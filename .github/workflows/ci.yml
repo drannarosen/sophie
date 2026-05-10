@@ -138,8 +138,15 @@ jobs:
             ${{ runner.os }}-turbo-build-${{ github.sha }}
             ${{ runner.os }}-turbo-build-
             ${{ runner.os }}-turbo-
-      - name: Build smoke target
-        run: pnpm --filter smoke build
+      - name: Build smoke target (and workspace deps)
+        # Use `turbo run build --filter=smoke` (not `pnpm --filter`) so
+        # Turborepo follows the workspace dependency graph and builds
+        # @sophie/core → @sophie/{components,theme} → @sophie/astro
+        # before smoke. With `pnpm --filter smoke build` the deps were
+        # never built (e2e was silently skipped due to the build job's
+        # own failure on Linux, masking this). The Turborepo cache
+        # restored above turns most of this into a cache hit.
+        run: pnpm exec turbo run build --filter=smoke
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
       - name: Playwright e2e
