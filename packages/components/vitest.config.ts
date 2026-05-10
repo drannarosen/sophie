@@ -26,6 +26,7 @@ export default defineConfig({
       exclude: [
         "**/*.test.ts",
         "**/*.test.tsx",
+        "**/*.stories.tsx",
         "**/index.ts",
         "**/*.d.ts",
         "src/css-modules.d.ts",

@@ -156,9 +156,27 @@ the spread are bugs.
   any component PR.
 - **Playwright** for end-to-end against `examples/smoke/` (the
   Phase 0 smoke target; replaced by `drannarosen/astr201` in Phase 1).
-- **Storybook** is Phase 1+ (added around the third v1 component when
-  isolation pays off).
-- **Visual regression** is Phase 1+ (once the design system is stable).
+- **Storybook** is **required for every component PR** (since
+  2026-05-10, Phase 1). Every component has at least one story under
+  `<Name>.stories.tsx` colocated with the component. Persistence-bearing
+  stories namespace via unique `course="storybook"` /
+  `chapter="<componentname>"` / `id="<storyname>"` args so cross-story
+  IDB state cannot leak. See
+  [ADR 0028](../decisions/0028-storybook-setup.md).
+- **Storybook test-runner** runs `axe-playwright` against every story
+  in CI (`storybook` job). Structural a11y rules — labels, landmarks,
+  ARIA, focus order — are enforced per-story. Stories that should
+  skip axe set `parameters.a11y.disable = true` in their meta.
+- **`color-contrast` axe rule is disabled** in both smoke e2e
+  (`examples/smoke/e2e/*.spec.ts`) and Storybook test-runner
+  (`packages/components/.storybook/test-runner.ts`). Color contrast
+  is reviewed at design-system level (`@sophie/theme`), not as a
+  per-feature gate. Structural axe rules (labels, landmarks, ARIA,
+  focus order) are enforced everywhere.
+- **Visual regression** is deferred to a separate PR. See
+  [ADR 0028 § Visual regression deferral](../decisions/0028-storybook-setup.md).
+  Until re-enabled, intentional UI changes are caught in PR review +
+  manual Storybook inspection (`pnpm storybook`).
 
 Tests are not optional. A component without an axe-core test does
 not ship.
@@ -203,7 +221,9 @@ Categories: `feat`, `fix`, `docs`, `chore`, `test`, `refactor`,
 - **Changeset attached** for any package change. See
   [Changelog](../status/changelog.md) for SemVer policy.
 - **Tests added or updated.**
-- **Storybook stories updated** if a component's surface changed.
+- **Storybook stories updated** to cover the new component / new
+  variant / new state. New components must ship with a story; visual
+  baselines under `__snapshots__/` are reviewed for intentional drift.
 
 ## Code review
 

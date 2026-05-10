@@ -67,8 +67,8 @@ work begins.
 | Port existing SCSS (`callouts.scss`, `lecture-cards.scss`, `nav-markers.scss`, `dashboard.scss`, `glossary.scss`, `collapsible-cards.scss`, `tokens.scss`, `design-tokens.scss`) from `astr101-sp26`/`astr201-sp26`/`comp536-sp26` to `@sophie/components` CSS Modules | High — Phase 1 week 1–2 | Per ADR 0005's "port not redesign" rule. Tailwind v4 `@theme` for tokens, CSS Modules for component styles. |
 | 14 remaining v1 components against the proven contract pattern | High — Phase 1 weeks 2–5 | Use ADR 0027's per-instance hydration pattern. Order by dependency: layout primitives first, persistence-bearing later. |
 | `drannarosen/astr201` consumer repo + first real chapter migration | High — Phase 1 week 1 (parallel) | Replaces `examples/smoke/` as the proving ground. Pick a well-bounded chapter (recommend `flux-luminosity-distance`). |
-| Storybook (around the third v1 component when isolation pays off) | Medium — Phase 1 week 3+ | Don't add until 2–3 components share enough props/composition that Storybook's overhead is justified. |
-| Visual regression (Chromatic or Playwright screenshots) | Low — Phase 1 end | Once the design system is stable. |
+| Storybook (around the third v1 component when isolation pays off) | ~~Medium — Phase 1 week 3+~~ **Done 2026-05-10** | Shipped between Trio 2.5 and Trio 3 with stories backfilled for all 9 components, axe-playwright per story in CI. See [§4.2](#42-storybook-activates-between-trio-25-and-trio-3-2026-05-10) and [ADR 0028](../decisions/0028-storybook-setup.md). |
+| Visual regression (Chromatic or Playwright screenshots) | Low — Phase 1 end (deferred 2026-05-10) | Scoped in ADR 0028 but deferred after CI surfaced macOS↔Ubuntu anti-aliasing gaps. Re-enable with Docker-based Linux baseline generation, per-platform baselines, or Chromatic. See [ADR 0028 § Visual regression deferral](../decisions/0028-storybook-setup.md). |
 | `sophie audit` Tier 1 + Tier 2 deterministic checks | Phase 3 | Audit was scoped to the schema-validation hook in Phase 0. |
 | `<CodeCell>` (Pyodide + CodeMirror 6) | Phase 3 | Per [ADR 0018](../decisions/0018-codemirror-6-for-codecell.md). |
 | `@sophie/cosmic-playground` | Phase 1+ when the first `<Demo>` lands | iframe + manifest protocol per [ADR 0008](../decisions/0008-cosmic-playground-protocol.md). |
@@ -196,14 +196,21 @@ InteractiveCallout; Predict's shape (form, multi-field state,
 gated reveal) is different enough that a second proof point
 matters before committing to the rest.
 
-### 4.2 Storybook activates with Trio 2 component #3 (Predict)
+### 4.2 Storybook activates between Trio 2.5 and Trio 3 (2026-05-10)
 
 The original [§4 priority 5](#45-original-ordering-superseded-2026-05-10)
-said Storybook lands at the third v1 component. Counting from
-Phase 0's three already-shipped, Predict is the sixth — but it's
-also the first new persistence-bearing component, where
-isolation pays. From Predict onward, every component PR
-includes its Storybook story.
+said Storybook lands at the third v1 component. The harness was
+deferred through Trio 2 (LearningObjectives, Callout variants,
+Predict) and Trio 2.5 (the self-assessment family) because unit +
+axe + e2e covered correctness adequately. **Storybook landed
+2026-05-10** as a discrete setup PR before Trio 3, with all 9
+shipped components getting stories in the same PR (32 stories total,
+all axe-clean, visual baselines committed). From Trio 3 onward
+every component PR ships with its story by default. See
+[ADR 0028](../decisions/0028-storybook-setup.md) for the locked
+choices: Storybook 10, co-located stories, `@storybook/react-vite`
+builder, Playwright snapshots via `@storybook/test-runner`, real
+browser IDB with per-story namespacing.
 
 ### 4.3 SCSS port mechanics
 
