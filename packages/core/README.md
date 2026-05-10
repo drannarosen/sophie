@@ -33,7 +33,7 @@ in the repo-root `biome.json`.
 ## Public surface
 
 | Subpath | What it exports |
-|---|---|
+| --- | --- |
 | `@sophie/core/schema` | `ChapterSchema`, `FigureSchema`, `SectionSchema`, inferred TS types |
 | `@sophie/core/audit` | `auditFile()` — parses MDX frontmatter and validates against `ChapterSchema` |
 | `@sophie/core/cli` | Programmatic CLI entry (mostly for tests) |
@@ -62,3 +62,15 @@ Outputs:
 - `dist/audit/index.{js,d.ts}`
 - `dist/cli/index.{js,d.ts}`
 - `dist/cli/bin.js` (executable; shebang preserved by tsup)
+
+## Known build-tooling quirks
+
+- **`ignoreDeprecations: "6.0"` in `tsconfig.json`.** TypeScript 6
+  deprecated `baseUrl`. `paths` resolution still works without
+  `baseUrl`, but tsup's DTS builder triggers the deprecation warning
+  internally even on paths-only configs. Silenced for now.
+  **TODO:** drop this when tsup ships a TS-6-clean DTS pipeline (or
+  when TypeScript provides a paths-without-baseUrl story that doesn't
+  warn). Tracked in the Phase 0 implementation plan
+  (`~/.claude/plans/read-all-of-the-sharded-sky.md`, step 3 quirk
+  note).
