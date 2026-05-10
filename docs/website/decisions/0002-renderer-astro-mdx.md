@@ -7,7 +7,15 @@ superseded-by: ~
 tags: [foundation, renderer, astro, mdx]
 ---
 
-# ADR 0002: Astro 5 + MDX as the renderer
+# ADR 0002: Astro + MDX as the renderer
+
+> **Revision (2026-05-10):** title, body, and pin updated from
+> "Astro 5" to "Astro 6". Astro 6 became stable after this ADR was
+> first written; the *renderer* decision (Astro + MDX) is unchanged.
+> No new architectural rationale needed — the Astro integration in
+> Phase 0 step 6 builds against `astro ^6.0.0` (latest 6.3.1 at time
+> of bump). Future ADRs may bump to Astro 7+ similarly without
+> rewriting this document.
 
 ## Context
 
@@ -25,7 +33,8 @@ citizens.
 
 ## Decision
 
-**Astro 5 + MDX**, with plugin-mediated academic markdown:
+**Astro + MDX** (currently Astro 6; was originally Astro 5 — see
+revision note), with plugin-mediated academic markdown:
 `remark-math` + `rehype-katex`, `rehype-citation`,
 `rehype-autolink-headings`. The integration lives in `@sophie/astro`,
 which is the single Astro-coupled package. All other core packages

@@ -81,7 +81,7 @@ Read the relevant ADR before proposing changes that touch its area.
 | Concern | ADR | Decision |
 |---|---|---|
 | Repo shape | 0001 | Standalone platform; courses are *separate* consumer repos |
-| Renderer | 0002 | Astro 5 + MDX |
+| Renderer | 0002 | Astro 6 + MDX (was Astro 5; see ADR 0002 revision note) |
 | Schema | 0003 | Zod as source of truth |
 | Component contract | 0004 | `serialize` separate from render; axe-core for a11y; `useInteractive` helper; composition rules |
 | Theming | 0005 | TS tokens → CSS vars + Tailwind preset; CSS Modules in components |
