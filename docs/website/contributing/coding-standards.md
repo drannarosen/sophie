@@ -7,11 +7,12 @@ tags: [contributing, coding, typescript, conventions]
 
 # Coding standards
 
-:::{important} Status: tooling-locked; rest fills in during Phase 0
-The tool commitments below are locked (ADRs 0011–0015). The rest of
-this page sketches conventions that become substantive when Sophie's
-platform repo is initialized in Phase 0. The repo's `CONTRIBUTING.md`
-will be the authority once it lands.
+:::{important} Status: Phase 0 shipped (2026-05-10)
+Tool commitments are locked (ADRs 0011–0015). Code-level
+conventions below describe the actual Phase 0 codebase. The
+"Internal package boundaries" and "Framework-purity"
+sections were added at end of Phase 0 to codify constraints
+the codebase already enforces; deviations are bugs.
 :::
 
 ## Tool commitments
@@ -56,29 +57,62 @@ these without a superseding ADR is a bug.**
 - **Avoid `any` and `unknown` casts** where a more specific type can
   be expressed.
 
+## Internal package boundaries
+
+- **`@sophie/core` uses subpath exports.** The `package.json`
+  `exports` field declares `.`, `./schema`, and `./audit` as the
+  only public entry points. Direct relative imports between those
+  internal directories are forbidden by Biome's
+  `noRestrictedImports` rule (see `packages/core/biome.json`). This
+  keeps the eventual split into `@sophie/schema`, `@sophie/audit`,
+  and `@sophie/cli` mechanical: every cross-directory consumer
+  already goes through a published subpath.
+- **`@sophie/components` framework-purity rule.** Components in
+  `@sophie/components` may import only from React, Zod, and other
+  `@sophie/*` packages. **No imports from `astro:*`, `vite/*`, or
+  any framework-runtime package.** Enforced by Biome's
+  `noRestrictedImports` rule
+  (see `packages/components/biome.json`). Rationale: components
+  must be drop-in usable by any future renderer (per ADR 0001 +
+  ADR 0023's deferred `@sophie/renderer-contract`); coupling to
+  Astro internals would lock that door.
+- **Astro coupling lives only in `@sophie/astro`.** That package is
+  the *single* place in the monorepo that may import from
+  `astro:*`. Per ADR 0027, persistence-bearing components rendered
+  via MDX receive their chapter context as **props**, threaded by
+  the `<SophieChapter>` adapter — components don't pull from any
+  Astro context directly.
+
 ## React
 
 - **Function components** with hooks. Class components only when a
   third-party API requires.
-- **Framework-pure**: components in `@sophie/components` import only
-  React, Zod, and from other `@sophie/*` packages — never from
-  `astro:*`. See [ADR 0001](../decisions/0001-platform-not-monorepo.md).
 - **Per-component CSS Modules**, scoped, referencing CSS custom
   properties from `@sophie/theme`. See
-  [ADR 0005](../decisions/0005-theming-three-layers.md).
+  [ADR 0005](../decisions/0005-theming-three-layers.md) and
+  [ADR 0026](../decisions/0026-tailwind-v4-css-first.md).
 - **`useInteractive` for persistence** — never touch IndexedDB
   directly. See
-  [ADR 0004](../decisions/0004-component-contract-revisions.md).
+  [ADR 0004](../decisions/0004-component-contract-revisions.md) and
+  [ADR 0007](../decisions/0007-persistence-indexeddb.md).
+- **Per-instance hydration for persistence-bearing MDX components.**
+  When a persistence-bearing component is used inside MDX, the
+  author imports the *interactive* variant directly and applies
+  `client:load` per usage. The MDX `components={...}` map cannot
+  carry hydration metadata. See
+  [ADR 0027](../decisions/0027-mdx-render-boundary-prop-threading.md).
 
 ## Tests
 
-- **Storybook stories** for every component, all render modes the
-  component supports.
-- **Vitest** for unit tests; colocated as `<Name>.test.ts`.
-- **axe-core** integrated into Storybook + Playwright. **Non-
-  negotiable** for any component PR.
-- **Playwright** for end-to-end against `apps/example-textbook/`.
-- **Visual regression** via Chromatic or Playwright screenshots.
+- **Vitest** for unit tests; colocated as `<Name>.test.ts(x)`.
+- **axe-core** required for every component (via `jest-axe` in jsdom
+  Vitest, or `@axe-core/playwright` for e2e). **Non-negotiable** for
+  any component PR.
+- **Playwright** for end-to-end against `examples/smoke/` (the
+  Phase 0 smoke target; replaced by `drannarosen/astr201` in Phase 1).
+- **Storybook** is Phase 1+ (added around the third v1 component when
+  isolation pays off).
+- **Visual regression** is Phase 1+ (once the design system is stable).
 
 Tests are not optional. A component without an axe-core test does
 not ship.
@@ -87,9 +121,12 @@ not ship.
 
 - **CSS Modules** for component styles; `<Name>.module.css`.
 - **CSS custom properties** for theming, never hardcoded values.
+  Theme tokens flow from `@sophie/theme`'s TS source via Tailwind v4
+  CSS-first `@theme` directive (no preset/config file). See
+  [ADR 0005](../decisions/0005-theming-three-layers.md) and
+  [ADR 0026](../decisions/0026-tailwind-v4-css-first.md).
 - **Per-component token namespacing**: `--color-prediction-*`,
-  `--space-prediction-*`. See
-  [ADR 0005](../decisions/0005-theming-three-layers.md).
+  `--space-prediction-*`.
 - **Logical properties** where appropriate
   (`margin-inline-start`, not `margin-left`) — light insurance for
   future i18n.
@@ -145,8 +182,9 @@ Categories: `feat`, `fix`, `docs`, `chore`, `test`, `refactor`,
 
 ## Dependencies
 
-- **Pin major versions.** Minor and patch updates via Renovate or
-  Dependabot. Major updates are scheduled work.
+- **Pin major versions.** Minor and patch updates via Dependabot
+  (security-only in Phase 0; broader once contributors arrive).
+  Major updates are scheduled work.
 - **Prefer batteries-included frameworks** (Astro integrations) over
   ad-hoc plumbing.
 - **Avoid runtime dependencies in the schema package.** Zod is the

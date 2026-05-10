@@ -217,57 +217,52 @@ Each phase ends with a working, testable artifact. No phase is
 "infrastructure only" — every phase delivers something the author
 can actually use.
 
-### Phase 0 — Foundation (~2–2.5 weeks, lean-but-realistic)
+### Phase 0 — Foundation (~2–2.5 weeks, **shipped 2026-05-10**)
 
-**Scope authority:** This phase scope is set by
-[ADR 0023](../decisions/0023-vertical-slice-build-order.md) (vertical-slice-first
-build order) and the implementation plan at
+**Scope authority:** [ADR 0023](../decisions/0023-vertical-slice-build-order.md)
+set the vertical-slice-first build order;
+[ADR 0025](../decisions/0025-phase-0-actual-scope.md) records the
+ten-step actual scope and supersedes ADR 0023's calendar (its
+build-order is reconfirmed). The parent implementation plan lives at
 [`~/.claude/plans/read-all-of-the-sharded-sky.md`](file:///Users/anna/.claude/plans/read-all-of-the-sharded-sky.md).
-ADR 0023 reduced the original 3–4 week scaffolding-first scope
-to a vertical-slice ~1–2 weeks; the implementation plan grew it
-back to ~2–2.5 weeks (still meaningfully smaller than the original)
-with three deliberate additions: full IndexedDB persistence per
-ADR 0007, the *real* trimmed first ASTR 201 reading as the proving
-chapter, and 26 figures with a `<Figure>` component. The amendment
-will be recorded in the upcoming ADR 0025.
 
-**Goal:** One ASTR 201 chapter rendering through `@sophie/astro`
-with HMR. Persistence backbone proven end-to-end. Test stack and
-CI in place.
+**Goal (achieved):** One trimmed ASTR 201 chapter renders through
+`@sophie/astro` with HMR; persistence backbone proven end-to-end with
+cross-tab sync; test stack and CI in place.
 
-**Deliverables:**
+**Shipped:**
 
-- `drannarosen/sophie` GitHub repo (public, AGPL-3.0-or-later).
-- pnpm workspace, TypeScript, Astro 5, MDX, React 19 configured.
-- A *minimal* `@sophie/core` package combining what would have
-  been `@sophie/schema`, `@sophie/audit`, and `@sophie/cli`, with
-  enforced internal directory boundaries (subpath exports + Biome
-  `noRestrictedImports` rule) so the eventual split is mechanical.
-- `@sophie/components` package with two components in v0
-  (`<Callout>`, `<Figure>`) plus the full IndexedDB +
-  BroadcastChannel + ProfileContext persistence runtime via
-  `useInteractive` (per ADR 0007).
-- `@sophie/theme` package with `tokens.ts` → CSS variables (light +
-  dark) + Tailwind v4 `@theme` artifact. Minimal token set sufficient
-  for prose; SCSS port deferred to Phase 1.
-- `@sophie/astro` package: the single Astro coupling point.
-  MDX with `remark-gfm` + `remark-frontmatter` + `rehype-katex`;
-  schema validation hook (build-time + dev-server warnings);
-  ProfileContext hydration.
-- One ASTR 201 chapter (trimmed Lecture 1 from `astr201-sp26`,
-  with all 26 figures) rendering through `@sophie/astro` with HMR
-  in `examples/smoke/` (a throwaway smoke target — replaced by the
-  real `drannarosen/astr201` consumer repo in Phase 1).
-- Vitest (jsdom for components) + Playwright (smoke + axe +
-  persistence) + axe-core + Biome + Turborepo (local cache only)
-  wired in CI via GitHub Actions.
-- Branch protection on `main`; Dependabot security-only.
-- New ADRs 0024 (license decision: AGPL-3.0-or-later), 0025 (Phase 0
-  actual scope), and 0026 (Tailwind v4 supersedes ADR 0005's
-  implicit v3 preset wording).
+- `drannarosen/sophie` GitHub repo (public, AGPL-3.0-or-later per
+  [ADR 0024](../decisions/0024-license-agpl.md)).
+- pnpm workspace, TypeScript 6, Biome, Turborepo, Astro 6 + MDX,
+  React 19. Node 22 pinned via `.nvmrc`; pnpm 11.0.9 pinned via
+  `packageManager`.
+- `@sophie/core`: schema (Zod), audit utilities, `sophie` CLI binary
+  with subpath exports (`/schema`, `/audit`) and Biome
+  `noRestrictedImports` rule for internal boundaries.
+- `@sophie/components`: `<Callout>` (interactive) and `<Figure>`
+  (registry + inline modes); `useInteractive` runtime over IndexedDB,
+  BroadcastChannel, and `ResponseStore`; all axe-core tested via
+  jsdom-fake-IndexedDB.
+- `@sophie/theme`: TS tokens to CSS variables (light and dark) via
+  Tailwind v4 CSS-first `@theme` directive
+  (per [ADR 0026](../decisions/0026-tailwind-v4-css-first.md)).
+- `@sophie/astro`: `defineSophieIntegration()`, `makeStaticComponents()`,
+  and the `<SophieChapter>` client island. Framework-pure boundary
+  enforced; ADR 0027 records the per-instance hydration constraint
+  surfaced during step 7's vertical-slice acceptance.
+- `examples/smoke/`: real trimmed ASTR 201 first reading
+  (spoiler-alerts) with prose + KaTeX + 26 figures + interactive
+  `<Callout>`. Throwaway; replaced by `drannarosen/astr201` in
+  Phase 1.
+- Vitest + Playwright (chromium) + axe-core + coverage (v8) wired
+  through Turborepo cache.
+- GitHub Actions CI: lint / typecheck / unit / build / e2e jobs +
+  Dependabot security-only. (Build job is a **known-issue** on
+  Linux runners; see Phase 1 handoff.)
 
-**Phase 0 deliberately defers** (added as they earn their keep, not
-abandoned — see [ADR 0023](../decisions/0023-vertical-slice-build-order.md)):
+**Phase 0 deliberately deferred** (added as they earn their keep,
+not abandoned — per ADR 0023):
 
 - `@sophie/renderer-contract` (only matters when a second renderer is real).
 - `@sophie/cosmic-playground` (Phase 1+ when the first `<Demo>` lands).
@@ -284,17 +279,25 @@ abandoned — see [ADR 0023](../decisions/0023-vertical-slice-build-order.md)):
 - Plugin architecture as `@stable` public API (`@internal` until a
   real third-party consumer materializes).
 
-**Done when:**
+**Done when (verified 2026-05-10):**
 
-- `pnpm --filter smoke dev` (or `pnpm exec sophie dev examples/smoke`)
-  serves the proving chapter on `localhost:4321` with prose, KaTeX
-  math, all 26 figures, and a working interactive `<Callout>` whose
-  state persists across reload and syncs across browser tabs within
-  ~1 second.
-- `pnpm turbo run test` passes Vitest + axe-core across all packages.
-- `pnpm test:e2e` passes Playwright smoke + axe + persistence.
-- CI on `main` is green; branch protection enforced.
-- ADRs 0024, 0025, 0026 published.
+- ✅ `pnpm --filter smoke dev` serves the proving chapter on
+  `localhost:4321` with prose, KaTeX math, all 26 figures, and a
+  working interactive `<Callout>` whose state persists across reload
+  and syncs across browser tabs within ~1 second.
+- ✅ `pnpm exec turbo run test:unit` passes (7/7 tasks; 41 tests +
+  coverage).
+- ✅ `pnpm test:e2e` passes Playwright smoke + axe + persistence
+  (3/3 chromium specs).
+- ✅ `pnpm exec biome check .` clean (82 files).
+- ⚠️ CI on `main`: lint/typecheck/unit pass on Linux; build fails
+  due to astro 6 + content-layer Vite-internals bundling pathology
+  (root cause traced; surface fixes attempted and reverted; full
+  fix is Phase 1's first task — see
+  [`status/phase-1-plan.md`](./phase-1-plan.md)).
+- ⚠️ Branch protection on `main`: deferred until CI build job is
+  green.
+- ✅ ADRs 0024, 0025, 0026 published.
 
 ### Phase 1 — Core schema + components (~5 weeks)
 
@@ -463,8 +466,10 @@ release-engineering phase, not re-architecture.
 
 **Deliverables:**
 
-- License chosen and applied. Recommended: Apache 2.0 for platform
-  code; CC BY 4.0 for textbook content.
+- License already chosen and applied (AGPL-3.0-or-later per
+  [ADR 0024](../decisions/0024-license-agpl.md)). Phase 7 just adds
+  the CC BY 4.0 for textbook content (stays in consumer repos) and
+  any release-engineering polish.
 - `npm publish` workflow for `@sophie/*` packages.
 - Tutorial chapter on the docs site.
 - Migration guides (from Quarto, from MyST).
@@ -648,9 +653,12 @@ goal; core ambition is Anna's courses.
 
 ### 9.4 License
 
-When Phase 7 lands, Sophie needs a license. **Default recommendation:
-Apache 2.0** for the platform code; **CC BY 4.0** for textbook
-content. Standards in scientific computing and OER respectively.
+**Decided 2026-05-10 (Phase 0 step 10):** Sophie ships under
+**AGPL-3.0-or-later** for platform code in `drannarosen/sophie`.
+Course content in consumer repos remains independently licensed
+(typically CC BY 4.0 for prose). See
+[ADR 0024](../decisions/0024-license-agpl.md) for the rationale,
+counter-argument review, and CLA-on-first-PR triggered task.
 
 ### 9.5 Naming the open-source release
 

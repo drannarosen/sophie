@@ -99,10 +99,15 @@ project:
         - file: decisions/0021-observable-plot-data-viz.md
         - file: decisions/0022-tsup-library-builds.md
         - file: decisions/0023-vertical-slice-build-order.md
+        - file: decisions/0024-license-agpl.md
+        - file: decisions/0025-phase-0-actual-scope.md
+        - file: decisions/0026-tailwind-v4-css-first.md
+        - file: decisions/0027-mdx-render-boundary-prop-threading.md
     - title: Status
       children:
         - file: status/roadmap.md
         - file: status/phase-0-report.md
+        - file: status/phase-1-plan.md
         - file: status/changelog.md
     - title: Contributing
       children:
