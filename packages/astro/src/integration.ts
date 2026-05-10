@@ -106,6 +106,20 @@ export function defineSophieIntegration(
           vite: {
             ssr: {
               noExternal: SOPHIE_NO_EXTERNAL,
+              // Astro 6's content layer pulls Vite's module-runner
+              // and related internals into prerender chunks via
+              // `astro:content`'s render() MDX path. When Vite's own
+              // source is bundled, its `import.meta.url`-based path
+              // resolution (e.g. CLIENT_ENTRY in src/node/constants)
+              // mis-locates Vite's package dir relative to the chunk.
+              // Force Vite (main entry + all subpath imports like
+              // `vite/module-runner`) to stay as runtime imports so
+              // its self-resolution logic uses Vite's own URL. Cast
+              // to string[] because Vite's TS types declare
+              // ssr.external as string[] only — but the runtime
+              // resolver also accepts RegExp, which is what we need
+              // to catch all `vite/*` subpath specifiers.
+              external: [/^vite($|\/)/] as unknown as string[],
             },
             build: {
               // Astro 6's content layer pulls Vite's module-runner
