@@ -1,0 +1,130 @@
+---
+status: accepted
+date: 2026-05-09
+deciders: [anna]
+supersedes: ~
+superseded-by: ~
+tags: [build, tsup, esbuild, library, packaging]
+---
+
+# ADR 0022: tsup for `@sophie/*` library package builds
+
+## Context
+
+Sophie ships ~8 publishable packages: `@sophie/schema`,
+`@sophie/components`, `@sophie/theme`, `@sophie/audit`,
+`@sophie/cli`, `@sophie/renderer-contract`, `@sophie/astro`,
+`@sophie/cosmic-playground`. Each needs to be built from TypeScript
+source into:
+
+- **ESM output** (modern consumers, tree-shakable).
+- **CJS output** (legacy compatibility for tools that haven't
+  migrated).
+- **`.d.ts` declaration files** (type information for consumers).
+- **Source maps** (debugging across the package boundary).
+
+`@sophie/astro` is a special case (Astro integration; bundled
+slightly differently per Astro conventions); the others are
+classic npm libraries.
+
+A bundler choice for libraries is distinct from the *application*
+bundler ([Astro](../decisions/0002-renderer-astro-mdx.md), which
+uses Vite under the hood for application code). Library bundling
+needs different defaults (preserve module structure, generate
+declaration files, dual-format output).
+
+## Decision
+
+**tsup** (built on esbuild) is the bundler for `@sophie/*` library
+packages. Configured per-package via `tsup.config.ts`. Produces
+ESM + CJS + `.d.ts` outputs in one invocation. Run via Turborepo
+([ADR 0014](0014-turborepo-monorepo-orchestration.md)) for caching.
+
+## Rationale
+
+- **Speed.** esbuild-based; builds are sub-second for typical
+  packages. Critical for fast Turborepo cache misses.
+- **Single config per package.** `tsup.config.ts` declares entry
+  points, format (ESM/CJS), declaration generation, externals.
+  No webpack-config or rollup-config gymnastics.
+- **Dual-format output trivially.** `format: ['esm', 'cjs']` —
+  tsup handles dual-package-hazard concerns (correct `package.json`
+  `exports` field, separate `.d.ts` for each).
+- **Declaration generation built in.** `dts: true` invokes the
+  TypeScript compiler for declarations alongside the esbuild bundle;
+  one tool, one config.
+- **Mature, popular.** Used by tRPC, Vite, t3 stack, many
+  mainstream library authors. Stable API, active maintenance.
+- **Pairs with pnpm + Turborepo.** Per-package builds cache
+  cleanly via Turborepo's content hashing
+  ([ADR 0014](0014-turborepo-monorepo-orchestration.md));
+  tsup respects pnpm's workspace `peerDependencies` correctly.
+
+## Alternatives considered
+
+- **unbuild** (Nuxt's library bundler). Pros: similar idea; clean
+  defaults. Cons: smaller community than tsup; ecosystem leans
+  Vue. Rejected — tsup wins on momentum.
+- **Rollup directly.** Pros: maximum control; what Astro itself
+  uses internally. Cons: rollup-config files become significant
+  per-package; declaration generation needs a separate plugin
+  invocation. Rejected — tsup wraps rollup-style flexibility with
+  esbuild's speed and a smaller config surface.
+- **esbuild directly.** Pros: simplest possible. Cons: declaration
+  generation is a separate tool invocation; dual-format output
+  needs custom orchestration. Rejected — tsup is the small wrapper
+  that handles these.
+- **Bun's native bundler.** Pros: extremely fast, integrated. Cons:
+  Bun is newer; library output compatibility with the Node
+  ecosystem still has rough edges. Rejected for v1; revisit when
+  `@sophie/cli` considers Bun as a runtime
+  ([ADR 0011](0011-pnpm-package-manager.md) defers this).
+- **tsc only.** Pros: official TypeScript output. Cons: no bundling;
+  separate steps for ESM vs CJS; slower. Rejected.
+- **Astro's bundler for everything.** Astro is application-shaped,
+  not library-shaped; using it for `@sophie/schema` would be a
+  shape mismatch. Rejected.
+
+## Consequences
+
+**Easier:**
+
+- Adding a new `@sophie/*` package is: write source, write a
+  `tsup.config.ts`, add to Turborepo pipeline, ship.
+- ESM-first with CJS fallback handled correctly without manual
+  `package.json exports` engineering.
+- Sub-second builds in development; Turborepo caches CI builds.
+
+**Harder:**
+
+- One more config file per package (`tsup.config.ts`). Mitigated
+  by a shared base config in `@sophie/internal-tsconfig` (or
+  similar) that each package extends.
+- Some advanced bundler features (custom resolution, complex
+  plugin chains) need switching to Rollup if they ever come up.
+  Acceptable trade-off; not yet on the horizon.
+- For the Astro integration package (`@sophie/astro`), tsup is
+  used but with Astro-aware externals; documented in that
+  package's README.
+
+**Triggers:**
+
+- Each `@sophie/*` package ships a `tsup.config.ts` from Phase 0.
+- A shared base config in `@sophie/internal-tsconfig` (workspace
+  package, not published) provides defaults; per-package configs
+  extend.
+- Turborepo pipeline runs `tsup` via `pnpm turbo run build
+  --filter=@sophie/<package>`.
+- `package.json` `exports` field generated by tsup or written
+  manually following its dual-format convention.
+
+## References
+
+- [tsup documentation](https://tsup.egoist.dev/).
+- [esbuild documentation](https://esbuild.github.io/).
+- [ADR 0011](0011-pnpm-package-manager.md) — pnpm workspaces tsup
+  builds within.
+- [ADR 0014](0014-turborepo-monorepo-orchestration.md) — Turborepo
+  caches tsup outputs.
+- [Roadmap → Phase 0](../status/roadmap.md) — package skeletons
+  ship with tsup configured.

@@ -1,0 +1,105 @@
+---
+status: accepted
+date: 2026-05-09
+deciders: [anna]
+supersedes: ~
+superseded-by: ~
+tags: [foundation, schema, types]
+---
+
+# ADR 0003: Zod as schema source of truth
+
+## Context
+
+Sophie's content schema (Chapter, Mission, MediaAsset, Concept,
+Skill, Misconception, Course) needs to be the source of truth that
+every layer refers to: the renderer for content collections, the audit
+for validation, the AI authoring kit for introspection, the consumer
+for type safety, the build for JSON-Schema-driven tooling like VSCode
+YAML autocomplete.
+
+An earlier draft of `content-schema.md` used hand-written TypeScript
+interfaces. The risk: TS types and validation schemas drift apart
+silently. A new field added to the TS interface but not to the
+validator passes type-checking and crashes at build.
+
+Astro Content Collections natively consume Zod schemas. React Hook
+Form integrates with Zod. `zod-to-json-schema` is mature.
+
+## Decision
+
+**Zod is the source of truth.** TypeScript types are inferred via
+`z.infer<typeof X>`. JSON Schema is generated via
+`zod-to-json-schema(X)` for VSCode YAML autocomplete and external
+authoring tools.
+
+```typescript
+const ChapterSchema = z.object({ /* ... */ });
+type Chapter = z.infer<typeof ChapterSchema>;
+const ChapterJsonSchema = zodToJsonSchema(ChapterSchema);
+```
+
+## Rationale
+
+- **One source eliminates drift.** Adding a field once propagates to
+  every consumer: TS types, runtime validation, JSON Schema,
+  Astro Content Collections.
+- **Astro's natural fit.** Astro Content Collections expect Zod;
+  using anything else means writing adapters.
+- **Audit needs runtime validation.** The audit walks chapter MDX
+  ASTs and validates frontmatter; Zod gives this for free.
+- **Bundle size is moot.** Zod isn't shipped to the browser; only
+  the validated content payloads are. The size argument against Zod
+  doesn't apply to a content schema.
+
+## Alternatives considered
+
+- **Effect Schema (`@effect/schema`).** More powerful, supports
+  encoders/decoders, but newer with smaller community and steeper
+  learning curve. Rejected: ecosystem maturity wins for v1.
+- **TypeBox.** Emits JSON Schema natively, faster runtime
+  validation. Rejected: less ergonomic; Astro doesn't use it
+  natively.
+- **Valibot.** Tree-shakable Zod alternative; smaller bundle.
+  Rejected: bundle size doesn't matter (schema doesn't ship to
+  browser); ecosystem is smaller.
+- **Hand-written TS interfaces + JSON Schema** (the prior draft).
+  Rejected: drift foot-gun; no runtime validation.
+- **JSON Schema as canonical, generate everything from it.**
+  Rejected: backwards. JSON Schema is a transport format; Zod is a
+  programming-language-native schema.
+
+## Consequences
+
+**Easier:**
+
+- Astro Content Collections work out of the box.
+- VSCode YAML autocomplete on chapter frontmatter works via
+  generated JSON Schema in `.vscode/settings.json` `yaml.schemas`
+  mapping.
+- Audit validation is free.
+- Refactoring the schema is type-safe end-to-end.
+
+**Harder:**
+
+- Authors who don't know Zod have a small learning curve. Mitigated
+  by: schema is small, idiomatic, and lives in one package.
+
+**Triggers:**
+
+- Component prop schemas live colocated with components in
+  `@sophie/components/src/<Name>/<Name>.schema.ts`, also in Zod.
+- Persisted-record schemas (`PredictionResponse`, `CodeCellRun`,
+  `MissionCompletion`) live alongside the components that produce
+  them, also in Zod.
+- `schemaVersion` integers on every entity; `sophie upgrade`
+  migrates forward-only on read.
+- Build emits `sophie.schema.json` for VSCode + external tools.
+
+## References
+
+- Brainstorming session, schema-sourcing pin (May 2026).
+- [reference/content-schema.md](../reference/content-schema.md) — the
+  full Zod schemas.
+- [Zod documentation](https://zod.dev).
+- [zod-to-json-schema](https://github.com/StefanTerdell/zod-to-json-schema).

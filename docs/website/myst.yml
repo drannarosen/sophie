@@ -1,0 +1,118 @@
+version: 1
+project:
+  id: sophie-design-docs
+  title: Sophie Design Documentation
+  description: Planning, design, decisions, and reference for the Sophie platform.
+  short_title: Sophie Docs
+  authors:
+    - name: Anna Rosen
+      email: alrosen@sdsu.edu
+      affiliation: San Diego State University
+      orcid: 0000-0003-3173-4322
+  keywords:
+    - sophie
+    - astronomy education
+    - interactive textbook
+    - astro
+    - mdx
+    - pedagogy
+  license:
+    content: CC-BY-4.0
+    code: Apache-2.0
+  github: https://github.com/drannarosen/sophie
+  bibliography:
+    - references.bib
+  numbering:
+    headings: false
+    figure:
+      enabled: true
+    equation:
+      enabled: true
+    table:
+      enabled: true
+  abbreviations:
+    ADR: Architecture Decision Record
+    MDX: Markdown + JSX
+    MyST: Markedly Structured Text
+    ApJ: Astrophysical Journal
+    POE: Predict-Observe-Explain
+    OMI: Observable, Model, Inference
+    PMI: Problem, Model, Implementation, Interpretation
+    FERPA: Family Educational Rights and Privacy Act
+    CSL: Citation Style Language
+    LMS: Learning Management System
+    a11y: accessibility
+    SoTA: State of the Art
+  toc:
+    - file: index.md
+    - title: Tutorials
+      children:
+        - file: tutorials/your-first-chapter.md
+        - file: tutorials/your-first-component.md
+        - file: tutorials/your-first-mission.md
+    - title: How-to guides
+      children:
+        - file: how-to/set-up-dual-profile.md
+        - file: how-to/set-up-cloudflare-access.md
+        - file: how-to/integrate-cosmic-playground.md
+        - file: how-to/cite-with-csl-json.md
+        - file: how-to/add-a-custom-component.md
+        - file: how-to/deploy-to-github-pages.md
+    - title: Reference
+      children:
+        - file: reference/content-schema.md
+        - file: reference/component-contract.md
+        - file: reference/cli.md
+        - file: reference/plugin-api.md
+        - file: reference/glossary.md
+    - title: Explanation
+      children:
+        - file: explanation/architecture.md
+        - file: explanation/audit-and-ai-authoring.md
+        - file: explanation/pedagogical-foundations.md
+        - file: explanation/persistence-model.md
+        - file: explanation/why-not-myst-for-sophie.md
+        - file: explanation/why-myst-for-docs.md
+    - title: Decisions
+      children:
+        - file: decisions/template.md
+        - file: decisions/0001-platform-not-monorepo.md
+        - file: decisions/0002-renderer-astro-mdx.md
+        - file: decisions/0003-zod-as-source-of-truth.md
+        - file: decisions/0004-component-contract-revisions.md
+        - file: decisions/0005-theming-three-layers.md
+        - file: decisions/0006-slides-revealjs.md
+        - file: decisions/0007-persistence-indexeddb.md
+        - file: decisions/0008-cosmic-playground-protocol.md
+        - file: decisions/0009-i18n-deferred.md
+        - file: decisions/0010-myst-for-design-docs.md
+        - file: decisions/0011-pnpm-package-manager.md
+        - file: decisions/0012-uv-python-tooling.md
+        - file: decisions/0013-biome-lint-format.md
+        - file: decisions/0014-turborepo-monorepo-orchestration.md
+        - file: decisions/0015-dev-preview-workflow.md
+        - file: decisions/0016-react-flow-for-concept-maps.md
+        - file: decisions/0017-rename-sophia-to-sophie.md
+        - file: decisions/0018-codemirror-6-for-codecell.md
+        - file: decisions/0019-radix-ui-primitives.md
+        - file: decisions/0020-shiki-syntax-highlighting.md
+        - file: decisions/0021-observable-plot-data-viz.md
+        - file: decisions/0022-tsup-library-builds.md
+        - file: decisions/0023-vertical-slice-build-order.md
+    - title: Status
+      children:
+        - file: status/roadmap.md
+        - file: status/phase-0-report.md
+        - file: status/changelog.md
+    - title: Contributing
+      children:
+        - file: contributing/setup.md
+        - file: contributing/adr-process.md
+        - file: contributing/docs-style-guide.md
+        - file: contributing/coding-standards.md
+site:
+  template: book-theme
+  options:
+    logo_text: Sophie
+    # favicon and logo image assets will land in _static/ later;
+    # currently rendered as text-only header.

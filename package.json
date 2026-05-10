@@ -1,0 +1,18 @@
+{
+  "name": "sophie",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Schema-driven, AI-authorable platform for interactive scientific textbooks, course websites, slide decks, and LMS exports.",
+  "license": "AGPL-3.0-or-later",
+  "author": "Anna Rosen",
+  "homepage": "https://github.com/drannarosen/sophie",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/drannarosen/sophie.git"
+  },
+  "packageManager": "pnpm@11.0.9",
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=11.0.0"
+  }
+}
