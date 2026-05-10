@@ -20,6 +20,17 @@ export {
   figureInlineContract,
   figureRegistryContract,
 } from "./components/Figure/index.ts";
+export type {
+  LearningObjectivesProps,
+  LearningObjectivesState,
+  Objective,
+} from "./components/LearningObjectives/index.ts";
+export {
+  LearningObjectives,
+  LearningObjectivesPropsSchema,
+  learningObjectivesContract,
+  ObjectiveSchema,
+} from "./components/LearningObjectives/index.ts";
 
 // Contract
 export type {

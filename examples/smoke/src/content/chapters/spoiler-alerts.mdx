@@ -6,17 +6,42 @@ description: "A trailer for the semester: how astronomers turn photons into phys
 tags: ["course-overview", "foundations"]
 ---
 
-import { InteractiveCallout } from "@sophie/components";
+import { InteractiveCallout, LearningObjectives } from "@sophie/components";
 
-## Learning Objectives
-
-By the end of this lecture, you will be able to:
-
-1. **State** the course thesis in one sentence: *pretty pictures → measurements → models → inferences*
-2. **Explain** why astronomy is fundamentally about inferring physical reality from constrained measurements
-3. **Name** the key physical quantities astronomers care about: distance, time, speed, mass, energy/luminosity, temperature
-4. **Explain** why the finite speed of light makes astronomy a "lookback time" science
-5. **Give** a one-sentence reason why wavelength matters: different wavelengths reveal different physics
+<LearningObjectives
+  client:load
+  course="astr201"
+  chapter="spoiler-alerts"
+  id="lo"
+  heading="By the end of this lecture, you will be able to:"
+  objectives={[
+    {
+      id: "thesis",
+      verb: "State",
+      body: "the course thesis in one sentence: pretty pictures → measurements → models → inferences",
+    },
+    {
+      id: "inference",
+      verb: "Explain",
+      body: "why astronomy is fundamentally about inferring physical reality from constrained measurements",
+    },
+    {
+      id: "quantities",
+      verb: "Name",
+      body: "the key physical quantities astronomers care about: distance, time, speed, mass, energy/luminosity, temperature",
+    },
+    {
+      id: "fls",
+      verb: "Explain",
+      body: 'why the finite speed of light makes astronomy a "lookback time" science',
+    },
+    {
+      id: "wavelength",
+      verb: "Give",
+      body: "a one-sentence reason why wavelength matters: different wavelengths reveal different physics",
+    },
+  ]}
+/>
 
 <Callout variant="info" title="A Note on First Exposure (Read This Once, Then Relax)">
 This reading is designed to *prime* your brain, not test it. You will encounter many terms, images, and equations before you fully understand them—and that is intentional. Every technical term introduced here will be revisited later, slowly and carefully, when it actually matters.
