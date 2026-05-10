@@ -28,7 +28,9 @@
     "clean": "rm -rf dist .turbo"
   },
   "peerDependencies": {
-    "astro": "^6.0.0"
+    "astro": "^6.0.0",
+    "esbuild": "^0.27.0",
+    "vite": "^7.3.0"
   },
   "dependencies": {
     "@astrojs/mdx": "^5.0.4",

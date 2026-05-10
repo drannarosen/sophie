@@ -20,85 +20,57 @@ export interface SophieIntegrationOptions {
 const SOPHIE_NO_EXTERNAL = ["@sophie/astro", "@sophie/components"];
 
 /**
- * `@vitejs/plugin-react@5.2.0` (transitive via `@astrojs/react@5.0.4`)
- * does `await import("vite/internal")` for React Refresh's native
- * wrapper. Vite 7.3.3 doesn't expose that subpath; bundling reaches it,
- * Rollup's commonjs-resolver crashes. Marking the subpath external lets
- * the dynamic import fail at runtime where the plugin handles it.
+ * Externalize `vite` and `esbuild` (bare + subpaths) from the
+ * SSR/prerender bundle. Astro 6 sets `resolve.noExternal: ["astro"]`
+ * on the prerender environment ([astro/dist/core/build/plugins/plugin-internals.js]),
+ * which bundles the entire `astro` package and transitively pulls
+ * bare `vite` (from `astro/dist/core/create-vite.js`,
+ * `astro/dist/core/middleware/vite-plugin.js`, etc.) and bare
+ * `esbuild` (from `astro/dist/core/client-directive/build.js`,
+ * `astro/dist/env/vite-plugin-import-meta-env.js`) into the bundle.
+ * Those build tools have OS-conditional optional imports — rollup's
+ * `await import('fsevents')` being canonical — that fail to resolve
+ * at bundle time on Linux runners.
  *
- * This is a CLIENT-bundle Phase 0 finding, narrow in scope. The broader
- * "astro pulls vite/esbuild into the prerender bundle on Linux" issue
- * is solved structurally below by `narrowAstroPrerenderNoExternal()`,
- * not by externalization.
+ * Externalizing them at the rollup level prevents the bundling.
+ * They're then loaded from `node_modules` at runtime by the prerender
+ * chunk. **Consumers must declare `vite` and `esbuild` as
+ * devDependencies** so pnpm symlinks them into the consumer's
+ * `node_modules/`, where Node ESM can resolve them via walk-up
+ * resolution from the prerender chunk's location. `@sophie/astro`
+ * declares both as peerDependencies to document this requirement.
  *
- * TODO: remove when @vitejs/plugin-react drops the vite/internal
- * dependency or Vite re-exports the path.
+ * Why this works at runtime: rollup's `await import('fsevents')` is
+ * inside a try/catch, so the optional import fails *gracefully* on
+ * Linux at runtime — the bundling-time resolver couldn't see the
+ * try/catch and choked at static analysis time. Once externalized,
+ * runtime gets to use the try/catch path.
+ *
+ * Phase 1 finding, 2026-05-10. Three earlier fix attempts
+ * (61d9ae0, a9633c5, a035dbb) iterated through subpath externals,
+ * broadened externals, and a `configResolved` plugin override of
+ * Astro's `noExternal: ["astro"]` — the override didn't take effect
+ * (Vite 7's environment config appears immutable post-`configResolved`).
+ * Switched to consumer-declared peerDeps as the empirical fix.
+ *
+ * `vite/internal` (the original Phase 0 narrow case for
+ * `@vitejs/plugin-react`'s React Refresh dynamic import) is covered
+ * by `/^vite($|\/)/`.
+ *
+ * Use the **regex-array form**, NOT a function. Empirically (Vite
+ * 7.3.3), Rollup processes string/regex arrays at an earlier
+ * resolution phase that the commonjs-resolver plugin consults; the
+ * function form fires too late and the resolver tries to deep-import
+ * inside the externalized package's bundled code.
+ *
+ * TODO: tighten or remove when Astro narrows `noExternal: ["astro"]`
+ * to specific runtime entry-points instead of the whole package
+ * (proposed upstream issue, B+D hybrid path D).
  */
-const VITE_BUILD_EXTERNAL: (string | RegExp)[] = ["vite/internal"];
-
-/**
- * Override Astro 6's prerender-environment `resolve.noExternal: ["astro"]`
- * rule ([astro/dist/core/build/plugins/plugin-internals.js]).
- *
- * Astro's rule bundles the entire `astro` package into the prerender
- * chunk, which transitively pulls bare `vite` and `esbuild` imports
- * (from `astro/dist/core/create-vite.js`, `astro/dist/core/client-directive/build.js`,
- * etc.) into the bundle too. Those build tools have OS-conditional
- * optional imports — rollup → `fsevents` (macOS-only) being the
- * canonical example — that fail to resolve at bundle time on Linux
- * runners. Externalizing them shifts the failure to runtime, where
- * Node ESM has to resolve the bare specifier from the chunk's
- * `dist/.prerender/chunks/` location, which fails for any package
- * not directly listed in the consumer's `package.json`.
- *
- * The structural fix: don't bundle astro at all for the prerender
- * environment. Astro is reachable from the consumer's `node_modules/`
- * via pnpm's symlink, and from astro's symlinked location all of its
- * transitive dependencies (vite, esbuild, etc.) are reachable too —
- * Node ESM handles the chain cleanly without bundling. For static
- * SSG (`output: "static"`), the prerender chunk runs on the build
- * machine where node_modules is fully populated, so externalizing
- * astro is safe.
- *
- * This plugin runs at `configResolved`, after Astro's
- * `pluginInternals.configEnvironment` has set `noExternal: ["astro"]`.
- * It removes the literal `"astro"` entry from the prerender env's
- * `resolve.noExternal` array. Sophie's own packages
- * (`@sophie/astro`, `@sophie/components`) remain noExternal via the
- * separate `SOPHIE_NO_EXTERNAL` rule because their CSS Module
- * side-effects require bundling.
- *
- * Discovered Phase 1 step 1, 2026-05-10. See
- * `~/.claude/plans/we-re-starting-sophie-phase-twinkling-dusk.md` and
- * the upstream issue (TODO: link once filed) for context.
- */
-// Inline structural type for the slice of Vite's `ResolvedConfig` we read
-// + mutate. Avoids importing `Plugin` from `vite` directly so the
-// type-check resolves cleanly regardless of which `vite` install
-// TypeScript picks up (the workspace pnpm store, or any ambient install
-// reachable via Node's walk-up resolution).
-type ResolvedConfigPrerenderSlice = {
-  environments?: {
-    prerender?: {
-      resolve?: {
-        noExternal?: unknown;
-      };
-    };
-  };
-};
-
-function narrowAstroPrerenderNoExternal() {
-  return {
-    name: "@sophie/astro:narrow-prerender-noexternal",
-    configResolved(config: unknown) {
-      const c = config as ResolvedConfigPrerenderSlice;
-      const noExternal = c.environments?.prerender?.resolve?.noExternal;
-      if (!Array.isArray(noExternal)) return;
-      const idx = noExternal.indexOf("astro");
-      if (idx >= 0) noExternal.splice(idx, 1);
-    },
-  };
-}
+const VITE_BUILD_EXTERNAL: (string | RegExp)[] = [
+  /^vite($|\/)/,
+  /^esbuild($|\/)/,
+];
 
 export function defineSophieIntegration(
   _options?: SophieIntegrationOptions
@@ -110,7 +82,6 @@ export function defineSophieIntegration(
         updateConfig({
           integrations: [mdx(sophieMdxOptions), react()],
           vite: {
-            plugins: [narrowAstroPrerenderNoExternal()],
             ssr: {
               noExternal: SOPHIE_NO_EXTERNAL,
             },
