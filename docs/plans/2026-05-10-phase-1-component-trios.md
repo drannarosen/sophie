@@ -71,37 +71,82 @@ every prose pattern in `spoiler-alerts.mdx`:
 Validates ADR 0027 across three contract classes early so the
 pattern is de-risked before committing to 9 components.
 
-### `<LearningObjectives>` (chapter primitive)
+### `<LearningObjectives>` (chapter primitive — persistence-bearing)
+
+**SHIPPED 2026-05-10** (commit on phase-1/learning-objectives).
 
 **Purpose.** Renders the standard "By the end of this lecture, you
-will be able to: 1. **Verb** ..." block at the top of every chapter.
-Course-wide pedagogical convention.
+will be able to: 1. **Verb** ..." block at the top of every chapter
+**as a checkable task list**. Students mark which objectives they
+feel confident about; per-objective state persists per
+course/profile/chapter via `useInteractive`. Course-wide pedagogical
+convention plus self-assessment affordance.
 
-**Props (proposed).**
+**Persistence-bearing scope-change.** This component's design
+shipped persistence-bearing (Anna's request: students can check off
+outcomes). The original design doc had this as pure-structural —
+the upgrade means Trio 2 contains TWO persistence components
+(LearningObjectives + Predict), not one. Even better de-risking of
+ADR 0027's per-instance hydration pattern: two structurally
+*different* persistence shapes (multi-checkbox list vs form +
+gated reveal) in the same trio.
+
+**Props (shipped).**
 
 ```ts
+interface Objective {
+  id: string;     // author-supplied stable key per objective
+  verb: string;   // e.g., "State"
+  body: string;   // e.g., "the course thesis in one sentence: ..."
+}
+
 interface LearningObjectivesProps {
-  objectives: ReadonlyArray<{
-    verb: string;        // e.g., "State"
-    body: string;        // e.g., "the course thesis in one sentence: ..."
-  }>;
-  heading?: string;      // override default "Learning Objectives"
+  course: string;          // ADR 0027 per-instance hydration props
+  chapter: string;
+  id: string;              // unique per <LearningObjectives> instance
+  objectives: Objective[];
+  heading?: string;        // override default "Learning Objectives"
 }
 ```
 
-**State.** None. Pure structural component.
+**State.** Per-objective checked state, written via `useInteractive`
+under key `learning-objectives:${componentId}:${objectiveId}:checked`.
+Each `<ObjectiveRow>` child calls `useInteractive` independently
+(matches the InteractiveCallout pattern).
 
-**A11y.** Render as `<section>` with `aria-labelledby` pointing at
-the heading; objectives in an `<ol>`; the verb wrapped in
-`<strong>` per existing prose convention.
+**Author-supplied id rationale.** Stable across edits/reorders. If
+the key were the array index or a derived slug, any chapter
+revision could silently corrupt students' previously-checked state.
+Same reason `<InteractiveCallout>` and `<Predict>` require explicit
+ids — pattern consistency.
 
-**SCSS port.** None — new design. Tokens from `@sophie/theme`.
+**Disabled-while-loading hydration guard.** Each checkbox sets
+`disabled={status === "loading"}` and `aria-busy={loading}` until
+useInteractive reaches `"ready"`. Otherwise a click landing
+between mount and IDB-fetch completion gets silently overwritten by
+the fetch's `setLocalValue(persisted ?? initial)`. With multiple
+useInteractive calls per LearningObjectives (one per objective),
+the race surfaces ~30% of test runs without this guard. The
+guard ALSO improves real UX (a click on a not-yet-hydrated control
+isn't lost) and gives screen readers an honest "this control is
+updating" signal. Tested by a `not.toBeDisabled()` waitFor before
+clicking — 10/10 stable test runs after.
 
-**Smoke change.** Replace lines 11–19 of `spoiler-alerts.mdx`
-(the markdown-list version) with `<LearningObjectives objectives={[...]} />`
-or with an MDX-friendly children-only API if the structured props
-feel too rigid for AI-author DX. To decide during implementation;
-default to structured props.
+**A11y.** Render as `<section>` with an `<h2>` heading; objectives
+in an `<ol>`; each row is `<input type="checkbox">` + `<label>`
+properly associated by id. The verb is wrapped in `<strong>`.
+`aria-busy` on each input while loading. Zero axe violations
+verified by the unit test suite + the smoke e2e test.
+
+**Smoke change.** Lines 11–19 of `spoiler-alerts.mdx` (the
+markdown numbered list under `## Learning Objectives`) replaced by
+a `<LearningObjectives client:load .../>` call with the same five
+objectives keyed by stable ids (`thesis`, `inference`, `quantities`,
+`fls`, `wavelength`). The chapter's `## Learning Objectives` h2 is
+absorbed into the component's own heading (configurable via the
+`heading` prop). The component sits in `examples/smoke/` as the
+first Trio 2 component using the proving-ground rather than a
+new consumer repo per [phase-1-plan §4.1](../website/status/phase-1-plan.md#41-component-build-sequence-class-coverage-trios).
 
 ### `<LectureCard>` (structural)
 
@@ -272,17 +317,39 @@ Every component PR includes:
 
 ## Open questions
 
-- **MDX author DX for `<LearningObjectives>`**: structured props
-  (`objectives={[{verb, body}, ...]}`) vs children-as-list
-  (`<LearningObjectives>` wrapping a markdown numbered list, with
-  the component parsing children). Decide during implementation;
-  default to structured props for AI-authoring clarity.
+- ~~**MDX author DX for `<LearningObjectives>`**: structured props
+  vs children-as-list~~ — **resolved 2026-05-10**: structured props
+  with author-supplied `id` per objective. Same explicit-id pattern
+  as `<InteractiveCallout>`. Edit-resilient.
 - **`<LectureCard>` `as` prop**: should the heading level default
   to `h3` and be configurable, or follow MDX heading depth
   automatically via remark plugin? Default to `h3` for v1.
 - **`<Predict>` confidence scale default**: 5-point Likert or
   7-point? Existing classroom convention if Anna has one;
   otherwise default to 5.
+
+## Lessons surfaced during Trio 2 (LearningObjectives)
+
+- **The disabled-while-loading hydration guard pattern.** Any
+  component that calls `useInteractive` more than once (or where
+  user input could land between mount and IDB-fetch completion)
+  needs an explicit "loading" gate on its interactive controls.
+  Rationale: useInteractive's IDB-fetch effect calls
+  `setLocalValue(persisted ?? initial)` unconditionally on
+  resolution. A click before resolution gets local state set
+  optimistically, then overwritten by the fetch. Test flakes
+  ~30% without the gate; 10/10 stable with it. **All future
+  persistence-bearing components in the trios should follow this
+  pattern.** Predict, CollapsibleCard's open/closed state, etc.
+- **Author-supplied id per persisted child.** When a component
+  persists state for child elements (here: per-objective checked
+  state), the keying *must* survive author edits. Array index =
+  fragile; derived slug = fragile; explicit author-supplied id =
+  stable. Make this a design rule for v1 components.
+- **Trio 2's persistence-bearing count is now 2** (LearningObjectives
+  + Predict), not 1. Even better de-risking of ADR 0027 — two
+  structurally different persistence shapes get exercised in the
+  same trio.
 
 ## See also
 

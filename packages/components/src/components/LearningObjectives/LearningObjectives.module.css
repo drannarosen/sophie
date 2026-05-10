@@ -1,0 +1,71 @@
+.section {
+  margin-block: var(--space-lo-block, 1.5rem);
+  padding: var(--space-lo-pad, 1.25rem 1.5rem);
+  border-inline-start: 4px solid
+    var(--color-lo-accent, var(--color-accent, #4c7e9b));
+  background: var(--color-lo-bg, var(--color-surface-alt, rgb(0 0 0 / 0.03)));
+  border-radius: var(--radius-lo, 0.375rem);
+}
+
+.heading {
+  margin: 0 0 var(--space-lo-heading-gap, 0.75rem);
+  font-size: var(--font-size-lo-heading, 1.125rem);
+  font-weight: 600;
+  color: var(--color-lo-heading, var(--color-text-strong, inherit));
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--space-lo-row-gap, 0.5rem);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-lo-row-inline-gap, 0.625rem);
+  align-items: baseline;
+}
+
+.checkbox {
+  margin: 0;
+  inline-size: var(--size-lo-checkbox, 1rem);
+  block-size: var(--size-lo-checkbox, 1rem);
+  cursor: pointer;
+}
+
+.checkbox:disabled {
+  cursor: progress;
+  opacity: 0.5;
+}
+
+.label {
+  cursor: pointer;
+  line-height: 1.5;
+}
+
+.label:has(+ .checkbox:disabled),
+.checkbox:disabled + .label {
+  cursor: progress;
+}
+
+.checkbox:checked + .label {
+  color: var(--color-lo-checked, var(--color-text-muted, inherit));
+  text-decoration: line-through var(--color-lo-checked-strike, currentColor) 1px;
+  text-decoration-skip-ink: auto;
+}
+
+.verb {
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .checkbox,
+  .label {
+    transition:
+      color 120ms ease-out,
+      opacity 120ms ease-out;
+  }
+}
