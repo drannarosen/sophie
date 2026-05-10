@@ -112,6 +112,16 @@ jobs:
             ${{ runner.os }}-turbo-
       - name: Turborepo build (packages + smoke)
         run: pnpm exec turbo run build
+      - name: Upload smoke prerender chunks (build-failure debug)
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: smoke-prerender-debug
+          path: |
+            examples/smoke/dist/.prerender/
+            examples/smoke/dist/server/
+          if-no-files-found: ignore
+          retention-days: 7
 
   e2e:
     name: e2e
