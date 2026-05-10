@@ -143,35 +143,108 @@ machine, verify on Linux CI before claiming success. Consider a
 Linux-based dev container (devcontainer.json) for parity if the
 divergence pattern recurs.
 
-## 4. Phase 1 first-week priorities
+## 4. Phase 1 priorities (updated 2026-05-10)
 
-Sequenced for max-information-first; reorder when the actual Phase 1
-plan-mode work happens:
+Updated after Phase 1 step 1 shipped (CI fix + branch protection)
+and after re-evaluating smoke's role. The original ordering (Linux
+CI → drannarosen/astr201 → SCSS port → 2-3 components → Storybook
+→ CLA) is preserved below for context, then revised.
 
-1. **Resolve the Linux CI build failure** (see §5). Without this,
-   Phase 1 PRs can't be CI-gated and branch protection can't be
-   enforced. Estimated 0.5–2 days depending on which fix path is
-   chosen (full root cause vs migrate-to-content-layer-v2 vs pin
-   astro to a version that doesn't have the issue).
+**Step 1 (done):** [§5.1 Linux CI build failure resolved](#51-linux-ci-build-job-fails-resolved-2026-05-10).
+Branch protection on `main` enforces the full check matrix
+(lint, typecheck, unit, build, e2e); see
+[§5.2](#52-branch-protection-on-main-deferred).
 
-2. **Stand up `drannarosen/astr201`** with a single chapter migrated
-   from `astr201-sp26`. This replaces `examples/smoke/` as the
-   proving ground. Pick a well-bounded chapter (recommend
-   `flux-luminosity-distance`).
+**Re-evaluation (2026-05-10):** the original plan said
+`examples/smoke/` was "throwaway, replaced by `drannarosen/astr201`
+in Phase 1." A second look showed smoke's `spoiler-alerts.mdx`
+chapter is **1198 lines** of real ASTR 201 content (30 Callouts,
+19 Figures, 6 InteractiveCallouts) — a complete vertical slice,
+not a fixture stub. Standing up a separate consumer repo before
+any new component lands is overhead with no proportional
+unblocking. **Smoke becomes the canonical Phase 1 proving ground;
+`drannarosen/astr201` standup defers to a triggered task.**
 
-3. **Port `callouts.scss` + `lecture-cards.scss`** to
-   `@sophie/components` CSS Modules + tokens. These are the two
-   most-used in existing courses; porting them validates the v4
-   `@theme` flow under real usage.
+### 4.1 Component build sequence (class-coverage trios)
 
-4. **Build the first 2–3 new v1 components** against ADR 0027's
-   per-instance hydration pattern. Each gets the full vertical-slice
-   loop (component + tests + e2e in the consumer repo).
+A survey of `spoiler-alerts.mdx` (catalogued in
+[docs/plans/2026-05-10-phase-1-component-trios.md](../../plans/2026-05-10-phase-1-component-trios.md))
+surfaces 9 component candidates beyond the Phase 0 trio
+(Callout, Figure, InteractiveCallout). Sequenced as three
+class-coverage trios so each batch validates a different shape
+of the [ADR 0004 contract](../decisions/0004-component-contract-revisions.md)
++ [ADR 0027 hydration pattern](../decisions/0027-mdx-render-boundary-prop-threading.md):
 
-5. **Add Storybook** when the third component lands and the props/
-   composition repetition justifies isolation.
+| Trio | Components | Class coverage | SCSS port |
+|---|---|---|---|
+| **2 (next)** | `<LearningObjectives>` · `<LectureCard>` · `<Predict>` | chapter primitive · structural · persistence-bearing | `lecture-cards.scss`; tokens in `@sophie/theme` already |
+| **3** | `<CollapsibleCard>` · `<KeyEquation>` · `<MiniGlossary>` | structural · content · structural | `collapsible-cards.scss`, `glossary.scss` |
+| **4** | `<PullQuote>` · `<Equation>` (numbered/captioned KaTeX wrapper) · Callout variant extensions (`misconception`, `checkpoint`) | content · content · contract-extension | New design (no classroom SCSS); Callout extension uses existing `callouts.scss` patterns |
 
-6. **First non-Anna PR triggers the CLA setup task** (see §6).
+Each component PR carries: contract-conformance test, axe-core
+test, e2e test in smoke that renders the actual chapter pattern,
+Storybook story (from the third component in Trio 2 onward).
+Trio composition is fixed; ordering within a trio is flexible.
+Trio 1 in this numbering is the Phase 0 trio
+(Callout, Figure, InteractiveCallout) — already shipped.
+
+**Why Predict in the next trio:** it's the only persistence-bearing
+component in the 9, so it exercises ADR 0027 a second time.
+Phase 0 proved the per-instance hydration pattern for
+InteractiveCallout; Predict's shape (form, multi-field state,
+gated reveal) is different enough that a second proof point
+matters before committing to the rest.
+
+### 4.2 Storybook activates with Trio 2 component #3 (Predict)
+
+The original [§4 priority 5](#45-original-ordering-superseded-2026-05-10)
+said Storybook lands at the third v1 component. Counting from
+Phase 0's three already-shipped, Predict is the sixth — but it's
+also the first new persistence-bearing component, where
+isolation pays. From Predict onward, every component PR
+includes its Storybook story.
+
+### 4.3 SCSS port mechanics
+
+Per [ADR 0005](../decisions/0005-theming-three-layers.md)'s
+"port not redesign" rule + [ADR 0026](../decisions/0026-tailwind-v4-css-first.md)'s
+v4 CSS-first commitment. Done **incrementally per-component**:
+each component PR brings its source SCSS file from
+`astr101-sp26/assets/theme/` and translates it to a CSS Module
+under `packages/components/src/components/<Name>/`. Shared tokens
+already live in `@sophie/theme`; component PRs add new tokens
+(rare) only when the source SCSS uses one that doesn't exist yet.
+Full playbook in
+[docs/plans/2026-05-10-phase-1-component-trios.md § SCSS porting playbook](../../plans/2026-05-10-phase-1-component-trios.md#scss-porting-playbook).
+
+### 4.4 Triggered / deferred
+
+- **`drannarosen/astr201` consumer repo standup** — deferred.
+  Trigger: smoke outgrows "single chapter" *or* publishing
+  pressure (real students using the textbook in fall 2026).
+  Until then, smoke is canonical.
+- **CLA setup** — triggered task; fires on first non-Anna PR per
+  [§6.1](#61-cla-on-first-non-anna-pr).
+- **Visual regression** — Phase 1 end / Phase 2.
+- **`@sophie/cosmic-playground`** — when first `<Demo>` lands.
+
+### 4.5 Original ordering (superseded 2026-05-10)
+
+For context, the original plan as written before Phase 1 step 1
+shipped:
+
+1. Resolve the Linux CI build failure (see §5). ✅ Done 2026-05-10.
+2. Stand up `drannarosen/astr201` with a single chapter migrated
+   from `astr201-sp26`. → Deferred per §4.4.
+3. Port `callouts.scss` + `lecture-cards.scss`. → Replaced by
+   incremental per-component port in §4.3.
+4. Build the first 2-3 new v1 components against ADR 0027's
+   per-instance hydration pattern. → Reshaped as the trio
+   sequence in §4.1.
+5. Add Storybook when the third component lands. → Reframed as
+   "lands with Trio 2 component #3 (Predict)" per §4.2.
+6. First non-Anna PR triggers the CLA setup task. → Unchanged;
+   see §6.1.
 
 ## 5. Known issues
 
