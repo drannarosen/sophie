@@ -1,0 +1,40 @@
+.row {
+  display: inline-grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-ic-gap, 0.5rem);
+  align-items: baseline;
+}
+
+.checkbox {
+  margin: 0;
+  inline-size: var(--size-ic-checkbox, 1rem);
+  block-size: var(--size-ic-checkbox, 1rem);
+  cursor: pointer;
+}
+
+.checkbox:disabled {
+  cursor: progress;
+  opacity: 0.5;
+}
+
+.label {
+  cursor: pointer;
+  line-height: 1.5;
+}
+
+.checkbox:disabled + .label {
+  cursor: progress;
+}
+
+.checkbox:checked + .label {
+  color: var(--color-ic-checked, var(--color-text-muted, inherit));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .checkbox,
+  .label {
+    transition:
+      color 120ms ease-out,
+      opacity 120ms ease-out;
+  }
+}

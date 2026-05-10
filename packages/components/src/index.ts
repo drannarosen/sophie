@@ -20,6 +20,12 @@ export {
   figureInlineContract,
   figureRegistryContract,
 } from "./components/Figure/index.ts";
+export type { InteractiveCheckboxProps } from "./components/InteractiveCheckbox/InteractiveCheckbox.schema.ts";
+export {
+  InteractiveCheckbox,
+  InteractiveCheckboxPropsSchema,
+  interactiveCheckboxContract,
+} from "./components/InteractiveCheckbox/index.ts";
 export type {
   LearningObjectivesProps,
   LearningObjectivesState,
@@ -50,6 +56,7 @@ export type {
   BroadcastMessage,
   FigureEntry,
   FigureRegistry,
+  InteractiveControlProps,
   InteractiveStatus,
   Profile,
   ResponseStore,

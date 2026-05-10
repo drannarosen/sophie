@@ -13,6 +13,7 @@ export {
 } from "./ResponseStore.ts";
 export type { SyncedResponseStore } from "./SyncedResponseStore.ts";
 export type {
+  InteractiveControlProps,
   InteractiveStatus,
   UseInteractiveResult,
 } from "./useInteractive.ts";

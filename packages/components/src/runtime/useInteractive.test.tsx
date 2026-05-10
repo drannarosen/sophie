@@ -43,6 +43,39 @@ function Probe({
 }
 
 describe("useInteractive", () => {
+  it("returns hydrated=false + controlProps={disabled:true, aria-busy:true} during loading; flips both after IDB hydrate", async () => {
+    function HydrationProbe({ keyName }: { keyName: string }) {
+      const { hydrated, controlProps } = useInteractive(
+        "hydration-course",
+        "hydration-chapter",
+        keyName,
+        false
+      );
+      return (
+        <div>
+          <span data-testid='hydrated'>{String(hydrated)}</span>
+          <span data-testid='cp-disabled'>{String(controlProps.disabled)}</span>
+          <span data-testid='cp-busy'>{String(controlProps["aria-busy"])}</span>
+        </div>
+      );
+    }
+    render(
+      <ProfileWrapper>
+        <HydrationProbe keyName='probe:hydration' />
+      </ProfileWrapper>
+    );
+    // Synchronous: at first render, IDB fetch hasn't resolved.
+    expect(screen.getByTestId("hydrated").textContent).toBe("false");
+    expect(screen.getByTestId("cp-disabled").textContent).toBe("true");
+    expect(screen.getByTestId("cp-busy").textContent).toBe("true");
+    // After hydration: all flip.
+    await waitFor(() =>
+      expect(screen.getByTestId("hydrated").textContent).toBe("true")
+    );
+    expect(screen.getByTestId("cp-disabled").textContent).toBe("false");
+    expect(screen.getByTestId("cp-busy").textContent).toBe("false");
+  });
+
   it("starts in loading and transitions to ready after IDB hydrate", async () => {
     render(
       <ProfileWrapper>
