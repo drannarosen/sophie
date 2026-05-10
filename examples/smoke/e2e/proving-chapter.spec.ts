@@ -20,12 +20,18 @@ test.describe("Phase 0 vertical-slice acceptance — spoiler-alerts chapter", ()
 
     // Static structure expectations (matches @sophie/components README's
     // 14→4 mapping table for this chapter).
-    // Was 36 in Phase 0; dropped to 35 in Trio 2 when the Prediction
-    // Moment Callout migrated to <Predict> (which renders as a section,
-    // not role="note"). See examples/smoke/e2e/predict.spec.ts for the
-    // <Predict> coverage.
-    await expect(page.locator("[role='note']")).toHaveCount(35);
-    await expect(page.locator("figure")).toHaveCount(19);
+    // 36 → 35 in Trio 2 (Predict migration, renders as section, not
+    // role=note). 35 → 31 in Trio 3 #1 when the four "Deep Dive: …"
+    // Callouts migrated to <CollapsibleCard> (which renders as a Radix
+    // Collapsible — a button + region, not role=note). See
+    // examples/smoke/e2e/collapsible-card.spec.ts for coverage.
+    await expect(page.locator("[role='note']")).toHaveCount(31);
+    // 19 → 18 in Trio 3 #1 — one figure ("standard-candles") lives inside
+    // the "Deep Dive: How the Distance Ladder Works" CollapsibleCard,
+    // which is collapsed by default. Radix Collapsible unmounts content
+    // when closed, so the figure isn't in the DOM until the student opens
+    // the card.
+    await expect(page.locator("figure")).toHaveCount(18);
     await expect(page.locator("table")).toHaveCount(9);
 
     // KaTeX rendered all math (no raw `$...$` left behind).

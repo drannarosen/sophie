@@ -36,6 +36,7 @@
     "clean": "rm -rf dist .turbo storybook-static"
   },
   "dependencies": {
+    "@radix-ui/react-collapsible": "^1.1.12",
     "@sophie/core": "workspace:*",
     "@sophie/theme": "workspace:*",
     "idb": "^8.0.3",

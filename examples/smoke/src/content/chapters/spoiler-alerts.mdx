@@ -7,6 +7,7 @@ tags: ["course-overview", "foundations"]
 ---
 
 import {
+  CollapsibleCard,
   ComprehensionGate,
   ConfidenceCheck,
   EffortLog,
@@ -401,13 +402,19 @@ Take 60 seconds. Stretch. Then continue—watching for the pattern, not memorizi
 **Key insight:** Color isn't decoration—it's encoded physics. Specific wavelengths = specific atoms = specific conditions.
 </aside>
 
-<Callout variant="info" title="Deep Dive: Hydrogen's Atomic Fingerprint">
+<CollapsibleCard
+  client:load
+  course="smoke"
+  chapter="spoiler-alerts"
+  id="hydrogen-fingerprint"
+  title="Deep Dive: Hydrogen's Atomic Fingerprint"
+>
 The red glow comes from hydrogen's "H-alpha" (Hα) transition at 656.3 nm. When an electron in a hydrogen atom drops from the n=3 to n=2 energy level, it releases a photon with exactly this wavelength. This isn't arbitrary—it's set by quantum mechanics. (We'll explore atomic transitions when we develop the physics of spectra.)
 
 The oxygen lines ([OIII] at 496–501 nm) come from "forbidden" transitions that only occur in extremely low-density gas—conditions impossible in Earth laboratories but common in space. The very presence of these lines tells us about gas density.
 
 **Key insight for now:** Each element has a unique "fingerprint" of emission wavelengths. Detecting specific wavelengths tells you which atoms are present.
-</Callout>
+</CollapsibleCard>
 
 *We'll return to why these exact wavelengths appear once we've met spectra.*
 
@@ -431,7 +438,13 @@ The oxygen lines ([OIII] at 496–501 nm) come from "forbidden" transitions that
 
 **Key insight:** Distance is *inferred* from brightness. To measure farther, we need brighter standard candles.
 
-<Callout variant="info" title="Deep Dive: How the Distance Ladder Works">
+<CollapsibleCard
+  client:load
+  course="smoke"
+  chapter="spoiler-alerts"
+  id="distance-ladder"
+  title="Deep Dive: How the Distance Ladder Works"
+>
 The **cosmic distance ladder** works in steps:
 
 1. **Radar** (Solar System): Bounce radio waves off planets; measure round-trip time → distance directly
@@ -444,7 +457,7 @@ Each rung calibrates the next. Parallax calibrates Cepheids; Cepheids calibrate 
 The ladder's power comes from its self-consistency: multiple methods overlap in certain distance ranges, allowing cross-checks.
 
 <Figure name="standard-candles" />
-</Callout>
+</CollapsibleCard>
 
 **Transition:** Distance tells us *where* things are. But what are they *made of*?
 
@@ -466,7 +479,13 @@ The ladder's power comes from its self-consistency: multiple methods overlap in 
 
 **Key insight:** Stars don't just shine—they manufacture the periodic table.
 
-<Callout variant="info" title="Deep Dive: Nucleosynthesis Sites">
+<CollapsibleCard
+  client:load
+  course="smoke"
+  chapter="spoiler-alerts"
+  id="nucleosynthesis-sites"
+  title="Deep Dive: Nucleosynthesis Sites"
+>
 - **Big Bang nucleosynthesis** (~3 minutes after the Big Bang): Produced H, He, trace Li
 - **Stellar core fusion** (over millions–billions of years): H → He → C → O → ... up to Fe
 - **Type Ia supernovae**: Major producers of iron-peak elements—each explosion synthesizes ~0.6 $M_\odot$ of ⁵⁶Ni (which decays to ⁵⁶Fe)
@@ -474,7 +493,7 @@ The ladder's power comes from its self-consistency: multiple methods overlap in 
 - **Neutron star mergers**: Primary site for r-process elements (Au, Pt, U)—confirmed in 2017
 
 Iron (Fe) is special: it's the most tightly bound nucleus. Fusion *to* iron releases energy; fusion *beyond* iron requires energy input. This is why iron is the end of the line for stellar core burning—heavier elements require explosive environments.
-</Callout>
+</CollapsibleCard>
 
 **Transition:** We've mentioned "wavelengths" and "spectra" several times. What exactly *is* a spectrum?
 
@@ -569,13 +588,19 @@ The next three spoilers show how wavelength *choice* reveals different physics i
 
 **Key insight:** Same object + different wavelength = different physical component revealed.
 
-<Callout variant="info" title="Deep Dive: The 21-cm Hydrogen Line">
+<CollapsibleCard
+  client:load
+  course="smoke"
+  chapter="spoiler-alerts"
+  id="hydrogen-21cm"
+  title="Deep Dive: The 21-cm Hydrogen Line"
+>
 The **21-cm line** arises from the hyperfine structure of hydrogen. The electron and proton can have parallel or anti-parallel spins. When an electron "flips" from parallel to anti-parallel, it emits a photon with wavelength 21.1 cm (frequency 1420 MHz).
 
 This transition is "forbidden"—extremely unlikely on short timescales—but there's so much hydrogen in the universe that we detect it easily. The 21-cm line traces *neutral atomic* hydrogen specifically; ionized hydrogen doesn't emit it.
 
 **Doppler connection:** The 21-cm line has a precise rest wavelength. When hydrogen gas is moving toward or away from us, the line shifts—and the amount of shift tells us how fast the gas is moving. This is how astronomers measure **galaxy rotation curves**: hydrogen on one side of a spinning galaxy is blueshifted (approaching); hydrogen on the other side is redshifted (receding). The Doppler effect turns a single spectral line into a velocity map.
-</Callout>
+</CollapsibleCard>
 
 **Transition:** Optical shows stars, but what if dust is blocking our view of where stars are *born*?
 
