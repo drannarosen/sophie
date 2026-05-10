@@ -5,15 +5,19 @@ export default defineConfig({
     index: "src/index.ts",
     "contract/index": "src/contract/index.ts",
     "runtime/index": "src/runtime/index.ts",
-    "components/Callout/index": "src/components/Callout/index.ts",
-    "components/Figure/index": "src/components/Figure/index.ts",
   },
   format: ["esm"],
   target: "es2022",
   dts: true,
   sourcemap: true,
   clean: true,
-  splitting: false,
+  // splitting: true so shared modules (useInteractive's stores/channels Maps,
+  // contracts, etc.) are deduped across `index`, `runtime/index`, and
+  // `contract/index` entries. Without this, a consumer importing both
+  // `@sophie/components` and `@sophie/components/runtime` gets two
+  // independent module-level singletons, which would break BroadcastChannel
+  // sync and IDB write coordination. Caught in code review 2026-05-09.
+  splitting: true,
   external: [
     "react",
     "react-dom",

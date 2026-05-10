@@ -3,10 +3,23 @@
 export type {
   CalloutProps,
   CalloutVariant,
+  InteractiveCalloutProps,
 } from "./components/Callout/Callout.schema.ts";
-export { Callout, calloutContract } from "./components/Callout/index.ts";
+export {
+  Callout,
+  CalloutPropsSchema,
+  calloutContract,
+  InteractiveCallout,
+  InteractiveCalloutPropsSchema,
+  interactiveCalloutContract,
+} from "./components/Callout/index.ts";
 export type { FigureProps } from "./components/Figure/Figure.schema.ts";
-export { Figure, figureContract } from "./components/Figure/index.ts";
+export {
+  Figure,
+  FigurePropsSchema,
+  figureInlineContract,
+  figureRegistryContract,
+} from "./components/Figure/index.ts";
 
 // Contract
 export type {
@@ -19,6 +32,8 @@ export {
   listRegistered,
   registerComponent,
 } from "./contract/index.ts";
+
+// Runtime — public surface re-exported from runtime/index.ts
 export type {
   BroadcastChannelLayer,
   BroadcastMessage,
@@ -27,18 +42,12 @@ export type {
   InteractiveStatus,
   Profile,
   ResponseStore,
-  SophieConfig,
   SyncedResponseStore,
   UseInteractiveResult,
 } from "./runtime/index.ts";
-// Runtime — public surface re-exported from runtime/index.ts
 export {
-  FigureRegistryProvider,
   IndexedDBResponseStore,
   ProfileProvider,
-  SophieConfigProvider,
-  useFigureRegistry,
   useInteractive,
   useProfile,
-  useSophieConfig,
 } from "./runtime/index.ts";

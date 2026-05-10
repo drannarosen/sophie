@@ -12,7 +12,12 @@ dist/
 coverage/
 playwright-report/
 test-results/
+.playwright-mcp/
 .vitest-cache/
+
+# transient screenshots from interactive verification
+step-7-acceptance.png
+*.acceptance.png
 
 # MyST docs build output (top-level logs and docs/website/_build/ both)
 _build/

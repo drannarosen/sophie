@@ -9,7 +9,6 @@ import { IndexedDBResponseStore } from "./IndexedDBResponseStore.ts";
 import { useProfile } from "./ProfileContext.tsx";
 import type { ResponseStore } from "./ResponseStore.ts";
 import { compositeKey } from "./ResponseStore.ts";
-import { useSophieConfig } from "./SophieConfig.tsx";
 
 export type InteractiveStatus = "loading" | "ready" | "error";
 
@@ -49,11 +48,27 @@ export function __resetRuntimeCaches(): void {
   channels.clear();
 }
 
+/**
+ * Persistence-bearing hook backing all `<Interactive*>` components.
+ *
+ * `course` and `chapter` are required arguments — they identify which
+ * IndexedDB and which BroadcastChannel this hook reads/writes through.
+ * `profile` is read from `ProfileContext` so a runtime profile toggle
+ * (Phase 5) can flip student/instructor mode without re-rendering every
+ * call site.
+ *
+ * Per ADR 0007 + ADR 0027: SophieConfig context was removed because
+ * Astro 6 + @astrojs/mdx 5 renders MDX content as Astro server-side;
+ * React components inside MDX get their own SSR pass and don't see
+ * context providers from `<SophieChapter>`. Course/chapter therefore
+ * must be threaded as props.
+ */
 export function useInteractive<T>(
+  course: string,
+  chapter: string,
   componentKey: string,
   initial: T
 ): UseInteractiveResult<T> {
-  const { course, chapter } = useSophieConfig();
   const profile = useProfile();
   const senderId = useId();
 
@@ -61,11 +76,20 @@ export function useInteractive<T>(
   const [status, setStatus] = useState<InteractiveStatus>("loading");
   const [error, setError] = useState<Error | null>(null);
 
-  // Keep latest value in a ref so the broadcast handler doesn't see stale state.
   const valueRef = useRef(value);
   valueRef.current = value;
 
-  // Hydrate from IndexedDB on mount / key change.
+  // Tracks whether the component is mounted; used to guard async write
+  // callbacks from calling setError/setStatus after unmount. Caught in
+  // code review 2026-05-09.
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     const store = getStore(course);
@@ -75,7 +99,10 @@ export function useInteractive<T>(
       .get<T>(profile, chapter, componentKey)
       .then((persisted) => {
         if (cancelled) return;
-        if (persisted !== undefined) setLocalValue(persisted);
+        // Reset to initial when the new key has no stored value — otherwise
+        // the previous key's state lingers across (course, chapter, profile,
+        // key) changes. Caught in code review 2026-05-09.
+        setLocalValue(persisted ?? initial);
         setStatus("ready");
       })
       .catch((err: unknown) => {
@@ -86,9 +113,8 @@ export function useInteractive<T>(
     return () => {
       cancelled = true;
     };
-  }, [course, chapter, profile, componentKey]);
+  }, [course, chapter, profile, componentKey, initial]);
 
-  // Subscribe to BroadcastChannel for cross-tab updates.
   useEffect(() => {
     const channel = getChannel(course, chapter);
     const fullKey = compositeKey(profile, chapter, componentKey);
@@ -110,10 +136,12 @@ export function useInteractive<T>(
         .set(profile, chapter, componentKey, next)
         .then(() => {
           channel.post({ senderId, key: fullKey, value: next });
+          if (!mountedRef.current) return;
           setError(null);
           setStatus("ready");
         })
         .catch((err: unknown) => {
+          if (!mountedRef.current) return;
           setError(err instanceof Error ? err : new Error(String(err)));
           setStatus("error");
         });

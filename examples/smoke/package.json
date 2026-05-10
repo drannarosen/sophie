@@ -1,0 +1,36 @@
+{
+  "name": "smoke",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Sophie Phase 0 smoke target: real ASTR 201 first reading rendered through @sophie/* via workspace:*. Throwaway; replaced by drannarosen/astr201 in Phase 1.",
+  "license": "AGPL-3.0-or-later",
+  "author": "Anna Rosen",
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "typecheck": "astro check",
+    "figures": "tsx scripts/build-figures.ts && biome format --write src/content/figures.ts",
+    "sophie:audit": "sophie audit src/content/chapters/spoiler-alerts.mdx"
+  },
+  "dependencies": {
+    "@astrojs/mdx": "^5.0.4",
+    "@astrojs/react": "^5.0.4",
+    "@sophie/astro": "workspace:*",
+    "@sophie/components": "workspace:*",
+    "@sophie/core": "workspace:*",
+    "@sophie/theme": "workspace:*",
+    "astro": "^6.3.1",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.2",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.3",
+    "yaml": "^2.8.4"
+  }
+}

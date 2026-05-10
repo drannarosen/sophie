@@ -1,50 +1,76 @@
 import { useId } from "react";
 import { useInteractive } from "../../runtime/useInteractive.ts";
 import styles from "./Callout.module.css.js";
-import type { CalloutProps } from "./Callout.schema.ts";
+import type {
+  CalloutProps,
+  CalloutVariant,
+  InteractiveCalloutProps,
+} from "./Callout.schema.ts";
 
-const variantTitles: Record<NonNullable<CalloutProps["variant"]>, string> = {
+const variantTitles: Record<CalloutVariant, string> = {
   info: "Note",
   warning: "Warning",
   tip: "Tip",
   caution: "Caution",
 };
 
-export function Callout({
-  variant = "info",
-  title,
-  id,
-  interactive = false,
-  children,
-}: CalloutProps) {
+export function Callout({ variant = "info", title, children }: CalloutProps) {
   const accessibleTitle = title ?? variantTitles[variant];
   const className = `${styles.callout} ${styles[variant] ?? ""}`.trim();
 
   return (
     <aside role='note' aria-label={accessibleTitle} className={className}>
-      {(title !== undefined || interactive) && (
-        <p className={styles.title}>{accessibleTitle}</p>
-      )}
+      {title !== undefined && <p className={styles.title}>{accessibleTitle}</p>}
       <div className={styles.body}>{children}</div>
-      {interactive && id !== undefined && (
-        <ReviewedRow calloutId={id} variant={variant} />
-      )}
-      {interactive && id === undefined && (
-        <DevWarningMissingId variant={variant} />
-      )}
+    </aside>
+  );
+}
+
+/**
+ * Persistence-bearing Callout. Use with `client:load` in MDX so each
+ * instance becomes its own React island. course/chapter/id thread the
+ * state into per-course IndexedDB.
+ */
+export function InteractiveCallout({
+  course,
+  chapter,
+  id,
+  variant = "info",
+  title,
+  children,
+}: InteractiveCalloutProps) {
+  const accessibleTitle = title ?? variantTitles[variant];
+  const className = `${styles.callout} ${styles[variant] ?? ""}`.trim();
+
+  return (
+    <aside role='note' aria-label={accessibleTitle} className={className}>
+      <p className={styles.title}>{accessibleTitle}</p>
+      <div className={styles.body}>{children}</div>
+      <ReviewedRow
+        course={course}
+        chapter={chapter}
+        calloutId={id}
+        variant={variant}
+      />
     </aside>
   );
 }
 
 function ReviewedRow({
+  course,
+  chapter,
   calloutId,
   variant,
 }: {
+  course: string;
+  chapter: string;
   calloutId: string;
-  variant: NonNullable<CalloutProps["variant"]>;
+  variant: CalloutVariant;
 }) {
   const checkboxId = useId();
   const { value: reviewed, setValue: setReviewed } = useInteractive(
+    course,
+    chapter,
     `callout:${calloutId}:reviewed`,
     false
   );
@@ -68,13 +94,4 @@ function ReviewedRow({
       </label>
     </div>
   );
-}
-
-function DevWarningMissingId({ variant }: { variant: string }) {
-  if (process.env.NODE_ENV !== "production") {
-    console.warn(
-      `[@sophie/components] <Callout variant="${variant}" interactive> requires an \`id\` prop for persistence; rendering without the checkbox. Add an id to enable review-tracking.`
-    );
-  }
-  return null;
 }

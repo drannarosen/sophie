@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    "types": ["node", "astro/client"],
+    "ignoreDeprecations": "6.0",
+    "allowImportingTsExtensions": true,
+    "lib": ["es2022", "dom", "dom.iterable"]
+  },
+  "include": [".astro/types.d.ts", "src", "scripts", "astro.config.ts"],
+  "exclude": ["dist", "node_modules", "public"]
+}

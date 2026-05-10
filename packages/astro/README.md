@@ -2,11 +2,9 @@
 
 The single Astro coupling point for Sophie, per
 [ADR 0001](../../docs/website/decisions/0001-platform-not-monorepo.md).
-Wires `@astrojs/mdx` + `@astrojs/react` + the Sophie component
-mapping. Provides `<SophieChapter>`, the client wrapper that
-side-effect-loads theme CSS and KaTeX CSS and threads the runtime
-contexts (`SophieConfig`, `Profile`, `FigureRegistry`) into every
-chapter render.
+Wires `@astrojs/mdx` + `@astrojs/react` + the Sophie MDX plugin chain
++ Vite stopgaps + `<SophieChapter>` (CSS shell) + `makeStaticComponents`
+(component-map factory).
 
 Built against Astro 6 (was Astro 5 originally — see
 [ADR 0002 revision note](../../docs/website/decisions/0002-renderer-astro-mdx.md)).
@@ -15,10 +13,10 @@ Built against Astro 6 (was Astro 5 originally — see
 
 | Subpath | What it exports |
 | --- | --- |
-| `@sophie/astro` | `defineSophieIntegration()` — the integration factory |
-| `@sophie/astro/client` | `<SophieChapter>` — provider wrapper + CSS side-effects |
+| `@sophie/astro` | `defineSophieIntegration()`, `makeStaticComponents()` |
+| `@sophie/astro/client` | `<SophieChapter>` — CSS-shell wrapper |
 
-## Quick recipe (for a consumer Astro app)
+## Quick recipe (consumer Astro app)
 
 `astro.config.ts`:
 
@@ -32,16 +30,20 @@ export default defineConfig({
 ```
 
 `src/content.config.ts` — schema validation via Astro Content
-Collections (we lean on Astro's native validator instead of
-duplicating it):
+Collections (we lean on Astro's native validator instead of duplicating
+it):
 
 ```ts
 import { defineCollection } from "astro:content";
+import { glob } from "astro/loaders";
 import { ChapterSchema } from "@sophie/core/schema";
 
-export const collections = {
-  chapters: defineCollection({ type: "content", schema: ChapterSchema }),
-};
+const chapters = defineCollection({
+  loader: glob({ pattern: "**/*.mdx", base: "./src/content/chapters" }),
+  schema: ChapterSchema,
+});
+
+export const collections = { chapters };
 ```
 
 `src/layouts/ChapterLayout.astro`:
@@ -57,48 +59,110 @@ const { frontmatter } = Astro.props;
     <title>{frontmatter.title}</title>
   </head>
   <body>
-    <SophieChapter
-      course="astr201"
-      chapter={frontmatter.slug}
-      figures={frontmatter.figures}
-      client:load
-    >
-      <slot />
+    <SophieChapter client:load>
+      <main><slot /></main>
     </SophieChapter>
   </body>
 </html>
 ```
 
-That's the full wiring: integration in `astro.config.ts`, schema in
-`content.config.ts`, `<SophieChapter>` in the layout.
+`src/pages/chapters/[...slug].astro`:
+
+```astro
+---
+import { makeStaticComponents } from "@sophie/astro";
+import { getCollection, render } from "astro:content";
+import { figures } from "../../content/figures";
+import ChapterLayout from "../../layouts/ChapterLayout.astro";
+
+// Module-level: built once per page-module, shared across all rendered
+// chapters that pass through this route.
+const components = makeStaticComponents({ figures });
+
+export async function getStaticPaths() {
+  const chapters = await getCollection("chapters");
+  return chapters.map((chapter) => ({
+    params: { slug: chapter.id },
+    props: { chapter },
+  }));
+}
+
+const { chapter } = Astro.props;
+const { Content } = await render(chapter);
+---
+<ChapterLayout frontmatter={chapter.data}>
+  <Content components={components} />
+</ChapterLayout>
+```
+
+For interactive (persistence-bearing) callouts, the MDX file imports
+the component directly and uses `client:load` per call-site:
+
+```mdx
+import { InteractiveCallout } from "@sophie/components";
+
+<InteractiveCallout
+  client:load
+  course="astr201"
+  chapter="spoiler-alerts"
+  id="check-yourself-1"
+  variant="tip"
+>
+  Mark when reviewed.
+</InteractiveCallout>
+```
 
 ## Behavior
 
-`defineSophieIntegration()` returns an `AstroIntegration` that:
+`defineSophieIntegration()` returns an `AstroIntegration` that, on
+`astro:config:setup`:
 
 1. Adds `@astrojs/mdx` with:
-   - `remarkPlugins: [remarkGfm, remarkFrontmatter]`
+   - `remarkPlugins: [remarkGfm, remarkFrontmatter, remarkMath]`
    - `rehypePlugins: [rehypeKatex]`
-   - `components: { Callout, Figure }` (from `@sophie/components`)
 2. Adds `@astrojs/react`.
-3. Logs `Sophie integration loaded (MDX + React)` at info level.
+3. Sets `vite.ssr.noExternal: ["@sophie/astro", "@sophie/components"]`
+   so Vite handles the CSS-Module wrappers in workspace packages
+   correctly during SSR.
+4. Sets `vite.build.rollupOptions.external: ["vite/internal"]` to dodge
+   a transient `@vitejs/plugin-react@5.2.0` × Vite-7.3.3 incompatibility
+   (the plugin does `await import("vite/internal")` and Vite 7 doesn't
+   expose that subpath; rollup's commonjs-resolver crashes at build).
+   Removable when upstream ships a fix.
+5. Logs `Sophie integration loaded (MDX + React)` at info level.
 
-`<SophieChapter>` side-effect-imports `@sophie/theme/css` and
-`katex/dist/katex.min.css`, then wraps `children` in three
-providers in this order: `SophieConfigProvider` → `ProfileProvider`
-→ `FigureRegistryProvider`.
+`<SophieChapter>` side-effect-imports `@sophie/theme/css`,
+`@sophie/components/styles.css`, and `katex/dist/katex.min.css`. It
+renders its children inside a React fragment.
 
-## Phase 0 island strategy
+`makeStaticComponents({ figures })` returns the components map for
+`<Content components={…}>`. It includes `<Callout>` (passed through
+unchanged) and `<Figure>` (closure-bound to the figure registry so MDX
+call sites can write `<Figure name="…" />` without manual registry
+plumbing).
 
-**One-big-island-per-chapter.** Every chapter is wrapped in
-`<SophieChapter ... client:load>`, putting the entire chapter content
-into a single React tree. Trade-off: heavier JS payload than
-per-island hydration, but contexts propagate correctly and there's
-zero magic. Phase 1+ optimizes to per-island hydration where it
-matters.
+## Architecture note (ADR 0027)
+
+Step 6 originally documented a "one-big-island-per-chapter" pattern
+with `SophieConfig`, `Profile`, and `FigureRegistry` contexts threaded
+through `<SophieChapter>`. Step 7's vertical-slice acceptance proved
+this doesn't work: Astro 6 + `@astrojs/mdx` 5 renders MDX content as
+Astro server-side, so React components inside MDX get isolated SSR
+passes outside any `client:load` parent's React tree. Context providers
+don't reach them.
+
+Phase 0 (post-pivot) threads course/chapter as **props** on
+`<InteractiveCallout>`, the figure registry via the components map, and
+keeps `<SophieChapter>` as a CSS-shell wrapper. Full rationale and
+alternatives are in
+[ADR 0027](../../docs/website/decisions/0027-mdx-render-boundary-prop-threading.md).
 
 ## Deferred
 
+- Custom Astro renderer / remark plugin that auto-injects `client:load`
+  + course/chapter props on `<Interactive*>` JSX so chapter authors
+  don't write them manually (Phase 1+, before drannarosen/astr201's
+  first chapter ships).
 - Reveal.js / slides pipeline (Phase 1+).
 - Cosmic Playground iframe + postMessage (Phase 1+).
 - Shiki / rehype-pretty-code (Phase 1+; no code in proving chapter).
@@ -109,5 +173,3 @@ matters.
 - Pagefind search (Phase 2).
 - Custom audit hooks for Tier 1/2 checks (Phase 3 — Astro Content
   Collections cover Phase 0 schema needs).
-- Per-island provider auto-injection via custom Astro renderer
-  (Phase 1+).

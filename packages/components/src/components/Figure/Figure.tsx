@@ -1,10 +1,19 @@
-import { useFigureRegistry } from "../../runtime/FigureRegistry.tsx";
+import type { FigureRegistry } from "../../runtime/index.ts";
 import styles from "./Figure.module.css.js";
 import type { FigureProps } from "./Figure.schema.ts";
 
-export function Figure(props: FigureProps) {
+export type FigureComponentProps = FigureProps & { registry?: FigureRegistry };
+
+export function Figure(props: FigureComponentProps) {
   if ("name" in props) {
-    return <FigureFromRegistry {...props} />;
+    return (
+      <FigureFromRegistry
+        name={props.name}
+        registry={props.registry}
+        caption={props.caption}
+        credit={props.credit}
+      />
+    );
   }
   return (
     <FigureBody
@@ -18,19 +27,20 @@ export function Figure(props: FigureProps) {
 
 function FigureFromRegistry({
   name,
+  registry,
   caption,
   credit,
 }: {
   name: string;
+  registry: FigureRegistry | undefined;
   caption?: string;
   credit?: string;
 }) {
-  const registry = useFigureRegistry();
-  const entry = registry[name];
+  const entry = registry?.[name];
   if (entry === undefined) {
     if (process.env.NODE_ENV !== "production") {
       console.error(
-        `[@sophie/components] <Figure name="${name}"> not found in FigureRegistry. Did you set <FigureRegistryProvider> with the chapter's frontmatter figures?`
+        `[@sophie/components] <Figure name="${name}"> not found in registry. Pass a registry prop (or wrap chapter content with <Content components={makeStaticComponents({ figures })} />).`
       );
     }
     return (

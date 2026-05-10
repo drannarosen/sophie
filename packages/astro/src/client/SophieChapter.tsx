@@ -1,43 +1,32 @@
 import "@sophie/theme/css";
+import "@sophie/components/styles.css";
 import "katex/dist/katex.min.css";
 
-import {
-  type FigureRegistry,
-  FigureRegistryProvider,
-  type Profile,
-  ProfileProvider,
-  SophieConfigProvider,
-} from "@sophie/components/runtime";
 import type { ReactNode } from "react";
 
 export interface SophieChapterProps {
-  course: string;
-  chapter: string;
-  figures?: FigureRegistry;
-  profile?: Profile;
   children: ReactNode;
 }
 
 /**
- * Wraps a chapter's MDX content in Sophie's three runtime contexts and
- * loads the global theme + KaTeX stylesheets as a side effect of being
- * imported. Use as the outermost wrapper of chapter content with
- * `client:load` so the entire chapter renders inside one React tree.
+ * Chapter wrapper. Side-effect-loads the global CSS (theme, component
+ * bundle, KaTeX) on the first import in the page, then renders children.
+ *
+ * **Architectural note (per ADR 0027):**
+ * Astro 6 + @astrojs/mdx 5 renders MDX content as Astro server-side;
+ * React components inside MDX get isolated SSR passes that don't see
+ * context providers from this wrapper. Threading data through provider
+ * context is therefore not viable for MDX-rendered components.
+ * Course/chapter/figures are passed as props on the persistence-bearing
+ * components (`<InteractiveCallout course chapter id>`); the figure
+ * registry is passed via `<Content components={makeStaticComponents({
+ * figures })} />`.
+ *
+ * No `<ProfileProvider>` here: it can't reach the per-instance React
+ * islands either. Phase 5's instructor-mode toggle will need a separate
+ * mechanism (most likely a per-island prop driven by a page-level state
+ * source). For Phase 0, profile defaults to `"student"` everywhere.
  */
-export function SophieChapter({
-  course,
-  chapter,
-  figures = {},
-  profile = "student",
-  children,
-}: SophieChapterProps) {
-  return (
-    <SophieConfigProvider course={course} chapter={chapter}>
-      <ProfileProvider profile={profile}>
-        <FigureRegistryProvider registry={figures}>
-          {children}
-        </FigureRegistryProvider>
-      </ProfileProvider>
-    </SophieConfigProvider>
-  );
+export function SophieChapter({ children }: SophieChapterProps) {
+  return <>{children}</>;
 }

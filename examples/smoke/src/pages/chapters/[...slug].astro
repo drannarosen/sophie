@@ -1,0 +1,26 @@
+---
+import { makeStaticComponents } from "@sophie/astro";
+import { getCollection, render } from "astro:content";
+import { figures } from "../../content/figures";
+import ChapterLayout from "../../layouts/ChapterLayout.astro";
+
+// Module-level singleton: every chapter in this smoke target shares the
+// same figure registry, so the components map is built once instead of
+// per-render.
+const components = makeStaticComponents({ figures });
+
+export async function getStaticPaths() {
+  const chapters = await getCollection("chapters");
+  return chapters.map((chapter) => ({
+    params: { slug: chapter.id },
+    props: { chapter },
+  }));
+}
+
+const { chapter } = Astro.props;
+const { Content } = await render(chapter);
+---
+
+<ChapterLayout frontmatter={chapter.data}>
+  <Content components={components} />
+</ChapterLayout>

@@ -18,14 +18,7 @@
       "types": "./dist/runtime/index.d.ts",
       "import": "./dist/runtime/index.js"
     },
-    "./Callout": {
-      "types": "./dist/components/Callout/index.d.ts",
-      "import": "./dist/components/Callout/index.js"
-    },
-    "./Figure": {
-      "types": "./dist/components/Figure/index.d.ts",
-      "import": "./dist/components/Figure/index.js"
-    }
+    "./styles.css": "./dist/styles.css"
   },
   "files": [
     "dist",

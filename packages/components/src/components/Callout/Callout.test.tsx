@@ -2,18 +2,13 @@ import { act, render, screen } from "@testing-library/react";
 import { axe } from "jest-axe";
 import { describe, expect, it } from "vitest";
 import { ProfileProvider } from "../../runtime/ProfileContext.tsx";
-import { SophieConfigProvider } from "../../runtime/SophieConfig.tsx";
-import { Callout } from "./Callout.tsx";
+import { Callout, InteractiveCallout } from "./Callout.tsx";
 
-function withProviders(node: React.ReactNode) {
-  return (
-    <SophieConfigProvider course='test-course' chapter='test-chapter'>
-      <ProfileProvider profile='student'>{node}</ProfileProvider>
-    </SophieConfigProvider>
-  );
+function withProfile(node: React.ReactNode) {
+  return <ProfileProvider profile='student'>{node}</ProfileProvider>;
 }
 
-describe("<Callout>", () => {
+describe("<Callout> (static)", () => {
   it("renders all four variants with correct accessible name", () => {
     const variants = ["info", "warning", "tip", "caution"] as const;
     for (const variant of variants) {
@@ -32,7 +27,7 @@ describe("<Callout>", () => {
     ).toBeInTheDocument();
   });
 
-  it("non-interactive variant has zero axe violations", async () => {
+  it("has zero axe violations", async () => {
     const { container } = render(
       <Callout variant='warning' title='Watch out'>
         <p>Some warning prose.</p>
@@ -41,13 +36,20 @@ describe("<Callout>", () => {
     const results = await axe(container);
     expect(results.violations).toEqual([]);
   });
+});
 
-  it("interactive variant renders a checkbox and toggles it", async () => {
+describe("<InteractiveCallout>", () => {
+  it("renders a checkbox and toggles it", async () => {
     render(
-      withProviders(
-        <Callout variant='tip' id='tip-1' interactive>
+      withProfile(
+        <InteractiveCallout
+          course='test-course'
+          chapter='test-chapter'
+          id='tip-1'
+          variant='tip'
+        >
           Take a moment to confirm you can re-derive the result.
-        </Callout>
+        </InteractiveCallout>
       )
     );
     const checkbox = await screen.findByRole("checkbox");
@@ -60,12 +62,17 @@ describe("<Callout>", () => {
     expect(screen.getByText("Reviewed")).toBeInTheDocument();
   });
 
-  it("interactive variant has zero axe violations", async () => {
+  it("has zero axe violations", async () => {
     const { container } = render(
-      withProviders(
-        <Callout variant='info' id='ax-1' interactive>
+      withProfile(
+        <InteractiveCallout
+          course='test-course'
+          chapter='test-chapter'
+          id='ax-1'
+          variant='info'
+        >
           Body with checkbox follow-up.
-        </Callout>
+        </InteractiveCallout>
       )
     );
     const results = await axe(container);

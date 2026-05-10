@@ -4,11 +4,11 @@
     "outDir": "dist",
     "noEmit": true,
     "jsx": "react-jsx",
-    "types": ["node"],
+    "types": ["node", "vitest/globals", "@testing-library/jest-dom"],
     "ignoreDeprecations": "6.0",
     "allowImportingTsExtensions": true,
     "lib": ["es2022", "dom", "dom.iterable"]
   },
-  "include": ["src"],
+  "include": ["src", "test-setup.ts", "vitest.config.ts"],
   "exclude": ["dist", "node_modules"]
 }

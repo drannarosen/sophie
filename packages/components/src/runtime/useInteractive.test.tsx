@@ -2,29 +2,35 @@ import { act, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { describe, expect, it } from "vitest";
 import { ProfileProvider } from "./ProfileContext.tsx";
-import { SophieConfigProvider } from "./SophieConfig.tsx";
 import { useInteractive } from "./useInteractive.ts";
 
-function Wrapper({
-  course = "test-course",
-  chapter = "test-chapter",
+function ProfileWrapper({
   profile = "student" as const,
   children,
 }: {
-  course?: string;
-  chapter?: string;
   profile?: "student" | "instructor";
   children: ReactNode;
 }) {
-  return (
-    <SophieConfigProvider course={course} chapter={chapter}>
-      <ProfileProvider profile={profile}>{children}</ProfileProvider>
-    </SophieConfigProvider>
-  );
+  return <ProfileProvider profile={profile}>{children}</ProfileProvider>;
 }
 
-function Probe({ keyName, initial }: { keyName: string; initial: boolean }) {
-  const { value, setValue, status } = useInteractive(keyName, initial);
+function Probe({
+  course = "test-course",
+  chapter = "test-chapter",
+  keyName,
+  initial,
+}: {
+  course?: string;
+  chapter?: string;
+  keyName: string;
+  initial: boolean;
+}) {
+  const { value, setValue, status } = useInteractive(
+    course,
+    chapter,
+    keyName,
+    initial
+  );
   return (
     <div>
       <span data-testid='status'>{status}</span>
@@ -39,9 +45,9 @@ function Probe({ keyName, initial }: { keyName: string; initial: boolean }) {
 describe("useInteractive", () => {
   it("starts in loading and transitions to ready after IDB hydrate", async () => {
     render(
-      <Wrapper>
+      <ProfileWrapper>
         <Probe keyName='probe:loading' initial={false} />
-      </Wrapper>
+      </ProfileWrapper>
     );
     expect(screen.getByTestId("status").textContent).toBe("loading");
     await waitFor(() =>
@@ -52,9 +58,9 @@ describe("useInteractive", () => {
 
   it("persists value across remount within same course/profile/chapter", async () => {
     const { unmount } = render(
-      <Wrapper>
+      <ProfileWrapper>
         <Probe keyName='probe:persist' initial={false} />
-      </Wrapper>
+      </ProfileWrapper>
     );
     await waitFor(() =>
       expect(screen.getByTestId("status").textContent).toBe("ready")
@@ -68,9 +74,9 @@ describe("useInteractive", () => {
     unmount();
 
     render(
-      <Wrapper>
+      <ProfileWrapper>
         <Probe keyName='probe:persist' initial={false} />
-      </Wrapper>
+      </ProfileWrapper>
     );
     await waitFor(() =>
       expect(screen.getByTestId("value").textContent).toBe("true")
@@ -79,9 +85,9 @@ describe("useInteractive", () => {
 
   it("namespaces keys by profile so student/instructor don't collide", async () => {
     const { unmount } = render(
-      <Wrapper profile='student'>
+      <ProfileWrapper profile='student'>
         <Probe keyName='probe:profile' initial={false} />
-      </Wrapper>
+      </ProfileWrapper>
     );
     await waitFor(() =>
       expect(screen.getByTestId("status").textContent).toBe("ready")
@@ -95,9 +101,9 @@ describe("useInteractive", () => {
     unmount();
 
     render(
-      <Wrapper profile='instructor'>
+      <ProfileWrapper profile='instructor'>
         <Probe keyName='probe:profile' initial={false} />
-      </Wrapper>
+      </ProfileWrapper>
     );
     await waitFor(() =>
       expect(screen.getByTestId("status").textContent).toBe("ready")
@@ -107,9 +113,9 @@ describe("useInteractive", () => {
 
   it("uses different DBs per course", async () => {
     const { unmount } = render(
-      <Wrapper course='course-a'>
-        <Probe keyName='probe:course' initial={false} />
-      </Wrapper>
+      <ProfileWrapper>
+        <Probe course='course-a' keyName='probe:course' initial={false} />
+      </ProfileWrapper>
     );
     await waitFor(() =>
       expect(screen.getByTestId("status").textContent).toBe("ready")
@@ -123,13 +129,83 @@ describe("useInteractive", () => {
     unmount();
 
     render(
-      <Wrapper course='course-b'>
-        <Probe keyName='probe:course' initial={false} />
-      </Wrapper>
+      <ProfileWrapper>
+        <Probe course='course-b' keyName='probe:course' initial={false} />
+      </ProfileWrapper>
     );
     await waitFor(() =>
       expect(screen.getByTestId("status").textContent).toBe("ready")
     );
     expect(screen.getByTestId("value").textContent).toBe("false");
+  });
+
+  it("resets to initial when componentKey changes and the new key has no stored value", async () => {
+    // Persist a value under the first key.
+    const { rerender } = render(
+      <ProfileWrapper>
+        <Probe keyName='probe:reset:a' initial={false} />
+      </ProfileWrapper>
+    );
+    await waitFor(() =>
+      expect(screen.getByTestId("status").textContent).toBe("ready")
+    );
+    await act(async () => {
+      screen.getByText("toggle").click();
+    });
+    await waitFor(() =>
+      expect(screen.getByTestId("value").textContent).toBe("true")
+    );
+
+    // Same component, swap the key. The new key has no stored value, so
+    // the hook must reset to `initial` (false) — not carry "true" across.
+    rerender(
+      <ProfileWrapper>
+        <Probe keyName='probe:reset:b' initial={false} />
+      </ProfileWrapper>
+    );
+    await waitFor(() =>
+      expect(screen.getByTestId("status").textContent).toBe("ready")
+    );
+    expect(screen.getByTestId("value").textContent).toBe("false");
+  });
+
+  it("updates when a same-name BroadcastChannel from elsewhere posts a matching message", async () => {
+    // Simulates a second tab: create our own BroadcastChannel with the
+    // same chapter-channel name and post a message. The hook's
+    // subscription should pick it up and update the local state.
+    // Same-channel echo doesn't fire (browser BC API), so we don't try
+    // to test that with two intra-tab instances — only cross-channel
+    // (cross-tab equivalent).
+    render(
+      <ProfileWrapper>
+        <Probe
+          course='cross-tab'
+          chapter='cross-chapter'
+          keyName='probe:bc'
+          initial={false}
+        />
+      </ProfileWrapper>
+    );
+    await waitFor(() =>
+      expect(screen.getByTestId("status").textContent).toBe("ready")
+    );
+    expect(screen.getByTestId("value").textContent).toBe("false");
+
+    const channelName = "sophie-cross-tab:cross-chapter";
+    const compositeKey = "student:cross-chapter:probe:bc";
+    const otherTab = new BroadcastChannel(channelName);
+    await act(async () => {
+      otherTab.postMessage({
+        senderId: "another-tab-sender",
+        key: compositeKey,
+        value: true,
+      });
+      // Yield so the receiving channel's onmessage handler fires.
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+    await waitFor(() =>
+      expect(screen.getByTestId("value").textContent).toBe("true")
+    );
+    otherTab.close();
   });
 });

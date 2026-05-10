@@ -1,0 +1,34 @@
+---
+import { SophieChapter } from "@sophie/astro/client";
+
+interface Props {
+  frontmatter: {
+    title: string;
+    slug: string;
+    lang?: string;
+    description?: string;
+  };
+}
+
+const { frontmatter } = Astro.props;
+---
+
+<html lang={frontmatter.lang ?? "en"}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{frontmatter.title}</title>
+    {
+      frontmatter.description && (
+        <meta name="description" content={frontmatter.description} />
+      )
+    }
+  </head>
+  <body>
+    <SophieChapter client:load>
+      <main>
+        <slot />
+      </main>
+    </SophieChapter>
+  </body>
+</html>

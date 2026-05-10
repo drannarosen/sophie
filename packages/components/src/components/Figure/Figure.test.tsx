@@ -1,7 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { axe } from "jest-axe";
 import { describe, expect, it } from "vitest";
-import { FigureRegistryProvider } from "../../runtime/FigureRegistry.tsx";
 import { FigurePropsSchema } from "./Figure.schema.ts";
 import { Figure } from "./Figure.tsx";
 
@@ -32,11 +31,7 @@ describe("<Figure>", () => {
         caption: "Caption from registry",
       },
     };
-    render(
-      <FigureRegistryProvider registry={registry}>
-        <Figure name='three-questions' />
-      </FigureRegistryProvider>
-    );
+    render(<Figure name='three-questions' registry={registry} />);
     expect(
       screen.getByRole("img", { name: "Three questions" })
     ).toHaveAttribute("src", "/figures/three-questions.png");
@@ -44,11 +39,12 @@ describe("<Figure>", () => {
   });
 
   it("renders missing-figure placeholder when name not in registry", () => {
-    render(
-      <FigureRegistryProvider registry={{}}>
-        <Figure name='absent' />
-      </FigureRegistryProvider>
-    );
+    render(<Figure name='absent' registry={{}} />);
+    expect(screen.getByText(/Missing figure/)).toBeInTheDocument();
+  });
+
+  it("renders missing-figure placeholder when registry prop is undefined", () => {
+    render(<Figure name='absent' />);
     expect(screen.getByText(/Missing figure/)).toBeInTheDocument();
   });
 

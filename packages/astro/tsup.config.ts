@@ -23,6 +23,7 @@ export default defineConfig({
     "rehype-katex",
     "remark-gfm",
     "remark-frontmatter",
+    "remark-math",
     /^@sophie\//,
   ],
 });
