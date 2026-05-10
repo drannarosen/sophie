@@ -192,6 +192,47 @@ Categories: `feat`, `fix`, `docs`, `chore`, `test`, `refactor`,
 - **Bundle size in `@sophie/components`** matters; the platform
   ships to browsers. Aim for tree-shakable exports.
 
+## Consumer-side requirements
+
+Sophie consumer repos (e.g. `examples/smoke/`, `drannarosen/astr201`,
+future textbooks) depending on `@sophie/astro` MUST declare the
+following in their `devDependencies`:
+
+```json
+{
+  "devDependencies": {
+    "vite": "^7.3.0",
+    "esbuild": "^0.27.0"
+  }
+}
+```
+
+**Why.** Astro 6 sets `resolve.noExternal: ["astro"]` on the
+prerender environment, which bundles all of `astro` into the SSR
+chunk. Astro itself imports bare `vite` and `esbuild` from internal
+modules. Bundling those build tools fails on Linux runners
+(rollup's optional `fsevents` import can't resolve at bundle time).
+
+`@sophie/astro` works around this by externalizing `vite` and
+`esbuild` at the rollup level — but the prerender chunk then needs
+to resolve those bare specifiers at *runtime* via Node ESM. Pnpm's
+strict node_modules layout only symlinks a package into a
+consumer's `node_modules/` if that consumer declares it directly,
+so consumers must carry the devDeps even though `@sophie/astro` is
+the package that actually uses them. `@sophie/astro` declares both
+as `peerDependencies` so pnpm warns at install time if missing.
+
+**When this requirement goes away.** The `noExternal: ["astro"]`
+mechanism is too coarse for static-output SSG. Upstream issue
+filed at [withastro/astro#16679](https://github.com/withastro/astro/issues/16679)
+requesting Astro narrow it to runtime entry points only; once
+landed, `@sophie/astro` can drop the rollup externals +
+peerDependencies and consumers can drop the devDeps. Until then,
+treat this as a load-bearing requirement.
+
+See [phase-1-plan.md §5.1](../status/phase-1-plan.md#51-linux-ci-build-job-fails-resolved-2026-05-10)
+for the full debugging trail and architectural rationale.
+
 ## See also
 
 - [ADR 0001](../decisions/0001-platform-not-monorepo.md) — public

@@ -49,9 +49,11 @@ ten-step decomposition and calendar.
   wired through Turborepo cache.
 - ✅ GitHub Actions CI (lint, typecheck, unit, build, e2e jobs)
   + Dependabot (security-only).
-- ⚠️ CI build job currently fails on Linux runners (see
-  [§5 Known issues](#5-known-issues)).
-- ⚠️ Branch protection on `main`: deferred until CI build is green.
+- ✅ CI build + e2e jobs green on Linux runners as of 2026-05-10
+  (Phase 1 step 1 fix; see [§5.1](#51-linux-ci-build-job-fails-resolved-2026-05-10)
+  for the resolution writeup).
+- ⚠️ Branch protection on `main`: deferred pending the now-green
+  CI status; checklist still in [§5.2](#52-branch-protection-on-main-deferred).
 
 ## 2. What Phase 0 deliberately deferred
 
@@ -173,58 +175,134 @@ plan-mode work happens:
 
 ## 5. Known issues
 
-### 5.1 Linux CI build job fails (high priority)
+### 5.1 Linux CI build job fails (RESOLVED 2026-05-10)
 
-**Symptom:** The `build` job in `.github/workflows/ci.yml` fails on
-ubuntu-latest runners with a chain of errors during astro's
-prerender phase. Lint, typecheck, and unit jobs pass; e2e is
-skipped because it depends on build.
+**Status:** Resolved 2026-05-10 by Phase 1 step 1 (commits
+`7ddd4d5` + `b550bb6` on PR #5). All five CI jobs (lint, typecheck,
+unit, build, e2e) now green on ubuntu-latest. Branch protection
+enablement (§5.2) unblocked.
 
-**Root cause (traced in Phase 0):** Astro 6's `astro:content` runtime
-pulls Vite's module-runner into the prerender chunk. On macOS
-(Anna's dev machine), `fsevents` resolves and a different code path
-is taken; on Linux, the cold path drags rollup's `dist/native.js`
-(a CJS module that uses `__dirname`) into the bundle. Subsequent
-errors ripple from there.
+**Resolution summary** (full trail in
+`~/.claude/plans/we-re-starting-sophie-phase-twinkling-dusk.md`
+and the PR's commit history):
 
-**Surface fixes attempted in Phase 0 step 10 (and reverted):**
+**Real root cause (Phase 1 finding, deeper than Phase 0 wrote up):**
+Astro 6's `pluginInternals` sets `resolve.noExternal: ["astro"]`
+on the prerender environment
+([astro/dist/core/build/plugins/plugin-internals.js]). This bundles
+the *entire* `astro` package into the prerender chunk, which
+transitively pulls bare `vite` (from `astro/dist/core/create-vite.js`,
+`middleware/vite-plugin.js`, etc.) and bare `esbuild` (from
+`client-directive/build.js`, `vite-plugin-import-meta-env.js`) into
+the SSR bundle. Those build tools have OS-conditional optional
+imports — rollup's `await import('fsevents')` being canonical —
+that fail to resolve at *bundle time* on Linux runners (no fsevents).
+At *runtime* the same imports are inside try/catch and degrade
+gracefully; the bundler can't see the try/catch.
 
-1. Externalize `fsevents` — past resolve-time error, exposed layer 2.
-2. Polyfill `__dirname`/`__filename`/`require` in SSR ESM chunks via
-   Vite banner — past `__dirname is not defined` and `require is
-   not defined`, exposed layer 3.
-3. `commonjsOptions.ignoreDynamicRequires: true` — past the
-   commonjs shim refusal, exposed layer 4.
-4. Externalize `vite/*` via regex — had no observable effect (the
-   regex did not flow through Vite's TS-typed-as-string-array
-   `ssr.external` in this position).
+The Phase 0 writeup framed this as "astro:content runtime pulls
+Vite's module-runner" — close, but the migration to Content Layer's
+glob loader (which `examples/smoke/` was already on) didn't help
+because the leak is below the user-facing API boundary.
 
-The four fixes formed a "build tools bundling build tools" pattern.
-The right fix is "don't bundle Vite", not "make Vite work when
-bundled". All four commits were reverted to keep the codebase
-honest. The artifact-capture investigation chunks are preserved in
-the GitHub Actions run history (run 25630690088) and the relevant
-CI commit messages.
+**Why Phase 0's surface fixes didn't work** (and one bonus
+discovery):
 
-**Phase 1 paths to investigate:**
+1. Externalize `fsevents`/polyfill `__dirname`/etc — fixed each
+   error layer but exposed the next; whack-a-mole, not root-cause.
+2. Externalize `vite/*` via RegExp on `vite.ssr.external` — Vite's
+   `external?: string[] | true` type is honest at runtime; the
+   resolver iterates as strings, never as RegExp. The cast bypassed
+   the type checker but the runtime ignored the regex entries
+   entirely. (Phase 1 confirmed this from Vite 7.3.3 source.)
+3. **Ambient `~/node_modules/vite` masked all local-green
+   verifications** on Anna's dev machine. A stray `~/package.json`
+   from `electron-vite` + `vitest` (likely an accidental `npm
+   install` in `$HOME` long ago) created a `vite` install reachable
+   via Node ESM's walk-up resolution from any project sub-directory.
+   Local builds passed for the wrong reason; Linux runners had no
+   such ambient install. **Verification on macOS for build/runtime
+   correctness must use Docker (`node:22-bookworm-slim`) until this
+   is cleaned up.** Static checks (lint, typecheck, unit) are
+   trustworthy.
 
-- **Migrate `examples/smoke/` (and the eventual `drannarosen/astr201`)
-  to Astro's content-layer-v2 API** if it exists / is stable.
-  The legacy collections runtime is what pulls in Vite's
-  module-runner. The newer pattern may not.
-- **Verify the cast-vs-runtime question for `vite.ssr.external`
-  RegExp.** If Vite's runtime resolver actually does honor RegExp
-  in `ssr.external`, the cast was right and the fix is legitimate;
-  test in isolation against a minimal repro.
-- **Pin Astro to a version where the issue doesn't reproduce.**
-  Astro 5 used a different content-layer architecture; downgrade
-  may dodge the issue at the cost of features.
-- **File an upstream issue against astro/vite** with the artifact-
-  captured chunk evidence. The community may have a known
-  workaround or fix-in-flight.
-- **Adopt a Linux-based dev container** so the divergence pattern
-  is caught before CI, not after. Devcontainer config + VSCode
-  remote/codespaces support.
+**The actual fix** (commit `7ddd4d5`):
+
+- `@sophie/astro/src/integration.ts` adds `vite` and `esbuild` (bare
+  + subpaths, regex-array form) to `build.rollupOptions.external`,
+  preventing them from being bundled when Astro's
+  `noExternal: ["astro"]` drags them in transitively.
+- `@sophie/astro/package.json` declares `vite` and `esbuild` as
+  `peerDependencies` so consumers are warned at install time.
+- `examples/smoke/package.json` declares both as `devDependencies`.
+  Pnpm symlinks them into `examples/smoke/node_modules/`, making
+  the bare specifiers Node-ESM-resolvable from the prerender chunk's
+  `dist/.prerender/chunks/` location at runtime.
+
+**Three fix attempts that did NOT work** (preserved in git
+history on PR #5 for reference):
+
+1. Commit `61d9ae0` — externalize `[/^vite\//]` (subpaths only).
+   Caught the original `vite/internal` case but missed bare `vite`,
+   so vite still got bundled and dragged rollup, which dragged
+   fsevents. Linux build failed at the rollup-fsevents resolution.
+2. Commit `a9633c5` — broaden to `[/^vite($|\/)/, /^esbuild($|\/)/]`.
+   Bundled vite/esbuild were now external — but at *runtime* the
+   prerender chunk couldn't resolve them from its location because
+   neither was in `examples/smoke`'s direct deps and pnpm hadn't
+   symlinked them into smoke's `node_modules`.
+3. Commit `a035dbb` — surgical override via Vite plugin
+   `configResolved` hook to remove `"astro"` from
+   `prerenderEnv.resolve.noExternal`. The mutation was observed but
+   ignored — Vite 7's resolved environment config is effectively
+   immutable post-`configResolved`. CI showed the same fsevents
+   error as `61d9ae0`, indicating astro stayed bundled.
+
+The architectural pivot to consumer-declared peerDeps was made
+after invoking systematic-debugging's "if 3+ fixes fail, question
+architecture" rule.
+
+**Workflow bug fixed alongside** (commit `b550bb6`): the e2e job's
+"Build smoke target" step ran `pnpm --filter smoke build`, which
+bypasses Turborepo's workspace dependency graph — workspace
+packages weren't built first on a fresh runner. This bug had been
+silently masked since Phase 0 step 9 because `e2e: needs: build`
+meant e2e was skipped on every CI run while the build job kept
+failing. Switched to `pnpm exec turbo run build --filter=smoke`.
+
+**Consumer-side DX requirement** (downstream consequence): every
+Sophie consumer (now `examples/smoke/`; soon `drannarosen/astr201`;
+future textbooks) MUST declare `vite` and `esbuild` in their
+`devDependencies` until the upstream `noExternal: ["astro"]` issue
+lands a fix. Documented in
+[contributing/coding-standards.md](../contributing/coding-standards.md#consumer-side-requirements)
+under "Consumer-side requirements" and signaled at install time
+via `@sophie/astro`'s peerDependencies.
+
+**Upstream issue:** Filed 2026-05-10 at
+[withastro/astro#16679](https://github.com/withastro/astro/issues/16679).
+Frame: "is `noExternal: ['astro']` intended to bundle astro's
+entire build-time toolchain into static-output prerender bundles?
+Could `astro/loaders` etc. lazy-import their vite/esbuild deps?"
+Sophie will track upstream response there; if Astro narrows
+`noExternal` (option 1) or lazy-imports the build-time deps (option 2),
+Sophie can drop the rollup externals + peerDependencies and
+consumers can drop the devDeps. GitHub Actions run with chunk
+artifacts (preserved):
+[run 25630690088](https://github.com/drannarosen/sophie/actions/runs/25630690088).
+
+**Original Phase 0 path inventory (preserved for context):**
+
+The Phase 0 writeup outlined four investigation paths (A: migrate
+to content-layer-v2; B: verify RegExp ssr.external; C: pin Astro
+5; D: file upstream). Phase 1 entered with B+D hybrid selected,
+discovered A was moot (already on Content Layer), discovered B was
+structurally impossible (RegExp not in vite's `external` type),
+pivoted through three failed attempts, and landed on a fifth path
+(consumer-declared peerDeps) that wasn't in the original list.
+The original four-path framing was correct in spirit (the right
+fix isn't "make the bundler do more work") but missed the actual
+mechanism (consumer-side runtime resolution).
 
 ### 5.2 Branch protection on `main` deferred
 
