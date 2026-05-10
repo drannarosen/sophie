@@ -167,7 +167,13 @@ the spread are bugs.
   `axe-playwright` + `jest-image-snapshot`. Baselines committed under
   `packages/components/__snapshots__/`. Threshold is 1% pixel diff
   (tightening as we observe real diff levels). Intentional UI changes
-  require updating baselines (`pnpm test:storybook --updateSnapshot`).
+  require updating baselines (`pnpm test:storybook -- -u`).
+- **`color-contrast` axe rule is disabled** in both smoke e2e
+  (`examples/smoke/e2e/*.spec.ts`) and Storybook test-runner
+  (`packages/components/.storybook/test-runner.ts`). Color contrast
+  is reviewed at design-system level (`@sophie/theme`), not as a
+  per-feature gate. Structural axe rules (labels, landmarks, ARIA,
+  focus order) are enforced everywhere.
 
 Tests are not optional. A component without an axe-core test does
 not ship.

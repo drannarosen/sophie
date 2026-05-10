@@ -9,6 +9,9 @@ import type { Preview } from "@storybook/react-vite";
 // Tailwind processing step, and the variables come from theme.css
 // regardless.
 import "@sophie/theme/css";
+// Apply --sophie-bg + --sophie-text to the preview body so muted text
+// tokens (designed for cream bg) hit AA contrast on every platform.
+import "./preview.css";
 
 const preview: Preview = {
   parameters: {

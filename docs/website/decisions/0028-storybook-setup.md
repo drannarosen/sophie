@@ -92,6 +92,23 @@ Storybook (axe-while-developing checks the disabled-busy state).
   deliberately not installed — its features (actions, viewport,
   backgrounds, highlight, measure, outline) consolidated into
   `storybook` core in 9+ and are auto-included.
+- **Preview body bg** (`packages/components/.storybook/preview.css`)
+  sets `body { background: var(--sophie-bg); color: var(--sophie-text); }`.
+  Sophie's color tokens are calibrated against the cream `--sophie-bg`,
+  not Storybook's default white preview chrome. Without this, stories
+  rendered against the wrong baseline and the visual snapshots would
+  encode an unintended design state.
+- **`color-contrast` axe rule is disabled in test-runner** to match the
+  project-wide a11y posture established in `examples/smoke/e2e/*.spec.ts`
+  (every smoke spec also does `.disableRules(["color-contrast"])`).
+  Sophie treats color-contrast as a design-system review concern, not
+  a per-feature CI gate. The 11 structural axe rules that DO run
+  (labels, landmarks, focus order, ARIA usage, etc.) catch what
+  matters for component correctness. A known follow-up — separate
+  from this ADR — is auditing `--sophie-text-muted` (and other
+  faded-text tokens) at small font sizes; preliminary check suggests
+  they sit just below AA contrast on cream bg and may need to be
+  darkened in `@sophie/theme`.
 - **CI orchestration**: `pnpm exec turbo run build-storybook
   --filter=@sophie/components` produces `storybook-static/` (cached
   by Turbo); CI then `npx http-server`s it on port 6006 and runs

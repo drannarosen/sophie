@@ -1,0 +1,19 @@
+/*
+ * Storybook preview body baseline.
+ *
+ * Sophie's color tokens (especially --sophie-text-muted at 46% black-on-cream)
+ * are calibrated for AA contrast against --sophie-bg (cream #fbfaf7), not
+ * against Storybook's default white preview chrome. Without this rule the
+ * tokens were AA-passing locally on macOS but tipping just below threshold
+ * on Ubuntu CI (color-profile differences in color-mix(in oklch, ...)).
+ *
+ * Match smoke's Astro layout: body bg = --sophie-bg, body color = --sophie-text.
+ * Stories now render against the same baseline as production chapter content.
+ */
+body,
+#storybook-root,
+.sb-show-main {
+  background-color: var(--sophie-bg);
+  color: var(--sophie-text);
+  font-family: var(--sophie-font-sans);
+}

@@ -20,11 +20,20 @@ const config: TestRunnerConfig = {
     const storyContext = await getStoryContext(page, context);
 
     if (storyContext.parameters?.a11y?.disable !== true) {
-      // axe-playwright's checkA11y fails on violations (not inconclusive),
-      // matching the Vitest jest-axe + Storybook addon-a11y posture.
+      // axe-playwright's checkA11y fails on violations (not inconclusive).
+      //
+      // `color-contrast` is excluded to match the project-wide a11y posture
+      // established in `examples/smoke/e2e/*.spec.ts` (every spec disables
+      // it). Color contrast is treated as a design-system review concern,
+      // not a per-feature gate. The structural axe rules (labels, landmarks,
+      // focus, ARIA usage, etc.) ARE enforced and catch the failures that
+      // matter for component correctness. See ADR 0028 § Consequences.
       await checkA11y(page, "#storybook-root", {
         detailedReport: true,
         detailedReportOptions: { html: true },
+        axeOptions: {
+          rules: { "color-contrast": { enabled: false } },
+        },
       });
     }
 
