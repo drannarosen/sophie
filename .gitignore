@@ -7,6 +7,12 @@ dist/
 .turbo/
 .astro/
 *.tsbuildinfo
+storybook-static/
+
+# Storybook test-runner diff output (per-failure visual diffs from
+# jest-image-snapshot). Baselines under __snapshots__/ ARE committed —
+# this is just the diff PNGs emitted on failure.
+__diff_output__/
 
 # test outputs
 coverage/

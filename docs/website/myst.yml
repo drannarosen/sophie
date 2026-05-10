@@ -103,6 +103,7 @@ project:
         - file: decisions/0025-phase-0-actual-scope.md
         - file: decisions/0026-tailwind-v4-css-first.md
         - file: decisions/0027-mdx-render-boundary-prop-threading.md
+        - file: decisions/0028-storybook-setup.md
     - title: Status
       children:
         - file: status/roadmap.md

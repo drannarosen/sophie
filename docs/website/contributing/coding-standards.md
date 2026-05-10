@@ -156,9 +156,18 @@ the spread are bugs.
   any component PR.
 - **Playwright** for end-to-end against `examples/smoke/` (the
   Phase 0 smoke target; replaced by `drannarosen/astr201` in Phase 1).
-- **Storybook** is Phase 1+ (added around the third v1 component when
-  isolation pays off).
-- **Visual regression** is Phase 1+ (once the design system is stable).
+- **Storybook** is **required for every component PR** (since
+  2026-05-10, Phase 1). Every component has at least one story under
+  `<Name>.stories.tsx` colocated with the component. Persistence-bearing
+  stories namespace via unique `course="storybook"` /
+  `chapter="<componentname>"` / `id="<storyname>"` args so cross-story
+  IDB state cannot leak. See
+  [ADR 0028](../decisions/0028-storybook-setup.md).
+- **Visual regression** runs in CI via `@storybook/test-runner` +
+  `axe-playwright` + `jest-image-snapshot`. Baselines committed under
+  `packages/components/__snapshots__/`. Threshold is 1% pixel diff
+  (tightening as we observe real diff levels). Intentional UI changes
+  require updating baselines (`pnpm test:storybook --updateSnapshot`).
 
 Tests are not optional. A component without an axe-core test does
 not ship.
@@ -203,7 +212,9 @@ Categories: `feat`, `fix`, `docs`, `chore`, `test`, `refactor`,
 - **Changeset attached** for any package change. See
   [Changelog](../status/changelog.md) for SemVer policy.
 - **Tests added or updated.**
-- **Storybook stories updated** if a component's surface changed.
+- **Storybook stories updated** to cover the new component / new
+  variant / new state. New components must ship with a story; visual
+  baselines under `__snapshots__/` are reviewed for intentional drift.
 
 ## Code review
 

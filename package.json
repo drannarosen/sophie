@@ -17,11 +17,14 @@
   },
   "scripts": {
     "build": "turbo run build",
+    "build-storybook": "turbo run build-storybook",
     "dev": "turbo run dev",
+    "storybook": "pnpm --filter @sophie/components storybook",
     "test": "turbo run test",
     "test:unit": "turbo run test:unit",
     "test:e2e": "playwright test",
     "test:e2e:install": "playwright install --with-deps chromium",
+    "test:storybook": "pnpm --filter @sophie/components test:storybook",
     "lint": "biome check .",
     "format": "biome format --write .",
     "typecheck": "turbo run typecheck"

@@ -6,6 +6,16 @@
       "dependsOn": ["^build"],
       "outputs": ["dist/**", ".astro/**"]
     },
+    "build-storybook": {
+      "dependsOn": ["^build"],
+      "inputs": [
+        "src/**/*.{ts,tsx,css}",
+        ".storybook/**",
+        "package.json",
+        "tsconfig.json"
+      ],
+      "outputs": ["storybook-static/**"]
+    },
     "dev": {
       "cache": false,
       "persistent": true
