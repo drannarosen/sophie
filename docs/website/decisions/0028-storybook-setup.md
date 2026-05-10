@@ -38,8 +38,8 @@ without leaking state between stories.
 ## Decision
 
 1. **Stories co-locate with components** in `packages/components/src/components/<Name>/<Name>.stories.tsx`. Storybook config in `packages/components/.storybook/`.
-2. **Builder is `@storybook/react-vite`** (Vite-aligned, matches Vitest and Astro).
-3. **Visual regression is Playwright snapshots via `@storybook/test-runner`** (with `axe-playwright` + `jest-image-snapshot`). Baselines under `packages/components/__snapshots__/` are committed.
+2. **Builder is `@storybook/react-vite`** (Vite-aligned, matches Vitest and Astro). The `.module.css.js` Vite alias from `vitest.config.ts` is mirrored in `.storybook/main.ts`.
+3. **Test-runner enforces axe-playwright on every story** as the first-land scope. Visual regression (jest-image-snapshot) was scoped here but deferred — see § Visual regression deferral below.
 4. **IndexedDB persistence in stories uses real browser IDB with per-story namespacing** — every persistence-bearing story passes unique `course="storybook"`, `chapter="<componentname>"`, `id="<storyname>"` args.
 5. **Storybook 10.3.6** (current `latest` dist-tag) — not the still-maintained 9.x line.
 
@@ -109,18 +109,47 @@ Storybook (axe-while-developing checks the disabled-busy state).
   faded-text tokens) at small font sizes; preliminary check suggests
   they sit just below AA contrast on cream bg and may need to be
   darkened in `@sophie/theme`.
-- **Visual comparison uses SSIM, not pixelmatch.** Baselines committed
-  locally (macOS) produce 1–2.4% raw-pixel differences against
-  Ubuntu CI rendering, purely from anti-aliasing and font hinting —
-  even when the layout, colors, and shapes are identical. SSIM
-  (Structural Similarity Index) measures perceptual similarity instead
-  of per-pixel byte equality, so the baselines stay platform-agnostic
-  while still catching real UI regressions (layout shifts, missing
-  elements, color drift, structural differences). Threshold is 0.05
-  (5% SSIM dissimilarity) for first land — generous; tighten once
-  we have empirical cross-platform data. A future enhancement is to
-  generate Linux baselines via Docker (or via a one-shot CI workflow)
-  for stricter pixelmatch-mode comparison.
+## Visual regression deferral
+
+ADR 0028's original plan included `@storybook/test-runner` +
+`jest-image-snapshot` for in-tree visual baselines. Three CI runs
+during this PR's iteration surfaced a fundamental architectural mismatch:
+
+- **Run 1** (pixelmatch, 1% threshold): 18 of 32 stories failed with
+  1–2.4% raw-pixel differences. Diagnosis: anti-aliasing and font
+  hinting differ between macOS-generated baselines and Ubuntu CI
+  rendering, even though structure (layout, colors, shapes) was
+  identical.
+- **Run 2** (after switching to SSIM at 5% threshold): 2 of 32 stories
+  still failed at 5.0% and 5.4% SSIM dissimilarity (LearningObjectives,
+  Reflection — UI-element-dense components where cumulative sub-pixel
+  differences compound).
+- **Decision** (per `superpowers:systematic-debugging`'s "if 3+ fixes
+  fail, question architecture"): cross-platform visual regression
+  with single-OS-generated baselines is the wrong architecture.
+  Progressively loosening thresholds reduces signal without fixing
+  the root cause.
+
+**Resolution**: Storybook ships in this PR with **axe-only** test-runner
+checking (label, landmark, ARIA, focus, etc. — 11 structural rules).
+Visual regression is deferred to a separate PR with one of:
+
+1. **Docker-based Linux baseline generation**: a local script or
+   makefile target that runs Playwright's official Docker image
+   (`mcr.microsoft.com/playwright:v<version>-noble`) to capture
+   baselines matching CI exactly. Strict pixelmatch comparison;
+   in-tree baselines.
+2. **Per-platform baselines**: `customSnapshotIdentifier` includes
+   `process.platform`; macOS dev and Ubuntu CI each have their own.
+   2× baseline files; bootstrapped by a one-shot CI artifact download
+   on first land.
+3. **Cloud-hosted visual regression** (Chromatic SaaS): explicitly
+   rejected here, but the cost-of-in-tree option becomes more
+   attractive as Sophie scales — revisit if 1/2 prove painful.
+
+Until then, the structural axe-core check at the test-runner layer
+plus the dev-UI addon-a11y plus Vitest's jest-axe gives Phase 1
+sufficient component-level a11y enforcement.
 - **CI orchestration**: `pnpm exec turbo run build-storybook
   --filter=@sophie/components` produces `storybook-static/` (cached
   by Turbo); CI then `npx http-server`s it on port 6006 and runs
@@ -179,20 +208,23 @@ Storybook (axe-while-developing checks the disabled-busy state).
 
 - Component PRs ship with stories; Storybook is the gate for "does
   this render correctly in isolation."
-- Visual regression catches theme-token drift, CSS Module name
-  collisions, and Tailwind purge surprises that unit + axe miss.
 - AI tools (per ADR 0015 Layer 3) can drive Storybook via Playwright
   MCP for component-level verification.
 - Real-browser IDB in stories means the hydration race is
   demonstrable, not hidden behind a shim.
+- Structural axe rules (labels, landmarks, ARIA, focus order) run on
+  every story in CI — catches a11y regressions that escape unit
+  tests, even without visual regression.
 
 **Harder:**
 
 - Story files become a per-component artifact every PR maintains
   (matches coding-standards.md update shipping with this PR).
-- Visual baselines need conscious approval when intentional UI
-  changes happen — flip side of catching unintentional changes.
 - CI job count goes from 5 to 6.
+- Visual regression is *not yet* part of this gate. Theme-token
+  drift, CSS Module name collisions, and Tailwind purge surprises
+  must be caught in PR review or in a separate visual-regression
+  follow-up (see § Visual regression deferral).
 - Pre-existing pnpm 11 quirks now affect Sophie: tslib was missing
   from `node_modules` after the dep install (corrupted state — see
   Triggers below), needing `rm -rf node_modules && pnpm install` to
@@ -205,11 +237,10 @@ Storybook (axe-while-developing checks the disabled-busy state).
   "required for every component PR."
 - `docs/website/status/phase-1-plan.md`: Storybook setup marked
   complete; Trio 3 components ship with stories from PR-1.
+  Visual regression remains a Phase 1+ follow-up.
 - `pnpm-workspace.yaml`: `allowBuilds` for `@swc/core` and
   `unrs-resolver` flipped from placeholder strings to `true`.
-- `.gitignore`: ignores `storybook-static/` (build output) and
-  `__diff_output__/` (jest-image-snapshot diffs on failure). Baselines
-  under `__snapshots__/` ARE committed.
+- `.gitignore`: ignores `storybook-static/` (build output).
 - **Known gotcha for future major dep batches**: pnpm 11 may write
   the lockfile correctly but miss writing some transitive-dep links
   to disk. Symptom: `Cannot find module 'X'` from a deeply transitive

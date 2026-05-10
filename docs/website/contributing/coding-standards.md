@@ -163,17 +163,20 @@ the spread are bugs.
   `chapter="<componentname>"` / `id="<storyname>"` args so cross-story
   IDB state cannot leak. See
   [ADR 0028](../decisions/0028-storybook-setup.md).
-- **Visual regression** runs in CI via `@storybook/test-runner` +
-  `axe-playwright` + `jest-image-snapshot`. Baselines committed under
-  `packages/components/__snapshots__/`. Threshold is 1% pixel diff
-  (tightening as we observe real diff levels). Intentional UI changes
-  require updating baselines (`pnpm test:storybook -- -u`).
+- **Storybook test-runner** runs `axe-playwright` against every story
+  in CI (`storybook` job). Structural a11y rules — labels, landmarks,
+  ARIA, focus order — are enforced per-story. Stories that should
+  skip axe set `parameters.a11y.disable = true` in their meta.
 - **`color-contrast` axe rule is disabled** in both smoke e2e
   (`examples/smoke/e2e/*.spec.ts`) and Storybook test-runner
   (`packages/components/.storybook/test-runner.ts`). Color contrast
   is reviewed at design-system level (`@sophie/theme`), not as a
   per-feature gate. Structural axe rules (labels, landmarks, ARIA,
   focus order) are enforced everywhere.
+- **Visual regression** is deferred to a separate PR. See
+  [ADR 0028 § Visual regression deferral](../decisions/0028-storybook-setup.md).
+  Until re-enabled, intentional UI changes are caught in PR review +
+  manual Storybook inspection (`pnpm storybook`).
 
 Tests are not optional. A component without an axe-core test does
 not ship.

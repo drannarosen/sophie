@@ -205,12 +205,11 @@ jobs:
           npx -y wait-on tcp:127.0.0.1:6006 -t 60000
           pnpm --filter @sophie/components test:storybook
           kill "$SERVER_PID" 2>/dev/null || true
-      - name: Upload Storybook diff artifacts
+      - name: Upload Storybook test-runner artifacts
         uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: storybook-diff-output
+          name: storybook-test-output
           path: |
-            packages/components/__diff_output__/
-            packages/components/__snapshots__/
+            packages/components/storybook-static/
           if-no-files-found: ignore
