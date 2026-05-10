@@ -1,0 +1,45 @@
+{
+  "name": "@sophie/core",
+  "version": "0.0.0",
+  "description": "Sophie core: schema, audit, and CLI. Internal subpackages enforced via subpath exports + Biome boundary rule.",
+  "license": "AGPL-3.0-or-later",
+  "author": "Anna Rosen",
+  "type": "module",
+  "exports": {
+    "./schema": {
+      "types": "./dist/schema/index.d.ts",
+      "import": "./dist/schema/index.js"
+    },
+    "./audit": {
+      "types": "./dist/audit/index.d.ts",
+      "import": "./dist/audit/index.js"
+    },
+    "./cli": {
+      "types": "./dist/cli/index.d.ts",
+      "import": "./dist/cli/index.js"
+    }
+  },
+  "bin": {
+    "sophie": "./dist/cli/bin.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist .turbo"
+  },
+  "dependencies": {
+    "citty": "^0.2.2",
+    "gray-matter": "^4.0.3",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.2",
+    "tsup": "^8.5.1",
+    "typescript": "^6.0.3"
+  }
+}

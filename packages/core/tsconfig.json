@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "noEmit": true,
+    "types": ["node"],
+    "ignoreDeprecations": "6.0",
+    "paths": {
+      "@sophie/core/schema": ["./src/schema/index.ts"],
+      "@sophie/core/audit": ["./src/audit/index.ts"],
+      "@sophie/core/cli": ["./src/cli/index.ts"]
+    }
+  },
+  "include": ["src"],
+  "exclude": ["dist", "node_modules"]
+}
