@@ -20,7 +20,11 @@ test.describe("Phase 0 vertical-slice acceptance — spoiler-alerts chapter", ()
 
     // Static structure expectations (matches @sophie/components README's
     // 14→4 mapping table for this chapter).
-    await expect(page.locator("[role='note']")).toHaveCount(36);
+    // Was 36 in Phase 0; dropped to 35 in Trio 2 when the Prediction
+    // Moment Callout migrated to <Predict> (which renders as a section,
+    // not role="note"). See examples/smoke/e2e/predict.spec.ts for the
+    // <Predict> coverage.
+    await expect(page.locator("[role='note']")).toHaveCount(35);
     await expect(page.locator("figure")).toHaveCount(19);
     await expect(page.locator("table")).toHaveCount(9);
 

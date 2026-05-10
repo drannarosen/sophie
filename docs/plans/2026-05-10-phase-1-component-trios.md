@@ -205,59 +205,85 @@ lectures/homework/solutions), that's its own component and Sophie
 will port `lecture-cards.scss` then. Not in scope until that
 consumer appears.
 
-### `<Predict>` (persistence-bearing)
+### `<Predict>` (persistence-bearing — reflection-only v1)
 
-**Purpose.** Predict-then-reveal pedagogical pattern. User commits
-a prediction → reveals expected answer → user can self-assess.
-Persistence so reloads remember the user's prediction and
-confidence.
+**SHIPPED 2026-05-10** as Trio 2 component #3. Trio 2 closes with
+this PR.
 
-**Props (proposed).**
+**Design correction from original spec.** Inspecting the actual
+"Prediction Moment" Callout in `spoiler-alerts.mdx` revealed the
+smoke pattern is **reflection-only**: rich prompt body with two
+sub-questions, no inline reveal content (the explanation comes
+later in the chapter prose), explicit "no wrong answer" framing.
+The original "predict-then-reveal with confidence Likert" spec was
+inherited from a different Predict pattern (homework-style "predict
+the numerical answer"); reality is the elicit-intuitions-before-
+reading variant.
+
+Self-assessment widgets (confidence, comprehension, effort,
+reflection) were considered in scope but pulled out: Anna's
+classroom uses ALL FOUR widgets across courses. Designing them as
+a Predict prop would cement a one-widget-per-component pattern
+that doesn't fit. Self-assessment is now a deliberate next-PR
+component family (`<ConfidenceCheck>`, `<ComprehensionGate>`,
+`<EffortLog>`, `<Reflection>`); chapter authors will compose them
+alongside `<Predict>` when wanted.
+
+**Props (shipped).**
 
 ```ts
+interface PredictPrompt {
+  id: string;     // author-supplied stable key
+  label: string;  // textarea label
+}
+
 interface PredictProps {
-  course: string;        // ADR 0027: per-instance hydration props
+  course: string;
   chapter: string;
-  id: string;            // unique per-instance key
-  prompt: string;        // the question/prediction prompt
-  children: React.ReactNode;  // the reveal content (rendered after commit)
-  confidenceScale?: 5 | 7 | 10;  // default 5
+  id: string;
+  description?: string;            // framing prose before prompts
+  prompts: PredictPrompt[];        // one or more questions; each gets a textarea
+  closing?: string;                // closing prose after prompts
+  heading?: string;                // default "Prediction Moment"
+  children?: React.ReactNode;      // when present: gated reveal content
 }
 ```
 
-**State (persisted via `useInteractive`).**
+**State.** Per-prompt answer + (when reveal mode) revealed flag,
+each via its own `useInteractive` call. Keys:
+- `predict:${componentId}:${promptId}:answer` → string
+- `predict:${componentId}:revealed` → boolean (only when children
+  provided)
 
-```ts
-interface PredictState {
-  prediction: string;
-  confidence: number;    // 1..confidenceScale
-  revealed: boolean;
-  ts: number;
-}
-```
+**Reveal-mode gating.** When `children` are provided, a
+`<button>Reveal</button>` is rendered below the textareas. It's
+disabled until all prompts have non-empty trimmed content
+(plus the standard hydration-guard disabled-while-loading from
+PR #8). Clicking flips `revealed=true` (persisted) and renders
+children below the button. State lifted into Predict so the
+reveal-gate can read all prompts' values without re-subscribing.
 
-**A11y.** Form-shaped: `<fieldset>` + `<legend>` for the prompt;
-labelled `<textarea>` for prediction; labelled radio group for
-confidence; a "Reveal" button gates the reveal content. After
-reveal, focus moves to the reveal section's heading via `tabIndex={-1}`
-+ `ref.current?.focus()` per existing pattern in
-`@sophie/components/src/runtime/useInteractive.ts`.
+**A11y.** `<section>` wrapper with an `<h2>` heading (default
+"Prediction Moment"). Each prompt is a `<label>`+`<textarea>`
+pair properly associated by id. Textareas spread `controlProps`
+(disabled + aria-busy while loading) per coding-standards. Reveal
+button uses `controlProps` too. Zero axe violations verified by
+unit + smoke e2e.
 
-**SCSS port.** None — new design. Reuse Callout token palette for
-the wrapper; new tokens for the form-control surfaces (matching
-existing classroom Predict styling if Anna has it elsewhere).
+**Smoke change.** The "Prediction Moment" Callout at line 289 of
+`spoiler-alerts.mdx` migrated to `<Predict client:load>` with two
+prompts (`colors`, `darks`). The chapter is unchanged
+pedagogically; the framing prose, sub-questions, and "no wrong
+answer" closing all preserved.
 
-**Smoke change.** The single explicit "Prediction Moment" Callout
-(line 264) is migrated to `<Predict course="astr201" chapter="spoiler-alerts" id="course-thesis" prompt="..." />`.
-Test: e2e exercises the predict → reveal → reload-persistence cycle
-exactly as the InteractiveCallout test does.
-
-**Why Predict in Trio 1.** It's the only persistence-bearing
-component in the list, so it exercises ADR 0027 a second time.
-Phase 0 proved the pattern for InteractiveCallout; Predict's
-shape (form, multi-field state, gated reveal) is *different
-enough* that a second proof point matters before we commit to
-the rest of the trios.
+**Why Predict in Trio 2.** Confirmed as the second persistence-
+bearing component in the trio (alongside LearningObjectives), so
+ADR 0027 + the disabled-while-loading hydration pattern get
+exercised under a structurally-different shape (form + multi-field
+state + gated reveal) than checkbox-list. Both proof points
+landed cleanly using the hardened pattern from PR #8 — no race-
+condition discovery this time, which is what the hardening was
+supposed to deliver.
 
 ## Trio 2 — structural + content + structural
 
@@ -351,9 +377,14 @@ Every component PR includes:
   markers are now Callout variants. Heading-level question moot
   (Callout uses an `<aside role="note">` with `aria-label`, not a
   semantic section heading).
-- **`<Predict>` confidence scale default**: 5-point Likert or
-  7-point? Existing classroom convention if Anna has one;
-  otherwise default to 5.
+- ~~**`<Predict>` confidence scale default**~~ — **resolved by
+  scope cut, 2026-05-10**: confidence is not a Predict prop. It's
+  one of four self-assessment widgets (confidence, comprehension,
+  effort, reflection) that Anna's classroom uses across ASTR 101 /
+  ASTR 201 / COMP 536. Designing them inline in Predict would
+  cement a one-widget-per-component pattern that won't fit
+  Check-Yourself / EndOfSection callouts later. They become their
+  own component family in the next PR.
 
 ## Lessons surfaced during Trio 2 (LearningObjectives)
 

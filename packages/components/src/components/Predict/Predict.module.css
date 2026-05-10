@@ -1,0 +1,105 @@
+.section {
+  margin-block: var(--space-predict-block, 1.5rem);
+  padding: var(--space-predict-pad, 1.25rem 1.5rem);
+  border-inline-start: 4px solid
+    var(--color-predict-accent, var(--sophie-brand-rose, #c25b7c));
+  background: var(
+    --color-predict-bg,
+    var(--sophie-surface-1, rgb(0 0 0 / 0.03))
+  );
+  border-radius: var(--radius-predict, 0.375rem);
+}
+
+.heading {
+  margin: 0 0 var(--space-predict-heading-gap, 0.75rem);
+  font-size: var(--font-size-predict-heading, 1.125rem);
+  font-weight: 600;
+  color: var(--color-predict-heading, var(--sophie-brand-rose-text, inherit));
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.description,
+.closing {
+  margin: var(--space-predict-prose-gap, 0.5rem) 0;
+  line-height: 1.5;
+}
+
+.closing {
+  font-style: italic;
+  color: var(--color-predict-closing, var(--sophie-text-muted, inherit));
+}
+
+.prompt {
+  display: grid;
+  gap: var(--space-predict-prompt-gap, 0.375rem);
+  margin: var(--space-predict-prompt-block, 0.75rem) 0;
+}
+
+.label {
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.textarea {
+  min-block-size: var(--size-predict-textarea, 4.5rem);
+  padding: var(--space-predict-textarea-pad, 0.5rem 0.625rem);
+  border: 1px solid
+    var(
+      --color-predict-textarea-border,
+      var(--sophie-border-subtle, currentColor)
+    );
+  border-radius: var(--radius-predict-textarea, 0.25rem);
+  font: inherit;
+  resize: vertical;
+  background: var(--color-predict-textarea-bg, var(--sophie-surface-1, white));
+  color: inherit;
+}
+
+.textarea:focus-visible {
+  outline: var(--sophie-focus-width, 2px) solid
+    var(--sophie-focus-color, currentColor);
+  outline-offset: 1px;
+}
+
+.textarea:disabled {
+  cursor: progress;
+  opacity: 0.7;
+}
+
+.revealGate {
+  display: grid;
+  gap: var(--space-predict-reveal-gap, 0.625rem);
+  margin-block-start: var(--space-predict-reveal-block, 1rem);
+}
+
+.revealButton {
+  justify-self: start;
+  padding: var(--space-predict-button-pad, 0.5rem 1rem);
+  border: 1px solid
+    var(--color-predict-button-border, var(--sophie-brand-rose, currentColor));
+  border-radius: var(--radius-predict-button, 0.25rem);
+  background: var(--color-predict-button-bg, transparent);
+  color: var(--color-predict-button-fg, var(--sophie-brand-rose-text, inherit));
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.revealButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.revealButton:not(:disabled):hover {
+  background: var(
+    --color-predict-button-hover-bg,
+    var(--sophie-surface-2, currentColor)
+  );
+}
+
+.revealContent {
+  padding-inline-start: var(--space-predict-reveal-indent, 0.75rem);
+  border-inline-start: 2px solid
+    var(--color-predict-reveal-border, var(--sophie-brand-rose, currentColor));
+}
