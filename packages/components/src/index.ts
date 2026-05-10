@@ -59,6 +59,12 @@ export {
   InteractiveCheckboxPropsSchema,
   interactiveCheckboxContract,
 } from "./components/InteractiveCheckbox/index.ts";
+export type { KeyEquationProps } from "./components/KeyEquation/index.ts";
+export {
+  KeyEquation,
+  KeyEquationPropsSchema,
+  keyEquationContract,
+} from "./components/KeyEquation/index.ts";
 export type {
   LearningObjectivesProps,
   LearningObjectivesState,

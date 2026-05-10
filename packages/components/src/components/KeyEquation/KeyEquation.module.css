@@ -1,0 +1,66 @@
+/*
+ * KeyEquation styles — new design (no SCSS source to port).
+ *
+ * Visual coding: violet accent + serif title cues "named mathematical
+ * object" — distinct from Callout's teal info-tone and Predict's rose
+ * elicitation-tone. Cross-references via `#hash-anchor` get a `:target`
+ * outline pulse to make the navigation feel responsive.
+ */
+
+.section {
+  margin-block: var(--space-ke-block, 1.5rem);
+  padding: var(--space-ke-pad-y, 1rem) var(--space-ke-pad-x, 1.25rem);
+  border-inline-start: 4px solid
+    var(--color-ke-accent, var(--sophie-brand-violet));
+  border-radius: var(--sophie-radius-md);
+  background: var(--color-ke-bg, var(--sophie-surface-1));
+  box-shadow: 0 1px 3px color-mix(in oklch, #0f1115 4%, transparent);
+  /* :target highlights when navigated to via #hash-anchor */
+  scroll-margin-block-start: var(--sophie-space-4, 1rem);
+}
+
+.section:target {
+  outline: 2px solid var(--sophie-accent);
+  outline-offset: 4px;
+}
+
+.title {
+  margin: 0 0 var(--sophie-space-3, 0.75rem);
+  font-family: var(--sophie-font-serif);
+  font-size: var(--sophie-text-lg);
+  font-weight: var(--sophie-weight-semibold);
+  color: var(--color-ke-title, var(--sophie-brand-violet-text));
+  letter-spacing: 0.01em;
+}
+
+.body {
+  font-size: var(--sophie-text-base);
+  line-height: var(--sophie-leading-prose);
+  color: var(--sophie-text);
+}
+
+.body :is(p, ul, ol) {
+  margin-block: var(--sophie-space-2, 0.5rem);
+}
+
+/*
+ * The KaTeX-rendered $$ block (class added by the MDX pipeline via
+ * rehype-katex). Center it, add breathing room, allow horizontal
+ * overflow scroll for wide equations on narrow viewports.
+ */
+.body :global(.katex-display) {
+  margin-block: var(--sophie-space-4, 1rem);
+  padding-block: var(--sophie-space-2, 0.5rem);
+  overflow-x: auto;
+}
+
+.body strong {
+  color: var(--sophie-brand-violet-text);
+  font-weight: var(--sophie-weight-semibold);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section {
+    scroll-behavior: auto;
+  }
+}
