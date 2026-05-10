@@ -39,14 +39,24 @@ const config: TestRunnerConfig = {
 
     await waitForPageReady(page);
 
-    // Visual snapshot diff. Threshold is generous on first land
-    // (anti-aliasing + font hinting differ across CI/local). Tighten once
-    // we observe real diff levels in CI.
+    // Visual snapshot diff via SSIM (structural similarity), not raw
+    // pixel diff. SSIM is the right tool for cross-platform baselines:
+    // macOS-generated baselines vs Ubuntu CI rendering produce 1–2.4%
+    // raw-pixel diffs purely from anti-aliasing / font hinting, even
+    // though the structure (layout, colors, shapes) is identical.
+    // SSIM ignores sub-pixel rendering and measures perceptual
+    // similarity — small enough that the baseline files stay
+    // platform-agnostic, large enough to catch real UI regressions
+    // (layout shifts, missing elements, color drift).
+    //
+    // Threshold 0.05 (5% SSIM dissimilarity) is generous for first land;
+    // tighten once we have empirical cross-platform diff data.
     const image = await page.screenshot();
     expect(image).toMatchImageSnapshot({
       customSnapshotsDir,
       customSnapshotIdentifier: context.id,
-      failureThreshold: 0.01,
+      comparisonMethod: "ssim",
+      failureThreshold: 0.05,
       failureThresholdType: "percent",
     });
   },

@@ -109,6 +109,18 @@ Storybook (axe-while-developing checks the disabled-busy state).
   faded-text tokens) at small font sizes; preliminary check suggests
   they sit just below AA contrast on cream bg and may need to be
   darkened in `@sophie/theme`.
+- **Visual comparison uses SSIM, not pixelmatch.** Baselines committed
+  locally (macOS) produce 1–2.4% raw-pixel differences against
+  Ubuntu CI rendering, purely from anti-aliasing and font hinting —
+  even when the layout, colors, and shapes are identical. SSIM
+  (Structural Similarity Index) measures perceptual similarity instead
+  of per-pixel byte equality, so the baselines stay platform-agnostic
+  while still catching real UI regressions (layout shifts, missing
+  elements, color drift, structural differences). Threshold is 0.05
+  (5% SSIM dissimilarity) for first land — generous; tighten once
+  we have empirical cross-platform data. A future enhancement is to
+  generate Linux baselines via Docker (or via a one-shot CI workflow)
+  for stricter pixelmatch-mode comparison.
 - **CI orchestration**: `pnpm exec turbo run build-storybook
   --filter=@sophie/components` produces `storybook-static/` (cached
   by Turbo); CI then `npx http-server`s it on port 6006 and runs
