@@ -33,5 +33,11 @@
     "turbo": "2.9.12",
     "typescript": "6.0.3",
     "tsx": "4.21.0"
+  },
+  "pnpm": {
+    "supportedArchitectures": {
+      "os": ["darwin", "linux"],
+      "cpu": ["arm64", "x64"]
+    }
   }
 }

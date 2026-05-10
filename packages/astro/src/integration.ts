@@ -89,6 +89,22 @@ export function defineSophieIntegration(
               noExternal: SOPHIE_NO_EXTERNAL,
             },
             build: {
+              // Astro 6's content layer pulls Vite's module-runner
+              // into prerender chunks, and module-runner transitively
+              // inlines rollup's native.js — which uses dynamic
+              // `require()` to load platform-specific
+              // `@rollup/rollup-${platform}` bindings. The default
+              // `@rollup/plugin-commonjs` behavior shims dynamic
+              // requires with a strict helper that throws "Could not
+              // dynamically require...". Setting ignoreDynamicRequires
+              // leaves those calls intact so they resolve at runtime
+              // through `createRequire(import.meta.url)` (which is
+              // already injected as `__require` in our chunks).
+              // Combined with the __dirname banner above, this makes
+              // rollup's native binding loader work on Linux CI.
+              commonjsOptions: {
+                ignoreDynamicRequires: true,
+              },
               rollupOptions: {
                 external: VITE_BUILD_EXTERNAL,
                 output: {
