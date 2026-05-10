@@ -20,41 +20,52 @@ export interface SophieIntegrationOptions {
 const SOPHIE_NO_EXTERNAL = ["@sophie/astro", "@sophie/components"];
 
 /**
- * Externalize Vite itself and any `vite/*` subpath from the SSR/prerender
- * bundles. Two distinct issues converge on the same fix:
+ * Externalize Astro's transitive build-tool dependencies from the
+ * SSR/prerender bundles. Astro 6's prerender env sets
+ * `resolve.noExternal: ["astro"]` ([astro/dist/core/build/plugins/plugin-internals.js]),
+ * forcing the entire `astro` package into the bundle. Astro imports
+ * bare `vite` and bare `esbuild` from many of its own `.js` files
+ * (e.g. `astro/dist/core/create-vite.js`,
+ * `astro/dist/core/client-directive/build.js`), so those build tools
+ * get bundled too — and they have OS-conditional optional imports
+ * (rollup → `fsevents` macOS-only) that fail to resolve at bundle
+ * time on Linux runners.
  *
- *   1. `@vitejs/plugin-react@5.2.0` (transitive via `@astrojs/react@5.0.4`)
- *      does `await import("vite/internal")` for React Refresh's native
- *      wrapper. Vite 7.3.3 doesn't expose that subpath, so the bundler
- *      crashes unless `vite/internal` is external. (Phase 0 finding.)
+ * Two patterns cover the immediate failure surface:
+ *   - `/^vite($|\/)/`   bare `vite` + any `vite/*` subpath. Bare
+ *                        catches `import * as vite from "vite"`;
+ *                        subpath catches `vite/internal` (the Phase 0
+ *                        @vitejs/plugin-react case) and `vite/module-runner`
+ *                        (the Phase 1 astro/loaders case). Externalizing
+ *                        vite breaks the chain to rollup before it starts;
+ *                        rollup is only type-imported by astro (`.d.ts`),
+ *                        not value-imported, so it doesn't need its own rule.
+ *   - `/^esbuild($|\/)/` bare `esbuild` + subpaths. Astro directly value-
+ *                        imports esbuild from two `.js` files (build.js,
+ *                        vite-plugin-import-meta-env.js). Esbuild has OS-
+ *                        native binaries and won't bundle cleanly.
  *
- *   2. Astro 6's prerender environment sets `resolve.noExternal: ["astro"]`
- *      ([astro/dist/core/build/plugins/plugin-internals.js]), forcing the
- *      whole `astro` package — including `astro/loaders` (the Content
- *      Layer `glob` loader) — into the prerender chunk. `astro/loaders`
- *      transitively imports `vite/module-runner` and friends; on Linux
- *      (no `fsevents`) the cold path drags rollup's `dist/native.js`
- *      (CJS, uses `__dirname`) into an ESM SSR chunk → build cascade.
- *      (Phase 1 finding; resolved 2026-05-10.)
- *
- * `build.rollupOptions.external` is applied at Rollup level, so it
- * carves `vite/*` back out even though Astro forces `astro` to be
- * bundled. Vite's own `ssr.external` / `resolve.external` fields are
- * typed `string[] | true` — they do *not* accept RegExp at runtime,
- * despite the type cast Phase 0 attempted.
- *
- * Use the regex-array form `[/^vite\//]`, NOT the function form
+ * Use the **regex-array form**, NOT the function form
  * `(id) => /^vite\//.test(id)`. Empirically, Rollup processes string/
  * regex arrays at an earlier resolution phase that the commonjs-resolver
  * plugin consults; the function form fires too late and the resolver
- * still tries to deep-import "./internal" inside vite's own bundled
- * code. Verified by regression on macOS, 2026-05-10.
+ * still tries to deep-import inside the externalized package's bundled
+ * code. Verified by macOS regression, 2026-05-10.
  *
- * TODO: tighten or remove when (a) `@vitejs/plugin-react` drops the
- * `vite/internal` dependency, *and* (b) `astro/loaders` lazy-imports
- * its Vite runtime dependencies (proposed upstream issue).
+ * Vite's own `ssr.external` / `resolve.external` fields are typed
+ * `string[] | true` — they do *not* accept RegExp at runtime, despite
+ * the type cast Phase 0 attempted. `build.rollupOptions.external`
+ * runs at Rollup level and accepts both strings and RegExp in array
+ * form, so it's the correct knob.
+ *
+ * TODO: tighten or remove when Astro narrows `noExternal: ["astro"]`
+ * to specific runtime entry-points instead of the whole package
+ * (proposed upstream issue, B+D hybrid path D).
  */
-const VITE_BUILD_EXTERNAL: (string | RegExp)[] = [/^vite\//];
+const VITE_BUILD_EXTERNAL: (string | RegExp)[] = [
+  /^vite($|\/)/,
+  /^esbuild($|\/)/,
+];
 
 export function defineSophieIntegration(
   _options?: SophieIntegrationOptions
