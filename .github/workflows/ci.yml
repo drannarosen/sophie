@@ -78,7 +78,7 @@ jobs:
       - name: Vitest (unit + coverage)
         run: pnpm exec turbo run test:unit
       - name: Upload coverage artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: coverage
@@ -145,7 +145,7 @@ jobs:
       - name: Playwright e2e
         run: pnpm test:e2e
       - name: Upload Playwright report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: playwright-report
