@@ -131,6 +131,7 @@ jobs:
           path: |
             examples/smoke/dist/
             examples/smoke/.astro/
+          include-hidden-files: true
           if-no-files-found: ignore
           retention-days: 7
 
