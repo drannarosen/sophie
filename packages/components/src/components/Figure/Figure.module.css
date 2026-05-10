@@ -1,0 +1,38 @@
+.figure {
+  display: grid;
+  gap: var(--sophie-space-2);
+  margin-block: var(--sophie-space-5);
+  font-family: var(--sophie-font-sans);
+}
+
+.image {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: var(--sophie-surface-2);
+  border-radius: var(--sophie-radius-md);
+}
+
+.caption {
+  margin: 0;
+  font-size: var(--sophie-text-sm);
+  line-height: var(--sophie-leading-prose);
+  color: var(--sophie-text-2);
+}
+
+.credit {
+  display: block;
+  font-size: var(--sophie-text-xs);
+  color: var(--sophie-text-muted);
+  margin-block-start: var(--sophie-space-1);
+}
+
+.missing {
+  padding: var(--sophie-space-4);
+  border: 1px dashed var(--sophie-status-warning);
+  border-radius: var(--sophie-radius-md);
+  font-family: var(--sophie-font-mono);
+  font-size: var(--sophie-text-sm);
+  color: var(--sophie-text-muted);
+  background: var(--sophie-surface-1);
+}

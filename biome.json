@@ -131,6 +131,33 @@
           }
         }
       }
+    },
+    {
+      "includes": ["packages/components/src/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "astro": "@sophie/components is framework-pure (ADR 0001). Move astro code to @sophie/astro.",
+                  "astro:assets": "@sophie/components is framework-pure (ADR 0001). Use plain <img> in components; image optimization belongs in @sophie/astro.",
+                  "astro:content": "@sophie/components is framework-pure (ADR 0001). Move content-collection code to @sophie/astro.",
+                  "astro:env": "@sophie/components is framework-pure (ADR 0001). Move env-var code to @sophie/astro.",
+                  "astro:transitions": "@sophie/components is framework-pure (ADR 0001). Move transition code to @sophie/astro."
+                },
+                "patterns": [
+                  {
+                    "group": ["@astrojs/**", "astro/**"],
+                    "message": "@sophie/components is framework-pure (ADR 0001). Move astro/@astrojs/* code to @sophie/astro."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
     }
   ]
 }
