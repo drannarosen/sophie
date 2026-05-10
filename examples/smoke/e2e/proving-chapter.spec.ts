@@ -21,11 +21,13 @@ test.describe("Phase 0 vertical-slice acceptance — spoiler-alerts chapter", ()
     // Static structure expectations (matches @sophie/components README's
     // 14→4 mapping table for this chapter).
     // 36 → 35 in Trio 2 (Predict migration, renders as section, not
-    // role=note). 35 → 31 in Trio 3 #1 when the four "Deep Dive: …"
-    // Callouts migrated to <CollapsibleCard> (which renders as a Radix
-    // Collapsible — a button + region, not role=note). See
-    // examples/smoke/e2e/collapsible-card.spec.ts for coverage.
-    await expect(page.locator("[role='note']")).toHaveCount(31);
+    // role=note). 35 → 31 in Trio 3 #1 (four Deep Dive Callouts →
+    // <CollapsibleCard>, which renders as Radix Collapsible — button +
+    // region, not role=note). 31 → 29 in Trio 3 #2 (Inverse-Square Law
+    // and Wien's Law Callouts → <KeyEquation>, which renders as a
+    // <section role="region">). See examples/smoke/e2e/key-equation.spec.ts
+    // for coverage.
+    await expect(page.locator("[role='note']")).toHaveCount(29);
     // 19 → 18 in Trio 3 #1 — one figure ("standard-candles") lives inside
     // the "Deep Dive: How the Distance Ladder Works" CollapsibleCard,
     // which is collapsed by default. Radix Collapsible unmounts content

@@ -1,4 +1,9 @@
-import { Callout, Figure, type FigureRegistry } from "@sophie/components";
+import {
+  Callout,
+  Figure,
+  type FigureRegistry,
+  KeyEquation,
+} from "@sophie/components";
 
 export interface MakeStaticComponentsOptions {
   /**
@@ -29,6 +34,9 @@ interface MdxFigureProps {
 export function makeStaticComponents({ figures }: MakeStaticComponentsOptions) {
   return {
     Callout,
+    // KeyEquation is content-only (no per-instance state, no client:load).
+    // Flows through the static components map alongside Callout/Figure.
+    KeyEquation,
     Figure: (props: MdxFigureProps) => {
       if (props.name !== undefined) {
         return (
