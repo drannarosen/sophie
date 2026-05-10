@@ -112,14 +112,25 @@ jobs:
             ${{ runner.os }}-turbo-
       - name: Turborepo build (packages + smoke)
         run: pnpm exec turbo run build
-      - name: Upload smoke prerender chunks (build-failure debug)
+      - name: Inventory smoke build outputs (build-failure debug)
+        if: failure()
+        run: |
+          echo "=== examples/smoke/ ==="
+          ls -la examples/smoke/ || true
+          echo "=== examples/smoke/dist/ ==="
+          ls -laR examples/smoke/dist/ 2>&1 | head -200 || true
+          echo "=== examples/smoke/.astro/ ==="
+          ls -la examples/smoke/.astro/ 2>&1 | head -40 || true
+          echo "=== find any *.prerender* anywhere under examples/ ==="
+          find examples/ -name '*prerender*' -maxdepth 6 2>&1 | head -40 || true
+      - name: Upload smoke debug artifacts
         uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: smoke-prerender-debug
+          name: smoke-build-debug
           path: |
-            examples/smoke/dist/.prerender/
-            examples/smoke/dist/server/
+            examples/smoke/dist/
+            examples/smoke/.astro/
           if-no-files-found: ignore
           retention-days: 7
 
