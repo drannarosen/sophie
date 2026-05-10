@@ -61,6 +61,55 @@
   color: var(--sophie-brand-violet-text);
 }
 
+/*
+ * In-chapter section-marker variants (Trio 2 expansion, 2026-05-10).
+ * Ported from astr101-sp26/assets/theme/callouts.scss (.callout-roadmap,
+ * .callout-summary, .callout-key-insight). Color tokens map to existing
+ * Sophie brand/status palette since the classroom uses an external
+ * bootstrap-icons font for icon glyphs that we don't yet bring into
+ * Sophie. Differentiation is via border + title color + the variant's
+ * default title text.
+ */
+
+.roadmap {
+  border-left-color: var(--sophie-text-muted);
+  background: color-mix(
+    in oklab,
+    var(--sophie-text-muted) 4%,
+    var(--sophie-surface-1)
+  );
+}
+
+.roadmap .title {
+  color: var(--sophie-text-muted);
+}
+
+.summary {
+  border-left-color: var(--sophie-status-success);
+  background: color-mix(
+    in oklab,
+    var(--sophie-status-success) 4%,
+    var(--sophie-surface-1)
+  );
+}
+
+.summary .title {
+  color: var(--sophie-status-success);
+}
+
+.key-insight {
+  border-left-color: var(--sophie-status-warning);
+  background: color-mix(
+    in oklab,
+    var(--sophie-status-warning) 6%,
+    var(--sophie-surface-1)
+  );
+}
+
+.key-insight .title {
+  color: var(--sophie-status-warning);
+}
+
 .reviewedRow {
   display: flex;
   gap: var(--sophie-space-2);

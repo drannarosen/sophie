@@ -177,9 +177,9 @@ of the [ADR 0004 contract](../decisions/0004-component-contract-revisions.md)
 
 | Trio | Components | Class coverage | SCSS port |
 |---|---|---|---|
-| **2 (next)** | `<LearningObjectives>` · `<LectureCard>` · `<Predict>` | chapter primitive · structural · persistence-bearing | `lecture-cards.scss`; tokens in `@sophie/theme` already |
-| **3** | `<CollapsibleCard>` · `<KeyEquation>` · `<MiniGlossary>` | structural · content · structural | `collapsible-cards.scss`, `glossary.scss` |
-| **4** | `<PullQuote>` · `<Equation>` (numbered/captioned KaTeX wrapper) · Callout variant extensions (`misconception`, `checkpoint`) | content · content · contract-extension | New design (no classroom SCSS); Callout extension uses existing `callouts.scss` patterns |
+| **2** | `<LearningObjectives>` ✅ · Callout variant expansion (roadmap/summary/key-insight) ✅ · `<Predict>` (next) | chapter primitive · variant-extension · persistence-bearing | `callouts.scss` `.callout-{roadmap,summary,key-insight}`; tokens already in `@sophie/theme` |
+| **3** | `<CollapsibleCard>` (owns "deep-dive") · `<KeyEquation>` · `<MiniGlossary>` | structural · content · structural | `collapsible-cards.scss`, `glossary.scss` |
+| **4** | `<PullQuote>` · `<Equation>` (numbered/captioned KaTeX wrapper) · further Callout variants (`misconception`, `checkpoint`, `prediction`-styled wrapper for `<Predict>`) | content · content · variant-extension | Patterns from `callouts.scss` |
 
 Each component PR carries: contract-conformance test, axe-core
 test, e2e test in smoke that renders the actual chapter pattern,

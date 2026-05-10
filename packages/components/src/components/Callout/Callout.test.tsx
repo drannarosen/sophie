@@ -9,13 +9,49 @@ function withProfile(node: React.ReactNode) {
 }
 
 describe("<Callout> (static)", () => {
-  it("renders all four variants with correct accessible name", () => {
-    const variants = ["info", "warning", "tip", "caution"] as const;
+  it("renders all seven variants with correct accessible name", () => {
+    const variants = [
+      "info",
+      "warning",
+      "tip",
+      "caution",
+      "roadmap",
+      "summary",
+      "key-insight",
+    ] as const;
     for (const variant of variants) {
       const { unmount } = render(
         <Callout variant={variant}>Body content for {variant}.</Callout>
       );
       expect(screen.getByRole("note")).toBeInTheDocument();
+      unmount();
+    }
+  });
+
+  it("uses a sensible default title for each in-chapter section-marker variant", () => {
+    const expected = {
+      roadmap: "Roadmap",
+      summary: "Summary",
+      "key-insight": "Key Insight",
+    } as const;
+    for (const [variant, title] of Object.entries(expected)) {
+      const { unmount } = render(
+        <Callout variant={variant as keyof typeof expected}>Body</Callout>
+      );
+      expect(screen.getByRole("note", { name: title })).toBeInTheDocument();
+      unmount();
+    }
+  });
+
+  it("each in-chapter section-marker variant has zero axe violations", async () => {
+    for (const variant of ["roadmap", "summary", "key-insight"] as const) {
+      const { container, unmount } = render(
+        <Callout variant={variant} title='Variant in context'>
+          <p>Some prose body for the {variant} variant.</p>
+        </Callout>
+      );
+      const results = await axe(container);
+      expect(results.violations).toEqual([]);
       unmount();
     }
   });
