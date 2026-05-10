@@ -12,11 +12,32 @@ import { compositeKey } from "./ResponseStore.ts";
 
 export type InteractiveStatus = "loading" | "ready" | "error";
 
+/**
+ * Spread on persistence-bearing inputs/buttons to gate user
+ * interaction until IndexedDB hydration completes. Without this,
+ * a click that lands between mount and IDB-fetch resolution gets
+ * silently overwritten by the fetch's `setLocalValue(persisted ?? initial)`.
+ *
+ * Convention codified in `docs/website/contributing/coding-standards.md`
+ * § "Persistence-bearing controls".
+ */
+export interface InteractiveControlProps {
+  disabled: boolean;
+  "aria-busy": boolean;
+}
+
 export interface UseInteractiveResult<T> {
   value: T;
   setValue: (next: T) => void;
   status: InteractiveStatus;
   error: Error | null;
+  /** True when the IndexedDB fetch has resolved (status === "ready"). */
+  hydrated: boolean;
+  /**
+   * Spread on the interactive control element. Sets `disabled` and
+   * `aria-busy` to `true` while loading, `false` when hydrated.
+   */
+  controlProps: InteractiveControlProps;
 }
 
 const stores = new Map<string, ResponseStore>();
@@ -149,5 +170,11 @@ export function useInteractive<T>(
     [course, chapter, profile, componentKey, senderId]
   );
 
-  return { value, setValue, status, error };
+  const hydrated = status === "ready";
+  const controlProps: InteractiveControlProps = {
+    disabled: !hydrated,
+    "aria-busy": !hydrated,
+  };
+
+  return { value, setValue, status, error, hydrated, controlProps };
 }

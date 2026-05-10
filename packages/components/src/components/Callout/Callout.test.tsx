@@ -1,4 +1,4 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import { axe } from "jest-axe";
 import { describe, expect, it } from "vitest";
 import { ProfileProvider } from "../../runtime/ProfileContext.tsx";
@@ -54,9 +54,12 @@ describe("<InteractiveCallout>", () => {
     );
     const checkbox = await screen.findByRole("checkbox");
     expect(checkbox).not.toBeChecked();
+    // Per the controlProps hydration-guard pattern: wait for the
+    // disabled-while-loading state to clear before clicking. Otherwise
+    // the click would be suppressed by `disabled={!hydrated}`.
+    await waitFor(() => expect(checkbox).not.toBeDisabled());
     await act(async () => {
       checkbox.click();
-      await Promise.resolve();
     });
     expect(checkbox).toBeChecked();
     expect(screen.getByText("Reviewed")).toBeInTheDocument();

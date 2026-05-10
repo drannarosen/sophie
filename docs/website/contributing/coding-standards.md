@@ -102,6 +102,52 @@ these without a superseding ADR is a bug.**
   carry hydration metadata. See
   [ADR 0027](../decisions/0027-mdx-render-boundary-prop-threading.md).
 
+### Persistence-bearing controls MUST spread `controlProps`
+
+Any `<input>`, `<button>`, or other interactive control whose state
+comes from a `useInteractive` value MUST spread the hook's
+`controlProps` onto the element:
+
+```tsx
+const { value, setValue, controlProps } = useInteractive(
+  course, chapter, key, false
+);
+return (
+  <input
+    type='checkbox'
+    checked={value}
+    {...controlProps}                            // ← required
+    onChange={(e) => setValue(e.target.checked)}
+  />
+);
+```
+
+`controlProps` sets `disabled` and `aria-busy` to `true` while
+`useInteractive` is loading from IndexedDB, then to `false` once
+hydration completes. Without it, a click landing between mount and
+IDB-fetch resolution gets silently overwritten by the fetch's
+`setLocalValue(persisted ?? initial)` — the user's interaction
+disappears.
+
+**Prefer `<InteractiveCheckbox>`** for the simple checkbox + label
+case; it embeds the spread automatically:
+
+```tsx
+<InteractiveCheckbox course='astr201' chapter='ch1' id='goal-1'>
+  Mark as understood
+</InteractiveCheckbox>
+```
+
+Custom interactive controls (form inputs, multi-state widgets,
+button groups) compose `useInteractive` directly and spread
+`controlProps` themselves.
+
+Surfaced 2026-05-10 during Trio 2 implementation
+([docs/plans/2026-05-10-phase-1-component-trios.md § Lessons
+surfaced during Trio 2](../../plans/2026-05-10-phase-1-component-trios.md#lessons-surfaced-during-trio-2-learningobjectives)).
+Pattern is non-optional; new persistence-bearing controls without
+the spread are bugs.
+
 ## Tests
 
 - **Vitest** for unit tests; colocated as `<Name>.test.ts(x)`.

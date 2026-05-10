@@ -68,12 +68,14 @@ function ReviewedRow({
   variant: CalloutVariant;
 }) {
   const checkboxId = useId();
-  const { value: reviewed, setValue: setReviewed } = useInteractive(
-    course,
-    chapter,
-    `callout:${calloutId}:reviewed`,
-    false
-  );
+  // Spread `controlProps` per ADR-codified hydration guard pattern
+  // (coding-standards.md § Persistence-bearing controls). Keeps clicks
+  // landing before IDB-fetch resolution from being silently overwritten.
+  const {
+    value: reviewed,
+    setValue: setReviewed,
+    controlProps,
+  } = useInteractive(course, chapter, `callout:${calloutId}:reviewed`, false);
 
   return (
     <div className={styles.reviewedRow}>
@@ -81,6 +83,7 @@ function ReviewedRow({
         id={checkboxId}
         type='checkbox'
         checked={reviewed}
+        {...controlProps}
         onChange={(event) => setReviewed(event.target.checked)}
         aria-describedby={`${checkboxId}-label`}
       />

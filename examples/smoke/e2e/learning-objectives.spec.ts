@@ -66,7 +66,10 @@ test.describe("<LearningObjectives> in spoiler-alerts chapter", () => {
     await expect(thesisCheckboxReloaded).toBeChecked({ timeout: 5000 });
 
     // Verify the IDB stored the checked state under the expected key
-    // shape: profile : chapter : learning-objectives:${componentId}:${objectiveId}:checked
+    // shape: profile : chapter : interactive-checkbox:${componentId}:${objectiveId}:checked
+    // (The `interactive-checkbox:` prefix comes from the
+    // <InteractiveCheckbox> wrapper that ObjectiveRow uses to embed the
+    // disabled-while-loading hydration guard automatically.)
     const storedValue = await page.evaluate(async () => {
       const db = await new Promise<IDBDatabase>((resolve, reject) => {
         const req = indexedDB.open("sophie-astr201");
@@ -78,7 +81,7 @@ test.describe("<LearningObjectives> in spoiler-alerts chapter", () => {
         const store = tx.objectStore("responses");
         const value = await new Promise((resolve) => {
           const req = store.get(
-            "student:spoiler-alerts:learning-objectives:lo:thesis:checked"
+            "student:spoiler-alerts:interactive-checkbox:lo:thesis:checked"
           );
           req.onsuccess = () => resolve(req.result);
         });
