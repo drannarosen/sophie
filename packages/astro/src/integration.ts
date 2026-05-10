@@ -20,16 +20,28 @@ export interface SophieIntegrationOptions {
 const SOPHIE_NO_EXTERNAL = ["@sophie/astro", "@sophie/components"];
 
 /**
- * @vitejs/plugin-react@5.2.0 (transitive via @astrojs/react@5.0.4) does
- * `await import("vite/internal")` for React Refresh's native wrapper.
- * Vite 7.3.3 doesn't expose that subpath, so Rollup's commonjs-resolver
- * crashes at build time. Marking external lets the dynamic import fail
- * at runtime where the plugin handles it gracefully.
+ * Build-time externals for Rollup. Each entry is a module that Rollup
+ * tries to resolve statically but should be left to the runtime ESM
+ * loader.
  *
- * TODO: remove when @vitejs/plugin-react ships a version that drops the
- * vite/internal dependency or Vite re-exports the path.
+ * - `vite/internal`: @vitejs/plugin-react@5.2.0 (transitive via
+ *   @astrojs/react@5.0.4) does `await import("vite/internal")` for
+ *   React Refresh's native wrapper. Vite 7.3.3 doesn't expose that
+ *   subpath, so Rollup's commonjs-resolver crashes at build time.
+ *   Marking external lets the dynamic import fail at runtime where
+ *   the plugin handles it gracefully.
+ *   TODO: remove when @vitejs/plugin-react ships a version that drops
+ *   the vite/internal dependency or Vite re-exports the path.
+ *
+ * - `fsevents`: macOS-only native file watcher. Rollup imports it
+ *   defensively for chokidar's polyfill path; on Linux runners (CI) it
+ *   doesn't resolve, and @vitejs/plugin-react's onwarn promotes the
+ *   resolve-failure to a build error. Externalizing matches the
+ *   pattern Vite/Rollup themselves use for fsevents and silences the
+ *   error on non-macOS builds without affecting macOS dev (where it
+ *   resolves and is used).
  */
-const VITE_BUILD_EXTERNAL = ["vite/internal"];
+const VITE_BUILD_EXTERNAL = ["vite/internal", "fsevents"];
 
 export function defineSophieIntegration(
   _options?: SophieIntegrationOptions
