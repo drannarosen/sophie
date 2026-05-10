@@ -13,6 +13,33 @@ export {
   InteractiveCalloutPropsSchema,
   interactiveCalloutContract,
 } from "./components/Callout/index.ts";
+export type {
+  ComprehensionGateProps,
+  ComprehensionLevel,
+} from "./components/ComprehensionGate/index.ts";
+export {
+  ComprehensionGate,
+  ComprehensionGatePropsSchema,
+  comprehensionGateContract,
+} from "./components/ComprehensionGate/index.ts";
+export type {
+  ConfidenceCheckProps,
+  ConfidenceScale,
+} from "./components/ConfidenceCheck/index.ts";
+export {
+  ConfidenceCheck,
+  ConfidenceCheckPropsSchema,
+  confidenceCheckContract,
+} from "./components/ConfidenceCheck/index.ts";
+export type {
+  EffortLevel,
+  EffortLogProps,
+} from "./components/EffortLog/index.ts";
+export {
+  EffortLog,
+  EffortLogPropsSchema,
+  effortLogContract,
+} from "./components/EffortLog/index.ts";
 export type { FigureProps } from "./components/Figure/Figure.schema.ts";
 export {
   Figure,
@@ -48,6 +75,12 @@ export {
   PredictPropsSchema,
   predictContract,
 } from "./components/Predict/index.ts";
+export type { ReflectionProps } from "./components/Reflection/index.ts";
+export {
+  Reflection,
+  ReflectionPropsSchema,
+  reflectionContract,
+} from "./components/Reflection/index.ts";
 
 // Contract
 export type {
@@ -71,6 +104,7 @@ export type {
   InteractiveStatus,
   Profile,
   ResponseStore,
+  SelfAssessmentWidget,
   SyncedResponseStore,
   UseInteractiveResult,
 } from "./runtime/index.ts";
@@ -79,4 +113,5 @@ export {
   ProfileProvider,
   useInteractive,
   useProfile,
+  useSelfAssessment,
 } from "./runtime/index.ts";

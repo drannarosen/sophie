@@ -18,6 +18,8 @@ export type {
   UseInteractiveResult,
 } from "./useInteractive.ts";
 export { useInteractive } from "./useInteractive.ts";
+export type { SelfAssessmentWidget } from "./useSelfAssessment.ts";
+export { useSelfAssessment } from "./useSelfAssessment.ts";
 
 /** FigureRegistry shape used by <Figure registry={...}> and consumers. */
 export interface FigureEntry {

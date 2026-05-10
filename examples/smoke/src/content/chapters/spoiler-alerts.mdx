@@ -6,7 +6,15 @@ description: "A trailer for the semester: how astronomers turn photons into phys
 tags: ["course-overview", "foundations"]
 ---
 
-import { InteractiveCallout, LearningObjectives, Predict } from "@sophie/components";
+import {
+  ComprehensionGate,
+  ConfidenceCheck,
+  EffortLog,
+  InteractiveCallout,
+  LearningObjectives,
+  Predict,
+  Reflection,
+} from "@sophie/components";
 
 <LearningObjectives
   client:load
@@ -1179,6 +1187,41 @@ Use these as a fast warm-up. Keep answers short but explicit about **what was me
 3. Energy is inversely proportional to wavelength, so doubling $\lambda$ halves $E$.  
 4. You see Andromeda as it was 2.5 million years ago; lookback time equals distance in light-years.
 </Callout>
+
+## How was the reading?
+
+<ConfidenceCheck
+  client:load
+  course="astr201"
+  chapter="spoiler-alerts"
+  id="post-reading-confidence"
+  prompt="How confident do you feel about the course's central thesis (pretty pictures → measurements → models → inferences)?"
+/>
+
+<ComprehensionGate
+  client:load
+  course="astr201"
+  chapter="spoiler-alerts"
+  id="post-reading-comprehension"
+  prompt="How well did you follow the inverse-square law section?"
+/>
+
+<EffortLog
+  client:load
+  course="astr201"
+  chapter="spoiler-alerts"
+  id="post-reading-effort"
+  prompt="How thoroughly did you engage with this lecture?"
+/>
+
+<Reflection
+  client:load
+  course="astr201"
+  chapter="spoiler-alerts"
+  id="post-reading-reflection"
+  prompt="What was the most confusing thing in this reading?"
+  placeholder="Optional. The instructor uses these to surface common stuck points."
+/>
 
 ## Practice Problems
 
