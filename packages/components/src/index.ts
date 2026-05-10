@@ -37,6 +37,17 @@ export {
   learningObjectivesContract,
   ObjectiveSchema,
 } from "./components/LearningObjectives/index.ts";
+export type {
+  PredictPrompt,
+  PredictProps,
+  PredictState,
+} from "./components/Predict/index.ts";
+export {
+  Predict,
+  PredictPromptSchema,
+  PredictPropsSchema,
+  predictContract,
+} from "./components/Predict/index.ts";
 
 // Contract
 export type {

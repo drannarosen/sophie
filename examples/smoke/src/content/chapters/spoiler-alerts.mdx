@@ -6,7 +6,7 @@ description: "A trailer for the semester: how astronomers turn photons into phys
 tags: ["course-overview", "foundations"]
 ---
 
-import { InteractiveCallout, LearningObjectives } from "@sophie/components";
+import { InteractiveCallout, LearningObjectives, Predict } from "@sophie/components";
 
 <LearningObjectives
   client:load
@@ -286,14 +286,24 @@ For now, the inverse-square law ($F = L/4\pi d^2$) is a **working equation**—y
 
 *We'll return to the inverse-square law quantitatively when we build the distance ladder step by step.*
 
-<Callout variant="tip" title="Prediction Moment">
-Look at the first image in the spoiler reel below (the colorful nebulae). Before reading the explanation, jot down:
-
-1. What do you *think* the different colors might represent?
-2. What do you *think* the dark regions are?
-
-There's no wrong answer—this is about surfacing your intuitions. We'll see how they compare to the physics.
-</Callout>
+<Predict
+  client:load
+  course="astr201"
+  chapter="spoiler-alerts"
+  id="nebulae-colors"
+  description="Look at the first image in the spoiler reel below (the colorful nebulae). Before reading the explanation, jot down:"
+  prompts={[
+    {
+      id: "colors",
+      label: "What do you think the different colors might represent?",
+    },
+    {
+      id: "darks",
+      label: "What do you think the dark regions are?",
+    },
+  ]}
+  closing="There's no wrong answer—this is about surfacing your intuitions. We'll see how they compare to the physics."
+/>
 
 ---
 
