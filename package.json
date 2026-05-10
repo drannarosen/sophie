@@ -20,12 +20,16 @@
     "dev": "turbo run dev",
     "test": "turbo run test",
     "test:unit": "turbo run test:unit",
+    "test:e2e": "playwright test",
+    "test:e2e:install": "playwright install --with-deps chromium",
     "lint": "biome check .",
     "format": "biome format --write .",
     "typecheck": "turbo run typecheck"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.10.2",
     "@biomejs/biome": "2.4.15",
+    "@playwright/test": "^1.56.0",
     "turbo": "2.9.12",
     "typescript": "6.0.3",
     "tsx": "4.21.0"

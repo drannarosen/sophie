@@ -19,5 +19,17 @@ export default defineConfig({
         classNameStrategy: "non-scoped",
       },
     },
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "html", "json", "json-summary"],
+      include: ["src/**"],
+      exclude: [
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "**/index.ts",
+        "**/*.d.ts",
+        "src/css-modules.d.ts",
+      ],
+    },
   },
 });

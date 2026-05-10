@@ -27,6 +27,7 @@ const { frontmatter } = Astro.props;
   <body>
     <SophieChapter client:load>
       <main>
+        <h1>{frontmatter.title}</h1>
         <slot />
       </main>
     </SophieChapter>

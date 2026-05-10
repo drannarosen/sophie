@@ -2,16 +2,16 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": "src",
     "noEmit": true,
-    "types": ["node"],
+    "types": ["node", "vitest/globals"],
     "ignoreDeprecations": "6.0",
+    "allowImportingTsExtensions": true,
     "paths": {
       "@sophie/core/schema": ["./src/schema/index.ts"],
       "@sophie/core/audit": ["./src/audit/index.ts"],
       "@sophie/core/cli": ["./src/cli/index.ts"]
     }
   },
-  "include": ["src"],
+  "include": ["src", "vitest.config.ts"],
   "exclude": ["dist", "node_modules"]
 }
