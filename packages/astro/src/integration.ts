@@ -43,6 +43,38 @@ const SOPHIE_NO_EXTERNAL = ["@sophie/astro", "@sophie/components"];
  */
 const VITE_BUILD_EXTERNAL = ["vite/internal", "fsevents"];
 
+/**
+ * `__dirname` / `__filename` polyfill prepended to every SSR/prerender
+ * ESM chunk. Astro's `astro:content` runtime pulls in Vite's
+ * module-runner during prerender, which transitively inlines rollup's
+ * `dist/native.js` — a CJS module that uses bare `__dirname` to
+ * locate its platform-specific `@rollup/rollup-*.node` binding. The
+ * bundler converts CJS→ESM and polyfills `require` via
+ * `createRequire(import.meta.url)` but does NOT polyfill `__dirname`,
+ * so the prerender chunk crashes on Linux with
+ * `__dirname is not defined in ES module scope`.
+ *
+ * On macOS the failure does not reproduce because a different
+ * resolution path (with `fsevents` present) avoids dragging
+ * rollup/native.js into the chunk. CI on Ubuntu hits the cold path.
+ *
+ * Banner is scoped to `.mjs` chunks via filename suffix, so the
+ * client `_astro/*.js` bundle is unaffected. The aliased identifiers
+ * (`___fu`, `___pd`) are unlikely to collide; ESM modules dedupe
+ * imports of the same source even if someone else imports
+ * `fileURLToPath`/`dirname` directly.
+ */
+const SSR_DIRNAME_POLYFILL_BANNER = [
+  "import { fileURLToPath as ___fu } from 'node:url';",
+  "import { dirname as ___pd } from 'node:path';",
+  "const __filename = ___fu(import.meta.url);",
+  "const __dirname = ___pd(__filename);",
+].join("\n");
+
+function ssrChunkBanner(chunk: { fileName?: string }): string {
+  return chunk.fileName?.endsWith(".mjs") ? SSR_DIRNAME_POLYFILL_BANNER : "";
+}
+
 export function defineSophieIntegration(
   _options?: SophieIntegrationOptions
 ): AstroIntegration {
@@ -59,6 +91,9 @@ export function defineSophieIntegration(
             build: {
               rollupOptions: {
                 external: VITE_BUILD_EXTERNAL,
+                output: {
+                  banner: ssrChunkBanner,
+                },
               },
             },
           },
