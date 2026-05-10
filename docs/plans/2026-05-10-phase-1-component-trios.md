@@ -285,6 +285,54 @@ landed cleanly using the hardened pattern from PR #8 — no race-
 condition discovery this time, which is what the hardening was
 supposed to deliver.
 
+## Trio 2.5 — Self-assessment family (SHIPPED 2026-05-10)
+
+Inserted between Trio 2 and Trio 3 because the
+"should we add confidence to other callouts?" question that came
+up during Trio 2 made it clear self-assessment is its own family,
+not a Predict prop. Anna's classroom uses **all four** widgets
+across ASTR 101 / ASTR 201 / COMP 536; the trios doc had treated
+confidence as a single Likert primitive, which was wrong.
+
+**Four named components + one shared hook:**
+
+- `<ConfidenceCheck>` — Likert (5- or 7-point) → `number`
+- `<ComprehensionGate>` — `'got-it' | 'revisit' | 'stuck'` → string enum
+- `<EffortLog>` — `'skimmed' | 'read' | 'studied'` → string enum
+- `<Reflection>` — freeform → `string`
+- Shared `useSelfAssessment(course, chapter, widget, id, initial)` hook
+  in `runtime/` that wraps `useInteractive` with the standardized
+  key shape `self-assessment:${widget}:${id}`. Returns the same
+  `{value, setValue, controlProps, hydrated, status}` interface so
+  consumers spread `controlProps` per the coding-standards rule.
+
+**Persistence schema for Phase 5 dashboard.** All four widgets'
+keys share the prefix `self-assessment:` so the instructor
+dashboard can query the IDB with one key range
+(`IDBKeyRange.bound("self-assessment:", "self-assessment:~")`)
+and read across all widget types. Per-widget filtering via
+narrower ranges (`self-assessment:confidence:`, etc.).
+
+**Initial-state convention.** Sentinel "no value chosen" — radio
+groups: `0` (Confidence) or `""` (Comprehension/Effort), shown as
+no selection. Textarea: `""`. Pre-selection biases self-assessment;
+explicit-choice-required is more honest.
+
+**Smoke usage.** Demo block at line 1183 of `spoiler-alerts.mdx`
+just before "Practice Problems": one of each widget asking
+post-reading questions. Real chapters will compose them
+selectively where the self-assessment fits the pedagogy.
+
+**Tests.** 21 unit tests (6 ConfidenceCheck + 5 each of the other
+three + 2 useSelfAssessment hook). 3 e2e tests in
+`examples/smoke/e2e/self-assessment.spec.ts`. Total package now
+57 unit tests + 12 e2e, all green.
+
+**Component count.** Sophie now ships **9 components**: Callout,
+Figure, InteractiveCallout, InteractiveCheckbox, LearningObjectives,
+Predict, plus the four new self-assessment widgets. Trio 2 + 2.5
+deliver 5 net-new components beyond Phase 0's three.
+
 ## Trio 2 — structural + content + structural
 
 Lower-risk than Trio 1; momentum trio after the contract pattern

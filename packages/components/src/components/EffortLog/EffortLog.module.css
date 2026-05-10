@@ -1,0 +1,52 @@
+.section {
+  margin-block: var(--space-sa-block, 1rem);
+  padding: var(--space-sa-pad, 0.875rem 1rem);
+  border: 1px solid var(--sophie-border-subtle, currentColor);
+  border-inline-start: 4px solid
+    var(--color-sa-effort, var(--sophie-brand-teal, #4c9b8c));
+  border-radius: var(--radius-sa, 0.375rem);
+  background: var(--color-sa-bg, var(--sophie-surface-1, transparent));
+}
+
+.legend {
+  font-weight: 600;
+  margin: 0 0 var(--space-sa-prompt-gap, 0.5rem);
+  padding: 0;
+}
+
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sa-option-gap, 0.5rem);
+}
+
+.option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  border: 1px solid var(--sophie-border-subtle, currentColor);
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.95em;
+  background: var(--sophie-surface-1, transparent);
+}
+
+.option:has(.radio:checked) {
+  border-color: var(--color-sa-effort, var(--sophie-brand-teal, currentColor));
+  background: color-mix(
+    in oklab,
+    var(--color-sa-effort, var(--sophie-brand-teal, currentColor)) 8%,
+    var(--sophie-surface-1, transparent)
+  );
+}
+
+.radio {
+  margin: 0;
+  cursor: pointer;
+}
+
+.radio:disabled {
+  cursor: progress;
+  opacity: 0.5;
+}

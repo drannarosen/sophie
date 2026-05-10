@@ -178,7 +178,7 @@ of the [ADR 0004 contract](../decisions/0004-component-contract-revisions.md)
 | Trio | Components | Class coverage | SCSS port |
 |---|---|---|---|
 | **2 (closed)** | `<LearningObjectives>` ✅ · Callout variant expansion (roadmap/summary/key-insight) ✅ · `<Predict>` ✅ | chapter primitive · variant-extension · persistence-bearing | `callouts.scss` variants; Predict no SCSS port (new design) |
-| **2.5 (next)** | Self-assessment family: `<ConfidenceCheck>` · `<ComprehensionGate>` · `<EffortLog>` · `<Reflection>` | self-assessment widgets, all persistence-bearing | New design (no classroom SCSS); shared persistence schema |
+| **2.5 (closed)** | Self-assessment family ✅: `<ConfidenceCheck>` · `<ComprehensionGate>` · `<EffortLog>` · `<Reflection>` | self-assessment widgets, all persistence-bearing | Shared `useSelfAssessment` hook prefixes IDB keys with `self-assessment:${widget}:` for Phase 5 dashboard queries |
 | **3** | `<CollapsibleCard>` (owns "deep-dive") · `<KeyEquation>` · `<MiniGlossary>` | structural · content · structural | `collapsible-cards.scss`, `glossary.scss` |
 | **4** | `<PullQuote>` · `<Equation>` (numbered/captioned KaTeX wrapper) · further Callout variants (`misconception`, `checkpoint`, `prediction`-styled wrapper for `<Predict>`) | content · content · variant-extension | Patterns from `callouts.scss` |
 
