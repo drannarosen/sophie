@@ -1,0 +1,25 @@
+version: 2
+updates:
+  # npm: security-only for Phase 0.
+  #
+  # `open-pull-requests-limit: 0` disables routine *version* update PRs
+  # for this ecosystem, while still allowing Dependabot to open
+  # *security advisory* PRs (those are gated by the repo's "Dependabot
+  # security updates" toggle in Settings → Code security, not by this
+  # limit). This is the lean Phase 0 substitute for Renovate.
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0
+
+  # github-actions: full version updates allowed.
+  #
+  # Decision #2 of step 9: pin actions to major-version tags (@v4,
+  # etc.) and let Dependabot bump the major when a new one lands. This
+  # keeps the workflow current without manual SHA maintenance.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
