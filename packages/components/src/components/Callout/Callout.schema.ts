@@ -1,7 +1,20 @@
 import type { ReactNode } from "react";
 import { z } from "zod";
 
-export const CalloutVariant = z.enum(["info", "warning", "tip", "caution"]);
+export const CalloutVariant = z.enum([
+  // Generic admonitions (Phase 0).
+  "info",
+  "warning",
+  "tip",
+  "caution",
+  // In-chapter section markers (Trio 2 expansion, 2026-05-10).
+  // Each shipped because the smoke chapter already uses the pattern;
+  // additional pedagogical variants (misconception, prediction,
+  // worked-example, etc.) follow when their consuming components ship.
+  "roadmap",
+  "summary",
+  "key-insight",
+]);
 export type CalloutVariant = z.infer<typeof CalloutVariant>;
 
 /** Props for the static `<Callout>` component. */

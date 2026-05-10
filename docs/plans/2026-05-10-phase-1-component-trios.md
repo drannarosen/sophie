@@ -46,7 +46,7 @@ every prose pattern in `spoiler-alerts.mdx`:
 | Pattern | Smoke usages | Component | SCSS source |
 |---|---|---|---|
 | Deep Dive | 4× | `<CollapsibleCard>` | `astr101-sp26/assets/theme/collapsible-cards.scss` |
-| Roadmap / Summary / Section markers | 5× | `<LectureCard>` | `lecture-cards.scss` |
+| Roadmap / Summary / Section markers | 6× | **Callout variant expansion** (`variant="roadmap"`, `variant="summary"`, `variant="key-insight"`) — NOT a new component | `callouts.scss` `.callout-roadmap` / `.callout-summary` / `.callout-key-insight` |
 | Equation explainer | 7× | `<KeyEquation>` | New (no classroom SCSS) |
 
 ### Tier 2 (clear pattern, smaller scope)
@@ -148,37 +148,62 @@ absorbed into the component's own heading (configurable via the
 first Trio 2 component using the proving-ground rather than a
 new consumer repo per [phase-1-plan §4.1](../website/status/phase-1-plan.md#41-component-build-sequence-class-coverage-trios).
 
-### `<LectureCard>` (structural)
+### Callout variant expansion — replaces the originally-proposed `<LectureCard>`
 
-**Purpose.** Section-marker / roadmap / summary blocks. Currently
-approximated by `<Callout title="Roadmap..." variant="info">`.
+**SHIPPED 2026-05-10** as Trio 2 component #2.
 
-**Props (proposed).**
+**Design correction.** The original design doc proposed a new
+`<LectureCard>` component for in-chapter Roadmap/Summary blocks
+and pointed at `astr101-sp26/assets/theme/lecture-cards.scss` as
+the SCSS source. Inspection revealed two distinct concepts had
+been conflated:
 
-```ts
-interface LectureCardProps {
-  variant: "roadmap" | "summary" | "section-marker" | "key-epoch";
-  title: string;
-  children: React.ReactNode;
-}
-```
+- **In-chapter section markers** (Roadmap, Summary, Course Arc,
+  Key Epochs, Key Insight) → these are *Callout variants* in the
+  existing classroom CSS (`callouts.scss` defines `.callout-roadmap`,
+  `.callout-summary`, `.callout-key-insight`, and ~10 other
+  pedagogical variants).
+- **Course-level listing cards** (the actual `lecture-cards.scss`
+  file) → these are GRID listings of lectures/homework/solutions
+  with date+title+summary+link. Not used in chapter prose.
 
-**State.** None.
+A new component was therefore the wrong shape. The right shape is
+**extending Sophie's existing `<Callout>` with the section-marker
+variants** the smoke chapter actually uses.
 
-**A11y.** Section landmark (`<section>`); heading at the right
-level (component renders an `<h3>` by default; configurable via
-`as` prop).
+**What shipped:**
 
-**SCSS port.** `astr101-sp26/assets/theme/lecture-cards.scss` →
-`packages/components/src/components/LectureCard/LectureCard.module.css`.
-Map classroom SCSS variables to `@sophie/theme` tokens; surface
-any missing tokens via PR-time additions to `@sophie/theme`.
+- `CalloutVariant` Zod enum extended from `["info","warning","tip","caution"]`
+  to add `"roadmap"`, `"summary"`, `"key-insight"`.
+- `variantTitles` map gains the defaults `"Roadmap"`, `"Summary"`,
+  `"Key Insight"`.
+- `Callout.module.css` adds `.roadmap`, `.summary`, `.key-insight`
+  classes, each with `border-left-color` + tinted `background`
+  (color-mix in oklab) + colored `.title`. Color tokens reuse the
+  existing Sophie palette: `--sophie-text-muted` (roadmap; neutral
+  navigational), `--sophie-status-success` (summary; recap), and
+  `--sophie-status-warning` (key-insight; gold emphasis).
+- Smoke chapter migrates 6 Callouts: 3 → `variant="roadmap"`
+  (Your Roadmap, Spoiler Reel Roadmap, Course Arc Preview), 2 →
+  `variant="summary"` (Spoiler Reel Summary, Key Epochs in Cosmic
+  History), 1 → `variant="key-insight"` (The Core Insight,
+  previously `variant="tip"`).
 
-**Smoke change.** Migrate ~5 Callouts (titles starting with
-"Roadmap", "Summary", "Course Arc", "Key Epochs") from
-`<Callout variant="info" title="...">` to
-`<LectureCard variant="roadmap" title="...">`. PR description
-includes a before/after screenshot.
+**Tests:** 3 added (renders-all-7-variants, default-title-per-new-variant,
+axe-zero-per-new-variant). All existing Callout/InteractiveCallout
+tests still pass. 33/33 unit, 6/6 e2e — no regressions.
+
+**Deep-dive deferred.** Deep Dive blocks need *collapsible
+behavior* (skippable on first read = the defining feature). A
+non-collapsible "deep-dive" Callout variant is structurally a
+different thing. Deep-dive lands with `<CollapsibleCard>` in
+Trio 3 instead.
+
+**No `<LectureCard>` component exists or will exist.** When a
+future use case calls for course-level listing cards (browsing
+lectures/homework/solutions), that's its own component and Sophie
+will port `lecture-cards.scss` then. Not in scope until that
+consumer appears.
 
 ### `<Predict>` (persistence-bearing)
 
@@ -321,9 +346,11 @@ Every component PR includes:
   vs children-as-list~~ — **resolved 2026-05-10**: structured props
   with author-supplied `id` per objective. Same explicit-id pattern
   as `<InteractiveCallout>`. Edit-resilient.
-- **`<LectureCard>` `as` prop**: should the heading level default
-  to `h3` and be configurable, or follow MDX heading depth
-  automatically via remark plugin? Default to `h3` for v1.
+- ~~**`<LectureCard>` `as` prop**~~ — **resolved by design
+  correction**: `<LectureCard>` was a phantom component; section
+  markers are now Callout variants. Heading-level question moot
+  (Callout uses an `<aside role="note">` with `aria-label`, not a
+  semantic section heading).
 - **`<Predict>` confidence scale default**: 5-point Likert or
   7-point? Existing classroom convention if Anna has one;
   otherwise default to 5.

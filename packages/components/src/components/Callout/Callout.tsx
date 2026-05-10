@@ -12,6 +12,9 @@ const variantTitles: Record<CalloutVariant, string> = {
   warning: "Warning",
   tip: "Tip",
   caution: "Caution",
+  roadmap: "Roadmap",
+  summary: "Summary",
+  "key-insight": "Key Insight",
 };
 
 export function Callout({ variant = "info", title, children }: CalloutProps) {
