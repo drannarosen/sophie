@@ -44,35 +44,54 @@ const SOPHIE_NO_EXTERNAL = ["@sophie/astro", "@sophie/components"];
 const VITE_BUILD_EXTERNAL = ["vite/internal", "fsevents"];
 
 /**
- * `__dirname` / `__filename` polyfill prepended to every SSR/prerender
- * ESM chunk. Astro's `astro:content` runtime pulls in Vite's
- * module-runner during prerender, which transitively inlines rollup's
- * `dist/native.js` — a CJS module that uses bare `__dirname` to
- * locate its platform-specific `@rollup/rollup-*.node` binding. The
- * bundler converts CJS→ESM and polyfills `require` via
- * `createRequire(import.meta.url)` but does NOT polyfill `__dirname`,
- * so the prerender chunk crashes on Linux with
- * `__dirname is not defined in ES module scope`.
+ * CJS-context globals polyfill prepended to every SSR/prerender ESM
+ * chunk. Astro 6's `astro:content` runtime pulls Vite's module-runner
+ * into prerender chunks, and module-runner transitively inlines
+ * rollup's `dist/native.js` — a CJS module that:
+ *   1. uses bare `__dirname` to locate platform-specific
+ *      `@rollup/rollup-*.node` bindings, AND
+ *   2. uses bare `require()` for the package-name fallback when the
+ *      colocated .node file isn't found.
  *
- * On macOS the failure does not reproduce because a different
+ * Without polyfills, the prerender chunk crashes on Linux with
+ * `__dirname is not defined in ES module scope` (and, once that's
+ * fixed, `require is not defined` for the package-require fallback).
+ *
+ * On macOS the failure doesn't reproduce because a different
  * resolution path (with `fsevents` present) avoids dragging
- * rollup/native.js into the chunk. CI on Ubuntu hits the cold path.
+ * rollup/native.js into the chunk in the first place. CI on Ubuntu
+ * hits the cold path.
  *
- * Banner is scoped to `.mjs` chunks via filename suffix, so the
- * client `_astro/*.js` bundle is unaffected. The aliased identifiers
- * (`___fu`, `___pd`) are unlikely to collide; ESM modules dedupe
- * imports of the same source even if someone else imports
- * `fileURLToPath`/`dirname` directly.
+ * The banner defines `__filename`, `__dirname`, and `require` from
+ * `import.meta.url` so the bundled CJS code runs as if it were in a
+ * CJS module. Combined with `commonjsOptions.ignoreDynamicRequires:
+ * true` (below, in the integration's vite config), this lets dynamic
+ * package requires like `require("@rollup/rollup-linux-x64-gnu")`
+ * resolve through Node's normal module loader.
+ *
+ * Scoped to `.mjs` chunks via filename suffix, so the client
+ * `_astro/*.js` bundle is unaffected. The aliased identifiers
+ * (`___fu`, `___pd`, `___cr`) are unlikely to collide; ESM modules
+ * dedupe imports of the same source even if someone else imports
+ * `fileURLToPath`/`dirname`/`createRequire` directly.
  */
-const SSR_DIRNAME_POLYFILL_BANNER = [
+/**
+ * The CJS-context globals (`__dirname`, `__filename`, `require`) that
+ * the SSR/prerender ESM chunks need at module top-level. Defined in
+ * one banner so all three are available together — see
+ * `ssrChunkBanner` for why.
+ */
+const SSR_CJS_GLOBALS_BANNER = [
   "import { fileURLToPath as ___fu } from 'node:url';",
   "import { dirname as ___pd } from 'node:path';",
+  "import { createRequire as ___cr } from 'node:module';",
   "const __filename = ___fu(import.meta.url);",
   "const __dirname = ___pd(__filename);",
+  "const require = ___cr(import.meta.url);",
 ].join("\n");
 
 function ssrChunkBanner(chunk: { fileName?: string }): string {
-  return chunk.fileName?.endsWith(".mjs") ? SSR_DIRNAME_POLYFILL_BANNER : "";
+  return chunk.fileName?.endsWith(".mjs") ? SSR_CJS_GLOBALS_BANNER : "";
 }
 
 export function defineSophieIntegration(
