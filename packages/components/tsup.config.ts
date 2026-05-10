@@ -25,6 +25,7 @@ export default defineConfig({
     "react/jsx-dev-runtime",
     "idb",
     "zod",
+    /^@radix-ui\//,
     /^@sophie\//,
     // CSS Module companions (.module.css.js) are emitted by
     // scripts/build-css-modules.ts at onSuccess time; mark external so

@@ -13,6 +13,12 @@ export {
   InteractiveCalloutPropsSchema,
   interactiveCalloutContract,
 } from "./components/Callout/index.ts";
+export type { CollapsibleCardProps } from "./components/CollapsibleCard/index.ts";
+export {
+  CollapsibleCard,
+  CollapsibleCardPropsSchema,
+  collapsibleCardContract,
+} from "./components/CollapsibleCard/index.ts";
 export type {
   ComprehensionGateProps,
   ComprehensionLevel,
