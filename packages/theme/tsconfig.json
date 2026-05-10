@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "noEmit": true,
+    "types": ["node"],
+    "ignoreDeprecations": "6.0",
+    "allowImportingTsExtensions": true
+  },
+  "include": ["src", "scripts"],
+  "exclude": ["dist", "node_modules"]
+}

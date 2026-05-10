@@ -1,0 +1,32 @@
+{
+  "name": "@sophie/theme",
+  "version": "0.0.0",
+  "description": "Sophie design tokens — TS-canonical role tree + light/dark CSS variables + Tailwind v4 @theme emit.",
+  "license": "AGPL-3.0-or-later",
+  "author": "Anna Rosen",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/tokens.d.ts",
+      "import": "./dist/tokens.js"
+    },
+    "./css": "./dist/theme.css",
+    "./tailwind": "./dist/tailwind.css"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist .turbo"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.2",
+    "tsup": "^8.5.1",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.3"
+  }
+}
