@@ -90,7 +90,9 @@ test.describe("<LearningObjectives> in spoiler-alerts chapter", () => {
         db.close();
       }
     });
-    expect(storedValue).toBe(true);
+    // Per ADR 0029, IDB records are `{ value, ts }`.
+    expect((storedValue as { value: boolean }).value).toBe(true);
+    expect((storedValue as { ts: number }).ts).toBeGreaterThan(0);
   });
 
   test("axe-core: zero accessibility violations on the LearningObjectives surface", async ({

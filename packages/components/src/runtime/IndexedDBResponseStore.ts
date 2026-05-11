@@ -4,16 +4,21 @@ import {
   chapterKeyRange,
   compositeKey,
   type ResponseStore,
+  type StoredValue,
 } from "./ResponseStore.ts";
 
 interface SophieDB extends DBSchema {
   responses: {
     key: string;
-    value: unknown;
+    value: StoredValue<unknown>;
   };
 }
 
-const DB_VERSION = 1;
+// v2 (ADR 0029): records are wrapped as `{ value, ts }` for LWW sync.
+// Pre-launch posture per Anna's directive — no legacy-shape unwrap; the
+// upgrade drops the old store and recreates it. Any developer test
+// state in IDB is discarded on first load post-upgrade.
+const DB_VERSION = 2;
 const STORE = "responses";
 
 export class IndexedDBResponseStore implements ResponseStore {
@@ -28,9 +33,10 @@ export class IndexedDBResponseStore implements ResponseStore {
     if (this.dbPromise === null) {
       this.dbPromise = openDB<SophieDB>(`sophie-${this.course}`, DB_VERSION, {
         upgrade(db) {
-          if (!db.objectStoreNames.contains(STORE)) {
-            db.createObjectStore(STORE);
+          if (db.objectStoreNames.contains(STORE)) {
+            db.deleteObjectStore(STORE);
           }
+          db.createObjectStore(STORE);
         },
       });
     }
@@ -41,20 +47,24 @@ export class IndexedDBResponseStore implements ResponseStore {
     profile: string,
     chapter: string,
     key: string
-  ): Promise<T | undefined> {
+  ): Promise<StoredValue<T> | undefined> {
     const db = await this.db();
-    const value = await db.get(STORE, compositeKey(profile, chapter, key));
-    return value as T | undefined;
+    const stored = await db.get(STORE, compositeKey(profile, chapter, key));
+    return stored as StoredValue<T> | undefined;
   }
 
   async set<T>(
     profile: string,
     chapter: string,
     key: string,
-    value: T
+    stored: StoredValue<T>
   ): Promise<void> {
     const db = await this.db();
-    await db.put(STORE, value as unknown, compositeKey(profile, chapter, key));
+    await db.put(
+      STORE,
+      stored as StoredValue<unknown>,
+      compositeKey(profile, chapter, key)
+    );
   }
 
   async delete(profile: string, chapter: string, key: string): Promise<void> {

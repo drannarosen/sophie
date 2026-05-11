@@ -2,14 +2,29 @@
  * Repository abstraction over interactive-component state. Phase 0 ships
  * one implementation (`IndexedDBResponseStore`); the v3 server-sync seam
  * is `SyncedResponseStore` (interface only).
+ *
+ * Per ADR 0029, every persisted record carries a `Date.now()` timestamp
+ * so the BroadcastChannel sync layer can do last-write-wins between
+ * concurrent tabs. The wrapping is uniform across the API surface;
+ * `useInteractive` is the only consumer that unwraps `value` for
+ * component code.
  */
+export interface StoredValue<T> {
+  value: T;
+  ts: number;
+}
+
 export interface ResponseStore {
-  get<T>(profile: string, chapter: string, key: string): Promise<T | undefined>;
+  get<T>(
+    profile: string,
+    chapter: string,
+    key: string
+  ): Promise<StoredValue<T> | undefined>;
   set<T>(
     profile: string,
     chapter: string,
     key: string,
-    value: T
+    stored: StoredValue<T>
   ): Promise<void>;
   delete(profile: string, chapter: string, key: string): Promise<void>;
   clearChapter(profile: string, chapter: string): Promise<void>;
