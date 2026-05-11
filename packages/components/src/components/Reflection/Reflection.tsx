@@ -1,4 +1,5 @@
 import { useId } from "react";
+import { HydrationAnnouncer } from "../../runtime/HydrationAnnouncer.tsx";
 import { useSelfAssessment } from "../../runtime/useSelfAssessment.ts";
 import styles from "./Reflection.module.css.js";
 import type { ReflectionProps } from "./Reflection.schema.ts";
@@ -11,7 +12,7 @@ export function Reflection({
   placeholder,
 }: ReflectionProps) {
   const textareaId = useId();
-  const { value, setValue, controlProps } = useSelfAssessment<string>(
+  const { value, setValue, hydrated, controlProps } = useSelfAssessment<string>(
     course,
     chapter,
     "reflection",
@@ -32,6 +33,7 @@ export function Reflection({
         {...controlProps}
         onChange={(event) => setValue(event.target.value)}
       />
+      <HydrationAnnouncer hydrated={hydrated} label='Reflection ready' />
     </div>
   );
 }

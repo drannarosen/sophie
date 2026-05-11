@@ -1,5 +1,6 @@
 import * as Collapsible from "@radix-ui/react-collapsible";
 import { useCallback } from "react";
+import { HydrationAnnouncer } from "../../runtime/HydrationAnnouncer.tsx";
 import { useInteractive } from "../../runtime/useInteractive.ts";
 import styles from "./CollapsibleCard.module.css.js";
 import type { CollapsibleCardProps } from "./CollapsibleCard.schema.ts";
@@ -25,6 +26,7 @@ export function CollapsibleCard({
   const {
     value: open,
     setValue: setOpen,
+    hydrated,
     controlProps,
   } = useInteractive<boolean>(
     course,
@@ -60,6 +62,7 @@ export function CollapsibleCard({
       <Collapsible.Content className={styles.content}>
         {children}
       </Collapsible.Content>
+      <HydrationAnnouncer hydrated={hydrated} label={`${title} ready`} />
     </Collapsible.Root>
   );
 }

@@ -1,4 +1,5 @@
 import { useId } from "react";
+import { HydrationAnnouncer } from "../../runtime/HydrationAnnouncer.tsx";
 import { useSelfAssessment } from "../../runtime/useSelfAssessment.ts";
 import styles from "./ConfidenceCheck.module.css.js";
 import type { ConfidenceCheckProps } from "./ConfidenceCheck.schema.ts";
@@ -20,7 +21,7 @@ export function ConfidenceCheck({
   scale = 5,
 }: ConfidenceCheckProps) {
   const groupName = useId();
-  const { value, setValue, controlProps } = useSelfAssessment<number>(
+  const { value, setValue, hydrated, controlProps } = useSelfAssessment<number>(
     course,
     chapter,
     "confidence",
@@ -52,6 +53,7 @@ export function ConfidenceCheck({
         <span>Not at all sure</span>
         <span>Very sure</span>
       </div>
+      <HydrationAnnouncer hydrated={hydrated} label='Confidence check ready' />
     </fieldset>
   );
 }
