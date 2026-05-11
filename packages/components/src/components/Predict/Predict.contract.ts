@@ -1,4 +1,4 @@
-import type { ComponentContract } from "../../contract/types.ts";
+import type { AuditFinding, ComponentContract } from "../../contract/types.ts";
 import { type PredictProps, PredictPropsSchema } from "./Predict.schema.ts";
 import { Predict } from "./Predict.tsx";
 
@@ -25,7 +25,25 @@ export const predictContract: ComponentContract<PredictProps, PredictState> = {
     props,
     state,
   }),
-  audit: () => [],
+  // Prompt ids back IndexedDB keys (one useInteractive per prompt);
+  // duplicates would race the same persistence key and silently
+  // merge answers. Detect at audit time.
+  audit: (props): AuditFinding[] => {
+    const counts = new Map<string, number>();
+    for (const prompt of props.prompts) {
+      counts.set(prompt.id, (counts.get(prompt.id) ?? 0) + 1);
+    }
+    const findings: AuditFinding[] = [];
+    for (const [id, count] of counts) {
+      if (count > 1) {
+        findings.push({
+          severity: "error",
+          message: `Duplicate prompt id "${id}" (appears ${count} times). Prompt ids back IndexedDB keys; duplicates corrupt answer persistence.`,
+        });
+      }
+    }
+    return findings;
+  },
   containedIn: ["chapter", "section"],
   forbidsContaining: [],
 };
