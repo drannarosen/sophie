@@ -202,6 +202,52 @@ describe("useInteractive", () => {
     expect(screen.getByTestId("value").textContent).toBe("false");
   });
 
+  it("ignores incoming broadcast with older ts than the local value (LWW per ADR 0029)", async () => {
+    // Reproduces the BroadcastChannel race from the Phase 1 audit P1-5:
+    // Tab A sets a value at ts=T_local. Tab B's older-but-slower IDB write
+    // broadcasts after Tab A has already moved on. Without the LWW gate,
+    // Tab A's UI flips to Tab B's stale value, silently overruling the
+    // user's most recent action.
+    render(
+      <ProfileWrapper>
+        <Probe
+          course='lww-course'
+          chapter='lww-chapter'
+          keyName='probe:lww-older'
+          initial={false}
+        />
+      </ProfileWrapper>
+    );
+    await waitFor(() =>
+      expect(screen.getByTestId("status").textContent).toBe("ready")
+    );
+    // Local set advances tsRef to Date.now() (which is on the order of 1.7e12).
+    await act(async () => {
+      screen.getByText("toggle").click();
+    });
+    await waitFor(() =>
+      expect(screen.getByTestId("value").textContent).toBe("true")
+    );
+
+    // Stale broadcast from another "tab" with ts=1 (ancient).
+    const channelName = "sophie-lww-course:lww-chapter";
+    const compositeKey = "student:lww-chapter:probe:lww-older";
+    const otherTab = new BroadcastChannel(channelName);
+    await act(async () => {
+      otherTab.postMessage({
+        senderId: "stale-tab",
+        key: compositeKey,
+        value: false,
+        ts: 1,
+      });
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+
+    // The stale message must be ignored — local value stays true.
+    expect(screen.getByTestId("value").textContent).toBe("true");
+    otherTab.close();
+  });
+
   it("updates when a same-name BroadcastChannel from elsewhere posts a matching message", async () => {
     // Simulates a second tab: create our own BroadcastChannel with the
     // same chapter-channel name and post a message. The hook's
@@ -232,6 +278,7 @@ describe("useInteractive", () => {
         senderId: "another-tab-sender",
         key: compositeKey,
         value: true,
+        ts: Date.now(),
       });
       // Yield so the receiving channel's onmessage handler fires.
       await new Promise((resolve) => setTimeout(resolve, 50));

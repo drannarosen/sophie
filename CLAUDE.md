@@ -75,7 +75,7 @@ npx mystmd start          # serves locally on http://localhost:3000
 npx mystmd build --html   # static build → _build/html/
 ```
 
-## Locked decisions — ADRs 0001–0022
+## Locked decisions — ADRs 0001–0029
 
 Read the relevant ADR before proposing changes that touch its area.
 
@@ -104,6 +104,7 @@ Read the relevant ADR before proposing changes that touch its area.
 | Data viz | 0021 | Observable Plot |
 | Library bundler | 0022 | tsup |
 | Build order | 0023 | **Vertical-slice-first**: lean Phase 0, refactor outward as patterns emerge |
+| BroadcastChannel LWW | 0029 | Per-write `Date.now()` timestamps; `useInteractive` ignores stale incoming writes (refines ADR 0007) |
 
 ## Conventions
 

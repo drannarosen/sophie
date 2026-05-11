@@ -90,8 +90,11 @@ test.describe("Self-assessment family in spoiler-alerts chapter", () => {
         db.close();
       }
     });
-    expect(stored.comprehension).toBe("stuck");
-    expect(stored.effort).toBe("studied");
+    // Per ADR 0029, IDB records are `{ value, ts }`.
+    expect((stored.comprehension as { value: string }).value).toBe("stuck");
+    expect((stored.comprehension as { ts: number }).ts).toBeGreaterThan(0);
+    expect((stored.effort as { value: string }).value).toBe("studied");
+    expect((stored.effort as { ts: number }).ts).toBeGreaterThan(0);
   });
 
   test("axe-core: zero accessibility violations on the self-assessment block", async ({

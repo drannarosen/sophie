@@ -78,7 +78,11 @@ test.describe("<Predict> in spoiler-alerts chapter", () => {
         db.close();
       }
     });
-    expect(storedValue).toBe("emission from hydrogen alpha and OIII");
+    // Per ADR 0029, IDB records are `{ value, ts }`.
+    expect((storedValue as { value: string }).value).toBe(
+      "emission from hydrogen alpha and OIII"
+    );
+    expect((storedValue as { ts: number }).ts).toBeGreaterThan(0);
   });
 
   test("axe-core: zero accessibility violations on the Predict surface", async ({

@@ -3,11 +3,16 @@
  * useInteractive sync. One channel per chapter; messages carry the
  * composite key + new value + a senderId so the originating tab can
  * ignore its own broadcast.
+ *
+ * Per ADR 0029, every message carries the originating write's
+ * `Date.now()` timestamp. Receivers compare against their own most-
+ * recent observed ts and ignore stale broadcasts (last-write-wins).
  */
 export interface BroadcastMessage {
   senderId: string;
   key: string;
   value: unknown;
+  ts: number;
 }
 
 export interface BroadcastChannelLayer {

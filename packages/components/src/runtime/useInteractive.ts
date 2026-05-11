@@ -83,6 +83,14 @@ export function __resetRuntimeCaches(): void {
  * React components inside MDX get their own SSR pass and don't see
  * context providers from `<SophieChapter>`. Course/chapter therefore
  * must be threaded as props.
+ *
+ * Per ADR 0029: every accepted write (local setValue, hydration read,
+ * cross-tab broadcast) carries a `Date.now()` timestamp. The hook
+ * tracks the most-recent observed ts per (course, chapter, profile,
+ * key) and ignores any incoming write whose ts is older. This last-
+ * write-wins gate prevents the BroadcastChannel race where Tab A's
+ * slower IDB write could silently overwrite Tab B's more recent
+ * user-interaction value.
  */
 export function useInteractive<T>(
   course: string,
@@ -100,6 +108,14 @@ export function useInteractive<T>(
   const valueRef = useRef(value);
   valueRef.current = value;
 
+  // Most recent observed timestamp for this (course, chapter, profile,
+  // key) tuple. Per ADR 0029, every accepted update (local setValue,
+  // hydration read, cross-tab broadcast) advances this; incoming
+  // updates with `ts <= tsRef.current` are ignored as stale. Initial 0
+  // means any positive timestamp from disk or broadcast supersedes the
+  // initial-value default.
+  const tsRef = useRef(0);
+
   // Tracks whether the component is mounted; used to guard async write
   // callbacks from calling setError/setStatus after unmount. Caught in
   // code review 2026-05-09.
@@ -116,6 +132,10 @@ export function useInteractive<T>(
     const store = getStore(course);
     setStatus("loading");
     setError(null);
+    // Reset the LWW gate when the (course, chapter, profile, key) tuple
+    // changes — different key means a different value lineage; the
+    // previous tuple's ts has no causal relation here.
+    tsRef.current = 0;
     store
       .get<T>(profile, chapter, componentKey)
       .then((persisted) => {
@@ -123,7 +143,12 @@ export function useInteractive<T>(
         // Reset to initial when the new key has no stored value — otherwise
         // the previous key's state lingers across (course, chapter, profile,
         // key) changes. Caught in code review 2026-05-09.
-        setLocalValue(persisted ?? initial);
+        if (persisted === undefined) {
+          setLocalValue(initial);
+        } else if (persisted.ts > tsRef.current) {
+          setLocalValue(persisted.value);
+          tsRef.current = persisted.ts;
+        }
         setStatus("ready");
       })
       .catch((err: unknown) => {
@@ -142,6 +167,13 @@ export function useInteractive<T>(
     const unsubscribe = channel.subscribe((message: BroadcastMessage) => {
       if (message.senderId === senderId) return;
       if (message.key !== fullKey) return;
+      // LWW gate per ADR 0029. Defensive against malformed messages
+      // (the BroadcastChannel API delivers anything postMessage'd);
+      // a non-number `ts` is treated as stale and ignored.
+      if (typeof message.ts !== "number" || message.ts <= tsRef.current) {
+        return;
+      }
+      tsRef.current = message.ts;
       setLocalValue(message.value as T);
     });
     return unsubscribe;
@@ -149,14 +181,16 @@ export function useInteractive<T>(
 
   const setValue = useCallback(
     (next: T) => {
+      const ts = Date.now();
+      tsRef.current = ts;
       setLocalValue(next);
       const store = getStore(course);
       const channel = getChannel(course, chapter);
       const fullKey = compositeKey(profile, chapter, componentKey);
       store
-        .set(profile, chapter, componentKey, next)
+        .set(profile, chapter, componentKey, { value: next, ts })
         .then(() => {
-          channel.post({ senderId, key: fullKey, value: next });
+          channel.post({ senderId, key: fullKey, value: next, ts });
           if (!mountedRef.current) return;
           setError(null);
           setStatus("ready");
