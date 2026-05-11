@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useInteractive } from "../../runtime/useInteractive.ts";
 import styles from "./Predict.module.css.js";
 import type { PredictPrompt, PredictProps } from "./Predict.schema.ts";
@@ -143,6 +143,38 @@ function RevealGate({
   // re-enabling the button while prompts are still empty.
   const gatedDisabled = controlProps.disabled || !enabled;
 
+  // Focus management for the reveal transition (WCAG 2.4.3 Focus Order).
+  // When the user clicks Reveal, the gated content appears and focus
+  // should follow into it — otherwise a screen-reader user gets no
+  // signal that anything happened (the button just becomes disabled).
+  //
+  // The userTriggeredRef gate distinguishes a click from an IDB-hydration
+  // restore: if a returning student lands on a page where they already
+  // revealed in a prior session, useInteractive sets revealed=true on
+  // hydration, which would otherwise yank focus on every page load.
+  const contentRef = useRef<HTMLDivElement>(null);
+  const userTriggeredRef = useRef(false);
+
+  useEffect(() => {
+    if (!revealed || !userTriggeredRef.current || contentRef.current === null) {
+      return;
+    }
+    userTriggeredRef.current = false;
+    const firstFocusable = contentRef.current.querySelector<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    if (firstFocusable !== null) {
+      firstFocusable.focus();
+    } else {
+      contentRef.current.focus();
+    }
+  }, [revealed]);
+
+  const handleReveal = () => {
+    userTriggeredRef.current = true;
+    setRevealed(true);
+  };
+
   return (
     <div className={styles.revealGate}>
       <button
@@ -150,11 +182,15 @@ function RevealGate({
         className={styles.revealButton}
         aria-busy={controlProps["aria-busy"]}
         disabled={gatedDisabled}
-        onClick={() => setRevealed(true)}
+        onClick={handleReveal}
       >
         Reveal
       </button>
-      {revealed && <div className={styles.revealContent}>{children}</div>}
+      {revealed && (
+        <div ref={contentRef} tabIndex={-1} className={styles.revealContent}>
+          {children}
+        </div>
+      )}
     </div>
   );
 }
