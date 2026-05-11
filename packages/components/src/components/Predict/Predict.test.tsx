@@ -250,6 +250,56 @@ describe("<Predict>", () => {
     );
   });
 
+  it("moves focus into the revealed content when Reveal is clicked (WCAG 2.4.3)", async () => {
+    render(
+      withProfile(
+        <Predict
+          course='predict-course'
+          chapter='predict-chapter'
+          id='reveal-focus'
+          prompts={[{ id: "single", label: "One question?" }]}
+        >
+          <p>The reveal text.</p>
+        </Predict>
+      )
+    );
+    // Fill the prompt so the Reveal button can enable.
+    const box = screen.getByRole("textbox", { name: "One question?" });
+    await waitFor(() => expect(box).not.toBeDisabled());
+    await act(async () => {
+      const setter = Object.getOwnPropertyDescriptor(
+        HTMLTextAreaElement.prototype,
+        "value"
+      )?.set;
+      setter?.call(box, "answer");
+      box.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    const button = screen.getByRole("button", { name: /reveal/i });
+    await waitFor(() => expect(button).not.toBeDisabled());
+    // Sanity: focus is on the button before the click (focus follows the
+    // most recent interaction; the textarea was last touched, not the
+    // button, but we don't depend on this — we depend on focus NOT
+    // staying wherever it was after the click).
+    await act(async () => {
+      button.click();
+    });
+    // After reveal, the content paragraph is rendered. Focus MUST move
+    // into that subtree (either to a focusable child, or to the
+    // tabIndex=-1 container itself), not stay on the now-disabled
+    // button. Screen-reader users get an announcement of the focused
+    // element; without this jump, they get nothing.
+    const paragraph = screen.getByText(/reveal text/);
+    const revealedContainer = paragraph.parentElement;
+    expect(revealedContainer).not.toBeNull();
+    expect(document.activeElement).not.toBe(button);
+    if (revealedContainer) {
+      expect(
+        revealedContainer === document.activeElement ||
+          revealedContainer.contains(document.activeElement)
+      ).toBe(true);
+    }
+  });
+
   it("has zero axe violations in reflection-only mode", async () => {
     const { container } = render(
       withProfile(
