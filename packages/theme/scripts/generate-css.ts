@@ -34,6 +34,11 @@ function colorBlock(mode: ColorMode): string {
     `--sophie-border: color-mix(in oklch, ${fg} 8%, transparent);`,
     `--sophie-border-subtle: color-mix(in oklch, ${fg} 5%, transparent);`,
     `--sophie-link: color-mix(in oklch, var(--sophie-accent) 70%, var(--sophie-text));`,
+    // Scheme-aware card shadow. Derived from ${fg} (=ink in light mode,
+    // paper in dark mode) so the shadow color adapts to scheme instead
+    // of being invisible in dark mode like a hardcoded #0f1115 would be.
+    // 4% concentration matches the original visual in light mode.
+    `--sophie-shadow-card: 0 1px 3px color-mix(in oklch, ${fg} 4%, transparent);`,
   ].join("\n    ");
 }
 

@@ -1,9 +1,8 @@
 .section {
   margin-block: var(--space-lo-block, 1.5rem);
   padding: var(--space-lo-pad, 1.25rem 1.5rem);
-  border-inline-start: 4px solid
-    var(--color-lo-accent, var(--color-accent, #4c7e9b));
-  background: var(--color-lo-bg, var(--color-surface-alt, rgb(0 0 0 / 0.03)));
+  border-inline-start: 4px solid var(--color-lo-accent, var(--sophie-accent));
+  background: var(--color-lo-bg, var(--sophie-surface-2));
   border-radius: var(--radius-lo, 0.375rem);
 }
 
@@ -11,7 +10,7 @@
   margin: 0 0 var(--space-lo-heading-gap, 0.75rem);
   font-size: var(--font-size-lo-heading, 1.125rem);
   font-weight: 600;
-  color: var(--color-lo-heading, var(--color-text-strong, inherit));
+  color: var(--color-lo-heading, var(--sophie-text));
 }
 
 .list {
@@ -52,9 +51,14 @@
 }
 
 .checkbox:checked + .label {
-  color: var(--color-lo-checked, var(--color-text-muted, inherit));
+  color: var(--color-lo-checked, var(--sophie-text-muted));
   text-decoration: line-through var(--color-lo-checked-strike, currentColor) 1px;
   text-decoration-skip-ink: auto;
+}
+
+.checkbox:focus-visible {
+  outline: var(--sophie-focus-width) solid var(--sophie-focus-color);
+  outline-offset: 2px;
 }
 
 .verb {
