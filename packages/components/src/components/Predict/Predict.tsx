@@ -133,9 +133,14 @@ function RevealGate({
     controlProps,
   } = useInteractive(course, chapter, `predict:${componentId}:revealed`, false);
 
-  // Spread controlProps for the hydration guard (disabled + aria-busy
-  // while loading), then override `disabled` to ALSO disable the button
-  // when not all prompts are filled. Either reason keeps it non-interactive.
+  // Two disable reasons must compose: (a) the hydration guard from
+  // useInteractive's controlProps; (b) the business-logic gate
+  // requiring all prompts to be filled. We thread `aria-busy` and
+  // `disabled` explicitly rather than spreading `{...controlProps}`,
+  // because spread-then-explicit-override depends on JSX attribute
+  // order — a future maintainer alphabetizing attributes would
+  // silently restore the spread overriding the explicit disable,
+  // re-enabling the button while prompts are still empty.
   const gatedDisabled = controlProps.disabled || !enabled;
 
   return (
@@ -143,7 +148,7 @@ function RevealGate({
       <button
         type='button'
         className={styles.revealButton}
-        {...controlProps}
+        aria-busy={controlProps["aria-busy"]}
         disabled={gatedDisabled}
         onClick={() => setRevealed(true)}
       >
