@@ -105,6 +105,7 @@ project:
         - file: decisions/0026-tailwind-v4-css-first.md
         - file: decisions/0027-mdx-render-boundary-prop-threading.md
         - file: decisions/0028-storybook-setup.md
+        - file: decisions/0029-broadcast-channel-last-write-wins.md
     - title: Status
       children:
         - file: status/roadmap.md
