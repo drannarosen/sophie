@@ -1,4 +1,5 @@
 import * as Collapsible from "@radix-ui/react-collapsible";
+import { useCallback } from "react";
 import { useInteractive } from "../../runtime/useInteractive.ts";
 import styles from "./CollapsibleCard.module.css.js";
 import type { CollapsibleCardProps } from "./CollapsibleCard.schema.ts";
@@ -32,11 +33,25 @@ export function CollapsibleCard({
     defaultOpen
   );
 
+  // Escape closes an open card (ARIA APG disclosure-widget convention).
+  // Radix Collapsible doesn't bind Escape itself, so we add it on the
+  // Root. Closed → noop; open → setOpen(false).
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLDivElement>) => {
+      if (event.key === "Escape" && open) {
+        event.preventDefault();
+        setOpen(false);
+      }
+    },
+    [open, setOpen]
+  );
+
   return (
     <Collapsible.Root
       open={open}
       onOpenChange={setOpen}
       className={styles.card}
+      onKeyDown={handleKeyDown}
     >
       <Collapsible.Trigger {...controlProps} className={styles.trigger}>
         <span className={styles.chevron} aria-hidden='true' />
