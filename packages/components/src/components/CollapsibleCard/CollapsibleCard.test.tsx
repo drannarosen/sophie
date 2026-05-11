@@ -1,4 +1,10 @@
-import { act, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { axe } from "jest-axe";
 import type { ReactNode } from "react";
 import { describe, expect, it } from "vitest";
@@ -189,6 +195,60 @@ describe("<CollapsibleCard>", () => {
     });
     expect(a).toHaveAttribute("aria-expanded", "true");
     expect(b).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("closes when Escape is pressed while the card is open (ARIA APG disclosure)", async () => {
+    // ARIA Authoring Practices Guide recommends Escape closing a
+    // disclosure widget. Radix Collapsible doesn't bind this by default;
+    // CollapsibleCard wires it explicitly via an onKeyDown handler.
+    render(
+      withProfile(
+        <CollapsibleCard
+          course='cc-escape'
+          chapter='cc-escape'
+          id='cc-escape-1'
+          title='Esc closes me'
+          defaultOpen
+        >
+          Body content
+        </CollapsibleCard>
+      )
+    );
+    const trigger = screen.getByRole("button", { name: "Esc closes me" });
+    await waitFor(() => expect(trigger).not.toBeDisabled());
+    // Sanity: trigger reports open state before Escape.
+    await waitFor(() =>
+      expect(trigger).toHaveAttribute("aria-expanded", "true")
+    );
+    await act(async () => {
+      fireEvent.keyDown(trigger, { key: "Escape" });
+    });
+    await waitFor(() =>
+      expect(trigger).toHaveAttribute("aria-expanded", "false")
+    );
+  });
+
+  it("ignores Escape when the card is already closed (no spurious state change)", async () => {
+    render(
+      withProfile(
+        <CollapsibleCard
+          course='cc-escape-noop'
+          chapter='cc-escape-noop'
+          id='cc-escape-noop-1'
+          title='Closed already'
+        >
+          Body content
+        </CollapsibleCard>
+      )
+    );
+    const trigger = screen.getByRole("button", { name: "Closed already" });
+    await waitFor(() => expect(trigger).not.toBeDisabled());
+    expect(trigger).toHaveAttribute("aria-expanded", "false");
+    await act(async () => {
+      fireEvent.keyDown(trigger, { key: "Escape" });
+    });
+    // Still closed; no state change attempted.
+    expect(trigger).toHaveAttribute("aria-expanded", "false");
   });
 
   it("has no axe-core accessibility violations (closed and open states)", async () => {

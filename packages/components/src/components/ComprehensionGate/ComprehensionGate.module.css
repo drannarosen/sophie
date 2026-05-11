@@ -3,7 +3,7 @@
   padding: var(--space-sa-pad, 0.875rem 1rem);
   border: 1px solid var(--sophie-border-subtle, currentColor);
   border-inline-start: 4px solid
-    var(--color-sa-comprehension, var(--sophie-status-success, #4c7e9b));
+    var(--color-sa-comprehension, var(--sophie-status-success));
   border-radius: var(--radius-sa, 0.375rem);
   background: var(--color-sa-bg, var(--sophie-surface-1, transparent));
 }
