@@ -62,6 +62,7 @@ project:
       children:
         - file: reference/content-schema.md
         - file: reference/component-contract.md
+        - file: reference/chapter-components.md
         - file: reference/cli.md
         - file: reference/plugin-api.md
         - file: reference/glossary.md
