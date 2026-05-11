@@ -34,7 +34,10 @@ test.describe("Phase 0 vertical-slice acceptance — spoiler-alerts chapter", ()
     // when closed, so the figure isn't in the DOM until the student opens
     // the card.
     await expect(page.locator("figure")).toHaveCount(18);
-    await expect(page.locator("table")).toHaveCount(9);
+    // 9 → 8 in Trio 3 #3 — the Mini-Glossary markdown table migrated to
+    // <MiniGlossary>, which renders as a <dl>, not a <table>. See
+    // examples/smoke/e2e/mini-glossary.spec.ts for the new coverage.
+    await expect(page.locator("table")).toHaveCount(8);
 
     // KaTeX rendered all math (no raw `$...$` left behind).
     const katexCount = await page.locator(".katex").count();

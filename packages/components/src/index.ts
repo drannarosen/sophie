@@ -77,6 +77,16 @@ export {
   ObjectiveSchema,
 } from "./components/LearningObjectives/index.ts";
 export type {
+  GlossaryTerm,
+  MiniGlossaryProps,
+} from "./components/MiniGlossary/index.ts";
+export {
+  GlossaryTermSchema,
+  MiniGlossary,
+  MiniGlossaryPropsSchema,
+  miniGlossaryContract,
+} from "./components/MiniGlossary/index.ts";
+export type {
   PredictPrompt,
   PredictProps,
   PredictState,

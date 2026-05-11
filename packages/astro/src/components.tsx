@@ -3,6 +3,7 @@ import {
   Figure,
   type FigureRegistry,
   KeyEquation,
+  MiniGlossary,
 } from "@sophie/components";
 
 export interface MakeStaticComponentsOptions {
@@ -37,6 +38,9 @@ export function makeStaticComponents({ figures }: MakeStaticComponentsOptions) {
     // KeyEquation is content-only (no per-instance state, no client:load).
     // Flows through the static components map alongside Callout/Figure.
     KeyEquation,
+    // MiniGlossary is content-only too — direct pass-through, no
+    // registry prop, no client:load. Per ADR 0027.
+    MiniGlossary,
     Figure: (props: MdxFigureProps) => {
       if (props.name !== undefined) {
         return (
