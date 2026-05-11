@@ -18,4 +18,5 @@ themselves.
 
 | Date | Topic | Grade | Trigger | Status |
 |---|---|---|---|---|
-| 2026-05-10 | [Phase 1 hardening audit](2026-05-10-phase-1-hardening-audit.md) | B− (73) | Trio 3 closed (PR #15 merged); pre-Trio-4 hardening | Open — P1 backlog awaiting sprint |
+| 2026-05-10 | [Phase 1 hardening audit](2026-05-10-phase-1-hardening-audit.md) | B− (73) | Trio 3 closed (PR #15 merged); pre-Trio-4 hardening | Closed — every P1 item shipped in PRs #17–#23 |
+| 2026-05-10 | [Post-hardening audit](2026-05-10-post-hardening-audit.md) | B+ (84) | Phase 1 hardening sprint closed (PRs #17–#23 merged); refreshed grade | Open — P2/P3 backlog carried forward |
