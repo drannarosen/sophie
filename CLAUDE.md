@@ -61,6 +61,7 @@ Standalone, distributable platform modeled on MyST and Quarto.
 |---|---|
 | Design docs (canonical) | `docs/website/` (MyST site) |
 | ADRs (decision audit trail) | `docs/website/decisions/` |
+| Chapter-author component reference | `docs/website/reference/chapter-components.md` |
 | Roadmap | `docs/website/status/roadmap.md` |
 | Pre-conversion historical docs | `_archive/` (read-only; do **not** edit) |
 | Implementation plan (most recent) | `~/.claude/plans/read-all-of-the-sharded-sky.md` |
