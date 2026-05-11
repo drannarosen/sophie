@@ -47,7 +47,7 @@ export function InteractiveCallout({
 
   return (
     <aside role='note' aria-label={accessibleTitle} className={className}>
-      <p className={styles.title}>{accessibleTitle}</p>
+      {title !== undefined && <p className={styles.title}>{accessibleTitle}</p>}
       <div className={styles.body}>{children}</div>
       <ReviewedRow
         course={course}

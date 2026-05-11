@@ -2,6 +2,7 @@ import { act, render, screen, waitFor } from "@testing-library/react";
 import { axe } from "jest-axe";
 import { describe, expect, it } from "vitest";
 import { ProfileProvider } from "../../runtime/ProfileContext.tsx";
+import styles from "./Callout.module.css.js";
 import { Callout, InteractiveCallout } from "./Callout.tsx";
 
 function withProfile(node: React.ReactNode) {
@@ -116,5 +117,48 @@ describe("<InteractiveCallout>", () => {
     );
     const results = await axe(container);
     expect(results.violations).toEqual([]);
+  });
+
+  it("omits the visible title element when no title prop is provided (matches static Callout)", () => {
+    // Static Callout falls back to the variant default for aria-label
+    // only; no visible <p class=title> renders. InteractiveCallout
+    // should behave identically when title is omitted — the
+    // variant-default name lives in aria-label, not in the DOM as
+    // visible text.
+    const { container } = render(
+      withProfile(
+        <InteractiveCallout
+          course='test-course'
+          chapter='test-chapter'
+          id='no-title'
+          variant='info'
+        >
+          Body without an explicit title.
+        </InteractiveCallout>
+      )
+    );
+    // aria-label still carries the variant-default name for screen readers.
+    expect(screen.getByRole("note", { name: "Note" })).toBeInTheDocument();
+    // But no visible "Note" heading is rendered as a <p>.
+    expect(container.querySelector(`p.${styles.title}`)).toBeNull();
+  });
+
+  it("renders the visible title element when a title prop IS provided", () => {
+    const { container } = render(
+      withProfile(
+        <InteractiveCallout
+          course='test-course'
+          chapter='test-chapter'
+          id='with-title'
+          variant='info'
+          title='Important context'
+        >
+          Body with an explicit title.
+        </InteractiveCallout>
+      )
+    );
+    const titleEl = container.querySelector(`p.${styles.title}`);
+    expect(titleEl).not.toBeNull();
+    expect(titleEl?.textContent).toBe("Important context");
   });
 });
