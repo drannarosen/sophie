@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { HydrationAnnouncer } from "../../runtime/HydrationAnnouncer.tsx";
 import { useInteractive } from "../../runtime/useInteractive.ts";
 import styles from "./Predict.module.css.js";
 import type { PredictPrompt, PredictProps } from "./Predict.schema.ts";
@@ -86,7 +87,7 @@ function PromptRow({
   onValue: (id: string, value: string) => void;
 }) {
   const textareaId = useId();
-  const { value, setValue, controlProps } = useInteractive(
+  const { value, setValue, hydrated, controlProps } = useInteractive(
     course,
     chapter,
     `predict:${componentId}:${prompt.id}:answer`,
@@ -110,6 +111,10 @@ function PromptRow({
         {...controlProps}
         onChange={(event) => setValue(event.target.value)}
       />
+      <HydrationAnnouncer
+        hydrated={hydrated}
+        label={`Prompt "${prompt.label}" ready`}
+      />
     </div>
   );
 }
@@ -130,6 +135,7 @@ function RevealGate({
   const {
     value: revealed,
     setValue: setRevealed,
+    hydrated,
     controlProps,
   } = useInteractive(course, chapter, `predict:${componentId}:revealed`, false);
 
@@ -191,6 +197,7 @@ function RevealGate({
           {children}
         </div>
       )}
+      <HydrationAnnouncer hydrated={hydrated} label='Reveal control ready' />
     </div>
   );
 }

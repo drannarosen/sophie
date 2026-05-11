@@ -1,4 +1,5 @@
 import { useId } from "react";
+import { HydrationAnnouncer } from "../../runtime/HydrationAnnouncer.tsx";
 import { useInteractive } from "../../runtime/useInteractive.ts";
 import styles from "./Callout.module.css.js";
 import type {
@@ -77,6 +78,7 @@ function ReviewedRow({
   const {
     value: reviewed,
     setValue: setReviewed,
+    hydrated,
     controlProps,
   } = useInteractive(course, chapter, `callout:${calloutId}:reviewed`, false);
 
@@ -98,6 +100,10 @@ function ReviewedRow({
       >
         {reviewed ? "Reviewed" : "Mark as reviewed"}
       </label>
+      <HydrationAnnouncer
+        hydrated={hydrated}
+        label='Mark-as-reviewed control ready'
+      />
     </div>
   );
 }

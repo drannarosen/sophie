@@ -1,4 +1,5 @@
 import { useId } from "react";
+import { HydrationAnnouncer } from "../../runtime/HydrationAnnouncer.tsx";
 import { useSelfAssessment } from "../../runtime/useSelfAssessment.ts";
 import styles from "./ComprehensionGate.module.css.js";
 import type {
@@ -19,7 +20,7 @@ export function ComprehensionGate({
   prompt,
 }: ComprehensionGateProps) {
   const groupName = useId();
-  const { value, setValue, controlProps } = useSelfAssessment<
+  const { value, setValue, hydrated, controlProps } = useSelfAssessment<
     ComprehensionLevel | ""
   >(course, chapter, "comprehension", id, "");
 
@@ -42,6 +43,10 @@ export function ComprehensionGate({
           </label>
         ))}
       </div>
+      <HydrationAnnouncer
+        hydrated={hydrated}
+        label='Comprehension check ready'
+      />
     </fieldset>
   );
 }
