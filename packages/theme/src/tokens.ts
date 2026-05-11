@@ -81,6 +81,9 @@ export const tokens = {
     width: v("focus-width"),
     color: v("focus-color"),
   },
+  shadow: {
+    card: v("shadow-card"),
+  },
 } as const;
 
 export type Tokens = typeof tokens;

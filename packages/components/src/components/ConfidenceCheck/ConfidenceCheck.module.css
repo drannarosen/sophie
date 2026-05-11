@@ -38,6 +38,11 @@
   opacity: 0.5;
 }
 
+.radio:focus-visible {
+  outline: var(--sophie-focus-width) solid var(--sophie-focus-color);
+  outline-offset: 2px;
+}
+
 .endpointLabels {
   display: flex;
   justify-content: space-between;

@@ -12,7 +12,7 @@
     var(--color-cc-accent, var(--sophie-brand-teal));
   border-radius: var(--sophie-radius-sm);
   background: var(--color-cc-bg, var(--sophie-surface-1));
-  box-shadow: 0 1px 3px color-mix(in oklch, #0f1115 4%, transparent);
+  box-shadow: var(--sophie-shadow-card);
   overflow: hidden;
 }
 
