@@ -23,7 +23,7 @@
  *     </body>
  *   </html>
  */
-import { sidebarPref } from "../preferences";
+import { sidebarPref, themePref } from "../preferences";
 
 // Sidebar default is viewport-aware: mobile sidebar is a slide-over
 // that obscures content, so default to "closed" below 768px. Desktop
@@ -32,6 +32,13 @@ import { sidebarPref } from "../preferences";
 const sidebarBoot = sidebarPref.bootScript({
   defaultExpression: "(window.innerWidth < 768 ? 'closed' : 'open')",
 });
+
+// Theme default is "system" — resolved at boot via the
+// resolveExpression on themePref (preferences/theme.ts), which
+// inspects prefers-color-scheme. The runtime matchMedia change
+// listener is installed by <ThemeToggle>.
+const themeBoot = themePref.bootScript();
 ---
 
 <script is:inline set:html={sidebarBoot} />
+<script is:inline set:html={themeBoot} />

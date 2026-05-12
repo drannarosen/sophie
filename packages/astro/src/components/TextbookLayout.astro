@@ -4,6 +4,7 @@ import ContentColumn from "./ContentColumn.astro";
 import RightColumn from "./RightColumn.astro";
 import Sidebar from "./Sidebar.astro";
 import SidebarToggle from "./SidebarToggle.astro";
+import ThemeToggle from "./ThemeToggle.astro";
 import TopBar from "./TopBar.astro";
 
 // Detect empty named slots so the corresponding grid columns can
@@ -69,7 +70,9 @@ const collapsedVars = [
     <slot name='topbar-leading'>
       <SidebarToggle />
     </slot>
-    <slot name='topbar-trailing' />
+    <slot name='topbar-trailing'>
+      <ThemeToggle />
+    </slot>
   </TopBar>
   <Sidebar>
     <slot name='sidebar' />
