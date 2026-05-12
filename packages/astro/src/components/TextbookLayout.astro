@@ -6,6 +6,21 @@ import Sidebar from "./Sidebar.astro";
 import SidebarToggle from "./SidebarToggle.astro";
 import TopBar from "./TopBar.astro";
 
+// Detect empty named slots so the corresponding grid columns can
+// collapse to 0 width — avoids wasted chrome in PR 1 where the sidebar
+// and right column have no content yet. Once PRs 3 (sidebar nav) and
+// 4 (in-page ToC) + 6 (margin asides) fill these slots, the columns
+// expand naturally to their full widths.
+const hasSidebarSlot = Astro.slots.has("sidebar");
+const hasRightSlot = Astro.slots.has("right");
+
+const collapsedVars = [
+  hasSidebarSlot ? null : "--sophie-sidebar-w: 0",
+  hasRightSlot ? null : "--sophie-right-w: 0",
+]
+  .filter((v): v is string => v !== null)
+  .join(";");
+
 /**
  * <TextbookLayout> — assembled book-theme layout shell.
  *
@@ -43,7 +58,13 @@ import TopBar from "./TopBar.astro";
     See packages/astro/src/components/TextbookHead.astro for why
     (React's SSR mangles is:inline directives inside React islands per ADR 0027). */}
 
-<div class='sophie-shell' id='sophie-sidebar-region'>
+<div
+  class='sophie-shell'
+  id='sophie-sidebar-region'
+  style={collapsedVars || undefined}
+  data-sidebar-slot={hasSidebarSlot ? "filled" : "empty"}
+  data-right-slot={hasRightSlot ? "filled" : "empty"}
+>
   <TopBar>
     <slot name='topbar-leading'>
       <SidebarToggle />

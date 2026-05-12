@@ -61,9 +61,16 @@
   grid-area: content;
   padding-inline: clamp(1rem, 4vw, 3rem);
   padding-block: 2rem;
-  max-inline-size: 75ch;
+  /* Cap reading width at 75ch in Default mode, but never exceed the
+     available viewport (after sidebar / right column reserve their
+     space). Prevents horizontal overflow on narrow viewports where
+     75ch would be wider than the column. */
+  max-inline-size: min(75ch, 100%);
   margin-inline: auto;
   inline-size: 100%;
+  /* Prevent extra-wide chapter content (long inline code, big tables)
+     from forcing horizontal scroll at any viewport. */
+  overflow-wrap: break-word;
 }
 
 .sophie-right {

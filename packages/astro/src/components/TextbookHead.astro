@@ -25,12 +25,28 @@
 
 <script is:inline>
   (function () {
+    // Mobile breakpoint matches packages/astro/src/styles/textbook-layout.css.
+    var MOBILE_MAX = 768;
+    function defaultForViewport() {
+      // On mobile, the sidebar is a slide-over that obscures content.
+      // Default it to "closed" so the chapter is reachable on first load.
+      // Desktop default stays "open" (sidebar is part of the persistent grid).
+      return window.innerWidth < MOBILE_MAX ? "closed" : "open";
+    }
     try {
       var stored = localStorage.getItem("sophie:sidebar");
-      var next = stored === "closed" ? "closed" : "open";
+      // Honor an explicit user preference if set; otherwise fall back to
+      // the viewport-aware default.
+      var next =
+        stored === "closed" ? "closed" :
+        stored === "open"   ? "open"   :
+        defaultForViewport();
       document.documentElement.setAttribute("data-sidebar", next);
     } catch (e) {
-      document.documentElement.setAttribute("data-sidebar", "open");
+      document.documentElement.setAttribute(
+        "data-sidebar",
+        defaultForViewport(),
+      );
     }
   })();
 </script>

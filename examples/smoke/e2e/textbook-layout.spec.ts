@@ -35,14 +35,38 @@ test.describe("PR 1: TextbookLayout shell on the smoke chapter", () => {
     await context.clearCookies();
   });
 
-  test("renders top bar, sidebar, content column, and right column", async ({
+  test("renders top bar + structural primitives (sidebar/content/right exist in DOM)", async ({
     page,
   }) => {
     await page.goto(CHAPTER_URL);
     await expect(page.locator(".sophie-topbar")).toBeVisible();
-    await expect(page.locator(".sophie-sidebar")).toBeVisible();
     await expect(page.locator(".sophie-content")).toBeVisible();
+    // The sidebar and right column are structural primitives that exist
+    // in DOM even when their slots are empty (so consumers can compose
+    // them later). When empty, they collapse to 0 width — see the
+    // "empty *: column collapses" tests below.
+    await expect(page.locator(".sophie-sidebar")).toBeAttached();
     await expect(page.locator(".sophie-right")).toBeAttached();
+  });
+
+  test("empty sidebar slot: column collapses to 0 width (no wasted chrome)", async ({
+    page,
+  }) => {
+    await page.goto(CHAPTER_URL);
+    const sidebarWidth = await page
+      .locator(".sophie-sidebar")
+      .evaluate((el) => el.clientWidth);
+    expect(sidebarWidth).toBe(0);
+  });
+
+  test("empty right-column slot: column collapses to 0 width", async ({
+    page,
+  }) => {
+    await page.goto(CHAPTER_URL);
+    const rightWidth = await page
+      .locator(".sophie-right")
+      .evaluate((el) => el.clientWidth);
+    expect(rightWidth).toBe(0);
   });
 
   test("default state: html has data-sidebar='open'", async ({ page }) => {
@@ -68,6 +92,48 @@ test.describe("PR 1: TextbookLayout shell on the smoke chapter", () => {
       "data-sidebar",
       "closed"
     );
+  });
+
+  test("mobile (<768px): sidebar defaults to 'closed' so it doesn't obscure content", async ({
+    browser,
+  }) => {
+    // Use a fresh mobile-viewport context so default behavior is honored.
+    const context = await browser.newContext({
+      viewport: { width: 375, height: 812 },
+    });
+    const page = await context.newPage();
+    try {
+      await page.goto(CHAPTER_URL);
+      await expect(page.locator(".sophie-topbar")).toBeVisible();
+      // Default on mobile must be "closed" (not the desktop "open"
+      // default) so the slide-over sidebar doesn't obscure the
+      // chapter content the user came to read.
+      await expect(page.locator("html")).toHaveAttribute(
+        "data-sidebar",
+        "closed"
+      );
+    } finally {
+      await context.close();
+    }
+  });
+
+  test("desktop (>=768px): sidebar still defaults to 'open' (existing behavior)", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      viewport: { width: 1280, height: 720 },
+    });
+    const page = await context.newPage();
+    try {
+      await page.goto(CHAPTER_URL);
+      await expect(page.locator(".sophie-topbar")).toBeVisible();
+      await expect(page.locator("html")).toHaveAttribute(
+        "data-sidebar",
+        "open"
+      );
+    } finally {
+      await context.close();
+    }
   });
 
   test("axe-core: zero violations on the new layout chrome", async ({
