@@ -13,14 +13,22 @@
     "./client": {
       "types": "./dist/client/SophieChapter.d.ts",
       "import": "./dist/client/SophieChapter.js"
-    }
+    },
+    "./components/TextbookLayout.astro": "./dist/components/TextbookLayout.astro",
+    "./components/TextbookHead.astro": "./dist/components/TextbookHead.astro",
+    "./components/TopBar.astro": "./dist/components/TopBar.astro",
+    "./components/Sidebar.astro": "./dist/components/Sidebar.astro",
+    "./components/ContentColumn.astro": "./dist/components/ContentColumn.astro",
+    "./components/RightColumn.astro": "./dist/components/RightColumn.astro",
+    "./components/SidebarToggle.astro": "./dist/components/SidebarToggle.astro",
+    "./styles/textbook-layout.css": "./dist/styles/textbook-layout.css"
   },
   "files": [
     "dist",
     "README.md"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "tsup && mkdir -p dist/components dist/styles && cp src/components/*.astro dist/components/ && cp src/styles/*.css dist/styles/",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
     "test:unit": "vitest run --coverage",

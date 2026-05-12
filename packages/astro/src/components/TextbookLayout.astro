@@ -1,0 +1,83 @@
+---
+import "../styles/textbook-layout.css";
+import ContentColumn from "./ContentColumn.astro";
+import RightColumn from "./RightColumn.astro";
+import Sidebar from "./Sidebar.astro";
+import SidebarToggle from "./SidebarToggle.astro";
+import TopBar from "./TopBar.astro";
+
+// Detect empty named slots so the corresponding grid columns can
+// collapse to 0 width — avoids wasted chrome in PR 1 where the sidebar
+// and right column have no content yet. Once PRs 3 (sidebar nav) and
+// 4 (in-page ToC) + 6 (margin asides) fill these slots, the columns
+// expand naturally to their full widths.
+const hasSidebarSlot = Astro.slots.has("sidebar");
+const hasRightSlot = Astro.slots.has("right");
+
+const collapsedVars = [
+  hasSidebarSlot ? null : "--sophie-sidebar-w: 0",
+  hasRightSlot ? null : "--sophie-right-w: 0",
+]
+  .filter((v): v is string => v !== null)
+  .join(";");
+
+/**
+ * <TextbookLayout> — assembled book-theme layout shell.
+ *
+ * Composes <TopBar> + <Sidebar> + <ContentColumn> + <RightColumn>
+ * inside a CSS Grid (`.sophie-shell`). Includes a boot script in
+ * <head> that synchronously sets `data-sidebar` from localStorage
+ * BEFORE paint, preventing FOUC on the user's preference.
+ *
+ * Usage (default):
+ *
+ *   <TextbookLayout>
+ *     <slot />
+ *   </TextbookLayout>
+ *
+ * For custom composition (top-bar content, sidebar contents, etc.),
+ * import the named slots:
+ *
+ *   <TextbookLayout>
+ *     <Fragment slot="topbar-extra"><MyToolbar /></Fragment>
+ *     <Fragment slot="sidebar"><MyNav /></Fragment>
+ *     <Fragment slot="right"><MyToc /></Fragment>
+ *     <slot />
+ *   </TextbookLayout>
+ *
+ * Per docs/plans/2026-05-12-layout-shell-foundation-design.md.
+ *
+ * PR 1 ships the visual frame + sidebar toggle. Theme toggle (PR 2),
+ * sidebar nav contents (PR 3), in-page ToC (PR 4), view modes (PR 5),
+ * margin asides (PR 6), search UI (PR 7), glossary popovers (PR 8),
+ * cross-ref previews (PR 9), print polish (PR 10) follow.
+ */
+---
+
+{/* Boot script lives in <TextbookHead /> which the consumer puts inside <head>.
+    See packages/astro/src/components/TextbookHead.astro for why
+    (React's SSR mangles is:inline directives inside React islands per ADR 0027). */}
+
+<div
+  class='sophie-shell'
+  id='sophie-sidebar-region'
+  style={collapsedVars || undefined}
+  data-sidebar-slot={hasSidebarSlot ? "filled" : "empty"}
+  data-right-slot={hasRightSlot ? "filled" : "empty"}
+>
+  <TopBar>
+    <slot name='topbar-leading'>
+      <SidebarToggle />
+    </slot>
+    <slot name='topbar-trailing' />
+  </TopBar>
+  <Sidebar>
+    <slot name='sidebar' />
+  </Sidebar>
+  <ContentColumn>
+    <slot />
+  </ContentColumn>
+  <RightColumn>
+    <slot name='right' />
+  </RightColumn>
+</div>

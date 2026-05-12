@@ -1,0 +1,19 @@
+---
+/**
+ * <TopBar> — sticky top row of the textbook layout.
+ *
+ * PR 1 ships the visual frame; later PRs slot in:
+ * - PR 2: <ThemeToggle> in the right side
+ * - PR 5: <ViewModeToggle> in the right side
+ * - PR 7: search input on the left
+ *
+ * Default content: a <SidebarToggle> at the inline-start. Consumers
+ * can override the slot to compose their own top-bar content.
+ */
+---
+
+<header class='sophie-topbar'>
+  <slot>
+    {/* Default slot fallback; consumer composition replaces this. */}
+  </slot>
+</header>
