@@ -109,6 +109,11 @@ project:
         - file: decisions/0027-mdx-render-boundary-prop-threading.md
         - file: decisions/0028-storybook-setup.md
         - file: decisions/0029-broadcast-channel-last-write-wins.md
+        - file: decisions/0030-audience-and-ai-author-model.md
+        - file: decisions/0031-compound-component-layout-primitives.md
+        - file: decisions/0032-vanilla-js-chrome-state.md
+        - file: decisions/0033-is-inline-outside-react-island.md
+        - file: decisions/0034-empty-slot-collapse-pattern.md
     - title: Status
       children:
         - file: status/roadmap.md
