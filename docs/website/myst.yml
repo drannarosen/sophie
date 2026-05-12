@@ -45,6 +45,7 @@ project:
     SoTA: State of the Art
   toc:
     - file: index.md
+    - file: overview.md
     - title: Tutorials
       children:
         - file: tutorials/your-first-chapter.md
@@ -69,6 +70,8 @@ project:
     - title: Explanation
       children:
         - file: explanation/architecture.md
+        - file: explanation/textbook-architecture.md
+        - file: explanation/textbook-use-cases.md
         - file: explanation/audit-and-ai-authoring.md
         - file: explanation/pedagogical-foundations.md
         - file: explanation/persistence-model.md
