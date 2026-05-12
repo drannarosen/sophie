@@ -49,6 +49,16 @@
   z-index: 10;
 }
 
+/* Default composition: TextbookLayout renders SidebarToggle in
+   `topbar-leading` and ThemeToggle in `topbar-trailing`. The trailing
+   slot's astro-slot wrapper has display: contents by default, so we
+   push it to the inline-end via margin-inline-start: auto on the
+   first child. Custom consumers using <TopBar> directly arrange
+   their own layout. */
+.sophie-topbar > :first-child + * {
+  margin-inline-start: auto;
+}
+
 .sophie-sidebar {
   grid-area: sidebar;
   border-inline-end: 1px solid var(--sophie-color-border, #e5e5e5);
@@ -112,6 +122,44 @@
 
 .sophie-sidebar-toggle:hover {
   background: var(--sophie-color-bg, #fff);
+}
+
+/* Theme toggle button — same primitive shape as the sidebar toggle.
+   Icons swap via [data-theme-pref] (the STORED value, not the
+   resolved data-theme on <html>) so the button reflects the user's
+   choice (system / light / dark) regardless of OS state. */
+.sophie-theme-toggle {
+  appearance: none;
+  background: transparent;
+  border: 1px solid var(--sophie-color-border, #e5e5e5);
+  border-radius: 6px;
+  padding: 0.375rem 0.625rem;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+}
+
+.sophie-theme-toggle:focus-visible {
+  outline: var(--sophie-focus-width, 2px) solid
+    var(--sophie-focus-color, #5b8def);
+  outline-offset: 2px;
+}
+
+.sophie-theme-toggle:hover {
+  background: var(--sophie-color-bg, #fff);
+}
+
+.sophie-theme-icon {
+  display: none;
+}
+
+.sophie-theme-toggle[data-theme-pref="system"] .sophie-theme-icon-system,
+.sophie-theme-toggle[data-theme-pref="light"] .sophie-theme-icon-light,
+.sophie-theme-toggle[data-theme-pref="dark"] .sophie-theme-icon-dark {
+  display: inline-block;
 }
 
 /* Mobile: single column; sidebar becomes a slide-over. */

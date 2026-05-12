@@ -1,0 +1,105 @@
+---
+/**
+ * <ThemeToggle> — accessible cycle button for the textbook theme.
+ *
+ * Cycles `system → light → dark → system`. State drives `data-theme`
+ * on <html>, which `@sophie/theme` (per ADR 0005) maps to CSS custom
+ * properties for the rendered theme.
+ *
+ * Pre-paint state is set by the boot script in <TextbookHead>; this
+ * component wires the click handler and keeps the button's
+ * aria-label + icon in sync with the stored preference.
+ *
+ * Per ADR 0032 (vanilla JS chrome state) — all interaction goes
+ * through `themePref` (preferences/theme.ts), a `definePreference`
+ * factory call. No React.
+ */
+---
+
+<button
+  type='button'
+  class='sophie-theme-toggle'
+  data-sophie-theme-toggle
+  data-theme-pref='system'
+  aria-label='Theme: system'
+>
+  {/* Three stacked icons; CSS shows one at a time based on data-theme-pref. */}
+  <svg
+    class='sophie-theme-icon sophie-theme-icon-system'
+    width='20'
+    height='20'
+    viewBox='0 0 20 20'
+    fill='none'
+    aria-hidden='true'
+    focusable='false'
+  >
+    {/* Half-filled circle: half light, half dark. */}
+    <circle cx='10' cy='10' r='7' stroke='currentColor' stroke-width='2' />
+    <path d='M10 3 a7 7 0 0 1 0 14 z' fill='currentColor' />
+  </svg>
+  <svg
+    class='sophie-theme-icon sophie-theme-icon-light'
+    width='20'
+    height='20'
+    viewBox='0 0 20 20'
+    fill='none'
+    aria-hidden='true'
+    focusable='false'
+  >
+    {/* Sun: filled disc + rays. */}
+    <circle cx='10' cy='10' r='3.5' fill='currentColor' />
+    <g stroke='currentColor' stroke-width='2' stroke-linecap='round'>
+      <path d='M10 2v2M10 16v2M2 10h2M16 10h2M4.2 4.2l1.4 1.4M14.4 14.4l1.4 1.4M4.2 15.8l1.4-1.4M14.4 5.6l1.4-1.4' />
+    </g>
+  </svg>
+  <svg
+    class='sophie-theme-icon sophie-theme-icon-dark'
+    width='20'
+    height='20'
+    viewBox='0 0 20 20'
+    fill='none'
+    aria-hidden='true'
+    focusable='false'
+  >
+    {/* Crescent moon. */}
+    <path
+      d='M16 12.5A6.5 6.5 0 0 1 7.5 4 6.5 6.5 0 1 0 16 12.5z'
+      fill='currentColor'
+    />
+  </svg>
+</button>
+
+<script>
+  import {
+    installSystemThemeListener,
+    nextTheme,
+    themePref,
+    type ThemeStored,
+  } from "../preferences";
+
+  const LABELS: Record<ThemeStored, string> = {
+    system: "Theme: system (auto)",
+    light: "Theme: light",
+    dark: "Theme: dark",
+  };
+
+  function syncUI(stored: ThemeStored): void {
+    document
+      .querySelectorAll<HTMLButtonElement>("[data-sophie-theme-toggle]")
+      .forEach((btn) => {
+        btn.setAttribute("data-theme-pref", stored);
+        btn.setAttribute("aria-label", LABELS[stored]);
+      });
+  }
+
+  syncUI(themePref.read());
+  themePref.subscribe(syncUI);
+
+  document
+    .querySelectorAll<HTMLButtonElement>("[data-sophie-theme-toggle]")
+    .forEach((btn) => {
+      themePref.bindToggle(btn, nextTheme);
+    });
+
+  installSystemThemeListener();
+</script>

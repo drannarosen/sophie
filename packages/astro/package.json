@@ -21,6 +21,7 @@
     "./components/ContentColumn.astro": "./dist/components/ContentColumn.astro",
     "./components/RightColumn.astro": "./dist/components/RightColumn.astro",
     "./components/SidebarToggle.astro": "./dist/components/SidebarToggle.astro",
+    "./components/ThemeToggle.astro": "./dist/components/ThemeToggle.astro",
     "./styles/textbook-layout.css": "./dist/styles/textbook-layout.css"
   },
   "files": [

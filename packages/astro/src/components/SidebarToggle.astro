@@ -1,15 +1,13 @@
 ---
 /**
  * <SidebarToggle> — accessible toggle button for the sidebar's
- * open/closed state. State lives in `data-sidebar` on <html>; this
- * button flips it and persists to localStorage.
+ * open/closed state. Drives `data-sidebar` on <html> through the
+ * generic `sidebarPref` (preferences/sidebar.ts), which encapsulates
+ * the localStorage round-trip, cross-tab `storage` event sync, and
+ * idempotent click binding.
  *
- * The boot script (in <TextbookLayout>) sets the initial state from
- * localStorage *before paint* to prevent FOUC. This component's
- * inline script wires the click handler + cross-tab `storage` event.
- *
- * No React; ~20 LOC of vanilla JS total. Per
- * docs/plans/2026-05-12-layout-shell-foundation-design.md Q3.
+ * Pre-paint state is set by the boot script in <TextbookHead>; this
+ * component just wires interaction.
  */
 ---
 
@@ -39,51 +37,27 @@
 </button>
 
 <script>
-  // Click handler + cross-tab storage sync.
-  // Idempotent: safe to load multiple times (buttons are queried fresh
-  // each time and listeners are attached only to elements that lack
-  // our marker attribute).
-  (function () {
-    const STORAGE_KEY = "sophie:sidebar";
-    const ATTR = "data-sidebar";
-    const html = document.documentElement;
+  import { sidebarPref } from "../preferences";
 
-    function setState(next: "open" | "closed", persist: boolean) {
-      html.setAttribute(ATTR, next);
-      document.querySelectorAll<HTMLButtonElement>(
-        "[data-sophie-sidebar-toggle]",
-      ).forEach((btn) => {
-        btn.setAttribute("aria-expanded", next === "open" ? "true" : "false");
+  function syncAriaExpanded(next: "open" | "closed"): void {
+    document
+      .querySelectorAll<HTMLButtonElement>("[data-sophie-sidebar-toggle]")
+      .forEach((btn) => {
+        btn.setAttribute(
+          "aria-expanded",
+          next === "open" ? "true" : "false",
+        );
       });
-      if (persist) {
-        try {
-          localStorage.setItem(STORAGE_KEY, next);
-        } catch {
-          // localStorage may be disabled (Safari private mode); fail silently.
-        }
-      }
-    }
+  }
 
-    document.querySelectorAll<HTMLButtonElement>(
-      "[data-sophie-sidebar-toggle]:not([data-sophie-bound])",
-    ).forEach((btn) => {
-      btn.setAttribute("data-sophie-bound", "true");
-      btn.addEventListener("click", () => {
-        const current = html.getAttribute(ATTR) === "closed" ? "closed" : "open";
-        setState(current === "open" ? "closed" : "open", true);
-      });
+  syncAriaExpanded(sidebarPref.read());
+  sidebarPref.subscribe(syncAriaExpanded);
+
+  document
+    .querySelectorAll<HTMLButtonElement>("[data-sophie-sidebar-toggle]")
+    .forEach((btn) => {
+      sidebarPref.bindToggle(btn, (cur) =>
+        cur === "open" ? "closed" : "open",
+      );
     });
-
-    // Cross-tab sync: listen once.
-    if (!(window as Window & { __sophieSidebarStorageBound?: boolean })
-      .__sophieSidebarStorageBound) {
-      (window as Window & { __sophieSidebarStorageBound?: boolean })
-        .__sophieSidebarStorageBound = true;
-      window.addEventListener("storage", (event) => {
-        if (event.key !== STORAGE_KEY) return;
-        const incoming = event.newValue === "closed" ? "closed" : "open";
-        setState(incoming, false);
-      });
-    }
-  })();
 </script>
