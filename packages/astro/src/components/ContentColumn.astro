@@ -1,0 +1,13 @@
+---
+/**
+ * <ContentColumn> — center reading column. ~75ch cap in Default mode.
+ *
+ * PR 1 ships the column at Default mode width. View modes
+ * (Default/Focused/Wide) land in PR 5 and adjust this column's
+ * max-inline-size via different grid-template-columns.
+ */
+---
+
+<main class='sophie-content'>
+  <slot />
+</main>

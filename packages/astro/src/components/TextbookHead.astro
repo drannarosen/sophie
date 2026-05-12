@@ -1,0 +1,36 @@
+---
+/**
+ * <TextbookHead /> — renders the inline boot script that synchronously
+ * sets `data-sidebar` on <html> from localStorage BEFORE paint, to
+ * prevent FOUC of the user's sidebar preference.
+ *
+ * MUST live inside the consumer's <head>, NOT inside any React island
+ * (per ADR 0027 — React's SSR mangles `is:inline` directives, dropping
+ * the IIFE wrapper). Putting it in <head> keeps it Astro-pure.
+ *
+ * Consumer usage:
+ *
+ *   <html>
+ *     <head>
+ *       <TextbookHead />
+ *     </head>
+ *     <body>
+ *       <TextbookLayout>...</TextbookLayout>
+ *     </body>
+ *   </html>
+ *
+ * Per docs/plans/2026-05-12-layout-shell-foundation-design.md.
+ */
+---
+
+<script is:inline>
+  (function () {
+    try {
+      var stored = localStorage.getItem("sophie:sidebar");
+      var next = stored === "closed" ? "closed" : "open";
+      document.documentElement.setAttribute("data-sidebar", next);
+    } catch (e) {
+      document.documentElement.setAttribute("data-sidebar", "open");
+    }
+  })();
+</script>
