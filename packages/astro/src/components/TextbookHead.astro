@@ -1,14 +1,18 @@
 ---
 /**
- * <TextbookHead /> — renders the inline boot script that synchronously
- * sets `data-sidebar` on <html> from localStorage BEFORE paint, to
- * prevent FOUC of the user's sidebar preference.
+ * <TextbookHead /> — emits one `is:inline` boot script per chrome
+ * preference. Each script synchronously reads localStorage and sets
+ * the matching `data-*` attribute on <html> BEFORE paint, preventing
+ * FOUC of the user's persisted preferences.
  *
  * MUST live inside the consumer's <head>, NOT inside any React island
- * (per ADR 0027 — React's SSR mangles `is:inline` directives, dropping
- * the IIFE wrapper). Putting it in <head> keeps it Astro-pure.
+ * (per ADR 0033 — React's SSR mangles `is:inline` directives,
+ * dropping the IIFE wrapper).
  *
- * Consumer usage:
+ * Each new chrome preference in subsequent Bucket B PRs adds one
+ * line here; preferences own their boot logic via `pref.bootScript()`
+ * (per ADR 0032 vanilla-JS chrome state + ADR 0031 compound-component
+ * isomorphism).
  *
  *   <html>
  *     <head>
@@ -18,35 +22,16 @@
  *       <TextbookLayout>...</TextbookLayout>
  *     </body>
  *   </html>
- *
- * Per docs/plans/2026-05-12-layout-shell-foundation-design.md.
  */
+import { sidebarPref } from "../preferences";
+
+// Sidebar default is viewport-aware: mobile sidebar is a slide-over
+// that obscures content, so default to "closed" below 768px. Desktop
+// default stays "open" (sidebar is part of the persistent grid).
+// Mobile breakpoint matches packages/astro/src/styles/textbook-layout.css.
+const sidebarBoot = sidebarPref.bootScript({
+  defaultExpression: "(window.innerWidth < 768 ? 'closed' : 'open')",
+});
 ---
 
-<script is:inline>
-  (function () {
-    // Mobile breakpoint matches packages/astro/src/styles/textbook-layout.css.
-    var MOBILE_MAX = 768;
-    function defaultForViewport() {
-      // On mobile, the sidebar is a slide-over that obscures content.
-      // Default it to "closed" so the chapter is reachable on first load.
-      // Desktop default stays "open" (sidebar is part of the persistent grid).
-      return window.innerWidth < MOBILE_MAX ? "closed" : "open";
-    }
-    try {
-      var stored = localStorage.getItem("sophie:sidebar");
-      // Honor an explicit user preference if set; otherwise fall back to
-      // the viewport-aware default.
-      var next =
-        stored === "closed" ? "closed" :
-        stored === "open"   ? "open"   :
-        defaultForViewport();
-      document.documentElement.setAttribute("data-sidebar", next);
-    } catch (e) {
-      document.documentElement.setAttribute(
-        "data-sidebar",
-        defaultForViewport(),
-      );
-    }
-  })();
-</script>
+<script is:inline set:html={sidebarBoot} />
