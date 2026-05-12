@@ -35,13 +35,15 @@
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist .turbo storybook-static"
   },
+  "peerDependencies": {
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6"
+  },
   "dependencies": {
     "@radix-ui/react-collapsible": "^1.1.12",
     "@sophie/core": "workspace:*",
     "@sophie/theme": "workspace:*",
     "idb": "^8.0.3",
-    "react": "^19.2.6",
-    "react-dom": "^19.2.6",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -62,6 +64,8 @@
     "jsdom": "^29.1.1",
     "postcss": "^8.5.14",
     "postcss-modules": "^6.0.1",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
     "storybook": "^10.3.6",
     "tsup": "^8.5.1",
     "tsx": "^4.21.0",
