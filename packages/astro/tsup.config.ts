@@ -19,6 +19,11 @@ export default defineConfig({
     // dist/icons/index.js to resolve from the copied-verbatim .astro
     // files in dist/components/.
     "icons/index": "src/icons/index.ts",
+    // `lib/aside-positioning` is the vanilla-JS docking script for
+    // <Aside> (PR 6). Wired by <AsideDocker> / <TextbookLayout>;
+    // must exist at dist/lib/aside-positioning.js to resolve from
+    // the copied-verbatim .astro files.
+    "lib/aside-positioning": "src/lib/aside-positioning.ts",
   },
   format: ["esm"],
   target: "es2022",

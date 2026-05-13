@@ -9,6 +9,7 @@ tags: ["course-overview", "foundations"]
 ---
 
 import {
+  Aside,
   CollapsibleCard,
   ComprehensionGate,
   ConfidenceCheck,
@@ -435,11 +436,19 @@ The oxygen lines ([OIII] at 496–501 nm) come from "forbidden" transitions that
 
 **What physics makes this legal?** If you know how bright something truly is (its luminosity) and measure how bright it *appears* (its flux), the inverse-square law lets you calculate distance.
 
-<aside class="margin-note">
-**Standard candle:** An object whose intrinsic luminosity can be determined independently (from pulsation period, spectral type, or explosion physics), allowing distance to be calculated from observed brightness.
-</aside>
+<Aside kind="definition" title="Standard candle">
+An object whose intrinsic luminosity can be determined independently — from pulsation period, spectral type, or explosion physics — allowing distance to be calculated from observed brightness via the inverse-square law.
+</Aside>
+
+<Aside kind="digression" title="Bessel's first parallax (1838)">
+Friedrich Bessel measured the first stellar parallax — 61 Cygni at 0.3 arcseconds. The result was so small that earlier astronomers had been unable to detect it, sparking centuries of debate about whether the Earth moved at all. Today, Gaia measures parallaxes to milliarcsecond precision for over a billion stars.
+</Aside>
 
 **Key insight:** Distance is *inferred* from brightness. To measure farther, we need brighter standard candles.
+
+<Aside kind="key-insight">
+Every distance method in astronomy ultimately rests on geometric parallax. Subsequent rungs of the cosmic distance ladder (standard candles, redshift) are calibrated against parallax-measured distances of nearby objects.
+</Aside>
 
 <CollapsibleCard
   client:load

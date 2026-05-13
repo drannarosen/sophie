@@ -1,4 +1,5 @@
 import {
+  Aside,
   Callout,
   Figure,
   type FigureRegistry,
@@ -34,6 +35,8 @@ interface MdxFigureProps {
  */
 export function makeStaticComponents({ figures }: MakeStaticComponentsOptions) {
   return {
+    // <Aside> is content-only (static; no state). PR 6.
+    Aside,
     Callout,
     // KeyEquation is content-only (no per-instance state, no client:load).
     // Flows through the static components map alongside Callout/Figure.

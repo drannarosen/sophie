@@ -59,11 +59,24 @@ test.describe("PR 4: In-page ToC (desktop)", () => {
       .first();
     await expect(firstLink).toHaveAttribute("aria-current", "location");
 
-    // Scroll to roughly the middle of the chapter so a later section
-    // is in the spy band.
+    // Scroll a later H2 INTO the IntersectionObserver's active band
+    // (20–30% from the top of the viewport, per TocSidebar's
+    // rootMargin "-20% 0px -70% 0px"). Anchoring on a heading
+    // element + computing scrollTop relative to the active band
+    // keeps this test robust to document-length changes (e.g. asides
+    // leaving flow when docked in PR 6) AND keeps the heading
+    // actually inside the band (block:"start" would put it ABOVE
+    // the band, failing to update aria-current at all).
     await page.evaluate(() => {
-      const halfway = document.body.scrollHeight / 2;
-      window.scrollTo({ top: halfway, behavior: "instant" });
+      const headings = document.querySelectorAll(".sophie-content h2");
+      const target = headings.item(2) as HTMLElement | null;
+      if (!target) return;
+      const desiredViewportTopFraction = 0.25; // center of active band
+      const targetScrollTop =
+        target.getBoundingClientRect().top +
+        window.scrollY -
+        window.innerHeight * desiredViewportTopFraction;
+      window.scrollTo({ top: targetScrollTop, behavior: "instant" });
     });
     // Give the IntersectionObserver one tick to fire.
     await page.waitForTimeout(150);
