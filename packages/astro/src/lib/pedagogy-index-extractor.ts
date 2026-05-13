@@ -192,3 +192,62 @@ class IndexAccumulator {
 }
 
 export const indexAccumulator = new IndexAccumulator();
+
+/**
+ * Default chapter-slug deriver. Matches Astro's content-layer
+ * default: the chapter id is the file's path relative to
+ * `src/content/chapters/`, without the `.mdx` extension. For
+ * `examples/smoke/src/content/chapters/01-foundations/spoiler-alerts.mdx`
+ * this yields `"01-foundations/spoiler-alerts"`.
+ *
+ * Consumer apps with non-default content layouts pass their own
+ * `getChapterSlug` to `pedagogyIndexRemarkPlugin()`.
+ */
+function defaultGetChapterSlug(filePath: string): string | undefined {
+  const match = filePath.match(/[/\\]content[/\\]chapters[/\\](.+)\.mdx$/);
+  if (!match) return undefined;
+  return match[1]?.replace(/\\/g, "/");
+}
+
+export interface PedagogyIndexRemarkPluginOptions {
+  /** Derive a chapter slug from the source file path. Defaults to the
+   * standard Astro content-collection layout (see defaultGetChapterSlug). */
+  getChapterSlug?: (filePath: string) => string | undefined;
+}
+
+interface VFileLike {
+  path?: string;
+}
+
+/**
+ * Remark plugin that wires `extractDefinitions` + `indexAccumulator`
+ * into the unified MDX pipeline. Add to `remarkPlugins` in your
+ * MDX integration config; runs once per chapter parse.
+ *
+ * On each chapter parse:
+ *   1. Derive the chapter slug from the vfile path.
+ *   2. `indexAccumulator.clearChapter(slug)` so re-parses don't
+ *      accumulate stale entries.
+ *   3. `extractDefinitions(tree, slug)` returns this chapter's
+ *      entries.
+ *   4. `indexAccumulator.addDefinitions(entries)` aggregates;
+ *      throws on cross-chapter slug collision (audit invariant #1).
+ *
+ * The plugin doesn't mutate the mdast tree — it's extraction-only.
+ */
+export function pedagogyIndexRemarkPlugin(
+  options: PedagogyIndexRemarkPluginOptions = {}
+): (tree: Root, file: VFileLike) => void {
+  const getChapterSlug = options.getChapterSlug ?? defaultGetChapterSlug;
+
+  return (tree: Root, file: VFileLike) => {
+    const filePath = file.path;
+    if (!filePath) return;
+    const chapterSlug = getChapterSlug(filePath);
+    if (!chapterSlug) return;
+
+    indexAccumulator.clearChapter(chapterSlug);
+    const entries = extractDefinitions(tree, chapterSlug);
+    indexAccumulator.addDefinitions(entries);
+  };
+}

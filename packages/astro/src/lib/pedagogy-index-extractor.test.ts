@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   extractDefinitions,
   indexAccumulator,
+  pedagogyIndexRemarkPlugin,
 } from "./pedagogy-index-extractor.ts";
 
 /**
@@ -295,5 +296,106 @@ describe("indexAccumulator (cross-chapter)", () => {
         },
       ])
     ).not.toThrow();
+  });
+});
+
+describe("pedagogyIndexRemarkPlugin", () => {
+  test("populates the accumulator for the parsed chapter", () => {
+    indexAccumulator.clearChapter("test-chapter");
+    const plugin = pedagogyIndexRemarkPlugin();
+    const tree = root([
+      mdxAside({ kind: "definition", title: "Cepheid variable" }, [
+        para("body"),
+      ]),
+    ]);
+
+    plugin(tree as never, {
+      path: "/repo/src/content/chapters/test-chapter.mdx",
+    });
+
+    const index = indexAccumulator.asPedagogyIndex();
+    const found = index.definitions.find((d) => d.term === "Cepheid variable");
+    expect(found).toBeDefined();
+    expect(found?.chapter).toBe("test-chapter");
+  });
+
+  test("uses the default getChapterSlug which preserves subdirectories", () => {
+    indexAccumulator.clearChapter("module-a/test-chapter");
+    const plugin = pedagogyIndexRemarkPlugin();
+    const tree = root([
+      mdxAside({ kind: "definition", title: "Pulsar" }, [para("body")]),
+    ]);
+
+    plugin(tree as never, {
+      path: "/repo/src/content/chapters/module-a/test-chapter.mdx",
+    });
+
+    const entry = indexAccumulator
+      .asPedagogyIndex()
+      .definitions.find((d) => d.term === "Pulsar");
+    expect(entry?.chapter).toBe("module-a/test-chapter");
+  });
+
+  test("honors a custom getChapterSlug", () => {
+    indexAccumulator.clearChapter("custom-slug");
+    const plugin = pedagogyIndexRemarkPlugin({
+      getChapterSlug: () => "custom-slug",
+    });
+    const tree = root([
+      mdxAside({ kind: "definition", title: "Quasar" }, [para("body")]),
+    ]);
+
+    plugin(tree as never, { path: "/any/path.mdx" });
+
+    const entry = indexAccumulator
+      .asPedagogyIndex()
+      .definitions.find((d) => d.term === "Quasar");
+    expect(entry?.chapter).toBe("custom-slug");
+  });
+
+  test("re-parsing a chapter replaces its entries (clears stale on each run)", () => {
+    indexAccumulator.clearChapter("hmr-test");
+    const plugin = pedagogyIndexRemarkPlugin();
+    const fileCtx = { path: "/repo/src/content/chapters/hmr-test.mdx" };
+
+    plugin(
+      root([
+        mdxAside({ kind: "definition", title: "Initial" }, [para("v1")]),
+      ]) as never,
+      fileCtx
+    );
+    expect(
+      indexAccumulator
+        .asPedagogyIndex()
+        .definitions.filter((d) => d.chapter === "hmr-test")
+    ).toHaveLength(1);
+
+    plugin(
+      root([
+        mdxAside({ kind: "definition", title: "Replaced" }, [para("v2")]),
+      ]) as never,
+      fileCtx
+    );
+    const hmrEntries = indexAccumulator
+      .asPedagogyIndex()
+      .definitions.filter((d) => d.chapter === "hmr-test");
+    expect(hmrEntries).toHaveLength(1);
+    expect(hmrEntries[0]?.term).toBe("Replaced");
+  });
+
+  test("skips files outside src/content/chapters/", () => {
+    const plugin = pedagogyIndexRemarkPlugin();
+    const tree = root([
+      mdxAside({ kind: "definition", title: "Skipme" }, [para("body")]),
+    ]);
+
+    // Outside the content-chapters tree; default getChapterSlug returns undefined.
+    plugin(tree as never, { path: "/repo/some-other-place/file.mdx" });
+
+    expect(
+      indexAccumulator
+        .asPedagogyIndex()
+        .definitions.find((d) => d.term === "Skipme")
+    ).toBeUndefined();
   });
 });
