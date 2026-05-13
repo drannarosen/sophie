@@ -149,6 +149,41 @@ test.describe("PR 2: ThemeToggle on the smoke chapter", () => {
     await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
   });
 
+  test("shell background actually changes between light and dark (not just the attribute)", async ({
+    page,
+  }) => {
+    await page.emulateMedia({ colorScheme: "light" });
+    await page.goto(CHAPTER_URL);
+    const toggle = page.getByRole("button", { name: /^theme:/i });
+
+    // Force explicit light, capture the shell's computed background.
+    await toggle.click(); // → light explicit
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+    const lightBg = await page.evaluate(
+      () =>
+        getComputedStyle(document.querySelector(".sophie-shell") as Element)
+          .backgroundColor
+    );
+
+    // Toggle to dark; the shell background must actually swap. If it
+    // stays equal to the light value (or to the hardcoded white
+    // fallback), the layout CSS isn't wired to @sophie/theme's tokens.
+    await toggle.click(); // → dark explicit
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+    const darkBg = await page.evaluate(
+      () =>
+        getComputedStyle(document.querySelector(".sophie-shell") as Element)
+          .backgroundColor
+    );
+    expect(darkBg).not.toBe(lightBg);
+    // Dark mode resolves to a very dark color; sanity-check the
+    // luminance is on the dark side (R+G+B < 384 ~= halfway).
+    const rgb = darkBg.match(/\d+/g);
+    expect(rgb).not.toBeNull();
+    const [r, g, b] = (rgb as RegExpMatchArray).slice(0, 3).map(Number);
+    expect(r + g + b).toBeLessThan(384);
+  });
+
   test("axe-core: zero violations on the theme toggle", async ({ page }) => {
     await page.emulateMedia({ colorScheme: "light" });
     await page.goto(CHAPTER_URL);

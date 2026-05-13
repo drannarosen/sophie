@@ -32,8 +32,8 @@
   grid-template-columns: var(--sophie-sidebar-w) 1fr var(--sophie-right-w);
   grid-template-rows: var(--sophie-topbar-h) 1fr;
   min-height: 100dvh;
-  background: var(--sophie-color-bg, #fff);
-  color: var(--sophie-color-fg, #1a1a1a);
+  background: var(--sophie-bg, #fbfaf7);
+  color: var(--sophie-text);
 }
 
 .sophie-topbar {
@@ -42,8 +42,8 @@
   align-items: center;
   gap: 0.75rem;
   padding-inline: 1rem;
-  border-block-end: 1px solid var(--sophie-color-border, #e5e5e5);
-  background: var(--sophie-color-surface, #fafafa);
+  border-block-end: 1px solid var(--sophie-border);
+  background: var(--sophie-surface-1);
   position: sticky;
   inset-block-start: 0;
   z-index: 10;
@@ -61,8 +61,8 @@
 
 .sophie-sidebar {
   grid-area: sidebar;
-  border-inline-end: 1px solid var(--sophie-color-border, #e5e5e5);
-  background: var(--sophie-color-surface, #fafafa);
+  border-inline-end: 1px solid var(--sophie-border);
+  background: var(--sophie-surface-1);
   overflow-y: auto;
   /* Sidebar nav contents land in PR 3; PR 1 ships the empty container. */
 }
@@ -85,8 +85,8 @@
 
 .sophie-right {
   grid-area: right;
-  border-inline-start: 1px solid var(--sophie-color-border, #e5e5e5);
-  background: var(--sophie-color-surface, #fafafa);
+  border-inline-start: 1px solid var(--sophie-border);
+  background: var(--sophie-surface-1);
   overflow-y: auto;
   /* In-page ToC + margin asides land in PRs 4 + 6; PR 1 ships the empty container. */
 }
@@ -105,7 +105,7 @@
 .sophie-sidebar-toggle {
   appearance: none;
   background: transparent;
-  border: 1px solid var(--sophie-color-border, #e5e5e5);
+  border: 1px solid var(--sophie-border);
   border-radius: 6px;
   padding: 0.375rem 0.625rem;
   font-size: 1rem;
@@ -121,7 +121,7 @@
 }
 
 .sophie-sidebar-toggle:hover {
-  background: var(--sophie-color-bg, #fff);
+  background: var(--sophie-bg, #fbfaf7);
 }
 
 /* Theme toggle button — same primitive shape as the sidebar toggle.
@@ -131,7 +131,7 @@
 .sophie-theme-toggle {
   appearance: none;
   background: transparent;
-  border: 1px solid var(--sophie-color-border, #e5e5e5);
+  border: 1px solid var(--sophie-border);
   border-radius: 6px;
   padding: 0.375rem 0.625rem;
   font-size: 1rem;
@@ -149,7 +149,7 @@
 }
 
 .sophie-theme-toggle:hover {
-  background: var(--sophie-color-bg, #fff);
+  background: var(--sophie-bg, #fbfaf7);
 }
 
 .sophie-theme-icon {
@@ -181,7 +181,7 @@
     transition: transform 200ms ease-out;
     z-index: 5;
     visibility: visible;
-    border-inline-end: 1px solid var(--sophie-color-border, #e5e5e5);
+    border-inline-end: 1px solid var(--sophie-border);
   }
 
   :root[data-sidebar="open"] .sophie-sidebar {
