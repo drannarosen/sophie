@@ -51,7 +51,7 @@ the architecture.
 | 2 | Extractor location | `@sophie/astro/src/lib/pedagogy-index-extractor.ts` — wired into `sophieMdxOptions.remarkPlugins` (lives in `lib/`, not `components/`, matching `aside-positioning.ts` and `group-headings.ts`) |
 | 3 | Index access mechanism | **Vite virtual module `virtual:sophie/pedagogy-index`** — the small Vite plugin lives next to the extractor; consumers `import { definitions } from "virtual:sophie/pedagogy-index"` (HITL Q1 confirmed 2026-05-13) |
 | 4 | Aside schema refinement | `AsidePropsSchema.refine(...)` requires non-empty `title` when `kind === "definition"`; other kinds keep `title` optional |
-| 5 | Slugify shape | Split into **two functions**: `slugify(s)` (pure; runtime-side `name → slug` lookup) + `slugifyWithCollisions(s, seen)` (preserves the existing MiniGlossary semantics for the extractor's per-chapter collision tracking). Lives at `@sophie/core/src/lib/slugify.ts` |
+| 5 | Slugify shape | Split into **two functions**: `slugify(s)` (pure; runtime-side `name → slug` lookup) + `slugifyWithCollisions(s, seen)` (preserves the existing MiniGlossary semantics for the extractor's per-chapter collision tracking). Lives at `packages/core/src/schema/slugify.ts` (sibling to the existing utility helper `module-nav.ts`). Imported by consumers as `@sophie/core/schema`. Rationale: `@sophie/core` uses explicit per-subpath tsup builds + Biome boundary rule; introducing a new `lib` subpath for one utility would add infrastructure for ~zero gain. If utility helpers accumulate beyond 2–3, promote to `@sophie/core/lib` then. |
 | 6 | Anchor IDs | Hybrid: default `id={slugify(title)}` on the rendered `<details>` element; authors can override via explicit `<Aside id="…">` |
 | 7 | Body rendering | Pre-rendered HTML string at extraction time (overview decision #11). Consumers embed via `set:html={entry.body}` / `dangerouslySetInnerHTML` |
 | 8 | Sort order | `<ChapterGlossary />` alphabetical default + `order="appearance"` prop; `<CourseGlossary />` alphabetical only |
@@ -369,8 +369,8 @@ const sorted = [...definitions].sort((a, b) => a.term.localeCompare(b.term));
 
 | Path | Purpose |
 | --- | --- |
-| `packages/core/src/lib/slugify.ts` | `slugify` + `slugifyWithCollisions` |
-| `packages/core/src/lib/slugify.test.ts` | unit tests |
+| `packages/core/src/schema/slugify.ts` | `slugify` + `slugifyWithCollisions` (lives in `schema/` alongside `module-nav.ts`; exported via `@sophie/core/schema`) |
+| `packages/core/src/schema/slugify.test.ts` | unit tests |
 | `packages/core/src/schema/pedagogy-index.ts` | `DefinitionEntry`, `PedagogyIndex` (+ stub types for PR-C2/3) + Zod schemas |
 | `packages/core/src/schema/pedagogy-index.test.ts` | unit tests |
 | `packages/astro/src/lib/pedagogy-index-extractor.ts` | remark plugin + `extractDefinitions` + `indexAccumulator` |
@@ -394,8 +394,7 @@ const sorted = [...definitions].sort((a, b) => a.term.localeCompare(b.term));
 
 | Path | Change |
 | --- | --- |
-| `packages/core/src/schema/index.ts` | export pedagogy-index types |
-| `packages/core/src/index.ts` | export `slugify` + `slugifyWithCollisions` |
+| `packages/core/src/schema/index.ts` | export pedagogy-index types + `slugify` + `slugifyWithCollisions` |
 | `packages/components/src/components/Aside/Aside.schema.ts` | add `.refine()` for definition-title requirement + add `id?: string` prop |
 | `packages/components/src/components/Aside/Aside.tsx` | honor `id` prop on the rendered `<details>` (default `slugify(title)` when `kind === "definition"`) |
 | `packages/components/src/index.ts` | export `GlossaryTerm` + types; remove `MiniGlossary` exports |
