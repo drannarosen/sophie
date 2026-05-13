@@ -1,0 +1,84 @@
+---
+import { ViewModeDefault, ViewModeFocused, ViewModeWide } from "../icons";
+
+/**
+ * <ViewModeToggle> — cycle button for the per-chapter view mode.
+ *
+ * Cycles `default → focused → wide → default`. State drives
+ * `data-view-mode` on <html>, which the textbook layout CSS maps
+ * to:
+ *   - Default → three-column shell (sidebar + content + right).
+ *   - Focused → both side columns collapsed; content cap 85ch.
+ *   - Wide    → both side columns collapsed; content cap 105ch.
+ *
+ * Pre-paint state is set by the boot script in <TextbookHead>; this
+ * component wires the click handler, the global `v` keyboard
+ * shortcut, and keeps the aria-label + icon in sync with the stored
+ * preference.
+ *
+ * Per ADR 0032 (vanilla JS chrome state) all interaction goes
+ * through `viewModePref` (preferences/view-mode.ts), a
+ * `definePreference` factory call. No React.
+ *
+ * Per ADR 0036 this is the third consumer of `definePreference`
+ * after `sidebarPref` and `themePref`; the minimum-shape call
+ * (no resolve indirection).
+ */
+---
+
+<button
+  type='button'
+  class='sophie-view-mode-toggle'
+  data-sophie-view-mode-toggle
+  data-view-mode-pref='default'
+  aria-label='View: default'
+>
+  {/* Three icons; CSS shows one at a time based on data-view-mode-pref. */}
+  <span
+    class='sophie-view-mode-icon sophie-view-mode-icon-default'
+    set:html={ViewModeDefault}
+  />
+  <span
+    class='sophie-view-mode-icon sophie-view-mode-icon-focused'
+    set:html={ViewModeFocused}
+  />
+  <span
+    class='sophie-view-mode-icon sophie-view-mode-icon-wide'
+    set:html={ViewModeWide}
+  />
+</button>
+
+<script>
+  import {
+    installViewModeKeyboardShortcut,
+    nextViewMode,
+    type ViewModeStored,
+    viewModePref,
+  } from "../preferences";
+
+  const LABELS: Record<ViewModeStored, string> = {
+    default: "View: default",
+    focused: "View: focused",
+    wide: "View: wide",
+  };
+
+  function syncUI(stored: ViewModeStored): void {
+    document
+      .querySelectorAll<HTMLButtonElement>("[data-sophie-view-mode-toggle]")
+      .forEach((btn) => {
+        btn.setAttribute("data-view-mode-pref", stored);
+        btn.setAttribute("aria-label", LABELS[stored]);
+      });
+  }
+
+  syncUI(viewModePref.read());
+  viewModePref.subscribe(syncUI);
+
+  document
+    .querySelectorAll<HTMLButtonElement>("[data-sophie-view-mode-toggle]")
+    .forEach((btn) => {
+      viewModePref.bindToggle(btn, nextViewMode);
+    });
+
+  installViewModeKeyboardShortcut();
+</script>

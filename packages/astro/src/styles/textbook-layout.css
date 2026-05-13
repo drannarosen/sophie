@@ -162,6 +162,46 @@
   display: inline-block;
 }
 
+/* View-mode toggle — same primitive shape as the theme + sidebar
+   toggles. Cycles Default / Focused / Wide; icons swap via
+   [data-view-mode-pref] on the button (the STORED value). */
+.sophie-view-mode-toggle {
+  appearance: none;
+  background: transparent;
+  border: 1px solid var(--sophie-border);
+  border-radius: 6px;
+  padding: 0.375rem 0.625rem;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+}
+
+.sophie-view-mode-toggle:focus-visible {
+  outline: var(--sophie-focus-width, 2px) solid
+    var(--sophie-focus-color, #5b8def);
+  outline-offset: 2px;
+}
+
+.sophie-view-mode-toggle:hover {
+  background: var(--sophie-bg, #fbfaf7);
+}
+
+.sophie-view-mode-icon {
+  display: none;
+}
+
+.sophie-view-mode-toggle[data-view-mode-pref="default"]
+  .sophie-view-mode-icon-default,
+.sophie-view-mode-toggle[data-view-mode-pref="focused"]
+  .sophie-view-mode-icon-focused,
+.sophie-view-mode-toggle[data-view-mode-pref="wide"]
+  .sophie-view-mode-icon-wide {
+  display: inline-flex;
+}
+
 /* Module/chapter navigation in the sidebar slot. PR 3. */
 .sophie-module-nav {
   padding: 1rem;
