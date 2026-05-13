@@ -86,3 +86,13 @@ const collapsedVars = [
     <slot name='right' />
   </RightColumn>
 </div>
+
+<script>
+  // PR 6: install the <Aside> docking lifecycle. Idempotent via a
+  // window-level guard inside installAsidePositioning() — safe to
+  // include in every textbook layout consumer. Per ADR 0032 this
+  // runs as vanilla JS (not React). Listens to resize +
+  // viewModePref change + MutationObserver on .sophie-content.
+  import { installAsidePositioning } from "../lib/aside-positioning";
+  installAsidePositioning();
+</script>

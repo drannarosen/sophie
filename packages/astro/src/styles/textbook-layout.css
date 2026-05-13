@@ -34,6 +34,11 @@
   min-height: 100dvh;
   background: var(--sophie-bg, #fbfaf7);
   color: var(--sophie-text);
+  /* Positioned containing block for absolute-positioned <Aside>
+     elements docked in the right column area (PR 6). Side effect:
+     no change for PR 1+ children (none were relying on the prior
+     `static` default). */
+  position: relative;
 }
 
 .sophie-topbar {
@@ -99,6 +104,19 @@
 :root[data-sidebar="closed"] .sophie-sidebar {
   visibility: hidden;
   border-inline-end: 0;
+}
+
+/* When the sidebar is hidden, let content widen to use the freed
+   horizontal space — up to a readability ceiling of 95ch.
+   Otherwise users who deliberately collapse the sidebar see the
+   prose stay narrow with leftover whitespace (a regression on
+   user signal).
+
+   Cascade order matters: this rule comes BEFORE the view-mode
+   overrides below, so Focused (85ch) and Wide (105ch) win when
+   active even with sidebar="closed". */
+:root[data-sidebar="closed"] .sophie-content {
+  max-inline-size: min(95ch, 100%);
 }
 
 /* Sidebar toggle button — basic primitive shape; full design in @sophie/theme later. */
@@ -243,6 +261,61 @@
 :root[data-view-mode="focused"] .sophie-sidebar-toggle,
 :root[data-view-mode="wide"] .sophie-sidebar-toggle {
   display: none;
+}
+
+/* ===== <Aside> docking orchestration (PR 6) =====
+   The <Aside> React component renders inline as <details
+   data-sophie-aside>. The aside-positioning.ts script (wired in
+   <TextbookLayout>'s component-level <script>) computes per-aside
+   top values in docked mode and sets the open attribute imperatively
+   in docked mode. CSS handles the rest: where the aside renders,
+   what summary visibility looks like, when the inline fallback
+   takes over.
+
+   Inline fallback (mobile <768px OR view-mode focused|wide): aside
+   stays in document flow as a collapsed <details>. Default styling
+   from Aside.module.css applies. */
+
+[data-sophie-aside] {
+  /* Inline-mode default: in-flow block element. */
+  display: block;
+}
+
+/* Docked mode: asides are kept in document flow UNTIL the
+   positioning script has assigned a `top` value. The script sets
+   data-aside-docked="true" on each aside it's actively placing;
+   CSS keys on that attribute (not on the base [data-sophie-aside])
+   so layout doesn't shift before JS runs. This preserves PR 4's
+   scroll-spy test's reference frame: body.scrollHeight only
+   shrinks once asides actually leave flow. */
+@media (min-width: 768px) {
+  :root[data-view-mode="default"]
+    [data-sophie-aside][data-aside-docked="true"] {
+    position: absolute;
+    inset-inline-end: 20px;
+    inline-size: 240px;
+    /* `top` is set imperatively by aside-positioning.ts. */
+    z-index: 1;
+    max-inline-size: 240px;
+  }
+
+  /* In docked mode, the disclosure summary is decorative — the
+     body is always shown (open attribute set by the positioning
+     script). Hide the summary so the docked aside reads as a
+     contextual margin note rather than a clickable disclosure. */
+  :root[data-view-mode="default"]
+    [data-sophie-aside][data-aside-docked="true"]
+    > summary {
+    display: none;
+  }
+}
+
+/* ToC sits sticky in the right column; ensure it stacks above
+   docked asides when they momentarily share viewport region as
+   the user scrolls. */
+.sophie-toc {
+  position: relative;
+  z-index: 2;
 }
 
 /* Module/chapter navigation in the sidebar slot. PR 3. */

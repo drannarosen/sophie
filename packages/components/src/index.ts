@@ -1,5 +1,12 @@
 // Components
 
+export type { AsideProps } from "./components/Aside/Aside.schema.ts";
+export {
+  Aside,
+  AsideKind,
+  AsidePropsSchema,
+  asideContract,
+} from "./components/Aside/index.ts";
 export type {
   CalloutProps,
   CalloutVariant,
