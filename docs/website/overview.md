@@ -15,12 +15,11 @@ status: draft (live document — built incrementally during the 2026-05-11 big-p
 > plans). When this page is stable, downstream docs that contradict
 > it must update — this page is upstream of them.
 
-## 1. Audience and authoring model
+## 1. Audience, partnership, and authoring model
 
-### Audience priority
+### Who Sophie serves
 
-Sophie is built for **three audiences in priority order**, with a
-fourth implicit audience (AI) elevated to *first-class author*:
+Sophie serves **two human audiences** in priority order:
 
 1. **Anna + her students** (Anna authors, students learn). Anna's
    ASTR 201 and COMP 521 students are the proof. Pedagogy components
@@ -30,20 +29,60 @@ fourth implicit audience (AI) elevated to *first-class author*:
    discipline (`@stable` / `@experimental` / `@internal`),
    migration guides, and the `sophie create textbook` scaffolder
    so other instructors can adopt without forking the platform.
-3. **AI as a first-class author**. The AI is not a helper — it's
-   the *primary author*. The schema is engineered for AI
-   introspection; the audit is engineered for tight AI iteration
-   loops; the templates are engineered to be AI-fillable; the
-   documentation is engineered to be AI-ingestible.
 
-### Authoring model: AI writes, instructor supervises
+The AI is **not** an audience — Sophie is not built *for* the AI.
+The AI is Sophie's **co-author and resident expert**. That role,
+not a third audience slot, is the load-bearing relationship.
 
-> **The defining principle of Sophie:** the AI is the *main writer*;
-> the instructor is the *supervisor*. Sophie's job is to ship the
-> scaffolding for the supervision workflow itself — brainstorming,
-> planning, drafting, auditing, iteration — so that an instructor
-> can produce high-quality scientific pedagogy at speeds and
-> volumes a solo human author cannot match.
+### Sophie's authoring model: AI is the primary author and resident expert; instructor is the supervisor
+
+> **The defining principle of Sophie — the source of truth for
+> every content-development workflow:** the AI is the *primary
+> author* and the instructor is the *supervisor and final
+> decider*. Sophie ships the scaffolding for the supervision
+> workflow itself — brainstorming, planning, drafting, auditing,
+> iteration — so an instructor can produce high-quality
+> scientific pedagogy at speeds and volumes a solo human author
+> cannot match.
+
+The AI plays **four load-bearing roles** in Sophie. The platform's
+schema, audit, templates, skill ecosystem, and docs all exist to
+make these roles effective:
+
+1. **Primary author.** The AI writes chapter prose, fills templates,
+   drafts examples, drafts equations, drafts code. The instructor
+   does not write the first draft.
+2. **STEM pedagogy expert.** The AI coaches the instructor on
+   evidence-based pedagogy — retrieval practice, spaced practice,
+   interleaving, elaboration, dual coding, concrete examples,
+   metacognition, productive failure / desirable difficulty,
+   worked examples with faded prompts, and cognitive-load
+   management. It surfaces the relevant research, recommends
+   which Sophie components fit a given pedagogical goal, and
+   pushes back on choices that contradict the literature (with
+   citations, not assertions).
+3. **Domain expert.** The AI carries deep STEM domain knowledge —
+   astrophysics, computational science, and the specific subject
+   area of the textbook in question — and produces correct,
+   citation-ready content the instructor verifies and corrects.
+   Sophie targets STEM college + graduate-level pedagogy
+   (§7 below); the AI's domain hat is what makes that scope
+   possible without exhausting the instructor.
+4. **Brainstorming partner and design-doc writer.** The AI drives
+   Socratic brainstorming, synthesizes brainstorm answers into
+   outlines and design docs, drafts plans for the instructor to
+   refine, and produces the scaffolding (CourseSpec, module
+   skeleton, learning-arc map, pedagogy-philosophy doc, see §10)
+   that keeps subsequent authoring coherent. This is the same
+   pattern Sophie's own development uses (the `superpowers:*`
+   skill family); Sophie's authoring kit adapts it for chapters.
+
+The instructor remains the **supervisor, decider, and final
+authority** at every handoff. The AI proposes; the instructor
+decides; the AI implements; the instructor reviews. HITL is
+**structural, not advisory** — chapters do not ship without
+instructor review. The same HITL mandate that governs Sophie's
+own development applies to Sophie's authoring product.
 
 This is a directive, not a description of a feature. It cascades
 through every other Sophie design choice:
@@ -71,8 +110,14 @@ through every other Sophie design choice:
   plan → execute → review, per the `superpowers:*` skill family
   used in this project) get adapted into Sophie's authoring
   workflow at a first-class level.
+- **Structured pedagogy components** (Aside, KeyEquation, Figure,
+  Callout, Predict, LearningObjectives, …) are the AI-author
+  surface; the build-time pedagogy index pattern
+  ([ADR 0038](../decisions/0038-pedagogy-index-pattern.md)) turns
+  AI-authored structure into navigation surfaces (glossaries,
+  cross-refs, audit invariants) for free.
 
-### What this priority does NOT mean
+### What this directive does NOT mean
 
 - **Not autonomous AI authoring.** The instructor is the
   supervisor; chapters do not ship without instructor review. The
@@ -84,12 +129,17 @@ through every other Sophie design choice:
   punish her for it.
 - **Not "Anna only."** Open-source from day one is real, not
   aspirational. API discipline starts now.
+- **Not "the AI is always right."** The AI's pedagogy and domain
+  expertise are real but bounded. Citations are required for
+  research claims; the instructor's judgment overrides the AI on
+  any disagreement; "the AI suggested it" is never a justification
+  on its own.
 
 ### How this maps to existing roadmap phases
 
 The roadmap (per [roadmap §1](../status/roadmap.md)) names AI
 authoring in Phase 3 ("Audit + AI authoring + CodeCell"). Under
-this audience-priority answer, that placement is **roughly correct
+this authoring-model answer, that placement is **roughly correct
 but understated** — Phase 3 is the public landing of the AI authoring
 kit, but **every phase from Phase 2 onward must hold the line on
 "AI-as-author-friendly"**. Schema designs, audit shapes, template
@@ -148,7 +198,8 @@ for three reasons:
   AI-ingestible. Reference docs become skill context.
 - **The skill ecosystem is itself a versioned product** with its own
   release cadence, changelog, and contributing guidelines. External
-  instructors (audience priority 2) get the same skills Anna uses.
+  instructors (the second human audience) get the same skills Anna
+  uses.
 
 ### The exact set of v1 skills
 

@@ -7,13 +7,21 @@ tags: [audit, ai, claude-code, codex]
 
 # Audit and AI authoring
 
-Sophie's AI surface — how the platform integrates with Claude Code,
-Codex, and other AI tools without making its own AI calls.
+Sophie's AI surface — how the AI **primary-authors** chapter content
+under instructor supervision, using third-party AI tools (Claude
+Code, Codex, etc.) as the runtime. Per
+[ADR 0030](../decisions/0030-audience-and-ai-author-model.md) and
+[overview §1](../overview.md), the AI plays four load-bearing roles
+(primary author / STEM pedagogy expert / domain expert /
+brainstorming + design-doc writer); the instructor remains the
+supervisor, decider, and final authority. This doc describes the
+*technical surface* that makes those roles effective — how Sophie
+integrates with AI tools without making its own AI calls.
 
 This is the AI-native differentiator vs. MyST/Quarto/JupyterBook. But
 **Sophie itself is provider-agnostic**: the CLI is deterministic, and
-the AI work happens in tools authors already pay for (Claude Max,
-ChatGPT Pro, etc.).
+the AI work happens in tools the instructor already pays for (Claude
+Max, ChatGPT Pro, etc.).
 
 ## 1. Architecture model
 
@@ -50,8 +58,10 @@ interface is structured prompt files in a known format.
 - **Reproducibility lives at the AI tool layer.** Sophie produces
   the same prompt every time; the AI tool produces non-deterministic
   output, but that's expected and bounded.
-- **Author always in the loop.** Sophie never silently writes content;
-  the AI tool produces drafts/diffs the author reviews.
+- **Instructor always in the loop.** Sophie never silently writes
+  content. The AI primary-authors; the instructor reviews and decides
+  at every handoff. HITL is structural, not advisory
+  ([ADR 0030](../decisions/0030-audience-and-ai-author-model.md)).
 
 ## 2. The Sophie CLI surface
 

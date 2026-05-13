@@ -17,44 +17,93 @@ deliverable, framed as "AI-assisted authoring." The 2026-05-11/12
 big-picture brainstorm
 ([overview.md §1–§2](../overview.md)) made this implicit
 shape explicit and substantially stronger: Sophie is not "AI helps
-the instructor"; Sophie is **AI is the primary author; instructor
-is the supervisor and pedagogical expert**. Every downstream
-schema, audit, template, doc, and skill choice depends on which
-framing is correct.
+the instructor"; Sophie is **AI is the primary author and resident
+expert; instructor is the supervisor and final decider**. Every
+downstream schema, audit, template, doc, and skill choice depends
+on which framing is correct.
 
 ## Decision
 
-Sophie has **three audiences in priority order**, with a fourth
-elevated to **first-class author**:
+Sophie serves **two human audiences** in priority order, and is
+**co-authored with AI** as a first-class partner — not a feature
+or helper.
+
+**Human audiences:**
 
 1. **Anna + her students** (Anna authors; students learn).
 2. **Anna + future external instructors** (open-source from day
    one).
-3. **AI as a first-class author**, with the instructor as
-   supervisor and pedagogical expert.
 
-The defining principle is: *the AI is the main writer; the
-instructor is the supervisor.* Sophie ships the scaffolding for
-the supervision workflow itself — brainstorming, planning,
-drafting, auditing, iteration — so that an instructor can produce
-high-quality scientific pedagogy at speeds and volumes a solo
-human author cannot match.
+**The AI is Sophie's co-author and resident expert,** not a third
+audience. The defining principle is: *the AI is the primary
+writer; the instructor is the supervisor and final decider.*
+Sophie ships the scaffolding for the supervision workflow itself
+— brainstorming, planning, drafting, auditing, iteration — so
+that an instructor can produce high-quality scientific pedagogy
+at speeds and volumes a solo human author cannot match.
+
+**The AI plays four load-bearing roles** in Sophie. The platform's
+schema, audit, templates, skill ecosystem, and docs all exist to
+make these roles effective:
+
+1. **Primary author.** Writes chapter prose, fills templates,
+   drafts examples, drafts equations, drafts code. The instructor
+   does not write the first draft.
+2. **STEM pedagogy expert.** Coaches the instructor on
+   evidence-based pedagogy (retrieval practice, spaced practice,
+   interleaving, elaboration, dual coding, concrete examples,
+   metacognition, productive failure, worked examples with faded
+   prompts, cognitive-load management). Recommends which Sophie
+   components fit a given pedagogical goal; pushes back on
+   choices that contradict the literature, with citations rather
+   than assertions.
+3. **Domain expert.** Carries deep STEM domain knowledge
+   (astrophysics, computational science, the textbook's specific
+   subject area) and produces correct, citation-ready content;
+   the instructor verifies and corrects.
+4. **Brainstorming partner and design-doc writer.** Drives
+   Socratic brainstorming, synthesizes brainstorm answers into
+   outlines and design docs, drafts plans for the instructor to
+   refine, and produces the scaffolding (CourseSpec, module
+   skeleton, learning-arc map, pedagogy-philosophy doc) that
+   keeps subsequent authoring coherent.
+
+The instructor remains the **supervisor, decider, and final
+authority** at every handoff. The AI proposes; the instructor
+decides; the AI implements; the instructor reviews. HITL is
+**structural, not advisory** — chapters do not ship without
+instructor review.
 
 ## Rationale
 
 - **The AI is the differentiator.** Quarto, MyST, Pressbooks all
-  serve audiences 1 and 2; none treats AI as a first-class author.
-  Treating AI as a peer-author is the categorical move that makes
-  Sophie distinct.
-- **Instructor expertise is load-bearing.** Unlike one-shot AI tools
-  (e.g., ClassBuild) that apply pedagogy principles automatically
-  from upfront preferences, Sophie surfaces pedagogy choices the
-  instructor decides at every handoff. AI suggests; instructor
-  decides; AI implements; instructor reviews. HITL is structural,
-  not advisory.
-- **All three audiences benefit simultaneously.** The same
-  workflow scaffolding that makes Anna productive makes external
-  instructors productive and makes AI authorship credible.
+  serve audiences 1 and 2; none treats AI as a first-class
+  co-author and resident expert. Treating AI as a peer-author
+  is the categorical move that makes Sophie distinct.
+- **Instructor expertise is load-bearing.** Unlike one-shot AI
+  tools (e.g., ClassBuild) that apply pedagogy principles
+  automatically from upfront preferences, Sophie surfaces
+  pedagogy choices the instructor decides at every handoff. AI
+  suggests; instructor decides; AI implements; instructor
+  reviews.
+- **The four AI roles compound.** A primary-author AI that is
+  also a STEM pedagogy expert produces pedagogically-better
+  prose than either role alone. Add domain expertise and the
+  draft is closer to publishable; add brainstorming/design-doc
+  capability and the instructor's expertise is amplified upstream
+  of the draft, not just downstream. The four roles are the
+  point.
+- **Domain expertise scopes the platform.** Sophie targets STEM
+  college + graduate-level pedagogy
+  ([overview §7](../overview.md)). The AI's domain hat is what
+  makes that scope tractable — an instructor can supervise
+  ~10× the draft throughput in a domain the AI already knows,
+  but loses that ratio in a domain where the instructor must
+  re-teach the AI on every chapter.
+- **All three groups benefit simultaneously.** The same workflow
+  scaffolding that makes Anna productive makes external
+  instructors productive and makes AI authorship credible to
+  reviewers, tenure committees, and prospective adopters.
 
 ## Alternatives considered
 

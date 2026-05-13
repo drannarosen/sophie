@@ -36,8 +36,9 @@ across these dimensions:
 - **Textbook + course-site separation**: canonical content stable
   across semesters; semester instances are thin shells that link
   into textbooks.
-- **Authoring speed**: with AI-assisted authoring, drafting a chapter
-  is faster than in current Quarto.
+- **Authoring speed**: with AI as the primary author under instructor
+  supervision (per [ADR 0030](../decisions/0030-audience-and-ai-author-model.md)),
+  drafting a chapter is faster than in current Quarto.
 - **Pedagogical contract**: structured components and the audit
   ensure consistency the current setup can't enforce.
 - **Single source of truth**: chapters, slides, Canvas exports, and
@@ -481,8 +482,9 @@ release-engineering phase, not re-architecture.
 ## 4. Calendar projection
 
 Working assumption: Anna has 10–15 hours/week for Sophie work during
-semester, 25–35 hours/week during summer. AI assistance compresses
-some tasks by 2–3×; doesn't help with judgment-heavy work.
+semester, 25–35 hours/week during summer. AI-primary authoring + AI
+coding compress some tasks by 2–3×; supervision and judgment-heavy
+work do not compress.
 
 | Phase | Weeks | Calendar window | Concurrent course load |
 |---|---|---|---|
