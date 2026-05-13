@@ -52,12 +52,15 @@
     "@sophie/components": "workspace:*",
     "@sophie/core": "workspace:*",
     "@sophie/theme": "workspace:*",
+    "hast-util-to-html": "^9.0.5",
     "katex": "^0.16.45",
     "lucide-static": "^1.14.0",
+    "mdast-util-to-hast": "^13.2.1",
     "rehype-katex": "^7.0.1",
     "remark-frontmatter": "^5.0.0",
     "remark-gfm": "^4.0.1",
-    "remark-math": "^6.0.0"
+    "remark-math": "^6.0.0",
+    "unist-util-visit": "^5.1.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",

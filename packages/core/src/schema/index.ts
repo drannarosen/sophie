@@ -18,4 +18,4 @@ export {
 } from "./pedagogy-index.js";
 export { LangTag, NonEmptyString, Slug } from "./primitives.js";
 export { type Section, SectionSchema } from "./section.js";
-export { slugify, slugifyWithCollisions } from "./slugify.js";
+export { slugify } from "./slugify.js";
