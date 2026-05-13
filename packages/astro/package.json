@@ -20,6 +20,7 @@
     "./components/Sidebar.astro": "./dist/components/Sidebar.astro",
     "./components/ContentColumn.astro": "./dist/components/ContentColumn.astro",
     "./components/RightColumn.astro": "./dist/components/RightColumn.astro",
+    "./components/ModuleNav.astro": "./dist/components/ModuleNav.astro",
     "./components/SidebarToggle.astro": "./dist/components/SidebarToggle.astro",
     "./components/ThemeToggle.astro": "./dist/components/ThemeToggle.astro",
     "./styles/textbook-layout.css": "./dist/styles/textbook-layout.css"

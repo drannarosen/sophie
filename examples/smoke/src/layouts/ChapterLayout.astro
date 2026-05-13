@@ -1,18 +1,35 @@
 ---
+import ModuleNav from "@sophie/astro/components/ModuleNav.astro";
 import TextbookHead from "@sophie/astro/components/TextbookHead.astro";
 import TextbookLayout from "@sophie/astro/components/TextbookLayout.astro";
 import { SophieChapter } from "@sophie/astro/client";
+import { getCollection } from "astro:content";
 
 interface Props {
   frontmatter: {
     title: string;
     slug: string;
+    module: string;
+    order?: number;
     lang?: string;
     description?: string;
   };
+  /** Astro collection id of the chapter currently being rendered. */
+  currentChapterSlug?: string;
 }
 
-const { frontmatter } = Astro.props;
+const { frontmatter, currentChapterSlug } = Astro.props;
+
+// Fetch every module + chapter from the content collections so the
+// sidebar nav can render the full tree on every chapter page. The
+// glob loader is cached by Astro across requests; no perf concern.
+const modules = (await getCollection("modules")).map((m) => m.data);
+const chapters = (await getCollection("chapters")).map((c) => ({
+  slug: c.id,
+  title: c.data.title,
+  module: c.data.module,
+  order: c.data.order,
+}));
 ---
 
 <html lang={frontmatter.lang ?? "en"}>
@@ -30,6 +47,13 @@ const { frontmatter } = Astro.props;
   <body>
     <SophieChapter client:load>
       <TextbookLayout>
+        <Fragment slot='sidebar'>
+          <ModuleNav
+            modules={modules}
+            chapters={chapters}
+            currentChapterSlug={currentChapterSlug}
+          />
+        </Fragment>
         <h1>{frontmatter.title}</h1>
         <slot />
       </TextbookLayout>

@@ -21,6 +21,9 @@ const { chapter } = Astro.props;
 const { Content } = await render(chapter);
 ---
 
-<ChapterLayout frontmatter={chapter.data}>
+<ChapterLayout
+  frontmatter={chapter.data}
+  currentChapterSlug={chapter.id}
+>
   <Content components={components} />
 </ChapterLayout>

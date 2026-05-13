@@ -49,15 +49,13 @@ test.describe("PR 1: TextbookLayout shell on the smoke chapter", () => {
     await expect(page.locator(".sophie-right")).toBeAttached();
   });
 
-  test("empty sidebar slot: column collapses to 0 width (no wasted chrome)", async ({
-    page,
-  }) => {
-    await page.goto(CHAPTER_URL);
-    const sidebarWidth = await page
-      .locator(".sophie-sidebar")
-      .evaluate((el) => el.clientWidth);
-    expect(sidebarWidth).toBe(0);
-  });
+  // The "empty sidebar slot collapses to 0 width" test from PR 1
+  // lived here. As of PR 3, the smoke chapter's sidebar slot is
+  // always filled by `<ModuleNav>`, so that test's premise no longer
+  // applies. The opposite assertion (sidebar IS filled and column
+  // does NOT collapse) lives in `module-nav.spec.ts`. The
+  // empty-slot-collapse FEATURE for the right column is still
+  // exercised by the next test below.
 
   test("empty right-column slot: column collapses to 0 width", async ({
     page,
