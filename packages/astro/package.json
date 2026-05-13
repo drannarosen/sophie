@@ -23,6 +23,8 @@
     "./components/ModuleNav.astro": "./dist/components/ModuleNav.astro",
     "./components/SidebarToggle.astro": "./dist/components/SidebarToggle.astro",
     "./components/ThemeToggle.astro": "./dist/components/ThemeToggle.astro",
+    "./components/TocDrawer.astro": "./dist/components/TocDrawer.astro",
+    "./components/TocSidebar.astro": "./dist/components/TocSidebar.astro",
     "./styles/textbook-layout.css": "./dist/styles/textbook-layout.css"
   },
   "files": [

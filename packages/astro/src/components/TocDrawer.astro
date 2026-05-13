@@ -1,0 +1,137 @@
+---
+import type { MarkdownHeading } from "astro";
+import TocSidebar from "./TocSidebar.astro";
+
+/**
+ * <TocDrawer> — mobile-only slide-over of the ToC, triggered by a
+ * floating "Contents" button. Composes <TocSidebar variant="drawer">
+ * inside the drawer surface so the heading data + grouping logic is
+ * shared with the desktop ToC.
+ *
+ * Drawer state is TRANSIENT (no localStorage; every chapter load
+ * starts closed). Distinct from `definePreference`-managed chrome
+ * state per ADR 0036's "transient view state" follow-up.
+ *
+ * Vanilla JS focus-trap + Escape + click-outside + link-click closes.
+ * Per ADR 0032 (no React).
+ *
+ * Desktop: the FAB + drawer are hidden via media query. The
+ * <TocSidebar> in the right column is the only ToC affordance.
+ * Mobile (<768px): the right column hides; the FAB appears; tap
+ * opens the drawer.
+ */
+export interface Props {
+  headings: ReadonlyArray<MarkdownHeading>;
+}
+
+const { headings } = Astro.props;
+---
+
+<button
+  type='button'
+  class='sophie-toc-fab'
+  data-sophie-toc-fab
+  aria-controls='sophie-toc-drawer'
+  aria-expanded='false'
+  aria-label='Open contents'
+>
+  <svg
+    width='20'
+    height='20'
+    viewBox='0 0 20 20'
+    aria-hidden='true'
+    focusable='false'
+  >
+    <path
+      d='M4 5h12M4 10h12M4 15h8'
+      stroke='currentColor'
+      stroke-width='2'
+      stroke-linecap='round'
+      fill='none'
+    />
+  </svg>
+  <span class='sophie-toc-fab-label'>Contents</span>
+</button>
+
+<aside
+  id='sophie-toc-drawer'
+  class='sophie-toc-drawer'
+  data-toc-state='closed'
+  aria-label='Table of contents'
+  inert
+>
+  <div class='sophie-toc-drawer-header'>
+    <span class='sophie-toc-drawer-title'>Contents</span>
+    <button
+      type='button'
+      class='sophie-toc-drawer-close'
+      data-sophie-toc-close
+      aria-label='Close contents'
+    >
+      <svg
+        width='16'
+        height='16'
+        viewBox='0 0 16 16'
+        aria-hidden='true'
+        focusable='false'
+      >
+        <path
+          d='M3 3 L13 13 M13 3 L3 13'
+          stroke='currentColor'
+          stroke-width='2'
+          stroke-linecap='round'
+        />
+      </svg>
+    </button>
+  </div>
+  <TocSidebar headings={headings} variant='drawer' />
+</aside>
+
+<script>
+  // Transient drawer state. Idempotent: per-FAB marker prevents
+  // double binding across HMR reloads.
+  document
+    .querySelectorAll<HTMLButtonElement>(
+      "[data-sophie-toc-fab]:not([data-sophie-toc-fab-bound])",
+    )
+    .forEach((fab) => {
+      fab.setAttribute("data-sophie-toc-fab-bound", "true");
+      const drawerId = fab.getAttribute("aria-controls");
+      if (!drawerId) return;
+      const drawer = document.getElementById(drawerId);
+      if (!drawer) return;
+      const closeBtn = drawer.querySelector<HTMLButtonElement>(
+        "[data-sophie-toc-close]",
+      );
+      let lastFocus: HTMLElement | null = null;
+
+      function open(): void {
+        lastFocus = document.activeElement as HTMLElement | null;
+        drawer!.setAttribute("data-toc-state", "open");
+        drawer!.removeAttribute("inert");
+        fab.setAttribute("aria-expanded", "true");
+        closeBtn?.focus();
+      }
+      function close(): void {
+        drawer!.setAttribute("data-toc-state", "closed");
+        drawer!.setAttribute("inert", "");
+        fab.setAttribute("aria-expanded", "false");
+        lastFocus?.focus();
+      }
+
+      fab.addEventListener("click", open);
+      closeBtn?.addEventListener("click", close);
+      drawer.addEventListener("click", (event) => {
+        const target = event.target as HTMLElement;
+        if (target.closest("a[href^='#']")) close();
+      });
+      document.addEventListener("keydown", (event) => {
+        if (
+          event.key === "Escape" &&
+          drawer!.getAttribute("data-toc-state") === "open"
+        ) {
+          close();
+        }
+      });
+    });
+</script>
