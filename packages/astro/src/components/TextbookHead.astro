@@ -23,7 +23,7 @@
  *     </body>
  *   </html>
  */
-import { sidebarPref, themePref } from "../preferences";
+import { sidebarPref, themePref, viewModePref } from "../preferences";
 
 // Sidebar default is viewport-aware: mobile sidebar is a slide-over
 // that obscures content, so default to "closed" below 768px. Desktop
@@ -38,7 +38,14 @@ const sidebarBoot = sidebarPref.bootScript({
 // inspects prefers-color-scheme. The runtime matchMedia change
 // listener is installed by <ThemeToggle>.
 const themeBoot = themePref.bootScript();
+
+// View mode is the minimum-shape preference: stored value reflects
+// verbatim onto data-view-mode. No viewport default, no resolve
+// indirection. CSS handles the cross-state visual rules (sidebar +
+// right column collapse when mode is focused|wide).
+const viewModeBoot = viewModePref.bootScript();
 ---
 
 <script is:inline set:html={sidebarBoot} />
 <script is:inline set:html={themeBoot} />
+<script is:inline set:html={viewModeBoot} />

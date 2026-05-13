@@ -1,4 +1,6 @@
 ---
+import { Moon, Sun, SunMoon } from "../icons";
+
 /**
  * <ThemeToggle> — accessible cycle button for the textbook theme.
  *
@@ -13,6 +15,10 @@
  * Per ADR 0032 (vanilla JS chrome state) — all interaction goes
  * through `themePref` (preferences/theme.ts), a `definePreference`
  * factory call. No React.
+ *
+ * Icons: Lucide `SunMoon` (system), `Sun` (light), `Moon` (dark) via
+ * lucide-static — per the two-adapter icon convention introduced in
+ * PR 5's design doc.
  */
 ---
 
@@ -24,49 +30,12 @@
   aria-label='Theme: system'
 >
   {/* Three stacked icons; CSS shows one at a time based on data-theme-pref. */}
-  <svg
+  <span
     class='sophie-theme-icon sophie-theme-icon-system'
-    width='20'
-    height='20'
-    viewBox='0 0 20 20'
-    fill='none'
-    aria-hidden='true'
-    focusable='false'
-  >
-    {/* Half-filled circle: half light, half dark. */}
-    <circle cx='10' cy='10' r='7' stroke='currentColor' stroke-width='2' />
-    <path d='M10 3 a7 7 0 0 1 0 14 z' fill='currentColor' />
-  </svg>
-  <svg
-    class='sophie-theme-icon sophie-theme-icon-light'
-    width='20'
-    height='20'
-    viewBox='0 0 20 20'
-    fill='none'
-    aria-hidden='true'
-    focusable='false'
-  >
-    {/* Sun: filled disc + rays. */}
-    <circle cx='10' cy='10' r='3.5' fill='currentColor' />
-    <g stroke='currentColor' stroke-width='2' stroke-linecap='round'>
-      <path d='M10 2v2M10 16v2M2 10h2M16 10h2M4.2 4.2l1.4 1.4M14.4 14.4l1.4 1.4M4.2 15.8l1.4-1.4M14.4 5.6l1.4-1.4' />
-    </g>
-  </svg>
-  <svg
-    class='sophie-theme-icon sophie-theme-icon-dark'
-    width='20'
-    height='20'
-    viewBox='0 0 20 20'
-    fill='none'
-    aria-hidden='true'
-    focusable='false'
-  >
-    {/* Crescent moon. */}
-    <path
-      d='M16 12.5A6.5 6.5 0 0 1 7.5 4 6.5 6.5 0 1 0 16 12.5z'
-      fill='currentColor'
-    />
-  </svg>
+    set:html={SunMoon}
+  />
+  <span class='sophie-theme-icon sophie-theme-icon-light' set:html={Sun} />
+  <span class='sophie-theme-icon sophie-theme-icon-dark' set:html={Moon} />
 </button>
 
 <script>

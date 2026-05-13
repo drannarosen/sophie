@@ -108,6 +108,9 @@ importers:
       katex:
         specifier: ^0.16.45
         version: 0.16.45
+      lucide-static:
+        specifier: ^1.14.0
+        version: 1.14.0
       rehype-katex:
         specifier: ^7.0.1
         version: 7.0.1
@@ -121,7 +124,7 @@ importers:
         specifier: ^6.0.0
         version: 6.0.0
       vite:
-        specifier: ^7.3.0
+        specifier: ^7.3.0 || ^8.0.0
         version: 7.3.3(@types/node@25.6.2)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.4)
     devDependencies:
       '@testing-library/jest-dom':
@@ -3667,6 +3670,9 @@ packages:
 
   lru-cache@5.1.1:
     resolution: {integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==}
+
+  lucide-static@1.14.0:
+    resolution: {integrity: sha512-QnAHXC1nk8IXRBmO5ee9JcPiKEVeqf06tKF0bZipxlV++bwUVqvvliC3KA+beDg2lod+WXYIhHde5pQRHkUmqA==}
 
   lz-string@1.5.0:
     resolution: {integrity: sha512-h5bgJWpxJNswbU7qCrV0tIKQCaS3blPDrqKWx+QxzuzL1zGUzij9XCWLrSLsJPu5t+eWA/ycetzYAO5IOMcWAQ==}
@@ -9022,6 +9028,8 @@ snapshots:
   lru-cache@5.1.1:
     dependencies:
       yallist: 3.1.1
+
+  lucide-static@1.14.0: {}
 
   lz-string@1.5.0: {}
 

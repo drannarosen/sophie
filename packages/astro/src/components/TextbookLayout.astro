@@ -6,6 +6,7 @@ import Sidebar from "./Sidebar.astro";
 import SidebarToggle from "./SidebarToggle.astro";
 import ThemeToggle from "./ThemeToggle.astro";
 import TopBar from "./TopBar.astro";
+import ViewModeToggle from "./ViewModeToggle.astro";
 
 // Detect empty named slots so the corresponding grid columns can
 // collapse to 0 width — avoids wasted chrome in PR 1 where the sidebar
@@ -71,6 +72,7 @@ const collapsedVars = [
       <SidebarToggle />
     </slot>
     <slot name='topbar-trailing'>
+      <ViewModeToggle />
       <ThemeToggle />
     </slot>
   </TopBar>

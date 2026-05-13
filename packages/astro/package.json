@@ -44,7 +44,7 @@
     "esbuild": "^0.27.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
-    "vite": "^7.3.0"
+    "vite": "^7.3.0 || ^8.0.0"
   },
   "dependencies": {
     "@astrojs/mdx": "^5.0.4",
@@ -53,6 +53,7 @@
     "@sophie/core": "workspace:*",
     "@sophie/theme": "workspace:*",
     "katex": "^0.16.45",
+    "lucide-static": "^1.14.0",
     "rehype-katex": "^7.0.1",
     "remark-frontmatter": "^5.0.0",
     "remark-gfm": "^4.0.1",
