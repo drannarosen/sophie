@@ -53,6 +53,7 @@
     "@sophie/core": "workspace:*",
     "@sophie/theme": "workspace:*",
     "katex": "^0.16.45",
+    "lucide-static": "^1.14.0",
     "rehype-katex": "^7.0.1",
     "remark-frontmatter": "^5.0.0",
     "remark-gfm": "^4.0.1",

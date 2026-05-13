@@ -13,6 +13,12 @@ export default defineConfig({
     // and must exist at dist/lib/group-headings.js to be resolvable
     // from the copied-verbatim .astro files in dist/components/.
     "lib/group-headings": "src/lib/group-headings.ts",
+    // `icons/index` is the uniform icon export surface for chrome
+    // primitives — re-exports lucide-static SVG strings + bespoke
+    // icons (e.g. view-mode column shapes). Must exist at
+    // dist/icons/index.js to resolve from the copied-verbatim .astro
+    // files in dist/components/.
+    "icons/index": "src/icons/index.ts",
   },
   format: ["esm"],
   target: "es2022",
