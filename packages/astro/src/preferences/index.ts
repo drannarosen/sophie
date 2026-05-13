@@ -13,3 +13,9 @@ export {
   systemTheme,
   themePref,
 } from "./theme";
+export type { ViewModeStored } from "./view-mode";
+export {
+  installViewModeKeyboardShortcut,
+  nextViewMode,
+  viewModePref,
+} from "./view-mode";
