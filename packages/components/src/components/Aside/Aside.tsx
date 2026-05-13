@@ -1,3 +1,4 @@
+import { slugify } from "@sophie/core/schema";
 import styles from "./Aside.module.css.js";
 import type { AsideKind, AsideProps } from "./Aside.schema.ts";
 
@@ -19,7 +20,7 @@ import type { AsideKind, AsideProps } from "./Aside.schema.ts";
  * Per the PR 6 design doc (2026-05-13). No persistence; this is a
  * static content component (no `useInteractive`, no IndexedDB).
  */
-export function Aside({ kind = "note", title, children }: AsideProps) {
+export function Aside({ kind = "note", title, id, children }: AsideProps) {
   const kindLabel = KIND_LABELS[kind];
   const className = [
     "sophie-aside", // stable global hook for chrome CSS
@@ -29,8 +30,20 @@ export function Aside({ kind = "note", title, children }: AsideProps) {
     .filter(Boolean)
     .join(" ");
 
+  // Auto-anchor for definition kind: id={slugify(title)} unless an
+  // explicit `id` prop overrides. The pedagogy-index extractor reads
+  // the same field (ADR 0038); back-links from <CourseGlossary> and
+  // <GlossaryTerm> target this DOM id.
+  const resolvedId =
+    id ?? (kind === "definition" && title ? slugify(title) : undefined);
+
   return (
-    <details className={className} data-sophie-aside='' data-aside-kind={kind}>
+    <details
+      className={className}
+      data-sophie-aside=''
+      data-aside-kind={kind}
+      {...(resolvedId ? { id: resolvedId } : {})}
+    >
       <summary className={styles.summary}>
         <span className={styles.marker}>{kindLabel}</span>
         {title !== undefined && <span className={styles.title}>{title}</span>}
