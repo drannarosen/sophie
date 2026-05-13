@@ -1,4 +1,6 @@
 ---
+import { Menu } from "../icons";
+
 /**
  * <SidebarToggle> — accessible toggle button for the sidebar's
  * open/closed state. Drives `data-sidebar` on <html> through the
@@ -8,6 +10,9 @@
  *
  * Pre-paint state is set by the boot script in <TextbookHead>; this
  * component just wires interaction.
+ *
+ * Icon: Lucide `Menu` via lucide-static (no React) — per the
+ * two-adapter icon convention introduced in this PR's design doc.
  */
 ---
 
@@ -19,21 +24,7 @@
   aria-expanded='true'
   aria-label='Toggle sidebar'
 >
-  <svg
-    width='20'
-    height='20'
-    viewBox='0 0 20 20'
-    fill='none'
-    aria-hidden='true'
-    focusable='false'
-  >
-    <path
-      d='M3 5h14M3 10h14M3 15h14'
-      stroke='currentColor'
-      stroke-width='2'
-      stroke-linecap='round'
-    />
-  </svg>
+  <Fragment set:html={Menu} />
 </button>
 
 <script>
