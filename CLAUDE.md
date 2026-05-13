@@ -111,6 +111,26 @@ Read the relevant ADR before proposing changes that touch its area.
 - **Use pnpm.** Never npm or yarn. (ADR 0011)
 - **Format with Biome** (`pnpm biome format --write`). Lint with
   `pnpm biome check`. (ADR 0013)
+- **Don't let lint warnings accumulate.** `pnpm exec biome check`
+  must finish a PR with **zero warnings as well as zero errors**.
+  Warnings flag a code-shape issue *Biome chose not to make a hard
+  failure*; ignoring them defeats the rule. Three response paths,
+  in order of preference:
+  1. **Refactor to satisfy the rule.** Usually the right move —
+     the warning is telling you something. Example: PR #33's
+     `noNonNullAssertion` warnings on `expect(result[0]!.field)`
+     resolved cleanly with `expect(result[0]).toMatchObject(...)`,
+     which gave better failure messages too.
+  2. **Suppress with a `biome-ignore` comment + reason** when the
+     rule genuinely doesn't fit a specific call site. The reason
+     must explain *why this case is safe*, not "the rule is
+     wrong." Per-line, not file-wide.
+  3. **Open an issue + adjust `biome.json`** if a rule is
+     systematically wrong for Sophie. Don't bury this in a PR;
+     surface it explicitly. ADRs 0013-adjacent.
+
+  Warnings introduced by a new PR are the new PR's responsibility
+  to clear, even when they fall under an existing-but-loose rule.
 - **Run package tasks via Turborepo**: `pnpm turbo run <task>
   --filter=<package>`. (ADR 0014)
 - **Python under uv**: `uv run python <script>.py`. (ADR 0012)
