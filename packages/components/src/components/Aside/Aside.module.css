@@ -1,0 +1,110 @@
+/* `<Aside>` — Tufte-style margin note (PR 6).
+ *
+ * This file handles VISUAL styling only — kind variant colors,
+ * summary + body layout, typography. Chrome ORCHESTRATION
+ * (when to dock into the right column, when to fall back to
+ * inline, mode-driven display switching, absolute positioning)
+ * lives in packages/astro/src/styles/textbook-layout.css under
+ * the `[data-sophie-aside]` selector. Two-layer separation: this
+ * file owns "how an aside looks", chrome owns "where an aside
+ * goes".
+ *
+ * Per ADR 0005, no hex/rgb literals — all colors flow through
+ * @sophie/theme tokens.
+ */
+
+.aside {
+  display: block;
+  margin-block: var(--sophie-space-4);
+  padding: var(--sophie-space-3) var(--sophie-space-4);
+  background: var(--sophie-surface-1);
+  border: 1px solid var(--sophie-border-subtle);
+  border-left: 3px solid var(--sophie-accent);
+  border-radius: var(--sophie-radius-md);
+  color: var(--sophie-text);
+  font-family: var(--sophie-font-sans);
+  font-size: var(--sophie-text-sm);
+  line-height: var(--sophie-leading-prose);
+}
+
+.summary {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sophie-space-2);
+  cursor: pointer;
+  /* WCAG 2.1 Success Criterion 2.5.5 (Target Size, Level AAA):
+     min 44px touch target on mobile. Padding-block gives the
+     summary line enough vertical room when summary is the only
+     visible part of the aside (inline collapsed state). */
+  min-block-size: 44px;
+  padding-block: var(--sophie-space-2);
+  list-style: none;
+  font-weight: var(--sophie-weight-medium);
+}
+
+.summary::-webkit-details-marker {
+  display: none;
+}
+
+.summary::marker {
+  content: "";
+}
+
+.marker {
+  font-size: var(--sophie-text-xs);
+  font-weight: var(--sophie-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--sophie-text-muted);
+}
+
+.title {
+  font-weight: var(--sophie-weight-semibold);
+  color: var(--sophie-text);
+}
+
+.body {
+  margin-block-start: var(--sophie-space-2);
+}
+
+.body > :first-child {
+  margin-block-start: 0;
+}
+
+.body > :last-child {
+  margin-block-end: 0;
+}
+
+/* Kind variants — change the accent (left-border + marker color). */
+
+.note {
+  border-left-color: var(--sophie-brand-teal);
+}
+
+.note .marker {
+  color: var(--sophie-brand-teal-text);
+}
+
+.definition {
+  border-left-color: var(--sophie-accent);
+}
+
+.definition .marker {
+  color: var(--sophie-brand-teal-text);
+}
+
+.digression {
+  border-left-color: var(--sophie-text-muted);
+}
+
+.digression .marker {
+  color: var(--sophie-text-muted);
+}
+
+.key-insight {
+  border-left-color: var(--sophie-warning, var(--sophie-accent));
+}
+
+.key-insight .marker {
+  color: var(--sophie-brand-teal-text);
+}
