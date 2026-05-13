@@ -37,13 +37,13 @@ describe("groupHeadings", () => {
       h(3, "sub-b-1", "Subsection B1"),
     ]);
     expect(result).toHaveLength(2);
-    expect(result[0]!.h2.slug).toBe("sec-a");
-    expect(result[0]!.children.map((c) => c.slug)).toEqual([
+    expect(result[0]).toMatchObject({ h2: { slug: "sec-a" } });
+    expect(result[0]?.children.map((c) => c.slug)).toEqual([
       "sub-a-1",
       "sub-a-2",
     ]);
-    expect(result[1]!.h2.slug).toBe("sec-b");
-    expect(result[1]!.children.map((c) => c.slug)).toEqual(["sub-b-1"]);
+    expect(result[1]).toMatchObject({ h2: { slug: "sec-b" } });
+    expect(result[1]?.children.map((c) => c.slug)).toEqual(["sub-b-1"]);
   });
 
   test("discards H3 that appears before any H2", () => {
@@ -53,8 +53,8 @@ describe("groupHeadings", () => {
       h(3, "child", "Child H3"),
     ]);
     expect(result).toHaveLength(1);
-    expect(result[0]!.h2.slug).toBe("first-h2");
-    expect(result[0]!.children.map((c) => c.slug)).toEqual(["child"]);
+    expect(result[0]).toMatchObject({ h2: { slug: "first-h2" } });
+    expect(result[0]?.children.map((c) => c.slug)).toEqual(["child"]);
   });
 
   test("ignores H1, H4, H5, H6", () => {
@@ -67,8 +67,8 @@ describe("groupHeadings", () => {
       h(3, "sub", "Subsection"),
     ]);
     expect(result).toHaveLength(1);
-    expect(result[0]!.h2.slug).toBe("sec-a");
-    expect(result[0]!.children.map((c) => c.slug)).toEqual(["sub"]);
+    expect(result[0]).toMatchObject({ h2: { slug: "sec-a" } });
+    expect(result[0]?.children.map((c) => c.slug)).toEqual(["sub"]);
   });
 
   test("preserves heading text and slug verbatim", () => {
@@ -84,9 +84,11 @@ describe("groupHeadings", () => {
         "The Four Things We Can Actually Measure"
       ),
     ]);
-    expect(result[0]!.h2.text).toBe("1.1 What This Course Is Really About");
-    expect(result[0]!.children[0]!.text).toBe(
-      "The Four Things We Can Actually Measure"
-    );
+    expect(result[0]).toMatchObject({
+      h2: { text: "1.1 What This Course Is Really About" },
+    });
+    expect(result[0]?.children[0]).toMatchObject({
+      text: "The Four Things We Can Actually Measure",
+    });
   });
 });
