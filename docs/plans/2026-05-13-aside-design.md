@@ -82,6 +82,16 @@ its MDX position. The `<details>` carries:
 - `data-aside-title` (if provided)
 - `<summary>` carries the kind's default label OR the title
 
+**Authoring constraint**: `<Aside>` MUST be used at MDX root
+scope (block-level), not inside a paragraph. The positioning
+script relies on the aside's previous element sibling at the
+document level to identify the anchor; inline use breaks that
+contract. Documented in
+[`docs/reference/chapter-components.md`](../website/reference/chapter-components.md)
+post-merge. Schema-level enforcement is out of scope (Zod
+doesn't see MDX context); the convention is documentation +
+audit warning if an aside is found inside a `<p>` at build time.
+
 ```html
 <details class="sophie-aside sophie-aside--definition"
          data-sophie-aside
@@ -96,17 +106,40 @@ its MDX position. The `<details>` carries:
 </details>
 ```
 
-### Visual rendering across modes (CSS-only orchestration)
+### Visual rendering across modes
+
+The visual mode flip is **CSS-only**, but the `open` attribute
+on `<details>` is **set imperatively by the positioning script**
+when entering / leaving docked mode (CSS cannot toggle a
+boolean DOM attribute). The two mechanisms are paired:
 
 | Selector | Behavior |
 |---|---|
-| `.sophie-aside` (base) | `<details>` collapsed by default; summary visible; subtle border, kind-specific accent color |
-| `:root[data-view-mode="default"] .sophie-aside` (desktop ≥768px) | `position: absolute; inset-inline-end: …; inline-size: 240px; top: <computed>` — escapes into right-column area; `open` attribute forced via `details[data-sophie-aside]::details-content` rules + JS sets `open`; summary visually hidden |
-| `@media (max-width: 768px) .sophie-aside`, `:root[data-view-mode="focused"|"wide"] .sophie-aside` | `position: static; inline-size: 100%; display: block` — inline collapsed `<details>` per fork 5 |
+| `.sophie-aside` (base) | `<details>` collapsed by default; summary visible; subtle border, kind-specific accent color via CSS variable |
+| `:root[data-view-mode="default"] .sophie-aside` (desktop ≥768px) | `position: absolute; inset-inline-end: 20px; inline-size: 240px; top: <set by JS>` — escapes into right-column area. Summary hidden via CSS (`display: none`). The positioning script sets the `open` attribute when entering docked mode so the body is visible; clears it when leaving. |
+| `@media (max-width: 768px)` OR `:root[data-view-mode="focused"\|"wide"]` | `position: static; inline-size: 100%; display: block`. Summary visible, kind label + title rendered as a clickable disclosure. User toggles via Enter/Space (browser default for `<details>`). |
 
-The CSS-only orchestration mirrors PR 5's view-mode CSS:
+The `<details>` element has a built-in summary marker
+(triangle) and `display: list-item` on the summary. Both need
+CSS reset:
+
+```css
+.sophie-aside-summary {
+  list-style: none;            /* hide the marker box */
+  cursor: pointer;
+  min-block-size: 44px;        /* WCAG touch-target minimum */
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.sophie-aside-summary::-webkit-details-marker { display: none; }
+.sophie-aside-summary::marker { content: ""; }
+```
+
+The CSS-only mode orchestration mirrors PR 5's view-mode CSS:
 `data-view-mode` on `<html>` drives the visual rule; no JS
-reaches across preferences.
+reaches across preferences except where the DOM attribute on
+`<details>` must be set imperatively.
 
 ## Positioning machinery
 
@@ -119,22 +152,48 @@ ships the vanilla-JS docking logic. Pure function plus an
 
 ```
 on (initial load OR viewport resize OR data-view-mode change OR DOM mutation):
-  if (active mode allows docking):
+  dockingMode = (window.innerWidth >= 768) &&
+                (document.documentElement.dataset.viewMode === "default")
+  if (dockingMode):
+    tocBottom = toc ? (toc.offsetTop + toc.offsetHeight + GAP) : 0
     asides = document.querySelectorAll('.sophie-aside[data-sophie-aside]')
     placed = []
     for each aside in document order:
-      anchor = aside.previousElementSibling OR aside.closest(...).previousElementSibling
-              // The paragraph immediately preceding the aside in source order.
-      anchorTop = anchor.getBoundingClientRect().top + window.scrollY
-      proposedTop = anchorTop
+      // Anchor is the immediately-preceding root-level element. The
+      // authoring constraint (block-level <Aside>) makes this well-defined.
+      anchor = aside.previousElementSibling
+      if (!anchor):
+        // Aside is the first child; anchor to parent's offsetTop.
+        anchor = aside.parentElement
+      anchorTop = anchor.offsetTop          // relative to .sophie-shell
+      proposedTop = max(anchorTop, tocBottom)
       if (placed.length > 0):
-        lastBottom = placed[-1].top + placed[-1].height + GAP
-        proposedTop = max(proposedTop, lastBottom)
+        proposedTop = max(proposedTop, placed[-1].top + placed[-1].height + GAP)
       aside.style.top = `${proposedTop}px`
+      aside.open = true                     // ensure body is visible in docked mode
       placed.push({ top: proposedTop, height: aside.offsetHeight })
   else:
-    asides.forEach(a => a.style.top = '')   // CSS handles inline rendering
+    asides.forEach(a => {
+      a.style.top = ""                      // CSS reverts to static positioning
+      a.open = false                        // collapse to summary-only in inline mode
+                                            // (user can re-open via summary click)
+    })
 ```
+
+Key choices in the algorithm:
+
+- **Coordinate space is `.sophie-shell`-relative** (using
+  `offsetTop`), because that's the containing block for the
+  absolute-positioned aside. `getBoundingClientRect()` would
+  be viewport-relative; wrong frame.
+- **`aside.open` is set imperatively** (per the render contract
+  note above). CSS can hide the marker but cannot toggle the
+  `open` attribute.
+- **Anchor fallback to parent** handles the edge case of an
+  aside being the first child of its container (rare but
+  possible if a chapter opens with an aside).
+- **Re-runs are O(n)** in the number of asides. For typical
+  chapter counts (< 20 asides), this is sub-millisecond.
 
 ### Hook lifecycle
 
@@ -172,6 +231,38 @@ treats the right column as a coordinate target, not a DOM
 parent. This is why a separate `<AsideDocker>` host is NOT
 needed; CSS reserves visual space, JS computes coordinates.
 
+### ToC ↔ aside vertical-collision rule
+
+The ToC is sticky-positioned at the top of the right column;
+asides are absolute-positioned. They share visual real estate
+but use different positioning models. Concrete collision rule:
+
+- The positioning script reads `tocSidebar.offsetTop +
+  tocSidebar.offsetHeight + GAP` once at install time (and on
+  each resize). Call this `tocBottom`.
+- Each aside's computed `top` is clamped to a minimum of
+  `tocBottom`: `top = max(anchor.offsetTop, tocBottom,
+  previousAside.bottom + GAP)`.
+- Result: asides never overlap the ToC's natural-flow box,
+  even if the ToC isn't currently scrolled-into-view (it might
+  be — sticky position keeps it visible).
+
+For visual clarity when the ToC sticks over a docked aside as
+the user scrolls, `.sophie-toc` gets `z-index: 2` and
+`.sophie-aside` gets `z-index: 1` so the ToC reads cleanly
+when they momentarily occupy the same viewport region.
+
+### Containing block: `.sophie-shell { position: relative }`
+
+Absolute positioning requires a positioned ancestor as the
+containing block. `.sophie-shell` (PR 1's grid root) currently
+has no explicit `position` (defaults to `static`). PR 6 adds
+`position: relative` to `.sophie-shell` so absolute children
+anchor against the shell's bounding box. Side effect on PR 1+:
+none — no descendant was relying on `static` as the containing
+block. Verified by the 8-test textbook-layout suite continuing
+to pass.
+
 ## File inventory
 
 ### New files
@@ -199,8 +290,8 @@ needed; CSS reserves visual space, JS computes coordinates.
 | `packages/astro/src/components/TextbookLayout.astro` | Wire the docking script via a new `<script>` block OR import via `<TextbookHead>` extension |
 | `packages/astro/src/styles/textbook-layout.css` | Reserve right-column space for absolute-positioned asides; ensure `.sophie-shell` is `position: relative` so absolute children anchor correctly |
 | `packages/astro/tsup.config.ts` | Add `lib/aside-positioning` entry |
-| `examples/smoke/src/content/chapters/spoiler-alerts.mdx` | Add 2–3 `<Aside>` instances of different kinds to give e2e + visual smoke something to test |
-| `examples/smoke/src/components/staticComponents.ts` (or wherever `makeStaticComponents` is configured) | Register `Aside` in the MDX component scope |
+| `examples/smoke/src/content/chapters/spoiler-alerts.mdx` | Add **at least 3 `<Aside>` instances** spanning at least 2 different kinds, with at least 2 of them anchored to **consecutive paragraphs** so the collision-avoidance cascade is exercised end-to-end. Content is real chapter-relevant prose (parallax definition, observational-history digression, etc.), not lorem ipsum. |
+| `examples/smoke/src/components/staticComponents.ts` (or wherever `makeStaticComponents` is configured) | Register `Aside` in the MDX component scope. Exact path identified during implementation. |
 | `packages/astro/package.json` | Possibly add `./lib/aside-positioning` to exports |
 
 ## TDD plan
@@ -231,13 +322,16 @@ test cycle.
 - `data-sophie-aside` marker present (positioning hook)
 - Storybook stories axe-clean for all 4 kinds (delegated to `*.stories.tsx`)
 
-**`aside-positioning.test.ts`** (~12 cases, JSDOM):
+**`aside-positioning.test.ts`** (~14 cases, JSDOM):
 - Pure positioning function: given 1 aside + 1 anchor, returns `top = anchor.offsetTop`
 - Given 2 asides with non-overlapping anchors, both get their anchor's offsetTop
 - Given 2 asides whose computed positions would overlap, second cascades down by `previous.bottom + GAP`
 - Given 0 asides, returns empty result (no throw)
-- Anchor resolution: aside's immediately-preceding sibling, OR closest preceding section/heading
-- Re-runs on `viewModePref` change (mode flipping default → focused clears top values)
+- Anchor resolution: aside's immediately-preceding sibling
+- Anchor fallback: aside as first child uses parent's offsetTop
+- ToC-collision clamp: if ToC exists, every aside's top is ≥ tocBottom
+- Re-runs on `viewModePref` change (mode flipping default → focused clears top values + closes details)
+- Docked mode sets `details.open = true`; inline mode clears `open`
 - Idempotent install (window guard); double-install no-ops
 - Cleanup detaches resize + mutation + viewModePref listeners
 - Listens to MutationObserver on `.sophie-content`
@@ -247,17 +341,20 @@ test cycle.
 
 ### E2E tests
 
-**`aside.spec.ts`** (~10 cases):
-- Smoke chapter renders the 2-3 `<Aside>` instances; each is in the document
+**`aside.spec.ts`** (~12 cases):
+- Smoke chapter renders all `<Aside>` instances; each is in the document
 - Desktop Default: asides have `top` style set, positioned in the right-column visual area
-- Desktop Default: clicking an aside's summary toggles `open` (default browser `<details>` behavior; should still work even in docked mode)
-- Cycling view mode to Focused: asides return to inline `<details>` (collapsed by default)
+- Desktop Default: docked asides are open (body visible without click)
+- Desktop Default: summary is visually hidden (display: none)
+- Cycling view mode to Focused: asides return to inline collapsed `<details>` (`open` cleared, summary visible)
 - Resize from desktop → mobile: asides re-render inline; `top` style cleared
+- Inline mode: clicking the summary toggles open/closed (standard `<details>` behavior)
+- Inline mode: summary keyboard-activates via Enter/Space (WCAG)
+- Inline mode: summary has min 44px tap target (WCAG mobile)
 - Two asides anchored to consecutive paragraphs do not overlap (collision-avoidance cascade)
-- Scroll-spy: scrolling the page does NOT cause aside top values to change (asides are anchored to absolute scroll position, not viewport)
-- axe-core: zero violations on each aside in each kind
-- axe-core: docked-mode asides still meet contrast / role / label requirements
-- Asides survive a reload + view-mode change cycle without losing position
+- ToC ↔ aside vertical-collision: when the first aside's anchor is above the ToC's natural-flow bottom, the aside is pushed below `tocBottom`
+- Scroll-spy: scrolling the page does NOT cause aside top values to recompute (asides are document-coordinate positioned, not viewport)
+- axe-core: zero violations on each aside in each kind in both modes
 
 ## Verification
 
@@ -265,7 +362,7 @@ test cycle.
 pnpm exec turbo run typecheck test:unit build   # 13/13 green
 pnpm install --frozen-lockfile                   # CI gate, per memory pre-pr-lockfile-check
 pnpm exec biome check .                          # zero warnings, zero errors
-pnpm test:e2e                                    # 70 prior + 10 new = 80 green
+pnpm test:e2e                                    # 70 prior + 12 new = 82 green
 ```
 
 Manual smoke via Playwright MCP / browser:
