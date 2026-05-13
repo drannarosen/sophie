@@ -45,6 +45,31 @@ Locked patterns inherited (not re-litigated): ADRs 0030–0036.
 New chrome-layer JS follows the same idempotency + window-guard
 discipline established by PRs 1–5.
 
+### Sixth decision: content-width responds to sidebar state
+
+PR 6 also folds in a **content-width calibration** surfaced
+during planning. Currently `.sophie-content` is capped at
+`min(75ch, 100%)` regardless of sidebar state — when the user
+collapses the sidebar to gain reading room, the prose stays
+narrow and the freed 280px becomes left-margin whitespace.
+That ignores user signal: collapsing the sidebar means "I want
+more horizontal room."
+
+The new rule:
+
+| State | Content cap |
+|---|---|
+| Default mode, `data-sidebar="open"` | `min(75ch, 100%)` *(current; readability sweet spot per Bringhurst)* |
+| Default mode, `data-sidebar="closed"` | `min(95ch, 100%)` *(grows into freed sidebar space; capped to stay under "long-line readability ceiling")* |
+| Focused mode | `min(85ch, 100%)` *(PR 5; sidebar forced hidden)* |
+| Wide mode | `min(105ch, 100%)` *(PR 5; sidebar forced hidden)* |
+
+CSS implementation uses cascade order: the sidebar-closed rule
+appears *before* the view-mode rules, so Focused/Wide
+overrides win when active even with sidebar collapsed. The
+right column remains 280px in all states; this calibration
+only widens content, not asides.
+
 ## API design
 
 ```ts
@@ -279,7 +304,8 @@ to pass.
 | `packages/components/src/components/Aside/index.ts` | Barrel |
 | `packages/astro/src/lib/aside-positioning.ts` | Vanilla-JS docking script |
 | `packages/astro/src/lib/aside-positioning.test.ts` | Vitest cases for the pure positioning algorithm (collision avoidance, anchor resolution, idempotency) |
-| `examples/smoke/e2e/aside.spec.ts` | Playwright cases for the full integrated behavior (10+ cases) |
+| `examples/smoke/e2e/aside.spec.ts` | Playwright cases for the full integrated `<Aside>` behavior (12 cases) |
+| `examples/smoke/e2e/content-width.spec.ts` | Playwright cases for the new sidebar-driven content-cap rule (4 cases) |
 
 ### Modified files
 
@@ -341,6 +367,12 @@ test cycle.
 
 ### E2E tests
 
+**`content-width.spec.ts`** (~4 cases — for the sidebar-driven content cap):
+- Default mode + sidebar="open": `.sophie-content` computed `max-inline-size` ≈ 75ch (≈600px)
+- Default mode + sidebar="closed": `.sophie-content` computed `max-inline-size` ≈ 95ch (≈760px)
+- Focused mode + sidebar="closed": content stays at 85ch (view-mode override wins)
+- Wide mode + sidebar="open": content at 105ch (view-mode override; sidebar still forced hidden)
+
 **`aside.spec.ts`** (~12 cases):
 - Smoke chapter renders all `<Aside>` instances; each is in the document
 - Desktop Default: asides have `top` style set, positioned in the right-column visual area
@@ -362,7 +394,7 @@ test cycle.
 pnpm exec turbo run typecheck test:unit build   # 13/13 green
 pnpm install --frozen-lockfile                   # CI gate, per memory pre-pr-lockfile-check
 pnpm exec biome check .                          # zero warnings, zero errors
-pnpm test:e2e                                    # 70 prior + 12 new = 82 green
+pnpm test:e2e                                    # 70 prior + 12 aside + 4 content-width = 86 green
 ```
 
 Manual smoke via Playwright MCP / browser:
