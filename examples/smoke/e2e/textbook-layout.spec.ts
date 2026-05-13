@@ -49,23 +49,16 @@ test.describe("PR 1: TextbookLayout shell on the smoke chapter", () => {
     await expect(page.locator(".sophie-right")).toBeAttached();
   });
 
-  // The "empty sidebar slot collapses to 0 width" test from PR 1
-  // lived here. As of PR 3, the smoke chapter's sidebar slot is
-  // always filled by `<ModuleNav>`, so that test's premise no longer
-  // applies. The opposite assertion (sidebar IS filled and column
-  // does NOT collapse) lives in `module-nav.spec.ts`. The
-  // empty-slot-collapse FEATURE for the right column is still
-  // exercised by the next test below.
-
-  test("empty right-column slot: column collapses to 0 width", async ({
-    page,
-  }) => {
-    await page.goto(CHAPTER_URL);
-    const rightWidth = await page
-      .locator(".sophie-right")
-      .evaluate((el) => el.clientWidth);
-    expect(rightWidth).toBe(0);
-  });
+  // The PR 1 "empty sidebar slot collapses" + "empty right-column
+  // slot collapses" tests lived here. The PR 1 ADR 0034 feature still
+  // works, but as of PRs 3 + 4 the smoke chapter's slots are both
+  // filled (sidebar = <ModuleNav>, right = <TocSidebar>), so neither
+  // test's premise applies on the spoiler-alerts chapter. Coverage
+  // moved to spec files closer to the features:
+  //   - PR 3 module-nav.spec.ts:82 asserts the sidebar column
+  //     does NOT collapse on a filled chapter.
+  //   - PR 4 in-page-toc.spec.ts:81 asserts the right column DOES
+  //     collapse on a stub chapter (no H2 headings → empty slot).
 
   test("default state: html has data-sidebar='open'", async ({ page }) => {
     await page.goto(CHAPTER_URL);

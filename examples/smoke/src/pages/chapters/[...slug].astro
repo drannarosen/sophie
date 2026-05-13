@@ -18,12 +18,13 @@ export async function getStaticPaths() {
 }
 
 const { chapter } = Astro.props;
-const { Content } = await render(chapter);
+const { Content, headings } = await render(chapter);
 ---
 
 <ChapterLayout
   frontmatter={chapter.data}
   currentChapterSlug={chapter.id}
+  headings={headings}
 >
   <Content components={components} />
 </ChapterLayout>

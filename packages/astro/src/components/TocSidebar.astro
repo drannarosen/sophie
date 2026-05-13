@@ -1,0 +1,113 @@
+---
+import type { MarkdownHeading } from "astro";
+import { groupHeadings } from "../lib/group-headings";
+
+/**
+ * <TocSidebar> — chapter in-page table of contents.
+ *
+ * Pure Astro; no React. Data-driven: takes the `headings` array
+ * that Astro's `render()` returns for an MDX chapter, groups H3s
+ * under their preceding H2 via the tested `groupHeadings` helper,
+ * and renders a two-level nested ToC. Scroll-spy via
+ * IntersectionObserver — the most-recently-crossed heading from
+ * below gets `aria-current="location"` on its ToC link; CSS
+ * targets that attribute for the highlight.
+ *
+ * Per PR 4 design doc. Per ADR 0032 (vanilla JS chrome state) and
+ * ADR 0031 (compound-component primitives).
+ *
+ * Variants:
+ *   - "sidebar" (default) — lives in <RightColumn> slot on desktop.
+ *   - "drawer" — composed inside <TocDrawer> for mobile slide-over.
+ */
+export interface Props {
+  headings: ReadonlyArray<MarkdownHeading>;
+  variant?: "sidebar" | "drawer";
+}
+
+const { headings, variant = "sidebar" } = Astro.props;
+const groups = groupHeadings(headings);
+---
+
+{groups.length > 0 && (
+  <nav
+    class:list={["sophie-toc", `sophie-toc--${variant}`]}
+    aria-label='Table of contents'
+  >
+    <h2 class='sophie-toc-heading'>Contents</h2>
+    <ol class='sophie-toc-list'>
+      {groups.map((g) => (
+        <li class='sophie-toc-item'>
+          <a class='sophie-toc-link' href={`#${g.h2.slug}`}>
+            {g.h2.text}
+          </a>
+          {g.children.length > 0 && (
+            <ol class='sophie-toc-sublist'>
+              {g.children.map((c) => (
+                <li>
+                  <a
+                    class='sophie-toc-link sophie-toc-link--sub'
+                    href={`#${c.slug}`}
+                  >
+                    {c.text}
+                  </a>
+                </li>
+              ))}
+            </ol>
+          )}
+        </li>
+      ))}
+    </ol>
+  </nav>
+)}
+
+<script>
+  // Scroll-spy. Observes every h2[id]/h3[id] inside .sophie-content
+  // and sets aria-current="location" on the matching ToC link.
+  // Idempotent via a window-level guard, matching the existing
+  // chrome-script pattern.
+  type W = Window & { __sophieTocSpyBound?: boolean };
+  const w = window as W;
+  if (!w.__sophieTocSpyBound) {
+    w.__sophieTocSpyBound = true;
+
+    const headings = document.querySelectorAll<HTMLHeadingElement>(
+      ".sophie-content h2[id], .sophie-content h3[id]",
+    );
+    if (headings.length > 0) {
+      let currentId: string | null = null;
+
+      function paint(id: string): void {
+        document
+          .querySelectorAll<HTMLAnchorElement>(".sophie-toc-link")
+          .forEach((a) => {
+            if (a.getAttribute("href") === `#${id}`) {
+              a.setAttribute("aria-current", "location");
+            } else {
+              a.removeAttribute("aria-current");
+            }
+          });
+      }
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting) {
+              currentId = (entry.target as HTMLElement).id;
+            }
+          }
+          if (currentId) paint(currentId);
+        },
+        // Window slice that counts a heading as "active". Top 20%
+        // and bottom 70% are dead zones; only the band between
+        // 20%–30% from the top counts as the current section.
+        { rootMargin: "-20% 0px -70% 0px" },
+      );
+      headings.forEach((h) => observer.observe(h));
+
+      // Initial paint: the first H2 of the chapter is "active" until
+      // scroll moves past it.
+      paint((headings[0] as HTMLHeadingElement).id);
+    }
+  }
+</script>

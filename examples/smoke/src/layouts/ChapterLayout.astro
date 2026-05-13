@@ -2,8 +2,11 @@
 import ModuleNav from "@sophie/astro/components/ModuleNav.astro";
 import TextbookHead from "@sophie/astro/components/TextbookHead.astro";
 import TextbookLayout from "@sophie/astro/components/TextbookLayout.astro";
+import TocDrawer from "@sophie/astro/components/TocDrawer.astro";
+import TocSidebar from "@sophie/astro/components/TocSidebar.astro";
 import { SophieChapter } from "@sophie/astro/client";
 import { getCollection } from "astro:content";
+import type { MarkdownHeading } from "astro";
 
 interface Props {
   frontmatter: {
@@ -16,9 +19,18 @@ interface Props {
   };
   /** Astro collection id of the chapter currently being rendered. */
   currentChapterSlug?: string;
+  /** Chapter headings (h1-h6) extracted by Astro's render(). */
+  headings?: ReadonlyArray<MarkdownHeading>;
 }
 
-const { frontmatter, currentChapterSlug } = Astro.props;
+const { frontmatter, currentChapterSlug, headings = [] } = Astro.props;
+
+// Only populate the right-column slot when the chapter has H2 headings.
+// `<TocSidebar>` returns null otherwise, but `Astro.slots.has("right")`
+// would still see a populated slot — defeating the empty-slot-collapse
+// pattern in <TextbookLayout> (ADR 0034). Filter here so stub chapters
+// (no H2s) genuinely leave the slot empty and the column collapses.
+const hasToc = headings.some((h) => h.depth === 2);
 
 // Fetch every module + chapter from the content collections so the
 // sidebar nav can render the full tree on every chapter page. The
@@ -54,9 +66,17 @@ const chapters = (await getCollection("chapters")).map((c) => ({
             currentChapterSlug={currentChapterSlug}
           />
         </Fragment>
+        {
+          hasToc && (
+            <Fragment slot='right'>
+              <TocSidebar headings={headings} />
+            </Fragment>
+          )
+        }
         <h1>{frontmatter.title}</h1>
         <slot />
       </TextbookLayout>
+      <TocDrawer headings={headings} />
     </SophieChapter>
   </body>
 </html>

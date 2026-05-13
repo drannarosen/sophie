@@ -9,6 +9,10 @@ export default defineConfig({
     //   2. <script> tags in components (client bundle, calls bindToggle()).
     // Both resolve to dist/preferences/index.js after build.
     "preferences/index": "src/preferences/index.ts",
+    // `lib/group-headings` is imported by .astro components (SSR side)
+    // and must exist at dist/lib/group-headings.js to be resolvable
+    // from the copied-verbatim .astro files in dist/components/.
+    "lib/group-headings": "src/lib/group-headings.ts",
   },
   format: ["esm"],
   target: "es2022",
