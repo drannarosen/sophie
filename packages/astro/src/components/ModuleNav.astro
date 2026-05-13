@@ -1,0 +1,67 @@
+---
+import { chaptersForModule } from "@sophie/core/schema";
+
+/**
+ * <ModuleNav> — sidebar module/chapter tree.
+ *
+ * Pure Astro; no React. SSR-renders the full module/chapter
+ * structure with `aria-current="page"` on the active chapter
+ * link. CSS targets `[aria-current="page"]` for the highlight;
+ * no client JS.
+ *
+ * Per PR 3 design doc (docs/plans/2026-05-12-sidebar-module-nav-design.md).
+ * Lives in the sidebar slot of <TextbookLayout>. When the slot is
+ * filled, the empty-slot-collapse logic (ADR 0034) lets the column
+ * expand to its default width.
+ */
+export interface NavChapter {
+  /** Astro collection id; e.g. "01-foundations/spoiler-alerts". */
+  slug: string;
+  title: string;
+  module: string;
+  order?: number;
+}
+
+export interface NavModule {
+  slug: string;
+  title: string;
+  order: number;
+  description?: string;
+}
+
+interface Props {
+  modules: ReadonlyArray<NavModule>;
+  chapters: ReadonlyArray<NavChapter>;
+  /** Set to the current chapter's slug for active-state highlight. */
+  currentChapterSlug?: string;
+}
+
+const { modules, chapters, currentChapterSlug } = Astro.props;
+const sortedModules = [...modules].sort((a, b) => a.order - b.order);
+---
+
+<nav class='sophie-module-nav' aria-label='Chapters'>
+  <ol class='sophie-module-list'>
+    {
+      sortedModules.map((m) => (
+        <li class='sophie-module' data-module={m.slug}>
+          <h2 class='sophie-module-title'>{m.title}</h2>
+          <ol class='sophie-chapter-list'>
+            {chaptersForModule(m.slug, chapters).map((c) => (
+              <li>
+                <a
+                  href={`/chapters/${c.slug}`}
+                  aria-current={
+                    c.slug === currentChapterSlug ? "page" : undefined
+                  }
+                >
+                  {c.title}
+                </a>
+              </li>
+            ))}
+          </ol>
+        </li>
+      ))
+    }
+  </ol>
+</nav>
