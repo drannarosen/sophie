@@ -101,6 +101,19 @@
   border-inline-end: 0;
 }
 
+/* When the sidebar is hidden, let content widen to use the freed
+   horizontal space — up to a readability ceiling of 95ch.
+   Otherwise users who deliberately collapse the sidebar see the
+   prose stay narrow with leftover whitespace (a regression on
+   user signal).
+
+   Cascade order matters: this rule comes BEFORE the view-mode
+   overrides below, so Focused (85ch) and Wide (105ch) win when
+   active even with sidebar="closed". */
+:root[data-sidebar="closed"] .sophie-content {
+  max-inline-size: min(95ch, 100%);
+}
+
 /* Sidebar toggle button — basic primitive shape; full design in @sophie/theme later. */
 .sophie-sidebar-toggle {
   appearance: none;
