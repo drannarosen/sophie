@@ -202,6 +202,49 @@
   display: inline-flex;
 }
 
+/* ===== View-mode layout orchestration =====
+   Per overview.md §18 + ADR 0032: data-view-mode on <html> drives
+   the layout shape entirely in CSS — no JavaScript reaches across
+   preferences. Focused + Wide both collapse the side columns
+   (regardless of `sidebarPref`); they differ in the content cap.
+   When the user cycles back to Default, sidebarPref takes over
+   again because we never wrote to it. */
+
+:root[data-view-mode="focused"] .sophie-shell,
+:root[data-view-mode="wide"] .sophie-shell {
+  --sophie-sidebar-w: 0;
+  --sophie-right-w: 0;
+}
+
+:root[data-view-mode="focused"] .sophie-sidebar,
+:root[data-view-mode="wide"] .sophie-sidebar {
+  visibility: hidden;
+  border-inline-end: 0;
+}
+
+:root[data-view-mode="focused"] .sophie-right,
+:root[data-view-mode="wide"] .sophie-right {
+  visibility: hidden;
+  border-inline-start: 0;
+}
+
+/* Content cap relaxes as chrome recedes. Default's 75ch cap is
+   set on .sophie-content directly above; these override. */
+:root[data-view-mode="focused"] .sophie-content {
+  max-inline-size: min(85ch, 100%);
+}
+
+:root[data-view-mode="wide"] .sophie-content {
+  max-inline-size: min(105ch, 100%);
+}
+
+/* The per-element sidebar toggle is only meaningful while a sidebar
+   exists. Hide it when the view mode has forced the sidebar away. */
+:root[data-view-mode="focused"] .sophie-sidebar-toggle,
+:root[data-view-mode="wide"] .sophie-sidebar-toggle {
+  display: none;
+}
+
 /* Module/chapter navigation in the sidebar slot. PR 3. */
 .sophie-module-nav {
   padding: 1rem;
