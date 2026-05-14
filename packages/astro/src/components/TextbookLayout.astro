@@ -1,6 +1,6 @@
 ---
 import "../styles/textbook-layout.css";
-import { __setGlossaryDefinitions } from "@sophie/components";
+import { __setEquations, __setGlossaryDefinitions } from "@sophie/components";
 import { type CollectionEntry, getCollection, render } from "astro:content";
 import { indexAccumulator } from "../lib/pedagogy-index-extractor";
 import ContentColumn from "./ContentColumn.astro";
@@ -39,21 +39,31 @@ import ViewModeToggle from "./ViewModeToggle.astro";
 // rather than importing the virtual module itself.
 const chapters: CollectionEntry<"chapters">[] = await getCollection("chapters");
 await Promise.all(chapters.map((c) => render(c)));
-const pedagogyDefinitions = indexAccumulator.asPedagogyIndex().definitions;
-__setGlossaryDefinitions(pedagogyDefinitions);
-// Serialize the same payload into a <script> tag so the
-// @sophie/components glossary store can hydrate client-side
-// after React mount. Server-side module state doesn't survive
-// to the wire, so without this script tag <GlossaryTerm>
-// rerenders as bare prose on hydration (empty client store
-// wins). See packages/components/.../definitions-store.ts.
+const pedagogy = indexAccumulator.asPedagogyIndex();
+// Both definitions and equations follow the same setter-call pattern
+// (ADR 0038 Revisions section): the chrome layer reads the accumulator
+// directly, then pushes into each role's React store via a setter
+// exported from @sophie/components. This keeps the components package
+// Vite-protocol-agnostic.
+__setGlossaryDefinitions(pedagogy.definitions);
+__setEquations(pedagogy.equations);
+// Serialize the same payloads into <script> tags so each role's
+// client-side store can hydrate after React mount. Server-side module
+// state doesn't survive to the wire, so without these script tags
+// <GlossaryTerm> / <EqRef> rerender as bare prose on hydration (empty
+// client store wins). See packages/components/.../definitions-store.ts
+// and packages/components/.../equations-store.ts.
 //
 // Escape `<` as `<` after JSON.stringify to prevent the
 // HTML parser from terminating the <script> tag early on any
-// `</script>` substring inside a definition body (realistic for
-// AI-authored CS/web content per ADR 0030). The escape survives
+// `</script>` substring inside a definition / equation body (realistic
+// for AI-authored CS/web content per ADR 0030). The escape survives
 // JSON.parse on the consumer side (< → <).
-const pedagogyDefinitionsJson = JSON.stringify(pedagogyDefinitions).replace(
+const pedagogyDefinitionsJson = JSON.stringify(pedagogy.definitions).replace(
+  /</g,
+  "\\u003c"
+);
+const pedagogyEquationsJson = JSON.stringify(pedagogy.equations).replace(
   /</g,
   "\\u003c"
 );
@@ -118,6 +128,12 @@ const collapsedVars = [
   id='sophie-pedagogy-definitions'
   type='application/json'
   set:html={pedagogyDefinitionsJson}
+/>
+<script
+  is:inline
+  id='sophie-pedagogy-equations'
+  type='application/json'
+  set:html={pedagogyEquationsJson}
 />
 
 <div
