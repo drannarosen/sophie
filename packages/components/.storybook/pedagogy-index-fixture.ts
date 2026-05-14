@@ -99,8 +99,3 @@ export const figureUsages = [
     captionOverride: "Optical (HST) vs. 21-cm radio (VLA).",
   },
 ];
-
-// Legacy alias retained for any importers that still expect the
-// pre-PR-C3 shape (single `figures` collection). New code should
-// use `figureRegistry` + `figureUsages`.
-export const figures: ReadonlyArray<unknown> = figureRegistry;
