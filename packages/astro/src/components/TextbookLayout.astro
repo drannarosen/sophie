@@ -1,5 +1,8 @@
 ---
 import "../styles/textbook-layout.css";
+import { __setGlossaryDefinitions } from "@sophie/components";
+import { type CollectionEntry, getCollection, render } from "astro:content";
+import { indexAccumulator } from "../lib/pedagogy-index-extractor";
 import ContentColumn from "./ContentColumn.astro";
 import RightColumn from "./RightColumn.astro";
 import Sidebar from "./Sidebar.astro";
@@ -7,6 +10,53 @@ import SidebarToggle from "./SidebarToggle.astro";
 import ThemeToggle from "./ThemeToggle.astro";
 import TopBar from "./TopBar.astro";
 import ViewModeToggle from "./ViewModeToggle.astro";
+
+// Wire the build-time pedagogy index (ADR 0038) into the
+// @sophie/components glossary store so <GlossaryTerm> in this
+// page's MDX content can resolve definitions.
+//
+// Build-order subtlety: Astro's content-collection layer only
+// triggers MDX parse (which runs the pedagogy-index remark
+// plugin) on `render(chapter)` — getCollection alone returns
+// metadata without parsing. To populate the index BEFORE the
+// current page renders MDX that references it, we force every
+// chapter's render() to resolve. Promise.all parallelizes; Astro
+// caches results so subsequent pages don't re-parse.
+//
+// Why we read indexAccumulator directly rather than via
+// `virtual:sophie/pedagogy-index`: Vite caches the virtual
+// module's first load() result, and that load fires BEFORE
+// chapter MDX parses (observed in dev + build). The virtual
+// module + its Vite plugin remain in @sophie/astro for future
+// consumers that want a portable read-only surface, but the
+// chrome layer takes the direct route to sidestep the cache.
+// ADR 0038 deviation noted in the PR-C1 design doc + PR
+// description.
+//
+// @sophie/components stays Vite-protocol-agnostic (which keeps
+// Astro config's bare-Node loader working) by receiving the
+// definitions through its `__setGlossaryDefinitions` setter
+// rather than importing the virtual module itself.
+const chapters: CollectionEntry<"chapters">[] = await getCollection("chapters");
+await Promise.all(chapters.map((c) => render(c)));
+const pedagogyDefinitions = indexAccumulator.asPedagogyIndex().definitions;
+__setGlossaryDefinitions(pedagogyDefinitions);
+// Serialize the same payload into a <script> tag so the
+// @sophie/components glossary store can hydrate client-side
+// after React mount. Server-side module state doesn't survive
+// to the wire, so without this script tag <GlossaryTerm>
+// rerenders as bare prose on hydration (empty client store
+// wins). See packages/components/.../definitions-store.ts.
+//
+// Escape `<` as `<` after JSON.stringify to prevent the
+// HTML parser from terminating the <script> tag early on any
+// `</script>` substring inside a definition body (realistic for
+// AI-authored CS/web content per ADR 0030). The escape survives
+// JSON.parse on the consumer side (< → <).
+const pedagogyDefinitionsJson = JSON.stringify(pedagogyDefinitions).replace(
+  /</g,
+  "\\u003c"
+);
 
 // Detect empty named slots so the corresponding grid columns can
 // collapse to 0 width — avoids wasted chrome in PR 1 where the sidebar
@@ -59,6 +109,16 @@ const collapsedVars = [
 {/* Boot script lives in <TextbookHead /> which the consumer puts inside <head>.
     See packages/astro/src/components/TextbookHead.astro for why
     (React's SSR mangles is:inline directives inside React islands per ADR 0027). */}
+
+{/* Glossary-index payload for client-side hydration of <GlossaryTerm>'s
+    definitions store. See packages/components/src/components/GlossaryTerm/definitions-store.ts
+    for why this is needed alongside the server-side __setGlossaryDefinitions call. */}
+<script
+  is:inline
+  id='sophie-pedagogy-definitions'
+  type='application/json'
+  set:html={pedagogyDefinitionsJson}
+/>
 
 <div
   class='sophie-shell'

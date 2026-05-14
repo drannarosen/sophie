@@ -1,0 +1,47 @@
+---
+import CourseGlossary from "@sophie/astro/components/CourseGlossary.astro";
+import ModuleNav from "@sophie/astro/components/ModuleNav.astro";
+import TextbookHead from "@sophie/astro/components/TextbookHead.astro";
+import TextbookLayout from "@sophie/astro/components/TextbookLayout.astro";
+import { SophieChapter } from "@sophie/astro/client";
+import { getCollection } from "astro:content";
+
+/**
+ * `/glossary` — course-wide glossary auto-generated from the
+ * pedagogy index (ADR 0038). Reads `definitions` via
+ * `virtual:sophie/pedagogy-index` (resolved by @sophie/astro's
+ * Vite plugin); alphabetical; each entry back-links to its
+ * canonical aside in the source chapter.
+ */
+
+const modules = (await getCollection("modules")).map((m) => m.data);
+const chapters = (await getCollection("chapters")).map((c) => ({
+  slug: c.id,
+  title: c.data.title,
+  module: c.data.module,
+  order: c.data.order,
+}));
+---
+
+<html lang='en'>
+  <head>
+    <meta charset='utf-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1' />
+    <title>Glossary</title>
+    <meta
+      name='description'
+      content='Course-wide glossary of canonical terms.'
+    />
+    <TextbookHead />
+  </head>
+  <body>
+    <SophieChapter client:load>
+      <TextbookLayout>
+        <Fragment slot='sidebar'>
+          <ModuleNav modules={modules} chapters={chapters} />
+        </Fragment>
+        <CourseGlossary heading='Glossary' />
+      </TextbookLayout>
+    </SophieChapter>
+  </body>
+</html>

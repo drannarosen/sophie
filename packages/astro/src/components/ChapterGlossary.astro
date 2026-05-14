@@ -1,0 +1,58 @@
+---
+import type { DefinitionEntry } from "@sophie/core/schema";
+import { indexAccumulator } from "../lib/pedagogy-index-extractor";
+
+const { definitions } = indexAccumulator.asPedagogyIndex();
+
+/**
+ * `<ChapterGlossary chapter="..." order="..." />` — Astro consumer
+ * of the build-time pedagogy index (ADR 0038). Renders the chapter's
+ * canonical definitions as a `<dl>`. Pre-rendered HTML bodies embed
+ * via `set:html` (decision #11 in the Bucket C overview).
+ *
+ * Sort: alphabetical (default) or appearance-order in the source
+ * chapter (`order="appearance"`). Per overview decision #12.
+ *
+ * Pure Astro; no client JS. Audited by axe via the smoke target's
+ * Playwright suite.
+ */
+export interface Props {
+  /** Chapter slug to filter the index by (e.g. "spoiler-alerts"). */
+  chapter: string;
+  /** Sort strategy. Default alphabetical. */
+  order?: "alphabetical" | "appearance";
+  /** Optional heading rendered above the list. */
+  heading?: string;
+}
+
+const { chapter, order = "alphabetical", heading } = Astro.props;
+
+const inChapter: DefinitionEntry[] = definitions.filter(
+  (d) => d.chapter === chapter
+);
+
+const sorted =
+  order === "alphabetical"
+    ? [...inChapter].sort((a, b) => a.term.localeCompare(b.term))
+    : inChapter; // appearance order — remark walk order
+---
+
+{heading && <h2 class='sophie-chapter-glossary__heading'>{heading}</h2>}
+{
+  sorted.length === 0 ? (
+    <p class='sophie-chapter-glossary__empty'>
+      No definitions in this chapter yet.
+    </p>
+  ) : (
+    <dl class='sophie-chapter-glossary' data-sophie-chapter-glossary=''>
+      {sorted.map((entry) => (
+        <Fragment>
+          <dt id={`gloss-${entry.slug}`} class='sophie-chapter-glossary__term'>
+            {entry.term}
+          </dt>
+          <dd class='sophie-chapter-glossary__body' set:html={entry.body} />
+        </Fragment>
+      ))}
+    </dl>
+  )
+}

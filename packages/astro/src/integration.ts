@@ -1,6 +1,7 @@
 import mdx from "@astrojs/mdx";
 import react from "@astrojs/react";
 import type { AstroIntegration } from "astro";
+import { pedagogyIndexVirtualModule } from "./lib/pedagogy-index-virtual-module.ts";
 import { sophieMdxOptions } from "./mdx-config.ts";
 
 export interface SophieIntegrationOptions {
@@ -82,6 +83,13 @@ export function defineSophieIntegration(
         updateConfig({
           integrations: [mdx(sophieMdxOptions), react()],
           vite: {
+            // Cast to `never`: @sophie/astro resolves to vite@8 while
+            // Astro 6 ships vite@7 types — two PluginOption shapes
+            // coexist and TS structural-checks them as incompatible.
+            // Vite is duck-typed at runtime; the cast bypasses the
+            // version-mismatch only. Revisit when Astro 6 → vite@8 or
+            // when @sophie/astro pins to a single vite major.
+            plugins: [pedagogyIndexVirtualModule() as never],
             ssr: {
               noExternal: SOPHIE_NO_EXTERNAL,
             },

@@ -1,0 +1,53 @@
+---
+import { indexAccumulator } from "../lib/pedagogy-index-extractor";
+
+const { definitions } = indexAccumulator.asPedagogyIndex();
+
+/**
+ * `<CourseGlossary />` — Astro consumer that lists every
+ * definition across the whole textbook, alphabetical. Each entry
+ * back-links to its source chapter + anchor so a reader hitting
+ * an unfamiliar term anywhere can return to the canonical
+ * treatment (per overview decision #13).
+ *
+ * Per overview decision #12: course-glossary is alphabetical only
+ * (chapter-glossary is the consumer that supports appearance
+ * order via prop). Bodies render from pre-rendered HTML strings.
+ */
+export interface Props {
+  /** Optional heading rendered above the list. */
+  heading?: string;
+}
+
+const { heading } = Astro.props;
+
+const sorted = [...definitions].sort((a, b) => a.term.localeCompare(b.term));
+---
+
+{heading && <h1 class='sophie-course-glossary__heading'>{heading}</h1>}
+{
+  sorted.length === 0 ? (
+    <p class='sophie-course-glossary__empty'>
+      No definitions across the textbook yet.
+    </p>
+  ) : (
+    <dl class='sophie-course-glossary' data-sophie-course-glossary=''>
+      {sorted.map((entry) => (
+        <Fragment>
+          <dt id={`gloss-${entry.slug}`} class='sophie-course-glossary__term'>
+            {entry.term}
+          </dt>
+          <dd class='sophie-course-glossary__body'>
+            <div set:html={entry.body} />
+            <p class='sophie-course-glossary__backlink'>
+              defined in{" "}
+              <a href={`/chapters/${entry.chapter}#${entry.anchor}`}>
+                <code>{entry.chapter}</code>
+              </a>
+            </p>
+          </dd>
+        </Fragment>
+      ))}
+    </dl>
+  )
+}

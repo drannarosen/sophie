@@ -101,4 +101,44 @@ describe("<Aside>", () => {
     const results = await axe(container);
     expect(results.violations).toEqual([]);
   });
+
+  it("auto-derives the DOM id from the title for kind='definition'", () => {
+    render(
+      <Aside kind='definition' title='Standard candle'>
+        body
+      </Aside>
+    );
+    const details = document.querySelector("details");
+    expect(details?.id).toBe("standard-candle");
+  });
+
+  it("honors an explicit `id` prop overriding the auto-derived slug", () => {
+    render(
+      <Aside kind='definition' title='Standard candle' id='custom-anchor'>
+        body
+      </Aside>
+    );
+    const details = document.querySelector("details");
+    expect(details?.id).toBe("custom-anchor");
+  });
+
+  it("omits the DOM id for kinds other than 'definition' unless explicitly provided", () => {
+    render(
+      <Aside kind='note' title='A note'>
+        body
+      </Aside>
+    );
+    const details = document.querySelector("details");
+    expect(details?.hasAttribute("id")).toBe(false);
+  });
+
+  it("honors an explicit `id` even for non-definition kinds", () => {
+    render(
+      <Aside kind='key-insight' id='my-insight'>
+        body
+      </Aside>
+    );
+    const details = document.querySelector("details");
+    expect(details?.id).toBe("my-insight");
+  });
 });

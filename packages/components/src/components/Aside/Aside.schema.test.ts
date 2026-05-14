@@ -22,13 +22,62 @@ describe("AsidePropsSchema", () => {
     expect(AsidePropsSchema.safeParse({ children: null }).success).toBe(true);
   });
 
-  it("accepts kind only", () => {
+  it("accepts kind='note' without a title", () => {
     expect(
-      AsidePropsSchema.safeParse({ kind: "definition", children: null }).success
+      AsidePropsSchema.safeParse({ kind: "note", children: null }).success
     ).toBe(true);
   });
 
-  it("accepts kind + title together", () => {
+  it("accepts kind='digression' without a title", () => {
+    expect(
+      AsidePropsSchema.safeParse({ kind: "digression", children: null }).success
+    ).toBe(true);
+  });
+
+  it("accepts kind='key-insight' without a title", () => {
+    expect(
+      AsidePropsSchema.safeParse({ kind: "key-insight", children: null })
+        .success
+    ).toBe(true);
+  });
+
+  it("rejects kind='definition' without a title (refinement)", () => {
+    // PR-C1 introduces a Zod refinement: <Aside kind="definition"> must
+    // carry a non-empty `title` because the title is canonical for term
+    // identity in the pedagogy index (ADR 0038).
+    const result = AsidePropsSchema.safeParse({
+      kind: "definition",
+      children: null,
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0]?.message).toMatch(
+        /title.*required.*definition/i
+      );
+    }
+  });
+
+  it("rejects kind='definition' with an empty title", () => {
+    expect(
+      AsidePropsSchema.safeParse({
+        kind: "definition",
+        title: "",
+        children: null,
+      }).success
+    ).toBe(false);
+  });
+
+  it("rejects kind='definition' with a whitespace-only title", () => {
+    expect(
+      AsidePropsSchema.safeParse({
+        kind: "definition",
+        title: "   ",
+        children: null,
+      }).success
+    ).toBe(false);
+  });
+
+  it("accepts kind='definition' with a non-empty title", () => {
     expect(
       AsidePropsSchema.safeParse({
         kind: "definition",
@@ -44,6 +93,28 @@ describe("AsidePropsSchema", () => {
       AsidePropsSchema.safeParse({ title: "On observation", children: null })
         .success
     ).toBe(true);
+  });
+
+  it("accepts an explicit `id` override prop", () => {
+    expect(
+      AsidePropsSchema.safeParse({
+        kind: "definition",
+        title: "Parallax",
+        id: "custom-slug",
+        children: null,
+      }).success
+    ).toBe(true);
+  });
+
+  it("rejects a non-string `id` prop", () => {
+    expect(
+      AsidePropsSchema.safeParse({
+        kind: "definition",
+        title: "Parallax",
+        id: 42,
+        children: null,
+      }).success
+    ).toBe(false);
   });
 
   it("rejects an unknown kind", () => {

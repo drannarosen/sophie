@@ -60,6 +60,17 @@ export {
   figureInlineContract,
   figureRegistryContract,
 } from "./components/Figure/index.ts";
+// Internal-use setter: @sophie/astro's <TextbookLayout> calls this
+// to hydrate the glossary index from `virtual:sophie/pedagogy-index`
+// at render time. Not part of the public authoring API; underscore-
+// prefix flags internal-use.
+export { __setGlossaryDefinitions } from "./components/GlossaryTerm/definitions-store.ts";
+export type { GlossaryTermProps } from "./components/GlossaryTerm/index.ts";
+export {
+  GlossaryTerm,
+  GlossaryTermPropsSchema,
+  glossaryTermContract,
+} from "./components/GlossaryTerm/index.ts";
 export type { InteractiveCheckboxProps } from "./components/InteractiveCheckbox/InteractiveCheckbox.schema.ts";
 export {
   InteractiveCheckbox,
@@ -83,16 +94,6 @@ export {
   learningObjectivesContract,
   ObjectiveSchema,
 } from "./components/LearningObjectives/index.ts";
-export type {
-  GlossaryTerm,
-  MiniGlossaryProps,
-} from "./components/MiniGlossary/index.ts";
-export {
-  GlossaryTermSchema,
-  MiniGlossary,
-  MiniGlossaryPropsSchema,
-  miniGlossaryContract,
-} from "./components/MiniGlossary/index.ts";
 export type {
   PredictPrompt,
   PredictProps,

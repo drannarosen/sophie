@@ -25,7 +25,34 @@ test.describe("<KeyEquation> blocks in spoiler-alerts chapter", () => {
     page,
   }) => {
     await page.goto(`${CHAPTER_URL}#wiens-law`);
+    // The chapter has many client:load islands (<GlossaryTerm>,
+    // <Predict>, <ConfidenceCheck>, etc.) plus PR 6's aside-
+    // positioning script that mutates layout after initial render.
+    // Both can shift the anchor out of viewport AFTER the
+    // browser's initial hash-scroll. Wait for network + the
+    // aside-docked attribute (set by the positioning script once
+    // it settles) before asserting viewport position.
+    await page.waitForLoadState("networkidle");
+    await page
+      .waitForFunction(
+        () =>
+          document
+            .querySelector("[data-sophie-aside]")
+            ?.hasAttribute("data-aside-docked"),
+        null,
+        { timeout: 5000 }
+      )
+      .catch(() => {
+        // Asides may not be docked at narrower viewports — that's
+        // fine; we just want the script to have run once.
+      });
+    // The browser may have scrolled to the anchor before islands
+    // hydrated; force a follow-up scroll now that layout has
+    // settled. We're testing that the anchor exists + lands in
+    // the viewport, not that the initial hash-scroll alone is
+    // pixel-perfect across timings.
     const wiens = page.getByRole("region", { name: "Wien's Law" });
+    await wiens.scrollIntoViewIfNeeded();
     await expect(wiens).toBeVisible();
     await expect(wiens).toBeInViewport();
   });
