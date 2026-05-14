@@ -114,6 +114,11 @@ project:
         - file: decisions/0032-vanilla-js-chrome-state.md
         - file: decisions/0033-is-inline-outside-react-island.md
         - file: decisions/0034-empty-slot-collapse-pattern.md
+        - file: decisions/0035-token-naming-flat-kindless.md
+        - file: decisions/0036-define-preference-factory-pattern.md
+        - file: decisions/0037-cross-bundle-dom-attribute-observation.md
+        - file: decisions/0038-pedagogy-index-pattern.md
+        - file: decisions/0039-lucide-two-adapter-convention.md
     - title: Status
       children:
         - file: status/roadmap.md
