@@ -1,0 +1,120 @@
+---
+import type {
+  ChapterEntry,
+  ModuleEntry,
+  ObjectiveEntry,
+} from "@sophie/core/schema";
+import { indexAccumulator } from "../lib/pedagogy-index-extractor";
+
+const { modules, chapters, objectives } = indexAccumulator.asPedagogyIndex();
+
+/**
+ * `<CourseObjectives heading="..." />` — Astro consumer that produces
+ * a Module → Chapter → Objectives roll-up across the whole textbook,
+ * joining `PedagogyIndex.modules`, `PedagogyIndex.chapters`, and
+ * `PedagogyIndex.objectives` (ADR 0038; PR-C4 design decision Q5).
+ *
+ * Module order is course-outline (required `order` on `ModuleEntry`).
+ * Chapter order within a module is authoring-driven; missing `order`
+ * sorts to the front but preserves insertion order via stable sort.
+ * Objectives within a chapter follow authoring order (the extractor
+ * emits them in source-walk order).
+ *
+ * Chapter headings render as plain `<a href>` (not `<ChapterRef>`):
+ * the page is server-rendered Astro and ChapterRef is a React
+ * component. The semantic affordance (clickable chapter title) is
+ * preserved without React hydration cost. See PR-C4 design doc.
+ *
+ * Bodies are pre-rendered HTML embedded via `set:html` (the extractor
+ * pre-renders `<Objective>` body content to HTML at SSR time). Pure
+ * Astro; no client JS. Reads the accumulator directly, mirroring
+ * `<CourseKeyInsights>` and `<CourseMisconceptions>`.
+ */
+export interface Props {
+  /** Optional heading rendered above the list. */
+  heading?: string;
+}
+
+const { heading } = Astro.props;
+
+interface GroupedChapter {
+  chapter: ChapterEntry;
+  objectives: ObjectiveEntry[];
+}
+
+interface GroupedModule {
+  module: ModuleEntry;
+  chapters: GroupedChapter[];
+}
+
+// Group: module → chapters (sorted by order, stable) → objectives
+// (authoring order, as emitted by the extractor).
+const grouped: GroupedModule[] = [...modules]
+  .sort((a, b) => a.order - b.order)
+  .map((mod) => ({
+    module: mod,
+    chapters: chapters
+      .filter((c) => c.module === mod.slug)
+      .slice()
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+      .map((ch) => ({
+        chapter: ch,
+        objectives: objectives.filter((o) => o.chapter === ch.slug),
+      })),
+  }));
+---
+
+{heading && <h1 class='sophie-course-objectives__heading'>{heading}</h1>}
+{
+  grouped.length === 0 ? (
+    <p class='sophie-course-objectives__empty'>
+      No modules declared yet.
+    </p>
+  ) : (
+    <div
+      class='sophie-course-objectives'
+      data-sophie-course-objectives=''
+    >
+      {grouped.map(({ module: mod, chapters: modChapters }) => (
+        <section class='sophie-course-objectives__module'>
+          <h2 class='sophie-course-objectives__module-title'>{mod.title}</h2>
+          {modChapters.length === 0 ? (
+            <p class='sophie-course-objectives__empty'>
+              No chapters in this module.
+            </p>
+          ) : (
+            modChapters.map(({ chapter, objectives: chObjectives }) => (
+              <article class='sophie-course-objectives__chapter'>
+                <h3 class='sophie-course-objectives__chapter-title'>
+                  <a href={`/chapters/${chapter.slug}`}>{chapter.title}</a>
+                </h3>
+                {chObjectives.length === 0 ? (
+                  <p class='sophie-course-objectives__empty'>
+                    No objectives declared.
+                  </p>
+                ) : (
+                  <ul class='sophie-course-objectives__list'>
+                    {chObjectives.map((o) => (
+                      <li
+                        id={o.anchor}
+                        class='sophie-course-objectives__item'
+                      >
+                        <strong class='sophie-course-objectives__verb'>
+                          {o.verb}
+                        </strong>{" "}
+                        <span
+                          class='sophie-course-objectives__body'
+                          set:html={o.body}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </article>
+            ))
+          )}
+        </section>
+      ))}
+    </div>
+  )
+}

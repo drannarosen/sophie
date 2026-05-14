@@ -35,6 +35,7 @@
     "./components/CourseFigures.astro": "./dist/components/CourseFigures.astro",
     "./components/ChapterMisconceptions.astro": "./dist/components/ChapterMisconceptions.astro",
     "./components/CourseMisconceptions.astro": "./dist/components/CourseMisconceptions.astro",
+    "./components/CourseObjectives.astro": "./dist/components/CourseObjectives.astro",
     "./styles/textbook-layout.css": "./dist/styles/textbook-layout.css"
   },
   "files": [
