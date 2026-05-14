@@ -52,57 +52,27 @@ Demotion is possible: an *accepted-pending-ADR* item can move back to
 *speculative* if its use case evaporates. Movement is documented in
 [Transitions](../transitions/index.md).
 
-## Initial top-of-mind aspirations (to be sorted into status files)
+## First triage (2026-05-14)
 
-Surfaced during the 2026-05-14 vision-section brainstorm with
-Anna + Claude + ChatGPT input. These need triage into the four
-statuses above:
+13 seed aspirations from the 2026-05-14 vision-section brainstorm
+(Anna + Claude + ChatGPT input) have been triaged:
 
-- **Teaching Decision Records (TDRs)** — pedagogy's equivalent of ADRs;
-  capture *why* a curriculum was designed this way. Promising fast-track candidate.
-- **Teaching Move Library** — name the pedagogical-choreography
-  vocabulary Sophie's components already implement (Predict → Cognitive
-  Conflict → Derivation → Unit Check → Visualization → Transfer Prompt
-  → Reflection). Each existing component gets a `pedagogy_intent`
-  metadata field.
-- **AI Contribution Ledger + Pedagogy Contract** — per-course
-  artifact codifying what [CLAUDE.md](../../../CLAUDE.md) Engineering
-  Principles does informally. Per-chapter `ai_contribution` metadata;
-  per-course `pedagogy_contract.yaml`.
-- **Misconception Graph + Intervention Library** — extend
-  [PR-C4](../../../docs/plans/2026-05-14-pr-c4-overview.md)'s
-  `misconceptions` index with graph structure (related concepts,
-  prerequisite misconceptions, addressed-by chapters/components) and
-  a reusable misconception → intervention pairing library.
-- **MultiRep + Notation Registry + Representation Alignment Audit**
-  — STEM-specific; bind representations of the same idea (prose,
-  equation, plot, code, diagram, physical intuition) so the audit
-  catches notation conflicts or missing representations.
-- **Equation Biography** — `<KeyEquation>` extended with
-  observable-meaning, assumptions, units, common-misuses metadata;
-  auto-generates equation glossary + audit checks.
-- **Approximation Honesty** — new `<Approximation>` primitive
-  declaring `valid_when` / `breaks_when` / `why_useful`. Audit flags
-  ≈/∼/"roughly" prose without declared validity regime.
-- **Pedagogical Diff / Curriculum CI** — software-engineering rigor
-  applied to curriculum changes. `sophie audit` extended with
-  pedagogy-aware diff output.
-- **Course Brain / structured AI memory** — serialized representation
-  of the populated pedagogy index for AI consumption (already exists
-  implicitly in `<script id="sophie-pedagogy-*">` tags).
-- **Human Expertise Required gates** — frontmatter flag on operations
-  that require explicit instructor judgment (concept introduction,
-  learning objective changes).
-- **Multi-modal generation pipeline** — `MediaSpec` → `AudioScript`
-  / `AnimationSpec` → `VoiceProvider` interface → audit. Audio
-  overviews, two-voice Socratic podcasts, retrieval audio, Manim
-  animations. Strict no-instructor-voice-cloning policy.
-- **AI Literacy callouts** — student-facing scaffolding teaching
-  responsible AI use. "How AI can help here / what AI may get wrong."
-- **Course as Research Object** — versioned pedagogy changes,
-  component usage, misconception targets, AI contribution records;
-  the SoTL artifact for the tenure case.
+- **5 entries** → [`accepted.md`](accepted.md):
+  Teaching Decision Records, Teaching Move Library, AI Contribution
+  Ledger + Pedagogy Contract, MultiRep + Notation Registry +
+  Representation Alignment Audit, Misconception Graph + Intervention
+  Library.
+- **7 entries** → [`backlog.md`](backlog.md):
+  Equation Biography, Approximation Honesty, Pedagogical Diff /
+  Curriculum CI, Course Brain, Human Expertise Required gates,
+  Multi-modal generation pipeline, Course as Research Object.
+- **1 entry demoted** → [`speculative.md`](speculative.md):
+  Pedagogy Notebooks (subsumed by Teaching Decision Records).
 
-Each will be triaged into [`accepted.md`](accepted.md),
-[`backlog.md`](backlog.md), or [`speculative.md`](speculative.md) in
-subsequent sessions.
+The 5 entries already in [`speculative.md`](speculative.md) stay where
+they are.
+
+Next graduation candidate is **Teaching Decision Records** (A1 in
+accepted) — its ADR's open question is "where do TDRs live in the
+docs site or in consumer repos?" Drafting that ADR is the next
+substantive step.

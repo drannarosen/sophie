@@ -1,13 +1,13 @@
 ---
 title: Accepted-pending-ADR features
 short_title: Accepted features
-description: Features committed to ship, awaiting their authoring ADR. Each entry must include a motivating use case, design sketch, estimated cost, and defended priority claim.
+description: Features committed to ship, awaiting their authoring ADR. Each entry includes a motivating use case, design sketch, estimated cost, defended priority claim, and a framed open ADR question.
 tags: [vision, features, accepted, adr, sophie-lds]
 ---
 
 # Accepted-pending-ADR features
 
-Features committed to ship. Each entry below has cleared the
+Features committed to ship. Each entry has cleared the
 [backlog](backlog.md) → accepted gate (see
 [Transitions](../transitions/index.md) for criteria) and is awaiting
 its authoring [ADR](../../decisions/).
@@ -16,47 +16,235 @@ When an entry's ADR is drafted, accepted, and (usually) placed on the
 [roadmap](../../status/roadmap.md), the entry moves to *graduated*
 status — a one-line pointer with a cross-link.
 
-## Entry template
+## A1. Teaching Decision Records (TDRs)
 
-```markdown
-## Feature name
+**Motivating use case.** When Anna decides "introduce parallax before
+standard candles because students need observable→inference scaffolding
+first," that decision currently lives in her head, in a Slack message,
+or in a chapter intro paragraph. Six months later, when a chapter is
+revised (by Anna, by AI, by a future collaborator), the *rationale*
+isn't visible — only the *outcome*. TDRs make pedagogy reasoning
+first-class: version-controlled, referenceable, transferable. Direct
+analog to ADRs (Architecture Decision Records), which Sophie already
+relies on for every architectural choice.
 
-**Motivating use case.** One concrete situation where this feature
-matters. Real, not hypothetical.
+**Design sketch.** Each TDR is a Markdown file with frontmatter
+(date, status, deciders) and a fixed body shape (Context, Decision,
+Rationale, Consequences). They're numbered (TDR-001, TDR-002, …) and
+live in a TDR directory whose location the authoring ADR will decide.
+TDRs reference course-specific decisions: chapter sequencing, what to
+omit, what notation conventions to use, what misconceptions to target,
+which pedagogical moves to deploy. They cross-link to specific ADRs,
+roadmap items, and pedagogy principles in `vision/pedagogy/`.
 
-**Design sketch.** A few sentences (not a full design doc) describing
-how it would work. Enough that a fresh reader can imagine the shape.
+**Estimated cost.** Small. ADR (~1 hour) + template (~30 min) + first
+3 TDRs drawn from existing ASTR 201 design choices (~1–2 hours
+authoring). Optionally a `sophie tdr new <slug>` CLI command later.
 
-**Estimated cost.** Schema additions / new components / extractor work
-/ migration cost. Order of magnitude (hours / days / weeks).
+**Priority claim.** Three independent reasons this earns first slot:
+(1) tenure-case visibility — TDRs are unambiguous evidence of
+intentional curriculum design; (2) SoTL paper substrate — a corpus of
+TDRs is a publishable artifact; (3) feeds AI authoring — future AI
+revisions of a chapter inherit the chapter's TDR history as
+constraints. No other accepted item dominates on all three.
 
-**Priority claim.** Why this earns a slot ahead of other backlog items.
-Cite the use case + leverage analysis.
+**Open ADR question.** *Where do TDRs live?* Three plausible
+placements: (a) `docs/website/decisions/tdrs/` — alongside ADRs but
+in a sub-directory; (b) new top-level `docs/website/pedagogy/`
+parallel to decisions/; (c) in consumer repos
+(`drannarosen/astr201/tdrs/`) with platform docs holding only the
+ADR + template. Option (c) matches [ADR 0001](../../decisions/0001-platform-not-monorepo.md)'s
+textbook/course-site separation cleanest, but the ADR will weigh
+trade-offs explicitly.
 
-**Open ADR question.** What architectural decision will the ADR make?
-Frame the choice that needs to be settled.
+**Status.**
+- 2026-05-14 — surfaced (speculative) during vision-section brainstorm
+- 2026-05-14 — promoted to accepted-pending-ADR (this triage)
+- ADR target: next session
 
-**Status.** When did it move to accepted; when is the ADR target?
-```
+---
 
-## Entries (initial seeds, to be filled out)
+## A2. Teaching Move Library
 
-This section is currently empty. Initial candidates from the
-[features index](index.md) that the 2026-05-14 brainstorm flagged for
-fast-track:
+**Motivating use case.** Sophie's chapter components — `<Predict>`,
+`<Aside kind="key-insight">`, `<ComprehensionGate>`, `<Reflection>`,
+`<CollapsibleCard>` — *already implement* pedagogical moves: elicit
+prior model, create cognitive conflict, reduce abstraction, generalize
+from case, check transfer, fade support. But the *moves themselves*
+aren't named. When AI scaffolds a chapter or Anna designs a new
+section, "what move are we making here?" should be the first
+question — not "what component do you want?" Naming the moves turns
+Sophie from a component library into a *language for teaching*.
 
-- Teaching Decision Records (TDRs)
-- Teaching Move Library
-- AI Contribution Ledger + Pedagogy Contract
-- MultiRep + Notation Registry + Representation Alignment Audit
-  (paired)
-- Misconception Graph + Intervention Library (extends PR-C4)
+**Design sketch.** A library of ~12–20 named teaching moves, each
+with a short description, when-to-use guidance, and a mapping to
+Sophie components that implement it. Each existing component gains a
+`pedagogy_intent` metadata field declaring which move(s) it
+implements. The library is reference content
+(`docs/website/reference/teaching-moves.md` or similar), not a code
+abstraction. AI authoring prompts (future Phase 3 work) reference the
+library by name.
 
-Each will be written up using the template above in subsequent
-sessions. The TDR entry is the highest-priority first draft because
-its mechanism is well-understood (mirrors ADRs) and its leverage as an
-intellectual artifact is unusually high (tenure case + SoTL paper +
-future-instructor onboarding all derive value).
+**Estimated cost.** ADR (~1 hour) + library document with ~15 named
+moves (~3–4 hours of authoring) + per-component metadata field added
+to existing schemas (~1 day of mechanical work across ~30 components).
+Total: ~2–3 days.
+
+**Priority claim.** Highest *conceptual* leverage of any accepted
+item. Names a category-defining abstraction that distinguishes Sophie
+from generic component libraries. Cheap relative to its leverage. AI
+authoring (eventual) and migrated chapters (near-term) both benefit
+from move-named scaffolding. Without it, every AI prompt re-invents
+the move vocabulary.
+
+**Open ADR question.** *What's the canonical move taxonomy?* Options:
+(a) ground in cognitive-science literature (Renkl's worked examples,
+Chi's ICAP, Mayer's multimedia learning); (b) ground in Anna's
+existing teaching practice (what moves does ASTR 201 already use?);
+(c) hybrid. The ADR also decides where `pedagogy_intent` lives —
+PropsSchema (typed), Storybook stories (documentation only), or both.
+
+**Status.**
+- 2026-05-14 — surfaced (speculative)
+- 2026-05-14 — promoted to accepted-pending-ADR
+- ADR target: after A1 (TDRs) lands
+
+---
+
+## A3. AI Contribution Ledger + Pedagogy Contract
+
+**Motivating use case.** Sophie's [CLAUDE.md](../../../CLAUDE.md)
+Engineering Principles informally codify the responsible-AI workflow:
+HITL mandate, no back-compat pre-launch, build the best now, SoTA over
+simple. But CLAUDE.md is project-instruction-for-Claude-Code, not a
+*per-course* artifact a reader can inspect. Promote it: each course
+ships a `pedagogy_contract.yaml` (the values that govern this course)
+and per-chapter `ai_contribution` metadata (which AI helped draft what,
+which instructor decisions overruled AI suggestions, what was reviewed).
+This is the *responsible-AI demonstrator* the broader ed-tech
+community needs to see.
+
+**Design sketch.** Two artifacts: (1) `pedagogy_contract.yaml` —
+course-level YAML covering teaching philosophy, AI use standards,
+math/units expectations, citation expectations, accessibility, and
+"what Sophie should never do" — readable and machine-loadable;
+(2) per-chapter `ai_contribution` frontmatter — drafted_by,
+reviewed_by, instructor_decisions list, transparency_note. Optionally
+a course-site page rendering the contract + aggregate ledger
+("How this course was made with AI").
+
+**Estimated cost.** ADR (~1 hour) + 2 schema files (~3–4 hours) +
+example contract + 3 chapter migrations to populate ledger (~2–3
+hours). Total: ~1–2 days.
+
+**Priority claim.** Highest *external-positioning* leverage of any
+accepted item. The cultural intervention Sophie is positioned to make
+("AI use is structured, supervised, documented — not banned, not
+hidden") becomes *demonstrable* once these artifacts ship.
+Tenure case + grant proposals + talks all want to point at concrete
+evidence. Without these, the "responsible AI" claim stays rhetorical.
+
+**Open ADR question.** *Where does the per-course pedagogy contract
+live?* As a top-level YAML in consumer repos? As frontmatter on a
+canonical course-index.mdx? Both? And: *what's the minimum required
+`ai_contribution` schema* — instructor's call on stringency vs
+overhead.
+
+**Status.**
+- 2026-05-14 — surfaced (speculative)
+- 2026-05-14 — promoted to accepted-pending-ADR
+- ADR target: after A1 (TDRs)
+
+---
+
+## A4. MultiRep + Notation Registry + Representation Alignment Audit
+
+**Motivating use case.** STEM students fail to learn when prose says
+"distance," equation uses *r*, figure labels radius *R*, code names
+the variable `distance_pc`, and plot axis says "separation." The
+representations are *materially the same concept*; the *symbols and
+language* drift. Sophie should encode the binding and audit it.
+Existing PR-C4 pedagogy index has all the raw data (definitions,
+equations, figures, inline-ref usages); the audit just doesn't yet
+look across representations.
+
+**Design sketch.** Three paired sub-features that ship in sequence:
+(1) **Notation Registry** — a per-course schema declaring canonical
+symbols, their meanings, units, common confusions; (2) **`<MultiRep>`**
+primitive — declares "these representations are the same concept"
+binding for one concept (verbal, equation, plot, code, diagram, physical
+intuition); (3) **Representation Alignment Audit** — invariants on
+notation consistency across the bound representations of one concept,
+plus catch-all symbol-reuse warnings.
+
+**Estimated cost.** ~1–2 weeks. Real schema additions + new
+component + new audit invariants. Largest of the accepted entries.
+
+**Priority claim.** Highest *STEM-specific* leverage of any accepted
+item. Catches a real chapter-authoring failure mode that current tools
+miss entirely. Sophie's "rigorous STEM teaching" claim depends on
+this kind of structural support. Equation Biography (backlog) depends
+on Notation Registry; MultiRep also unlocks better Cosmic Playground
+demo integration via the canonical-notation binding.
+
+**Open ADR question.** *Schema shape for Notation Registry.* Per-course
+YAML (declarative) vs schema-driven derivation from `<KeyEquation>` +
+`<Figure>` + `<CodeCell>` walks (implicit). Plus: *what audit
+invariants does Representation Alignment ship with at v1?*
+
+**Status.**
+- 2026-05-14 — surfaced (speculative)
+- 2026-05-14 — promoted to accepted-pending-ADR
+- ADR target: after A1 (TDRs) + A2 (Teaching Moves)
+
+---
+
+## A5. Misconception Graph + Intervention Library
+
+**Motivating use case.** PR-C4 shipped a `misconceptions` collection
+in the pedagogy index — each misconception has a name, a chapter
+locator, and short/long content discriminator. But misconceptions
+*relate*: "universe expands from a center" is a *prerequisite* to
+"redshift is ordinary Doppler motion"; "brightness is intrinsic"
+*relates to* "flux and luminosity are interchangeable." And
+misconceptions have *reusable interventions*: contrasting cases,
+Predict-then-reveal sequences, specific analogies. Today: each
+chapter rediscovers these. Tomorrow: a graph + library makes them
+queryable + reusable across courses.
+
+**Design sketch.** Two paired sub-features: (1) **Misconception
+Graph** — extend `MisconceptionEntry` schema with `related_concepts`,
+`prerequisite_misconceptions`, `addressed_by` (chapter/component
+FKs); (2) **Intervention Library** — reusable misconception →
+intervention pairings (Predict + contrasting cases; analogy with
+explicit limits; etc.) that any chapter can reference. The
+PR-C4 audit pass extends with M3 (orphan misconception),
+M4 (misconception addressed but no intervention paired), M5
+(intervention used but no misconception cited).
+
+**Estimated cost.** ~1 week. Schema extension on existing collection;
+new lightweight intervention-library schema; audit invariant
+additions.
+
+**Priority claim.** Highest *curriculum-design distinctiveness*
+leverage of any accepted item. Most courses track "what students
+should know"; Sophie tracks "what wrong models students bring and
+how the course transforms them." That's the deepest pedagogical
+claim Sophie can make. Builds directly on PR-C4's shipped
+misconceptions index; no greenfield work.
+
+**Open ADR question.** *Graph topology — should misconception
+prerequisites form a DAG (build-time audit catches cycles) or just
+loose `related_to` links?* Plus: *intervention-library reuse model —
+named interventions referenced by anchor (rigid), or per-chapter
+inline interventions tagged with type (flexible)?*
+
+**Status.**
+- 2026-05-14 — surfaced (speculative)
+- 2026-05-14 — promoted to accepted-pending-ADR
+- ADR target: after A1 (TDRs)
+
+---
 
 ## Graduated entries (links only)
 
