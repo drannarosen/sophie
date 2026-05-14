@@ -721,6 +721,16 @@ class IndexAccumulator {
    *
    * Keyed by `${chapter}#${anchor}` so the same anchor can coexist
    * across chapters when permitted (auto-anchors).
+   *
+   * Note on intra-batch dedup: unlike `addFigureUsages` (which guards
+   * against same-name canonical figures within a single batch via
+   * `seenCanonicalNames`), this method has no intra-batch check.
+   * Safe because the batch is always single-chapter (see callsite
+   * `indexAccumulator.addMisconceptions(extractMisconceptions(tree, slug))`)
+   * and `extractMisconceptions` already enforces M1 (intra-chapter
+   * anchor uniqueness) via `seenAnchors` before this method ever
+   * runs. If the calling shape ever changes to multi-chapter batches,
+   * mirror the `addFigureUsages` two-map pattern.
    */
   addMisconceptions(entries: ReadonlyArray<MisconceptionEntry>): void {
     const state = getGlobalState();
