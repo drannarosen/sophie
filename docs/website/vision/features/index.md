@@ -74,10 +74,9 @@ they are.
 
 ## Graduations (2026-05-14)
 
-Two accepted entries graduated on the same day as the triage that
-promoted them. The staging-area model's first two end-to-end tests:
-ideas moving from speculative → accepted → graduated within one
-day.
+Three accepted entries graduated on the same day as the triage that
+promoted them. The staging-area model's first three end-to-end tests:
+ideas moving from speculative → accepted → graduated within one day.
 
 **A1 — Teaching Decision Records (TDRs)** ratified by
 [ADR 0040 — Teaching Decision Records](../../decisions/0040-teaching-decision-records.md)
@@ -93,8 +92,19 @@ names + practice glosses) and the centralized-TS-map binding
 (`packages/components/src/pedagogy/move-index.ts`, populated in a
 follow-up code PR). v1 ships 18 moves across 7 families.
 
-Remaining graduation candidates from `accepted.md`:
-A3 AI Contribution Ledger + Pedagogy Contract, A4 MultiRep +
+**A3 — AI Contribution Ledger + Pedagogy Contract** ratified by
+[ADR 0042 — Pedagogy Contract + AI Contribution Ledger](../../decisions/0042-pedagogy-contract-and-ai-contribution-ledger.md)
++ [Pedagogy Contract schema](../../reference/pedagogy-contract-schema.md)
++ [AI Contribution schema](../../reference/ai-contribution-schema.md).
+The ADR locked the placement of the per-course contract
+(`pedagogy-contract.yaml` at the consumer repo root, parallel to ADR
+0040's `teaching-decisions/`) and the three-tier `ai_contribution`
+schema (required minimum + recommended `transparency_note` + optional
+rich-ledger fields). Public-facing by default. Together with ADR 0040
+and ADR 0041, this commit completes the **Sophie LDS conformance
+triple** (TDRs + Teaching Moves + Pedagogy Contract & AI Ledger).
+
+Remaining graduation candidates from `accepted.md`: A4 MultiRep +
 Notation Registry + Representation Alignment Audit, A5 Misconception
 Graph + Intervention Library. Each graduates when its authoring ADR
 is drafted.

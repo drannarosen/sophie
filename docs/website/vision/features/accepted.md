@@ -59,49 +59,31 @@ the full library with citations.
 
 ---
 
-## A3. AI Contribution Ledger + Pedagogy Contract
+(a3-ai-contribution-ledger-and-pedagogy-contract)=
+## A3. AI Contribution Ledger + Pedagogy Contract — graduated 2026-05-14
 
-**Motivating use case.** Sophie's [CLAUDE.md](../../../CLAUDE.md)
-Engineering Principles informally codify the responsible-AI workflow:
-HITL mandate, no back-compat pre-launch, build the best now, SoTA over
-simple. But CLAUDE.md is project-instruction-for-Claude-Code, not a
-*per-course* artifact a reader can inspect. Promote it: each course
-ships a `pedagogy_contract.yaml` (the values that govern this course)
-and per-chapter `ai_contribution` metadata (which AI helped draft what,
-which instructor decisions overruled AI suggestions, what was reviewed).
-This is the *responsible-AI demonstrator* the broader ed-tech
-community needs to see.
+**Graduated** → [ADR 0042 — Pedagogy Contract + AI Contribution Ledger](../../decisions/0042-pedagogy-contract-and-ai-contribution-ledger.md)
++ [Pedagogy Contract schema](../../reference/pedagogy-contract-schema.md)
++ [AI Contribution schema](../../reference/ai-contribution-schema.md).
 
-**Design sketch.** Two artifacts: (1) `pedagogy_contract.yaml` —
-course-level YAML covering teaching philosophy, AI use standards,
-math/units expectations, citation expectations, accessibility, and
-"what Sophie should never do" — readable and machine-loadable;
-(2) per-chapter `ai_contribution` frontmatter — drafted_by,
-reviewed_by, instructor_decisions list, transparency_note. Optionally
-a course-site page rendering the contract + aggregate ledger
-("How this course was made with AI").
-
-**Estimated cost.** ADR (~1 hour) + 2 schema files (~3–4 hours) +
-example contract + 3 chapter migrations to populate ledger (~2–3
-hours). Total: ~1–2 days.
-
-**Priority claim.** Highest *external-positioning* leverage of any
-accepted item. The cultural intervention Sophie is positioned to make
-("AI use is structured, supervised, documented — not banned, not
-hidden") becomes *demonstrable* once these artifacts ship.
-Tenure case + grant proposals + talks all want to point at concrete
-evidence. Without these, the "responsible AI" claim stays rhetorical.
-
-**Open ADR question.** *Where does the per-course pedagogy contract
-live?* As a top-level YAML in consumer repos? As frontmatter on a
-canonical course-index.mdx? Both? And: *what's the minimum required
-`ai_contribution` schema* — instructor's call on stringency vs
-overhead.
+The ADR resolved the *"where does the per-course pedagogy contract
+live?"* open question (top-level `pedagogy-contract.yaml` at the
+consumer repo root, parallel to ADR 0040's `teaching-decisions/`
+placement) and the *"what's the minimum required `ai_contribution`
+schema?"* sub-question (three-tier shape: required fields —
+`drafted_by`, `instructor_reviewed`, `last_review_date`; recommended
+— `transparency_note`; optional — `brainstormed_by`, `reviewed_by`,
+`instructor_decisions`). Public-facing by default. Together with ADR
+0040 (TDRs) and ADR 0041 (Teaching Moves), this completes the
+**Sophie LDS conformance triple**: a Sophie-LDS-compliant course
+ships TDRs (curriculum audit trail) + Teaching Move references
+(pedagogical vocabulary) + Pedagogy Contract & AI Ledger
+(accountability layer).
 
 **Status.**
-- 2026-05-14 — surfaced (speculative)
-- 2026-05-14 — promoted to accepted-pending-ADR
-- ADR target: after A1 (TDRs)
+- 2026-05-14 — surfaced (speculative) during vision-section brainstorm
+- 2026-05-14 — promoted to accepted-pending-ADR (triage)
+- 2026-05-14 — graduated → [ADR 0042](../../decisions/0042-pedagogy-contract-and-ai-contribution-ledger.md)
 
 ---
 
