@@ -54,7 +54,7 @@ test.describe("PR-C2: <CourseEquations /> on /equations", () => {
     const titles = await page
       .locator(".sophie-course-equations__title")
       .evaluateAll((els) => els.map((el) => (el.textContent ?? "").trim()));
-    expect(titles[0]).toBe("Inverse-Square Law");
+    expect(titles[0]).toBe("The Inverse-Square Law");
     // Smart-quote: source MDX `Wien's Law` renders with a curly
     // apostrophe (U+2019) via remark; tolerate either via regex.
     expect(titles[1]).toMatch(/^Wien.s Law$/);
