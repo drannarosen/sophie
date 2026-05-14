@@ -1193,6 +1193,35 @@ describe("indexAccumulator figures (cross-chapter)", () => {
     ).toBeUndefined();
   });
 
+  test('two <Figure name="X"> in one chapter produce two distinct usages (no clobber)', () => {
+    indexAccumulator.clearChapter("ch-fig-dupe");
+    indexAccumulator.addFigureUsages([
+      fu({
+        name: "hr-diagram",
+        chapter: "ch-fig-dupe",
+        anchor: "fig-hr-diagram-1",
+        canonical: false,
+      }),
+      fu({
+        name: "hr-diagram",
+        chapter: "ch-fig-dupe",
+        anchor: "fig-hr-diagram-2",
+        number: 2,
+        canonical: false,
+      }),
+    ]);
+    const usages = indexAccumulator
+      .asPedagogyIndex()
+      .figureUsages.filter(
+        (u) => u.chapter === "ch-fig-dupe" && u.name === "hr-diagram"
+      );
+    expect(usages).toHaveLength(2);
+    expect(usages.map((u) => u.anchor).sort()).toEqual([
+      "fig-hr-diagram-1",
+      "fig-hr-diagram-2",
+    ]);
+  });
+
   // T32
   test("clearChapter removes figureUsages for that chapter; other chapters survive", () => {
     indexAccumulator.clearChapter("fig-clr-a");
