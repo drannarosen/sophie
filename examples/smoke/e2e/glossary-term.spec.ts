@@ -51,14 +51,22 @@ test.describe("PR-C1: <GlossaryTerm> on the smoke chapter", () => {
   }) => {
     await page.goto(CHAPTER_URL);
     // The chapter is a `client:load` React island. Wait for the
-    // `<GlossaryTerm>` trigger to flip `data-react-hydrated="true"`
-    // (via `useHydrated`) before hovering — `networkidle` is a
-    // network-level signal that fires before React hydration
-    // completes in full-suite runs (followup #10).
-    await page.locator('[data-react-hydrated="true"]').first().waitFor();
+    // SPECIFIC `<GlossaryTerm>` trigger we'll hover to flip
+    // `data-react-hydrated="true"` (via `useHydrated`) before
+    // hovering — `networkidle` is a network-level signal that fires
+    // before React hydration completes, and a global first-match
+    // wait can resolve on a different island (e.g. an earlier
+    // ChapterRef/EqRef/FigureRef hydration on the same page) while
+    // this specific trigger is still pre-hydration (followup #10).
+    // Mirrors chapter-ref.spec.ts (PR-C4 Task 11) scoped pattern.
     const trigger = page
       .locator('a[href="/chapters/spoiler-alerts#dark-matter"]')
       .first();
+    await trigger.waitFor({ state: "attached" });
+    await trigger.scrollIntoViewIfNeeded();
+    await expect(trigger).toHaveAttribute("data-react-hydrated", "true", {
+      timeout: 5000,
+    });
     // HoverCard content is portal-mounted only when open.
     await expect(
       page.locator("[data-sophie-glossary-popover]")
@@ -75,18 +83,31 @@ test.describe("PR-C1: <GlossaryTerm> on the smoke chapter", () => {
 
   test("moving the pointer away closes the HoverCard", async ({ page }) => {
     await page.goto(CHAPTER_URL);
-    // Wait for React hydration (followup #10).
-    await page.locator('[data-react-hydrated="true"]').first().waitFor();
+    // Scoped per-trigger hydration wait — see open-path test above.
+    // The "redshift" trigger hydrates independently of "dark-matter";
+    // a first-match `[data-react-hydrated="true"]` wait can resolve
+    // on a sibling island before THIS trigger is interactive, causing
+    // the subsequent hover to fire before Radix's listeners are
+    // attached (followup #10, full-suite race).
     const trigger = page
       .locator('a[href="/chapters/spoiler-alerts#redshift"]')
       .first();
+    await trigger.waitFor({ state: "attached" });
+    await trigger.scrollIntoViewIfNeeded();
+    await expect(trigger).toHaveAttribute("data-react-hydrated", "true", {
+      timeout: 5000,
+    });
     await trigger.hover();
-    await expect(page.locator("[data-sophie-glossary-popover]")).toBeAttached();
-    // Move pointer off the trigger to a neutral position.
+    const popover = page.locator("[data-sophie-glossary-popover]");
+    // Explicit timeout for openDelay (150ms) + render budget.
+    await expect(popover).toBeAttached({ timeout: 2000 });
+    // Move pointer off the trigger to a neutral position. Radix
+    // HoverCard.closeDelay is 120ms; the portal unmounts after the
+    // delay elapses. Explicit 2000ms timeout makes the contract
+    // clear (closeDelay + unmount budget) and decouples from
+    // Playwright's default which is enough but ambiguous about why.
     await page.mouse.move(0, 0);
-    await expect(
-      page.locator("[data-sophie-glossary-popover]")
-    ).not.toBeAttached();
+    await expect(popover).not.toBeAttached({ timeout: 2000 });
   });
 
   test("clicking the trigger navigates to the canonical anchor", async ({
