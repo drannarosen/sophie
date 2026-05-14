@@ -1,0 +1,70 @@
+---
+import type { EquationEntry } from "@sophie/core/schema";
+import { indexAccumulator } from "../lib/pedagogy-index-extractor";
+
+const { equations } = indexAccumulator.asPedagogyIndex();
+
+/**
+ * `<CourseEquations order="..." />` — Astro consumer that lists every
+ * key equation across the whole textbook with a back-link to the
+ * source chapter + anchor.
+ *
+ * **Sort defaults diverge from `<CourseGlossary />`** per PR-C2
+ * design decision #7: chapter-order default + `order="alphabetical"`
+ * opt-in. Rationale: equation lookup is topic/chapter-anchored
+ * (matches print-textbook "Index of Equations" convention),
+ * whereas glossary lookup is term-name-anchored (alphabetical-only).
+ *
+ * Bodies are pre-rendered HTML embedded via `set:html`. Pure Astro;
+ * no client JS. Reads the accumulator directly per ADR 0038's
+ * Revisions section.
+ */
+export interface Props {
+  /** Sort strategy. Default chapter-order (slug asc, then number asc). */
+  order?: "chapter" | "alphabetical";
+  /** Optional heading rendered above the list. */
+  heading?: string;
+}
+
+const { order = "chapter", heading } = Astro.props;
+
+const sorted: EquationEntry[] =
+  order === "alphabetical"
+    ? [...equations].sort((a, b) => a.title.localeCompare(b.title))
+    : [...equations].sort((a, b) =>
+        a.chapter === b.chapter
+          ? a.number - b.number
+          : a.chapter.localeCompare(b.chapter)
+      );
+---
+
+{heading && <h1 class='sophie-course-equations__heading'>{heading}</h1>}
+{
+  sorted.length === 0 ? (
+    <p class='sophie-course-equations__empty'>
+      No key equations across the textbook yet.
+    </p>
+  ) : (
+    <dl class='sophie-course-equations' data-sophie-course-equations=''>
+      {sorted.map((entry) => (
+        <Fragment>
+          <dt id={`eq-${entry.slug}`} class='sophie-course-equations__term'>
+            <span class='sophie-course-equations__number'>
+              Eq. {entry.number}
+            </span>
+            <span class='sophie-course-equations__title'>{entry.title}</span>
+          </dt>
+          <dd class='sophie-course-equations__body'>
+            <div set:html={entry.body} />
+            <p class='sophie-course-equations__backlink'>
+              defined in{" "}
+              <a href={`/chapters/${entry.chapter}#${entry.anchor}`}>
+                <code>{entry.chapter}</code>
+              </a>
+            </p>
+          </dd>
+        </Fragment>
+      ))}
+    </dl>
+  )
+}
