@@ -1,0 +1,92 @@
+---
+import type { MisconceptionEntry } from "@sophie/core/schema";
+import { indexAccumulator } from "../lib/pedagogy-index-extractor";
+
+const { misconceptions } = indexAccumulator.asPedagogyIndex();
+
+/**
+ * `<CourseMisconceptions order="..." heading="..." />` — Astro consumer
+ * that lists every misconception across the whole textbook with a
+ * back-link to the source chapter + anchor.
+ *
+ * Sort: chapter-order default (chapter slug + appearance order within
+ * chapter); `order="alphabetical"` opt-in sorts by label-or-anchor
+ * (PR-C3 design decisions #9 + #12). Mirrors `<CourseEquations>` /
+ * `<CourseFigures>` sort surface; diverges from
+ * `<ChapterMisconceptions>` (appearance-only) because the course-level
+ * index benefits from an alphabetical lookup option when scanning a
+ * full-textbook list.
+ *
+ * Visual distinction by length (decision #12): the length
+ * discriminator drives a modifier CSS class on both `<dt>` and `<dd>`
+ * (`--short` vs `--long`) so the consumer-app stylesheet can render
+ * `short` entries inline/compactly and `long` entries as full-width
+ * blocks — matching the source-component visual treatment (Aside vs
+ * Callout).
+ *
+ * Default labels per length (when `entry.label` is absent): short →
+ * "Misconception (brief)"; long → "Misconception".
+ *
+ * Bodies are pre-rendered HTML embedded via `set:html`. Pure Astro;
+ * no client JS.
+ */
+export interface Props {
+  /** Sort strategy. Default chapter-order (slug asc, appearance asc). */
+  order?: "chapter" | "alphabetical";
+  /** Optional heading rendered above the list. */
+  heading?: string;
+}
+
+const { order = "chapter", heading } = Astro.props;
+
+const sorted: MisconceptionEntry[] =
+  order === "alphabetical"
+    ? [...misconceptions].sort((a, b) => {
+        const aLabel = a.label ?? a.anchor;
+        const bLabel = b.label ?? b.anchor;
+        return aLabel.localeCompare(bLabel);
+      })
+    : [...misconceptions].sort((a, b) => {
+        if (a.chapter !== b.chapter) return a.chapter.localeCompare(b.chapter);
+        return 0; // preserve insertion order within chapter
+      });
+---
+
+{heading && <h1 class='sophie-course-misconceptions__heading'>{heading}</h1>}
+{
+  sorted.length === 0 ? (
+    <p class='sophie-course-misconceptions__empty'>
+      No misconceptions across the textbook yet.
+    </p>
+  ) : (
+    <dl
+      class='sophie-course-misconceptions'
+      data-sophie-course-misconceptions=''
+    >
+      {sorted.map((entry) => (
+        <Fragment>
+          <dt
+            id={`misc-${entry.anchor}`}
+            class={`sophie-course-misconceptions__term sophie-course-misconceptions__term--${entry.length}`}
+          >
+            {entry.label ??
+              (entry.length === "short"
+                ? "Misconception (brief)"
+                : "Misconception")}
+          </dt>
+          <dd
+            class={`sophie-course-misconceptions__body sophie-course-misconceptions__body--${entry.length}`}
+          >
+            <div set:html={entry.body} />
+            <p class='sophie-course-misconceptions__backlink'>
+              from{" "}
+              <a href={`/chapters/${entry.chapter}#${entry.anchor}`}>
+                <code>{entry.chapter}</code>
+              </a>
+            </p>
+          </dd>
+        </Fragment>
+      ))}
+    </dl>
+  )
+}
