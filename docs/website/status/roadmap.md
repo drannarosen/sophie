@@ -13,6 +13,29 @@ This is a living document. Calendar dates are projections, not
 commitments. Phase boundaries are decision points where we pause to
 reassess before continuing.
 
+## Current status (2026-05-14)
+
+**Bucket C — pedagogy-index infrastructure — is 4/4 done.**
+
+| Bucket / PR | Status | Description |
+|---|---|---|
+| PR-C1 (#36) | ✓ merged | Definitions + glossary consumers + Aside title-required |
+| PR-C2 (#37) | ✓ merged | Equations index + `<EqRef>` + KaTeX dep + 2 consumers |
+| PR-C3 (#38) | ✓ merged | Key-insights + figures + misconceptions + `createPedagogyStore<T>` factory + two-tier figures |
+| Phase-1 closeout (#39) | ✓ merged | 14 PR-C2/C3 followup items + HoverCard hydration race fix |
+| PR-C4 (#40) | ✓ merged | LO course roll-up + `<ChapterRef>` + systematic build-time audit invariants + SoTA condition-based e2e waits + scroll-spy production fix |
+
+The pedagogy-index pattern ([ADR 0038](../decisions/0038-pedagogy-index-pattern.md))
+is now load-bearing infrastructure for both:
+
+- **Bucket B remaining work**: PR 7 (faceted search consuming the
+  pedagogy index) and PR 10 (print polish). Six original PRs collapsed
+  to two.
+- **Phase 3 audit work** (below): `runPedagogyAudit(index)` already
+  ships ten invariants (D4/D5, E1/E4/E6, F1/F2/F4, C1, O1/O2, K1). The
+  audit shell is in place; remaining audit work (Tier 1 + Tier 2
+  per Phase 3) layers on top.
+
 This page covers:
 
 1. Goals and success criteria
