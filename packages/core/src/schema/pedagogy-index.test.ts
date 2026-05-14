@@ -77,6 +77,12 @@ describe("EquationEntrySchema", () => {
       EquationEntrySchema.safeParse({ ...validEquation, title: "" }).success
     ).toBe(false);
   });
+
+  test("rejects an entry with number: 0 (extractor counter is 1-indexed)", () => {
+    expect(
+      EquationEntrySchema.safeParse({ ...validEquation, number: 0 }).success
+    ).toBe(false);
+  });
 });
 
 describe("future-PR entry schemas (stub-tested in PR-C1)", () => {
