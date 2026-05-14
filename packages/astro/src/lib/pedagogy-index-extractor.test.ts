@@ -1,17 +1,23 @@
 import type {
+  ChapterEntry,
   EquationEntry,
   FigureRegistryEntry,
   FigureUsageEntry,
+  InlineRefUsageEntry,
   KeyInsightEntry,
   MisconceptionEntry,
+  ModuleEntry,
+  ObjectiveEntry,
 } from "@sophie/core/schema";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import {
   extractDefinitions,
   extractEquations,
   extractFigures,
+  extractInlineRefUsages,
   extractKeyInsights,
   extractMisconceptions,
+  extractObjectives,
   indexAccumulator,
   pedagogyIndexRemarkPlugin,
   resetIndexAccumulator,
@@ -1685,5 +1691,515 @@ describe("pedagogyIndexRemarkPlugin (figures)", () => {
     expect(inCh.find((u) => u.name === "plugin-fig-plain")?.canonical).toBe(
       false
     );
+  });
+});
+
+/**
+ * PR-C4 Task 2 — Objective + LearningObjectives source-component
+ * fixtures. `<LearningObjectives>` wraps `<Objective>` flow elements;
+ * the extractor walks the inner `<Objective>`s and emits one
+ * ObjectiveEntry per match.
+ */
+const mdxLearningObjectives = (
+  attrs: Record<string, string>,
+  children: ReadonlyArray<Record<string, unknown>> = []
+) => ({
+  type: "mdxJsxFlowElement",
+  name: "LearningObjectives",
+  attributes: Object.entries(attrs).map(([name, value]) => ({
+    type: "mdxJsxAttribute",
+    name,
+    value,
+  })),
+  children,
+});
+
+const mdxObjective = (
+  attrs: Record<string, string>,
+  children: ReadonlyArray<Record<string, unknown>> = []
+) => ({
+  type: "mdxJsxFlowElement",
+  name: "Objective",
+  attributes: Object.entries(attrs).map(([name, value]) => ({
+    type: "mdxJsxAttribute",
+    name,
+    value,
+  })),
+  children,
+});
+
+describe("extractObjectives (pure)", () => {
+  test("returns one ObjectiveEntry per <Objective> nested in <LearningObjectives>", () => {
+    const tree = root([
+      mdxLearningObjectives({ id: "ch1-objectives" }, [
+        mdxObjective({ id: "lo-1", verb: "Recognize" }, [
+          para("Distinguish parallax distance from standard-candle distance."),
+        ]),
+        mdxObjective({ id: "lo-2", verb: "Understand" }, [
+          para("The mathematical structure of Wien's displacement law."),
+        ]),
+      ]),
+    ]);
+
+    const entries = extractObjectives(tree as never, "spoiler-alerts");
+
+    expect(entries).toHaveLength(2);
+    expect(entries[0]).toMatchObject({
+      id: "lo-1",
+      verb: "Recognize",
+      chapter: "spoiler-alerts",
+      anchor: "lo-lo-1",
+    });
+    expect(entries[0]?.body).toContain("Distinguish parallax distance");
+    expect(entries[1]).toMatchObject({
+      id: "lo-2",
+      verb: "Understand",
+      chapter: "spoiler-alerts",
+      anchor: "lo-lo-2",
+    });
+  });
+
+  test("throws when an <Objective> is missing a non-empty `id`", () => {
+    const tree = root([
+      mdxLearningObjectives({ id: "ch-obj" }, [
+        mdxObjective({ verb: "Recognize" }, [para("body")]),
+      ]),
+    ]);
+
+    expect(() => extractObjectives(tree as never, "ch")).toThrow(
+      /missing.*`id`|missing.*id/i
+    );
+  });
+
+  test("throws when an <Objective> is missing a non-empty `verb`", () => {
+    const tree = root([
+      mdxLearningObjectives({ id: "ch-obj" }, [
+        mdxObjective({ id: "lo-1" }, [para("body")]),
+      ]),
+    ]);
+
+    expect(() => extractObjectives(tree as never, "ch")).toThrow(
+      /missing.*`verb`|missing.*verb/i
+    );
+  });
+
+  test("throws when an <Objective> has an empty (whitespace-only) body", () => {
+    const tree = root([
+      mdxLearningObjectives({ id: "ch-obj" }, [
+        mdxObjective({ id: "lo-1", verb: "Recognize" }, []),
+      ]),
+    ]);
+
+    expect(() => extractObjectives(tree as never, "ch")).toThrow(
+      /empty.*body|missing.*body/i
+    );
+  });
+
+  test("O1 — throws on duplicate objective id within a chapter", () => {
+    const tree = root([
+      mdxLearningObjectives({ id: "ch-obj" }, [
+        mdxObjective({ id: "lo-1", verb: "Recognize" }, [para("first")]),
+        mdxObjective({ id: "lo-1", verb: "Understand" }, [para("second")]),
+      ]),
+    ]);
+
+    expect(() => extractObjectives(tree as never, "ch")).toThrow(
+      /O1 invariant|duplicate|collision/i
+    );
+  });
+
+  test("ignores <Objective> elements outside a <LearningObjectives> parent", () => {
+    const tree = root([
+      mdxObjective({ id: "lo-orphan", verb: "Recognize" }, [
+        para("orphan objective"),
+      ]),
+      mdxLearningObjectives({ id: "ch-obj" }, [
+        mdxObjective({ id: "lo-1", verb: "Recognize" }, [para("real")]),
+      ]),
+    ]);
+
+    const entries = extractObjectives(tree as never, "ch");
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.id).toBe("lo-1");
+  });
+});
+
+describe("indexAccumulator objectives (cross-chapter)", () => {
+  const objective = (
+    overrides: Partial<ObjectiveEntry> = {}
+  ): ObjectiveEntry => ({
+    id: "lo-1",
+    verb: "Recognize",
+    body: "<p>body</p>",
+    chapter: "obj-ch-a",
+    anchor: "lo-lo-1",
+    ...overrides,
+  });
+
+  test("addObjectives keyed by chapter+anchor; two chapters can each declare 'lo-1'", () => {
+    indexAccumulator.addObjectives([
+      objective({ id: "lo-1", chapter: "obj-share-a", anchor: "lo-lo-1" }),
+    ]);
+    indexAccumulator.addObjectives([
+      objective({ id: "lo-1", chapter: "obj-share-b", anchor: "lo-lo-1" }),
+    ]);
+
+    const index = indexAccumulator.asPedagogyIndex();
+    const shared = index.objectives.filter((o) => o.id === "lo-1");
+    const chapters = shared.map((o) => o.chapter).sort();
+    expect(chapters).toContain("obj-share-a");
+    expect(chapters).toContain("obj-share-b");
+  });
+
+  test("addObjectives — multiple objectives within one chapter coexist", () => {
+    indexAccumulator.addObjectives([
+      objective({ id: "lo-1", chapter: "obj-multi", anchor: "lo-lo-1" }),
+      objective({ id: "lo-2", chapter: "obj-multi", anchor: "lo-lo-2" }),
+    ]);
+
+    const index = indexAccumulator.asPedagogyIndex();
+    const inCh = index.objectives.filter((o) => o.chapter === "obj-multi");
+    expect(inCh).toHaveLength(2);
+    expect(inCh.map((o) => o.id).sort()).toEqual(["lo-1", "lo-2"]);
+  });
+
+  test("clearChapter removes objectives for the target chapter; other chapters survive", () => {
+    indexAccumulator.addObjectives([
+      objective({ id: "lo-a", chapter: "obj-clr-a", anchor: "lo-lo-a" }),
+    ]);
+    indexAccumulator.addObjectives([
+      objective({ id: "lo-b", chapter: "obj-clr-b", anchor: "lo-lo-b" }),
+    ]);
+
+    indexAccumulator.clearChapter("obj-clr-a");
+
+    const index = indexAccumulator.asPedagogyIndex();
+    expect(
+      index.objectives.filter((o) => o.chapter === "obj-clr-a")
+    ).toHaveLength(0);
+    expect(index.objectives.find((o) => o.chapter === "obj-clr-b")?.id).toBe(
+      "lo-b"
+    );
+  });
+});
+
+describe("indexAccumulator setChapters / setModules", () => {
+  // Mirror setFigureRegistry semantics: last-write-wins, consumer-global,
+  // NOT touched by clearChapter.
+
+  test("setChapters overwrites prior entries (last-write-wins)", () => {
+    const a: ChapterEntry = {
+      slug: "ch-a",
+      title: "Chapter A",
+      module: "mod-1",
+    };
+    const b: ChapterEntry = {
+      slug: "ch-b",
+      title: "Chapter B",
+      module: "mod-1",
+    };
+    const c: ChapterEntry = {
+      slug: "ch-c",
+      title: "Chapter C",
+      module: "mod-1",
+    };
+
+    indexAccumulator.setChapters([a, b]);
+    expect(indexAccumulator.asPedagogyIndex().chapters).toEqual([a, b]);
+
+    indexAccumulator.setChapters([c]);
+    expect(indexAccumulator.asPedagogyIndex().chapters).toEqual([c]);
+  });
+
+  test("setModules overwrites prior entries (last-write-wins)", () => {
+    const a: ModuleEntry = {
+      slug: "mod-a",
+      title: "Module A",
+      order: 0,
+    };
+    const b: ModuleEntry = {
+      slug: "mod-b",
+      title: "Module B",
+      order: 1,
+    };
+
+    indexAccumulator.setModules([a]);
+    expect(indexAccumulator.asPedagogyIndex().modules).toEqual([a]);
+
+    indexAccumulator.setModules([a, b]);
+    expect(indexAccumulator.asPedagogyIndex().modules).toEqual([a, b]);
+  });
+
+  test("clearChapter does NOT touch chapters / modules (consumer-global)", () => {
+    const ch: ChapterEntry = {
+      slug: "ch-x",
+      title: "X",
+      module: "mod-1",
+    };
+    const mod: ModuleEntry = { slug: "mod-1", title: "Module 1", order: 0 };
+
+    indexAccumulator.setChapters([ch]);
+    indexAccumulator.setModules([mod]);
+    indexAccumulator.clearChapter("ch-x");
+
+    const index = indexAccumulator.asPedagogyIndex();
+    expect(index.chapters).toEqual([ch]);
+    expect(index.modules).toEqual([mod]);
+  });
+});
+
+/**
+ * PR-C4 Task 2 — inline-ref usage fixtures. Inline cross-refs
+ * (`<GlossaryTerm>`, `<EqRef>`, `<FigureRef>`, `<ChapterRef>`) appear
+ * both as block elements (mdxJsxFlowElement) and inline within prose
+ * (mdxJsxTextElement). The extractor walks BOTH node types.
+ */
+const mdxInlineJsx = (
+  name: string,
+  attrs: Record<string, string>,
+  type: "mdxJsxFlowElement" | "mdxJsxTextElement" = "mdxJsxTextElement"
+) => ({
+  type,
+  name,
+  attributes: Object.entries(attrs).map(([n, value]) => ({
+    type: "mdxJsxAttribute",
+    name: n,
+    value,
+  })),
+  children: [],
+});
+
+describe("extractInlineRefUsages (pure)", () => {
+  test("produces one entry per <GlossaryTerm>, <EqRef>, <FigureRef>, <ChapterRef>", () => {
+    const tree = root([
+      {
+        type: "paragraph",
+        children: [
+          { type: "text", value: "See " },
+          mdxInlineJsx("GlossaryTerm", { name: "Parallax" }),
+          { type: "text", value: " and " },
+          mdxInlineJsx("EqRef", { slug: "wiens-law" }),
+          { type: "text", value: " and " },
+          mdxInlineJsx("FigureRef", { name: "hr-diagram" }),
+          { type: "text", value: " and " },
+          mdxInlineJsx("ChapterRef", { slug: "hydrostatic-equilibrium" }),
+          { type: "text", value: "." },
+        ],
+      },
+    ]);
+
+    const entries = extractInlineRefUsages(tree as never, "spoiler-alerts");
+
+    expect(entries).toHaveLength(4);
+    expect(entries).toEqual(
+      expect.arrayContaining([
+        {
+          kind: "glossary-term",
+          refKey: "Parallax",
+          chapter: "spoiler-alerts",
+        },
+        {
+          kind: "eq-ref",
+          refKey: "wiens-law",
+          chapter: "spoiler-alerts",
+        },
+        {
+          kind: "figure-ref",
+          refKey: "hr-diagram",
+          chapter: "spoiler-alerts",
+        },
+        {
+          kind: "chapter-ref",
+          refKey: "hydrostatic-equilibrium",
+          chapter: "spoiler-alerts",
+        },
+      ])
+    );
+  });
+
+  test("also captures block-level <ChapterRef> (mdxJsxFlowElement)", () => {
+    const tree = root([
+      mdxInlineJsx(
+        "ChapterRef",
+        { slug: "hydrostatic-equilibrium" },
+        "mdxJsxFlowElement"
+      ),
+    ]);
+
+    const entries = extractInlineRefUsages(tree as never, "ch");
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toEqual({
+      kind: "chapter-ref",
+      refKey: "hydrostatic-equilibrium",
+      chapter: "ch",
+    });
+  });
+
+  test("missing/empty lookup prop is silently skipped (audit catches it separately)", () => {
+    const tree = root([
+      {
+        type: "paragraph",
+        children: [
+          mdxInlineJsx("GlossaryTerm", {}), // missing name
+          mdxInlineJsx("EqRef", { slug: "" }), // empty slug
+          mdxInlineJsx("FigureRef", { name: "valid" }),
+        ],
+      },
+    ]);
+
+    const entries = extractInlineRefUsages(tree as never, "ch");
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toEqual({
+      kind: "figure-ref",
+      refKey: "valid",
+      chapter: "ch",
+    });
+  });
+
+  test("skips JSX elements that aren't one of the four inline-ref components", () => {
+    const tree = root([
+      {
+        type: "paragraph",
+        children: [
+          mdxInlineJsx("Strong", { foo: "bar" }),
+          mdxInlineJsx("GlossaryTerm", { name: "Parallax" }),
+        ],
+      },
+    ]);
+
+    const entries = extractInlineRefUsages(tree as never, "ch");
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.kind).toBe("glossary-term");
+  });
+
+  test("produces multiple entries when the same refKey appears more than once", () => {
+    const tree = root([
+      {
+        type: "paragraph",
+        children: [
+          mdxInlineJsx("GlossaryTerm", { name: "Parallax" }),
+          mdxInlineJsx("GlossaryTerm", { name: "Parallax" }),
+          mdxInlineJsx("GlossaryTerm", { name: "Parallax" }),
+        ],
+      },
+    ]);
+
+    const entries = extractInlineRefUsages(tree as never, "ch");
+    expect(entries).toHaveLength(3);
+    expect(
+      entries.every(
+        (e) => e.kind === "glossary-term" && e.refKey === "Parallax"
+      )
+    ).toBe(true);
+  });
+});
+
+describe("indexAccumulator inlineRefUsages (cross-chapter)", () => {
+  const usage = (
+    overrides: Partial<InlineRefUsageEntry> = {}
+  ): InlineRefUsageEntry => ({
+    kind: "glossary-term",
+    refKey: "Parallax",
+    chapter: "iru-ch-a",
+    ...overrides,
+  });
+
+  test("addInlineRefUsages appends entries; same (kind, refKey) duplicates coexist", () => {
+    indexAccumulator.addInlineRefUsages([
+      usage({ chapter: "iru-multi" }),
+      usage({ chapter: "iru-multi" }),
+      usage({ kind: "eq-ref", refKey: "wiens-law", chapter: "iru-multi" }),
+    ]);
+
+    const index = indexAccumulator.asPedagogyIndex();
+    const inCh = index.inlineRefUsages.filter((u) => u.chapter === "iru-multi");
+    expect(inCh).toHaveLength(3);
+    const glossary = inCh.filter((u) => u.kind === "glossary-term");
+    expect(glossary).toHaveLength(2);
+  });
+
+  test("clearChapter removes inlineRefUsages for that chapter; others survive", () => {
+    indexAccumulator.addInlineRefUsages([
+      usage({ chapter: "iru-clr-a", refKey: "term-a" }),
+      usage({ chapter: "iru-clr-b", refKey: "term-b" }),
+    ]);
+
+    indexAccumulator.clearChapter("iru-clr-a");
+
+    const index = indexAccumulator.asPedagogyIndex();
+    expect(
+      index.inlineRefUsages.filter((u) => u.chapter === "iru-clr-a")
+    ).toHaveLength(0);
+    expect(
+      index.inlineRefUsages.find((u) => u.chapter === "iru-clr-b")?.refKey
+    ).toBe("term-b");
+  });
+});
+
+describe("asPedagogyIndex (PR-C4 collections)", () => {
+  test("returns all four new collections populated", () => {
+    indexAccumulator.setChapters([
+      { slug: "ch-x", title: "X", module: "mod-1" },
+    ]);
+    indexAccumulator.setModules([
+      { slug: "mod-1", title: "Module 1", order: 0 },
+    ]);
+    indexAccumulator.addObjectives([
+      {
+        id: "lo-1",
+        verb: "Recognize",
+        body: "<p>body</p>",
+        chapter: "ch-x",
+        anchor: "lo-lo-1",
+      },
+    ]);
+    indexAccumulator.addInlineRefUsages([
+      { kind: "chapter-ref", refKey: "ch-x", chapter: "ch-y" },
+    ]);
+
+    const index = indexAccumulator.asPedagogyIndex();
+    expect(index.chapters).toHaveLength(1);
+    expect(index.modules).toHaveLength(1);
+    expect(index.objectives).toHaveLength(1);
+    expect(index.inlineRefUsages).toHaveLength(1);
+  });
+});
+
+describe("pedagogyIndexRemarkPlugin (objectives + inline-ref usages)", () => {
+  test("populates objectives AND inlineRefUsages for the parsed chapter", () => {
+    const plugin = pedagogyIndexRemarkPlugin();
+    const tree = root([
+      mdxLearningObjectives({ id: "ch-obj" }, [
+        mdxObjective({ id: "lo-1", verb: "Recognize" }, [para("body")]),
+      ]),
+      {
+        type: "paragraph",
+        children: [
+          { type: "text", value: "see " },
+          mdxInlineJsx("GlossaryTerm", { name: "Parallax" }),
+          { type: "text", value: " " },
+          mdxInlineJsx("EqRef", { slug: "wiens-law" }),
+        ],
+      },
+    ]);
+
+    plugin(tree as never, {
+      path: "/repo/src/content/chapters/objectives-plugin.mdx",
+    });
+
+    const index = indexAccumulator.asPedagogyIndex();
+    const objectives = index.objectives.filter(
+      (o) => o.chapter === "objectives-plugin"
+    );
+    const usages = index.inlineRefUsages.filter(
+      (u) => u.chapter === "objectives-plugin"
+    );
+    expect(objectives).toHaveLength(1);
+    expect(objectives[0]?.id).toBe("lo-1");
+    expect(usages).toHaveLength(2);
+    expect(usages.map((u) => u.kind).sort()).toEqual([
+      "eq-ref",
+      "glossary-term",
+    ]);
   });
 });

@@ -218,6 +218,42 @@ export const ObjectiveEntrySchema = z.object({
 export type ObjectiveEntry = z.infer<typeof ObjectiveEntrySchema>;
 
 /**
+ * Kind discriminator for inline-ref callsites. Mirrors the four
+ * inline cross-ref components: `<GlossaryTerm>`, `<EqRef>`,
+ * `<FigureRef>`, `<ChapterRef>`. The audit pass uses these to
+ * detect undefined targets (D4, E4, F2, C1).
+ */
+export const InlineRefKindSchema = z.enum([
+  "glossary-term",
+  "eq-ref",
+  "figure-ref",
+  "chapter-ref",
+]);
+export type InlineRefKind = z.infer<typeof InlineRefKindSchema>;
+
+/**
+ * An inline-ref callsite — one record per occurrence of an inline
+ * cross-ref in a chapter MDX source. Populated by the extractor so
+ * the build-time audit pass can detect undefined targets (D4, E4,
+ * F2, C1). Append-only by design: the same `refKey` referenced N
+ * times yields N entries (useful for usage-count facets later).
+ *
+ * `refKey` is the looked-up identifier:
+ *   - `glossary-term` → `<GlossaryTerm name="X">` → `X`
+ *   - `eq-ref`        → `<EqRef slug="X">`       → `X`
+ *   - `figure-ref`    → `<FigureRef name="X">`   → `X`
+ *   - `chapter-ref`   → `<ChapterRef slug="X">`  → `X`
+ */
+export const InlineRefUsageEntrySchema = z.object({
+  kind: InlineRefKindSchema,
+  /** The looked-up name/slug; matched against the target collection. */
+  refKey: NonEmptyString,
+  /** Origin chapter slug — where the callsite lives. */
+  chapter: NonEmptyString,
+});
+export type InlineRefUsageEntry = z.infer<typeof InlineRefUsageEntrySchema>;
+
+/**
  * The full pedagogy index — one per build. Consumers read it via
  * the `virtual:sophie/pedagogy-index` module exposed by
  * @sophie/astro's Vite plugin.
@@ -237,5 +273,7 @@ export const PedagogyIndexSchema = z.object({
   modules: z.array(ModuleEntrySchema).readonly(),
   /** Per-chapter learning objectives, populated by the extractor. */
   objectives: z.array(ObjectiveEntrySchema).readonly(),
+  /** Per-chapter inline-ref callsites — populated by the extractor for the audit pass. */
+  inlineRefUsages: z.array(InlineRefUsageEntrySchema).readonly(),
 });
 export type PedagogyIndex = z.infer<typeof PedagogyIndexSchema>;

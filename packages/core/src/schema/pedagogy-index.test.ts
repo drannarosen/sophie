@@ -5,6 +5,8 @@ import {
   EquationEntrySchema,
   FigureRegistryEntrySchema,
   FigureUsageEntrySchema,
+  InlineRefKindSchema,
+  InlineRefUsageEntrySchema,
   KeyInsightEntrySchema,
   MisconceptionEntrySchema,
   ModuleEntrySchema,
@@ -356,101 +358,146 @@ describe("ObjectiveEntrySchema", () => {
   });
 });
 
-describe("PedagogyIndexSchema", () => {
-  test("accepts an empty index", () => {
+describe("InlineRefKindSchema", () => {
+  test("accepts each of the four valid inline-ref kinds", () => {
+    for (const kind of [
+      "glossary-term",
+      "eq-ref",
+      "figure-ref",
+      "chapter-ref",
+    ]) {
+      expect(InlineRefKindSchema.safeParse(kind).success).toBe(true);
+    }
+  });
+
+  test("rejects an unknown kind", () => {
+    expect(InlineRefKindSchema.safeParse("definition-ref").success).toBe(false);
+  });
+});
+
+describe("InlineRefUsageEntrySchema", () => {
+  const validUsage = {
+    kind: "glossary-term" as const,
+    refKey: "Standard candle",
+    chapter: "spoiler-alerts",
+  };
+
+  test("accepts a valid entry", () => {
+    expect(InlineRefUsageEntrySchema.safeParse(validUsage).success).toBe(true);
+  });
+
+  test("accepts each of the four kinds", () => {
+    for (const kind of [
+      "glossary-term",
+      "eq-ref",
+      "figure-ref",
+      "chapter-ref",
+    ] as const) {
+      expect(
+        InlineRefUsageEntrySchema.safeParse({ ...validUsage, kind }).success
+      ).toBe(true);
+    }
+  });
+
+  test("rejects an entry with empty refKey", () => {
     expect(
-      PedagogyIndexSchema.safeParse({
-        definitions: [],
-        equations: [],
-        keyInsights: [],
-        figureRegistry: [],
-        figureUsages: [],
-        misconceptions: [],
-        chapters: [],
-        modules: [],
-        objectives: [],
+      InlineRefUsageEntrySchema.safeParse({ ...validUsage, refKey: "" }).success
+    ).toBe(false);
+  });
+
+  test("rejects an entry with empty chapter", () => {
+    expect(
+      InlineRefUsageEntrySchema.safeParse({ ...validUsage, chapter: "" })
+        .success
+    ).toBe(false);
+  });
+
+  test("rejects an entry with unknown kind", () => {
+    expect(
+      InlineRefUsageEntrySchema.safeParse({
+        ...validUsage,
+        kind: "not-a-kind",
       }).success
-    ).toBe(true);
+    ).toBe(false);
+  });
+});
+
+describe("PedagogyIndexSchema", () => {
+  const emptyIndex = {
+    definitions: [],
+    equations: [],
+    keyInsights: [],
+    figureRegistry: [],
+    figureUsages: [],
+    misconceptions: [],
+    chapters: [],
+    modules: [],
+    objectives: [],
+    inlineRefUsages: [],
+  };
+
+  test("accepts an empty index", () => {
+    expect(PedagogyIndexSchema.safeParse(emptyIndex).success).toBe(true);
   });
 
   test("accepts a populated definitions array", () => {
     expect(
       PedagogyIndexSchema.safeParse({
+        ...emptyIndex,
         definitions: [validDefinition],
-        equations: [],
-        keyInsights: [],
-        figureRegistry: [],
-        figureUsages: [],
-        misconceptions: [],
-        chapters: [],
-        modules: [],
-        objectives: [],
       }).success
     ).toBe(true);
   });
 
   test("rejects an index missing a required collection", () => {
-    expect(
-      PedagogyIndexSchema.safeParse({
-        definitions: [],
-        equations: [],
-        keyInsights: [],
-        figureRegistry: [],
-        figureUsages: [],
-        // misconceptions missing
-        chapters: [],
-        modules: [],
-        objectives: [],
-      }).success
-    ).toBe(false);
+    const { misconceptions: _misconceptions, ...withoutMisconceptions } =
+      emptyIndex;
+    expect(PedagogyIndexSchema.safeParse(withoutMisconceptions).success).toBe(
+      false
+    );
   });
 
   // PR-C4 T(N+4) — three new collections required.
   test("rejects an index missing the new chapters collection", () => {
-    expect(
-      PedagogyIndexSchema.safeParse({
-        definitions: [],
-        equations: [],
-        keyInsights: [],
-        figureRegistry: [],
-        figureUsages: [],
-        misconceptions: [],
-        // chapters missing
-        modules: [],
-        objectives: [],
-      }).success
-    ).toBe(false);
+    const { chapters: _chapters, ...withoutChapters } = emptyIndex;
+    expect(PedagogyIndexSchema.safeParse(withoutChapters).success).toBe(false);
   });
 
   test("rejects an index missing the new modules collection", () => {
-    expect(
-      PedagogyIndexSchema.safeParse({
-        definitions: [],
-        equations: [],
-        keyInsights: [],
-        figureRegistry: [],
-        figureUsages: [],
-        misconceptions: [],
-        chapters: [],
-        // modules missing
-        objectives: [],
-      }).success
-    ).toBe(false);
+    const { modules: _modules, ...withoutModules } = emptyIndex;
+    expect(PedagogyIndexSchema.safeParse(withoutModules).success).toBe(false);
   });
 
   test("rejects an index missing the new objectives collection", () => {
+    const { objectives: _objectives, ...withoutObjectives } = emptyIndex;
+    expect(PedagogyIndexSchema.safeParse(withoutObjectives).success).toBe(
+      false
+    );
+  });
+
+  // PR-C4 Task 2 — inlineRefUsages required.
+  test("rejects an index missing the new inlineRefUsages collection", () => {
+    const { inlineRefUsages: _inlineRefUsages, ...withoutInline } = emptyIndex;
+    expect(PedagogyIndexSchema.safeParse(withoutInline).success).toBe(false);
+  });
+
+  test("accepts populated inlineRefUsages", () => {
     expect(
       PedagogyIndexSchema.safeParse({
-        definitions: [],
-        equations: [],
-        keyInsights: [],
-        figureRegistry: [],
-        figureUsages: [],
-        misconceptions: [],
-        chapters: [],
-        modules: [],
-        // objectives missing
+        ...emptyIndex,
+        inlineRefUsages: [
+          {
+            kind: "glossary-term",
+            refKey: "Parallax",
+            chapter: "ch-a",
+          },
+          {
+            kind: "chapter-ref",
+            refKey: "hydrostatic-equilibrium",
+            chapter: "ch-b",
+          },
+        ],
       }).success
-    ).toBe(false);
+    ).toBe(true);
   });
 });
