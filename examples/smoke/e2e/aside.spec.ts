@@ -29,13 +29,16 @@ test.describe("PR 6: <Aside> on the smoke chapter", () => {
     await context.clearCookies();
   });
 
-  test("smoke chapter renders 3 asides inline (all data-sophie-aside)", async ({
+  test("smoke chapter renders asides inline (all data-sophie-aside)", async ({
     page,
   }) => {
     await page.setViewportSize(DESKTOP_VIEWPORT);
     await page.goto(CHAPTER_URL);
     const asides = page.locator("[data-sophie-aside]");
-    await expect(asides).toHaveCount(3);
+    // PR-C1 migration added 14 definition asides + 1 converted
+    // key-insight to spoiler-alerts.mdx alongside the original 3
+    // (definition + digression + key-insight). Total: 18.
+    await expect(asides).toHaveCount(18);
   });
 
   test("each aside carries its kind via data-aside-kind", async ({ page }) => {
@@ -46,9 +49,20 @@ test.describe("PR 6: <Aside> on the smoke chapter", () => {
       .evaluateAll((els) =>
         els.map((el) => (el as HTMLElement).dataset.asideKind ?? "")
       );
-    // The chapter currently uses these three kinds (see
-    // spoiler-alerts.mdx). Order matches MDX order.
-    expect(kinds).toEqual(["definition", "digression", "key-insight"]);
+    // Assert distribution rather than the exact MDX order. The
+    // smoke chapter's three rolled-up kinds (per PR-C1's
+    // migration): 15 definitions + 1 digression + 2 key-insights.
+    // The ordering depends on prose flow; counts are the stable
+    // contract.
+    const counts = kinds.reduce<Record<string, number>>(
+      (acc, k) => Object.assign(acc, { [k]: (acc[k] ?? 0) + 1 }),
+      {}
+    );
+    expect(counts).toEqual({
+      definition: 15,
+      digression: 1,
+      "key-insight": 2,
+    });
   });
 
   test("desktop Default: positioning script docks asides (data-aside-docked='true', top set, open)", async ({

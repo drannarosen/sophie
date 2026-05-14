@@ -319,8 +319,8 @@ describe("pedagogyIndexRemarkPlugin", () => {
     expect(found?.chapter).toBe("test-chapter");
   });
 
-  test("uses the default getChapterSlug which preserves subdirectories", () => {
-    indexAccumulator.clearChapter("module-a/test-chapter");
+  test("uses the default getChapterSlug which returns the basename (matching Astro 6's glob-loader id default)", () => {
+    indexAccumulator.clearChapter("test-chapter");
     const plugin = pedagogyIndexRemarkPlugin();
     const tree = root([
       mdxAside({ kind: "definition", title: "Pulsar" }, [para("body")]),
@@ -333,7 +333,9 @@ describe("pedagogyIndexRemarkPlugin", () => {
     const entry = indexAccumulator
       .asPedagogyIndex()
       .definitions.find((d) => d.term === "Pulsar");
-    expect(entry?.chapter).toBe("module-a/test-chapter");
+    // Astro 6 default route uses basename → /chapters/test-chapter.
+    // The extractor's chapter slug must match for back-link hrefs.
+    expect(entry?.chapter).toBe("test-chapter");
   });
 
   test("honors a custom getChapterSlug", () => {
@@ -383,14 +385,14 @@ describe("pedagogyIndexRemarkPlugin", () => {
     expect(hmrEntries[0]?.term).toBe("Replaced");
   });
 
-  test("skips files outside src/content/chapters/", () => {
+  test("skips files when getChapterSlug returns undefined (no .mdx extension)", () => {
     const plugin = pedagogyIndexRemarkPlugin();
     const tree = root([
       mdxAside({ kind: "definition", title: "Skipme" }, [para("body")]),
     ]);
 
-    // Outside the content-chapters tree; default getChapterSlug returns undefined.
-    plugin(tree as never, { path: "/repo/some-other-place/file.mdx" });
+    // No .mdx extension; default getChapterSlug returns undefined.
+    plugin(tree as never, { path: "/repo/some-other-place/file.md" });
 
     expect(
       indexAccumulator

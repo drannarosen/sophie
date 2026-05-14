@@ -215,19 +215,21 @@ class IndexAccumulator {
 export const indexAccumulator = new IndexAccumulator();
 
 /**
- * Default chapter-slug deriver. Matches Astro's content-layer
- * default: the chapter id is the file's path relative to
- * `src/content/chapters/`, without the `.mdx` extension. For
+ * Default chapter-slug deriver. Matches Astro 6's glob-loader
+ * default: the chapter id is the file's BASENAME, without the
+ * `.mdx` extension. For
  * `examples/smoke/src/content/chapters/01-foundations/spoiler-alerts.mdx`
- * this yields `"01-foundations/spoiler-alerts"`.
+ * this yields `"spoiler-alerts"` (matching the URL slug at
+ * `/chapters/spoiler-alerts`).
  *
- * Consumer apps with non-default content layouts pass their own
+ * Consumer apps with non-default content layouts (e.g. a glob
+ * loader configured with `generateId: ...`) pass their own
  * `getChapterSlug` to `pedagogyIndexRemarkPlugin()`.
  */
 function defaultGetChapterSlug(filePath: string): string | undefined {
-  const match = filePath.match(/[/\\]content[/\\]chapters[/\\](.+)\.mdx$/);
+  const match = filePath.match(/[/\\]([^/\\]+)\.mdx$/);
   if (!match) return undefined;
-  return match[1]?.replace(/\\/g, "/");
+  return match[1];
 }
 
 export interface PedagogyIndexRemarkPluginOptions {

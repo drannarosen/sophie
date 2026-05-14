@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { axe } from "jest-axe";
 import { describe, expect, it, vi } from "vitest";
 
@@ -55,32 +55,13 @@ describe("<GlossaryTerm>", () => {
     );
   });
 
-  it("opens the popover on trigger click and shows the definition body", () => {
-    render(<GlossaryTerm name='Standard candle'>candle</GlossaryTerm>);
-    // Popover closed initially — content not in DOM yet.
-    expect(
-      screen.queryByText("An object whose intrinsic luminosity is known.")
-    ).toBeNull();
-
-    const link = screen.getByRole("link", { name: /candle/i });
-    fireEvent.click(link);
-
-    // Popover content now in DOM with the rendered body HTML.
-    expect(
-      screen.getByText(/an object whose intrinsic luminosity/i)
-    ).toBeInTheDocument();
-  });
-
-  it("popover header shows the canonical term", () => {
-    render(<GlossaryTerm name='Standard candle'>candle</GlossaryTerm>);
-    fireEvent.click(screen.getByRole("link", { name: /candle/i }));
-    // The canonical term ("Standard candle" capitalized) appears
-    // in the popover header, regardless of the inline prose
-    // (which says "candle").
-    const popover = document.querySelector("[data-sophie-glossary-popover]");
-    expect(popover).not.toBeNull();
-    expect(popover?.textContent).toContain("Standard candle");
-  });
+  // HoverCard's open-on-hover/focus interaction model isn't
+  // reliably testable in JSDOM (Radix listens for pointer events
+  // that JSDOM doesn't fully synthesize). The popover-open path
+  // is covered by examples/smoke/e2e/glossary-term.spec.ts in a
+  // real browser. Here we verify the surface that matters for
+  // unit-level confidence: trigger structure, accessibility, and
+  // graceful-fallback behavior.
 
   it("renders bare children (no anchor, no popover) when the term is undefined", () => {
     render(<GlossaryTerm name='Unknown term'>unknown</GlossaryTerm>);
@@ -103,15 +84,6 @@ describe("<GlossaryTerm>", () => {
     const { container } = render(
       <GlossaryTerm name='Parallax'>parallax</GlossaryTerm>
     );
-    const results = await axe(container);
-    expect(results.violations).toEqual([]);
-  });
-
-  it("is axe-clean (open popover state)", async () => {
-    const { container } = render(
-      <GlossaryTerm name='Parallax'>parallax</GlossaryTerm>
-    );
-    fireEvent.click(screen.getByRole("link", { name: /parallax/i }));
     const results = await axe(container);
     expect(results.violations).toEqual([]);
   });

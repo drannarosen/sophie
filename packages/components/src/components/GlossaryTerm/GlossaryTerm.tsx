@@ -1,4 +1,4 @@
-import * as Popover from "@radix-ui/react-popover";
+import * as HoverCard from "@radix-ui/react-hover-card";
 import { slugify } from "@sophie/core/schema";
 import { BookOpen } from "lucide-react";
 import { lookupDefinition } from "./definitions-store.ts";
@@ -40,8 +40,8 @@ export function GlossaryTerm({ name, children }: GlossaryTermProps) {
   const href = `/chapters/${entry.chapter}#${entry.anchor}`;
 
   return (
-    <Popover.Root>
-      <Popover.Trigger asChild>
+    <HoverCard.Root openDelay={150} closeDelay={120}>
+      <HoverCard.Trigger asChild>
         <a className={styles.trigger} href={href}>
           {children}
           <BookOpen
@@ -51,9 +51,9 @@ export function GlossaryTerm({ name, children }: GlossaryTermProps) {
             size={12}
           />
         </a>
-      </Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Content
+      </HoverCard.Trigger>
+      <HoverCard.Portal>
+        <HoverCard.Content
           className={styles.popover}
           collisionPadding={8}
           data-sophie-glossary-popover=''
@@ -65,9 +65,9 @@ export function GlossaryTerm({ name, children }: GlossaryTermProps) {
             // biome-ignore lint/security/noDangerouslySetInnerHtml: body is pre-rendered HTML produced by our remark plugin (mdast → hast → html), not user-supplied content. ADR 0038 decision #11.
             dangerouslySetInnerHTML={{ __html: entry.body }}
           />
-          <Popover.Arrow className={styles.arrow} />
-        </Popover.Content>
-      </Popover.Portal>
-    </Popover.Root>
+          <HoverCard.Arrow className={styles.arrow} />
+        </HoverCard.Content>
+      </HoverCard.Portal>
+    </HoverCard.Root>
   );
 }

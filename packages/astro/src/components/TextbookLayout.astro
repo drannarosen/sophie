@@ -39,7 +39,15 @@ import ViewModeToggle from "./ViewModeToggle.astro";
 // rather than importing the virtual module itself.
 const chapters: CollectionEntry<"chapters">[] = await getCollection("chapters");
 await Promise.all(chapters.map((c) => render(c)));
-__setGlossaryDefinitions(indexAccumulator.asPedagogyIndex().definitions);
+const pedagogyDefinitions = indexAccumulator.asPedagogyIndex().definitions;
+__setGlossaryDefinitions(pedagogyDefinitions);
+// Serialize the same payload into a <script> tag so the
+// @sophie/components glossary store can hydrate client-side
+// after React mount. Server-side module state doesn't survive
+// to the wire, so without this script tag <GlossaryTerm>
+// rerenders as bare prose on hydration (empty client store
+// wins). See packages/components/.../definitions-store.ts.
+const pedagogyDefinitionsJson = JSON.stringify(pedagogyDefinitions);
 
 // Detect empty named slots so the corresponding grid columns can
 // collapse to 0 width — avoids wasted chrome in PR 1 where the sidebar
@@ -92,6 +100,16 @@ const collapsedVars = [
 {/* Boot script lives in <TextbookHead /> which the consumer puts inside <head>.
     See packages/astro/src/components/TextbookHead.astro for why
     (React's SSR mangles is:inline directives inside React islands per ADR 0027). */}
+
+{/* Glossary-index payload for client-side hydration of <GlossaryTerm>'s
+    definitions store. See packages/components/src/components/GlossaryTerm/definitions-store.ts
+    for why this is needed alongside the server-side __setGlossaryDefinitions call. */}
+<script
+  is:inline
+  id='sophie-pedagogy-definitions'
+  type='application/json'
+  set:html={pedagogyDefinitionsJson}
+/>
 
 <div
   class='sophie-shell'
