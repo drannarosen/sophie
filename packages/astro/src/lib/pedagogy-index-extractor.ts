@@ -301,7 +301,9 @@ export function extractEquations(
  * "Aside" with `kind="key-insight"`, returns one KeyInsightEntry per
  * match. Per PR-C3 decisions row 7, the `title` prop is OPTIONAL on
  * key-insight asides; the anchor is derived from `id` > slug(title) >
- * `key-insight-${counter}` (counter is per-chapter sequential).
+ * `ki-${counter}` (counter is per-chapter sequential). The short
+ * `ki-` prefix is the canonical auto-anchor shape; see the anchor
+ * prefix table in `@sophie/core/schema/pedagogy-index.ts`.
  *
  * Throws on intra-chapter anchor collisions (defense-in-depth K1).
  * Warns (non-production) on empty body (defense-in-depth K2).
@@ -323,7 +325,7 @@ export function extractKeyInsights(
     counter += 1;
     const titleSlug = attrs.title?.trim() ? slugify(attrs.title.trim()) : null;
     const explicitId = attrs.id?.trim() ? slugify(attrs.id.trim()) : null;
-    const anchor = explicitId ?? titleSlug ?? `key-insight-${counter}`;
+    const anchor = explicitId ?? titleSlug ?? `ki-${counter}`;
 
     if (seenAnchors.has(anchor)) {
       throw new Error(
@@ -436,9 +438,11 @@ export function extractFigures(
  * treatment downstream (decisions row 12).
  *
  * Anchor derivation matches `extractKeyInsights`: explicit `id` >
- * slug(title) > `misconception-${counter}` (counter is per-chapter
+ * slug(title) > `misc-${counter}` (counter is per-chapter
  * sequential, incremented once per matched element across BOTH
- * source primitives in source order).
+ * source primitives in source order). The short `misc-` prefix is
+ * the canonical auto-anchor shape; see the anchor prefix table in
+ * `@sophie/core/schema/pedagogy-index.ts`.
  *
  * Throws on intra-chapter anchor collisions (M1 invariant).
  * Warns (non-production) on empty body (M3 invariant — soft check).
@@ -473,7 +477,7 @@ export function extractMisconceptions(
     counter += 1;
     const titleSlug = attrs.title?.trim() ? slugify(attrs.title.trim()) : null;
     const explicitId = attrs.id?.trim() ? slugify(attrs.id.trim()) : null;
-    const anchor = explicitId ?? titleSlug ?? `misconception-${counter}`;
+    const anchor = explicitId ?? titleSlug ?? `misc-${counter}`;
 
     if (seenAnchors.has(anchor)) {
       throw new Error(
@@ -646,7 +650,7 @@ class IndexAccumulator {
    * (intra-chapter collisions are caught by `extractKeyInsights`
    * before they reach the accumulator), so no cross-chapter
    * validation is required. Keyed by `${chapter}#${anchor}` so two
-   * different chapters can both have e.g. anchor "key-insight-1"
+   * different chapters can both have e.g. anchor "ki-1"
    * without collision.
    */
   addKeyInsights(entries: ReadonlyArray<KeyInsightEntry>): void {
@@ -710,10 +714,10 @@ class IndexAccumulator {
   /**
    * Add a chapter's extracted misconceptions. M2 invariant (PR-C3
    * decisions row 10): explicit-id-derived anchors must be unique
-   * across chapters. Auto-anchors of the shape `misconception-${N}`
+   * across chapters. Auto-anchors of the shape `misc-${N}`
    * are inherently chapter-scoped (each chapter restarts its counter
    * at 1) and are NOT subject to the cross-chapter check — two
-   * chapters can each have a `misconception-1` without conflict.
+   * chapters can each have a `misc-1` without conflict.
    *
    * Two-pass shape: validate the whole batch BEFORE mutating, so a
    * collision in entry N leaves entries 0..N-1 unwritten (mirrors
@@ -737,7 +741,7 @@ class IndexAccumulator {
     // M2: cross-chapter slug collision check (only for EXPLICIT id-
     // derived anchors, not for auto-anchors which are chapter-scoped).
     for (const entry of entries) {
-      if (entry.anchor.startsWith("misconception-")) continue;
+      if (entry.anchor.startsWith("misc-")) continue;
       for (const existing of state.misconceptions.values()) {
         if (
           existing.chapter !== entry.chapter &&
@@ -840,7 +844,7 @@ interface VFileLike {
  *      invariant #1) for definitions and equations, on F3 (multiple-
  *      canonical-per-name) for figures, and on M2 (cross-chapter
  *      explicit-id collision) for misconceptions. Key-insights are
- *      chapter-local; misconception auto-anchors (`misconception-N`)
+ *      chapter-local; misconception auto-anchors (`misc-N`)
  *      are also chapter-local and skip the M2 check.
  *
  * The plugin doesn't mutate the mdast tree — it's extraction-only.

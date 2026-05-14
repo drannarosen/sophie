@@ -787,19 +787,19 @@ describe("extractKeyInsights (pure)", () => {
   });
 
   // T22
-  test("untitled key-insight gets auto-anchor 'key-insight-1'", () => {
+  test("untitled key-insight gets auto-anchor 'ki-1'", () => {
     const tree = root([
       mdxAside({ kind: "key-insight" }, [para("An untitled insight body.")]),
     ]);
 
     const entries = extractKeyInsights(tree as never, "ch");
     expect(entries).toHaveLength(1);
-    expect(entries[0]?.anchor).toBe("key-insight-1");
+    expect(entries[0]?.anchor).toBe("ki-1");
     expect(entries[0]?.title).toBeUndefined();
   });
 
   // T23
-  test("throws on intra-chapter anchor collision (two untitled key-insights collide on 'key-insight-1' vs 'key-insight-2'? — instead force same explicit id)", () => {
+  test("throws on intra-chapter anchor collision (two untitled key-insights collide on 'ki-1' vs 'ki-2'? — instead force same explicit id)", () => {
     // Two key-insights sharing an explicit `id` collide on the same anchor.
     const tree = root([
       mdxAside({ kind: "key-insight", id: "shared-anchor" }, [para("first")]),
@@ -836,7 +836,7 @@ describe("extractKeyInsights (pure)", () => {
     expect(entries[0]?.title).toBe("Some Title");
   });
 
-  test("auto-numbered anchors increment per-chapter (untitled+untitled → key-insight-1, key-insight-2)", () => {
+  test("auto-numbered anchors increment per-chapter (untitled+untitled → ki-1, ki-2)", () => {
     const tree = root([
       mdxAside({ kind: "key-insight" }, [para("first")]),
       mdxAside({ kind: "key-insight" }, [para("second")]),
@@ -844,10 +844,7 @@ describe("extractKeyInsights (pure)", () => {
 
     const entries = extractKeyInsights(tree as never, "ch");
     expect(entries).toHaveLength(2);
-    expect(entries.map((e) => e.anchor)).toEqual([
-      "key-insight-1",
-      "key-insight-2",
-    ]);
+    expect(entries.map((e) => e.anchor)).toEqual(["ki-1", "ki-2"]);
   });
 });
 
@@ -895,20 +892,18 @@ describe("indexAccumulator key-insights (cross-chapter)", () => {
     ).toBe("Insight B");
   });
 
-  test("two chapters can share an auto-anchor (e.g. 'key-insight-1') without collision", () => {
+  test("two chapters can share an auto-anchor (e.g. 'ki-1') without collision", () => {
     indexAccumulator.clearChapter("ki-share-a");
     indexAccumulator.clearChapter("ki-share-b");
     indexAccumulator.addKeyInsights([
-      ki({ chapter: "ki-share-a", anchor: "key-insight-1" }),
+      ki({ chapter: "ki-share-a", anchor: "ki-1" }),
     ]);
     indexAccumulator.addKeyInsights([
-      ki({ chapter: "ki-share-b", anchor: "key-insight-1" }),
+      ki({ chapter: "ki-share-b", anchor: "ki-1" }),
     ]);
 
     const index = indexAccumulator.asPedagogyIndex();
-    const shared = index.keyInsights.filter(
-      (k) => k.anchor === "key-insight-1"
-    );
+    const shared = index.keyInsights.filter((k) => k.anchor === "ki-1");
     const chapters = shared.map((k) => k.chapter).sort();
     expect(chapters).toContain("ki-share-a");
     expect(chapters).toContain("ki-share-b");
@@ -1356,14 +1351,14 @@ describe("extractMisconceptions (pure)", () => {
     });
   });
 
-  test("untitled misconception gets auto-anchor 'misconception-1'", () => {
+  test("untitled misconception gets auto-anchor 'misc-1'", () => {
     const tree = root([
       mdxAside({ kind: "misconception" }, [para("anonymous misconception")]),
     ]);
 
     const entries = extractMisconceptions(tree as never, "ch");
     expect(entries).toHaveLength(1);
-    expect(entries[0]?.anchor).toBe("misconception-1");
+    expect(entries[0]?.anchor).toBe("misc-1");
     expect(entries[0]?.label).toBeUndefined();
     expect(entries[0]?.length).toBe("short");
   });
@@ -1378,9 +1373,9 @@ describe("extractMisconceptions (pure)", () => {
     const entries = extractMisconceptions(tree as never, "ch");
     expect(entries).toHaveLength(3);
     expect(entries.map((e) => e.anchor)).toEqual([
-      "misconception-1",
-      "misconception-2",
-      "misconception-3",
+      "misc-1",
+      "misc-2",
+      "misc-3",
     ]);
     expect(entries.map((e) => e.length)).toEqual(["short", "long", "short"]);
   });
@@ -1515,22 +1510,20 @@ describe("indexAccumulator misconceptions (cross-chapter)", () => {
     ).toThrow(/mc-m2-b/);
   });
 
-  test("M2 — auto-anchors ('misconception-N') do NOT trigger cross-chapter collision", () => {
+  test("M2 — auto-anchors ('misc-N') do NOT trigger cross-chapter collision", () => {
     indexAccumulator.clearChapter("mc-auto-a");
     indexAccumulator.clearChapter("mc-auto-b");
     indexAccumulator.addMisconceptions([
-      mc({ chapter: "mc-auto-a", anchor: "misconception-1" }),
+      mc({ chapter: "mc-auto-a", anchor: "misc-1" }),
     ]);
     expect(() =>
       indexAccumulator.addMisconceptions([
-        mc({ chapter: "mc-auto-b", anchor: "misconception-1" }),
+        mc({ chapter: "mc-auto-b", anchor: "misc-1" }),
       ])
     ).not.toThrow();
 
     const index = indexAccumulator.asPedagogyIndex();
-    const shared = index.misconceptions.filter(
-      (m) => m.anchor === "misconception-1"
-    );
+    const shared = index.misconceptions.filter((m) => m.anchor === "misc-1");
     const chapters = shared.map((m) => m.chapter).sort();
     expect(chapters).toContain("mc-auto-a");
     expect(chapters).toContain("mc-auto-b");
