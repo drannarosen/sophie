@@ -19,6 +19,39 @@
 
 ---
 
+## Errata (live corrections during execution)
+
+These corrections apply across the rest of the plan. They surfaced
+while implementing Task 1; subsequent tasks should follow these
+instead of the original plan text where they conflict.
+
+1. **Test script:** `pnpm --filter @sophie/astro test:unit` (NOT
+   `test`). The `@sophie/astro` package's script is named `test:unit`;
+   `pnpm ... test` silently no-ops on the missing script and exits 0,
+   masking RED-first failures. Verified during Task 1 execution.
+
+2. **Test file location:** Co-locate under `packages/astro/src/lib/`
+   (NOT `packages/astro/test/`). Project convention is tests next to
+   source — see `pedagogy-index-extractor.test.ts` for precedent.
+   Snapshot files therefore land at
+   `packages/astro/src/lib/__snapshots__/`.
+
+3. **No `remark` / `remark-mdx` dep:** Tests build mdast trees as
+   plain JS objects via local helper factories
+   (`mdxLearningObjectives`, `mdxObjective`, `para`, `root`), matching
+   the convention in `pedagogy-index-extractor.test.ts`. No new deps
+   added to `@sophie/astro`.
+
+4. **Task 2 (snapshot test) — adapt the approach:** Either build the
+   mdast input manually and snapshot the post-plugin tree (preferred),
+   or commit a `.mdx` fixture file and have the snapshot test invoke
+   the plugin pipeline directly. Don't import `remark` or `remark-mdx`
+   in tests.
+
+Task 1's commit reflects these corrections.
+
+---
+
 ## Task 1: Layer 1 RED — failing unit test on `transformLearningObjectives`
 
 **Goal:** Commit the failing-first contract for the new transform function. The function does not exist yet; the test must fail with "transformLearningObjectives is not defined" (or similar).
