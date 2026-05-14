@@ -1,56 +1,129 @@
 ---
 title: Chapter components reference
 short_title: Chapter components
-description: Every Sophie component a chapter author can use, with import patterns and the static-vs-interactive distinction.
+description: Every Sophie component a chapter author can use, with import patterns and the three category distinctions.
 tags: [components, authoring, mdx, reference]
 ---
 
 # Chapter components
 
-Every Sophie component a chapter author can drop into MDX, the two
+Every Sophie component a chapter author can drop into MDX, the three
 categories they fall into, and how each one wires up to Astro.
 
-The platform draws a hard line between **static** components
-(no per-instance state; render once, server-side) and
-**persistence-bearing** components (own state in IndexedDB; hydrate as
-React islands). The two categories use different MDX import patterns,
-and mixing them up is the most common authoring mistake — either form
-fails silently in ways the page render won't catch.
+After Bucket C closed (PRs C1–C4 — the pedagogy-index infrastructure),
+Sophie has **three** component categories rather than the two of the
+Phase 0 era:
+
+1. **Static (Astro-rendered)** — no React hydration; render once
+   server-side. Includes the primary *source* components for the
+   pedagogy index (`<Aside>` for definitions / key-insights /
+   misconceptions; `<KeyEquation>` for equations; `<Figure>` for
+   figure usages; `<LearningObjectives>` containing `<Objective>` for
+   learning objectives — although `<LearningObjectives>` itself is
+   interactive).
+2. **Interactive React island** — hydrates as a React island. Either
+   (a) **persistence-bearing**, owning state in IndexedDB (e.g.,
+   `<Predict>`, `<LearningObjectives>`, `<InteractiveCallout>`), or
+   (b) **hover-interactive** for inline cross-references over the
+   pedagogy index (`<GlossaryTerm>`, `<EqRef>`, `<FigureRef>`,
+   `<ChapterRef>`). Both use `client:load`.
+3. **Astro consumer (server-rendered aggregator)** — reads the
+   pedagogy index server-side and renders a directory or roll-up
+   block. Used at chapter-end inside MDX (`<Chapter*>`) or on
+   dedicated routes (`<Course*>`). Never hydrates.
+
+The platform draws a hard line between *static* and *hydrated React
+island* — the two use different MDX import patterns and mixing them
+up is the most common authoring mistake (either form fails silently
+in ways the page render won't catch). The Astro-consumer category is
+a third path that doesn't go through the React-island machinery at
+all.
 
 :::{seealso}
 The architectural rationale lives in
-[ADR 0027 — MDX render boundary prop threading](../decisions/0027-mdx-render-boundary-prop-threading.md).
+[ADR 0027 — MDX render boundary prop threading](../decisions/0027-mdx-render-boundary-prop-threading.md)
+and [ADR 0038 — Pedagogy-index pattern](../decisions/0038-pedagogy-index-pattern.md).
 This page is the chapter author's quick reference.
 :::
 
 ## The inventory
 
-Sophie ships 13 components after Phase 1 closes. Each row tells you
-the category, the MDX import pattern, and whether `client:load` is
-needed:
+### Static (Astro-rendered)
 
-| Component | Category | Needs `client:load`? | Import via |
+| Component | Notes |
+|---|---|
+| `<Aside kind="definition">` | Source for `PedagogyIndex.definitions`. Required `title` slugifies into the canonical anchor. |
+| `<Aside kind="key-insight">` | Source for `PedagogyIndex.keyInsights` (short variant). |
+| `<Aside kind="misconception">` | Source for `PedagogyIndex.misconceptions` (short variant). |
+| `<Aside kind="note">` / `kind="digression">` | Non-indexed marginal asides; no pedagogy-index role. |
+| `<Callout>` (and `variant="key-insight"` / `variant="misconception"`) | Static variant ships pure-display; the `key-insight` and `misconception` variants ALSO feed the index (long-form). |
+| `<Figure>` | Source for `PedagogyIndex.figureUsages` (per-chapter record of where each registry figure appears). Resolves `name` against the consumer-supplied `figureRegistry`. |
+| `<KeyEquation>` | Source for `PedagogyIndex.equations`. Requires `id` (canonical anchor) and `title`; body must contain exactly one `$$...$$` block (KaTeX-rendered). |
+| `<Objective>` | Pure-display primitive. Only meaningful as a child of `<LearningObjectives>`; the remark extractor walks it during MDX parse to populate `PedagogyIndex.objectives`. |
+
+### Interactive React island
+
+#### Persistence-bearing (IndexedDB state)
+
+| Component | Use case |
+|---|---|
+| `<InteractiveCallout>` | Side info with a reviewed-state toggle |
+| `<InteractiveCheckbox>` | Single tracked checkbox |
+| `<LearningObjectives>` | Chapter-opening "you will be able to…" list (children-mode, contains `<Objective>` elements). After PR-C4, the LO checkbox interactivity has a known cloneElement-through-astro-slot gap; see follow-ups. |
+| `<Predict>` | "Predict before the answer" prompt |
+| `<ConfidenceCheck>` | 1–5 / 1–7 confidence rating |
+| `<ComprehensionGate>` | "Did you understand?" gate before next section |
+| `<EffortLog>` | Effort self-report |
+| `<Reflection>` | Free-text reflection prompt |
+| `<CollapsibleCard>` | "Deep Dive" disclosure block |
+
+#### Hover-interactive (inline cross-references over the pedagogy index)
+
+| Component | Looks up | Default rendered text | Mode |
 |---|---|---|---|
-| `<Callout>` | Static | No | `makeStaticComponents` map |
-| `<InteractiveCallout>` | Persistence-bearing | Yes | Direct import |
-| `<Figure>` | Static | No | `makeStaticComponents` map |
-| `<KeyEquation>` | Static | No | `makeStaticComponents` map |
-| `<MiniGlossary>` | Static | No | `makeStaticComponents` map |
-| `<InteractiveCheckbox>` | Persistence-bearing | Yes | Direct import |
-| `<LearningObjectives>` | Persistence-bearing | Yes | Direct import |
-| `<Predict>` | Persistence-bearing | Yes | Direct import |
-| `<ConfidenceCheck>` | Persistence-bearing | Yes | Direct import |
-| `<ComprehensionGate>` | Persistence-bearing | Yes | Direct import |
-| `<EffortLog>` | Persistence-bearing | Yes | Direct import |
-| `<Reflection>` | Persistence-bearing | Yes | Direct import |
-| `<CollapsibleCard>` | Persistence-bearing | Yes | Direct import |
+| `<GlossaryTerm name="X">term</GlossaryTerm>` | `definitions` | The element's children (always; `name` is the lookup key) | Children-only |
+| `<EqRef slug="X" />` | `equations` | Equation title with hover preview (KaTeX-rendered tex + title) | Self-closing or children |
+| `<FigureRef name="X" />` | `figureRegistry` + `figureUsages` | "Fig. N" (ordinal) with hover preview (thumbnail + caption) | Self-closing or children |
+| `<ChapterRef slug="X" />` | `chapters` + `modules` | Chapter title with hover preview (module breadcrumb + title + description) | Self-closing or children |
 
-The four static components flow through the Astro components map
-configured by `makeStaticComponents` in `@sophie/astro`. The nine
-persistence-bearing components hydrate as React islands and need an
-explicit import + `client:load` directive on every instance.
+Each carries the new `data-react-hydrated="true"` attribute after
+mount via the `useHydrated()` hook (Phase 1 item #10 pattern); e2e
+tests wait on this signal before exercising hover behavior.
 
-## The two import patterns
+### Astro consumer (server-rendered aggregator)
+
+#### Chapter-level (used inside MDX)
+
+| Component | Renders |
+|---|---|
+| `<ChapterGlossary chapter="X" />` | All definitions defined in chapter X, sorted alphabetically |
+| `<ChapterEquations chapter="X" />` | All `<KeyEquation>` blocks in chapter X |
+| `<ChapterFigures chapter="X" />` | All `<Figure>` usages in chapter X, joined with `figureRegistry` for src/alt/caption |
+| `<ChapterKeyInsights chapter="X" />` | All key-insight Asides + Callouts in chapter X |
+| `<ChapterMisconceptions chapter="X" />` | All misconception Asides + Callouts in chapter X |
+
+Each component currently hardcodes `<h2>` for its section heading. A
+forward-looking `headingLevel?: 2 | 3 | 4` prop will land when a real
+consumer needs nested-section usage (Phase 1 item #13 forward-looking
+JSDoc note).
+
+#### Course-level (used on dedicated routes only)
+
+| Component | Route | Renders |
+|---|---|---|
+| `<CourseGlossary />` | `/glossary` | All definitions across the course, alphabetical |
+| `<CourseEquations />` | `/equations` | All equations across the course |
+| `<CourseFigures />` | `/figures` | Every figure (canonical entries from registry) |
+| `<CourseKeyInsights />` | `/key-insights` | All key insights across the course |
+| `<CourseMisconceptions />` | `/misconceptions` | All misconceptions across the course |
+| `<CourseObjectives />` | `/objectives` | Hierarchical Module → Chapter → Objectives roll-up. Chapter headings link to each `/chapters/X` route. (PR-C4) |
+
+Course consumers are imported into the Astro page for their route
+(`examples/smoke/src/pages/{glossary,equations,figures,key-insights,misconceptions,objectives}.astro`),
+each slotted into `TextbookLayout`. They are **never** imported into
+MDX chapter content.
+
+## The import patterns
 
 ### Static components — through `<Content components={...}>`
 
@@ -60,19 +133,15 @@ chapter author writes the tag in MDX and never imports it:
 ```mdx
 {/* No import statement needed for static components. */}
 
-<Callout variant="info" title="Definition">
+<Aside kind="definition" title="Photon">
 A photon is a packet of light.
-</Callout>
+</Aside>
 
 <Figure name="hubble-deep-field" caption="A deep-field image." />
 
 <KeyEquation id="wiens-law" title="Wien's Law">
 $$\lambda_{\text{peak}} = b \, T^{-1}$$
 </KeyEquation>
-
-<MiniGlossary id="ch1-terms" title="Key terms" terms={[
-  { term: "Photon", definition: "A packet of light." },
-]} />
 ```
 
 The page that renders the MDX wires the map:
@@ -89,25 +158,30 @@ const { Content } = await Astro.glob("../content/chapters/*.mdx")[0];
 ```
 
 Sophie's `makeStaticComponents` accepts a figure registry (for
-`<Figure name=...>` lookups) and returns the four static components
+`<Figure name=...>` lookups) and returns every static component
 ready to wire in.
 
-### Persistence-bearing components — direct import + `client:load`
+### Interactive React island — direct import + `client:load`
 
-Persistence-bearing components don't flow through the components map.
+Interactive components don't flow through the components map.
 Astro's `<Content components={...}>` map can't carry hydration
 metadata, so each instance must be imported into the MDX file and
 marked for hydration:
 
 ```mdx
 import {
+  ChapterRef,
   CollapsibleCard,
   ComprehensionGate,
   ConfidenceCheck,
   EffortLog,
+  EqRef,
+  FigureRef,
+  GlossaryTerm,
   InteractiveCallout,
   InteractiveCheckbox,
   LearningObjectives,
+  Objective,
   Predict,
   Reflection,
 } from "@sophie/components";
@@ -118,67 +192,150 @@ import {
   chapter="ch1"
   id="lo"
   heading="By the end of this lecture, you will be able to:"
-  objectives={[
-    { id: "thesis", verb: "State", body: "the course thesis." },
-  ]}
-/>
-
-<InteractiveCallout
-  client:load
-  course="astr201"
-  chapter="ch1"
-  id="reviewed-1"
-  variant="tip"
 >
-Take a moment to confirm you can re-derive the result.
-</InteractiveCallout>
+  <Objective verb="State" id="thesis">
+    the course thesis.
+  </Objective>
+  <Objective verb="Distinguish" id="parallax">
+    parallax-derived distance from standard-candle distance.
+  </Objective>
+</LearningObjectives>
+
+In <ChapterRef client:load slug="measuring-the-sky" />, we will see how
+<GlossaryTerm client:load name="parallax">parallax</GlossaryTerm>
+underpins every distance method.
 ```
 
 Every persistence-bearing component takes three threading props —
-`course`, `chapter`, `id` — which compose into the IndexedDB key.
+`course`, `chapter`, `id` — which compose into the IndexedDB key
+([ADR 0027](../decisions/0027-mdx-render-boundary-prop-threading.md)).
+The four cross-reference components (`<GlossaryTerm>`, `<EqRef>`,
+`<FigureRef>`, `<ChapterRef>`) take only a lookup prop (`name` /
+`slug`) plus optional children for custom anchor text — no
+persistence keys, since they don't own state.
+
 The `client:load` directive tells Astro to hydrate the component as
-a React island on page load.
+a React island on page load. (`client:visible` works for refs below
+the fold if performance becomes a concern; `client:load` is the
+default starting point.)
+
+### Astro consumer — import the `.astro` file directly
+
+Chapter-level consumers can be imported into MDX as Astro components:
+
+```mdx
+import ChapterGlossary from "@sophie/astro/components/ChapterGlossary.astro";
+import ChapterMisconceptions from "@sophie/astro/components/ChapterMisconceptions.astro";
+
+{/* …chapter prose… */}
+
+<ChapterGlossary chapter="ch1" />
+<ChapterMisconceptions chapter="ch1" />
+```
+
+Course-level consumers are imported only into Astro pages (not MDX):
+
+```astro
+---
+// examples/smoke/src/pages/objectives.astro
+import TextbookLayout from "@sophie/astro/components/TextbookLayout.astro";
+import CourseObjectives from "@sophie/astro/components/CourseObjectives.astro";
+---
+<TextbookLayout>
+  <CourseObjectives />
+</TextbookLayout>
+```
+
+Astro consumers read the populated `PedagogyIndex` directly via
+`indexAccumulator.asPedagogyIndex()` — the same mechanism
+TextbookLayout uses to feed the React-side stores. Per
+[ADR 0038 Revisions §2](../decisions/0038-pedagogy-index-pattern.md#revisions-2026-05-14--post-pr-c2--pr-c3--pr-c4),
+this read must happen in a *child* of `TextbookLayout` (e.g., a
+`<Course*>` component slotted into the page), not in the page
+frontmatter itself — Astro evaluates page frontmatter before
+TextbookLayout's setChapters / setModules / render(chapter) cycle
+populates the accumulator.
 
 ## Common failure modes
 
-Three mistakes catch every author at least once:
+Four mistakes catch authors at least once:
 
 **Importing a static component AND using `client:load` on it.**
 Hydrates a stateless component as an isolated React island for no
-benefit. The page works but ships extra JavaScript. Audit will flag
-this in a future Sophie release; today it's a silent waste.
+benefit. The page works but ships extra JavaScript. The PR-C4 audit
+pass does not flag this yet; a future audit invariant should.
 
-**Using a persistence-bearing component without `client:load`.**
-The component renders server-side once with its `initialValue` and
-never hydrates, so state changes are lost and the IndexedDB
-persistence never engages. Looks correct on first paint; breaks the
-moment a student tries to interact.
+**Using an interactive component without `client:load`.**
+The component renders server-side once with its initial state and
+never hydrates, so state changes are lost and IndexedDB persistence
+(or HoverCard interactivity) never engages. Looks correct on first
+paint; breaks the moment a student tries to interact.
 
-**Forgetting the `course`/`chapter`/`id` props on a persistence-bearing
-component.** TypeScript catches `course` and `chapter` as required.
-`id` is also required; without it, two instances on the same page
-share an IndexedDB key and clobber each other.
+**Forgetting the `course`/`chapter`/`id` props on a persistence-
+bearing component.** TypeScript catches `course` and `chapter` as
+required (or it would, if MDX prop typecheck were enforced at build —
+see ADR 0038 §2). `id` is also required; without it, two instances
+on the same page share an IndexedDB key and clobber each other.
+
+**Referencing a name/slug that doesn't exist in the index.**
+`<GlossaryTerm name="unknown">`, `<EqRef slug="unknown">`,
+`<FigureRef name="unknown">`, `<ChapterRef slug="unknown">` all fall
+back to bare-text render + dev `console.warn`. The PR-C4 audit pass
+catches this systematically (D4, E4, F2, C1 ERRORs); fix authoring
+errors at build time, not at runtime.
 
 ## When to use each component
 
 | Use case | Component |
 |---|---|
-| A heading and a paragraph of side info | `<Callout>` |
-| Side info that's also "check yourself" | `<InteractiveCallout>` (with reviewed-toggle) |
-| An image with caption + credit | `<Figure>` (registry or inline) |
+| A heading and a paragraph of side info | `<Callout>` or `<Aside kind="note">` |
+| Side info with a reviewed-toggle | `<InteractiveCallout>` |
+| A defined term with a margin definition | `<Aside kind="definition" title="...">` |
+| A flagged misconception (1–2 sentences) | `<Aside kind="misconception">` |
+| A flagged misconception (multi-paragraph) | `<Callout variant="misconception">` |
+| A flagged key insight (1–2 sentences) | `<Aside kind="key-insight">` |
+| A flagged key insight (multi-paragraph) | `<Callout variant="key-insight">` |
+| An image with caption + credit | `<Figure>` (registry-resolved) |
 | A named equation block with anchor | `<KeyEquation>` |
-| A cluster of vocabulary terms | `<MiniGlossary>` |
+| Inline reference to a defined term | `<GlossaryTerm name="X">term</GlossaryTerm>` |
+| Inline reference to an equation | `<EqRef slug="X" />` |
+| Inline reference to a figure | `<FigureRef name="X" />` |
+| Inline reference to another chapter | `<ChapterRef slug="X" />` |
+| The chapter-opening "you will be able to..." list | `<LearningObjectives>` with `<Objective>` children |
 | A single checkbox for a tracked item | `<InteractiveCheckbox>` |
-| The chapter-opening "you will be able to..." list | `<LearningObjectives>` |
 | A "predict before the answer" prompt | `<Predict>` |
 | A confidence rating (1–5 or 1–7) | `<ConfidenceCheck>` |
 | A "did you understand?" gate | `<ComprehensionGate>` |
 | An effort-level self-report | `<EffortLog>` |
 | A free-text reflection prompt | `<Reflection>` |
 | A "Deep Dive" disclosure block | `<CollapsibleCard>` |
+| Chapter-end roll-up of definitions | `<ChapterGlossary chapter="X" />` |
+| Chapter-end roll-up of equations | `<ChapterEquations chapter="X" />` |
+| Chapter-end roll-up of figures | `<ChapterFigures chapter="X" />` |
+| Chapter-end roll-up of key insights | `<ChapterKeyInsights chapter="X" />` |
+| Chapter-end roll-up of misconceptions | `<ChapterMisconceptions chapter="X" />` |
+| Course-wide pages | `<Course*>` on the matching `/glossary`, `/equations`, `/figures`, `/key-insights`, `/misconceptions`, `/objectives` route |
 
 Pick by pedagogical intent first; the static-vs-interactive split
-follows automatically from that.
+and the chapter-vs-course aggregation level follow automatically.
+
+## Anchor convention
+
+Every pedagogy-index entry has a stable anchor derived from its
+source. Authors writing cross-references must match these. The
+canonical table lives in
+[`packages/core/src/schema/pedagogy-index.ts`](https://github.com/drannarosen/sophie/tree/main/packages/core/src/schema/pedagogy-index.ts)
+JSDoc:
+
+| Role | Prefix | Source |
+|---|---|---|
+| Definition | `def-` | author-supplied via title/id slug |
+| Equation | `eq-` | author-supplied via id slug |
+| Key insight | `ki-` | auto: `ki-${counter}` |
+| Figure | `fig-` | auto: `fig-${slug(name)}-${counter}` |
+| Misconception | `misc-` | auto: `misc-${counter}` (auto only); explicit ids slugify directly |
+| Chapter | `ch-` | passthrough chapter slug |
+| Objective | `lo-` | author-supplied via id |
 
 ## References
 
@@ -186,5 +343,6 @@ follows automatically from that.
 - [ADR 0004](../decisions/0004-component-contract-revisions.md) — component contract.
 - [ADR 0007](../decisions/0007-persistence-indexeddb.md) — IndexedDB + ResponseStore + BroadcastChannel.
 - [ADR 0027](../decisions/0027-mdx-render-boundary-prop-threading.md) — static vs persistence-bearing render boundary.
+- [ADR 0038](../decisions/0038-pedagogy-index-pattern.md) — pedagogy-index pattern (the architectural basis for the cross-reference and aggregator categories).
 - [Component contract](component-contract.md) — the TypeScript interface every component implements.
 - [Add a custom component](../how-to/add-a-custom-component.md) — recipe for new components.
