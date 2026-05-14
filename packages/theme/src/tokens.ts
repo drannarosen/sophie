@@ -83,6 +83,7 @@ export const tokens = {
   },
   shadow: {
     card: v("shadow-card"),
+    popover: v("shadow-popover"),
   },
 } as const;
 

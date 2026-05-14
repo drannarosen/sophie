@@ -55,6 +55,10 @@ function modeInvariantBlock(): string {
     `--sophie-status-danger: ${status.danger};`,
     "--sophie-accent: var(--sophie-brand-teal);",
     "--sophie-link-hover: var(--sophie-accent);",
+    // Popover shadow. Mode-invariant literal preserved from the rgb
+    // fallback that consumer CSS modules (FigureRef, EqRef,
+    // GlossaryTerm) were relying on before the token existed.
+    "--sophie-shadow-popover: 0 4px 12px rgb(0 0 0 / 0.12);",
   ].join("\n  ");
 }
 
