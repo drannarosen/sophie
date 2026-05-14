@@ -72,7 +72,18 @@ Demotion is possible: an *accepted-pending-ADR* item can move back to
 The 5 entries already in [`speculative.md`](speculative.md) stay where
 they are.
 
-Next graduation candidate is **Teaching Decision Records** (A1 in
-accepted) — its ADR's open question is "where do TDRs live in the
-docs site or in consumer repos?" Drafting that ADR is the next
-substantive step.
+## First graduation (2026-05-14)
+
+**A1 — Teaching Decision Records (TDRs)** graduated on the same day
+as triage: ratified by
+[ADR 0040 — Teaching Decision Records](../../decisions/0040-teaching-decision-records.md)
++ [TDR template](../../reference/tdr-template.md). The ADR locked
+location (consumer repos, not platform docs), schema (ADR-shaped),
+and numbering (folder-scoped 3-digit).
+
+This is the **first end-to-end test of the staging-area model** —
+an idea moving from speculative → accepted → graduated within one
+day. Subsequent graduations from `accepted.md` (A2 Teaching Move
+Library, A3 AI Contribution Ledger + Pedagogy Contract, A4 MultiRep
++ Notation Registry, A5 Misconception Graph) follow when their
+authoring ADRs are drafted.

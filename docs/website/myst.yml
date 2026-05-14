@@ -67,6 +67,7 @@ project:
         - file: reference/cli.md
         - file: reference/plugin-api.md
         - file: reference/glossary.md
+        - file: reference/tdr-template.md
     - title: Explanation
       children:
         - file: explanation/architecture.md
@@ -129,6 +130,7 @@ project:
         - file: decisions/0037-cross-bundle-dom-attribute-observation.md
         - file: decisions/0038-pedagogy-index-pattern.md
         - file: decisions/0039-lucide-two-adapter-convention.md
+        - file: decisions/0040-teaching-decision-records.md
     - title: Status
       children:
         - file: status/roadmap.md

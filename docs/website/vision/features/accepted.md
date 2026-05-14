@@ -16,51 +16,22 @@ When an entry's ADR is drafted, accepted, and (usually) placed on the
 [roadmap](../../status/roadmap.md), the entry moves to *graduated*
 status — a one-line pointer with a cross-link.
 
-## A1. Teaching Decision Records (TDRs)
+(a1-teaching-decision-records-tdrs)=
+## A1. Teaching Decision Records (TDRs) — graduated 2026-05-14
 
-**Motivating use case.** When Anna decides "introduce parallax before
-standard candles because students need observable→inference scaffolding
-first," that decision currently lives in her head, in a Slack message,
-or in a chapter intro paragraph. Six months later, when a chapter is
-revised (by Anna, by AI, by a future collaborator), the *rationale*
-isn't visible — only the *outcome*. TDRs make pedagogy reasoning
-first-class: version-controlled, referenceable, transferable. Direct
-analog to ADRs (Architecture Decision Records), which Sophie already
-relies on for every architectural choice.
+**Graduated** → [ADR 0040 — Teaching Decision Records](../../decisions/0040-teaching-decision-records.md)
++ [TDR template](../../reference/tdr-template.md).
 
-**Design sketch.** Each TDR is a Markdown file with frontmatter
-(date, status, deciders) and a fixed body shape (Context, Decision,
-Rationale, Consequences). They're numbered (TDR-001, TDR-002, …) and
-live in a TDR directory whose location the authoring ADR will decide.
-TDRs reference course-specific decisions: chapter sequencing, what to
-omit, what notation conventions to use, what misconceptions to target,
-which pedagogical moves to deploy. They cross-link to specific ADRs,
-roadmap items, and pedagogy principles in `vision/pedagogy/`.
-
-**Estimated cost.** Small. ADR (~1 hour) + template (~30 min) + first
-3 TDRs drawn from existing ASTR 201 design choices (~1–2 hours
-authoring). Optionally a `sophie tdr new <slug>` CLI command later.
-
-**Priority claim.** Three independent reasons this earns first slot:
-(1) tenure-case visibility — TDRs are unambiguous evidence of
-intentional curriculum design; (2) SoTL paper substrate — a corpus of
-TDRs is a publishable artifact; (3) feeds AI authoring — future AI
-revisions of a chapter inherit the chapter's TDR history as
-constraints. No other accepted item dominates on all three.
-
-**Open ADR question.** *Where do TDRs live?* Three plausible
-placements: (a) `docs/website/decisions/tdrs/` — alongside ADRs but
-in a sub-directory; (b) new top-level `docs/website/pedagogy/`
-parallel to decisions/; (c) in consumer repos
-(`drannarosen/astr201/tdrs/`) with platform docs holding only the
-ADR + template. Option (c) matches [ADR 0001](../../decisions/0001-platform-not-monorepo.md)'s
-textbook/course-site separation cleanest, but the ADR will weigh
-trade-offs explicitly.
+The ADR resolved the "where do TDRs live?" open question (option c —
+in consumer repos, not platform docs), ratified the ADR-shaped
+schema, and locked folder-scoped 3-digit numbering. TDRs are now a
+first-class Sophie convention; consumer repos copy the template and
+begin authoring `teaching-decisions/001-...md` entries.
 
 **Status.**
 - 2026-05-14 — surfaced (speculative) during vision-section brainstorm
-- 2026-05-14 — promoted to accepted-pending-ADR (this triage)
-- ADR target: next session
+- 2026-05-14 — promoted to accepted-pending-ADR (triage)
+- 2026-05-14 — graduated → [ADR 0040](../../decisions/0040-teaching-decision-records.md)
 
 ---
 
@@ -251,11 +222,5 @@ inline interventions tagged with type (flexible)?*
 Once an entry's ADR ships, the full content moves into the ADR; the
 vision/features/ entry collapses to a one-line pointer.
 
-*None yet.*
-
-Future format:
-
-```markdown
-- **TDRs** → [ADR XXXX — Teaching Decision Records](../../decisions/XXXX-teaching-decision-records.md)
-  ([roadmap](../../status/roadmap.md))
-```
+- **A1 — Teaching Decision Records (TDRs)** → [ADR 0040 — Teaching Decision Records](../../decisions/0040-teaching-decision-records.md)
+  + [TDR template](../../reference/tdr-template.md). Graduated 2026-05-14.
