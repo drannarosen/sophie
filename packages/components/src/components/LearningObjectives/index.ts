@@ -5,7 +5,5 @@ export {
 export {
   type LearningObjectivesProps,
   LearningObjectivesPropsSchema,
-  type Objective,
-  ObjectiveSchema,
 } from "./LearningObjectives.schema.ts";
 export { LearningObjectives } from "./LearningObjectives.tsx";

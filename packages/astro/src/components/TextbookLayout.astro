@@ -1,13 +1,21 @@
 ---
 import "../styles/textbook-layout.css";
 import {
+  __setChapters,
   __setEquations,
   __setFigureRegistry,
   __setFigureUsages,
   __setGlossaryDefinitions,
+  __setModules,
+  __setObjectives,
 } from "@sophie/components";
 import type { FigureRegistryEntry } from "@sophie/core/schema";
 import { type CollectionEntry, getCollection, render } from "astro:content";
+import {
+  auditExitCode,
+  formatAuditReport,
+  runPedagogyAudit,
+} from "../lib/pedagogy-audit";
 import { indexAccumulator } from "../lib/pedagogy-index-extractor";
 import ContentColumn from "./ContentColumn.astro";
 import RightColumn from "./RightColumn.astro";
@@ -59,6 +67,7 @@ const { figureRegistry = [] } = Astro.props;
 // and `__setEquations` setters rather than importing the virtual
 // module itself.
 const chapters: CollectionEntry<"chapters">[] = await getCollection("chapters");
+const modules: CollectionEntry<"modules">[] = await getCollection("modules");
 await Promise.all(chapters.map((c) => render(c)));
 // Push the consumer-supplied figure registry into the accumulator
 // BEFORE snapshotting / before the slot renders so that
@@ -68,7 +77,44 @@ await Promise.all(chapters.map((c) => render(c)));
 // in-MDX <Figure> walks; the registry of canonical image metadata
 // is consumer-owned content (smoke's `src/content/figures.ts`).
 indexAccumulator.setFigureRegistry(figureRegistry);
+// PR-C4: push the consumer-owned chapters + modules collections into
+// the accumulator. Both are consumer-global (last-write-wins, NOT
+// touched by `clearChapter`) — mirrors `figureRegistry`. Read here
+// once per layout render after `getCollection` resolves so the audit
+// pass (below) sees populated chapters + modules.
+indexAccumulator.setChapters(
+  chapters.map((c) => ({
+    slug: c.data.slug,
+    title: c.data.title,
+    module: c.data.module,
+    order: c.data.order,
+    description: c.data.description,
+  }))
+);
+indexAccumulator.setModules(
+  modules.map((m) => ({
+    slug: m.data.slug,
+    title: m.data.title,
+    order: m.data.order,
+    description: m.data.description,
+  }))
+);
 const pedagogy = indexAccumulator.asPedagogyIndex();
+// PR-C4: run the systematic build-time audit pass once per build,
+// after the index is fully populated. Errors fail the build; warnings
+// + info print but allow the build to continue. See
+// packages/astro/src/lib/pedagogy-audit.ts for the invariant list.
+const auditReport = runPedagogyAudit(pedagogy);
+console.log(formatAuditReport(auditReport));
+if (auditExitCode(auditReport) !== 0) {
+  // Astro's build pipeline surfaces thrown errors as build failures
+  // with a stack trace and the offending file context. Preferred over
+  // `process.exit(1)` because it cooperates with Astro's logger and
+  // dev-server HMR overlay rather than killing the parent process.
+  throw new Error(
+    "Pedagogy audit found errors. See preceding output for details."
+  );
+}
 // All four setters follow the same pattern (ADR 0038 Revisions
 // section): the chrome layer reads the accumulator directly, then
 // pushes into each role's React store via a setter exported from
@@ -93,6 +139,18 @@ __setGlossaryDefinitions(pedagogy.definitions);
 __setEquations(pedagogy.equations);
 __setFigureRegistry(figureRegistry);
 __setFigureUsages(pedagogy.figureUsages);
+// PR-C4: three new setters wired alongside the four PR-C1/C2/C3
+// setters above. chapters + modules support `<ChapterRef>`'s
+// hover-preview (module breadcrumb + chapter title + description).
+// objectives ships as a stub store for pattern uniformity — no v1
+// React consumer (the `/objectives` page is server-rendered Astro
+// that reads the accumulator directly); the setter + script tag
+// anticipate future client-side consumers (PR 7 faceted search, a
+// `<CourseObjectives client:visible>` widget, etc.) without
+// rewiring TextbookLayout later.
+__setChapters(pedagogy.chapters);
+__setModules(pedagogy.modules);
+__setObjectives(pedagogy.objectives);
 // Serialize the same payloads into <script> tags so each role's
 // client-side store can hydrate after React mount. Server-side module
 // state doesn't survive to the wire, so without these script tags
@@ -121,6 +179,20 @@ const pedagogyFigureRegistryJson = JSON.stringify(figureRegistry).replace(
   "\\u003c"
 );
 const pedagogyFigureUsagesJson = JSON.stringify(pedagogy.figureUsages).replace(
+  /</g,
+  "\\u003c"
+);
+// PR-C4: three new payloads for client-side store hydration. Same
+// escape treatment as the four PR-C1/C2/C3 payloads above.
+const pedagogyChaptersJson = JSON.stringify(pedagogy.chapters).replace(
+  /</g,
+  "\\u003c"
+);
+const pedagogyModulesJson = JSON.stringify(pedagogy.modules).replace(
+  /</g,
+  "\\u003c"
+);
+const pedagogyObjectivesJson = JSON.stringify(pedagogy.objectives).replace(
   /</g,
   "\\u003c"
 );
@@ -209,6 +281,37 @@ const collapsedVars = [
   id='sophie-pedagogy-figure-usages'
   type='application/json'
   set:html={pedagogyFigureUsagesJson}
+/>
+{/* Chapters collection payload (PR-C4):
+    consumer-app-owned chapter metadata forwarded from
+    `getCollection('chapters')`. Hydrates <ChapterRef>'s chapters
+    store for hover-preview lookups (module + title + description). */}
+<script
+  is:inline
+  id='sophie-pedagogy-chapters'
+  type='application/json'
+  set:html={pedagogyChaptersJson}
+/>
+{/* Modules collection payload (PR-C4):
+    consumer-app-owned module metadata forwarded from
+    `getCollection('modules')`. Hydrates <ChapterRef>'s modules
+    store so the hover-preview's module-breadcrumb resolves. */}
+<script
+  is:inline
+  id='sophie-pedagogy-modules'
+  type='application/json'
+  set:html={pedagogyModulesJson}
+/>
+{/* Objectives collection payload (PR-C4):
+    per-chapter learning objectives. v1 has no React consumer for the
+    objectives store; ships alongside chapters/modules for pattern
+    uniformity. Future consumers (PR 7 faceted search, a
+    `<CourseObjectives client:visible>` widget) hydrate from here. */}
+<script
+  is:inline
+  id='sophie-pedagogy-objectives'
+  type='application/json'
+  set:html={pedagogyObjectivesJson}
 />
 
 <div

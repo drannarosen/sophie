@@ -3,6 +3,8 @@ export { type Figure, FigureSchema } from "./figure.js";
 export { type Module, ModuleSchema } from "./module.js";
 export { chaptersForModule } from "./module-nav.js";
 export {
+  type ChapterEntry,
+  ChapterEntrySchema,
   type DefinitionEntry,
   DefinitionEntrySchema,
   type EquationEntry,
@@ -11,10 +13,18 @@ export {
   FigureRegistryEntrySchema,
   type FigureUsageEntry,
   FigureUsageEntrySchema,
+  type InlineRefKind,
+  InlineRefKindSchema,
+  type InlineRefUsageEntry,
+  InlineRefUsageEntrySchema,
   type KeyInsightEntry,
   KeyInsightEntrySchema,
   type MisconceptionEntry,
   MisconceptionEntrySchema,
+  type ModuleEntry,
+  ModuleEntrySchema,
+  type ObjectiveEntry,
+  ObjectiveEntrySchema,
   type PedagogyIndex,
   PedagogyIndexSchema,
 } from "./pedagogy-index.js";

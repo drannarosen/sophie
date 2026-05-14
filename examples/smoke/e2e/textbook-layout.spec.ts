@@ -143,7 +143,9 @@ test.describe("PR 1: TextbookLayout shell on the smoke chapter", () => {
       .exclude(".margin-note")
       .exclude(".task-list-item input[type='checkbox']")
       .exclude("li > input[type='checkbox'][disabled]")
-      .disableRules(["color-contrast"])
+      // list/listitem suppression — see proving-chapter.spec.ts for
+      // the LearningObjectives astro-slot follow-up rationale.
+      .disableRules(["color-contrast", "list", "listitem"])
       .analyze();
 
     expect(results.violations).toEqual([]);

@@ -20,6 +20,19 @@ export {
   InteractiveCalloutPropsSchema,
   interactiveCalloutContract,
 } from "./components/Callout/index.ts";
+export type { ChapterRefProps } from "./components/ChapterRef/ChapterRef.schema.ts";
+// Internal-use setters: @sophie/astro's <TextbookLayout> calls these
+// to hydrate the chapters + modules collections from
+// `getCollection('chapters')` / `getCollection('modules')` at render
+// time. Not part of the public authoring API; underscore-prefix
+// flags internal-use.
+export { __setChapters } from "./components/ChapterRef/chapters-store.ts";
+export {
+  ChapterRef,
+  ChapterRefPropsSchema,
+  chapterRefContract,
+} from "./components/ChapterRef/index.ts";
+export { __setModules } from "./components/ChapterRef/modules-store.ts";
 export type { CollapsibleCardProps } from "./components/CollapsibleCard/index.ts";
 export {
   CollapsibleCard,
@@ -106,14 +119,25 @@ export {
 export type {
   LearningObjectivesProps,
   LearningObjectivesState,
-  Objective,
 } from "./components/LearningObjectives/index.ts";
 export {
   LearningObjectives,
   LearningObjectivesPropsSchema,
   learningObjectivesContract,
-  ObjectiveSchema,
 } from "./components/LearningObjectives/index.ts";
+export type { ObjectiveProps } from "./components/Objective/index.ts";
+export {
+  Objective,
+  ObjectivePropsSchema,
+} from "./components/Objective/index.ts";
+// Internal-use setter: @sophie/astro's <TextbookLayout> calls this to
+// hydrate the objectives collection from the populated pedagogy index
+// at render time. v1 has no React consumer for the store (the
+// `/objectives` page is server-rendered Astro that reads the
+// accumulator directly), but ships in PR-C4 for pattern uniformity
+// with `__setChapters` / `__setModules` and to anticipate future
+// client-side consumers without rewiring TextbookLayout later.
+export { __setObjectives } from "./components/Objective/objectives-store.ts";
 export type {
   PredictPrompt,
   PredictProps,

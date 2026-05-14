@@ -1,0 +1,57 @@
+---
+import CourseObjectives from "@sophie/astro/components/CourseObjectives.astro";
+import ModuleNav from "@sophie/astro/components/ModuleNav.astro";
+import TextbookHead from "@sophie/astro/components/TextbookHead.astro";
+import TextbookLayout from "@sophie/astro/components/TextbookLayout.astro";
+import { SophieChapter } from "@sophie/astro/client";
+import { getCollection } from "astro:content";
+import { figures as figureRegistry } from "../content/figures";
+
+const figureRegistryArray = Object.values(figureRegistry);
+
+/**
+ * `/objectives` — course-wide learning-objectives roll-up auto-generated
+ * from the pedagogy index (ADR 0038; PR-C4 design decision Q5). Reads
+ * `modules`, `chapters`, and `objectives` via `indexAccumulator` inside
+ * `<CourseObjectives>` (which runs after `TextbookLayout` populates the
+ * accumulator with consumer-owned modules + chapters and after MDX
+ * render triggers the extractor). Hierarchical: module (course-outline
+ * order) → chapter (authoring order) → objectives (source-walk order).
+ *
+ * Chapter heading is a plain `<a href>` link (not `<ChapterRef>`):
+ * server-rendered Astro page, no React hydration. Mirrors the shape of
+ * `/glossary`, `/equations`, `/figures`, `/misconceptions`,
+ * `/key-insights`.
+ */
+
+const modules = (await getCollection("modules")).map((m) => m.data);
+const chapters = (await getCollection("chapters")).map((c) => ({
+  slug: c.id,
+  title: c.data.title,
+  module: c.data.module,
+  order: c.data.order,
+}));
+---
+
+<html lang='en'>
+  <head>
+    <meta charset='utf-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1' />
+    <title>Course objectives</title>
+    <meta
+      name='description'
+      content='Hierarchical roll-up of learning objectives by module and chapter.'
+    />
+    <TextbookHead />
+  </head>
+  <body>
+    <SophieChapter client:load>
+      <TextbookLayout figureRegistry={figureRegistryArray}>
+        <Fragment slot='sidebar'>
+          <ModuleNav modules={modules} chapters={chapters} />
+        </Fragment>
+        <CourseObjectives heading='Course objectives' />
+      </TextbookLayout>
+    </SophieChapter>
+  </body>
+</html>

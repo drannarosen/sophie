@@ -1,10 +1,15 @@
 import {
+  type ChapterEntry,
   type DefinitionEntry,
   type EquationEntry,
   type FigureRegistryEntry,
   type FigureUsageEntry,
+  type InlineRefKind,
+  type InlineRefUsageEntry,
   type KeyInsightEntry,
   type MisconceptionEntry,
+  type ModuleEntry,
+  type ObjectiveEntry,
   type PedagogyIndex,
   slugify,
 } from "@sophie/core/schema";
@@ -114,6 +119,45 @@ function readFigureAttributes(node: MdxJsxFlowElement): FigureAttributes {
     }
   }
   return out;
+}
+
+interface ObjectiveAttributes {
+  id?: string;
+  verb?: string;
+}
+
+function readObjectiveAttributes(node: MdxJsxFlowElement): ObjectiveAttributes {
+  const out: ObjectiveAttributes = {};
+  for (const attr of node.attributes ?? []) {
+    if (attr.type !== "mdxJsxAttribute") continue;
+    if (typeof attr.value !== "string") continue;
+    if (attr.name === "id") out.id = attr.value;
+    if (attr.name === "verb") out.verb = attr.value;
+  }
+  return out;
+}
+
+/**
+ * Read a single string-valued attribute by name. Returns the trimmed
+ * value, or undefined when the attribute is absent / non-string / empty.
+ * Used by `extractInlineRefUsages` to read the lookup prop on each of
+ * the four inline-ref components.
+ */
+function readStringAttr(
+  node: {
+    attributes?: ReadonlyArray<{ type: string; name: string; value: unknown }>;
+  },
+  name: string
+): string | undefined {
+  for (const attr of node.attributes ?? []) {
+    if (attr.type !== "mdxJsxAttribute") continue;
+    if (attr.name !== name) continue;
+    if (typeof attr.value !== "string") continue;
+    const trimmed = attr.value.trim();
+    if (trimmed.length === 0) return undefined;
+    return trimmed;
+  }
+  return undefined;
 }
 
 interface CalloutAttributes {
@@ -511,6 +555,154 @@ export function extractMisconceptions(
 }
 
 /**
+ * Pure extractor. Walks an mdast tree for `<LearningObjectives>` flow
+ * elements; for each, walks its direct children for `<Objective>` flow
+ * elements. Returns one `ObjectiveEntry` per `<Objective>` match.
+ *
+ * Anchor convention: `lo-${id}` (passthrough). The `id` prop is
+ * author-supplied and persists across edits — never auto-generated.
+ *
+ * Throws when:
+ *   - An `<Objective>` is missing a non-empty `id` prop.
+ *   - An `<Objective>` is missing a non-empty `verb` prop.
+ *   - An `<Objective>` body renders to an empty / whitespace-only HTML
+ *     string.
+ *   - Two `<Objective>`s within the same chapter share an `id` (O1
+ *     invariant — duplicate-id-within-chapter).
+ *
+ * Bare `<Objective>` elements outside a `<LearningObjectives>` parent
+ * are ignored (not authoring-sanctioned shape).
+ */
+export function extractObjectives(
+  tree: Root,
+  chapterSlug: string
+): ObjectiveEntry[] {
+  const out: ObjectiveEntry[] = [];
+  const seenIds = new Set<string>();
+
+  visit(tree, "mdxJsxFlowElement", (node: unknown) => {
+    const parent = node as MdxJsxFlowElement;
+    if (parent.name !== "LearningObjectives") return;
+
+    for (const child of parent.children) {
+      const el = child as MdxJsxFlowElement;
+      if (
+        !el ||
+        typeof el !== "object" ||
+        el.type !== "mdxJsxFlowElement" ||
+        el.name !== "Objective"
+      ) {
+        continue;
+      }
+
+      const attrs = readObjectiveAttributes(el);
+      const id = attrs.id?.trim();
+      const verb = attrs.verb?.trim();
+
+      if (!id) {
+        throw new Error(
+          `<Objective> in chapter "${chapterSlug}" is missing a non-empty \`id\`.`
+        );
+      }
+      if (!verb) {
+        throw new Error(
+          `<Objective id="${id}"> in chapter "${chapterSlug}" is missing a non-empty \`verb\`.`
+        );
+      }
+
+      const body = renderChildrenToHtml(el.children);
+      if (body.trim().length === 0) {
+        throw new Error(
+          `<Objective id="${id}"> in chapter "${chapterSlug}" has an empty body. Resolution: add objective text between the opening and closing tags.`
+        );
+      }
+
+      if (seenIds.has(id)) {
+        throw new Error(
+          `O1 invariant: duplicate <Objective id="${id}"> within chapter "${chapterSlug}". Resolution: change one of the \`id\` props.`
+        );
+      }
+      seenIds.add(id);
+
+      out.push({
+        id,
+        verb,
+        body,
+        chapter: chapterSlug,
+        anchor: `lo-${slugify(id)}`,
+      });
+    }
+  });
+
+  return out;
+}
+
+/**
+ * Map from JSX element name → (kind, lookup-prop-name) for the four
+ * inline-ref components. Centralized so the extractor and any future
+ * audit-config diagnostics share a single source of truth.
+ */
+const INLINE_REF_TARGETS: Record<
+  string,
+  { kind: InlineRefKind; prop: string }
+> = {
+  GlossaryTerm: { kind: "glossary-term", prop: "name" },
+  EqRef: { kind: "eq-ref", prop: "slug" },
+  FigureRef: { kind: "figure-ref", prop: "name" },
+  ChapterRef: { kind: "chapter-ref", prop: "slug" },
+};
+
+/**
+ * Pure extractor. Walks an mdast tree for BOTH `mdxJsxFlowElement` and
+ * `mdxJsxTextElement` nodes whose name matches one of the four inline-
+ * ref components (`<GlossaryTerm>`, `<EqRef>`, `<FigureRef>`,
+ * `<ChapterRef>`). Returns one `InlineRefUsageEntry` per match.
+ *
+ * Inline-refs can appear inline within prose (mdxJsxTextElement) OR
+ * standalone as block elements (mdxJsxFlowElement); both shapes count.
+ *
+ * Empty / missing lookup props are silently skipped — the audit pass
+ * (D4 / E4 / F2 / C1) surfaces those as their own ERROR codes against
+ * the populated target collections. Append-only: no dedup. The same
+ * `refKey` referenced N times in one chapter yields N entries (useful
+ * for usage-count facets later).
+ */
+export function extractInlineRefUsages(
+  tree: Root,
+  chapterSlug: string
+): InlineRefUsageEntry[] {
+  const out: InlineRefUsageEntry[] = [];
+
+  const visitor = (node: unknown) => {
+    const el = node as {
+      name?: string | null;
+      attributes?: ReadonlyArray<{
+        type: string;
+        name: string;
+        value: unknown;
+      }>;
+    };
+    if (!el.name) return;
+    const target = INLINE_REF_TARGETS[el.name];
+    if (!target) return;
+
+    const refKey = readStringAttr(el, target.prop);
+    if (!refKey) return;
+
+    out.push({
+      kind: target.kind,
+      refKey,
+      chapter: chapterSlug,
+    });
+  };
+
+  visit(tree, "mdxJsxFlowElement", visitor);
+  visit(tree, "mdxJsxTextElement", visitor);
+
+  return out;
+}
+
+/**
  * Cross-chapter accumulator — state lives on `globalThis` so it
  * survives across Vite environments within a single Astro build.
  *
@@ -546,6 +738,31 @@ interface GlobalIndexState {
    * alongside `figureUsages` to resolve names → image src/alt/caption.
    */
   figureRegistry: ReadonlyArray<FigureRegistryEntry>;
+  /**
+   * Per-chapter learning objectives (PR-C4). Keyed by
+   * `${chapter}#${anchor}` so different chapters can each declare an
+   * objective with the same id (no semantic collision).
+   */
+  objectives: Map<string, ObjectiveEntry>;
+  /**
+   * Consumer-supplied chapters collection (PR-C4). Populated from
+   * `getCollection('chapters')` at TextbookLayout SSR-merge time.
+   * Last-write-wins; NOT touched by `clearChapter` (mirrors
+   * `figureRegistry`).
+   */
+  chapters: ReadonlyArray<ChapterEntry>;
+  /**
+   * Consumer-supplied modules collection (PR-C4). Same shape as
+   * `chapters`; populated from `getCollection('modules')`.
+   */
+  modules: ReadonlyArray<ModuleEntry>;
+  /**
+   * Per-chapter inline-ref callsites (PR-C4). Append-only array
+   * (NOT a Map) — the audit consumes the whole list and
+   * usage-count facets care about callsite counts, not dedup'd keys.
+   * `clearChapter` filters out entries with the cleared chapter slug.
+   */
+  inlineRefUsages: InlineRefUsageEntry[];
 }
 
 function getGlobalState(): GlobalIndexState {
@@ -558,6 +775,10 @@ function getGlobalState(): GlobalIndexState {
       figureUsages: new Map(),
       misconceptions: new Map(),
       figureRegistry: [],
+      objectives: new Map(),
+      chapters: [],
+      modules: [],
+      inlineRefUsages: [],
     };
   }
   return g[GLOBAL_KEY];
@@ -596,6 +817,17 @@ class IndexAccumulator {
         state.misconceptions.delete(key);
       }
     }
+    for (const [key, entry] of state.objectives) {
+      if (entry.chapter === chapterSlug) {
+        state.objectives.delete(key);
+      }
+    }
+    // Inline-ref usages are stored as a plain array (append-only). Filter
+    // out the cleared chapter's entries. `chapters` and `modules` are
+    // consumer-global (mirror `figureRegistry`) and are NOT touched here.
+    state.inlineRefUsages = state.inlineRefUsages.filter(
+      (u) => u.chapter !== chapterSlug
+    );
   }
 
   /**
@@ -768,6 +1000,54 @@ class IndexAccumulator {
   }
 
   /**
+   * Add a chapter's extracted objectives. Keyed by
+   * `${chapter}#${anchor}`; different chapters can each declare an
+   * objective with the same `id` (no semantic collision at this layer
+   * — chapter scope is part of the key). Single-chapter batch
+   * invariant: `extractObjectives` already enforces O1 (duplicate-id-
+   * within-chapter) via `seenIds`, mirroring `addMisconceptions`'s
+   * comment. No cross-chapter id-collision check.
+   */
+  addObjectives(entries: ReadonlyArray<ObjectiveEntry>): void {
+    const state = getGlobalState();
+    for (const entry of entries) {
+      state.objectives.set(`${entry.chapter}#${entry.anchor}`, entry);
+    }
+  }
+
+  /**
+   * Push the consumer-supplied chapters collection into the accumulator
+   * (PR-C4). Mirrors `setFigureRegistry` semantics: last-write-wins,
+   * consumer-global, NOT touched by `clearChapter`. Called from
+   * TextbookLayout's frontmatter after `getCollection('chapters')`
+   * resolves so consumers see a populated chapters list.
+   */
+  setChapters(entries: ReadonlyArray<ChapterEntry>): void {
+    const state = getGlobalState();
+    state.chapters = entries;
+  }
+
+  /**
+   * Push the consumer-supplied modules collection into the accumulator
+   * (PR-C4). Same shape as `setChapters`.
+   */
+  setModules(entries: ReadonlyArray<ModuleEntry>): void {
+    const state = getGlobalState();
+    state.modules = entries;
+  }
+
+  /**
+   * Append a chapter's inline-ref callsites. Append-only — the audit
+   * consumes the whole list and usage-count facets later care about
+   * callsite counts, not dedup'd keys. `clearChapter` filters out
+   * entries with the cleared chapter slug to keep re-parses idempotent.
+   */
+  addInlineRefUsages(entries: ReadonlyArray<InlineRefUsageEntry>): void {
+    const state = getGlobalState();
+    state.inlineRefUsages.push(...entries);
+  }
+
+  /**
    * Snapshot the current accumulator state as a PedagogyIndex.
    * Equations populate from PR-C2 onward; keyInsights, figureUsages,
    * and misconceptions populate from PR-C3 onward. `figureRegistry`
@@ -784,6 +1064,10 @@ class IndexAccumulator {
       figureRegistry: state.figureRegistry,
       figureUsages: Array.from(state.figureUsages.values()),
       misconceptions: Array.from(state.misconceptions.values()),
+      chapters: state.chapters,
+      modules: state.modules,
+      objectives: Array.from(state.objectives.values()),
+      inlineRefUsages: state.inlineRefUsages.slice(),
     };
   }
 }
@@ -807,6 +1091,10 @@ export function resetIndexAccumulator(): void {
   state.figureUsages.clear();
   state.misconceptions.clear();
   state.figureRegistry = [];
+  state.objectives.clear();
+  state.chapters = [];
+  state.modules = [];
+  state.inlineRefUsages = [];
 }
 
 /**
@@ -880,6 +1168,10 @@ export function pedagogyIndexRemarkPlugin(
     indexAccumulator.addFigureUsages(extractFigures(tree, chapterSlug));
     indexAccumulator.addMisconceptions(
       extractMisconceptions(tree, chapterSlug)
+    );
+    indexAccumulator.addObjectives(extractObjectives(tree, chapterSlug));
+    indexAccumulator.addInlineRefUsages(
+      extractInlineRefUsages(tree, chapterSlug)
     );
   };
 }

@@ -103,23 +103,35 @@ test.describe("PR-C3: <FigureRef> on the smoke chapter", () => {
   }) => {
     await page.goto(CHAPTER_URL);
     // Chapter is a `client:load` React island. Wait for the
-    // `<FigureRef>` trigger to flip `data-react-hydrated="true"`
-    // (via `useHydrated`) before hovering — `networkidle` fires
-    // before React hydration completes in full-suite runs
-    // (followup #10).
-    await page.locator('[data-react-hydrated="true"]').first().waitFor();
+    // SPECIFIC `<FigureRef>` trigger we'll hover to flip
+    // `data-react-hydrated="true"` (via `useHydrated`) before
+    // hovering — a global first-match `[data-react-hydrated="true"]`
+    // wait can resolve on a different island (e.g. an earlier
+    // ChapterRef/EqRef/GlossaryTerm hydration on the same page)
+    // while this specific FigureRef trigger is still pre-hydration
+    // in full-suite runs (followup #10). Mirrors chapter-ref.spec.ts
+    // (PR-C4 Task 11) scoped pattern.
     const trigger = page
       .locator('a[href="/chapters/spoiler-alerts#fig-decoder-ring-16"]')
       .first();
+    await trigger.waitFor({ state: "attached" });
+    await trigger.scrollIntoViewIfNeeded();
+    await expect(trigger).toHaveAttribute("data-react-hydrated", "true");
     // Closed-state precondition: portal isn't mounted yet.
     await expect(
       page.locator("[data-sophie-figure-popover]")
     ).not.toBeAttached();
     await trigger.hover();
     const popover = page.locator("[data-sophie-figure-popover]");
-    // HoverCard.openDelay = 150ms (set in FigureRef.tsx);
-    // explicit 2000ms timeout makes the contract clear.
-    await expect(popover).toBeAttached({ timeout: 2000 });
+    // Wait on Radix's deterministic `data-state` flip — the same
+    // DOM commit that attaches the Content via `<Presence>` also
+    // stamps `data-state="open"`. SoTA condition-based wait (no
+    // clock-time dependency); the assertion resolves the instant
+    // Radix's state machine commits the open transition. Supersedes
+    // the prior `toBeAttached({ timeout: 2000 })` knob. See
+    // `node_modules/@radix-ui/react-hover-card/dist/index.mjs`
+    // ("data-state": context.open ? "open" : "closed").
+    await expect(popover).toHaveAttribute("data-state", "open");
     // Thumbnail <img> from the registry (lazy-loaded).
     const thumb = popover.locator("img");
     await expect(thumb).toBeAttached();

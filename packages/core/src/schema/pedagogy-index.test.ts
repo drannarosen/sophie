@@ -1,11 +1,16 @@
 import { describe, expect, test } from "vitest";
 import {
+  ChapterEntrySchema,
   DefinitionEntrySchema,
   EquationEntrySchema,
   FigureRegistryEntrySchema,
   FigureUsageEntrySchema,
+  InlineRefKindSchema,
+  InlineRefUsageEntrySchema,
   KeyInsightEntrySchema,
   MisconceptionEntrySchema,
+  ModuleEntrySchema,
+  ObjectiveEntrySchema,
   PedagogyIndexSchema,
 } from "./pedagogy-index.ts";
 
@@ -133,6 +138,53 @@ describe("FigureRegistryEntrySchema", () => {
       }).success
     ).toBe(false);
   });
+
+  // PR-C4 T(N+3) — optional intrinsic dimensions (Q11).
+  test("accepts a registry entry WITH width and height", () => {
+    expect(
+      FigureRegistryEntrySchema.safeParse({
+        name: "cosmic-distance-ladder",
+        src: "/figures/ladder.png",
+        alt: "Cosmic distance ladder schematic",
+        width: 1200,
+        height: 800,
+      }).success
+    ).toBe(true);
+  });
+
+  test("accepts a registry entry WITHOUT width or height (optional)", () => {
+    expect(
+      FigureRegistryEntrySchema.safeParse({
+        name: "cosmic-distance-ladder",
+        src: "/figures/ladder.png",
+        alt: "Cosmic distance ladder schematic",
+      }).success
+    ).toBe(true);
+  });
+
+  test("rejects a registry entry with negative width", () => {
+    expect(
+      FigureRegistryEntrySchema.safeParse({
+        name: "cosmic-distance-ladder",
+        src: "/figures/ladder.png",
+        alt: "Cosmic distance ladder schematic",
+        width: -10,
+        height: 800,
+      }).success
+    ).toBe(false);
+  });
+
+  test("rejects a registry entry with zero width", () => {
+    expect(
+      FigureRegistryEntrySchema.safeParse({
+        name: "cosmic-distance-ladder",
+        src: "/figures/ladder.png",
+        alt: "Cosmic distance ladder schematic",
+        width: 0,
+        height: 800,
+      }).success
+    ).toBe(false);
+  });
 });
 
 describe("FigureUsageEntrySchema", () => {
@@ -193,43 +245,259 @@ describe("MisconceptionEntrySchema", () => {
   });
 });
 
-describe("PedagogyIndexSchema", () => {
-  test("accepts an empty index", () => {
+describe("ChapterEntrySchema", () => {
+  const validChapter = {
+    slug: "hydrostatic-equilibrium",
+    title: "Hydrostatic Equilibrium",
+    module: "stellar-structure",
+    order: 2,
+    description: "Pressure balance in a self-gravitating fluid.",
+  };
+
+  // PR-C4 T(N)
+  test("accepts a valid entry", () => {
+    expect(ChapterEntrySchema.safeParse(validChapter).success).toBe(true);
+  });
+
+  test("accepts a valid entry without optional order/description", () => {
     expect(
-      PedagogyIndexSchema.safeParse({
-        definitions: [],
-        equations: [],
-        keyInsights: [],
-        figureRegistry: [],
-        figureUsages: [],
-        misconceptions: [],
+      ChapterEntrySchema.safeParse({
+        slug: validChapter.slug,
+        title: validChapter.title,
+        module: validChapter.module,
       }).success
     ).toBe(true);
+  });
+
+  test("rejects an entry with empty slug", () => {
+    expect(
+      ChapterEntrySchema.safeParse({ ...validChapter, slug: "" }).success
+    ).toBe(false);
+  });
+
+  test("rejects an entry with empty title", () => {
+    expect(
+      ChapterEntrySchema.safeParse({ ...validChapter, title: "" }).success
+    ).toBe(false);
+  });
+
+  test("rejects an entry with non-integer order", () => {
+    expect(
+      ChapterEntrySchema.safeParse({ ...validChapter, order: 1.5 }).success
+    ).toBe(false);
+  });
+
+  test("rejects an entry with negative order", () => {
+    expect(
+      ChapterEntrySchema.safeParse({ ...validChapter, order: -1 }).success
+    ).toBe(false);
+  });
+});
+
+describe("ModuleEntrySchema", () => {
+  const validModule = {
+    slug: "stellar-structure",
+    title: "Stellar Structure",
+    order: 1,
+    description: "How stars hold themselves together.",
+  };
+
+  // PR-C4 T(N+1)
+  test("accepts a valid entry", () => {
+    expect(ModuleEntrySchema.safeParse(validModule).success).toBe(true);
+  });
+
+  test("rejects an entry missing order (required — modules are ordered)", () => {
+    const { order: _order, ...rest } = validModule;
+    expect(ModuleEntrySchema.safeParse(rest).success).toBe(false);
+  });
+
+  test("rejects an entry with negative order", () => {
+    expect(
+      ModuleEntrySchema.safeParse({ ...validModule, order: -1 }).success
+    ).toBe(false);
+  });
+
+  test("rejects an entry with empty title", () => {
+    expect(
+      ModuleEntrySchema.safeParse({ ...validModule, title: "" }).success
+    ).toBe(false);
+  });
+});
+
+describe("ObjectiveEntrySchema", () => {
+  const validObjective = {
+    id: "lo-1",
+    verb: "Recognize",
+    body: "<p>Distinguish parallax distance from standard-candle distance.</p>",
+    chapter: "spoiler-alerts",
+    anchor: "lo-lo-1",
+  };
+
+  // PR-C4 T(N+2)
+  test("accepts a valid entry", () => {
+    expect(ObjectiveEntrySchema.safeParse(validObjective).success).toBe(true);
+  });
+
+  test("rejects an entry with empty id", () => {
+    expect(
+      ObjectiveEntrySchema.safeParse({ ...validObjective, id: "" }).success
+    ).toBe(false);
+  });
+
+  test("rejects an entry with empty verb", () => {
+    expect(
+      ObjectiveEntrySchema.safeParse({ ...validObjective, verb: "" }).success
+    ).toBe(false);
+  });
+
+  test("rejects an entry with empty body", () => {
+    expect(
+      ObjectiveEntrySchema.safeParse({ ...validObjective, body: "" }).success
+    ).toBe(false);
+  });
+});
+
+describe("InlineRefKindSchema", () => {
+  test("accepts each of the four valid inline-ref kinds", () => {
+    for (const kind of [
+      "glossary-term",
+      "eq-ref",
+      "figure-ref",
+      "chapter-ref",
+    ]) {
+      expect(InlineRefKindSchema.safeParse(kind).success).toBe(true);
+    }
+  });
+
+  test("rejects an unknown kind", () => {
+    expect(InlineRefKindSchema.safeParse("definition-ref").success).toBe(false);
+  });
+});
+
+describe("InlineRefUsageEntrySchema", () => {
+  const validUsage = {
+    kind: "glossary-term" as const,
+    refKey: "Standard candle",
+    chapter: "spoiler-alerts",
+  };
+
+  test("accepts a valid entry", () => {
+    expect(InlineRefUsageEntrySchema.safeParse(validUsage).success).toBe(true);
+  });
+
+  test("accepts each of the four kinds", () => {
+    for (const kind of [
+      "glossary-term",
+      "eq-ref",
+      "figure-ref",
+      "chapter-ref",
+    ] as const) {
+      expect(
+        InlineRefUsageEntrySchema.safeParse({ ...validUsage, kind }).success
+      ).toBe(true);
+    }
+  });
+
+  test("rejects an entry with empty refKey", () => {
+    expect(
+      InlineRefUsageEntrySchema.safeParse({ ...validUsage, refKey: "" }).success
+    ).toBe(false);
+  });
+
+  test("rejects an entry with empty chapter", () => {
+    expect(
+      InlineRefUsageEntrySchema.safeParse({ ...validUsage, chapter: "" })
+        .success
+    ).toBe(false);
+  });
+
+  test("rejects an entry with unknown kind", () => {
+    expect(
+      InlineRefUsageEntrySchema.safeParse({
+        ...validUsage,
+        kind: "not-a-kind",
+      }).success
+    ).toBe(false);
+  });
+});
+
+describe("PedagogyIndexSchema", () => {
+  const emptyIndex = {
+    definitions: [],
+    equations: [],
+    keyInsights: [],
+    figureRegistry: [],
+    figureUsages: [],
+    misconceptions: [],
+    chapters: [],
+    modules: [],
+    objectives: [],
+    inlineRefUsages: [],
+  };
+
+  test("accepts an empty index", () => {
+    expect(PedagogyIndexSchema.safeParse(emptyIndex).success).toBe(true);
   });
 
   test("accepts a populated definitions array", () => {
     expect(
       PedagogyIndexSchema.safeParse({
+        ...emptyIndex,
         definitions: [validDefinition],
-        equations: [],
-        keyInsights: [],
-        figureRegistry: [],
-        figureUsages: [],
-        misconceptions: [],
       }).success
     ).toBe(true);
   });
 
   test("rejects an index missing a required collection", () => {
+    const { misconceptions: _misconceptions, ...withoutMisconceptions } =
+      emptyIndex;
+    expect(PedagogyIndexSchema.safeParse(withoutMisconceptions).success).toBe(
+      false
+    );
+  });
+
+  // PR-C4 T(N+4) — three new collections required.
+  test("rejects an index missing the new chapters collection", () => {
+    const { chapters: _chapters, ...withoutChapters } = emptyIndex;
+    expect(PedagogyIndexSchema.safeParse(withoutChapters).success).toBe(false);
+  });
+
+  test("rejects an index missing the new modules collection", () => {
+    const { modules: _modules, ...withoutModules } = emptyIndex;
+    expect(PedagogyIndexSchema.safeParse(withoutModules).success).toBe(false);
+  });
+
+  test("rejects an index missing the new objectives collection", () => {
+    const { objectives: _objectives, ...withoutObjectives } = emptyIndex;
+    expect(PedagogyIndexSchema.safeParse(withoutObjectives).success).toBe(
+      false
+    );
+  });
+
+  // PR-C4 Task 2 — inlineRefUsages required.
+  test("rejects an index missing the new inlineRefUsages collection", () => {
+    const { inlineRefUsages: _inlineRefUsages, ...withoutInline } = emptyIndex;
+    expect(PedagogyIndexSchema.safeParse(withoutInline).success).toBe(false);
+  });
+
+  test("accepts populated inlineRefUsages", () => {
     expect(
       PedagogyIndexSchema.safeParse({
-        definitions: [],
-        equations: [],
-        keyInsights: [],
-        figureRegistry: [],
-        figureUsages: [],
-        // misconceptions missing
+        ...emptyIndex,
+        inlineRefUsages: [
+          {
+            kind: "glossary-term",
+            refKey: "Parallax",
+            chapter: "ch-a",
+          },
+          {
+            kind: "chapter-ref",
+            refKey: "hydrostatic-equilibrium",
+            chapter: "ch-b",
+          },
+        ],
       }).success
-    ).toBe(false);
+    ).toBe(true);
   });
 });

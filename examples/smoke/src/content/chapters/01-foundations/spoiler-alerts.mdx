@@ -10,6 +10,7 @@ tags: ["course-overview", "foundations"]
 
 import {
   Aside,
+  ChapterRef,
   CollapsibleCard,
   ComprehensionGate,
   ConfidenceCheck,
@@ -19,6 +20,7 @@ import {
   GlossaryTerm,
   InteractiveCallout,
   LearningObjectives,
+  Objective,
   Predict,
   Reflection,
 } from "@sophie/components";
@@ -30,34 +32,23 @@ import ChapterGlossary from "@sophie/astro/components/ChapterGlossary.astro";
   chapter="spoiler-alerts"
   id="lo"
   heading="By the end of this lecture, you will be able to:"
-  objectives={[
-    {
-      id: "thesis",
-      verb: "State",
-      body: "the course thesis in one sentence: pretty pictures → measurements → models → inferences",
-    },
-    {
-      id: "inference",
-      verb: "Explain",
-      body: "why astronomy is fundamentally about inferring physical reality from constrained measurements",
-    },
-    {
-      id: "quantities",
-      verb: "Name",
-      body: "the key physical quantities astronomers care about: distance, time, speed, mass, energy/luminosity, temperature",
-    },
-    {
-      id: "fls",
-      verb: "Explain",
-      body: 'why the finite speed of light makes astronomy a "lookback time" science',
-    },
-    {
-      id: "wavelength",
-      verb: "Give",
-      body: "a one-sentence reason why wavelength matters: different wavelengths reveal different physics",
-    },
-  ]}
-/>
+>
+  <Objective id="thesis" verb="State">
+    the course thesis in one sentence: pretty pictures → measurements → models → inferences
+  </Objective>
+  <Objective id="inference" verb="Explain">
+    why astronomy is fundamentally about inferring physical reality from constrained measurements
+  </Objective>
+  <Objective id="quantities" verb="Name">
+    the key physical quantities astronomers care about: distance, time, speed, mass, energy/luminosity, temperature
+  </Objective>
+  <Objective id="fls" verb="Explain">
+    why the finite speed of light makes astronomy a "lookback time" science
+  </Objective>
+  <Objective id="wavelength" verb="Give">
+    a one-sentence reason why wavelength matters: different wavelengths reveal different physics
+  </Objective>
+</LearningObjectives>
 
 <Callout variant="info" title="A Note on First Exposure (Read This Once, Then Relax)">
 This reading is designed to *prime* your brain, not test it. You will encounter many terms, images, and equations before you fully understand them—and that is intentional. Every technical term introduced here will be revisited later, slowly and carefully, when it actually matters.
@@ -1199,7 +1190,7 @@ Let's recap what we've covered:
 Today's spoilers touched all four modules. Now we build the tools to understand them.
 </Callout>
 
-**Next class:** The Math Boot Camp—units, scaling, order-of-magnitude estimation, and the ratio method. Not hazing; tools that make precise reasoning possible.
+**Next class:** The Math Boot Camp—units, scaling, order-of-magnitude estimation, and the ratio method. Not hazing; tools that make precise reasoning possible. We pick up the language of coordinates, magnitudes, and angular sizes in <ChapterRef client:load slug="measuring-the-sky" />, then return to <ChapterRef client:load slug="stellar-evolution">how stars live and die</ChapterRef> once we have the H–R diagram in hand.
 
 **Coming soon:** Our first real inference problem: *How do we measure distance to objects we can't reach?*
 

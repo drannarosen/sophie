@@ -62,8 +62,16 @@ const groups = groupHeadings(headings);
 )}
 
 <script>
-  // Scroll-spy. Observes every h2[id]/h3[id] inside .sophie-content
-  // and sets aria-current="location" on the matching ToC link.
+  // Scroll-spy. The ToC's own links are the source of truth for
+  // which headings get observed: we look up each `.sophie-toc-link`
+  // by its `href="#<id>"` and observe ONLY those headings. This
+  // excludes incidental `h2[id]` / `h3[id]` elements that live
+  // inside `.sophie-content` but are *not* part of the chapter's
+  // navigable structure — e.g. `<LearningObjectives>` renders its
+  // own `<h2 id="lo-heading">` for axe-core region naming, and
+  // observing it caused `paint()` to be called with an id that has
+  // no matching link, silently clearing aria-current on every link.
+  // Sets aria-current="location" on the matching ToC link.
   // Idempotent via a window-level guard, matching the existing
   // chrome-script pattern.
   type W = Window & { __sophieTocSpyBound?: boolean };
@@ -71,22 +79,28 @@ const groups = groupHeadings(headings);
   if (!w.__sophieTocSpyBound) {
     w.__sophieTocSpyBound = true;
 
-    const headings = document.querySelectorAll<HTMLHeadingElement>(
-      ".sophie-content h2[id], .sophie-content h3[id]",
+    const tocLinks = Array.from(
+      document.querySelectorAll<HTMLAnchorElement>(".sophie-toc-link"),
     );
+    const headings = tocLinks
+      .map((a) => {
+        const href = a.getAttribute("href") ?? "";
+        if (!href.startsWith("#")) return null;
+        return document.getElementById(href.slice(1));
+      })
+      .filter((h): h is HTMLElement => h !== null);
+
     if (headings.length > 0) {
       let currentId: string | null = null;
 
       function paint(id: string): void {
-        document
-          .querySelectorAll<HTMLAnchorElement>(".sophie-toc-link")
-          .forEach((a) => {
-            if (a.getAttribute("href") === `#${id}`) {
-              a.setAttribute("aria-current", "location");
-            } else {
-              a.removeAttribute("aria-current");
-            }
-          });
+        for (const a of tocLinks) {
+          if (a.getAttribute("href") === `#${id}`) {
+            a.setAttribute("aria-current", "location");
+          } else {
+            a.removeAttribute("aria-current");
+          }
+        }
       }
 
       const observer = new IntersectionObserver(
@@ -105,9 +119,9 @@ const groups = groupHeadings(headings);
       );
       headings.forEach((h) => observer.observe(h));
 
-      // Initial paint: the first H2 of the chapter is "active" until
-      // scroll moves past it.
-      paint((headings[0] as HTMLHeadingElement).id);
+      // Initial paint: the first ToC entry (the chapter's first H2)
+      // is "active" until scroll moves past it.
+      paint(headings[0].id);
     }
   }
 </script>

@@ -30,6 +30,13 @@ export default defineConfig({
     // to read aggregated definitions and seed the @sophie/components
     // glossary store.
     "lib/pedagogy-index-extractor": "src/lib/pedagogy-index-extractor.ts",
+    // `lib/pedagogy-audit` is the systematic build-time audit pass
+    // (PR-C4) over the populated PedagogyIndex. Imported by
+    // TextbookLayout to surface cross-cutting invariants (undefined
+    // cross-refs, orphan definitions, registry figures with zero
+    // usages, etc.). Must exist at dist/lib/pedagogy-audit.js to
+    // resolve from the copied-verbatim .astro files in dist/components/.
+    "lib/pedagogy-audit": "src/lib/pedagogy-audit.ts",
     // `lib/pedagogy-index-virtual-module` is the optional Vite plugin
     // exposing `virtual:sophie/pedagogy-index`. Not used by the
     // chrome critical path (Vite caches load() before chapter parse);
