@@ -1,13 +1,14 @@
 ---
-status: accepted
 date: 2026-05-09
-deciders: [anna]
-supersedes: ~
-superseded-by: ~
 tags: [components, codecell, editor, codemirror, comp]
 ---
 
 # ADR 0018: CodeMirror 6 as the editor inside `<CodeCell>`
+
+:::{admonition} ADR metadata
+- **Status**: accepted
+- **Deciders**: anna
+:::
 
 ## Context
 

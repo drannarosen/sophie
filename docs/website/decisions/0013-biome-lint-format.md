@@ -1,13 +1,14 @@
 ---
-status: accepted
 date: 2026-05-09
-deciders: [anna]
-supersedes: ~
-superseded-by: ~
 tags: [tooling, lint, format, biome, dx]
 ---
 
 # ADR 0013: Biome for lint and format
+
+:::{admonition} ADR metadata
+- **Status**: accepted
+- **Deciders**: anna
+:::
 
 ## Context
 

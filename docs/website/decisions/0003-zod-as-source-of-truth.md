@@ -1,13 +1,14 @@
 ---
-status: accepted
 date: 2026-05-09
-deciders: [anna]
-supersedes: ~
-superseded-by: ~
 tags: [foundation, schema, types]
 ---
 
 # ADR 0003: Zod as schema source of truth
+
+:::{admonition} ADR metadata
+- **Status**: accepted
+- **Deciders**: anna
+:::
 
 ## Context
 

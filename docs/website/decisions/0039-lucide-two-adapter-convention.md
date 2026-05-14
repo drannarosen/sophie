@@ -1,13 +1,14 @@
 ---
-status: accepted
 date: 2026-05-13
-deciders: [anna]
-supersedes: ~
-superseded-by: ~
 tags: [icons, chrome, components, adapter, lucide]
 ---
 
 # ADR 0039: Two-adapter Lucide icon convention (`lucide-static` for chrome, `lucide-react` for pedagogy)
+
+:::{admonition} ADR metadata
+- **Status**: accepted
+- **Deciders**: anna
+:::
 
 ## Context
 

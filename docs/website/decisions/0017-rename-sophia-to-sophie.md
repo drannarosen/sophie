@@ -1,13 +1,14 @@
 ---
-status: accepted
 date: 2026-05-09
-deciders: [anna]
-supersedes: ~
-superseded-by: ~
 tags: [naming, branding, foundation]
 ---
 
 # ADR 0017: Rename Sophia → Sophie
+
+:::{admonition} ADR metadata
+- **Status**: accepted
+- **Deciders**: anna
+:::
 
 ## Context
 

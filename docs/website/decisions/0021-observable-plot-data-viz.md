@@ -1,13 +1,14 @@
 ---
-status: accepted
 date: 2026-05-09
-deciders: [anna]
-supersedes: ~
-superseded-by: ~
 tags: [data-viz, observable-plot, calibration, dashboards]
 ---
 
 # ADR 0021: Observable Plot for data viz and dashboards
+
+:::{admonition} ADR metadata
+- **Status**: accepted
+- **Deciders**: anna
+:::
 
 ## Context
 

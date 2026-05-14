@@ -1,13 +1,14 @@
 ---
-status: accepted
 date: 2026-05-09
-deciders: [anna]
-supersedes: ~
-superseded-by: ~
 tags: [build-order, phase-0, scope, philosophy, foundation]
 ---
 
 # ADR 0023: Vertical-slice-first build order for Phase 0 and beyond
+
+:::{admonition} ADR metadata
+- **Status**: accepted
+- **Deciders**: anna
+:::
 
 ## Context
 

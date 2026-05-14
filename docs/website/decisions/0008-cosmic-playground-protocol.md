@@ -1,13 +1,14 @@
 ---
-status: accepted
 date: 2026-05-09
-deciders: [anna]
-supersedes: ~
-superseded-by: ~
 tags: [cosmic-playground, demos, integration, postmessage]
 ---
 
 # ADR 0008: Cosmic Playground integration via manifest + iframe + postMessage protocol
+
+:::{admonition} ADR metadata
+- **Status**: accepted
+- **Deciders**: anna
+:::
 
 ## Context
 

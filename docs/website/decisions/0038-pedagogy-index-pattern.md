@@ -1,13 +1,14 @@
 ---
-status: accepted
 date: 2026-05-13
-deciders: [anna]
-supersedes: ~
-superseded-by: ~
 tags: [pedagogy, content, mdx, remark, indexing, schema-driven]
 ---
 
 # ADR 0038: Pedagogy index pattern + role-aggregation principle
+
+:::{admonition} ADR metadata
+- **Status**: accepted
+- **Deciders**: anna
+:::
 
 ## Context
 

@@ -1,13 +1,14 @@
 ---
-status: accepted
 date: 2026-05-13
-deciders: [anna]
-supersedes: ~
-superseded-by: ~
 tags: [chrome, state, astro, bundling, gotcha]
 ---
 
 # ADR 0037: Cross-bundle chrome communication via DOM attributes + MutationObserver
+
+:::{admonition} ADR metadata
+- **Status**: accepted
+- **Deciders**: anna
+:::
 
 ## Context
 

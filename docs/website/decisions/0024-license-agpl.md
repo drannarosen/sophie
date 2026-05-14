@@ -1,13 +1,14 @@
 ---
-status: accepted
 date: 2026-05-10
-deciders: [anna]
-supersedes: ~
-superseded-by: ~
 tags: [license, governance, foundation, phase-0]
 ---
 
 # ADR 0024: License — AGPL-3.0-or-later for platform code
+
+:::{admonition} ADR metadata
+- **Status**: accepted
+- **Deciders**: anna
+:::
 
 ## Context
 

@@ -1,13 +1,14 @@
 ---
-status: accepted
 date: 2026-05-12
-deciders: [anna]
-supersedes: ~
-superseded-by: ~
 tags: [layout, components, astro, api-design]
 ---
 
 # ADR 0031: Compound-component pattern for layout primitives
+
+:::{admonition} ADR metadata
+- **Status**: accepted
+- **Deciders**: anna
+:::
 
 ## Context
 

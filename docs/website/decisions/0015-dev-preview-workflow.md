@@ -1,13 +1,14 @@
 ---
-status: accepted
 date: 2026-05-09
-deciders: [anna]
-supersedes: ~
-superseded-by: ~
 tags: [tooling, dx, preview, hmr, storybook, playwright, ai]
 ---
 
 # ADR 0015: Dev preview workflow — `sophie dev` + Storybook + Playwright MCP
+
+:::{admonition} ADR metadata
+- **Status**: accepted
+- **Deciders**: anna
+:::
 
 ## Context
 

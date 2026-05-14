@@ -1,13 +1,14 @@
 ---
-status: accepted
 date: 2026-05-09
-deciders: [anna]
-supersedes: ~
-superseded-by: ~
 tags: [foundation, renderer, astro, mdx]
 ---
 
 # ADR 0002: Astro + MDX as the renderer
+
+:::{admonition} ADR metadata
+- **Status**: accepted
+- **Deciders**: anna
+:::
 
 > **Revision (2026-05-10):** title, body, and pin updated from
 > "Astro 5" to "Astro 6". Astro 6 became stable after this ADR was
