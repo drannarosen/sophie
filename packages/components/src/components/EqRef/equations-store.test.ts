@@ -25,9 +25,7 @@ describe("equations-store", () => {
   // The store keeps `equationsBySlug` and `hydratedFromScript` as
   // module-level state. T15 (script-tag auto-hydrate on first
   // lookup) needs a *pristine* module instance; we use
-  // `vi.resetModules()` + dynamic import to guarantee one. T14
-  // resets state explicitly via `__setEquations([])` after the
-  // assertions to be a good citizen.
+  // `vi.resetModules()` + dynamic import to guarantee one.
   beforeEach(async () => {
     const { vi } = await import("vitest");
     vi.resetModules();

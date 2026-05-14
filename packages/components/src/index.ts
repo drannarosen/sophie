@@ -53,11 +53,17 @@ export {
   EffortLogPropsSchema,
   effortLogContract,
 } from "./components/EffortLog/index.ts";
+export type { EqRefProps } from "./components/EqRef/EqRef.schema.ts";
 // Internal-use setters: @sophie/astro's <TextbookLayout> calls these
 // to hydrate the pedagogy index (definitions, equations, ...) from
 // `virtual:sophie/pedagogy-index` at render time. Not part of the
 // public authoring API; underscore-prefix flags internal-use.
 export { __setEquations } from "./components/EqRef/equations-store.ts";
+export {
+  EqRef,
+  EqRefPropsSchema,
+  eqRefContract,
+} from "./components/EqRef/index.ts";
 export type { FigureProps } from "./components/Figure/Figure.schema.ts";
 export {
   Figure,

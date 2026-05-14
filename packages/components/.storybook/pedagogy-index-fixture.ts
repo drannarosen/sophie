@@ -4,8 +4,8 @@
  * @sophie/astro Vite plugin (ADR 0038) and resolves to live
  * accumulator state. Storybook runs in isolation (no astro
  * pipeline, no chapter MDX), so we provide a small fixture so
- * `<GlossaryTerm>` stories can render against a realistic index
- * shape.
+ * `<GlossaryTerm>` / `<EqRef>` stories can render against a
+ * realistic index shape.
  *
  * Wired by an alias in .storybook/main.ts:
  *
@@ -36,7 +36,27 @@ export const definitions = [
   },
 ];
 
-export const equations: ReadonlyArray<unknown> = [];
+export const equations = [
+  {
+    slug: "inverse-square-law",
+    title: "The Inverse-Square Law",
+    number: 1,
+    tex: "F = \\frac{L}{4\\pi d^2}",
+    body: "<p>Flux falls off as the inverse square of the distance to a point source — the geometric consequence of light spreading over an ever-expanding sphere.</p>",
+    chapter: "spoiler-alerts",
+    anchor: "inverse-square-law",
+  },
+  {
+    slug: "wiens-law",
+    title: "Wien's Law",
+    number: 2,
+    tex: "\\lambda_{\\text{peak}} = b \\, T^{-1}",
+    body: "<p>The peak wavelength of a blackbody's emission scales inversely with temperature — hotter sources peak bluer; cooler sources peak redder.</p>",
+    chapter: "spoiler-alerts",
+    anchor: "wiens-law",
+  },
+];
+
 export const keyInsights: ReadonlyArray<unknown> = [];
 export const figures: ReadonlyArray<unknown> = [];
 export const misconceptions: ReadonlyArray<unknown> = [];
