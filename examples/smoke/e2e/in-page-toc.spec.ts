@@ -78,10 +78,20 @@ test.describe("PR 4: In-page ToC (desktop)", () => {
         window.innerHeight * desiredViewportTopFraction;
       window.scrollTo({ top: targetScrollTop, behavior: "instant" });
     });
-    // Give the IntersectionObserver one tick to fire.
-    await page.waitForTimeout(150);
 
-    // Some OTHER link should now be aria-current, not the first.
+    // Condition-based wait: poll the observable state (the
+    // aria-current attribute) rather than guessing how long the
+    // IntersectionObserver + paint pipeline takes. Playwright's
+    // web-first assertions retry until satisfied or the default
+    // timeout (5s) expires — no arbitrary sleep, no per-assertion
+    // timeout knob. Two transitions must settle:
+    //   1. The first link must lose aria-current (it was set on
+    //      initial paint and must be cleared once a later heading
+    //      enters the active band).
+    //   2. Exactly one OTHER link must now carry aria-current.
+    // Asserting both stable states before reading hrefs eliminates
+    // the race that produced the historical flake.
+    await expect(firstLink).not.toHaveAttribute("aria-current", "location");
     const active = page.locator(
       ".sophie-toc--sidebar .sophie-toc-link[aria-current='location']"
     );
