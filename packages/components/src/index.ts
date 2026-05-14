@@ -130,6 +130,14 @@ export {
   Objective,
   ObjectivePropsSchema,
 } from "./components/Objective/index.ts";
+// Internal-use setter: @sophie/astro's <TextbookLayout> calls this to
+// hydrate the objectives collection from the populated pedagogy index
+// at render time. v1 has no React consumer for the store (the
+// `/objectives` page is server-rendered Astro that reads the
+// accumulator directly), but ships in PR-C4 for pattern uniformity
+// with `__setChapters` / `__setModules` and to anticipate future
+// client-side consumers without rewiring TextbookLayout later.
+export { __setObjectives } from "./components/Objective/objectives-store.ts";
 export type {
   PredictPrompt,
   PredictProps,
