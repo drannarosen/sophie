@@ -64,19 +64,22 @@ test.describe("PR-C1: <GlossaryTerm> on the smoke chapter", () => {
       .first();
     await trigger.waitFor({ state: "attached" });
     await trigger.scrollIntoViewIfNeeded();
-    await expect(trigger).toHaveAttribute("data-react-hydrated", "true", {
-      timeout: 5000,
-    });
+    await expect(trigger).toHaveAttribute("data-react-hydrated", "true");
     // HoverCard content is portal-mounted only when open.
     await expect(
       page.locator("[data-sophie-glossary-popover]")
     ).not.toBeAttached();
     await trigger.hover();
     const popover = page.locator("[data-sophie-glossary-popover]");
-    // HoverCard's openDelay is 150ms (set in GlossaryTerm.tsx);
-    // Playwright's default `toBeAttached` timeout is 5s which
-    // covers this, but explicit timeout makes the contract clear.
-    await expect(popover).toBeAttached({ timeout: 2000 });
+    // Wait on Radix's deterministic `data-state` flip — the same
+    // DOM commit that attaches the Content via `<Presence>` also
+    // stamps `data-state="open"`. This is the SoTA condition-based
+    // wait (no clock-time dependency): the assertion resolves the
+    // instant Radix's state machine commits the open transition.
+    // Supersedes the prior `toBeAttached({ timeout: 2000 })` knob;
+    // see `node_modules/@radix-ui/react-hover-card/dist/index.mjs`
+    // ("data-state": context.open ? "open" : "closed").
+    await expect(popover).toHaveAttribute("data-state", "open");
     await expect(popover).toContainText(/dark matter/i);
     await expect(popover).toContainText(/gravity/i);
   });
@@ -94,20 +97,20 @@ test.describe("PR-C1: <GlossaryTerm> on the smoke chapter", () => {
       .first();
     await trigger.waitFor({ state: "attached" });
     await trigger.scrollIntoViewIfNeeded();
-    await expect(trigger).toHaveAttribute("data-react-hydrated", "true", {
-      timeout: 5000,
-    });
+    await expect(trigger).toHaveAttribute("data-react-hydrated", "true");
     await trigger.hover();
     const popover = page.locator("[data-sophie-glossary-popover]");
-    // Explicit timeout for openDelay (150ms) + render budget.
-    await expect(popover).toBeAttached({ timeout: 2000 });
+    // Wait on Radix's `data-state="open"` flip — see open-path
+    // test above for the SoTA condition-based-waiting rationale.
+    await expect(popover).toHaveAttribute("data-state", "open");
     // Move pointer off the trigger to a neutral position. Radix
-    // HoverCard.closeDelay is 120ms; the portal unmounts after the
-    // delay elapses. Explicit 2000ms timeout makes the contract
-    // clear (closeDelay + unmount budget) and decouples from
-    // Playwright's default which is enough but ambiguous about why.
+    // wraps `HoverCard.Content` in `<Presence present={open}>`, so
+    // the content fully UNMOUNTS once `closeDelay` elapses — that
+    // unmount IS the deterministic state-machine signal. No
+    // clock-time knob needed; Playwright's default expect timeout
+    // covers Radix's closeDelay + unmount budget with room to spare.
     await page.mouse.move(0, 0);
-    await expect(popover).not.toBeAttached({ timeout: 2000 });
+    await expect(popover).not.toBeAttached();
   });
 
   test("clicking the trigger navigates to the canonical anchor", async ({

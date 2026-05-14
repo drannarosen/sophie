@@ -116,18 +116,22 @@ test.describe("PR-C3: <FigureRef> on the smoke chapter", () => {
       .first();
     await trigger.waitFor({ state: "attached" });
     await trigger.scrollIntoViewIfNeeded();
-    await expect(trigger).toHaveAttribute("data-react-hydrated", "true", {
-      timeout: 5000,
-    });
+    await expect(trigger).toHaveAttribute("data-react-hydrated", "true");
     // Closed-state precondition: portal isn't mounted yet.
     await expect(
       page.locator("[data-sophie-figure-popover]")
     ).not.toBeAttached();
     await trigger.hover();
     const popover = page.locator("[data-sophie-figure-popover]");
-    // HoverCard.openDelay = 150ms (set in FigureRef.tsx);
-    // explicit 2000ms timeout makes the contract clear.
-    await expect(popover).toBeAttached({ timeout: 2000 });
+    // Wait on Radix's deterministic `data-state` flip — the same
+    // DOM commit that attaches the Content via `<Presence>` also
+    // stamps `data-state="open"`. SoTA condition-based wait (no
+    // clock-time dependency); the assertion resolves the instant
+    // Radix's state machine commits the open transition. Supersedes
+    // the prior `toBeAttached({ timeout: 2000 })` knob. See
+    // `node_modules/@radix-ui/react-hover-card/dist/index.mjs`
+    // ("data-state": context.open ? "open" : "closed").
+    await expect(popover).toHaveAttribute("data-state", "open");
     // Thumbnail <img> from the registry (lazy-loaded).
     const thumb = popover.locator("img");
     await expect(thumb).toBeAttached();
