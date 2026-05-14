@@ -1,5 +1,6 @@
 import type {
   EquationEntry,
+  FigureRegistryEntry,
   FigureUsageEntry,
   KeyInsightEntry,
   MisconceptionEntry,
@@ -1289,6 +1290,58 @@ describe("indexAccumulator figures (cross-chapter)", () => {
 
     const index = indexAccumulator.asPedagogyIndex();
     expect(index.figureRegistry).toEqual([]);
+  });
+});
+
+describe("indexAccumulator setFigureRegistry / figureRegistry", () => {
+  // PR-C3 two-tier model: registry comes from consumer frontmatter
+  // (set globally via `setFigureRegistry`), usages come from per-chapter
+  // `<Figure>` walks. These tests lock in the registry-side semantics
+  // so future refactors of the accumulator can't silently break them.
+
+  test("setFigureRegistry overwrites prior entries (last-write-wins)", () => {
+    // Reset to empty so this test doesn't depend on prior accumulator state.
+    indexAccumulator.setFigureRegistry([]);
+
+    const entryA: FigureRegistryEntry = {
+      name: "set-fr-a",
+      src: "/a.png",
+      alt: "A",
+    };
+    const entryB: FigureRegistryEntry = {
+      name: "set-fr-b",
+      src: "/b.png",
+      alt: "B",
+    };
+    const entryC: FigureRegistryEntry = {
+      name: "set-fr-c",
+      src: "/c.png",
+      alt: "C",
+    };
+
+    indexAccumulator.setFigureRegistry([entryA, entryB]);
+    expect(indexAccumulator.asPedagogyIndex().figureRegistry).toEqual([
+      entryA,
+      entryB,
+    ]);
+
+    indexAccumulator.setFigureRegistry([entryC]);
+    expect(indexAccumulator.asPedagogyIndex().figureRegistry).toEqual([entryC]);
+  });
+
+  test("clearChapter does NOT touch figureRegistry (consumer-global, not per-chapter)", () => {
+    // Reset to empty so this test doesn't depend on prior accumulator state.
+    indexAccumulator.setFigureRegistry([]);
+
+    const entry: FigureRegistryEntry = {
+      name: "clr-fr-x",
+      src: "/x.png",
+      alt: "X",
+    };
+    indexAccumulator.setFigureRegistry([entry]);
+
+    indexAccumulator.clearChapter("some-chapter");
+    expect(indexAccumulator.asPedagogyIndex().figureRegistry).toEqual([entry]);
   });
 });
 
