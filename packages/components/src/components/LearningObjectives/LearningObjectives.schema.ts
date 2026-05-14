@@ -1,36 +1,40 @@
+import { NonEmptyString } from "@sophie/core/schema";
+import type { ReactNode } from "react";
 import { z } from "zod";
 
 /**
- * One learning objective. The `id` is author-supplied (not derived) so
- * the persisted "checked" state survives chapter edits and reorders;
- * mirrors the explicit-id pattern Sophie uses for `<InteractiveCallout>`
- * and (future) `<Predict>`. Per
- * [docs/plans/2026-05-10-phase-1-component-trios.md](../../../../docs/plans/2026-05-10-phase-1-component-trios.md).
- */
-export const ObjectiveSchema = z.object({
-  id: z.string().min(1),
-  verb: z.string().min(1),
-  body: z.string().min(1),
-});
-
-export type Objective = z.infer<typeof ObjectiveSchema>;
-
-/**
- * Persistence-bearing chapter primitive. Each objective renders as a
- * checkable list item; per-objective checked state persists per-course/
- * profile/chapter/component-id/objective-id via `useInteractive`.
+ * Persistence-bearing chapter primitive. Authored in MDX as
  *
- * Per ADR 0027: course, chapter, and id are required props (per-instance
- * hydration; the MDX render boundary doesn't propagate context). Each
- * `<LearningObjectives>` instance is its own React island via
+ * ```mdx
+ * <LearningObjectives client:load course="..." chapter="..." id="...">
+ *   <Objective verb="Recognize" id="lo-1">body</Objective>
+ *   <Objective verb="Apply"     id="lo-2">body</Objective>
+ * </LearningObjectives>
+ * ```
+ *
+ * The parent reads/writes one IndexedDB record per (course, chapter,
+ * id) tuple — value is `Record<objectiveId, boolean>`. Per-objective
+ * `checked` + `onToggle` is injected into each `<Objective>` child via
+ * `React.Children.map` + `cloneElement` at render time.
+ *
+ * Per ADR 0027: `course`, `chapter`, and `id` are required props.
+ * MDX-rendered React components are isolated SSR roots; context
+ * providers from outer `client:load` parents do not propagate into
+ * the per-island `renderToStaticMarkup` pass. Threading course/chapter
+ * as props is the ADR-mandated pattern (also used by
+ * `<InteractiveCallout>`). The PR-C4 implementer caught the original
+ * design doc's `useChapterContext` proposal as conflicting with ADR
+ * 0027 before writing code; revised to keep props.
+ *
+ * Each `<LearningObjectives>` instance is its own React island via
  * `client:load`.
  */
 export const LearningObjectivesPropsSchema = z.object({
-  course: z.string().min(1),
-  chapter: z.string().min(1),
-  id: z.string().min(1),
-  objectives: z.array(ObjectiveSchema).min(1),
+  course: NonEmptyString,
+  chapter: NonEmptyString,
+  id: NonEmptyString,
   heading: z.string().min(1).optional(),
+  children: z.custom<ReactNode>(),
 });
 
 export type LearningObjectivesProps = z.infer<

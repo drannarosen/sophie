@@ -106,14 +106,17 @@ export {
 export type {
   LearningObjectivesProps,
   LearningObjectivesState,
-  Objective,
 } from "./components/LearningObjectives/index.ts";
 export {
   LearningObjectives,
   LearningObjectivesPropsSchema,
   learningObjectivesContract,
-  ObjectiveSchema,
 } from "./components/LearningObjectives/index.ts";
+export type { ObjectiveProps } from "./components/Objective/index.ts";
+export {
+  Objective,
+  ObjectivePropsSchema,
+} from "./components/Objective/index.ts";
 export type {
   PredictPrompt,
   PredictProps,

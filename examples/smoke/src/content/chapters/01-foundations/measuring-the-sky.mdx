@@ -8,7 +8,7 @@ description: "(stub — placeholder for nav demo) Coordinates, magnitudes, angul
 tags: ["foundations", "coordinates"]
 ---
 
-import { LearningObjectives } from "@sophie/components";
+import { LearningObjectives, Objective } from "@sophie/components";
 
 This chapter is a **placeholder** wired into the Sophie smoke target so
 the sidebar module/chapter navigation has a real second chapter to
@@ -22,14 +22,11 @@ multi-chapter layout in production builds.
   chapter="measuring-the-sky"
   id="lo"
   heading="By the end of this stub, you will:"
-  objectives={[
-    {
-      id: "stub",
-      verb: "Recognize",
-      body: "this as placeholder content that demonstrates the platform's module/chapter nav, not real ASTR 201 material.",
-    },
-  ]}
-/>
+>
+  <Objective id="stub" verb="Recognize">
+    this as placeholder content that demonstrates the platform's module/chapter nav, not real ASTR 201 material.
+  </Objective>
+</LearningObjectives>
 
 The astronomical sky is a sphere. Coordinates locate a star on that
 sphere; magnitudes describe how much of its light reaches us; angular

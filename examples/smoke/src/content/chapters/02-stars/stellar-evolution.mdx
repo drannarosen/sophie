@@ -8,7 +8,7 @@ description: "(stub — placeholder for nav demo) Birth, main-sequence life, and
 tags: ["stars", "stellar-physics"]
 ---
 
-import { LearningObjectives } from "@sophie/components";
+import { LearningObjectives, Objective } from "@sophie/components";
 
 This chapter is a **placeholder** wired into the Sophie smoke target so
 the sidebar module/chapter navigation has a real chapter under the
@@ -22,14 +22,11 @@ evolution.
   chapter="stellar-evolution"
   id="lo"
   heading="By the end of this stub, you will:"
-  objectives={[
-    {
-      id: "stub",
-      verb: "Recognize",
-      body: "this as a second module's placeholder, demonstrating that a chapter list grows past one module.",
-    },
-  ]}
-/>
+>
+  <Objective id="stub" verb="Recognize">
+    this as a second module's placeholder, demonstrating that a chapter list grows past one module.
+  </Objective>
+</LearningObjectives>
 
 A star's life is determined almost entirely by its initial mass. The
 H–R diagram organizes stars by luminosity and surface temperature; a

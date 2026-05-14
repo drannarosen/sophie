@@ -1,42 +1,25 @@
 import { describe, expect, it } from "vitest";
-import {
-  LearningObjectivesPropsSchema,
-  ObjectiveSchema,
-} from "./LearningObjectives.schema.ts";
-
-describe("ObjectiveSchema", () => {
-  const valid = { id: "thesis", verb: "State", body: "the thesis" };
-
-  it("accepts a complete objective", () => {
-    expect(ObjectiveSchema.safeParse(valid).success).toBe(true);
-  });
-
-  it("rejects empty id, verb, or body", () => {
-    for (const field of ["id", "verb", "body"] as const) {
-      expect(ObjectiveSchema.safeParse({ ...valid, [field]: "" }).success).toBe(
-        false
-      );
-    }
-  });
-});
+import { LearningObjectivesPropsSchema } from "./LearningObjectives.schema.ts";
 
 describe("LearningObjectivesPropsSchema", () => {
   const valid = {
     course: "test",
     chapter: "test",
     id: "lo",
-    objectives: [{ id: "a", verb: "x", body: "y" }],
+    children: null,
   };
 
-  it("accepts the minimal valid shape (one objective)", () => {
+  it("accepts the minimal valid shape", () => {
     expect(LearningObjectivesPropsSchema.safeParse(valid).success).toBe(true);
   });
 
-  it("rejects empty objectives array (min(1))", () => {
+  it("accepts an optional heading", () => {
     expect(
-      LearningObjectivesPropsSchema.safeParse({ ...valid, objectives: [] })
-        .success
-    ).toBe(false);
+      LearningObjectivesPropsSchema.safeParse({
+        ...valid,
+        heading: "Today's Objectives",
+      }).success
+    ).toBe(true);
   });
 
   it("rejects empty heading when heading is provided", () => {

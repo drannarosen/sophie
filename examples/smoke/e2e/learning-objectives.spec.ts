@@ -17,10 +17,10 @@ test.describe("<LearningObjectives> in spoiler-alerts chapter", () => {
     });
     await expect(heading).toBeVisible();
 
-    // Each objective renders as a <li> with a checkbox + label.
-    const checkboxes = page
-      .locator("label", { hasText: /State|Explain|Name|Give/ })
-      .locator("xpath=preceding-sibling::input[@type='checkbox']");
+    // Each <Objective> child renders as an <li> containing a checkbox
+    // + label. The parent <ul> carries aria-busy until the parent
+    // useInteractive hydration completes.
+    const checkboxes = page.locator("ul[aria-busy] input[type='checkbox']");
     await expect(checkboxes).toHaveCount(5);
 
     // Verify the verbs from the chapter migration appear in order.
@@ -29,18 +29,19 @@ test.describe("<LearningObjectives> in spoiler-alerts chapter", () => {
     await expect(page.getByText("Give", { exact: true })).toBeVisible();
   });
 
-  test("checked state persists across reload via IndexedDB, keyed by objective.id", async ({
+  test("checked state persists across reload via IndexedDB, keyed by objective id", async ({
     page,
   }) => {
     await page.goto(CHAPTER_URL);
 
-    // Wait for hydration: the disabled-while-loading guard prevents
-    // race-condition click loss. After hydration the first checkbox is
-    // enabled.
-    const firstCheckbox = page
-      .locator("input[type='checkbox'][aria-busy]")
-      .first();
-    await expect(firstCheckbox).toBeEnabled({ timeout: 5000 });
+    // Wait for hydration: the parent <ul aria-busy="false"> signals the
+    // useInteractive store is ready. Per PR-C4, the parent owns the
+    // single useInteractive call; checkboxes are pure-display until
+    // injected `checked` + `onToggle` props arrive from the parent.
+    await page
+      .locator("ul[aria-busy='false']")
+      .first()
+      .waitFor({ timeout: 5000 });
 
     // Find the checkbox associated with the "thesis" objective via its
     // label text.
@@ -65,11 +66,10 @@ test.describe("<LearningObjectives> in spoiler-alerts chapter", () => {
     );
     await expect(thesisCheckboxReloaded).toBeChecked({ timeout: 5000 });
 
-    // Verify the IDB stored the checked state under the expected key
-    // shape: profile : chapter : interactive-checkbox:${componentId}:${objectiveId}:checked
-    // (The `interactive-checkbox:` prefix comes from the
-    // <InteractiveCheckbox> wrapper that ObjectiveRow uses to embed the
-    // disabled-while-loading hydration guard automatically.)
+    // Verify the IDB stored the checked state under the new PR-C4 key
+    // shape: profile : chapter : learning-objectives:${componentId}:checked
+    // with a Record<objectiveId, boolean> value. The parent
+    // <LearningObjectives> owns the single useInteractive record.
     const storedValue = await page.evaluate(async () => {
       const db = await new Promise<IDBDatabase>((resolve, reject) => {
         const req = indexedDB.open("sophie-astr201");
@@ -81,7 +81,7 @@ test.describe("<LearningObjectives> in spoiler-alerts chapter", () => {
         const store = tx.objectStore("responses");
         const value = await new Promise((resolve) => {
           const req = store.get(
-            "student:spoiler-alerts:interactive-checkbox:lo:thesis:checked"
+            "student:spoiler-alerts:learning-objectives:lo:checked"
           );
           req.onsuccess = () => resolve(req.result);
         });
@@ -90,8 +90,11 @@ test.describe("<LearningObjectives> in spoiler-alerts chapter", () => {
         db.close();
       }
     });
-    // Per ADR 0029, IDB records are `{ value, ts }`.
-    expect((storedValue as { value: boolean }).value).toBe(true);
+    // Per ADR 0029, IDB records are `{ value, ts }`. PR-C4 value shape
+    // is `Record<objectiveId, boolean>`.
+    expect(
+      (storedValue as { value: Record<string, boolean> }).value.thesis
+    ).toBe(true);
     expect((storedValue as { ts: number }).ts).toBeGreaterThan(0);
   });
 
@@ -99,9 +102,9 @@ test.describe("<LearningObjectives> in spoiler-alerts chapter", () => {
     page,
   }) => {
     await page.goto(CHAPTER_URL);
-    // Wait for the LO checkboxes to finish hydrating before scanning.
+    // Wait for hydration of the parent useInteractive before scanning.
     await page
-      .locator("input[type='checkbox'][aria-busy='false']")
+      .locator("ul[aria-busy='false']")
       .first()
       .waitFor({ timeout: 5000 });
 

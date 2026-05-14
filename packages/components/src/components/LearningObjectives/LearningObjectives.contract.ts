@@ -1,4 +1,4 @@
-import type { AuditFinding, ComponentContract } from "../../contract/types.ts";
+import type { ComponentContract } from "../../contract/types.ts";
 import {
   type LearningObjectivesProps,
   LearningObjectivesPropsSchema,
@@ -7,9 +7,18 @@ import { LearningObjectives } from "./LearningObjectives.tsx";
 
 /**
  * Persistence state shape: `Record<objectiveId, checked>`. Keyed by
- * the author-supplied `objective.id` so reorders/edits don't corrupt
- * student state. Each entry is written to IndexedDB via
- * `useInteractive` under `learning-objectives:${componentId}:${objectiveId}:checked`.
+ * the author-supplied `<Objective id>` so reorders/edits don't
+ * corrupt student state. One IndexedDB record per
+ * (course, chapter, id) tuple under
+ * `learning-objectives:${id}:checked`.
+ *
+ * Per PR-C4 (children-mode refactor): the LO parent reads/writes the
+ * full record; the build-time pedagogy-audit (`pedagogy-audit.ts`)
+ * reasons across chapters about duplicate `<Objective id>` (O1) +
+ * zero-objective chapters (O2). The per-component contract audit is
+ * a no-op because the children-mode shape moves the duplicate-id
+ * check into a static-extraction concern (the remark plugin walks
+ * `<Objective>` flow elements per chapter and raises O1 there).
  */
 export type LearningObjectivesState = Record<string, boolean>;
 
@@ -24,26 +33,11 @@ export const learningObjectivesContract: ComponentContract<
     props,
     state,
   }),
-  // Objective ids back IndexedDB keys; two objectives with the same id
-  // would race the same persistence key and silently merge checked
-  // state. Detect duplicates at audit time so the platform fails
-  // loudly during content review rather than mysteriously at runtime.
-  audit: (props): AuditFinding[] => {
-    const counts = new Map<string, number>();
-    for (const objective of props.objectives) {
-      counts.set(objective.id, (counts.get(objective.id) ?? 0) + 1);
-    }
-    const findings: AuditFinding[] = [];
-    for (const [id, count] of counts) {
-      if (count > 1) {
-        findings.push({
-          severity: "error",
-          message: `Duplicate objective id "${id}" (appears ${count} times). Objective ids back IndexedDB keys; duplicates corrupt checked-state persistence.`,
-        });
-      }
-    }
-    return findings;
-  },
+  // No runtime audit at the component level. Duplicate-id detection
+  // happens at remark-extraction time (PR-C4 O1 invariant) and at
+  // build-time `runPedagogyAudit()`; the children-mode JSX shape
+  // means the contract no longer has access to the objective list.
+  audit: () => [],
   containedIn: ["chapter"],
   forbidsContaining: [],
 };
