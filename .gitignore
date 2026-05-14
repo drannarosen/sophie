@@ -44,3 +44,8 @@ Thumbs.db
 # Claude Code local settings (user-specific permissions etc.)
 .claude/settings.local.json
 .claude/.credentials.json
+
+# Git worktrees for isolated feature branches (per
+# superpowers:using-git-worktrees). Each subdirectory is a separate
+# checkout sharing this repo's .git/ — never commit their contents.
+.worktrees/
