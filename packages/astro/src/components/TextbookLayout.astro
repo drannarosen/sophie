@@ -1,6 +1,6 @@
 ---
 import "../styles/textbook-layout.css";
-import { __setGlossaryDefinitions } from "@sophie/components";
+import { __setEquations, __setGlossaryDefinitions } from "@sophie/components";
 import { type CollectionEntry, getCollection, render } from "astro:content";
 import { indexAccumulator } from "../lib/pedagogy-index-extractor";
 import ContentColumn from "./ContentColumn.astro";
@@ -12,8 +12,8 @@ import TopBar from "./TopBar.astro";
 import ViewModeToggle from "./ViewModeToggle.astro";
 
 // Wire the build-time pedagogy index (ADR 0038) into the
-// @sophie/components glossary store so <GlossaryTerm> in this
-// page's MDX content can resolve definitions.
+// @sophie/components pedagogy stores so <GlossaryTerm> and <EqRef>
+// in this page's MDX content can resolve definitions and equations.
 //
 // Build-order subtlety: Astro's content-collection layer only
 // triggers MDX parse (which runs the pedagogy-index remark
@@ -35,25 +35,36 @@ import ViewModeToggle from "./ViewModeToggle.astro";
 //
 // @sophie/components stays Vite-protocol-agnostic (which keeps
 // Astro config's bare-Node loader working) by receiving the
-// definitions through its `__setGlossaryDefinitions` setter
-// rather than importing the virtual module itself.
+// definitions and equations through its `__setGlossaryDefinitions`
+// and `__setEquations` setters rather than importing the virtual
+// module itself.
 const chapters: CollectionEntry<"chapters">[] = await getCollection("chapters");
 await Promise.all(chapters.map((c) => render(c)));
-const pedagogyDefinitions = indexAccumulator.asPedagogyIndex().definitions;
-__setGlossaryDefinitions(pedagogyDefinitions);
-// Serialize the same payload into a <script> tag so the
-// @sophie/components glossary store can hydrate client-side
-// after React mount. Server-side module state doesn't survive
-// to the wire, so without this script tag <GlossaryTerm>
-// rerenders as bare prose on hydration (empty client store
-// wins). See packages/components/.../definitions-store.ts.
+const pedagogy = indexAccumulator.asPedagogyIndex();
+// Both definitions and equations follow the same setter-call pattern
+// (ADR 0038 Revisions section): the chrome layer reads the accumulator
+// directly, then pushes into each role's React store via a setter
+// exported from @sophie/components. This keeps the components package
+// Vite-protocol-agnostic.
+__setGlossaryDefinitions(pedagogy.definitions);
+__setEquations(pedagogy.equations);
+// Serialize the same payloads into <script> tags so each role's
+// client-side store can hydrate after React mount. Server-side module
+// state doesn't survive to the wire, so without these script tags
+// <GlossaryTerm> / <EqRef> rerender as bare prose on hydration (empty
+// client store wins). See packages/components/.../definitions-store.ts
+// and packages/components/.../equations-store.ts.
 //
 // Escape `<` as `<` after JSON.stringify to prevent the
 // HTML parser from terminating the <script> tag early on any
-// `</script>` substring inside a definition body (realistic for
-// AI-authored CS/web content per ADR 0030). The escape survives
+// `</script>` substring inside a definition / equation body (realistic
+// for AI-authored CS/web content per ADR 0030). The escape survives
 // JSON.parse on the consumer side (< → <).
-const pedagogyDefinitionsJson = JSON.stringify(pedagogyDefinitions).replace(
+const pedagogyDefinitionsJson = JSON.stringify(pedagogy.definitions).replace(
+  /</g,
+  "\\u003c"
+);
+const pedagogyEquationsJson = JSON.stringify(pedagogy.equations).replace(
   /</g,
   "\\u003c"
 );
@@ -98,11 +109,6 @@ const collapsedVars = [
  *   </TextbookLayout>
  *
  * Per docs/plans/2026-05-12-layout-shell-foundation-design.md.
- *
- * PR 1 ships the visual frame + sidebar toggle. Theme toggle (PR 2),
- * sidebar nav contents (PR 3), in-page ToC (PR 4), view modes (PR 5),
- * margin asides (PR 6), search UI (PR 7), glossary popovers (PR 8),
- * cross-ref previews (PR 9), print polish (PR 10) follow.
  */
 ---
 
@@ -118,6 +124,15 @@ const collapsedVars = [
   id='sophie-pedagogy-definitions'
   type='application/json'
   set:html={pedagogyDefinitionsJson}
+/>
+{/* Equation-index payload for client-side hydration of <EqRef>'s
+    equations store. See packages/components/src/components/EqRef/equations-store.ts
+    for why this is needed alongside the server-side __setEquations call. */}
+<script
+  is:inline
+  id='sophie-pedagogy-equations'
+  type='application/json'
+  set:html={pedagogyEquationsJson}
 />
 
 <div

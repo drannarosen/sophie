@@ -1,0 +1,65 @@
+---
+import type { EquationEntry } from "@sophie/core/schema";
+import { indexAccumulator } from "../lib/pedagogy-index-extractor";
+
+const { equations } = indexAccumulator.asPedagogyIndex();
+
+/**
+ * `<ChapterEquations chapter="..." order="..." />` — Astro consumer
+ * of the build-time pedagogy index (ADR 0038). Renders one chapter's
+ * key equations as a `<dl>`. Mirrors `<ChapterGlossary>`'s shape:
+ * alphabetical default, `order="appearance"` opt-in (per PR-C2
+ * design decision #7; chapter-consumers follow the alphabetical-
+ * default rule).
+ *
+ * Bodies are pre-rendered HTML embedded via `set:html`. Pure Astro;
+ * no client JS. Reads the accumulator directly per ADR 0038's
+ * Revisions section (virtual-module bypass; matches
+ * `<ChapterGlossary>`).
+ */
+export interface Props {
+  /** Chapter slug to filter the index by (e.g. "spoiler-alerts"). */
+  chapter: string;
+  /** Sort strategy. Default alphabetical. */
+  order?: "alphabetical" | "appearance";
+  /** Optional heading rendered above the list. */
+  heading?: string;
+}
+
+const { chapter, order = "alphabetical", heading } = Astro.props;
+
+const inChapter: EquationEntry[] = equations.filter(
+  (e) => e.chapter === chapter
+);
+
+const sorted =
+  order === "alphabetical"
+    ? [...inChapter].sort((a, b) => a.title.localeCompare(b.title))
+    : [...inChapter].sort((a, b) => a.number - b.number);
+---
+
+{heading && <h2 class='sophie-chapter-equations__heading'>{heading}</h2>}
+{
+  sorted.length === 0 ? (
+    <p class='sophie-chapter-equations__empty'>
+      No key equations in this chapter yet.
+    </p>
+  ) : (
+    <dl class='sophie-chapter-equations' data-sophie-chapter-equations=''>
+      {sorted.map((entry) => (
+        <Fragment>
+          <dt id={`eq-${entry.slug}`} class='sophie-chapter-equations__term'>
+            <span class='sophie-chapter-equations__number'>
+              Eq. {entry.number}
+            </span>
+            <span class='sophie-chapter-equations__title'>{entry.title}</span>
+          </dt>
+          <dd
+            class='sophie-chapter-equations__body'
+            set:html={entry.body}
+          />
+        </Fragment>
+      ))}
+    </dl>
+  )
+}

@@ -1,6 +1,8 @@
+import type { EquationEntry } from "@sophie/core/schema";
 import { describe, expect, test } from "vitest";
 import {
   extractDefinitions,
+  extractEquations,
   indexAccumulator,
   pedagogyIndexRemarkPlugin,
 } from "./pedagogy-index-extractor.ts";
@@ -187,6 +189,196 @@ describe("extractDefinitions (pure)", () => {
   });
 });
 
+const mdxKeyEquation = (
+  attrs: Record<string, string>,
+  children: ReadonlyArray<Record<string, unknown>> = []
+) => ({
+  type: "mdxJsxFlowElement",
+  name: "KeyEquation",
+  attributes: Object.entries(attrs).map(([name, value]) => ({
+    type: "mdxJsxAttribute",
+    name,
+    value,
+  })),
+  children,
+});
+
+const mathBlock = (value: string) => ({ type: "math", value });
+
+const inlineMath = (value: string) => ({ type: "inlineMath", value });
+
+describe("extractEquations (pure)", () => {
+  // T5
+  test("returns one EquationEntry for one KeyEquation (number=1, slug/title/tex/body/chapter/anchor)", () => {
+    const tree = root([
+      mdxKeyEquation({ id: "wiens-law", title: "Wien's Law" }, [
+        mathBlock("\\lambda_{\\text{peak}} = b T^{-1}"),
+        para("Wien's displacement law relates peak wavelength to temperature."),
+      ]),
+    ]);
+
+    const entries = extractEquations(tree as never, "ch");
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      slug: "wiens-law",
+      title: "Wien's Law",
+      number: 1,
+      tex: "\\lambda_{\\text{peak}} = b T^{-1}",
+      chapter: "ch",
+      anchor: "wiens-law",
+    });
+    // anchor === slug invariant
+    expect(entries[0]?.anchor).toBe(entries[0]?.slug);
+    // body contains the rendered prose
+    expect(entries[0]?.body).toContain(
+      "Wien's displacement law relates peak wavelength to temperature."
+    );
+  });
+
+  // T6
+  test("extracts `tex` from the FIRST `$$` block when the body has multiple math blocks; subsequent forms stay in `body`", () => {
+    const tree = root([
+      mdxKeyEquation(
+        { id: "inverse-square-law", title: "Inverse-Square Law" },
+        [
+          mathBlock("F = \\frac{L}{4\\pi d^2}"),
+          para("Equivalently:"),
+          mathBlock("L = 4\\pi d^2 F"),
+        ]
+      ),
+    ]);
+
+    const entries = extractEquations(tree as never, "ch");
+
+    expect(entries).toHaveLength(1);
+    // tex is the FIRST math block
+    expect(entries[0]?.tex).toBe("F = \\frac{L}{4\\pi d^2}");
+    // body contains the rendered output for BOTH math blocks
+    expect(entries[0]?.body).toContain("F = \\frac{L}{4\\pi d^2}");
+    expect(entries[0]?.body).toContain("L = 4\\pi d^2 F");
+  });
+
+  // T6 supplementary — inlineMath must be ignored when picking the first tex
+  test("ignores inlineMath ($x$) when picking the first tex (only $$ display math counts)", () => {
+    const tree = root([
+      mdxKeyEquation({ id: "stefan-boltzmann", title: "Stefan–Boltzmann" }, [
+        {
+          type: "paragraph",
+          children: [
+            { type: "text", value: "Recall " },
+            inlineMath("T"),
+            { type: "text", value: " is temperature." },
+          ],
+        },
+        mathBlock("L = 4\\pi R^2 \\sigma T^4"),
+      ]),
+    ]);
+
+    const entries = extractEquations(tree as never, "ch");
+    expect(entries[0]?.tex).toBe("L = 4\\pi R^2 \\sigma T^4");
+  });
+
+  // T7
+  test("assigns per-chapter `number` 1, 2, 3 in source order across three KeyEquations", () => {
+    const tree = root([
+      mdxKeyEquation({ id: "eq-a", title: "Equation A" }, [mathBlock("a = 1")]),
+      mdxKeyEquation({ id: "eq-b", title: "Equation B" }, [mathBlock("b = 2")]),
+      mdxKeyEquation({ id: "eq-c", title: "Equation C" }, [mathBlock("c = 3")]),
+    ]);
+
+    const entries = extractEquations(tree as never, "ch");
+    expect(entries).toHaveLength(3);
+    expect(entries.map((e) => e.number)).toEqual([1, 2, 3]);
+    expect(entries.map((e) => e.slug)).toEqual(["eq-a", "eq-b", "eq-c"]);
+  });
+
+  // T8
+  test("throws on intra-chapter slug collision (two KeyEquations with the same `id`)", () => {
+    const tree = root([
+      mdxKeyEquation({ id: "wiens-law", title: "Wien's Law" }, [
+        mathBlock("\\lambda = b/T"),
+      ]),
+      mdxKeyEquation({ id: "wiens-law", title: "Wien's Law (alt)" }, [
+        mathBlock("\\lambda T = b"),
+      ]),
+    ]);
+
+    expect(() => extractEquations(tree as never, "ch")).toThrow(
+      /collision|duplicate/i
+    );
+    // Error message cites the chapter + slug
+    expect(() => extractEquations(tree as never, "ch")).toThrow(/ch/);
+    expect(() => extractEquations(tree as never, "ch")).toThrow(/wiens-law/);
+  });
+
+  // T9
+  test("throws E6 categorization error when a KeyEquation has no `$$` math block", () => {
+    const tree = root([
+      mdxKeyEquation({ id: "no-math", title: "No Math Here" }, [
+        para("This KeyEquation has prose but no $$ block."),
+      ]),
+    ]);
+
+    expect(() => extractEquations(tree as never, "ch")).toThrow(
+      /no `\$\$\.\.\.\$\$` math block/
+    );
+  });
+
+  test("throws E6 when the only `$$` block contains whitespace-only TeX", () => {
+    // extractFirstTex trims; whitespace-only `$$` is treated as "no math content".
+    const tree = root([
+      mdxKeyEquation({ id: "ws-math", title: "Whitespace Math" }, [
+        mathBlock("   "),
+      ]),
+    ]);
+
+    expect(() => extractEquations(tree as never, "ch")).toThrow(
+      /no `\$\$\.\.\.\$\$` math block/
+    );
+  });
+
+  // Defense-in-depth: missing id and missing title
+  test("throws when a KeyEquation is missing a non-empty `id`", () => {
+    const tree = root([
+      mdxKeyEquation({ title: "Some Title" }, [mathBlock("x = 1")]),
+    ]);
+    expect(() => extractEquations(tree as never, "ch")).toThrow(
+      /missing.*`id`/i
+    );
+  });
+
+  test("throws when a KeyEquation is missing a non-empty `title`", () => {
+    const tree = root([
+      mdxKeyEquation({ id: "some-id" }, [mathBlock("x = 1")]),
+    ]);
+    expect(() => extractEquations(tree as never, "ch")).toThrow(
+      /missing.*`title`/i
+    );
+  });
+
+  // Skips non-KeyEquation JSX elements
+  test("skips JSX elements that aren't named 'KeyEquation'", () => {
+    const tree = root([
+      {
+        type: "mdxJsxFlowElement",
+        name: "Callout",
+        attributes: [
+          { type: "mdxJsxAttribute", name: "variant", value: "info" },
+        ],
+        children: [para("not a KeyEquation"), mathBlock("z = 0")],
+      },
+      mdxKeyEquation({ id: "real-eq", title: "Real Equation" }, [
+        mathBlock("y = mx + b"),
+      ]),
+    ]);
+
+    const entries = extractEquations(tree as never, "ch");
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.slug).toBe("real-eq");
+  });
+});
+
 describe("indexAccumulator (cross-chapter)", () => {
   // Tests share module state, so each clears the chapters they touch.
 
@@ -241,7 +433,7 @@ describe("indexAccumulator (cross-chapter)", () => {
           anchor: "standard-candle",
         },
       ])
-    ).toThrow(/multiple chapters|duplicate/i);
+    ).toThrow(/multiple chapters/i);
   });
 
   test("clearChapter removes only that chapter's entries", () => {
@@ -399,5 +591,167 @@ describe("pedagogyIndexRemarkPlugin", () => {
         .asPedagogyIndex()
         .definitions.find((d) => d.term === "Skipme")
     ).toBeUndefined();
+  });
+
+  // T13
+  test("populates BOTH definitions AND equations from one parsed chapter", () => {
+    indexAccumulator.clearChapter("dual-test");
+    const plugin = pedagogyIndexRemarkPlugin();
+    const tree = root([
+      mdxAside({ kind: "definition", title: "Standard candle" }, [
+        para("An object whose intrinsic luminosity is known."),
+      ]),
+      mdxKeyEquation({ id: "wiens-law", title: "Wien's Law" }, [
+        mathBlock("\\lambda_{\\text{peak}} = b T^{-1}"),
+      ]),
+    ]);
+
+    plugin(tree as never, {
+      path: "/repo/src/content/chapters/dual-test.mdx",
+    });
+
+    const index = indexAccumulator.asPedagogyIndex();
+    const def = index.definitions.find((d) => d.term === "Standard candle");
+    const eq = index.equations.find((e) => e.slug === "wiens-law");
+    expect(def).toBeDefined();
+    expect(def?.chapter).toBe("dual-test");
+    expect(eq).toBeDefined();
+    expect(eq?.chapter).toBe("dual-test");
+    expect(eq?.title).toBe("Wien's Law");
+  });
+});
+
+describe("indexAccumulator equations (cross-chapter)", () => {
+  // Tests share module state, so each clears the chapters they touch.
+
+  const eq = (overrides: Partial<EquationEntry> = {}): EquationEntry => ({
+    slug: "default-slug",
+    title: "Default Title",
+    number: 1,
+    tex: "x = 1",
+    body: "",
+    chapter: "ch-a",
+    anchor: "default-slug",
+    ...overrides,
+  });
+
+  // T10
+  test("addEquations validates the whole batch BEFORE mutating (cross-chapter collision in entry 2 leaves entry 1 unwritten)", () => {
+    indexAccumulator.clearChapter("ch-a");
+    indexAccumulator.clearChapter("ch-b");
+    // Seed: chapter "ch-a" already has equation slug "shared".
+    indexAccumulator.addEquations([
+      eq({
+        slug: "shared",
+        title: "Shared",
+        chapter: "ch-a",
+        anchor: "shared",
+      }),
+    ]);
+
+    // Batch: entry 1 is a valid NEW slug for chapter "ch-b"; entry 2
+    // collides with "shared" across chapters. Whole batch must throw
+    // before entry 1 is written.
+    expect(() =>
+      indexAccumulator.addEquations([
+        eq({
+          slug: "fresh-eq",
+          title: "Fresh Eq",
+          chapter: "ch-b",
+          anchor: "fresh-eq",
+        }),
+        eq({
+          slug: "shared",
+          title: "Shared (alt)",
+          chapter: "ch-b",
+          anchor: "shared",
+        }),
+      ])
+    ).toThrow(/multiple chapters|duplicate/i);
+
+    const index = indexAccumulator.asPedagogyIndex();
+    // Entry 1 ("fresh-eq" in ch-b) must NOT have been written.
+    expect(index.equations.find((e) => e.slug === "fresh-eq")).toBeUndefined();
+    // The pre-existing ch-a entry is intact.
+    expect(index.equations.find((e) => e.slug === "shared")?.chapter).toBe(
+      "ch-a"
+    );
+  });
+
+  // T11
+  test("clearChapter removes BOTH definitions AND equations for the given chapter; entries from other chapters stay", () => {
+    indexAccumulator.clearChapter("ch-a");
+    indexAccumulator.clearChapter("ch-b");
+    indexAccumulator.addDefinitions([
+      {
+        term: "Def A",
+        slug: "def-a",
+        body: "",
+        chapter: "ch-a",
+        anchor: "def-a",
+      },
+      {
+        term: "Def B",
+        slug: "def-b",
+        body: "",
+        chapter: "ch-b",
+        anchor: "def-b",
+      },
+    ]);
+    indexAccumulator.addEquations([
+      eq({
+        slug: "eq-a",
+        title: "Eq A",
+        chapter: "ch-a",
+        anchor: "eq-a",
+      }),
+      eq({
+        slug: "eq-b",
+        title: "Eq B",
+        chapter: "ch-b",
+        anchor: "eq-b",
+      }),
+    ]);
+
+    indexAccumulator.clearChapter("ch-a");
+
+    const index = indexAccumulator.asPedagogyIndex();
+    expect(index.definitions.filter((d) => d.chapter === "ch-a")).toHaveLength(
+      0
+    );
+    expect(index.equations.filter((e) => e.chapter === "ch-a")).toHaveLength(0);
+    // ch-b survives in both collections.
+    expect(index.definitions.find((d) => d.chapter === "ch-b")?.term).toBe(
+      "Def B"
+    );
+    expect(index.equations.find((e) => e.chapter === "ch-b")?.title).toBe(
+      "Eq B"
+    );
+  });
+
+  // T12
+  test("asPedagogyIndex returns populated `equations` array (was empty `[]` in PR-C1)", () => {
+    indexAccumulator.clearChapter("ch-a");
+    indexAccumulator.addEquations([
+      eq({
+        slug: "alpha",
+        title: "Alpha",
+        chapter: "ch-a",
+        anchor: "alpha",
+      }),
+      eq({
+        slug: "beta",
+        title: "Beta",
+        number: 2,
+        chapter: "ch-a",
+        anchor: "beta",
+      }),
+    ]);
+
+    const index = indexAccumulator.asPedagogyIndex();
+    const inChA = index.equations.filter((e) => e.chapter === "ch-a");
+    expect(inChA).toHaveLength(2);
+    const slugs = inChA.map((e) => e.slug).sort();
+    expect(slugs).toEqual(["alpha", "beta"]);
   });
 });
