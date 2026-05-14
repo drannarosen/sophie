@@ -14,11 +14,13 @@ import {
   ComprehensionGate,
   ConfidenceCheck,
   EffortLog,
+  GlossaryTerm,
   InteractiveCallout,
   LearningObjectives,
   Predict,
   Reflection,
 } from "@sophie/components";
+import ChapterGlossary from "@sophie/astro/components/ChapterGlossary.astro";
 
 <LearningObjectives
   client:load
@@ -356,27 +358,9 @@ Each builds on the one before. **Watch for the pattern**, not the details.
 
 ---
 
-<MiniGlossary
-  id="mini-glossary"
-  title="Mini-Glossary (Orientation Only)"
-  lede="This glossary is here to help you recognize terms when you see them—not to memorize them. Every term below will be reintroduced later, in context, with time to understand it properly. For now, just scan and move on."
-  terms={[
-    { term: "Photon", definition: 'A "packet" of light; the quantum of electromagnetic radiation.' },
-    { term: "Wavelength (λ)", definition: 'The spatial period of a light wave; determines the "type" of light.' },
-    { term: "Spectrum", definition: "Brightness measured as a function of wavelength." },
-    { term: "Flux", definition: "Light energy per unit time per unit area reaching your detector." },
-    { term: "Luminosity", definition: "Total light energy emitted by a source per unit time." },
-    { term: "Emission", definition: "Light produced and sent out by a source." },
-    { term: "Absorption", definition: "Light removed from a beam by intervening material." },
-    { term: "Extinction", definition: "Dimming of light by dust (absorption + scattering combined)." },
-    { term: "Ionized", definition: "An atom that has lost one or more electrons; electrically charged." },
-    { term: "Neutral", definition: "An atom with equal numbers of protons and electrons; no net charge." },
-    { term: "Thermal radiation", definition: "Light emitted due to an object's temperature (all hot objects glow)." },
-    { term: "Dark matter", definition: "Invisible matter detected through gravity; outweighs visible matter ~5:1." },
-    { term: "Dark energy", definition: "The unknown driver of accelerating cosmic expansion; ~68% of the universe." },
-    { term: "Redshift", definition: "Stretching of light wavelengths; for distant galaxies, caused by cosmic expansion." },
-  ]}
-/>
+> **Mini-Glossary (Orientation Only).** This glossary is here to help you recognize terms when you see them—not to memorize them. Every term below will be reintroduced later, in context, with time to understand it properly. For now, just scan and move on.
+
+<ChapterGlossary chapter="01-foundations/spoiler-alerts" />
 
 <Callout variant="info" title="Checkpoint: Pause and Breathe">
 If your brain feels full, that's working as intended.
@@ -398,13 +382,41 @@ Take 60 seconds. Stretch. Then continue—watching for the pattern, not memorizi
 
 **What do we measure?** Structured colors at specific wavelengths. Red light at 656 nm. Blue-green light at 496–501 nm. Dark regions where light is blocked.
 
+<Aside kind="definition" title="Photon">
+A "packet" of light; the quantum of electromagnetic radiation. Every observation in astronomy is, at root, a count of photons.
+</Aside>
+
+<Aside kind="definition" title="Wavelength (λ)">
+The spatial period of a light wave; determines the "type" of light (radio, infrared, visible, ultraviolet, X-ray). Specific atoms emit at specific wavelengths.
+</Aside>
+
+<Aside kind="definition" title="Spectrum">
+Brightness measured as a function of wavelength. The structured "fingerprint" that lets us identify which atoms are present.
+</Aside>
+
 **What do we infer?** The red regions contain hydrogen gas that's been heated and **ionized** by nearby hot stars. The blue-green regions contain oxygen. The dark lanes contain dust—tiny solid particles that absorb and scatter starlight.
+
+<Aside kind="definition" title="Ionized">
+An atom that has lost one or more electrons; electrically charged. Ionization happens when atoms absorb enough energy to break the electron's bond — common around hot stars.
+</Aside>
+
+<Aside kind="definition" title="Absorption">
+Light removed from a beam by intervening material. The dust between us and a distant star absorbs specific wavelengths of its light; what reaches us is a dimmed + reddened version of the original.
+</Aside>
+
+<Aside kind="definition" title="Extinction">
+Dimming of light by dust (absorption + scattering combined). Extinction is wavelength-dependent — shorter wavelengths are extinguished more, which is why dusty regions look red.
+</Aside>
 
 **What physics makes this legal?** Atoms emit light at specific wavelengths, not random colors. Each element has a unique "fingerprint" of wavelengths determined by its atomic structure. When we see red light at exactly 656 nm, we know hydrogen is present.
 
-<aside class="margin-note">
-**Key insight:** Color isn't decoration—it's encoded physics. Specific wavelengths = specific atoms = specific conditions.
-</aside>
+<Aside kind="definition" title="Emission">
+Light produced and sent out by a source. Atoms in heated gas emit light at the specific wavelengths their quantum structure permits; emission spectra are the inverse fingerprint of absorption.
+</Aside>
+
+<Aside kind="key-insight">
+Color isn't decoration — it's encoded physics. Specific wavelengths = specific atoms = specific conditions.
+</Aside>
 
 <CollapsibleCard
   client:load
@@ -435,6 +447,14 @@ The oxygen lines ([OIII] at 496–501 nm) come from "forbidden" transitions that
 **What do we infer?** Distances far beyond what geometry alone can reach—out to billions of light-years.
 
 **What physics makes this legal?** If you know how bright something truly is (its luminosity) and measure how bright it *appears* (its flux), the inverse-square law lets you calculate distance.
+
+<Aside kind="definition" title="Flux">
+Light energy per unit time per unit area reaching your detector. Flux is what you *measure* — it depends on both the source's intrinsic brightness and its distance.
+</Aside>
+
+<Aside kind="definition" title="Luminosity">
+Total light energy emitted by a source per unit time. Luminosity is a property of the *source* — it doesn't depend on where you observe from. The inverse-square law connects flux + luminosity to distance.
+</Aside>
 
 <Aside kind="definition" title="Standard candle">
 An object whose intrinsic luminosity can be determined independently — from pulsation period, spectral type, or explosion physics — allowing distance to be calculated from observed brightness via the inverse-square law.
@@ -598,6 +618,14 @@ The next three spoilers show how wavelength *choice* reveals different physics i
 
 **What physics makes this legal?** Stars emit **thermal radiation** from their hot surfaces (peaks in visible). **Neutral** hydrogen emits at exactly 21 cm due to a quantum mechanical transition in cold atomic gas.
 
+<Aside kind="definition" title="Thermal radiation">
+Light emitted due to an object's temperature — all hot objects glow. The shape of the emitted spectrum (blackbody curve) and its peak wavelength encode the object's temperature directly.
+</Aside>
+
+<Aside kind="definition" title="Neutral">
+An atom with equal numbers of protons and electrons; no net charge. The contrast with "ionized" matters: neutral hydrogen radiates at 21 cm; ionized hydrogen radiates a recombination spectrum.
+</Aside>
+
 **Key insight:** Same object + different wavelength = different physical component revealed.
 
 <CollapsibleCard
@@ -666,6 +694,10 @@ This transition is "forbidden"—extremely unlikely on short timescales—but th
 
 **What do we infer?** Galaxies rotate too fast. Stars in the outer regions orbit at speeds that should fling them into intergalactic space—unless there's far more mass than we can see. The same is true for galaxy clusters: galaxies move too fast to be held together by visible matter alone. When we calculate the mass required to explain the observed motions, it exceeds the visible mass by a factor of ~6. We infer the presence of **dark matter**—matter that doesn't emit, absorb, or reflect light, but does exert gravitational pull.
 
+<Aside kind="definition" title="Dark matter">
+Invisible matter detected through gravity. Outweighs visible (baryonic) matter by roughly 5:1; its presence is inferred from rotation curves, gravitational lensing, the cosmic microwave background, and large-scale structure — never (so far) from direct detection.
+</Aside>
+
 **What physics makes this legal?** Newton's law of gravity tells us that orbital speed depends on enclosed mass: $v^2 = GM/r$. Measure $v$ and $r$, solve for $M$. The math is unambiguous. The extra mass is real—we detect it through the motions it causes.
 
 <Figure name="desi-3d-map" />
@@ -720,11 +752,19 @@ Only 5% of the universe is made of the stuff we understand. The rest is dark—b
 
 **What do we measure?** Two things: distances to objects across cosmic history (using the distance ladder from Spoiler 2) and their recession speeds. How do we get recession speeds? Through **redshift**—the Doppler shift we introduced in Spoiler 4. When we spread a galaxy's light into a spectrum, its spectral lines appear shifted toward longer (redder) wavelengths compared to laboratory (at-rest) values. The amount of shift tells us how fast the galaxy is moving away. By combining distances with redshifts for objects at different epochs, we reconstruct how the universe has expanded over time.
 
+<Aside kind="definition" title="Redshift">
+Stretching of light wavelengths. For distant galaxies, redshift is caused primarily by the expansion of space itself — not by the source's motion through space. Measuring redshift against a calibrated rest wavelength gives recession velocity, which combined with distance maps cosmic history.
+</Aside>
+
 **What do we infer?**
 
 1. The universe is **13.8 billion years old**—traced back from the observed expansion rate.
 2. The expansion was initially slowing down (gravity pulling matter together), but about 5 billion years ago, it started **speeding up**.
 3. Something is pushing the universe apart faster and faster. We call it **dark energy**.
+
+<Aside kind="definition" title="Dark energy">
+The unknown driver of accelerating cosmic expansion. Roughly 68% of the universe's energy budget. The name is a placeholder — we know its dynamical role from supernova and CMB data, but not its underlying physics.
+</Aside>
 
 **What physics makes this legal?**
 
@@ -931,7 +971,7 @@ where:
 Since $c$ is constant, wavelength and frequency are **inversely related**: longer wavelength means lower frequency, and vice versa.
 
 <aside class="margin-note">
-**Doppler preview:** If a light source moves toward you, the wavelengths you receive are *compressed* (shifted blue). If it moves away, wavelengths are *stretched* (shifted red). The speed of light stays constant—what changes is the wavelength. We'll see this **Doppler effect** power major discoveries: dark matter, the expanding universe, and exoplanets.
+**Doppler preview:** If a light source moves toward you, the wavelengths you receive are *compressed* (shifted blue). If it moves away, wavelengths are *stretched* (shifted red). The speed of light stays constant—what changes is the wavelength. We'll see this **Doppler effect** power major discoveries: <GlossaryTerm name="Dark matter">dark matter</GlossaryTerm>, the expanding universe (via <GlossaryTerm name="Redshift">redshift</GlossaryTerm>), and exoplanets.
 </aside>
 
 <Callout variant="info" title="Visible Light Frequencies">

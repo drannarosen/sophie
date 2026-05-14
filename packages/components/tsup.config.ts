@@ -31,6 +31,14 @@ export default defineConfig({
     // scripts/build-css-modules.ts at onSuccess time; mark external so
     // tsup leaves the import statements intact in the output JS.
     /\.module\.css(\.js)?$/,
+    // Vite virtual modules (e.g. `virtual:sophie/pedagogy-index`) are
+    // produced at consumer build time by @sophie/astro's Vite plugin
+    // (ADR 0038). They don't exist at @sophie/components compile time;
+    // leave the imports intact so the consumer's Vite resolves them.
+    /^virtual:/,
+    // lucide-react: keep as a consumer dep import (per ADR 0039's
+    // two-adapter convention; consumer's bundler tree-shakes per-icon).
+    "lucide-react",
   ],
   onSuccess: "tsx scripts/build-css-modules.ts",
 });

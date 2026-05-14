@@ -132,29 +132,48 @@ export function extractDefinitions(
 }
 
 /**
- * Cross-chapter accumulator — module-level singleton shared
- * between the remark plugin (which writes) and the Vite virtual
- * module (which reads). Both run in the same Node process during
- * build; the singleton is one instance per process per Node
- * worker.
+ * Cross-chapter accumulator — state lives on `globalThis` so it
+ * survives across Vite environments within a single Astro build.
  *
- * Per ADR 0038's role-aggregation principle, future entry types
+ * Why globalThis instead of a module-level `Map`: Astro 6 / Vite 7
+ * runs separate environments for client and SSR bundles. Each
+ * environment has its own module-resolution graph, so a module-
+ * level `new Map()` produces TWO independent maps in the same
+ * Node process — one written by the MDX-parsing pass, the other
+ * read by the page-rendering pass. `globalThis` is genuinely
+ * per-process and bridges the environments. Observed during PR-C1
+ * with a `pid` + accumulator-size trace.
+ *
+ * Per ADR 0038's role-aggregation principle. Future entry types
  * (equations, key-insights, figures, misconceptions) attach to
  * this same accumulator under their own collections; PR-C1 only
  * surfaces definitions.
  */
-class IndexAccumulator {
-  private definitions = new Map<string, DefinitionEntry>();
+const GLOBAL_KEY = "__sophiePedagogyIndex";
 
+interface GlobalIndexState {
+  definitions: Map<string, DefinitionEntry>;
+}
+
+function getGlobalState(): GlobalIndexState {
+  const g = globalThis as { [GLOBAL_KEY]?: GlobalIndexState };
+  if (!g[GLOBAL_KEY]) {
+    g[GLOBAL_KEY] = { definitions: new Map() };
+  }
+  return g[GLOBAL_KEY];
+}
+
+class IndexAccumulator {
   /**
    * Drop all entries for a given chapter. Called by the remark
    * plugin before re-extracting a chapter (so re-parses don't
    * accumulate stale entries).
    */
   clearChapter(chapterSlug: string): void {
-    for (const [slug, entry] of this.definitions) {
+    const state = getGlobalState();
+    for (const [slug, entry] of state.definitions) {
       if (entry.chapter === chapterSlug) {
-        this.definitions.delete(slug);
+        state.definitions.delete(slug);
       }
     }
   }
@@ -164,14 +183,15 @@ class IndexAccumulator {
    * slug collision (audit invariant #1).
    */
   addDefinitions(entries: ReadonlyArray<DefinitionEntry>): void {
+    const state = getGlobalState();
     for (const entry of entries) {
-      const existing = this.definitions.get(entry.slug);
+      const existing = state.definitions.get(entry.slug);
       if (existing && existing.chapter !== entry.chapter) {
         throw new Error(
           `Definition "${entry.term}" (slug "${entry.slug}") is defined in multiple chapters: "${existing.chapter}" and "${entry.chapter}". Resolution: rename one or consolidate.`
         );
       }
-      this.definitions.set(entry.slug, entry);
+      state.definitions.set(entry.slug, entry);
     }
   }
 
@@ -181,8 +201,9 @@ class IndexAccumulator {
    * in PR-C1 (PR-C2 onward populates them).
    */
   asPedagogyIndex(): PedagogyIndex {
+    const state = getGlobalState();
     return {
-      definitions: Array.from(this.definitions.values()),
+      definitions: Array.from(state.definitions.values()),
       equations: [],
       keyInsights: [],
       figures: [],

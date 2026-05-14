@@ -3,8 +3,8 @@ import {
   Callout,
   Figure,
   type FigureRegistry,
+  GlossaryTerm,
   KeyEquation,
-  MiniGlossary,
 } from "@sophie/components";
 
 export interface MakeStaticComponentsOptions {
@@ -41,9 +41,12 @@ export function makeStaticComponents({ figures }: MakeStaticComponentsOptions) {
     // KeyEquation is content-only (no per-instance state, no client:load).
     // Flows through the static components map alongside Callout/Figure.
     KeyEquation,
-    // MiniGlossary is content-only too — direct pass-through, no
-    // registry prop, no client:load. Per ADR 0027.
-    MiniGlossary,
+    // GlossaryTerm is content-only — inline term reference whose
+    // Popover state is React-local (no IDB), so it flows through the
+    // static map. Per ADR 0027. Replaces the deprecated MiniGlossary
+    // (PR-C1; the canonical glossary surface is now <ChapterGlossary />
+    // + <CourseGlossary /> consuming the pedagogy index — ADR 0038).
+    GlossaryTerm,
     Figure: (props: MdxFigureProps) => {
       if (props.name !== undefined) {
         return (

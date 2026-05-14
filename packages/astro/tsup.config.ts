@@ -24,6 +24,18 @@ export default defineConfig({
     // must exist at dist/lib/aside-positioning.js to resolve from
     // the copied-verbatim .astro files.
     "lib/aside-positioning": "src/lib/aside-positioning.ts",
+    // `lib/pedagogy-index-extractor` is the remark plugin + cross-
+    // chapter accumulator (PR-C1 / ADR 0038). Imported by .astro
+    // components (TextbookLayout, ChapterGlossary, CourseGlossary)
+    // to read aggregated definitions and seed the @sophie/components
+    // glossary store.
+    "lib/pedagogy-index-extractor": "src/lib/pedagogy-index-extractor.ts",
+    // `lib/pedagogy-index-virtual-module` is the optional Vite plugin
+    // exposing `virtual:sophie/pedagogy-index`. Not used by the
+    // chrome critical path (Vite caches load() before chapter parse);
+    // kept as a portable read-only surface for future consumers.
+    "lib/pedagogy-index-virtual-module":
+      "src/lib/pedagogy-index-virtual-module.ts",
   },
   format: ["esm"],
   target: "es2022",
@@ -33,6 +45,7 @@ export default defineConfig({
   splitting: false,
   external: [
     "astro",
+    /^astro:/,
     /^@astrojs\//,
     "react",
     "react-dom",
@@ -44,6 +57,9 @@ export default defineConfig({
     "remark-gfm",
     "remark-frontmatter",
     "remark-math",
+    "unist-util-visit",
+    "mdast-util-to-hast",
+    "hast-util-to-html",
     /^@sophie\//,
   ],
 });
