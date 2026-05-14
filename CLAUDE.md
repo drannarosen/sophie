@@ -106,6 +106,65 @@ Read the relevant ADR before proposing changes that touch its area.
 | Build order | 0023 | **Vertical-slice-first**: lean Phase 0, refactor outward as patterns emerge |
 | BroadcastChannel LWW | 0029 | Per-write `Date.now()` timestamps; `useInteractive` ignores stale incoming writes (refines ADR 0007) |
 
+## Engineering principles
+
+These are project-wide standards layered on top of the ADRs. They apply
+to every PR, every design decision, every refactor.
+
+- **SoTA over simple.** When choosing between a working-but-naive
+  approach and a more robust state-of-the-art shape, choose SoTA.
+  Sophie is a long-lived platform; "what's simple now" tends to
+  become "what's causing more work later." Recent examples:
+  - **Condition-based waiting** (`expect(el).toHaveAttribute("data-state", "open")`)
+    over arbitrary `{ timeout: N }` knobs in e2e tests — wait on Radix's
+    actual state-machine signals, not on clock time. The naive fix
+    masked a real production scroll-spy bug; the SoTA fix surfaced it.
+  - **Structural fixes** over targeted patches — invert source-of-truth
+    on the in-page-ToC scroll-spy (observe what's *in the ToC*, not all
+    headings) so the fix defends against the whole class of "stray
+    `h2[id]` in chapter content" rather than the single instance.
+  - **AI-authoring-friendly source-component patterns**
+    (`<Parent><Child>...</Child></Parent>`) over inline prop arrays
+    (`<Parent items={[…]}/>`) — extraction is mechanical, AI scaffolding
+    is reliable, and the JSX is more readable for human authors too.
+    See `<LearningObjectives>` PR-C4 refactor.
+
+- **Pre-launch; no backwards compatibility.** Sophie has zero
+  production students. Hard renames are the right shape; drop legacy
+  shapes and migrate all consumers in the same PR. No back-compat
+  shims, no "if-old-then-new" branches, no deprecation cycles.
+  Bucket C examples:
+  - PR-C3 hard-renamed `<MiniGlossary>` to the pedagogy-index pattern;
+    every consumer migrated in the same PR.
+  - PR-C4 dropped `LearningObjectives.objectives[]` prop entirely;
+    three smoke chapter callsites migrated to children-mode in the
+    same commit.
+  - Phase 1 (PR #39) unified anchor prefixes (`key-insight-N` → `ki-N`,
+    `misconception-N` → `misc-N`) without a shim; production code and
+    tests updated together.
+
+- **DRY, YAGNI, clean code.** Three practical applications:
+  - **DRY**: extract reusable patterns (`createPedagogyStore<T>`
+    factory; `useHydrated()` hook; `indexAccumulator`) once they're
+    paid for by ≥2 callers. Don't pre-abstract before the second
+    caller exists.
+  - **YAGNI**: don't add abstractions for hypothetical future
+    requirements. Per ADR 0023 vertical-slice-first: lean Phase 0,
+    refactor outward as patterns emerge. The 11 audit invariants in
+    `pedagogy-audit.ts` ship because they have concrete inputs (the
+    populated `PedagogyIndex`), not because they *might* be useful.
+  - **Clean code**: zero biome warnings (per Conventions below);
+    no commented-out code; no dead imports; no `TODO` without an
+    issue link; descriptive identifier names; no comments that
+    explain *what* the code does (the code already does that —
+    comments are for non-obvious *why*).
+
+- **Build the best now, plan ahead — not what's simple now causing
+  more work later.** Anna's saved feedback preference, restated for
+  emphasis. "The best" is decided collaboratively (HITL mandate);
+  "now" means in this PR rather than deferred to a hypothetical
+  follow-up that never lands.
+
 ## Conventions
 
 - **Use pnpm.** Never npm or yarn. (ADR 0011)
