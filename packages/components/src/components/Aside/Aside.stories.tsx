@@ -68,6 +68,7 @@ export const Digression: Story = {
 };
 
 export const KeyInsight: Story = {
+  name: "Key insight",
   args: {
     kind: "key-insight",
     children: (

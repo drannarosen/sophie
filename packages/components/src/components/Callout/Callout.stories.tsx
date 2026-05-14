@@ -98,6 +98,7 @@ export const Summary: Story = {
 };
 
 export const KeyInsight: Story = {
+  name: "Key insight",
   args: {
     variant: "key-insight",
     children: (
