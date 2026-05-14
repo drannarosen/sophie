@@ -71,6 +71,19 @@ export {
   figureInlineContract,
   figureRegistryContract,
 } from "./components/Figure/index.ts";
+export type { FigureRefProps } from "./components/FigureRef/FigureRef.schema.ts";
+// Internal-use setters: @sophie/astro's <TextbookLayout> calls these
+// to hydrate the two-tier figure stores (registry + usages) from
+// `virtual:sophie/pedagogy-index` (usages) and the consumer-owned
+// figure-registry prop (registry) at render time. Not part of the
+// public authoring API; underscore-prefix flags internal-use.
+export { __setFigureRegistry } from "./components/FigureRef/figure-registry-store.ts";
+export { __setFigureUsages } from "./components/FigureRef/figure-usages-store.ts";
+export {
+  FigureRef,
+  FigureRefPropsSchema,
+  figureRefContract,
+} from "./components/FigureRef/index.ts";
 export { __setGlossaryDefinitions } from "./components/GlossaryTerm/definitions-store.ts";
 export type { GlossaryTermProps } from "./components/GlossaryTerm/index.ts";
 export {

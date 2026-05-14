@@ -1,0 +1,82 @@
+/* `<FigureRef>` — inline figure cross-reference + hover popover (PR-C3).
+ *
+ * Visual styling only. Per ADR 0005, no hex/rgb literals — all
+ * colors flow through @sophie/theme tokens. The popover is
+ * portal-rendered (Radix); the .popover class targets the
+ * portaled root. Mirrors EqRef.module.css; the popover sizes for
+ * a small thumbnail + caption (instead of a KaTeX block).
+ */
+
+.trigger {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.15em;
+  color: var(--sophie-link);
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  cursor: help;
+}
+
+.trigger:hover,
+.trigger:focus-visible {
+  color: var(--sophie-link-hover);
+  text-decoration-style: solid;
+}
+
+.trigger:focus-visible {
+  outline: 2px solid var(--sophie-focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--sophie-radius-sm);
+}
+
+.icon {
+  display: inline-block;
+  vertical-align: middle;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.popover {
+  /* Sized for a small thumbnail + caption. Min keeps the popover
+   * usable on narrow viewports; max prevents over-wide popovers
+   * on desktop. */
+  min-width: min(14rem, calc(100vw - 2rem));
+  max-width: min(20rem, calc(100vw - 2rem));
+  padding: var(--sophie-space-3) var(--sophie-space-4);
+  background: var(--sophie-surface-1);
+  border: 1px solid var(--sophie-border-subtle);
+  border-radius: var(--sophie-radius-md);
+  box-shadow: var(--sophie-shadow-popover, 0 4px 12px rgb(0 0 0 / 0.12));
+  color: var(--sophie-text);
+  font-family: var(--sophie-font-sans);
+  font-size: var(--sophie-text-sm);
+  line-height: var(--sophie-leading-prose);
+  z-index: 50;
+}
+
+.thumb {
+  display: block;
+  max-width: 12rem;
+  max-height: 8rem;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  margin: 0 auto var(--sophie-space-2);
+  border-radius: var(--sophie-radius-sm);
+  background: var(--sophie-surface-2, var(--sophie-surface-1));
+}
+
+.caption {
+  margin: 0;
+  color: var(--sophie-text-muted, var(--sophie-text));
+  font-size: var(--sophie-text-sm);
+  text-align: center;
+}
+
+.arrow {
+  fill: var(--sophie-surface-1);
+  stroke: var(--sophie-border-subtle);
+  stroke-width: 1px;
+}
