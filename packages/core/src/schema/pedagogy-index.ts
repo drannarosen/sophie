@@ -21,7 +21,8 @@ import { NonEmptyString, Slug } from "./primitives.ts";
  * | Key insight   | `ki-`   | auto: `ki-${counter}`                                     |
  * | Figure        | `fig-`  | auto: `fig-${slug(name)}-${counter}`                      |
  * | Misconception | `misc-` | auto: `misc-${counter}` (auto only)                       |
- * | Chapter       | `ch-`   | RESERVED for PR-C4 ChapterRef anchors (not chapter slugs) |
+ * | Chapter       | `ch-`   | passthrough chapter slug                                  |
+ * | Objective     | `lo-`   | passthrough author id                                     |
  *
  * Authors can override any auto-generated anchor via explicit `id`
  * props on the source component. The anchor uniqueness invariants
@@ -106,6 +107,10 @@ export const FigureRegistryEntrySchema = z.object({
   caption: z.string().optional(),
   /** Attribution / credit text. */
   credit: z.string().optional(),
+  /** Optional intrinsic image width in CSS pixels. Forwarded to `<img width>` to reserve layout space and reduce CLS. */
+  width: z.number().int().positive().optional(),
+  /** Optional intrinsic image height in CSS pixels. Forwarded to `<img height>` to reserve layout space and reduce CLS. */
+  height: z.number().int().positive().optional(),
 });
 export type FigureRegistryEntry = z.infer<typeof FigureRegistryEntrySchema>;
 
@@ -151,6 +156,68 @@ export const MisconceptionEntrySchema = z.object({
 export type MisconceptionEntry = z.infer<typeof MisconceptionEntrySchema>;
 
 /**
+ * A chapter entry — one per chapter in the consumer's Astro
+ * `chapters` content collection. Populated at SSR-merge time by
+ * `TextbookLayout` from `getCollection('chapters')`; never written by
+ * the remark extractor (chapters are consumer-app-owned, like
+ * `figureRegistry`). Powers `<ChapterRef>` hover-preview and the
+ * `/objectives` course roll-up.
+ */
+export const ChapterEntrySchema = z.object({
+  /** Chapter slug (matches the content-collection entry id). */
+  slug: NonEmptyString,
+  /** Human-readable chapter title. */
+  title: NonEmptyString,
+  /** Module slug — FK to `ModuleEntry.slug`. */
+  module: NonEmptyString,
+  /** Optional in-module ordering. Chapter order within a module is authoring-driven; absent => sort-stable insertion order. */
+  order: z.number().int().nonnegative().optional(),
+  /** Optional single-paragraph chapter description for hover-preview + roll-up cards. */
+  description: z.string().optional(),
+});
+export type ChapterEntry = z.infer<typeof ChapterEntrySchema>;
+
+/**
+ * A module entry — one per top-level course module in the consumer's
+ * Astro `modules` content collection. Populated at SSR-merge time from
+ * `getCollection('modules')`. Modules are ordered (the course outline
+ * is a sequence), so `order` is required — distinct from chapters,
+ * where order within a module is optional.
+ */
+export const ModuleEntrySchema = z.object({
+  /** Module slug (matches the content-collection entry id). */
+  slug: NonEmptyString,
+  /** Human-readable module title. */
+  title: NonEmptyString,
+  /** Required course-outline ordering. */
+  order: z.number().int().nonnegative(),
+  /** Optional single-paragraph module description. */
+  description: z.string().optional(),
+});
+export type ModuleEntry = z.infer<typeof ModuleEntrySchema>;
+
+/**
+ * A learning-objective entry — extracted from `<Objective>` flow
+ * elements nested inside `<LearningObjectives>` in chapter MDX. The
+ * objective `id` is author-supplied and persists across edits (drives
+ * the IndexedDB persistence key per ADR 0007); the extractor never
+ * auto-generates it. Anchor convention: `lo-${id}` (passthrough).
+ */
+export const ObjectiveEntrySchema = z.object({
+  /** Author-supplied stable id; survives edits to verb/body. */
+  id: NonEmptyString,
+  /** Pedagogical verb (e.g. "Recognize", "Understand", "Apply"). */
+  verb: NonEmptyString,
+  /** Pre-rendered HTML of the objective body. Consumers embed via `set:html`. */
+  body: NonEmptyString,
+  /** Chapter slug containing the source <Objective>. */
+  chapter: NonEmptyString,
+  /** DOM id; passthrough `lo-${id}`. */
+  anchor: NonEmptyString,
+});
+export type ObjectiveEntry = z.infer<typeof ObjectiveEntrySchema>;
+
+/**
  * The full pedagogy index — one per build. Consumers read it via
  * the `virtual:sophie/pedagogy-index` module exposed by
  * @sophie/astro's Vite plugin.
@@ -164,5 +231,11 @@ export const PedagogyIndexSchema = z.object({
   /** Per-chapter usage records, populated by the extractor (renamed from `figures` in PR-C3). */
   figureUsages: z.array(FigureUsageEntrySchema).readonly(),
   misconceptions: z.array(MisconceptionEntrySchema).readonly(),
+  /** Consumer-app-owned chapter metadata, forwarded from `getCollection('chapters')`. */
+  chapters: z.array(ChapterEntrySchema).readonly(),
+  /** Consumer-app-owned module metadata, forwarded from `getCollection('modules')`. */
+  modules: z.array(ModuleEntrySchema).readonly(),
+  /** Per-chapter learning objectives, populated by the extractor. */
+  objectives: z.array(ObjectiveEntrySchema).readonly(),
 });
 export type PedagogyIndex = z.infer<typeof PedagogyIndexSchema>;
