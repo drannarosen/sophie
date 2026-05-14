@@ -269,6 +269,84 @@ without a hand-rolled cache-invalidation API.
 - Future ADR (Phase 3 AI authoring runtime): the schema in
   this ADR is the surface AI authors target.
 
+## Revisions (2026-05-13 — post-PR-C1)
+
+Three implementation realities surfaced during
+[PR #36](https://github.com/drannarosen/sophie/pull/36) that this
+ADR's Decision section should be read alongside. None invalidate
+the pattern; one narrows the recommended access mechanism, the
+others document lessons learned for PRs C2–C4.
+
+### Virtual module bypassed on the chrome critical path
+
+The Decision section names `virtual:sophie/pedagogy-index` as the
+consumer access mechanism. In practice, Vite caches the virtual
+module's first `load()` result, and that load fires BEFORE
+chapter MDX parses — yielding an empty index cached for the rest
+of the build.
+
+The shipped pattern: `<TextbookLayout>` forces `render(chapter)`
+on every chapter (which triggers the remark plugin → populates
+the accumulator), then reads `indexAccumulator.asPedagogyIndex()`
+directly and seeds the `@sophie/components` glossary store via
+`__setGlossaryDefinitions(...)`. The Vite plugin + virtual module
+remain in `@sophie/astro` as a portable read-only surface for
+future consumers; the chrome layer takes the direct route.
+
+**Implication for PR-C2+**: equation / key-insight / figure /
+misconception consumers should follow the same direct-read
+pattern via the accumulator's typed snapshot, not via virtual
+module imports. The role-aggregation principle is unchanged.
+
+### Accumulator state must live on `globalThis`
+
+The "module-level singleton accumulator" framing in the Decision
+section underspecified an Astro 6 / Vite 7 reality: separate
+client + SSR build environments run in the same Node process,
+each with its own module-resolution graph. A naive
+`const map = new Map()` at module scope produces TWO independent
+maps — one written by the MDX-parsing pass, one read by the
+page-rendering pass. The accumulator stores its state on
+`globalThis` (genuinely per-process; bridges environments).
+Future role accumulators must do the same.
+
+### SSR-to-client data transfer requires a `<script>` tag
+
+The setter `__setGlossaryDefinitions(entries)` populates the
+React-side store on SSR — but server-side module state doesn't
+survive to the wire. The shipped solution: `<TextbookLayout>`
+also emits a `<script id="sophie-pedagogy-definitions"
+type="application/json">[…]</script>` payload; the store auto-
+hydrates from this tag on first client-side lookup. Without it,
+inline references like `<GlossaryTerm>` SSR correctly but
+rerender as bare prose after React hydration.
+
+**Implication for PR-C3+**: any inline reference component
+(`<EqRef>`, `<FigureRef>`, `<ChapterRef>`) that requires
+client-side lookup needs the same script-tag-plus-auto-hydrate
+pattern. Generalize the script tag to carry the full
+`PedagogyIndex` shape (definitions today; add equations,
+key-insights, figures, misconceptions as their roles ship).
+
+### Interaction-model addendum: `<GlossaryTerm>` uses HoverCard, not Popover
+
+Decision #13 from the [Bucket C overview](../../plans/2026-05-13-bucket-c-pedagogy-index-overview.md)
+spells the design as "hover shows definition; click navigates."
+That's `@radix-ui/react-hover-card` semantics — not Popover.
+Radix `Popover.Trigger asChild` over an `<a>` made click both
+navigate AND toggle popover (they fight each other in real
+browsers; unit tests passed only because JSDOM doesn't follow
+href). PR-C1 ships `@radix-ui/react-hover-card@^1.1.16` for
+`<GlossaryTerm>`'s trigger.
+
+**Implication for PR-C2+ cross-ref components**: same primitive
+choice. `<EqRef>`, `<FigureRef>`, `<ChapterRef>` all want hover-
+preview semantics; HoverCard is the right Radix primitive.
+Authors mark each usage `client:load` so React hydration
+attaches the pointer handlers (consistent with `<Predict>`,
+`<ConfidenceCheck>`, `<InteractiveCallout>` already in the
+chapter MDX).
+
 ## References
 
 - [Bucket C overview](../../plans/2026-05-13-bucket-c-pedagogy-index-overview.md)
