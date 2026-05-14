@@ -1,3 +1,4 @@
+import type { EquationEntry } from "@sophie/core/schema";
 import { describe, expect, test } from "vitest";
 import {
   extractDefinitions,
@@ -577,5 +578,167 @@ describe("pedagogyIndexRemarkPlugin", () => {
         .asPedagogyIndex()
         .definitions.find((d) => d.term === "Skipme")
     ).toBeUndefined();
+  });
+
+  // T13
+  test("populates BOTH definitions AND equations from one parsed chapter", () => {
+    indexAccumulator.clearChapter("dual-test");
+    const plugin = pedagogyIndexRemarkPlugin();
+    const tree = root([
+      mdxAside({ kind: "definition", title: "Standard candle" }, [
+        para("An object whose intrinsic luminosity is known."),
+      ]),
+      mdxKeyEquation({ id: "wiens-law", title: "Wien's Law" }, [
+        mathBlock("\\lambda_{\\text{peak}} = b T^{-1}"),
+      ]),
+    ]);
+
+    plugin(tree as never, {
+      path: "/repo/src/content/chapters/dual-test.mdx",
+    });
+
+    const index = indexAccumulator.asPedagogyIndex();
+    const def = index.definitions.find((d) => d.term === "Standard candle");
+    const eq = index.equations.find((e) => e.slug === "wiens-law");
+    expect(def).toBeDefined();
+    expect(def?.chapter).toBe("dual-test");
+    expect(eq).toBeDefined();
+    expect(eq?.chapter).toBe("dual-test");
+    expect(eq?.title).toBe("Wien's Law");
+  });
+});
+
+describe("indexAccumulator equations (cross-chapter)", () => {
+  // Tests share module state, so each clears the chapters they touch.
+
+  const eq = (overrides: Partial<EquationEntry> = {}): EquationEntry => ({
+    slug: "default-slug",
+    title: "Default Title",
+    number: 1,
+    tex: "x = 1",
+    body: "",
+    chapter: "ch-a",
+    anchor: "default-slug",
+    ...overrides,
+  });
+
+  // T10
+  test("addEquations validates the whole batch BEFORE mutating (cross-chapter collision in entry 2 leaves entry 1 unwritten)", () => {
+    indexAccumulator.clearChapter("ch-a");
+    indexAccumulator.clearChapter("ch-b");
+    // Seed: chapter "ch-a" already has equation slug "shared".
+    indexAccumulator.addEquations([
+      eq({
+        slug: "shared",
+        title: "Shared",
+        chapter: "ch-a",
+        anchor: "shared",
+      }),
+    ]);
+
+    // Batch: entry 1 is a valid NEW slug for chapter "ch-b"; entry 2
+    // collides with "shared" across chapters. Whole batch must throw
+    // before entry 1 is written.
+    expect(() =>
+      indexAccumulator.addEquations([
+        eq({
+          slug: "fresh-eq",
+          title: "Fresh Eq",
+          chapter: "ch-b",
+          anchor: "fresh-eq",
+        }),
+        eq({
+          slug: "shared",
+          title: "Shared (alt)",
+          chapter: "ch-b",
+          anchor: "shared",
+        }),
+      ])
+    ).toThrow(/multiple chapters|duplicate/i);
+
+    const index = indexAccumulator.asPedagogyIndex();
+    // Entry 1 ("fresh-eq" in ch-b) must NOT have been written.
+    expect(index.equations.find((e) => e.slug === "fresh-eq")).toBeUndefined();
+    // The pre-existing ch-a entry is intact.
+    expect(index.equations.find((e) => e.slug === "shared")?.chapter).toBe(
+      "ch-a"
+    );
+  });
+
+  // T11
+  test("clearChapter removes BOTH definitions AND equations for the given chapter; entries from other chapters stay", () => {
+    indexAccumulator.clearChapter("ch-a");
+    indexAccumulator.clearChapter("ch-b");
+    indexAccumulator.addDefinitions([
+      {
+        term: "Def A",
+        slug: "def-a",
+        body: "",
+        chapter: "ch-a",
+        anchor: "def-a",
+      },
+      {
+        term: "Def B",
+        slug: "def-b",
+        body: "",
+        chapter: "ch-b",
+        anchor: "def-b",
+      },
+    ]);
+    indexAccumulator.addEquations([
+      eq({
+        slug: "eq-a",
+        title: "Eq A",
+        chapter: "ch-a",
+        anchor: "eq-a",
+      }),
+      eq({
+        slug: "eq-b",
+        title: "Eq B",
+        chapter: "ch-b",
+        anchor: "eq-b",
+      }),
+    ]);
+
+    indexAccumulator.clearChapter("ch-a");
+
+    const index = indexAccumulator.asPedagogyIndex();
+    expect(index.definitions.filter((d) => d.chapter === "ch-a")).toHaveLength(
+      0
+    );
+    expect(index.equations.filter((e) => e.chapter === "ch-a")).toHaveLength(0);
+    // ch-b survives in both collections.
+    expect(index.definitions.find((d) => d.chapter === "ch-b")?.term).toBe(
+      "Def B"
+    );
+    expect(index.equations.find((e) => e.chapter === "ch-b")?.title).toBe(
+      "Eq B"
+    );
+  });
+
+  // T12
+  test("asPedagogyIndex returns populated `equations` array (was empty `[]` in PR-C1)", () => {
+    indexAccumulator.clearChapter("ch-a");
+    indexAccumulator.addEquations([
+      eq({
+        slug: "alpha",
+        title: "Alpha",
+        chapter: "ch-a",
+        anchor: "alpha",
+      }),
+      eq({
+        slug: "beta",
+        title: "Beta",
+        number: 2,
+        chapter: "ch-a",
+        anchor: "beta",
+      }),
+    ]);
+
+    const index = indexAccumulator.asPedagogyIndex();
+    const inChA = index.equations.filter((e) => e.chapter === "ch-a");
+    expect(inChA).toHaveLength(2);
+    const slugs = inChA.map((e) => e.slug).sort();
+    expect(slugs).toEqual(["alpha", "beta"]);
   });
 });

@@ -268,12 +268,16 @@ const GLOBAL_KEY = "__sophiePedagogyIndex";
 
 interface GlobalIndexState {
   definitions: Map<string, DefinitionEntry>;
+  equations: Map<string, EquationEntry>;
 }
 
 function getGlobalState(): GlobalIndexState {
   const g = globalThis as { [GLOBAL_KEY]?: GlobalIndexState };
   if (!g[GLOBAL_KEY]) {
-    g[GLOBAL_KEY] = { definitions: new Map() };
+    g[GLOBAL_KEY] = {
+      definitions: new Map(),
+      equations: new Map(),
+    };
   }
   return g[GLOBAL_KEY];
 }
@@ -289,6 +293,11 @@ class IndexAccumulator {
     for (const [slug, entry] of state.definitions) {
       if (entry.chapter === chapterSlug) {
         state.definitions.delete(slug);
+      }
+    }
+    for (const [slug, entry] of state.equations) {
+      if (entry.chapter === chapterSlug) {
+        state.equations.delete(slug);
       }
     }
   }
@@ -318,15 +327,37 @@ class IndexAccumulator {
   }
 
   /**
+   * Add a chapter's extracted equations. Throws on cross-chapter
+   * slug collision (audit invariant E1; defense in depth in PR-C2,
+   * matches `addDefinitions`'s pattern). Two-pass shape: validate
+   * the whole batch BEFORE mutating, so a collision in entry N
+   * leaves entries 0..N-1 unwritten.
+   */
+  addEquations(entries: ReadonlyArray<EquationEntry>): void {
+    const state = getGlobalState();
+    for (const entry of entries) {
+      const existing = state.equations.get(entry.slug);
+      if (existing && existing.chapter !== entry.chapter) {
+        throw new Error(
+          `Equation "${entry.title}" (slug "${entry.slug}") is defined in multiple chapters: "${existing.chapter}" and "${entry.chapter}". Resolution: change one of the \`id\` props.`
+        );
+      }
+    }
+    for (const entry of entries) {
+      state.equations.set(entry.slug, entry);
+    }
+  }
+
+  /**
    * Snapshot the current accumulator state as a PedagogyIndex.
-   * Equations / keyInsights / figures / misconceptions ship empty
-   * in PR-C1 (PR-C2 onward populates them).
+   * Equations populate from PR-C2 onward; keyInsights / figures /
+   * misconceptions still ship empty (PR-C3+).
    */
   asPedagogyIndex(): PedagogyIndex {
     const state = getGlobalState();
     return {
       definitions: Array.from(state.definitions.values()),
-      equations: [],
+      equations: Array.from(state.equations.values()),
       keyInsights: [],
       figures: [],
       misconceptions: [],
@@ -365,7 +396,7 @@ interface VFileLike {
 }
 
 /**
- * Remark plugin that wires `extractDefinitions` + `indexAccumulator`
+ * Remark plugin that wires the pure extractors + `indexAccumulator`
  * into the unified MDX pipeline. Add to `remarkPlugins` in your
  * MDX integration config; runs once per chapter parse.
  *
@@ -373,10 +404,11 @@ interface VFileLike {
  *   1. Derive the chapter slug from the vfile path.
  *   2. `indexAccumulator.clearChapter(slug)` so re-parses don't
  *      accumulate stale entries.
- *   3. `extractDefinitions(tree, slug)` returns this chapter's
- *      entries.
- *   4. `indexAccumulator.addDefinitions(entries)` aggregates;
- *      throws on cross-chapter slug collision (audit invariant #1).
+ *   3. `extractDefinitions(tree, slug)` + `extractEquations(tree,
+ *      slug)` return this chapter's entries.
+ *   4. `indexAccumulator.addDefinitions(entries)` +
+ *      `addEquations(entries)` aggregate; throw on cross-chapter
+ *      slug collision (audit invariant #1).
  *
  * The plugin doesn't mutate the mdast tree — it's extraction-only.
  */
@@ -392,7 +424,7 @@ export function pedagogyIndexRemarkPlugin(
     if (!chapterSlug) return;
 
     indexAccumulator.clearChapter(chapterSlug);
-    const entries = extractDefinitions(tree, chapterSlug);
-    indexAccumulator.addDefinitions(entries);
+    indexAccumulator.addDefinitions(extractDefinitions(tree, chapterSlug));
+    indexAccumulator.addEquations(extractEquations(tree, chapterSlug));
   };
 }
