@@ -1,4 +1,9 @@
+import { fileURLToPath } from "node:url";
 import type { StorybookConfig } from "@storybook/react-vite";
+
+const pedagogyIndexFixture = fileURLToPath(
+  new URL("./pedagogy-index-fixture.ts", import.meta.url)
+);
 
 const config: StorybookConfig = {
   framework: {
@@ -32,6 +37,14 @@ const config: StorybookConfig = {
         alias: [
           ...aliasArray,
           { find: /^(.+)\.module\.css\.js$/, replacement: "$1.module.css" },
+          // `virtual:sophie/pedagogy-index` is produced at build
+          // time by @sophie/astro's Vite plugin (ADR 0038). In
+          // Storybook isolation, alias to a fixture with sample
+          // entries so <GlossaryTerm> stories render meaningfully.
+          {
+            find: "virtual:sophie/pedagogy-index",
+            replacement: pedagogyIndexFixture,
+          },
         ],
       },
     };

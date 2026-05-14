@@ -45,6 +45,7 @@
     "@sophie/core": "workspace:*",
     "@sophie/theme": "workspace:*",
     "idb": "^8.0.3",
+    "lucide-react": "^1.14.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
