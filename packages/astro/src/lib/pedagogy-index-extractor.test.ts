@@ -325,6 +325,19 @@ describe("extractEquations (pure)", () => {
     );
   });
 
+  test("throws E6 when the only `$$` block contains whitespace-only TeX", () => {
+    // extractFirstTex trims; whitespace-only `$$` is treated as "no math content".
+    const tree = root([
+      mdxKeyEquation({ id: "ws-math", title: "Whitespace Math" }, [
+        mathBlock("   "),
+      ]),
+    ]);
+
+    expect(() => extractEquations(tree as never, "ch")).toThrow(
+      /no `\$\$\.\.\.\$\$` math block/
+    );
+  });
+
   // Defense-in-depth: missing id and missing title
   test("throws when a KeyEquation is missing a non-empty `id`", () => {
     const tree = root([
@@ -420,7 +433,7 @@ describe("indexAccumulator (cross-chapter)", () => {
           anchor: "standard-candle",
         },
       ])
-    ).toThrow(/multiple chapters|duplicate/i);
+    ).toThrow(/multiple chapters/i);
   });
 
   test("clearChapter removes only that chapter's entries", () => {

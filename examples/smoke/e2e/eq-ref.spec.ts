@@ -74,6 +74,10 @@ test.describe("PR-C2: <EqRef> on the smoke chapter", () => {
     const icon = trigger.locator("svg");
     await expect(icon).toBeAttached();
     await expect(icon).toHaveAttribute("aria-hidden", "true");
+    // Lucide-React emits `lucide lucide-<kebab-name>` class on every icon.
+    // Asserting the specific class prevents a silent swap to a different
+    // Lucide glyph (e.g. Pi, FunctionSquare) from passing this test.
+    await expect(icon).toHaveClass(/lucide-sigma/);
   });
 
   test("T24: hovering the trigger opens a HoverCard with KaTeX-rendered tex", async ({
