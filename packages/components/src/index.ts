@@ -53,6 +53,11 @@ export {
   EffortLogPropsSchema,
   effortLogContract,
 } from "./components/EffortLog/index.ts";
+// Internal-use setters: @sophie/astro's <TextbookLayout> calls these
+// to hydrate the pedagogy index (definitions, equations, ...) from
+// `virtual:sophie/pedagogy-index` at render time. Not part of the
+// public authoring API; underscore-prefix flags internal-use.
+export { __setEquations } from "./components/EqRef/equations-store.ts";
 export type { FigureProps } from "./components/Figure/Figure.schema.ts";
 export {
   Figure,
@@ -60,10 +65,6 @@ export {
   figureInlineContract,
   figureRegistryContract,
 } from "./components/Figure/index.ts";
-// Internal-use setter: @sophie/astro's <TextbookLayout> calls this
-// to hydrate the glossary index from `virtual:sophie/pedagogy-index`
-// at render time. Not part of the public authoring API; underscore-
-// prefix flags internal-use.
 export { __setGlossaryDefinitions } from "./components/GlossaryTerm/definitions-store.ts";
 export type { GlossaryTermProps } from "./components/GlossaryTerm/index.ts";
 export {
