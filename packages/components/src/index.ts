@@ -20,6 +20,19 @@ export {
   InteractiveCalloutPropsSchema,
   interactiveCalloutContract,
 } from "./components/Callout/index.ts";
+export type { ChapterRefProps } from "./components/ChapterRef/ChapterRef.schema.ts";
+// Internal-use setters: @sophie/astro's <TextbookLayout> calls these
+// to hydrate the chapters + modules collections from
+// `getCollection('chapters')` / `getCollection('modules')` at render
+// time. Not part of the public authoring API; underscore-prefix
+// flags internal-use.
+export { __setChapters } from "./components/ChapterRef/chapters-store.ts";
+export {
+  ChapterRef,
+  ChapterRefPropsSchema,
+  chapterRefContract,
+} from "./components/ChapterRef/index.ts";
+export { __setModules } from "./components/ChapterRef/modules-store.ts";
 export type { CollapsibleCardProps } from "./components/CollapsibleCard/index.ts";
 export {
   CollapsibleCard,

@@ -1,0 +1,84 @@
+/* `<ChapterRef>` — inline chapter cross-reference + hover popover (PR-C4).
+ *
+ * Visual styling only. Per ADR 0005, no hex/rgb literals — all
+ * colors flow through @sophie/theme tokens. The popover is
+ * portal-rendered (Radix); the .popover class targets the
+ * portaled root. Mirrors EqRef.module.css / FigureRef.module.css;
+ * the popover is sized for a three-line text card (module
+ * breadcrumb / chapter title / optional description).
+ */
+
+.trigger {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.15em;
+  color: var(--sophie-link);
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  cursor: help;
+}
+
+.trigger:hover,
+.trigger:focus-visible {
+  color: var(--sophie-link-hover);
+  text-decoration-style: solid;
+}
+
+.trigger:focus-visible {
+  outline: 2px solid var(--sophie-focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--sophie-radius-sm);
+}
+
+.icon {
+  display: inline-block;
+  vertical-align: middle;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.popover {
+  /* Sized for a three-line text card (breadcrumb / title / description). */
+  min-width: min(16rem, calc(100vw - 2rem));
+  max-width: min(22rem, calc(100vw - 2rem));
+  padding: var(--sophie-space-3) var(--sophie-space-4);
+  background: var(--sophie-surface-1);
+  border: 1px solid var(--sophie-border-subtle);
+  border-radius: var(--sophie-radius-md);
+  box-shadow: var(--sophie-shadow-popover);
+  color: var(--sophie-text);
+  font-family: var(--sophie-font-sans);
+  font-size: var(--sophie-text-sm);
+  line-height: var(--sophie-leading-prose);
+  z-index: 50;
+}
+
+.breadcrumb {
+  margin: 0 0 var(--sophie-space-1);
+  font-size: var(--sophie-text-xs);
+  color: var(--sophie-text-muted, var(--sophie-text));
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.title {
+  display: block;
+  margin: 0 0 var(--sophie-space-2);
+  color: var(--sophie-accent);
+  font-weight: 600;
+  font-size: var(--sophie-text-sm);
+}
+
+.description {
+  margin: 0;
+  color: var(--sophie-text-muted, var(--sophie-text));
+  font-size: var(--sophie-text-sm);
+}
+
+.arrow {
+  fill: var(--sophie-surface-1);
+  stroke: var(--sophie-border-subtle);
+  stroke-width: 1px;
+}
