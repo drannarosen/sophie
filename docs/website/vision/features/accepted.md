@@ -35,50 +35,27 @@ begin authoring `teaching-decisions/001-...md` entries.
 
 ---
 
-## A2. Teaching Move Library
+(a2-teaching-move-library)=
+## A2. Teaching Move Library — graduated 2026-05-14
 
-**Motivating use case.** Sophie's chapter components — `<Predict>`,
-`<Aside kind="key-insight">`, `<ComprehensionGate>`, `<Reflection>`,
-`<CollapsibleCard>` — *already implement* pedagogical moves: elicit
-prior model, create cognitive conflict, reduce abstraction, generalize
-from case, check transfer, fade support. But the *moves themselves*
-aren't named. When AI scaffolds a chapter or Anna designs a new
-section, "what move are we making here?" should be the first
-question — not "what component do you want?" Naming the moves turns
-Sophie from a component library into a *language for teaching*.
+**Graduated** → [ADR 0041 — Teaching Move Library](../../decisions/0041-teaching-move-library.md)
++ [Teaching Move Library reference](../../reference/teaching-moves.md).
 
-**Design sketch.** A library of ~12–20 named teaching moves, each
-with a short description, when-to-use guidance, and a mapping to
-Sophie components that implement it. Each existing component gains a
-`pedagogy_intent` metadata field declaring which move(s) it
-implements. The library is reference content
-(`docs/website/reference/teaching-moves.md` or similar), not a code
-abstraction. AI authoring prompts (future Phase 3 work) reference the
-library by name.
-
-**Estimated cost.** ADR (~1 hour) + library document with ~15 named
-moves (~3–4 hours of authoring) + per-component metadata field added
-to existing schemas (~1 day of mechanical work across ~30 components).
-Total: ~2–3 days.
-
-**Priority claim.** Highest *conceptual* leverage of any accepted
-item. Names a category-defining abstraction that distinguishes Sophie
-from generic component libraries. Cheap relative to its leverage. AI
-authoring (eventual) and migrated chapters (near-term) both benefit
-from move-named scaffolding. Without it, every AI prompt re-invents
-the move vocabulary.
-
-**Open ADR question.** *What's the canonical move taxonomy?* Options:
-(a) ground in cognitive-science literature (Renkl's worked examples,
-Chi's ICAP, Mayer's multimedia learning); (b) ground in Anna's
-existing teaching practice (what moves does ASTR 201 already use?);
-(c) hybrid. The ADR also decides where `pedagogy_intent` lives —
-PropsSchema (typed), Storybook stories (documentation only), or both.
+The ADR resolved the "what's the canonical move taxonomy?" open
+question (option c — hybrid: literature-grounded canonical names +
+practice glosses) and the "where does `pedagogy_intent` live in code?"
+sub-question (centralized TypeScript map at
+`packages/components/src/pedagogy/move-index.ts`, populated in a
+follow-up code PR). v1 ships 18 named moves across 7 families:
+eliciting prior knowledge, confronting misconceptions, worked
+examples + fading, representations + comparison, metacognition +
+retrieval, diagnostics, and Sophie-native. The reference doc holds
+the full library with citations.
 
 **Status.**
-- 2026-05-14 — surfaced (speculative)
-- 2026-05-14 — promoted to accepted-pending-ADR
-- ADR target: after A1 (TDRs) lands
+- 2026-05-14 — surfaced (speculative) during vision-section brainstorm
+- 2026-05-14 — promoted to accepted-pending-ADR (triage)
+- 2026-05-14 — graduated → [ADR 0041](../../decisions/0041-teaching-move-library.md)
 
 ---
 

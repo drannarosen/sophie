@@ -68,6 +68,7 @@ project:
         - file: reference/plugin-api.md
         - file: reference/glossary.md
         - file: reference/tdr-template.md
+        - file: reference/teaching-moves.md
     - title: Explanation
       children:
         - file: explanation/architecture.md
@@ -131,6 +132,7 @@ project:
         - file: decisions/0038-pedagogy-index-pattern.md
         - file: decisions/0039-lucide-two-adapter-convention.md
         - file: decisions/0040-teaching-decision-records.md
+        - file: decisions/0041-teaching-move-library.md
     - title: Status
       children:
         - file: status/roadmap.md

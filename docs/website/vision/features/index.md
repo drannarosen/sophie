@@ -72,18 +72,29 @@ Demotion is possible: an *accepted-pending-ADR* item can move back to
 The 5 entries already in [`speculative.md`](speculative.md) stay where
 they are.
 
-## First graduation (2026-05-14)
+## Graduations (2026-05-14)
 
-**A1 — Teaching Decision Records (TDRs)** graduated on the same day
-as triage: ratified by
+Two accepted entries graduated on the same day as the triage that
+promoted them. The staging-area model's first two end-to-end tests:
+ideas moving from speculative → accepted → graduated within one
+day.
+
+**A1 — Teaching Decision Records (TDRs)** ratified by
 [ADR 0040 — Teaching Decision Records](../../decisions/0040-teaching-decision-records.md)
 + [TDR template](../../reference/tdr-template.md). The ADR locked
 location (consumer repos, not platform docs), schema (ADR-shaped),
 and numbering (folder-scoped 3-digit).
 
-This is the **first end-to-end test of the staging-area model** —
-an idea moving from speculative → accepted → graduated within one
-day. Subsequent graduations from `accepted.md` (A2 Teaching Move
-Library, A3 AI Contribution Ledger + Pedagogy Contract, A4 MultiRep
-+ Notation Registry, A5 Misconception Graph) follow when their
-authoring ADRs are drafted.
+**A2 — Teaching Move Library** ratified by
+[ADR 0041 — Teaching Move Library](../../decisions/0041-teaching-move-library.md)
++ [Teaching Move Library reference](../../reference/teaching-moves.md).
+The ADR locked the hybrid taxonomy (literature-grounded canonical
+names + practice glosses) and the centralized-TS-map binding
+(`packages/components/src/pedagogy/move-index.ts`, populated in a
+follow-up code PR). v1 ships 18 moves across 7 families.
+
+Remaining graduation candidates from `accepted.md`:
+A3 AI Contribution Ledger + Pedagogy Contract, A4 MultiRep +
+Notation Registry + Representation Alignment Audit, A5 Misconception
+Graph + Intervention Library. Each graduates when its authoring ADR
+is drafted.
