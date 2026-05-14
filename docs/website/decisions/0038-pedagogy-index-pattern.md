@@ -347,6 +347,168 @@ attaches the pointer handlers (consistent with `<Predict>`,
 `<ConfidenceCheck>`, `<InteractiveCallout>` already in the
 chapter MDX).
 
+## Revisions (2026-05-14 — post-PR-C2 / PR-C3 / PR-C4)
+
+Five further implementation realities surfaced across the rest of
+Bucket C (PR-C2 [equations + `<EqRef>`], PR-C3 [key-insights +
+figures + misconceptions + factory refactor], the PR-C3 closeout
+audit [#39], and PR-C4 [chapters + `<ChapterRef>` + LO course
+roll-up + systematic build-time audit invariants]). They refine
+the patterns laid down in §1 (Revisions, post-PR-C1) and codify
+conventions every future role addition should inherit.
+
+### `createPedagogyStore<T>` factory replaces per-store boilerplate
+
+PR-C1 and PR-C2 each hand-rolled a store with the same shape:
+an `set(entries)` SSR-side setter, a `lookup(key)` client-side
+reader, and auto-hydration from a `<script id="sophie-pedagogy-*">`
+tag on first lookup. By PR-C3 the duplication crossed the DRY
+threshold (third callsite); the role-aggregation principle says
+one factory covers every role.
+
+PR-C3 ships `createPedagogyStore<T>(scriptId, keyFn)` returning
+`{ set, lookup }`. PR-C3 migrates the existing definitions-store
+and equations-store; figure-registry, figure-usages, key-insights,
+and misconceptions stores all wrap the factory directly. PR-C4
+adds `chapters-store`, `modules-store`, and `objectives-store`
+through the same factory with zero new patterns.
+
+**Implication for future roles**: never hand-roll the
+SSR-set / CSR-lookup / script-tag-hydrate triple. Pass `(scriptId,
+keyFn)` to the factory; export the resulting setter as
+`__set${RoleName}`; consumers call `${roleStore}.lookup(key)`.
+
+### Two-tier figures model: asset registry vs. usage records
+
+PR-C3's `<Figure>` source component surfaced a model the §1
+revisions didn't anticipate: figures have a *registry* (assets
+known to the consumer chapter — `src`, `alt`, `caption`,
+`credit`) and *usages* (where the chapter prose actually invokes
+each figure — `<Figure name="X">` and `<FigureRef name="X">`).
+These are two different concerns over the same namespace.
+
+The shipped pattern: `figureRegistry: ReadonlyArray<FigureRegistryEntry>`
+is consumer-global (set once at TextbookLayout SSR from the
+consumer's `content/figures.ts`); `figureUsages: ReadonlyArray<FigureUsageEntry>`
+is per-chapter (extracted from the MDX walk). The build-time
+audit (PR-C4) joins them: F1 errors when a usage references a
+name not in the registry; F2 errors when an inline reference
+points at an unregistered name; F4 warns when a registry entry
+has zero usages.
+
+**Implication for future role pairs**: when a role has both
+declarative metadata (the asset) and call-site usages (where it's
+referenced), split into a `registry`-style consumer-global
+collection and a `usages`-style per-chapter collection on
+`PedagogyIndex`. The audit reconciles them.
+
+### SSR setters ship uniformly even when no React consumer exists in v1
+
+By PR-C3 the accumulator was emitting six collections; only four
+had React-rendered inline-ref consumers (definitions, equations,
+figure-registry, figure-usages). Key-insights and misconceptions
+were indexed but only read by server-rendered chapter / course
+consumers (Astro `<ChapterKeyInsights>`, `<CourseMisconceptions>`).
+The setter pattern is uniform anyway: `__setKeyInsights` and
+`__setMisconceptions` are exported, called by TextbookLayout,
+and feed script-tag JSON payloads — even though no React store
+consumes them in v1.
+
+**Why uniform**: pattern parity matters more than completeness.
+The marginal cost of an unused setter is two lines (one
+`__setX(pedagogy.X)` call + one `<script id="sophie-pedagogy-X">`
+tag). The marginal benefit is that future consumers (Bucket B
+PR 7 faceted search; PR-C4 audit invariants reading
+`inlineRefUsages`) don't have to bootstrap the plumbing.
+
+PR-C4 inherits this convention: `__setChapters`, `__setModules`,
+and `__setObjectives` all ship. `chapters` has a React consumer
+(`<ChapterRef>` hover preview); `modules` is joined into the
+ChapterRef hover preview; `objectives` is currently SSR-only but
+ready for future inline-ref shapes.
+
+### ADR 0027 conflict caught at design-doc time (PR-C4 Task 4)
+
+PR-C4's original design draft proposed `useChapterContext` for
+reading `course` and `chapter` inside the refactored
+`<LearningObjectives>`. [ADR 0027](./0027-mdx-render-boundary-prop-threading.md)
+explicitly forbids context propagation into MDX-rendered React
+components — each gets its own `renderToStaticMarkup` SSR pass
+outside any `client:load` parent's React tree, so context
+providers don't reach them. The implementer caught the conflict
+*before* writing code; the design doc was corrected on main
+(`6fa48d8`) before any implementation work proceeded.
+
+**Implication for future role refactors**: the
+`(course, chapter, …)` props that thread through every
+persistence-bearing component aren't ergonomic boilerplate to
+be eliminated via "global context provider" patterns. They're
+the ADR-0027-mandated shape. Any proposal to source these from
+hooks or context inside MDX-rendered components is a
+super-ADR-0027 architectural change requiring its own ADR.
+
+### Audit pass is a separate concern; `AuditReport` is the contract
+
+PR-C4 ships `runPedagogyAudit(index: PedagogyIndex): AuditReport`
+as a pure function — reads the index, returns findings with
+`{ errors, warnings, info }` severity levels (accumulate-and-
+report, exit code reflects ERROR presence). No annotations on
+index entries; audit output is a discrete object. The Bucket B
+PR 7 faceted search will call `runPedagogyAudit(index)` for
+facet data (e.g., "show me orphan defined terms") without
+back-coupling.
+
+**Two practical surprises during PR-C4 integration**:
+
+- **Audit-call timing**: `runPedagogyAudit` runs inside
+  `TextbookLayout.astro`'s frontmatter, *after* `render(chapter)`
+  Promise.all (which triggers MDX parsing → populates accumulator).
+  Reading `indexAccumulator.asPedagogyIndex()` from a *page*
+  frontmatter (e.g., `/objectives.astro`) yields empty arrays
+  because Astro evaluates page frontmatter before child-component
+  frontmatter. Pages consume the index via a child component
+  slotted into `TextbookLayout` (the established `<Course*>`
+  pattern; PR-C4 follows it with `<CourseObjectives>`).
+- **MDX prop typecheck is not enforced at build**: dropping a
+  required prop from a schema (e.g., `objectives[]` from
+  `<LearningObjectives>`) doesn't fail `pnpm --filter smoke
+  build` even when the smoke chapter still uses the old shape —
+  Astro doesn't typecheck MDX prop shapes at build. Schema
+  breakages must be caught at consumer migration time (or by a
+  future remark plugin that validates MDX prop shapes against
+  `@sophie/core` schemas). Worth a forward-looking audit
+  invariant.
+
+### SoTA testing pattern surfaces a real production bug (PR-C4 closeout)
+
+E2E tests in early Bucket C waited on `networkidle` or arbitrary
+`{ timeout: N }` knobs. Phase 1 (#39) replaced `networkidle`
+with the scoped `data-react-hydrated="true"` attribute wait.
+PR-C4 closeout took the next step: condition-based waiting on
+Radix HoverCard's `data-state="open"` / `data-state="closed"`
+attributes (the deterministic state-machine signal), with no
+timeout knobs.
+
+**The SoTA-not-simple thesis paid off**: switching the in-page
+ToC scroll-spy test from `waitForTimeout(150)` to
+`expect(tocLink).toHaveAttribute("aria-current", "location")`
+exposed a latent production bug. The scroll-spy observed every
+`h2[id]` inside `.sophie-content`, including the
+`<LearningObjectives>` heading (added by PR-C4's children-mode
+refactor for axe-region naming) that had no corresponding ToC
+link. When the observer fired on that orphan heading, it cleared
+`aria-current` on every link. Naive `waitForTimeout` made the
+test pass through pure luck; condition-based waiting forced the
+fix. Production fix: invert source of truth — observe only
+headings that have a corresponding ToC link, not all chapter
+headings.
+
+**Implication for every future test**: replace timing-based
+waits with condition-based waits whenever a deterministic
+observable state exists. Test correctness is downstream of
+production correctness; SoTA test patterns expose latent
+production bugs that simple timing patterns hide.
+
 ## References
 
 - [Bucket C overview](../../plans/2026-05-13-bucket-c-pedagogy-index-overview.md)
