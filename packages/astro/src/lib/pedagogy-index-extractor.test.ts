@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
   extractDefinitions,
+  extractEquations,
   indexAccumulator,
   pedagogyIndexRemarkPlugin,
 } from "./pedagogy-index-extractor.ts";
@@ -184,6 +185,183 @@ describe("extractDefinitions (pure)", () => {
     expect(entries[0]?.slug).toBe("custom-anchor");
     expect(entries[0]?.anchor).toBe("custom-anchor");
     expect(entries[0]?.term).toBe("Standard candle"); // term still from title
+  });
+});
+
+const mdxKeyEquation = (
+  attrs: Record<string, string>,
+  children: ReadonlyArray<Record<string, unknown>> = []
+) => ({
+  type: "mdxJsxFlowElement",
+  name: "KeyEquation",
+  attributes: Object.entries(attrs).map(([name, value]) => ({
+    type: "mdxJsxAttribute",
+    name,
+    value,
+  })),
+  children,
+});
+
+const mathBlock = (value: string) => ({ type: "math", value });
+
+const inlineMath = (value: string) => ({ type: "inlineMath", value });
+
+describe("extractEquations (pure)", () => {
+  // T5
+  test("returns one EquationEntry for one KeyEquation (number=1, slug/title/tex/body/chapter/anchor)", () => {
+    const tree = root([
+      mdxKeyEquation({ id: "wiens-law", title: "Wien's Law" }, [
+        mathBlock("\\lambda_{\\text{peak}} = b T^{-1}"),
+        para("Wien's displacement law relates peak wavelength to temperature."),
+      ]),
+    ]);
+
+    const entries = extractEquations(tree as never, "ch");
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      slug: "wiens-law",
+      title: "Wien's Law",
+      number: 1,
+      tex: "\\lambda_{\\text{peak}} = b T^{-1}",
+      chapter: "ch",
+      anchor: "wiens-law",
+    });
+    // anchor === slug invariant
+    expect(entries[0]?.anchor).toBe(entries[0]?.slug);
+    // body contains the rendered prose
+    expect(entries[0]?.body).toContain(
+      "Wien's displacement law relates peak wavelength to temperature."
+    );
+  });
+
+  // T6
+  test("extracts `tex` from the FIRST `$$` block when the body has multiple math blocks; subsequent forms stay in `body`", () => {
+    const tree = root([
+      mdxKeyEquation(
+        { id: "inverse-square-law", title: "Inverse-Square Law" },
+        [
+          mathBlock("F = \\frac{L}{4\\pi d^2}"),
+          para("Equivalently:"),
+          mathBlock("L = 4\\pi d^2 F"),
+        ]
+      ),
+    ]);
+
+    const entries = extractEquations(tree as never, "ch");
+
+    expect(entries).toHaveLength(1);
+    // tex is the FIRST math block
+    expect(entries[0]?.tex).toBe("F = \\frac{L}{4\\pi d^2}");
+    // body contains the rendered output for BOTH math blocks
+    expect(entries[0]?.body).toContain("F = \\frac{L}{4\\pi d^2}");
+    expect(entries[0]?.body).toContain("L = 4\\pi d^2 F");
+  });
+
+  // T6 supplementary — inlineMath must be ignored when picking the first tex
+  test("ignores inlineMath ($x$) when picking the first tex (only $$ display math counts)", () => {
+    const tree = root([
+      mdxKeyEquation({ id: "stefan-boltzmann", title: "Stefan–Boltzmann" }, [
+        {
+          type: "paragraph",
+          children: [
+            { type: "text", value: "Recall " },
+            inlineMath("T"),
+            { type: "text", value: " is temperature." },
+          ],
+        },
+        mathBlock("L = 4\\pi R^2 \\sigma T^4"),
+      ]),
+    ]);
+
+    const entries = extractEquations(tree as never, "ch");
+    expect(entries[0]?.tex).toBe("L = 4\\pi R^2 \\sigma T^4");
+  });
+
+  // T7
+  test("assigns per-chapter `number` 1, 2, 3 in source order across three KeyEquations", () => {
+    const tree = root([
+      mdxKeyEquation({ id: "eq-a", title: "Equation A" }, [mathBlock("a = 1")]),
+      mdxKeyEquation({ id: "eq-b", title: "Equation B" }, [mathBlock("b = 2")]),
+      mdxKeyEquation({ id: "eq-c", title: "Equation C" }, [mathBlock("c = 3")]),
+    ]);
+
+    const entries = extractEquations(tree as never, "ch");
+    expect(entries).toHaveLength(3);
+    expect(entries.map((e) => e.number)).toEqual([1, 2, 3]);
+    expect(entries.map((e) => e.slug)).toEqual(["eq-a", "eq-b", "eq-c"]);
+  });
+
+  // T8
+  test("throws on intra-chapter slug collision (two KeyEquations with the same `id`)", () => {
+    const tree = root([
+      mdxKeyEquation({ id: "wiens-law", title: "Wien's Law" }, [
+        mathBlock("\\lambda = b/T"),
+      ]),
+      mdxKeyEquation({ id: "wiens-law", title: "Wien's Law (alt)" }, [
+        mathBlock("\\lambda T = b"),
+      ]),
+    ]);
+
+    expect(() => extractEquations(tree as never, "ch")).toThrow(
+      /collision|duplicate/i
+    );
+    // Error message cites the chapter + slug
+    expect(() => extractEquations(tree as never, "ch")).toThrow(/ch/);
+    expect(() => extractEquations(tree as never, "ch")).toThrow(/wiens-law/);
+  });
+
+  // T9
+  test("throws E6 categorization error when a KeyEquation has no `$$` math block", () => {
+    const tree = root([
+      mdxKeyEquation({ id: "no-math", title: "No Math Here" }, [
+        para("This KeyEquation has prose but no $$ block."),
+      ]),
+    ]);
+
+    expect(() => extractEquations(tree as never, "ch")).toThrow(
+      /no `\$\$\.\.\.\$\$` math block/
+    );
+  });
+
+  // Defense-in-depth: missing id and missing title
+  test("throws when a KeyEquation is missing a non-empty `id`", () => {
+    const tree = root([
+      mdxKeyEquation({ title: "Some Title" }, [mathBlock("x = 1")]),
+    ]);
+    expect(() => extractEquations(tree as never, "ch")).toThrow(
+      /missing.*`id`/i
+    );
+  });
+
+  test("throws when a KeyEquation is missing a non-empty `title`", () => {
+    const tree = root([
+      mdxKeyEquation({ id: "some-id" }, [mathBlock("x = 1")]),
+    ]);
+    expect(() => extractEquations(tree as never, "ch")).toThrow(
+      /missing.*`title`/i
+    );
+  });
+
+  // Skips non-KeyEquation JSX elements
+  test("skips JSX elements that aren't named 'KeyEquation'", () => {
+    const tree = root([
+      {
+        type: "mdxJsxFlowElement",
+        name: "Callout",
+        attributes: [
+          { type: "mdxJsxAttribute", name: "variant", value: "info" },
+        ],
+        children: [para("not a KeyEquation"), mathBlock("z = 0")],
+      },
+      mdxKeyEquation({ id: "real-eq", title: "Real Equation" }, [
+        mathBlock("y = mx + b"),
+      ]),
+    ]);
+
+    const entries = extractEquations(tree as never, "ch");
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.slug).toBe("real-eq");
   });
 });
 
