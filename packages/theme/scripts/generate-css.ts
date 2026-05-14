@@ -39,6 +39,10 @@ function colorBlock(mode: ColorMode): string {
     // of being invisible in dark mode like a hardcoded #0f1115 would be.
     // 4% concentration matches the original visual in light mode.
     `--sophie-shadow-card: 0 1px 3px color-mix(in oklch, ${fg} 4%, transparent);`,
+    // Same pattern for popover surfaces (FigureRef / EqRef / GlossaryTerm).
+    // 12% concentration matches the original `rgb(0 0 0 / 0.12)` in light
+    // mode and stays visible against dark surface-1.
+    `--sophie-shadow-popover: 0 4px 12px color-mix(in oklch, ${fg} 12%, transparent);`,
   ].join("\n    ");
 }
 
@@ -55,10 +59,6 @@ function modeInvariantBlock(): string {
     `--sophie-status-danger: ${status.danger};`,
     "--sophie-accent: var(--sophie-brand-teal);",
     "--sophie-link-hover: var(--sophie-accent);",
-    // Popover shadow. Mode-invariant literal preserved from the rgb
-    // fallback that consumer CSS modules (FigureRef, EqRef,
-    // GlossaryTerm) were relying on before the token existed.
-    "--sophie-shadow-popover: 0 4px 12px rgb(0 0 0 / 0.12);",
   ].join("\n  ");
 }
 
