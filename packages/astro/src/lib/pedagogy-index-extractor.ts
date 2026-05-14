@@ -541,15 +541,16 @@ class IndexAccumulator {
    *
    * Keyed by `${chapter}#${name}` so the same registry name can be
    * used in multiple chapters (the two-tier point of decisions row
-   * 3); each usage gets its own entry. Note that a chapter that uses
-   * the same `name` twice produces two entries with the same key
-   * here — the second write would clobber the first. That case is
-   * caught earlier by `extractFigures`'s anchor-collision guard (F5)
-   * via the counter suffix, which makes two same-name usages produce
-   * distinct anchors but the same `${chapter}#${name}` key. If we
-   * later allow repeated registry names within a chapter (e.g. for
-   * comparison spreads), the key here will need to incorporate the
-   * counter as well.
+   * 3); each usage gets its own entry. Note: two `<Figure name="X">`
+   * in the same chapter get distinct anchors (`fig-x-1`, `fig-x-2`)
+   * via the counter suffix, so F5 (intra-chapter anchor collision)
+   * does NOT fire — but they share the `${chapter}#${name}` key, so
+   * the second silently clobbers the first in the index. This is a
+   * known v1 limitation; the smoke chapter never renders the same
+   * figure twice. If we later allow repeated registry names within a
+   * chapter (e.g. for comparison spreads), the key here will need to
+   * incorporate the counter, OR an authoring lint should reject the
+   * shape.
    */
   addFigureUsages(entries: ReadonlyArray<FigureUsageEntry>): void {
     const state = getGlobalState();
