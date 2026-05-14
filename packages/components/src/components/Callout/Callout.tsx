@@ -15,7 +15,7 @@ const variantTitles: Record<CalloutVariant, string> = {
   caution: "Caution",
   roadmap: "Roadmap",
   summary: "Summary",
-  "key-insight": "Key Insight",
+  "key-insight": "Key insight",
   misconception: "Misconception",
 };
 

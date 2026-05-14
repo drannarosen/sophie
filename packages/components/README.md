@@ -69,6 +69,13 @@ or remark plugin that auto-injects `client:load` and the course/chapter
 props on `<Interactive*>` JSX names — until then, MDX authors include
 the directive at each call site.
 
+## Label-case convention
+
+User-facing labels (e.g., `Aside` kind labels, `Callout` variant titles)
+use **sentence case**: "Key insight", not "Key Insight". Applies to
+`KIND_LABELS`, `variantTitles`, story display names, and any new
+user-facing string registry.
+
 ## CSS Modules build pipeline
 
 [ADR 0005](../../docs/website/decisions/0005-theming-three-layers.md)

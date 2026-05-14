@@ -33,7 +33,7 @@ describe("<Callout> (static)", () => {
     const expected = {
       roadmap: "Roadmap",
       summary: "Summary",
-      "key-insight": "Key Insight",
+      "key-insight": "Key insight",
     } as const;
     for (const [variant, title] of Object.entries(expected)) {
       const { unmount } = render(
