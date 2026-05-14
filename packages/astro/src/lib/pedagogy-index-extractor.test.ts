@@ -1,8 +1,13 @@
-import type { EquationEntry, KeyInsightEntry } from "@sophie/core/schema";
+import type {
+  EquationEntry,
+  FigureUsageEntry,
+  KeyInsightEntry,
+} from "@sophie/core/schema";
 import { describe, expect, test } from "vitest";
 import {
   extractDefinitions,
   extractEquations,
+  extractFigures,
   extractKeyInsights,
   indexAccumulator,
   pedagogyIndexRemarkPlugin,
@@ -905,5 +910,390 @@ describe("indexAccumulator key-insights (cross-chapter)", () => {
     const chapters = shared.map((k) => k.chapter).sort();
     expect(chapters).toContain("ki-share-a");
     expect(chapters).toContain("ki-share-b");
+  });
+});
+
+/**
+ * Figure-test fixture. Supports both string-valued and boolean-presence
+ * (value === null) attributes. The `canonical` JSX prop on `<Figure>`
+ * is a boolean-presence prop — the mdast `mdxJsxAttribute` carries
+ * `value: null` when authored as `<Figure name="X" canonical />`. We
+ * model both shapes here so tests can exercise the canonical-detection
+ * branch authentically.
+ */
+const mdxFigure = (
+  attrs: Record<string, string | null | true>,
+  children: ReadonlyArray<Record<string, unknown>> = []
+) => ({
+  type: "mdxJsxFlowElement",
+  name: "Figure",
+  attributes: Object.entries(attrs).map(([name, value]) => ({
+    type: "mdxJsxAttribute",
+    name,
+    value,
+  })),
+  children,
+});
+
+describe("extractFigures (pure)", () => {
+  // T24
+  test("one <Figure name='X' /> produces one usage entry with number=1, canonical=false, no captionOverride", () => {
+    const tree = root([mdxFigure({ name: "decoder-ring" })]);
+
+    const entries = extractFigures(tree as never, "spoiler-alerts");
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      name: "decoder-ring",
+      chapter: "spoiler-alerts",
+      anchor: "fig-decoder-ring-1",
+      number: 1,
+      canonical: false,
+    });
+    expect(entries[0]?.captionOverride).toBeUndefined();
+  });
+
+  // T25
+  test("three <Figure name='...'> get number 1, 2, 3 in source order", () => {
+    const tree = root([
+      mdxFigure({ name: "alpha" }),
+      mdxFigure({ name: "beta" }),
+      mdxFigure({ name: "gamma" }),
+    ]);
+
+    const entries = extractFigures(tree as never, "ch");
+    expect(entries).toHaveLength(3);
+    expect(entries.map((e) => e.number)).toEqual([1, 2, 3]);
+    expect(entries.map((e) => e.name)).toEqual(["alpha", "beta", "gamma"]);
+    expect(entries.map((e) => e.anchor)).toEqual([
+      "fig-alpha-1",
+      "fig-beta-2",
+      "fig-gamma-3",
+    ]);
+  });
+
+  // T26
+  test("<Figure name='X' canonical /> (boolean-presence prop) produces canonical=true", () => {
+    // Boolean-presence JSX prop: AST value is `null` (no `=` follows).
+    const tree = root([mdxFigure({ name: "decoder-ring", canonical: null })]);
+
+    const entries = extractFigures(tree as never, "ch");
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.canonical).toBe(true);
+  });
+
+  test("<Figure name='X' canonical={true} /> (explicit-true) also produces canonical=true", () => {
+    // Some MDX serializations represent `canonical={true}` with
+    // `value: true` directly. Accept that shape too.
+    const tree = root([mdxFigure({ name: "x", canonical: true })]);
+
+    const entries = extractFigures(tree as never, "ch");
+    expect(entries[0]?.canonical).toBe(true);
+  });
+
+  // T27
+  test("<Figure src='...' /> (inline mode, no name) is NOT extracted", () => {
+    const tree = root([
+      mdxFigure({ src: "/img/hero.png" }),
+      mdxFigure({ src: "/img/illustration.png" }),
+      mdxFigure({ name: "real-figure" }),
+    ]);
+
+    const entries = extractFigures(tree as never, "ch");
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.name).toBe("real-figure");
+    expect(entries[0]?.number).toBe(1); // counter not incremented by skipped inline figures
+  });
+
+  // Extra: explicit caption override
+  test("<Figure name='X' caption='custom' /> produces captionOverride='custom'", () => {
+    const tree = root([
+      mdxFigure({ name: "x", caption: "An overriding caption." }),
+    ]);
+
+    const entries = extractFigures(tree as never, "ch");
+    expect(entries[0]?.captionOverride).toBe("An overriding caption.");
+  });
+
+  test("whitespace-only caption collapses to undefined captionOverride", () => {
+    const tree = root([mdxFigure({ name: "x", caption: "   " })]);
+
+    const entries = extractFigures(tree as never, "ch");
+    expect(entries[0]?.captionOverride).toBeUndefined();
+  });
+
+  test("whitespace-only `name` is treated as inline-mode and skipped", () => {
+    const tree = root([
+      mdxFigure({ name: "   " }),
+      mdxFigure({ name: "real" }),
+    ]);
+
+    const entries = extractFigures(tree as never, "ch");
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.name).toBe("real");
+  });
+
+  test("skips JSX elements that aren't named 'Figure'", () => {
+    const tree = root([
+      {
+        type: "mdxJsxFlowElement",
+        name: "Callout",
+        attributes: [
+          { type: "mdxJsxAttribute", name: "variant", value: "info" },
+        ],
+        children: [],
+      },
+      mdxFigure({ name: "real" }),
+    ]);
+
+    const entries = extractFigures(tree as never, "ch");
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.name).toBe("real");
+  });
+});
+
+describe("indexAccumulator figures (cross-chapter)", () => {
+  const fu = (overrides: Partial<FigureUsageEntry> = {}): FigureUsageEntry => ({
+    name: "decoder-ring",
+    chapter: "ch-a",
+    anchor: "fig-decoder-ring-1",
+    number: 1,
+    canonical: false,
+    ...overrides,
+  });
+
+  // T31
+  test("addFigureUsages throws on F3 (multiple canonical for same name across chapters)", () => {
+    indexAccumulator.clearChapter("fig-a");
+    indexAccumulator.clearChapter("fig-b");
+    indexAccumulator.addFigureUsages([
+      fu({
+        name: "decoder-ring",
+        chapter: "fig-a",
+        anchor: "fig-decoder-ring-1",
+        canonical: true,
+      }),
+    ]);
+
+    expect(() =>
+      indexAccumulator.addFigureUsages([
+        fu({
+          name: "decoder-ring",
+          chapter: "fig-b",
+          anchor: "fig-decoder-ring-1",
+          canonical: true,
+        }),
+      ])
+    ).toThrow(/F3 invariant/);
+    // Error message names BOTH chapter slugs.
+    expect(() =>
+      indexAccumulator.addFigureUsages([
+        fu({
+          name: "decoder-ring",
+          chapter: "fig-b",
+          anchor: "fig-decoder-ring-1",
+          canonical: true,
+        }),
+      ])
+    ).toThrow(/fig-a/);
+    expect(() =>
+      indexAccumulator.addFigureUsages([
+        fu({
+          name: "decoder-ring",
+          chapter: "fig-b",
+          anchor: "fig-decoder-ring-1",
+          canonical: true,
+        }),
+      ])
+    ).toThrow(/fig-b/);
+  });
+
+  test("addFigureUsages detects multiple canonical within a SINGLE batch", () => {
+    indexAccumulator.clearChapter("fig-batch-a");
+    indexAccumulator.clearChapter("fig-batch-b");
+    // Both entries in the same call, both canonical, different chapters.
+    expect(() =>
+      indexAccumulator.addFigureUsages([
+        fu({
+          name: "spectrum",
+          chapter: "fig-batch-a",
+          anchor: "fig-spectrum-1",
+          canonical: true,
+        }),
+        fu({
+          name: "spectrum",
+          chapter: "fig-batch-b",
+          anchor: "fig-spectrum-1",
+          canonical: true,
+        }),
+      ])
+    ).toThrow(/F3 invariant/);
+  });
+
+  test("addFigureUsages allows multi-chapter usages when only ONE is canonical", () => {
+    indexAccumulator.clearChapter("fig-ok-a");
+    indexAccumulator.clearChapter("fig-ok-b");
+    indexAccumulator.addFigureUsages([
+      fu({
+        name: "hr-diagram",
+        chapter: "fig-ok-a",
+        anchor: "fig-hr-diagram-1",
+        canonical: true,
+      }),
+    ]);
+    expect(() =>
+      indexAccumulator.addFigureUsages([
+        fu({
+          name: "hr-diagram",
+          chapter: "fig-ok-b",
+          anchor: "fig-hr-diagram-1",
+          canonical: false,
+        }),
+      ])
+    ).not.toThrow();
+
+    const index = indexAccumulator.asPedagogyIndex();
+    const usages = index.figureUsages.filter((u) => u.name === "hr-diagram");
+    expect(usages).toHaveLength(2);
+    expect(usages.filter((u) => u.canonical)).toHaveLength(1);
+  });
+
+  test("addFigureUsages validates the whole batch BEFORE mutating (canonical-collision in entry 2 leaves entry 1 unwritten)", () => {
+    indexAccumulator.clearChapter("fig-pre-a");
+    indexAccumulator.clearChapter("fig-pre-b");
+    // Seed: chapter "fig-pre-a" has a canonical usage of "x".
+    indexAccumulator.addFigureUsages([
+      fu({
+        name: "x",
+        chapter: "fig-pre-a",
+        anchor: "fig-x-1",
+        canonical: true,
+      }),
+    ]);
+
+    // Batch: entry 1 is a fresh non-colliding usage; entry 2 collides
+    // canonically. The whole batch must throw with entry 1 unwritten.
+    expect(() =>
+      indexAccumulator.addFigureUsages([
+        fu({
+          name: "fresh-fig",
+          chapter: "fig-pre-b",
+          anchor: "fig-fresh-fig-1",
+          canonical: false,
+        }),
+        fu({
+          name: "x",
+          chapter: "fig-pre-b",
+          anchor: "fig-x-1",
+          canonical: true,
+        }),
+      ])
+    ).toThrow(/F3 invariant/);
+
+    const index = indexAccumulator.asPedagogyIndex();
+    expect(
+      index.figureUsages.find((u) => u.name === "fresh-fig")
+    ).toBeUndefined();
+  });
+
+  // T32
+  test("clearChapter removes figureUsages for that chapter; other chapters survive", () => {
+    indexAccumulator.clearChapter("fig-clr-a");
+    indexAccumulator.clearChapter("fig-clr-b");
+    indexAccumulator.addFigureUsages([
+      fu({
+        name: "fig-a",
+        chapter: "fig-clr-a",
+        anchor: "fig-fig-a-1",
+        canonical: false,
+      }),
+      fu({
+        name: "fig-b",
+        chapter: "fig-clr-b",
+        anchor: "fig-fig-b-1",
+        canonical: false,
+      }),
+    ]);
+
+    indexAccumulator.clearChapter("fig-clr-a");
+
+    const index = indexAccumulator.asPedagogyIndex();
+    expect(
+      index.figureUsages.filter((u) => u.chapter === "fig-clr-a")
+    ).toHaveLength(0);
+    expect(
+      index.figureUsages.find((u) => u.chapter === "fig-clr-b")?.name
+    ).toBe("fig-b");
+  });
+
+  test("asPedagogyIndex returns populated figureUsages (was empty `[]` in earlier PRs)", () => {
+    indexAccumulator.clearChapter("fig-ap-a");
+    indexAccumulator.addFigureUsages([
+      fu({
+        name: "fig-1",
+        chapter: "fig-ap-a",
+        anchor: "fig-fig-1-1",
+        canonical: false,
+      }),
+      fu({
+        name: "fig-2",
+        chapter: "fig-ap-a",
+        anchor: "fig-fig-2-2",
+        number: 2,
+        canonical: false,
+      }),
+    ]);
+
+    const index = indexAccumulator.asPedagogyIndex();
+    const inChApA = index.figureUsages.filter((u) => u.chapter === "fig-ap-a");
+    expect(inChApA).toHaveLength(2);
+    expect(inChApA.map((u) => u.name).sort()).toEqual(["fig-1", "fig-2"]);
+  });
+
+  test("asPedagogyIndex leaves figureRegistry as [] (extractor never populates it; SSR merge does)", () => {
+    indexAccumulator.clearChapter("fig-reg-a");
+    indexAccumulator.addFigureUsages([
+      fu({
+        name: "anything",
+        chapter: "fig-reg-a",
+        anchor: "fig-anything-1",
+        canonical: false,
+      }),
+    ]);
+
+    const index = indexAccumulator.asPedagogyIndex();
+    expect(index.figureRegistry).toEqual([]);
+  });
+});
+
+describe("pedagogyIndexRemarkPlugin (figures)", () => {
+  test("populates figureUsages for the parsed chapter", () => {
+    indexAccumulator.clearChapter("fig-plugin");
+    const plugin = pedagogyIndexRemarkPlugin();
+    // Use figure names unique to this test to avoid collision with
+    // leftover canonical entries from F3 tests above (shared module
+    // state across describe blocks).
+    const tree = root([
+      mdxFigure({ name: "plugin-fig-canonical", canonical: null }),
+      mdxFigure({ name: "plugin-fig-plain" }),
+    ]);
+
+    plugin(tree as never, {
+      path: "/repo/src/content/chapters/fig-plugin.mdx",
+    });
+
+    const index = indexAccumulator.asPedagogyIndex();
+    const inCh = index.figureUsages.filter((u) => u.chapter === "fig-plugin");
+    expect(inCh).toHaveLength(2);
+    expect(inCh.map((u) => u.name).sort()).toEqual([
+      "plugin-fig-canonical",
+      "plugin-fig-plain",
+    ]);
+    expect(inCh.find((u) => u.name === "plugin-fig-canonical")?.canonical).toBe(
+      true
+    );
+    expect(inCh.find((u) => u.name === "plugin-fig-plain")?.canonical).toBe(
+      false
+    );
   });
 });
