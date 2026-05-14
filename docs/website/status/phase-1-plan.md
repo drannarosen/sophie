@@ -210,6 +210,7 @@ InteractiveCallout; Predict's shape (form, multi-field state,
 gated reveal) is different enough that a second proof point
 matters before committing to the rest.
 
+(42-storybook-activates-between-trio-25-and-trio-3-2026-05-10)=
 ### 4.2 Storybook activates between Trio 2.5 and Trio 3 (2026-05-10)
 
 The original [§4 priority 5](#45-original-ordering-superseded-2026-05-10)
@@ -250,6 +251,7 @@ Full playbook in
 - **Visual regression** — Phase 1 end / Phase 2.
 - **`@sophie/cosmic-playground`** — when first `<Demo>` lands.
 
+(45-original-ordering-superseded-2026-05-10)=
 ### 4.5 Original ordering (superseded 2026-05-10)
 
 For context, the original plan as written before Phase 1 step 1
@@ -270,6 +272,7 @@ shipped:
 
 ## 5. Known issues
 
+(51-linux-ci-build-job-fails-resolved-2026-05-10)=
 ### 5.1 Linux CI build job fails (RESOLVED 2026-05-10)
 
 **Status:** Resolved 2026-05-10 by Phase 1 step 1 (commits
@@ -399,6 +402,7 @@ The original four-path framing was correct in spirit (the right
 fix isn't "make the bundler do more work") but missed the actual
 mechanism (consumer-side runtime resolution).
 
+(52-branch-protection-on-main-deferred)=
 ### 5.2 Branch protection on `main` deferred
 
 Cannot enforce branch protection until CI build is green; otherwise
@@ -435,6 +439,7 @@ actually did the work — exit code 0 isn't sufficient evidence.
 
 These tasks fire on a specific event, not a calendar date:
 
+(61-cla-on-first-non-anna-pr)=
 ### 6.1 CLA on first non-Anna PR
 
 **Trigger:** the first PR opened against `drannarosen/sophie` by

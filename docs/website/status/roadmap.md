@@ -241,6 +241,7 @@ Each phase ends with a working, testable artifact. No phase is
 "infrastructure only" — every phase delivers something the author
 can actually use.
 
+(phase-0-foundation-3-4-weeks-expanded-scope)=
 ### Phase 0 — Foundation (~2–2.5 weeks, **shipped 2026-05-10**)
 
 **Scope authority:** [ADR 0023](../decisions/0023-vertical-slice-build-order.md)

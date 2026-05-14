@@ -347,6 +347,7 @@ attaches the pointer handlers (consistent with `<Predict>`,
 `<ConfidenceCheck>`, `<InteractiveCallout>` already in the
 chapter MDX).
 
+(adr-0038-revisions-pr-c2-c3-c4)=
 ## Revisions (2026-05-14 — post-PR-C2 / PR-C3 / PR-C4)
 
 Five further implementation realities surfaced across the rest of

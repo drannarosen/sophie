@@ -249,7 +249,7 @@ import CourseObjectives from "@sophie/astro/components/CourseObjectives.astro";
 Astro consumers read the populated `PedagogyIndex` directly via
 `indexAccumulator.asPedagogyIndex()` — the same mechanism
 TextbookLayout uses to feed the React-side stores. Per
-[ADR 0038 Revisions §2](../decisions/0038-pedagogy-index-pattern.md#revisions-2026-05-14--post-pr-c2--pr-c3--pr-c4),
+[ADR 0038 Revisions §2](../decisions/0038-pedagogy-index-pattern.md#adr-0038-revisions-pr-c2-c3-c4),
 this read must happen in a *child* of `TextbookLayout` (e.g., a
 `<Course*>` component slotted into the page), not in the page
 frontmatter itself — Astro evaluates page frontmatter before
