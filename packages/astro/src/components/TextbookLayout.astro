@@ -75,11 +75,15 @@ const pedagogy = indexAccumulator.asPedagogyIndex();
 // @sophie/components. This keeps the components package
 // Vite-protocol-agnostic.
 //
-// `__setFigureRegistry` receives the consumer-app prop, NOT
-// `pedagogy.figureRegistry` (which is always `[]` per the two-tier
-// model: the accumulator only collects in-MDX `<Figure>` USAGES;
-// the REGISTRY of canonical figure metadata is consumer-owned in
-// `content/figures.ts`). PR-C3 decision #3.
+// `__setFigureRegistry` receives the consumer-app prop directly.
+// We could equivalently read `pedagogy.figureRegistry` (which the
+// `indexAccumulator.setFigureRegistry(figureRegistry)` call two
+// lines above populates) — both carry the same data. Passing the
+// prop directly keeps the React-side wire explicit and avoids a
+// redundant readonly trip. Per the two-tier model (decision #3),
+// the EXTRACTOR never collects figure-registry data — it only
+// walks in-MDX `<Figure>` USAGES; the REGISTRY of canonical
+// figure metadata is consumer-owned in `content/figures.ts`.
 //
 // Key-insights and misconceptions have no React-side inline-ref
 // component in v1 (no `<KeyInsightRef>` / `<MisconceptionRef>` ships),
