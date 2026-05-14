@@ -4,23 +4,31 @@ import { z } from "zod";
 /**
  * `AsideKind` — the visual + pedagogical category of an aside.
  *
- *   - `note`        General digressive note (default).
- *   - `definition`  Term + meaning, often anchored to a parenthetical
- *                   first-use of the term in the prose.
- *   - `digression`  Historical / anecdotal aside; orthogonal to the
- *                   main thread.
- *   - `key-insight` A claim the reader should remember; the aside
- *                   restates it in compact form.
+ *   - `note`           General digressive note (default).
+ *   - `definition`     Term + meaning, often anchored to a
+ *                      parenthetical first-use of the term in the
+ *                      prose.
+ *   - `digression`     Historical / anecdotal aside; orthogonal to
+ *                      the main thread.
+ *   - `key-insight`    A claim the reader should remember; the aside
+ *                      restates it in compact form.
+ *   - `misconception`  A short-form misconception alert. The long-
+ *                      form variant is `<Callout variant="misconception">`
+ *                      (PR-C3 decision #8). Title is OPTIONAL,
+ *                      matching the key-insight precedent.
  *
- * Per the PR 6 design doc (2026-05-13), full 4-variant set chosen
- * over a smaller initial variant set to give chapter authors and AI
- * authors (ADR 0030) the full pedagogical vocabulary up-front.
+ * Per the PR 6 design doc (2026-05-13), full variant set chosen over
+ * a smaller initial variant set to give chapter authors and AI
+ * authors (ADR 0030) the full pedagogical vocabulary up-front. PR-C3
+ * adds "misconception" alongside "key-insight" as the second
+ * title-optional pedagogical kind.
  */
 export const AsideKind = z.enum([
   "note",
   "definition",
   "digression",
   "key-insight",
+  "misconception",
 ]);
 export type AsideKind = z.infer<typeof AsideKind>;
 

@@ -58,4 +58,5 @@ const KIND_LABELS: Record<AsideKind, string> = {
   definition: "Definition",
   digression: "Digression",
   "key-insight": "Key insight",
+  misconception: "Misconception",
 };

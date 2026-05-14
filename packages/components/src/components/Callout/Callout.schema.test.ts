@@ -15,6 +15,45 @@ describe("CalloutPropsSchema", () => {
         .success
     ).toBe(false);
   });
+
+  it("accepts variant='misconception' with an id prop (PR-C3 T10)", () => {
+    // Per PR-C3 decisions #2 + #8: CalloutVariant gains "misconception"
+    // (alongside existing "caution" — NOT a rename), and CalloutProps
+    // gains an optional `id?: string` symmetric with Aside.id?.
+    expect(
+      CalloutPropsSchema.safeParse({
+        variant: "misconception",
+        id: "x",
+        children: null,
+      }).success
+    ).toBe(true);
+  });
+
+  it("accepts variant='caution' — backward-compat preserved (PR-C3 T11)", () => {
+    // Per PR-C3 decision #2: "misconception" is ADDED alongside
+    // "caution", not a rename. Existing caution call sites must
+    // continue to typecheck and parse.
+    expect(
+      CalloutPropsSchema.safeParse({ variant: "caution", children: null })
+        .success
+    ).toBe(true);
+  });
+
+  it("accepts an optional `id` prop on the static Callout", () => {
+    expect(
+      CalloutPropsSchema.safeParse({
+        variant: "info",
+        id: "my-callout",
+        children: null,
+      }).success
+    ).toBe(true);
+  });
+
+  it("rejects a non-string `id` prop", () => {
+    expect(
+      CalloutPropsSchema.safeParse({ id: 42, children: null }).success
+    ).toBe(false);
+  });
 });
 
 describe("InteractiveCalloutPropsSchema", () => {

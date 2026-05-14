@@ -16,14 +16,25 @@ const variantTitles: Record<CalloutVariant, string> = {
   roadmap: "Roadmap",
   summary: "Summary",
   "key-insight": "Key Insight",
+  misconception: "Misconception",
 };
 
-export function Callout({ variant = "info", title, children }: CalloutProps) {
+export function Callout({
+  variant = "info",
+  title,
+  id,
+  children,
+}: CalloutProps) {
   const accessibleTitle = title ?? variantTitles[variant];
   const className = `${styles.callout} ${styles[variant] ?? ""}`.trim();
 
   return (
-    <aside role='note' aria-label={accessibleTitle} className={className}>
+    <aside
+      role='note'
+      aria-label={accessibleTitle}
+      className={className}
+      {...(id !== undefined ? { id } : {})}
+    >
       {title !== undefined && <p className={styles.title}>{accessibleTitle}</p>}
       <div className={styles.body}>{children}</div>
     </aside>

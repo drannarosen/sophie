@@ -2,8 +2,14 @@ import { describe, expect, it } from "vitest";
 import { AsideKind, AsidePropsSchema } from "./Aside.schema.ts";
 
 describe("AsideKind enum", () => {
-  it("accepts the four expected kinds", () => {
-    for (const kind of ["note", "definition", "digression", "key-insight"]) {
+  it("accepts the five expected kinds", () => {
+    for (const kind of [
+      "note",
+      "definition",
+      "digression",
+      "key-insight",
+      "misconception",
+    ]) {
       expect(AsideKind.safeParse(kind).success).toBe(true);
     }
   });
@@ -39,6 +45,23 @@ describe("AsidePropsSchema", () => {
       AsidePropsSchema.safeParse({ kind: "key-insight", children: null })
         .success
     ).toBe(true);
+  });
+
+  it("accepts kind='misconception' without a title (PR-C3 T8)", () => {
+    // Per PR-C3 decision #8: <Aside kind="misconception"> keeps title
+    // optional (consistent with key-insight). No refinement change.
+    expect(
+      AsidePropsSchema.safeParse({ kind: "misconception", children: null })
+        .success
+    ).toBe(true);
+  });
+
+  it("rejects kind='definition' without a title — refinement unchanged (PR-C3 T9)", () => {
+    // Regression: the existing definition refinement is unaffected
+    // by adding the new "misconception" enum value.
+    expect(
+      AsidePropsSchema.safeParse({ kind: "definition", children: null }).success
+    ).toBe(false);
   });
 
   it("rejects kind='definition' without a title (refinement)", () => {
