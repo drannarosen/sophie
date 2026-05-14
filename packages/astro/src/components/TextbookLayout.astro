@@ -12,8 +12,8 @@ import TopBar from "./TopBar.astro";
 import ViewModeToggle from "./ViewModeToggle.astro";
 
 // Wire the build-time pedagogy index (ADR 0038) into the
-// @sophie/components glossary store so <GlossaryTerm> in this
-// page's MDX content can resolve definitions.
+// @sophie/components pedagogy stores so <GlossaryTerm> and <EqRef>
+// in this page's MDX content can resolve definitions and equations.
 //
 // Build-order subtlety: Astro's content-collection layer only
 // triggers MDX parse (which runs the pedagogy-index remark
@@ -35,8 +35,9 @@ import ViewModeToggle from "./ViewModeToggle.astro";
 //
 // @sophie/components stays Vite-protocol-agnostic (which keeps
 // Astro config's bare-Node loader working) by receiving the
-// definitions through its `__setGlossaryDefinitions` setter
-// rather than importing the virtual module itself.
+// definitions and equations through its `__setGlossaryDefinitions`
+// and `__setEquations` setters rather than importing the virtual
+// module itself.
 const chapters: CollectionEntry<"chapters">[] = await getCollection("chapters");
 await Promise.all(chapters.map((c) => render(c)));
 const pedagogy = indexAccumulator.asPedagogyIndex();
@@ -129,6 +130,9 @@ const collapsedVars = [
   type='application/json'
   set:html={pedagogyDefinitionsJson}
 />
+{/* Equation-index payload for client-side hydration of <EqRef>'s
+    equations store. See packages/components/src/components/EqRef/equations-store.ts
+    for why this is needed alongside the server-side __setEquations call. */}
 <script
   is:inline
   id='sophie-pedagogy-equations'
