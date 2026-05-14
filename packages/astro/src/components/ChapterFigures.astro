@@ -1,0 +1,107 @@
+---
+import type {
+  FigureRegistryEntry,
+  FigureUsageEntry,
+} from "@sophie/core/schema";
+import { indexAccumulator } from "../lib/pedagogy-index-extractor";
+
+const { figureRegistry, figureUsages } = indexAccumulator.asPedagogyIndex();
+
+/**
+ * `<ChapterFigures chapter="..." order="..." heading="..." />` — Astro
+ * consumer of the build-time pedagogy index (ADR 0038). Renders one
+ * chapter's figure usages as a numbered `<ol>` (PR-C3 design decision
+ * #6 — per-chapter sequential numbering).
+ *
+ * Sort: `order="number"` (default) follows appearance order — the
+ * extractor-assigned `number` field. `order="alphabetical"` sorts by
+ * registry caption-or-name. Default is `number` because chapter-scoped
+ * figures are most naturally consumed in reading order (decision #9:
+ * chapter consumers default to appearance for figures, in contrast to
+ * the alphabetical default for glossary/equations).
+ *
+ * Two-tier model (decision #3): `figureUsages` come from the extractor
+ * (the chapter walk); `figureRegistry` comes from the consumer app
+ * (the figures.ts registry, passed in via TextbookLayout's
+ * `figureRegistry` prop). Both feed `indexAccumulator.asPedagogyIndex()`.
+ *
+ * Defensive: if a usage's name is not present in the registry (e.g.
+ * during build before Task 11 wires the registry through), the missing-
+ * figure marker is rendered instead of bombing the build.
+ *
+ * Pure Astro; no client JS.
+ */
+export interface Props {
+  /** Chapter slug to filter the index by (e.g. "spoiler-alerts"). */
+  chapter: string;
+  /** Sort strategy. Default `"number"` (appearance order). */
+  order?: "number" | "alphabetical";
+  /** Optional heading rendered above the list. */
+  heading?: string;
+}
+
+const { chapter, order = "number", heading } = Astro.props;
+
+const inChapter: FigureUsageEntry[] = figureUsages.filter(
+  (u) => u.chapter === chapter
+);
+
+// O(1) registry lookup by name. May be empty during PR-C3 build steps
+// before the registry is wired through TextbookLayout — that's OK; the
+// per-usage `registry &&` guards downstream rendering.
+const registryByName = new Map<string, FigureRegistryEntry>(
+  figureRegistry.map((r) => [r.name, r])
+);
+
+const sorted =
+  order === "alphabetical"
+    ? [...inChapter].sort((a, b) => {
+        const aLabel = registryByName.get(a.name)?.caption ?? a.name;
+        const bLabel = registryByName.get(b.name)?.caption ?? b.name;
+        return aLabel.localeCompare(bLabel);
+      })
+    : [...inChapter].sort((a, b) => a.number - b.number);
+---
+
+{heading && <h2 class='sophie-chapter-figures__heading'>{heading}</h2>}
+{
+  sorted.length === 0 ? (
+    <p class='sophie-chapter-figures__empty'>
+      No figures in this chapter yet.
+    </p>
+  ) : (
+    <ol class='sophie-chapter-figures' data-sophie-chapter-figures=''>
+      {sorted.map((usage) => {
+        const registry = registryByName.get(usage.name);
+        return (
+          <li
+            id={`fig-${usage.anchor}`}
+            class='sophie-chapter-figures__item'
+          >
+            <span class='sophie-chapter-figures__number'>
+              Fig. {usage.number}
+            </span>
+            {registry && (
+              <figure class='sophie-chapter-figures__figure'>
+                <img
+                  src={registry.src}
+                  alt={registry.alt}
+                  class='sophie-chapter-figures__image'
+                  loading='lazy'
+                />
+                <figcaption class='sophie-chapter-figures__caption'>
+                  {usage.captionOverride ?? registry.caption ?? registry.name}
+                </figcaption>
+              </figure>
+            )}
+            {!registry && (
+              <span class='sophie-chapter-figures__missing'>
+                Missing figure: <code>{usage.name}</code>
+              </span>
+            )}
+          </li>
+        );
+      })}
+    </ol>
+  )
+}
