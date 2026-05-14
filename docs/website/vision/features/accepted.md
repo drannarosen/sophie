@@ -87,45 +87,32 @@ ships TDRs (curriculum audit trail) + Teaching Move references
 
 ---
 
-## A4. MultiRep + Notation Registry + Representation Alignment Audit
+(a4-multirep-notation-registry-and-representation-alignment-audit)=
+## A4. MultiRep + Notation Registry + Representation Alignment Audit — graduated 2026-05-14
 
-**Motivating use case.** STEM students fail to learn when prose says
-"distance," equation uses *r*, figure labels radius *R*, code names
-the variable `distance_pc`, and plot axis says "separation." The
-representations are *materially the same concept*; the *symbols and
-language* drift. Sophie should encode the binding and audit it.
-Existing PR-C4 pedagogy index has all the raw data (definitions,
-equations, figures, inline-ref usages); the audit just doesn't yet
-look across representations.
+**Graduated** → [ADR 0043 — Notation Registry + MultiRep + Representation Alignment Audit](../../decisions/0043-notation-registry-multirep-alignment-audit.md)
++ [Notation Registry schema](../../reference/notation-registry-schema.md)
++ [MultiRep component reference](../../reference/multirep-component.md).
 
-**Design sketch.** Three paired sub-features that ship in sequence:
-(1) **Notation Registry** — a per-course schema declaring canonical
-symbols, their meanings, units, common confusions; (2) **`<MultiRep>`**
-primitive — declares "these representations are the same concept"
-binding for one concept (verbal, equation, plot, code, diagram, physical
-intuition); (3) **Representation Alignment Audit** — invariants on
-notation consistency across the bound representations of one concept,
-plus catch-all symbol-reuse warnings.
-
-**Estimated cost.** ~1–2 weeks. Real schema additions + new
-component + new audit invariants. Largest of the accepted entries.
-
-**Priority claim.** Highest *STEM-specific* leverage of any accepted
-item. Catches a real chapter-authoring failure mode that current tools
-miss entirely. Sophie's "rigorous STEM teaching" claim depends on
-this kind of structural support. Equation Biography (backlog) depends
-on Notation Registry; MultiRep also unlocks better Cosmic Playground
-demo integration via the canonical-notation binding.
-
-**Open ADR question.** *Schema shape for Notation Registry.* Per-course
-YAML (declarative) vs schema-driven derivation from `<KeyEquation>` +
-`<Figure>` + `<CodeCell>` walks (implicit). Plus: *what audit
-invariants does Representation Alignment ship with at v1?*
+The ADR resolved the *"schema shape for Notation Registry"* open
+question (declarative YAML at the consumer repo root, parallel to
+ADRs 0040 + 0042's repo-root placement; chapters are audited
+*against* the registry as an external source of truth, not the
+reverse) and the *"what audit invariants ship at v1?"* sub-question
+(eight invariants: four NR-prefix on the registry / `<KeyEquation>`
+relationship + four MR-prefix on the `<MultiRep>` binding integrity).
+The three sub-features ship as one ADR because they're tightly
+coupled — splitting would force forward-references that obscure
+rationale. `<MultiRep>` uses the children-mode source pattern from
+PR-C4's LearningObjectives refactor. The registry is **opt-in** via
+`pedagogy-contract.yaml.math_and_units_standards.notation_registry`
+so non-STEM courses (creative writing, intellectual history) aren't
+forced into empty registries.
 
 **Status.**
-- 2026-05-14 — surfaced (speculative)
-- 2026-05-14 — promoted to accepted-pending-ADR
-- ADR target: after A1 (TDRs) + A2 (Teaching Moves)
+- 2026-05-14 — surfaced (speculative) during vision-section brainstorm
+- 2026-05-14 — promoted to accepted-pending-ADR (triage)
+- 2026-05-14 — graduated → [ADR 0043](../../decisions/0043-notation-registry-multirep-alignment-audit.md)
 
 ---
 

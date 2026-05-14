@@ -1,0 +1,555 @@
+---
+date: 2026-05-14
+tags: [pedagogy, decisions, notation, multirep, representation-alignment, audit, stem, lds]
+---
+
+# ADR 0043: Notation Registry + MultiRep + Representation Alignment Audit
+
+:::{admonition} ADR metadata
+- **Status**: accepted
+- **Deciders**: anna
+:::
+
+## Context
+
+STEM students fail to learn when a single concept presents
+inconsistently across its representations. The prose says *"distance"*;
+the equation uses *r*; the figure labels radius *R*; the code names
+the variable `distance_pc`; the plot axis says *"separation"*. The
+five surfaces are the *materially same concept* — but the *symbols
+and language drift*. Each drift point is a friction the student must
+resolve before they can think with the concept.
+
+Sophie's existing infrastructure already captures every raw signal
+this audit would need:
+
+- [PR-C2](./0038-pedagogy-index-pattern.md)'s `equations` collection
+  knows every `<KeyEquation>`'s `eqKey`, `tex`, `name`.
+- [PR-C3](./0038-pedagogy-index-pattern.md)'s `figures` collection
+  knows every `<Figure>`'s `name`, `alt`, `caption`.
+- [PR-C4](./0038-pedagogy-index-pattern.md)'s definitions /
+  glossary collection knows every `<Aside kind="definition">`'s
+  term + concept.
+- [ADR 0018](./0018-codemirror-6-for-codecell.md)'s `<CodeCell>`
+  knows every code snippet's variable names.
+
+What's missing is the *binding* — the explicit declaration that
+"the prose `distance` + equation `r` + figure label `R` + code
+`distance_pc` + plot axis `separation` are the same concept" — and
+the *normative source of truth* the audit can check binding-internal
+consistency against.
+
+Three converging needs make this load-bearing:
+
+1. **Representation alignment is the load-bearing STEM-learning
+   move.** Per Ainsworth 2006 (DeFT framework), learning with
+   multiple representations only works when the *translation between
+   representations is supported*. Sophie's existing components
+   represent concepts in many forms; without an explicit binding,
+   the translation work falls on the student.
+
+2. **AI authoring needs symbol stability.** When the future
+   `sophie-chapter-author` workflow drafts a new chapter, it must
+   know what symbols the course has already committed to using.
+   Without a registry, AI drafts inconsistent notation that
+   propagates into chapters and creates exactly the drift this ADR
+   aims to prevent.
+
+3. **Equation Biography** (per
+   [`vision/features/backlog.md`](../vision/features/backlog.md) B1)
+   depends on the Notation Registry as its foundation — a per-symbol
+   provenance + history layer only makes sense when symbols are
+   first-class entities with declared meaning.
+
+This ADR is the fourth graduation through the
+[staging-area lifecycle](../vision/transitions/index.md) — the
+[`vision/features/accepted.md`](../vision/features/accepted.md) A4
+entry surfaced the open ADR questions; this ADR resolves them.
+
+It is the **first STEM-specific consumer-repo contract**. The Sophie
+LDS conformance triple ratified by ADRs 0040/0041/0042 (TDRs +
+Teaching Moves + Pedagogy Contract & AI Ledger) applies to *every*
+Sophie course; this ADR's registry applies to *courses where
+representation alignment matters*. ASTR 201 needs it; a hypothetical
+Sophie-Compose course on creative writing wouldn't. The
+`pedagogy-contract.yaml`'s `math_and_units_standards.notation_registry`
+field (per ADR 0042) declares opt-in.
+
+## Decision
+
+Sophie ships three paired artifacts: a course-level **Notation
+Registry**, a chapter-level `<MultiRep>` primitive, and a build-time
+**Representation Alignment Audit** that checks both against each
+other and against the existing pedagogy index.
+
+### Artifact 1: `notation-registry.yaml` at consumer repo root
+
+Each Sophie-LDS-compliant STEM course maintains a single top-level
+YAML file alongside the pedagogy contract:
+
+```
+drannarosen/astr201/
+  ├── pedagogy-contract.yaml      ← per ADR 0042
+  ├── notation-registry.yaml      ← this artifact
+  ├── teaching-decisions/         ← per ADR 0040
+  └── src/content/...
+```
+
+The full schema spec lives at
+[`reference/notation-registry-schema.md`](../reference/notation-registry-schema.md).
+The registry declares **concepts** (the semantic unit) and binds
+each concept to its canonical representations:
+
+```yaml
+concepts:
+  - id: "orbital-radius"
+    verbal_label: "orbital radius"
+    canonical_symbol: "r"
+    latex: "r"
+    units: "cm (CGS); AU (display)"
+    code_alias: "r_au"
+    common_confusions:
+      - symbol: "R"
+        meaning: "stellar radius — reserved for the central body"
+      - symbol: "d"
+        meaning: "Earth-observer distance — different concept"
+    introduced_in: "module-02/lecture-04"
+    related_concepts: ["orbital-period", "semi-major-axis"]
+```
+
+The registry is **normative**: it declares what symbols a course
+*commits to using* before chapters are written. Chapters are audited
+*against* the registry, not the other way around. A descriptive
+registry (derived from chapter walks) would only check chapters
+against themselves — meaningless. The audit's value comes from the
+registry being an *external source of truth*.
+
+### Artifact 2: `<MultiRep>` component (children-mode)
+
+Each chapter binds representations of a concept via a `<MultiRep>`
+block. The component follows the **children-mode source pattern**
+established by [PR-C4's LearningObjectives refactor](./0038-pedagogy-index-pattern.md) —
+children declare data, the parent component renders + indexes:
+
+```mdx
+<MultiRep concept="orbital-radius">
+  <RepVerbal>
+    The distance from the central mass to the orbiting body.
+  </RepVerbal>
+  <RepEquation refKey="kepler-3rd-law" symbol="r" />
+  <RepFigure refName="orbit-geometry" symbolLabel="r" />
+  <RepCode refName="orbit-simulation" symbol="r_au" />
+  <RepIntuition>
+    Imagine an ant walking around the orbit — how far must it travel
+    to reach the central mass?
+  </RepIntuition>
+</MultiRep>
+```
+
+Child element types and their referents:
+
+| Child | Purpose | References |
+|---|---|---|
+| `<RepVerbal>` | Plain-language description | Prose only |
+| `<RepEquation refKey symbol>` | Equation form | `<KeyEquation>` by `eqKey` |
+| `<RepFigure refName symbolLabel>` | Visual representation | `<Figure>` by `name` |
+| `<RepCode refName symbol>` | Code form | `<CodeCell>` by `name` |
+| `<RepIntuition>` | Physical/conceptual intuition | Prose only |
+
+A `<MultiRep>` block doesn't need every form — it declares the
+*binding for the forms actually present*. A chapter may declare
+verbal + equation + figure without code if no code representation
+exists for that concept yet.
+
+Full reference at
+[`reference/multirep-component.md`](../reference/multirep-component.md).
+
+### Artifact 3: Representation Alignment Audit (v1: 8 invariants)
+
+The audit extends [PR-C4's `pedagogy-audit.ts`](./0038-pedagogy-index-pattern.md)
+with two new invariant families:
+
+**NR (Notation Registry) invariants**:
+
+| ID | Severity | Check |
+|---|---|---|
+| **NR1** | WARNING | `<KeyEquation>` uses a primary symbol not declared in `notation-registry.yaml` |
+| **NR2** | INFO | Notation Registry declares a concept but no chapter references it (orphan declaration) |
+| **NR3** | ERROR | Same symbol bound to different `concept.id`s across the registry (declaration collision) |
+| **NR4** | WARNING | Symbol declared in registry with explicit units; `<KeyEquation>` uses it without unit context in prose |
+
+**MR (MultiRep) invariants**:
+
+| ID | Severity | Check |
+|---|---|---|
+| **MR1** | ERROR | `<MultiRep>` references a `concept` not present in `notation-registry.yaml` |
+| **MR2** | WARNING | `<MultiRep><RepEquation refKey=…>` — the referenced equation's primary symbol doesn't match the concept's `canonical_symbol` (after declared aliases) |
+| **MR3** | WARNING | `<MultiRep><RepCode refName=…>` — the referenced code's variable name doesn't match the concept's `code_alias` |
+| **MR4** | INFO | `<MultiRep><RepFigure refName=…>` — the referenced figure's `alt` text doesn't mention the concept's `verbal_label` or `canonical_symbol` |
+
+Invariant severity rationale:
+
+- **ERROR** invariants block the build (collision in the registry; binding to a non-existent concept). These represent inconsistencies that have no valid interpretation.
+- **WARNING** invariants surface in the build report but don't block. These represent likely drift but might be intentional (e.g., a `<KeyEquation>` using a context-specific symbol the registry doesn't declare).
+- **INFO** invariants surface as suggestions; the author may choose to address them or not.
+
+The invariant list is **the v1 floor**, not the ceiling. New invariants are added via the ADR-revisions pattern (this ADR gains a `## Revisions §N` section).
+
+### What lives in code vs. what lives in docs
+
+This ADR + its two reference docs ship as **docs only**. The
+schema enforcement code lands in a follow-up PR:
+
+- `packages/core/src/schema/notation-registry.ts` — Zod
+  `NotationRegistrySchema` matching the YAML structure.
+- `packages/components/src/multirep/index.tsx` — `<MultiRep>`,
+  `<RepVerbal>`, `<RepEquation>`, `<RepFigure>`, `<RepCode>`,
+  `<RepIntuition>` components with `serialize` separation per
+  [ADR 0004](./0004-component-contract-revisions.md).
+- `packages/components/src/multirep/multirep-index.ts` —
+  pedagogy-index extractor (children-mode, per
+  [PR-C4 precedent](./0038-pedagogy-index-pattern.md)).
+- 8 new audit invariants added to
+  `packages/astro/src/lib/pedagogy-audit.ts`.
+- A `<MultiRepRenderer>` UI that lets the reader toggle between
+  representations (or view them side-by-side); design TBD in the
+  code-PR's Storybook stories.
+
+That code PR follows the standard branch + PR cadence per
+[`feedback_branch_pr_scope`](../../../) memory and is expected to
+be the largest follow-up PR of the three Sophie LDS contracts
+(~1–2 weeks of implementation work).
+
+### Opt-in via the Pedagogy Contract
+
+A course declares it uses the Notation Registry by setting the
+field in its `pedagogy-contract.yaml`:
+
+```yaml
+math_and_units_standards:
+  notation_registry: "astr201"   # references this course's registry
+```
+
+Courses without this declaration are not audited for NR/MR
+invariants. This preserves the ADR 0042 principle that the
+Pedagogy Contract is the *opt-in mechanism* for course-level
+standards; A4's STEM-specificity doesn't break the universal
+Sophie LDS conformance triple.
+
+## Rationale
+
+### Three artifacts paired beats one combined artifact
+
+The Notation Registry is *course-level*; `<MultiRep>` is
+*chapter-level*; the audit is *build-time*. They have different
+granularities, different consumers, and different lifecycle
+rhythms. Mixing them into a single artifact would force
+course-level data into chapter source or vice versa.
+
+The three-artifact split parallels ADR 0042's two-artifact split
+(course-level YAML + per-chapter frontmatter): each artifact lives
+at its natural granularity.
+
+### Declarative YAML beats schema-driven derivation
+
+The handoff framed the open question as YAML (declarative) vs
+schema-driven derivation from `<KeyEquation>` + `<Figure>` +
+`<CodeCell>` walks (implicit). The declarative answer wins on five
+grounds:
+
+1. **Normative vs. descriptive**. A registry derived from chapter
+   walks can only describe what's already in the chapters; the
+   registry's *purpose* is to constrain what authors write. An
+   external source of truth is the only way the audit means
+   anything.
+2. **Pre-content authoring**. Anna declares ASTR 201's canonical
+   notation before any chapter exists. The registry shapes the
+   course design; the chapters fill in the declared shape.
+3. **AI authoring grounding**. The future
+   `sophie-chapter-author` workflow reads the registry as
+   *binding constraints*. A derived registry would mean AI
+   inherits whatever drift is already in the chapters.
+4. **Equation Biography dependency**. Backlog B1 (Equation
+   Biography) layers per-symbol provenance + history onto the
+   registry. That layer only makes sense atop a declarative
+   foundation.
+5. **Parallel with ADR 0042**. The Pedagogy Contract is
+   declarative YAML; the Notation Registry follows the same
+   shape for the same reasons.
+
+### One ADR over three smaller ADRs
+
+The three sub-features are tightly coupled: `<MultiRep>` is
+meaningless without a Notation Registry to bind to; the Alignment
+Audit is meaningless without both. Splitting forces
+forward-references that obscure rationale and creates artificial
+phasing.
+
+The precedent: ADR 0042 covered two artifacts (pedagogy contract +
+ai contribution ledger) as one coherent ADR; ADR 0041 covered the
+move library + the centralized TS map binding. One-ADR-per-coherent-
+shape is the pattern.
+
+Anna's "build the best now, plan ahead" preference points the same
+direction: a unified ADR is the long-term-correct shape; splitting
+would be "what's simple now causing more work later" (cross-ADR
+references, half-shipped binding without the audit, etc.).
+
+### Children-mode component pattern over inline props
+
+`<MultiRep>` uses children-mode (`<MultiRep><RepEquation .../></MultiRep>`)
+rather than inline-props (`<MultiRep items={[…]} />`) per the
+established [PR-C4 LearningObjectives refactor](./0038-pedagogy-index-pattern.md)
+shape:
+
+- Extraction is mechanical (the pedagogy-index extractor walks
+  children and produces the index entries).
+- AI scaffolding is reliable (each child element is a small,
+  named, structured slot).
+- JSX is more readable for human authors than nested prop arrays.
+
+### v1 invariant set: 8 invariants is the right floor
+
+Fewer than ~6 invariants leaves gaps in the binding (the whole
+point of the audit is catching cross-representation drift; missing
+NR1 or MR1 makes the audit toothless). More than ~12 invariants at
+v1 is premature — most invariants beyond the first 8 are either
+edge-case refinements that should follow real authoring experience,
+or speculative checks for unshipped representation types.
+
+The 8 listed cover the four representation surfaces (equation,
+figure, code, prose) × the two failure modes (the registry is
+incomplete / the binding doesn't match the registry).
+
+### Opt-in via Pedagogy Contract over universal mandate
+
+Sophie aims to serve STEM courses *primarily* but not exclusively.
+A Sophie-Compose creative-writing course or a Sophie-History
+intellectual-history course doesn't have a meaningful Notation
+Registry. Forcing universal opt-in would either bloat non-STEM
+courses with empty registries or block them from being Sophie-LDS-
+compliant.
+
+The `pedagogy-contract.yaml.math_and_units_standards.notation_registry`
+field is the natural opt-in: courses declaring math/units
+standards already opt into a STEM framing; the registry follows.
+
+## Consequences
+
+### For Sophie-the-platform (this commit)
+
+This commit ships **docs only**:
+
+1. ADR 0043 (this file).
+2. [`reference/notation-registry-schema.md`](../reference/notation-registry-schema.md).
+3. [`reference/multirep-component.md`](../reference/multirep-component.md).
+4. `myst.yml` registers all three.
+5. `vision/features/accepted.md` collapses A4 to graduated pointer.
+6. `vision/features/index.md` notes fourth graduation.
+
+### For Sophie-the-platform (future code PR)
+
+The largest of the consumer-repo-contract follow-up code PRs
+(~1–2 weeks of work):
+
+1. `packages/core/src/schema/notation-registry.ts` —
+   `NotationRegistrySchema`.
+2. Six new components: `<MultiRep>`, `<RepVerbal>`,
+   `<RepEquation>`, `<RepFigure>`, `<RepCode>`, `<RepIntuition>`.
+3. Pedagogy-index extractor for `<MultiRep>` children-mode.
+4. Eight new audit invariants (NR1–NR4, MR1–MR4).
+5. `<MultiRepRenderer>` UI surface (toggle / side-by-side).
+6. Storybook stories per component.
+7. axe-core a11y tests per [ADR 0004](./0004-component-contract-revisions.md).
+
+### For consumer repos (opt-in)
+
+A Sophie-LDS-compliant STEM course that adopts the registry needs:
+
+1. `notation-registry.yaml` at the repo root.
+2. `pedagogy-contract.yaml.math_and_units_standards.notation_registry`
+   declared to opt in.
+3. Concept-rich chapters wrapped in `<MultiRep>` bindings where
+   the alignment matters.
+
+Non-STEM courses (and STEM courses that don't declare the
+registry) are unaffected.
+
+### For TDRs (per [ADR 0040](./0040-teaching-decision-records.md))
+
+A TDR may cite a Notation Registry decision when a curriculum
+choice depends on declared symbols. Example: a TDR introducing
+"redshift *z*" in Module 4 cites the registry entry that
+distinguishes *z* (redshift) from *Z* (atomic number) — the
+common-confusions field is the rationale source.
+
+### For the Teaching Move Library (per [ADR 0041](./0041-teaching-move-library.md))
+
+The **Multiple representations binding** move from the library
+maps directly to `<MultiRep>`. The future `move-index.ts` will
+declare:
+
+```ts
+MultiRep: ["multiple-representations-binding"],
+```
+
+A chapter that explicitly invokes the move (e.g., in a TDR) now
+has a *component-level affordance* to express it, not just prose.
+
+### For the Pedagogy Contract (per [ADR 0042](./0042-pedagogy-contract-and-ai-contribution-ledger.md))
+
+The contract's `math_and_units_standards.notation_registry` field
+becomes load-bearing. A course declaring `require_units: true` +
+`notation_registry: "astr201"` gains automated audit support
+for unit + notation consistency.
+
+### For AI authoring (future)
+
+The `sophie-chapter-author` workflow reads `notation-registry.yaml`
+as binding context. AI drafting a new chapter on orbital
+mechanics:
+
+1. Looks up `orbital-radius` in the registry → sees
+   `canonical_symbol: r`, `units: cm`, `code_alias: r_au`,
+   common confusions with *R* and *d*.
+2. Drafts prose using *r*, not *R* or *d*.
+3. References `<KeyEquation>` entries via the declared `eqKey`.
+4. When introducing a new concept not in the registry, AI
+   *proposes* a registry entry as part of the chapter draft — the
+   instructor reviews + accepts before the chapter is published.
+
+### For SoTL paper + tenure case
+
+The Representation Alignment Audit is a citable methods
+artifact. Paper-1-methods can describe "Sophie audits notation
+consistency across N representations using build-time invariants
+NR1–NR4 + MR1–MR4 against a course-level Notation Registry" as
+*structural support for representation-aware curriculum*. The
+combined ADR 0040–0043 chain — TDRs + Moves + Contract + Notation
+— forms a publishable model of *AI-supported responsible
+curriculum design*.
+
+### For Equation Biography (backlog B1)
+
+B1 layers per-symbol provenance (who introduced the symbol; what
+historical context; what cognitive precedents exist) onto the
+Notation Registry. This ADR's declarative shape is the foundation
+B1 builds on. When B1 graduates, its ADR will extend the registry
+schema (likely via a `provenance:` field per concept) rather than
+introducing a parallel structure.
+
+### For Cosmic Playground demos (per [ADR 0008](./0008-cosmic-playground-protocol.md))
+
+A demo declares which Notation Registry concepts it visualizes
+via the `<MultiRep>` binding. The Cosmic Playground manifest
+extension is deferred to a Phase 4+ code PR but the binding
+surface is established here: a `<RepCode refName="orbit-demo">`
+inside a `<MultiRep concept="orbital-radius">` declares the demo
+as that concept's code representation.
+
+## Alternatives considered
+
+### Schema-driven derivation (descriptive registry)
+
+Build the registry by walking `<KeyEquation>` + `<Figure>` +
+`<CodeCell>` and aggregating their symbols. Reject — see
+Rationale §2. A descriptive registry can only check chapters
+against themselves; the audit has no external truth to compare
+against.
+
+### Three separate ADRs (one per sub-feature)
+
+Split into ADR 0043 (Notation Registry), ADR 0044 (`<MultiRep>`),
+ADR 0045 (Alignment Audit). Reject — see Rationale §3. The
+sub-features are too tightly coupled; splitting creates
+artificial phasing and forward-reference clutter.
+
+### Inline-props `<MultiRep items={[…]} />`
+
+Instead of children-mode, declare representations as a prop
+array. Reject as a regression from the
+[PR-C4 LearningObjectives refactor](./0038-pedagogy-index-pattern.md) —
+extraction would require parsing JSX-in-prop-values, AI
+scaffolding becomes brittle, and human authors lose readability.
+The children-mode pattern is the established Sophie convention.
+
+### Universal-mandate (no opt-in)
+
+Require every Sophie-LDS course to have a Notation Registry.
+Reject — see Rationale §6. Non-STEM courses would carry empty
+registries; the opt-in via Pedagogy Contract preserves the
+universal triple (ADRs 0040/0041/0042) while letting STEM-specific
+contracts layer cleanly.
+
+### Per-concept declaration in chapter frontmatter
+
+Move the registry into chapter MDX frontmatter (each chapter
+declares its concepts). Reject — symbols span chapters; a
+chapter-scoped declaration cannot detect cross-chapter collisions
+(NR3), cannot serve as pre-content authoring scaffolding, and
+duplicates declarations every time a concept reappears.
+
+### No `<MultiRep>` component — derive binding from index alone
+
+Skip the explicit chapter-level binding; let the audit infer
+which representations belong to which concept from co-located
+`<KeyEquation>` + `<Figure>` + `<CodeCell>` calls. Reject as
+fragile: co-location is a weak signal (a chapter section may
+discuss multiple concepts; co-located components may represent
+different ones). Explicit binding via `<MultiRep>` is the
+unambiguous source.
+
+### Larger v1 invariant list (15+ invariants)
+
+Front-load invariants for representations not yet in Sophie
+(narrated-audio variable readings, dimensional-analysis checks,
+unit-conversion verification, etc.). Reject as speculative — the
+v1 list covers Sophie's existing components; further invariants
+follow real authoring experience.
+
+## Revisions
+
+*None yet.* Revisions to the invariant list, registry schema, or
+`<MultiRep>` child taxonomy follow the pattern established by
+[ADR 0038 §1, §2](./0038-pedagogy-index-pattern.md) — a new
+`## Revisions §N` section appended to this ADR documenting the
+change + reason.
+
+## References
+
+- [`reference/notation-registry-schema.md`](../reference/notation-registry-schema.md)
+  — the YAML schema spec + ASTR 201 example.
+- [`reference/multirep-component.md`](../reference/multirep-component.md)
+  — the `<MultiRep>` component reference + child-element specs +
+  authoring example.
+- [ADR 0038 — pedagogy index pattern](./0038-pedagogy-index-pattern.md)
+  — children-mode source pattern + audit-invariant precedent.
+- [ADR 0040 — Teaching Decision Records](./0040-teaching-decision-records.md)
+  — TDRs may cite registry entries.
+- [ADR 0041 — Teaching Move Library](./0041-teaching-move-library.md)
+  — `<MultiRep>` implements the *multiple-representations-binding* move.
+- [ADR 0042 — Pedagogy Contract + AI Contribution Ledger](./0042-pedagogy-contract-and-ai-contribution-ledger.md)
+  — `math_and_units_standards.notation_registry` is the opt-in field.
+- [ADR 0004 — component contract revisions](./0004-component-contract-revisions.md)
+  — `serialize` separation + a11y testing applies to all six new components.
+- [ADR 0008 — Cosmic Playground protocol](./0008-cosmic-playground-protocol.md)
+  — `<RepCode>` may reference Cosmic Playground demos.
+- [`vision/features/accepted.md`](../vision/features/accepted.md) A4
+  — the staging-area entry this ADR graduates.
+- [`vision/features/backlog.md`](../vision/features/backlog.md) B1
+  (Equation Biography) — layers provenance on this registry.
+
+### Key cognitive-science citations
+
+- Ainsworth, S. (2006). DeFT: A conceptual framework for considering
+  learning with multiple representations. *Learning and Instruction*,
+  16(3), 183–198.
+- diSessa, A. A. (2004). Metarepresentation: Native competence and
+  targets for instruction. *Cognition and Instruction*, 22(3),
+  293–331.
+- Kozma, R. (2003). The material features of multiple
+  representations and their cognitive and social affordances for
+  science understanding. *Learning and Instruction*, 13(2), 205–226.
+
+Full citations in [`reference/teaching-moves.md`](../reference/teaching-moves.md)
+under *multiple-representations-binding*.

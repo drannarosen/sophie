@@ -74,8 +74,8 @@ they are.
 
 ## Graduations (2026-05-14)
 
-Three accepted entries graduated on the same day as the triage that
-promoted them. The staging-area model's first three end-to-end tests:
+Four accepted entries graduated on the same day as the triage that
+promoted them. The staging-area model's first four end-to-end tests:
 ideas moving from speculative → accepted → graduated within one day.
 
 **A1 — Teaching Decision Records (TDRs)** ratified by

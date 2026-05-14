@@ -71,6 +71,8 @@ project:
         - file: reference/teaching-moves.md
         - file: reference/pedagogy-contract-schema.md
         - file: reference/ai-contribution-schema.md
+        - file: reference/notation-registry-schema.md
+        - file: reference/multirep-component.md
     - title: Explanation
       children:
         - file: explanation/architecture.md
@@ -136,6 +138,7 @@ project:
         - file: decisions/0040-teaching-decision-records.md
         - file: decisions/0041-teaching-move-library.md
         - file: decisions/0042-pedagogy-contract-and-ai-contribution-ledger.md
+        - file: decisions/0043-notation-registry-multirep-alignment-audit.md
     - title: Status
       children:
         - file: status/roadmap.md
