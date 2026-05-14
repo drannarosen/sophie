@@ -135,8 +135,8 @@ export {
 export type {
   BroadcastChannelLayer,
   BroadcastMessage,
-  FigureEntry,
   FigureRegistry,
+  FigureRegistryEntry,
   InteractiveControlProps,
   InteractiveStatus,
   Profile,
