@@ -1,6 +1,7 @@
 import {
   type DefinitionEntry,
   type EquationEntry,
+  type FigureRegistryEntry,
   type FigureUsageEntry,
   type KeyInsightEntry,
   type MisconceptionEntry,
@@ -531,6 +532,16 @@ interface GlobalIndexState {
   keyInsights: Map<string, KeyInsightEntry>;
   figureUsages: Map<string, FigureUsageEntry>;
   misconceptions: Map<string, MisconceptionEntry>;
+  /**
+   * Consumer-supplied figure registry (two-tier model, PR-C3 decision
+   * #3). Unlike the other collections, this is NOT populated by the
+   * MDX extractor — `TextbookLayout` pushes it in via
+   * `setFigureRegistry()` at SSR merge time after reading it from the
+   * consumer's `content/figures.ts`. `<CourseFigures>` and
+   * `<ChapterFigures>` then read it through `asPedagogyIndex()`
+   * alongside `figureUsages` to resolve names → image src/alt/caption.
+   */
+  figureRegistry: ReadonlyArray<FigureRegistryEntry>;
 }
 
 function getGlobalState(): GlobalIndexState {
@@ -542,6 +553,7 @@ function getGlobalState(): GlobalIndexState {
       keyInsights: new Map(),
       figureUsages: new Map(),
       misconceptions: new Map(),
+      figureRegistry: [],
     };
   }
   return g[GLOBAL_KEY];
@@ -733,12 +745,27 @@ class IndexAccumulator {
   }
 
   /**
+   * Push the consumer-supplied figure registry into the accumulator
+   * (two-tier model, PR-C3 decision #3). Unlike the other accumulator
+   * setters, the registry doesn't come from an MDX walk — it comes
+   * from the consumer's `content/figures.ts` via TextbookLayout's
+   * `figureRegistry` prop. `<CourseFigures>` and `<ChapterFigures>`
+   * read it back through `asPedagogyIndex()` to resolve figure names
+   * to image src/alt/caption. Called from TextbookLayout's frontmatter
+   * before the slot renders so consumers see a populated registry.
+   */
+  setFigureRegistry(entries: ReadonlyArray<FigureRegistryEntry>): void {
+    const state = getGlobalState();
+    state.figureRegistry = entries;
+  }
+
+  /**
    * Snapshot the current accumulator state as a PedagogyIndex.
    * Equations populate from PR-C2 onward; keyInsights, figureUsages,
    * and misconceptions populate from PR-C3 onward. `figureRegistry`
-   * is never populated by the extractor — TextbookLayout receives it
-   * from the consumer app at SSR merge time (PR-C3 decisions row 3,
-   * two-tier model).
+   * comes from the consumer app via `setFigureRegistry()` (called by
+   * TextbookLayout at SSR merge time, PR-C3 decisions row 3 two-tier
+   * model); empty until that setter fires.
    */
   asPedagogyIndex(): PedagogyIndex {
     const state = getGlobalState();
@@ -746,7 +773,7 @@ class IndexAccumulator {
       definitions: Array.from(state.definitions.values()),
       equations: Array.from(state.equations.values()),
       keyInsights: Array.from(state.keyInsights.values()),
-      figureRegistry: [],
+      figureRegistry: state.figureRegistry,
       figureUsages: Array.from(state.figureUsages.values()),
       misconceptions: Array.from(state.misconceptions.values()),
     };

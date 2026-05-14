@@ -60,6 +60,14 @@ const { figureRegistry = [] } = Astro.props;
 // module itself.
 const chapters: CollectionEntry<"chapters">[] = await getCollection("chapters");
 await Promise.all(chapters.map((c) => render(c)));
+// Push the consumer-supplied figure registry into the accumulator
+// BEFORE snapshotting / before the slot renders so that
+// <CourseFigures> and <ChapterFigures> (which read figureRegistry via
+// asPedagogyIndex()) see a populated registry. Two-tier model
+// (PR-C3 decision #3): the extractor produces figureUsages from
+// in-MDX <Figure> walks; the registry of canonical image metadata
+// is consumer-owned content (smoke's `src/content/figures.ts`).
+indexAccumulator.setFigureRegistry(figureRegistry);
 const pedagogy = indexAccumulator.asPedagogyIndex();
 // All four setters follow the same pattern (ADR 0038 Revisions
 // section): the chrome layer reads the accumulator directly, then

@@ -5,6 +5,9 @@ import TextbookHead from "@sophie/astro/components/TextbookHead.astro";
 import TextbookLayout from "@sophie/astro/components/TextbookLayout.astro";
 import { SophieChapter } from "@sophie/astro/client";
 import { getCollection } from "astro:content";
+import { figures as figureRegistry } from "../content/figures";
+
+const figureRegistryArray = Object.values(figureRegistry);
 
 /**
  * `/key-insights` — course-wide key-insights index auto-generated from
@@ -38,7 +41,7 @@ const chapters = (await getCollection("chapters")).map((c) => ({
   </head>
   <body>
     <SophieChapter client:load>
-      <TextbookLayout>
+      <TextbookLayout figureRegistry={figureRegistryArray}>
         <Fragment slot='sidebar'>
           <ModuleNav modules={modules} chapters={chapters} />
         </Fragment>

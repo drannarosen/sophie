@@ -7,6 +7,13 @@ import TocSidebar from "@sophie/astro/components/TocSidebar.astro";
 import { SophieChapter } from "@sophie/astro/client";
 import { getCollection } from "astro:content";
 import type { MarkdownHeading } from "astro";
+import { figures as figureRegistry } from "../content/figures";
+
+// Convert the consumer-owned figures registry (a named-keyed map; see
+// `src/content/figures.ts`) into the array shape `<TextbookLayout>`
+// expects so `<FigureRef>` can hydrate its registry store on every page.
+// PR-C3 decision #3 + Task 12 wiring.
+const figureRegistryArray = Object.values(figureRegistry);
 
 interface Props {
   frontmatter: {
@@ -58,7 +65,7 @@ const chapters = (await getCollection("chapters")).map((c) => ({
   </head>
   <body>
     <SophieChapter client:load>
-      <TextbookLayout>
+      <TextbookLayout figureRegistry={figureRegistryArray}>
         <Fragment slot='sidebar'>
           <ModuleNav
             modules={modules}
