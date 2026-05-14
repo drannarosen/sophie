@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { axe } from "jest-axe";
 import { describe, expect, it, vi } from "vitest";
 
@@ -118,6 +118,20 @@ describe("<EqRef>", () => {
       const { container } = render(<EqRef slug='wiens-law'>Wien's law</EqRef>);
       const results = await axe(container);
       expect(results.violations).toEqual([]);
+    });
+  });
+
+  // E2E hydration signal (followup #10). The trigger anchor flips
+  // `data-react-hydrated="true"` after `useEffect` runs; Playwright
+  // waits on this attribute before hovering, replacing the
+  // unreliable `networkidle` wait.
+  describe("hydration signal", () => {
+    it("sets data-react-hydrated=true on the trigger after mount", async () => {
+      render(<EqRef slug='inverse-square-law' />);
+      const link = screen.getByRole("link");
+      await waitFor(() => {
+        expect(link).toHaveAttribute("data-react-hydrated", "true");
+      });
     });
   });
 });

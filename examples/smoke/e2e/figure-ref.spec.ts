@@ -102,10 +102,12 @@ test.describe("PR-C3: <FigureRef> on the smoke chapter", () => {
     page,
   }) => {
     await page.goto(CHAPTER_URL);
-    // Chapter is a `client:load` React island. Wait for
-    // hydration before hovering so HoverCard handlers are
-    // attached (matches the EqRef + GlossaryTerm patterns).
-    await page.waitForLoadState("networkidle");
+    // Chapter is a `client:load` React island. Wait for the
+    // `<FigureRef>` trigger to flip `data-react-hydrated="true"`
+    // (via `useHydrated`) before hovering — `networkidle` fires
+    // before React hydration completes in full-suite runs
+    // (followup #10).
+    await page.locator('[data-react-hydrated="true"]').first().waitFor();
     const trigger = page
       .locator('a[href="/chapters/spoiler-alerts#fig-decoder-ring-16"]')
       .first();

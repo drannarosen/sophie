@@ -51,10 +51,11 @@ test.describe("PR-C1: <GlossaryTerm> on the smoke chapter", () => {
   }) => {
     await page.goto(CHAPTER_URL);
     // The chapter is a `client:load` React island. Wait for the
-    // network to settle so the GlossaryTerm hydrates before we
-    // hover — otherwise the pointer event hits a static anchor
-    // that has no React handlers attached yet.
-    await page.waitForLoadState("networkidle");
+    // `<GlossaryTerm>` trigger to flip `data-react-hydrated="true"`
+    // (via `useHydrated`) before hovering — `networkidle` is a
+    // network-level signal that fires before React hydration
+    // completes in full-suite runs (followup #10).
+    await page.locator('[data-react-hydrated="true"]').first().waitFor();
     const trigger = page
       .locator('a[href="/chapters/spoiler-alerts#dark-matter"]')
       .first();
@@ -74,7 +75,8 @@ test.describe("PR-C1: <GlossaryTerm> on the smoke chapter", () => {
 
   test("moving the pointer away closes the HoverCard", async ({ page }) => {
     await page.goto(CHAPTER_URL);
-    await page.waitForLoadState("networkidle");
+    // Wait for React hydration (followup #10).
+    await page.locator('[data-react-hydrated="true"]').first().waitFor();
     const trigger = page
       .locator('a[href="/chapters/spoiler-alerts#redshift"]')
       .first();

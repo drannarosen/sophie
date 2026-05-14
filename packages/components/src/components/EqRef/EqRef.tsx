@@ -2,6 +2,7 @@ import * as HoverCard from "@radix-ui/react-hover-card";
 import katex from "katex";
 import { Sigma } from "lucide-react";
 import { useMemo } from "react";
+import { useHydrated } from "../../runtime/useHydrated.ts";
 import styles from "./EqRef.module.css.js";
 import type { EqRefProps } from "./EqRef.schema.ts";
 import { lookupEquation } from "./equations-store.ts";
@@ -29,6 +30,9 @@ import { lookupEquation } from "./equations-store.ts";
  */
 export function EqRef({ slug, children }: EqRefProps) {
   const entry = lookupEquation(slug);
+  // E2E hydration signal (followup #10): see useHydrated.ts and
+  // GlossaryTerm.tsx for rationale.
+  const hydrated = useHydrated();
 
   // KaTeX render must happen unconditionally per React rules-of-
   // hooks; the `entry?.tex ?? ""` guard keeps it safe when the
@@ -65,7 +69,11 @@ export function EqRef({ slug, children }: EqRefProps) {
   return (
     <HoverCard.Root openDelay={150} closeDelay={120}>
       <HoverCard.Trigger asChild>
-        <a className={styles.trigger} href={href}>
+        <a
+          className={styles.trigger}
+          data-react-hydrated={hydrated ? "true" : undefined}
+          href={href}
+        >
           {linkText}
           <Sigma
             aria-hidden

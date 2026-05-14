@@ -1,6 +1,7 @@
 import * as HoverCard from "@radix-ui/react-hover-card";
 import { slugify } from "@sophie/core/schema";
 import { BookOpen } from "lucide-react";
+import { useHydrated } from "../../runtime/useHydrated.ts";
 import { lookupDefinition } from "./definitions-store.ts";
 import styles from "./GlossaryTerm.module.css.js";
 import type { GlossaryTermProps } from "./GlossaryTerm.schema.ts";
@@ -27,6 +28,11 @@ import type { GlossaryTermProps } from "./GlossaryTerm.schema.ts";
 export function GlossaryTerm({ name, children }: GlossaryTermProps) {
   const slug = slugify(name);
   const entry = lookupDefinition(slug);
+  // E2E hydration signal (followup #10): flips to "true" after
+  // useEffect runs, so Playwright can wait on the trigger being
+  // fully interactive before hovering. `networkidle` is unreliable
+  // when Astro islands hydrate after the network goes quiet.
+  const hydrated = useHydrated();
 
   if (!entry) {
     // Dev-only signal so authoring drift is visible. Production
@@ -49,7 +55,11 @@ export function GlossaryTerm({ name, children }: GlossaryTermProps) {
   return (
     <HoverCard.Root openDelay={150} closeDelay={120}>
       <HoverCard.Trigger asChild>
-        <a className={styles.trigger} href={href}>
+        <a
+          className={styles.trigger}
+          data-react-hydrated={hydrated ? "true" : undefined}
+          href={href}
+        >
           {children}
           <BookOpen
             aria-hidden
