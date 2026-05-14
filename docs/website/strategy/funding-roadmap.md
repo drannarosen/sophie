@@ -44,7 +44,7 @@ Sophie remains AGPL OSS for self-hosters, with a hosted product
 AGPL. Revenue from hosted + premium AI features + institutional
 licensing supports continued development.
 
-Realistic 5-year ceiling executed seriously: $200K–$2M ARR. Lifestyle
+Realistic 5-year ceiling executed seriously: \$200K–\$2M ARR. Lifestyle
 business shape, not a venture outcome.
 
 Pro: Anna owns it. Independence post-tenure. Revenue compatible with
@@ -56,6 +56,7 @@ Con: Running a business — sales, support, churn, taxes, payroll. SDSU
 Conflict of Interest / Conflict of Commitment policies become
 load-bearing. **Pre-tenure, this is incompatible with the day job.**
 
+(path-3-vc-scale-company)=
 ### Path 3 — VC-scale company
 
 Sophie becomes EdTech-Inc., raises venture funding, sells enterprise
@@ -63,7 +64,7 @@ contracts to universities and publishers. Anna takes leave from SDSU
 or leaves academia.
 
 Realistic assessment: probably not the right shape. EdTech VC is a
-graveyard — Top Hat raised $130M+ and reportedly struggles; Cengage's
+graveyard — Top Hat raised \$130M+ and reportedly struggles; Cengage's
 MindTap is a slow decline; Coursera and 2U are public-company
 basket-cases. Sophie's TAM is narrow. AGPL is structurally
 incompatible with venture economics. Faculty rarely make this jump

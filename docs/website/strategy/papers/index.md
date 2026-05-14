@@ -124,7 +124,7 @@ open-access where possible. Specifically:
 
 - **JOSS** is OA by design.
 - **PRPER, AER, IJAIED, AERA Open** all support OA.
-- **Computers & Education** offers OA option (~$3K APC).
+- **Computers & Education** offers OA option (~\$3K APC).
 - **NSF and Cottrell** both fund OA publication costs; budget
   accordingly.
 

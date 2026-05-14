@@ -15,11 +15,11 @@ realistic fit, and links to per-program proposal plans. Updated
 
 | # | Program | Award | Deadline | Status | Doc |
 |---|---------|-------|----------|--------|-----|
-| 1 | **Cottrell Scholar Award** | $120K / 3 yr | **Jul 1, 2026** | Sprint in progress | [→](cottrell-2026.md) |
-| 2 | **NSF CAREER** | $400K+ / 5 yr | **Jul 22, 2026** | Sprint in progress | [→](career-2026.md) |
-| 3 | **Sloan Technology — Exploratory Grantmaking** | $300K–$750K typical | Rolling LOI (target Nov 2026) | Pending Sophie v1 launch | [→](sloan-2026.md) |
-| 4 | **AAS-EPD Mini-Grant** | up to $1K | Summer 2026 (TBA) | Watching for call | [→](aas-epd-mini.md) |
-| 5 | **SDSU University Grants Program** | $5K–$50K | Fall 2026 (annual) | Bridge funding | [→](sdsu-internal.md) |
+| 1 | **Cottrell Scholar Award** | \$120K / 3 yr | **Jul 1, 2026** | Sprint in progress | [→](cottrell-2026.md) |
+| 2 | **NSF CAREER** | \$400K+ / 5 yr | **Jul 22, 2026** | Sprint in progress | [→](career-2026.md) |
+| 3 | **Sloan Technology — Exploratory Grantmaking** | \$300K–\$750K typical | Rolling LOI (target Nov 2026) | Pending Sophie v1 launch | [→](sloan-2026.md) |
+| 4 | **AAS-EPD Mini-Grant** | up to \$1K | Summer 2026 (TBA) | Watching for call | [→](aas-epd-mini.md) |
+| 5 | **SDSU University Grants Program** | \$5K–\$50K | Fall 2026 (annual) | Bridge funding | [→](sdsu-internal.md) |
 
 ## Skipped 2026 programs (with rationale)
 

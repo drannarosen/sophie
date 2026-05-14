@@ -2,7 +2,7 @@
 title: NSF CAREER — 2026
 short_title: CAREER 2026
 description: NSF CAREER proposal plan (deadline July 22, 2026) — solicitation summary, project description structure, education plan strategy, departmental letter, MPS/AST framing.
-tags: [strategy, grants, nsf, career, 2026]
+tags: [strategy, grants, nsf, career, "2026"]
 ---
 
 # NSF CAREER — 2026
@@ -27,7 +27,7 @@ Anna committed 2026-05-13 to applying this cycle.
   - No more than three CAREER competition submissions over career
     (withdrawn proposals don't count).
   - Doctoral degree in NSF-supported field.
-- **Award (MPS, including AST)**: minimum **$400,000 over 5 years**.
+- **Award (MPS, including AST)**: minimum **\$400,000 over 5 years**.
   (Higher minimums apply to BIO / ENG / OPP — not applicable.)
 - **Deadline**: **July 22, 2026** at 5 PM submitter's local time.
 - **Decision timeline**: Decisions typically Q1–Q2 of the year
@@ -200,7 +200,7 @@ for the joint week-by-week sequence. Highlights for CAREER:
 
 ## Budget shape
 
-$400K minimum over 5 years for MPS. Typical CAREER budget allocation:
+\$400K minimum over 5 years for MPS. Typical CAREER budget allocation:
 
 - **Summer salary** for PI across 5 summers (largest line).
 - **Graduate student support** (1 PhD student at SDSU — note this is

@@ -2,7 +2,7 @@
 title: 2026 calendar
 short_title: 2026 calendar
 description: Executable timeline for the 2026 double-sprint — Cottrell (July 1) and NSF CAREER (July 22) — plus fall 2026 follow-on actions.
-tags: [strategy, calendar, grants, 2026, cottrell, career]
+tags: [strategy, calendar, grants, "2026", cottrell, career]
 ---
 
 # 2026 calendar
@@ -71,7 +71,7 @@ How the decision tree looks in early 2027 depending on what funds:
 
 ### Scenario A — Cottrell funded, CAREER funded
 
-The best case. $120K + $400K+ over 3–5 years. Anna becomes a Cottrell
+The best case. \$120K + \$400K+ over 3–5 years. Anna becomes a Cottrell
 Scholar (prestigious pre-tenure recognition) with a CAREER award
 (arguably *the* most important pre-tenure grant). Tenure case is
 substantially de-risked. Focus shifts to executing the funded plans

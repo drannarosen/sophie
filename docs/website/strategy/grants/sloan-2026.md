@@ -2,7 +2,7 @@
 title: Sloan Technology Grant — 2026
 short_title: Sloan 2026
 description: Alfred P. Sloan Foundation Technology (Exploratory Grantmaking) — LOI plan for fall 2026, post-Sophie-v1 launch.
-tags: [strategy, grants, sloan, foundation, 2026]
+tags: [strategy, grants, sloan, foundation, "2026"]
 ---
 
 # Sloan Technology Grant — 2026
@@ -11,7 +11,7 @@ The Alfred P. Sloan Foundation's
 **[Technology — Exploratory Grantmaking program](https://sloan.org/programs/digital-technology/exploratory-grantmaking-in-technology)**
 is the best foundation fit for Sophie. Sloan has funded comparable
 AGPL scholarly-publishing infrastructure projects (MyST,
-ExecutableBooks, Jupyter, Pangeo). The funding shape — $300K–$750K
+ExecutableBooks, Jupyter, Pangeo). The funding shape — \$300K–\$750K
 typical, rolling LOI-then-full-proposal — aligns with Sophie's needs.
 
 **Submit LOI in November 2026, post-Sophie-v1 launch.**
@@ -20,7 +20,7 @@ typical, rolling LOI-then-full-proposal — aligns with Sophie's needs.
 
 - **Funder**: Alfred P. Sloan Foundation
 - **Program**: Technology — Exploratory Grantmaking
-- **Award**: Typically $300K–$750K, 1–3 year duration
+- **Award**: Typically \$300K–\$750K, 1–3 year duration
 - **Submission**: Rolling LOI; selected LOIs invited to full proposal
 - **Decision timeline**: ~4–6 months LOI → decision; full proposal
   decision in subsequent ~4–6 months
@@ -74,7 +74,7 @@ funnel. The format:
 3. **Approach** (~1 page): the technical architecture in brief; cite
    the [architecture explanation](../../explanation/architecture.md);
    the AGPL + ADR-driven governance.
-4. **Funding ask + use of funds**: $300K–$500K over 2 years; specific
+4. **Funding ask + use of funds**: \$300K–\$500K over 2 years; specific
    line items (1 RA + 1 postdoc + infra + travel).
 5. **Sustainability**: post-funding plan. Sophie remains AGPL OSS;
    community governance; Sophie Cloud as a separate optional
@@ -84,8 +84,8 @@ funnel. The format:
 
 Approximately:
 
-- $300K–$500K over 2 years
-- Year 1: hire a postdoc for 12 months ($85K + fringe ≈ $115K) +
+- \$300K–\$500K over 2 years
+- Year 1: hire a postdoc for 12 months (\$85K + fringe ≈ \$115K) +
   Sophie infrastructure + travel
 - Year 2: continue postdoc + RA support + community-building (Sophie
   workshops, conference presentations)

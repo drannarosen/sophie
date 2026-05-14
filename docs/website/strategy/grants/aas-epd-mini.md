@@ -2,7 +2,7 @@
 title: AAS-EPD Mini-Grant — 2026
 short_title: AAS-EPD Mini
 description: American Astronomical Society Education & Public Engagement Division Mini-Grant — low-effort tactical proposal for summer/fall 2026.
-tags: [strategy, grants, aas, aas-epd, 2026]
+tags: [strategy, grants, aas, aas-epd, "2026"]
 ---
 
 # AAS-EPD Mini-Grant — 2026
@@ -10,7 +10,7 @@ tags: [strategy, grants, aas, aas-epd, 2026]
 The AAS Education and Public Engagement Division
 ([AAS-EPD](https://aas.org/education/aas-epd-mini-grant-program))
 runs an annual Mini-Grant program with small awards (typically up to
-$1,000) for member-led astronomy education and public-engagement
+\$1,000) for member-led astronomy education and public-engagement
 projects.
 
 Low effort, low award size — but a useful CV line, a way to engage
@@ -22,7 +22,7 @@ opportunity to position Sophie in the astronomy-education world.
 
 - **Funder**: American Astronomical Society — Education and Public
   Engagement Division
-- **Award**: Typically up to $1,000
+- **Award**: Typically up to \$1,000
 - **Eligibility**: AAS-EPD members (verify Anna's membership status)
 - **Submission**: Annual call (typically summer); watch the AAS-EPD
   newsletter and aas.org/education
@@ -39,7 +39,7 @@ opportunity to position Sophie in the astronomy-education world.
 - **Positions Sophie in the astronomy-education space.** A funded
   AAS-EPD project tagged "Sophie" surfaces the platform in the
   community.
-- **Bridge funding.** Even $1K can pay for conference travel or a
+- **Bridge funding.** Even \$1K can pay for conference travel or a
   small infrastructure expense.
 
 ## Proposal idea
@@ -69,7 +69,7 @@ focused, achievable mini-grant projects.
 - **Watch the AAS-EPD newsletter** for the 2026 call posting. Calls
   typically post in early-to-mid summer.
 - **Don't wait for funding to engage AAS-EPD.** The community is the
-  real prize; the $1K is a side benefit. Volunteer for workshops,
+  real prize; the \$1K is a side benefit. Volunteer for workshops,
   attend AAS-EPD division meetings at AAS summer meeting.
 
 ## Timeline

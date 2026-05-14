@@ -2,7 +2,7 @@
 title: SDSU University Grants Program — 2026
 short_title: SDSU Internal
 description: San Diego State University internal seed grant for fall 2026 — bridge funding for Sophie-related research before external grants land.
-tags: [strategy, grants, sdsu, internal, 2026]
+tags: [strategy, grants, sdsu, internal, "2026"]
 ---
 
 # SDSU University Grants Program — 2026
@@ -10,7 +10,7 @@ tags: [strategy, grants, sdsu, internal, 2026]
 The
 **[SDSU University Grants Program](https://research.sdsu.edu/research_affairs/university_grants_program)**
 provides internal seed funding for SDSU faculty research. Small dollar
-amounts (typically $5K–$50K), unrestricted-ish, annual cycle. Useful
+amounts (typically \$5K–\$50K), unrestricted-ish, annual cycle. Useful
 as **bridge funding** while external grants are pending or pre-funded.
 
 Apply in **fall 2026** for the annual cycle.
@@ -18,7 +18,7 @@ Apply in **fall 2026** for the annual cycle.
 ## Program quick facts
 
 - **Funder**: SDSU Division of Research and Innovation
-- **Award**: Typically $5K–$50K range
+- **Award**: Typically \$5K–\$50K range
 - **Eligibility**: SDSU tenure-track faculty
 - **Submission**: Annual; check
   [research.sdsu.edu](https://research.sdsu.edu/research_affairs/university_grants_program)
@@ -48,7 +48,7 @@ astronomy education"** — funds a small pilot study comparing
 Sophie-authored content vs. existing OER content for one ASTR 201
 module, with disaggregated learning-outcomes measurement.
 
-Concrete uses for ~$25–40K:
+Concrete uses for ~\$25–40K:
 
 - Undergraduate RA for the pilot study (8–10 hr/week × 2 semesters).
 - IRB application fees and protocol setup.

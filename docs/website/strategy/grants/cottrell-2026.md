@@ -2,14 +2,14 @@
 title: Cottrell Scholar Award — 2026
 short_title: Cottrell 2026
 description: Sprint plan for the Cottrell Scholar Award proposal (July 1, 2026 deadline) — narrative arc, week-by-week, budget shape, internal review.
-tags: [strategy, grants, cottrell, 2026]
+tags: [strategy, grants, cottrell, "2026"]
 ---
 
 # Cottrell Scholar Award — 2026
 
 The Cottrell Scholar Award from the Research Corporation for Science
 Advancement (RC). Pre-tenure-only, restricted to astronomy / physics /
-chemistry, $120K over 3 years, designed to recognize and support
+chemistry, \$120K over 3 years, designed to recognize and support
 faculty who integrate research with teaching. The 2026 deadline is
 **July 1, 2026**.
 
@@ -25,7 +25,7 @@ program) is the program's literal target demographic.
   in astronomy / physics / chemistry at a PhD-granting US institution.
   SDSU qualifies (offers PhD in astronomy via the joint SDSU/UCSD
   program).
-- **Award**: $120,000 over 3 years ($40K/yr).
+- **Award**: \$120,000 over 3 years (\$40K/yr).
 - **Deadline**: July 1, 2026.
 - **Decision timeline**: Decision typically Q4 of submission year
   (October–December).
@@ -129,16 +129,16 @@ Six weeks of focused work at ~10 hr/week. Submit by July 1.
 
 ## Budget shape
 
-$40K/year × 3 years = $120K total. Typical Cottrell budget uses:
+\$40K/year × 3 years = \$120K total. Typical Cottrell budget uses:
 
-- **Summer salary** for the PI (largest line; ~$15–25K/yr depending on
+- **Summer salary** for the PI (largest line; ~\$15–25K/yr depending on
   current salary).
 - **Undergraduate or graduate RA support** for Sophie-related
-  research (ideally 1 RA at part-time, ~$10K/yr).
+  research (ideally 1 RA at part-time, ~\$10K/yr).
 - **Equipment / infrastructure** for Sophie (Sophie Cloud hosting,
-  domain registrations, possibly a workstation). $1–3K/yr.
-- **Conference travel** (AAS, AAPT, AAS-EPD). $2–4K/yr.
-- **Open-access publication fees**. $1–2K/yr.
+  domain registrations, possibly a workstation). \$1–3K/yr.
+- **Conference travel** (AAS, AAPT, AAS-EPD). \$2–4K/yr.
+- **Open-access publication fees**. \$1–2K/yr.
 
 A clean, justified budget reads as competent. Don't pad.
 
@@ -169,12 +169,12 @@ reach via chair, RC mentorship network, or AAS-EPD network.
 - **HSI / CSU mission framing** appears in the Broader Impacts of the
   research section and again in the teaching section's audience
   description.
-- **Don't overload the budget narrative.** RC reviewers know what $40K
+- **Don't overload the budget narrative.** RC reviewers know what \$40K
   buys; a focused, well-justified ask reads as serious.
 
 ## Outcome scenarios
 
-- **Awarded**: $120K over 3 years + Cottrell Scholar designation.
+- **Awarded**: \$120K over 3 years + Cottrell Scholar designation.
   Cohort access, amplification for CAREER review. Use Year 1 funding
   for summer salary + an RA who begins the empirical work.
 - **Declined with feedback**: Almost all unsuccessful proposals get
