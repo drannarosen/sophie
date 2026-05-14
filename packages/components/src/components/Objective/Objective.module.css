@@ -1,0 +1,52 @@
+/* `<Objective>` — single learning objective row.
+ *
+ * Pure display: visual style only — verb (bold) + body. When rendered
+ * inside `<LearningObjectives>`, a checkbox is injected at the leading
+ * edge. The wrapping `<ul>` and section chrome belong to the parent
+ * `<LearningObjectives>`. Per ADR 0005, all colors flow through theme
+ * tokens.
+ */
+
+.objective {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-lo-row-inline-gap, 0.625rem);
+  align-items: baseline;
+  line-height: 1.5;
+}
+
+.objective.displayOnly {
+  /* Pure-display mode: no checkbox column. */
+  grid-template-columns: 1fr;
+}
+
+.checkbox {
+  margin: 0;
+  inline-size: var(--size-lo-checkbox, 1rem);
+  block-size: var(--size-lo-checkbox, 1rem);
+  cursor: pointer;
+  align-self: center;
+}
+
+.checkbox:focus-visible {
+  outline: var(--sophie-focus-width) solid var(--sophie-focus-color);
+  outline-offset: 2px;
+}
+
+.content {
+  display: inline;
+}
+
+.verb {
+  font-weight: 600;
+}
+
+.body {
+  /* Inline so it sits next to the verb on the same line. */
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .checkbox {
+    transition: opacity 120ms ease-out;
+  }
+}
