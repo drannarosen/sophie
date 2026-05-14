@@ -47,7 +47,16 @@ __setGlossaryDefinitions(pedagogyDefinitions);
 // to the wire, so without this script tag <GlossaryTerm>
 // rerenders as bare prose on hydration (empty client store
 // wins). See packages/components/.../definitions-store.ts.
-const pedagogyDefinitionsJson = JSON.stringify(pedagogyDefinitions);
+//
+// Escape `<` as `<` after JSON.stringify to prevent the
+// HTML parser from terminating the <script> tag early on any
+// `</script>` substring inside a definition body (realistic for
+// AI-authored CS/web content per ADR 0030). The escape survives
+// JSON.parse on the consumer side (< → <).
+const pedagogyDefinitionsJson = JSON.stringify(pedagogyDefinitions).replace(
+  /</g,
+  "\\u003c"
+);
 
 // Detect empty named slots so the corresponding grid columns can
 // collapse to 0 width — avoids wasted chrome in PR 1 where the sidebar

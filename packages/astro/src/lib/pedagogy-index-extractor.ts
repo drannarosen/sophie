@@ -184,6 +184,11 @@ class IndexAccumulator {
    */
   addDefinitions(entries: ReadonlyArray<DefinitionEntry>): void {
     const state = getGlobalState();
+    // Validate the whole batch BEFORE mutating. Without this two-
+    // pass shape, a cross-chapter collision in entry N would leave
+    // entries 0..N-1 already in the map — fine while the throw
+    // kills the build, but brittle for PR-C2+ which may batch
+    // larger role-mixed adds.
     for (const entry of entries) {
       const existing = state.definitions.get(entry.slug);
       if (existing && existing.chapter !== entry.chapter) {
@@ -191,6 +196,8 @@ class IndexAccumulator {
           `Definition "${entry.term}" (slug "${entry.slug}") is defined in multiple chapters: "${existing.chapter}" and "${entry.chapter}". Resolution: rename one or consolidate.`
         );
       }
+    }
+    for (const entry of entries) {
       state.definitions.set(entry.slug, entry);
     }
   }

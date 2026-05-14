@@ -47,10 +47,27 @@ function hydrateFromScriptTagIfPresent(): void {
     return;
   }
   try {
-    const entries = JSON.parse(raw) as ReadonlyArray<DefinitionEntry>;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) {
+      throw new TypeError(
+        `Expected an array of DefinitionEntry; got ${typeof parsed}`
+      );
+    }
+    const entries = parsed as ReadonlyArray<DefinitionEntry>;
     definitionsBySlug = new Map(entries.map((d) => [d.slug, d]));
-  } catch {
-    // Malformed script payload; leave the map as-is.
+  } catch (err) {
+    // Malformed payload; leave the map as-is + surface the error
+    // to the dev console so the build-vs-runtime mismatch is
+    // debuggable. Silent in production.
+    if (
+      typeof process === "undefined" ||
+      process.env?.NODE_ENV !== "production"
+    ) {
+      console.error(
+        "[GlossaryTerm] Failed to parse `sophie-pedagogy-definitions` script payload; <GlossaryTerm> will fall back to bare prose for every lookup on this page.",
+        err
+      );
+    }
   }
   hydratedFromScript = true;
 }

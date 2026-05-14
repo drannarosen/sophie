@@ -29,7 +29,14 @@ export function GlossaryTerm({ name, children }: GlossaryTermProps) {
   const entry = lookupDefinition(slug);
 
   if (!entry) {
-    if (typeof console !== "undefined") {
+    // Dev-only signal so authoring drift is visible. Production
+    // pages stay silent — the bare-prose fallback degrades
+    // gracefully. PR-C4's audit invariant #4 elevates this to
+    // a build error.
+    if (
+      typeof process === "undefined" ||
+      process.env?.NODE_ENV !== "production"
+    ) {
       console.warn(
         `[GlossaryTerm] No definition found for "${name}" (slug "${slug}"). Term is undefined; rendering bare prose.`
       );
