@@ -350,8 +350,11 @@ class IndexAccumulator {
 
   /**
    * Snapshot the current accumulator state as a PedagogyIndex.
-   * Equations populate from PR-C2 onward; keyInsights / figures /
-   * misconceptions still ship empty (PR-C3+).
+   * Equations populate from PR-C2 onward; keyInsights / figureUsages /
+   * misconceptions still ship empty placeholders here (the extractor
+   * implementations land in PR-C3 Tasks 5–7). figureRegistry is never
+   * populated by the extractor — TextbookLayout receives it from the
+   * consumer app at SSR merge time (PR-C3 Q3 two-tier model).
    */
   asPedagogyIndex(): PedagogyIndex {
     const state = getGlobalState();
@@ -359,7 +362,8 @@ class IndexAccumulator {
       definitions: Array.from(state.definitions.values()),
       equations: Array.from(state.equations.values()),
       keyInsights: [],
-      figures: [],
+      figureRegistry: [],
+      figureUsages: [],
       misconceptions: [],
     };
   }

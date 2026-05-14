@@ -48,7 +48,8 @@ describe("pedagogyIndexVirtualModule — load", () => {
     expect(src).toContain("export const definitions");
     expect(src).toContain("export const equations");
     expect(src).toContain("export const keyInsights");
-    expect(src).toContain("export const figures");
+    expect(src).toContain("export const figureRegistry");
+    expect(src).toContain("export const figureUsages");
     expect(src).toContain("export const misconceptions");
   });
 

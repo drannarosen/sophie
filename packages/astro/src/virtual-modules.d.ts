@@ -10,7 +10,8 @@ declare module "virtual:sophie/pedagogy-index" {
   import type {
     DefinitionEntry,
     EquationEntry,
-    FigureEntry,
+    FigureRegistryEntry,
+    FigureUsageEntry,
     KeyInsightEntry,
     MisconceptionEntry,
   } from "@sophie/core/schema";
@@ -18,6 +19,7 @@ declare module "virtual:sophie/pedagogy-index" {
   export const definitions: ReadonlyArray<DefinitionEntry>;
   export const equations: ReadonlyArray<EquationEntry>;
   export const keyInsights: ReadonlyArray<KeyInsightEntry>;
-  export const figures: ReadonlyArray<FigureEntry>;
+  export const figureRegistry: ReadonlyArray<FigureRegistryEntry>;
+  export const figureUsages: ReadonlyArray<FigureUsageEntry>;
   export const misconceptions: ReadonlyArray<MisconceptionEntry>;
 }
