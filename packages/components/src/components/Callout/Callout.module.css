@@ -110,17 +110,9 @@
   color: var(--sophie-status-warning);
 }
 
-/*
- * Misconception — long-form myth-busting card: "you might believe X,
- * but the correct understanding is Y." Distinct from `.warning`
- * (status-warning, "watch out") and `.caution` (brand-violet, "subtle
- * gotcha"); uses status-danger to signal a commonly held error worth
- * surfacing and correcting. Mirrors the `.key-insight` shape (border +
- * tinted background) since misconception is its semantic pair: both
- * single-out a concept readers should leave the chapter holding onto.
- * Ported from astr101-sp26 `.callout-misconception`; status-danger is
- * the closest Sophie token since `.tip` already owns brand-rose.
- */
+/* Ported from astr101-sp26 `.callout-misconception`; uses status-danger
+   because rose, violet, and warning are owned by sibling variants.
+   Mirrors `.key-insight` shape since misconception is its semantic pair. */
 .misconception {
   border-left-color: var(--sophie-status-danger);
   background: color-mix(
