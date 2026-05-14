@@ -1,13 +1,14 @@
 ---
-status: accepted
 date: 2026-05-12
-deciders: [anna]
-supersedes: ~
-superseded-by: ~
 tags: [chrome, state, performance, astro, react]
 ---
 
 # ADR 0032: Vanilla JS + `data-*` attributes for chrome state (not React islands)
+
+:::{admonition} ADR metadata
+- **Status**: accepted
+- **Deciders**: anna
+:::
 
 ## Context
 

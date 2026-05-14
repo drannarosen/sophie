@@ -1,13 +1,14 @@
 ---
-status: accepted
 date: 2026-05-12
-deciders: [anna]
-supersedes: ~
-superseded-by: ~
 tags: [astro, react, ssr, scripts, gotcha]
 ---
 
 # ADR 0033: `is:inline` scripts MUST live outside React islands
+
+:::{admonition} ADR metadata
+- **Status**: accepted
+- **Deciders**: anna
+:::
 
 ## Context
 

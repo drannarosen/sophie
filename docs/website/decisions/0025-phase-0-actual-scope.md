@@ -1,13 +1,14 @@
 ---
-status: accepted
 date: 2026-05-10
-deciders: [anna]
-supersedes: ~
-superseded-by: ~
 tags: [phase-0, scope, calendar, retrospective]
 ---
 
 # ADR 0025: Phase 0 actual scope (lean-but-realistic)
+
+:::{admonition} ADR metadata
+- **Status**: accepted
+- **Deciders**: anna
+:::
 
 ## Context
 

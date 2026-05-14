@@ -1,13 +1,14 @@
 ---
-status: accepted
 date: 2026-05-09
-deciders: [anna]
-supersedes: ~
-superseded-by: ~
 tags: [components, mdx, hydration, persistence, astro]
 ---
 
 # ADR 0027: MDX-rendered React components are isolated SSR roots; data threads as props
+
+:::{admonition} ADR metadata
+- **Status**: accepted
+- **Deciders**: anna
+:::
 
 ## Context
 

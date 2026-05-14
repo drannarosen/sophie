@@ -1,13 +1,14 @@
 ---
-status: accepted
 date: 2026-05-12
-deciders: [anna]
-supersedes: ~
-superseded-by: ~
 tags: [foundation, audience, authoring-model, ai-authoring]
 ---
 
 # ADR 0030: Audience priority and AI-as-primary-author / instructor-as-supervisor
+
+:::{admonition} ADR metadata
+- **Status**: accepted
+- **Deciders**: anna
+:::
 
 ## Context
 

@@ -1,13 +1,14 @@
 ---
-status: accepted
 date: 2026-05-10
-deciders: [anna]
-supersedes: ~
-superseded-by: ~
 tags: [theming, design-tokens, css, tailwind, phase-0]
 ---
 
 # ADR 0026: Tailwind v4 (CSS-first configuration)
+
+:::{admonition} ADR metadata
+- **Status**: accepted
+- **Deciders**: anna
+:::
 
 ## Context
 

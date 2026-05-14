@@ -1,14 +1,15 @@
 ---
-status: accepted
 date: 2026-05-12
-deciders: [anna]
-supersedes: ~
-superseded-by: ~
-amends: 0005
 tags: [theming, design-tokens, naming-convention]
 ---
 
 # ADR 0035: Theme tokens use flat, kind-less names
+
+:::{admonition} ADR metadata
+- **Status**: accepted
+- **Deciders**: anna
+- **Amends**: 0005
+:::
 
 ## Context
 

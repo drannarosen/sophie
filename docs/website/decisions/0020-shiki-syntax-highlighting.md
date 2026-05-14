@@ -1,13 +1,14 @@
 ---
-status: accepted
 date: 2026-05-09
-deciders: [anna]
-supersedes: ~
-superseded-by: ~
 tags: [syntax-highlighting, shiki, code, mdx]
 ---
 
 # ADR 0020: Shiki (via rehype-pretty-code) for syntax highlighting
+
+:::{admonition} ADR metadata
+- **Status**: accepted
+- **Deciders**: anna
+:::
 
 ## Context
 

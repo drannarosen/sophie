@@ -1,13 +1,14 @@
 ---
-status: accepted
 date: 2026-05-09
-deciders: [anna]
-supersedes: ~
-superseded-by: ~
 tags: [theming, design-tokens, css, tailwind]
 ---
 
 # ADR 0005: Three-layer theming (TS tokens → CSS vars + Tailwind preset; CSS Modules in components)
+
+:::{admonition} ADR metadata
+- **Status**: accepted
+- **Deciders**: anna
+:::
 
 ## Context
 

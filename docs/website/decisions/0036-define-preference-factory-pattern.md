@@ -1,13 +1,14 @@
 ---
-status: accepted
 date: 2026-05-12
-deciders: [anna]
-supersedes: ~
-superseded-by: ~
 tags: [chrome, state, factory, astro, preferences]
 ---
 
 # ADR 0036: `definePreference` factory + `resolve` / `resolveExpression` pattern
+
+:::{admonition} ADR metadata
+- **Status**: accepted
+- **Deciders**: anna
+:::
 
 ## Context
 

@@ -77,6 +77,16 @@ project:
         - file: explanation/persistence-model.md
         - file: explanation/why-not-myst-for-sophie.md
         - file: explanation/why-myst-for-docs.md
+    - title: Vision
+      children:
+        - file: vision/index.md
+        - file: vision/pedagogy/index.md
+        - file: vision/design/index.md
+        - file: vision/features/index.md
+        - file: vision/features/accepted.md
+        - file: vision/features/backlog.md
+        - file: vision/features/speculative.md
+        - file: vision/transitions/index.md
     - title: Decisions
       children:
         - file: decisions/template.md

@@ -1,13 +1,14 @@
 ---
-status: accepted
 date: 2026-05-12
-deciders: [anna]
-supersedes: ~
-superseded-by: ~
 tags: [layout, astro, slots, ux]
 ---
 
 # ADR 0034: Empty layout slots collapse to 0 width via `Astro.slots.has()`
+
+:::{admonition} ADR metadata
+- **Status**: accepted
+- **Deciders**: anna
+:::
 
 ## Context
 

@@ -1,13 +1,14 @@
 ---
-status: proposed
 date: 2026-05-09
-deciders: [anna]
-supersedes: ~
-superseded-by: ~
 tags: [components, visualization, concept-maps, v2, v3, proposed]
 ---
 
 # ADR 0016: React Flow for concept maps and interactive diagrams (v2+)
+
+:::{admonition} ADR metadata
+- **Status**: proposed
+- **Deciders**: anna
+:::
 
 :::{important} Status: proposed (not yet accepted)
 This ADR captures the rationale for adopting React Flow *if and when*

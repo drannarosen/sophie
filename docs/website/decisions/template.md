@@ -42,30 +42,42 @@ ADRs are **immutable once accepted**. Edits to typos or formatting are
 fine; substantive changes mean writing a new ADR that supersedes the
 old one. The old one stays in the tree with `status: superseded`.
 
-## Frontmatter fields
+## Metadata fields
 
-| Field | Required | Notes |
-|---|---|---|
-| `status` | yes | `proposed`, `accepted`, `deprecated`, `superseded`, `rejected` |
-| `date` | yes | ISO 8601 (`YYYY-MM-DD`) — date of acceptance |
-| `deciders` | yes | List of decision-makers |
-| `supersedes` | optional | ADR id this replaces (e.g. `0003`) |
-| `superseded-by` | optional | ADR id that replaces this |
-| `tags` | recommended | Discoverability via tag search |
+Two places to record ADR metadata:
+
+- **Frontmatter** — `date` and `tags` only. These are mystmd-recognized
+  keys; anything else triggers "extra keys ignored" warnings on build.
+- **Body admonition** — an `:::{admonition} ADR metadata` block right
+  after the H1, holding the lifecycle keys (`Status`, `Deciders`,
+  `Supersedes`, `Superseded by`, `Amends`). Omit any row whose value is
+  null/unused; always include `Status` and `Deciders`.
+
+| Field | Required | Where | Notes |
+|---|---|---|---|
+| `date` | yes | frontmatter | ISO 8601 (`YYYY-MM-DD`) — date of acceptance |
+| `tags` | recommended | frontmatter | Discoverability via tag search |
+| `Status` | yes | admonition | `proposed`, `accepted`, `deprecated`, `superseded`, `rejected` |
+| `Deciders` | yes | admonition | Decision-makers (comma-joined) |
+| `Supersedes` | optional | admonition | ADR id this replaces (e.g. `0003`) |
+| `Superseded by` | optional | admonition | ADR id that replaces this |
+| `Amends` | optional | admonition | ADR id this refines without superseding |
 
 ## The template
 
 ```markdown
 ---
-status: proposed
 date: 2026-MM-DD
-deciders: [anna]
-supersedes: ~
-superseded-by: ~
 tags: [foundation]
 ---
 
 # ADR NNNN: <Concise decision title>
+
+:::{admonition} ADR metadata
+- **Status**: proposed
+- **Deciders**: anna
+:::
+
 
 ## Context
 

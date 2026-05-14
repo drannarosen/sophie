@@ -104,16 +104,27 @@ const pedagogy = indexAccumulator.asPedagogyIndex();
 // after the index is fully populated. Errors fail the build; warnings
 // + info print but allow the build to continue. See
 // packages/astro/src/lib/pedagogy-audit.ts for the invariant list.
-const auditReport = runPedagogyAudit(pedagogy);
-console.log(formatAuditReport(auditReport));
-if (auditExitCode(auditReport) !== 0) {
-  // Astro's build pipeline surfaces thrown errors as build failures
-  // with a stack trace and the offending file context. Preferred over
-  // `process.exit(1)` because it cooperates with Astro's logger and
-  // dev-server HMR overlay rather than killing the parent process.
-  throw new Error(
-    "Pedagogy audit found errors. See preceding output for details."
-  );
+//
+// Cache once in production builds (one-shot Node process producing N
+// static pages — audit input is identical across renders). In dev the
+// long-running Node process caches state across HMR reloads, so we
+// re-run every render to keep audit feedback fresh on content edits.
+const auditCache = globalThis as unknown as {
+  __sophiePedagogyAuditDone?: boolean;
+};
+if (!import.meta.env.PROD || !auditCache.__sophiePedagogyAuditDone) {
+  const auditReport = runPedagogyAudit(pedagogy);
+  console.log(formatAuditReport(auditReport));
+  if (auditExitCode(auditReport) !== 0) {
+    // Astro's build pipeline surfaces thrown errors as build failures
+    // with a stack trace and the offending file context. Preferred over
+    // `process.exit(1)` because it cooperates with Astro's logger and
+    // dev-server HMR overlay rather than killing the parent process.
+    throw new Error(
+      "Pedagogy audit found errors. See preceding output for details."
+    );
+  }
+  auditCache.__sophiePedagogyAuditDone = true;
 }
 // All four setters follow the same pattern (ADR 0038 Revisions
 // section): the chrome layer reads the accumulator directly, then

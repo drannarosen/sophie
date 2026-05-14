@@ -1,13 +1,14 @@
 ---
-status: accepted
 date: 2026-05-10
-deciders: [anna]
-supersedes: ~
-superseded-by: ~
 tags: [tooling, storybook, dx, testing, visual-regression]
 ---
 
 # ADR 0028: Storybook setup — location, builder, and visual regression
+
+:::{admonition} ADR metadata
+- **Status**: accepted
+- **Deciders**: anna
+:::
 
 ## Context
 

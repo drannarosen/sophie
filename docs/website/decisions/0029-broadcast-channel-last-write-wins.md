@@ -1,13 +1,14 @@
 ---
-status: accepted
 date: 2026-05-10
-deciders: [anna]
-supersedes: ~
-superseded-by: ~
 tags: [persistence, broadcast, concurrency, hardening]
 ---
 
 # ADR 0029: BroadcastChannel last-write-wins via per-write timestamps
+
+:::{admonition} ADR metadata
+- **Status**: accepted
+- **Deciders**: anna
+:::
 
 ## Context
 
