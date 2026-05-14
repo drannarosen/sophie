@@ -2,13 +2,15 @@ import type {
   EquationEntry,
   FigureUsageEntry,
   KeyInsightEntry,
+  MisconceptionEntry,
 } from "@sophie/core/schema";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import {
   extractDefinitions,
   extractEquations,
   extractFigures,
   extractKeyInsights,
+  extractMisconceptions,
   indexAccumulator,
   pedagogyIndexRemarkPlugin,
 } from "./pedagogy-index-extractor.ts";
@@ -1263,6 +1265,341 @@ describe("indexAccumulator figures (cross-chapter)", () => {
 
     const index = indexAccumulator.asPedagogyIndex();
     expect(index.figureRegistry).toEqual([]);
+  });
+});
+
+/**
+ * Misconception-test fixture. Misconceptions are extracted from BOTH
+ * `<Aside kind="misconception">` (length="short") via the existing
+ * `mdxAside` factory above, and `<Callout variant="misconception">`
+ * (length="long") via `mdxCallout` below.
+ */
+const mdxCallout = (
+  attrs: Record<string, string>,
+  children: ReadonlyArray<Record<string, unknown>> = []
+) => ({
+  type: "mdxJsxFlowElement",
+  name: "Callout",
+  attributes: Object.entries(attrs).map(([name, value]) => ({
+    type: "mdxJsxAttribute",
+    name,
+    value,
+  })),
+  children,
+});
+
+describe("extractMisconceptions (pure)", () => {
+  // T28
+  test("<Aside kind='misconception'> produces entry with length='short'", () => {
+    const tree = root([
+      mdxAside({ kind: "misconception", title: "Heavier falls faster" }, [
+        para("Galileo's experiment showed otherwise."),
+      ]),
+    ]);
+
+    const entries = extractMisconceptions(tree as never, "spoiler-alerts");
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      chapter: "spoiler-alerts",
+      anchor: "heavier-falls-faster",
+      length: "short",
+      label: "Heavier falls faster",
+    });
+    expect(entries[0]?.body).toContain(
+      "Galileo's experiment showed otherwise."
+    );
+  });
+
+  // T29
+  test("<Callout variant='misconception'> produces entry with length='long'", () => {
+    const tree = root([
+      mdxCallout({ variant: "misconception", title: "Seasons from distance" }, [
+        para(
+          "Earth's tilt — not its distance from the Sun — drives the seasons."
+        ),
+      ]),
+    ]);
+
+    const entries = extractMisconceptions(tree as never, "spoiler-alerts");
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      chapter: "spoiler-alerts",
+      anchor: "seasons-from-distance",
+      length: "long",
+      label: "Seasons from distance",
+    });
+    expect(entries[0]?.body).toContain("Earth's tilt");
+  });
+
+  // T30
+  test("BOTH source primitives in the same chapter — each gets its own entry, no collision", () => {
+    const tree = root([
+      mdxAside({ kind: "misconception", title: "Short one" }, [
+        para("short body"),
+      ]),
+      mdxCallout({ variant: "misconception", title: "Long one" }, [
+        para("long body"),
+      ]),
+    ]);
+
+    const entries = extractMisconceptions(tree as never, "ch");
+    expect(entries).toHaveLength(2);
+    expect(entries[0]).toMatchObject({
+      anchor: "short-one",
+      length: "short",
+    });
+    expect(entries[1]).toMatchObject({
+      anchor: "long-one",
+      length: "long",
+    });
+  });
+
+  test("untitled misconception gets auto-anchor 'misconception-1'", () => {
+    const tree = root([
+      mdxAside({ kind: "misconception" }, [para("anonymous misconception")]),
+    ]);
+
+    const entries = extractMisconceptions(tree as never, "ch");
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.anchor).toBe("misconception-1");
+    expect(entries[0]?.label).toBeUndefined();
+    expect(entries[0]?.length).toBe("short");
+  });
+
+  test("counter increments across BOTH source primitives in source order", () => {
+    const tree = root([
+      mdxAside({ kind: "misconception" }, [para("first")]),
+      mdxCallout({ variant: "misconception" }, [para("second")]),
+      mdxAside({ kind: "misconception" }, [para("third")]),
+    ]);
+
+    const entries = extractMisconceptions(tree as never, "ch");
+    expect(entries).toHaveLength(3);
+    expect(entries.map((e) => e.anchor)).toEqual([
+      "misconception-1",
+      "misconception-2",
+      "misconception-3",
+    ]);
+    expect(entries.map((e) => e.length)).toEqual(["short", "long", "short"]);
+  });
+
+  test("explicit `id` overrides slug(title) for the anchor", () => {
+    const tree = root([
+      mdxCallout(
+        { variant: "misconception", title: "Some title", id: "custom-id" },
+        [para("body")]
+      ),
+    ]);
+
+    const entries = extractMisconceptions(tree as never, "ch");
+    expect(entries[0]?.anchor).toBe("custom-id");
+    expect(entries[0]?.label).toBe("Some title");
+  });
+
+  test("M1 — throws on intra-chapter anchor collision (two Asides with same explicit id)", () => {
+    const tree = root([
+      mdxAside({ kind: "misconception", id: "shared" }, [para("first")]),
+      mdxAside({ kind: "misconception", id: "shared" }, [para("second")]),
+    ]);
+
+    expect(() => extractMisconceptions(tree as never, "ch")).toThrow(
+      /M1 invariant|anchor collision/i
+    );
+  });
+
+  test("M1 — throws on intra-chapter anchor collision across Aside + Callout sharing an id", () => {
+    const tree = root([
+      mdxAside({ kind: "misconception", id: "shared" }, [para("short body")]),
+      mdxCallout({ variant: "misconception", id: "shared" }, [
+        para("long body"),
+      ]),
+    ]);
+
+    expect(() => extractMisconceptions(tree as never, "ch")).toThrow(
+      /M1 invariant|anchor collision/i
+    );
+  });
+
+  test("M3 — empty body emits a console.warn (non-production)", () => {
+    const spy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      const tree = root([
+        mdxAside({ kind: "misconception", title: "Empty one" }, []),
+      ]);
+      const entries = extractMisconceptions(tree as never, "ch");
+      expect(entries).toHaveLength(1);
+      expect(spy).toHaveBeenCalled();
+      const msg = spy.mock.calls.map((c) => String(c[0])).join("\n");
+      expect(msg).toMatch(/M3 warning|empty body/i);
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  test("skips Aside blocks with non-misconception kinds and Callouts with non-misconception variants", () => {
+    const tree = root([
+      mdxAside({ kind: "note", title: "A note" }, [para("not it")]),
+      mdxAside({ kind: "key-insight", title: "Insight" }, [para("not it")]),
+      mdxCallout({ variant: "caution", title: "Caution" }, [para("not it")]),
+      mdxCallout({ variant: "info" }, [para("not it")]),
+      mdxAside({ kind: "misconception", title: "Real" }, [para("real body")]),
+    ]);
+
+    const entries = extractMisconceptions(tree as never, "ch");
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.label).toBe("Real");
+  });
+});
+
+describe("indexAccumulator misconceptions (cross-chapter)", () => {
+  const mc = (
+    overrides: Partial<MisconceptionEntry> = {}
+  ): MisconceptionEntry => ({
+    body: "",
+    chapter: "mc-ch-a",
+    anchor: "default-anchor",
+    length: "short",
+    ...overrides,
+  });
+
+  test("addMisconceptions populates misconceptions collection accessible via asPedagogyIndex", () => {
+    indexAccumulator.clearChapter("mc-pop-a");
+    indexAccumulator.clearChapter("mc-pop-b");
+    indexAccumulator.addMisconceptions([
+      mc({
+        chapter: "mc-pop-a",
+        anchor: "alpha",
+        label: "Alpha",
+        length: "short",
+      }),
+      mc({
+        chapter: "mc-pop-b",
+        anchor: "beta",
+        label: "Beta",
+        length: "long",
+      }),
+    ]);
+
+    const index = indexAccumulator.asPedagogyIndex();
+    const labels = index.misconceptions
+      .filter((m) => m.chapter === "mc-pop-a" || m.chapter === "mc-pop-b")
+      .map((m) => m.label)
+      .sort();
+    expect(labels).toEqual(["Alpha", "Beta"]);
+  });
+
+  test("M2 — throws on cross-chapter explicit-id anchor collision", () => {
+    indexAccumulator.clearChapter("mc-m2-a");
+    indexAccumulator.clearChapter("mc-m2-b");
+    indexAccumulator.addMisconceptions([
+      mc({ chapter: "mc-m2-a", anchor: "shared-explicit-id" }),
+    ]);
+
+    expect(() =>
+      indexAccumulator.addMisconceptions([
+        mc({ chapter: "mc-m2-b", anchor: "shared-explicit-id" }),
+      ])
+    ).toThrow(/M2 invariant/);
+    // Error names BOTH chapter slugs.
+    expect(() =>
+      indexAccumulator.addMisconceptions([
+        mc({ chapter: "mc-m2-b", anchor: "shared-explicit-id" }),
+      ])
+    ).toThrow(/mc-m2-a/);
+    expect(() =>
+      indexAccumulator.addMisconceptions([
+        mc({ chapter: "mc-m2-b", anchor: "shared-explicit-id" }),
+      ])
+    ).toThrow(/mc-m2-b/);
+  });
+
+  test("M2 — auto-anchors ('misconception-N') do NOT trigger cross-chapter collision", () => {
+    indexAccumulator.clearChapter("mc-auto-a");
+    indexAccumulator.clearChapter("mc-auto-b");
+    indexAccumulator.addMisconceptions([
+      mc({ chapter: "mc-auto-a", anchor: "misconception-1" }),
+    ]);
+    expect(() =>
+      indexAccumulator.addMisconceptions([
+        mc({ chapter: "mc-auto-b", anchor: "misconception-1" }),
+      ])
+    ).not.toThrow();
+
+    const index = indexAccumulator.asPedagogyIndex();
+    const shared = index.misconceptions.filter(
+      (m) => m.anchor === "misconception-1"
+    );
+    const chapters = shared.map((m) => m.chapter).sort();
+    expect(chapters).toContain("mc-auto-a");
+    expect(chapters).toContain("mc-auto-b");
+  });
+
+  test("addMisconceptions validates the whole batch BEFORE mutating", () => {
+    indexAccumulator.clearChapter("mc-pre-a");
+    indexAccumulator.clearChapter("mc-pre-b");
+    // Seed.
+    indexAccumulator.addMisconceptions([
+      mc({ chapter: "mc-pre-a", anchor: "seeded-id" }),
+    ]);
+
+    // Batch: entry 1 is a fresh non-colliding misconception; entry 2 collides.
+    expect(() =>
+      indexAccumulator.addMisconceptions([
+        mc({ chapter: "mc-pre-b", anchor: "fresh-id" }),
+        mc({ chapter: "mc-pre-b", anchor: "seeded-id" }),
+      ])
+    ).toThrow(/M2 invariant/);
+
+    const index = indexAccumulator.asPedagogyIndex();
+    expect(
+      index.misconceptions.find(
+        (m) => m.chapter === "mc-pre-b" && m.anchor === "fresh-id"
+      )
+    ).toBeUndefined();
+  });
+
+  test("clearChapter removes misconceptions for the target chapter; other chapters survive", () => {
+    indexAccumulator.clearChapter("mc-clr-a");
+    indexAccumulator.clearChapter("mc-clr-b");
+    indexAccumulator.addMisconceptions([
+      mc({ chapter: "mc-clr-a", anchor: "mc-a-1", label: "A" }),
+      mc({ chapter: "mc-clr-b", anchor: "mc-b-1", label: "B" }),
+    ]);
+
+    indexAccumulator.clearChapter("mc-clr-a");
+
+    const index = indexAccumulator.asPedagogyIndex();
+    expect(
+      index.misconceptions.filter((m) => m.chapter === "mc-clr-a")
+    ).toHaveLength(0);
+    expect(
+      index.misconceptions.find((m) => m.chapter === "mc-clr-b")?.label
+    ).toBe("B");
+  });
+
+  test("asPedagogyIndex returns populated misconceptions (was empty `[]` before Task 7)", () => {
+    indexAccumulator.clearChapter("mc-ap-a");
+    indexAccumulator.addMisconceptions([
+      mc({
+        chapter: "mc-ap-a",
+        anchor: "ap-1",
+        label: "AP One",
+        length: "short",
+      }),
+      mc({
+        chapter: "mc-ap-a",
+        anchor: "ap-2",
+        label: "AP Two",
+        length: "long",
+      }),
+    ]);
+
+    const index = indexAccumulator.asPedagogyIndex();
+    const inCh = index.misconceptions.filter((m) => m.chapter === "mc-ap-a");
+    expect(inCh).toHaveLength(2);
+    expect(inCh.map((m) => m.label).sort()).toEqual(["AP One", "AP Two"]);
   });
 });
 
