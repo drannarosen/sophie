@@ -1,5 +1,5 @@
 ---
-import CourseGlossary from "@sophie/astro/components/CourseGlossary.astro";
+import CourseKeyInsights from "@sophie/astro/components/CourseKeyInsights.astro";
 import ModuleNav from "@sophie/astro/components/ModuleNav.astro";
 import TextbookHead from "@sophie/astro/components/TextbookHead.astro";
 import TextbookLayout from "@sophie/astro/components/TextbookLayout.astro";
@@ -10,11 +10,13 @@ import { figures as figureRegistry } from "../content/figures";
 const figureRegistryArray = Object.values(figureRegistry);
 
 /**
- * `/glossary` — course-wide glossary auto-generated from the
- * pedagogy index (ADR 0038). Reads `definitions` via
- * `virtual:sophie/pedagogy-index` (resolved by @sophie/astro's
- * Vite plugin); alphabetical; each entry back-links to its
- * canonical aside in the source chapter.
+ * `/key-insights` — course-wide key-insights index auto-generated from
+ * the pedagogy index (ADR 0038; PR-C3). Reads `keyInsights` via
+ * `indexAccumulator` inside `<CourseKeyInsights>`; appearance order
+ * only (per design decision #9: untitled key-insights can't
+ * alphabetize); each entry back-links to its source `<Aside
+ * kind="key-insight">` in the source chapter. Mirrors the shape of
+ * `/equations`.
  */
 
 const modules = (await getCollection("modules")).map((m) => m.data);
@@ -30,10 +32,10 @@ const chapters = (await getCollection("chapters")).map((c) => ({
   <head>
     <meta charset='utf-8' />
     <meta name='viewport' content='width=device-width, initial-scale=1' />
-    <title>Glossary</title>
+    <title>Key insights</title>
     <meta
       name='description'
-      content='Course-wide glossary of canonical terms.'
+      content='Course-wide index of key insights.'
     />
     <TextbookHead />
   </head>
@@ -43,7 +45,7 @@ const chapters = (await getCollection("chapters")).map((c) => ({
         <Fragment slot='sidebar'>
           <ModuleNav modules={modules} chapters={chapters} />
         </Fragment>
-        <CourseGlossary heading='Glossary' />
+        <CourseKeyInsights heading='Key insights' />
       </TextbookLayout>
     </SophieChapter>
   </body>

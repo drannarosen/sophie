@@ -73,6 +73,25 @@ describe("<Callout> (static)", () => {
     const results = await axe(container);
     expect(results.violations).toEqual([]);
   });
+
+  it("renders the optional `id` prop on the root DOM element (PR-C3 T12)", () => {
+    // Per PR-C3 decision #8: Callout gains an optional `id?: string`
+    // prop symmetric with Aside.id?. When provided, the value must
+    // land on the root <aside> so hash-anchors target the callout.
+    const { container } = render(
+      <Callout variant='misconception' id='x'>
+        Body content.
+      </Callout>
+    );
+    const root = container.querySelector("aside");
+    expect(root?.id).toBe("x");
+  });
+
+  it("omits the id attribute when no `id` prop is provided", () => {
+    const { container } = render(<Callout>Body.</Callout>);
+    const root = container.querySelector("aside");
+    expect(root?.hasAttribute("id")).toBe(false);
+  });
 });
 
 describe("<InteractiveCallout>", () => {

@@ -1,5 +1,5 @@
 ---
-import CourseGlossary from "@sophie/astro/components/CourseGlossary.astro";
+import CourseMisconceptions from "@sophie/astro/components/CourseMisconceptions.astro";
 import ModuleNav from "@sophie/astro/components/ModuleNav.astro";
 import TextbookHead from "@sophie/astro/components/TextbookHead.astro";
 import TextbookLayout from "@sophie/astro/components/TextbookLayout.astro";
@@ -10,11 +10,14 @@ import { figures as figureRegistry } from "../content/figures";
 const figureRegistryArray = Object.values(figureRegistry);
 
 /**
- * `/glossary` — course-wide glossary auto-generated from the
- * pedagogy index (ADR 0038). Reads `definitions` via
- * `virtual:sophie/pedagogy-index` (resolved by @sophie/astro's
- * Vite plugin); alphabetical; each entry back-links to its
- * canonical aside in the source chapter.
+ * `/misconceptions` — course-wide misconceptions index auto-generated
+ * from the pedagogy index (ADR 0038; PR-C3). Reads `misconceptions`
+ * via `indexAccumulator` inside `<CourseMisconceptions>`; chapter-order
+ * by default (per design decision #9: misconception lookup is
+ * reading-flow-anchored, mirroring `/equations` and `/figures`); each
+ * entry back-links to its source `<Aside kind="misconception">` or
+ * `<Callout variant="misconception">` in the source chapter. Length
+ * discriminator visual class (decision #12) preserved.
  */
 
 const modules = (await getCollection("modules")).map((m) => m.data);
@@ -30,10 +33,10 @@ const chapters = (await getCollection("chapters")).map((c) => ({
   <head>
     <meta charset='utf-8' />
     <meta name='viewport' content='width=device-width, initial-scale=1' />
-    <title>Glossary</title>
+    <title>Common misconceptions</title>
     <meta
       name='description'
-      content='Course-wide glossary of canonical terms.'
+      content='Course-wide index of common misconceptions.'
     />
     <TextbookHead />
   </head>
@@ -43,7 +46,7 @@ const chapters = (await getCollection("chapters")).map((c) => ({
         <Fragment slot='sidebar'>
           <ModuleNav modules={modules} chapters={chapters} />
         </Fragment>
-        <CourseGlossary heading='Glossary' />
+        <CourseMisconceptions heading='Common misconceptions' />
       </TextbookLayout>
     </SophieChapter>
   </body>

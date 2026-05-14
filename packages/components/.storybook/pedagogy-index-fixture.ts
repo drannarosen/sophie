@@ -58,5 +58,44 @@ export const equations = [
 ];
 
 export const keyInsights: ReadonlyArray<unknown> = [];
-export const figures: ReadonlyArray<unknown> = [];
 export const misconceptions: ReadonlyArray<unknown> = [];
+
+// Figure two-tier (PR-C3 decision #3): registry = per-name asset
+// metadata; usages = per-chapter appearances (number, anchor,
+// canonical flag, optional caption override). The FigureRef
+// stories seed both via `__setFigureRegistry` + `__setFigureUsages`.
+export const figureRegistry = [
+  {
+    name: "cosmic-distance-ladder",
+    src: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Cosmic_distance_ladder.jpg/640px-Cosmic_distance_ladder.jpg",
+    alt: "Schematic of the cosmic distance ladder: parallax → standard candles → redshift.",
+    caption:
+      "The cosmic distance ladder — each rung calibrates the next, from parallax out to cosmological redshifts.",
+    credit: "NASA / ESA / A. Feild (STScI)",
+  },
+  {
+    name: "m51-optical-radio",
+    src: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Messier51_sRGB.jpg/640px-Messier51_sRGB.jpg",
+    alt: "Side-by-side optical and radio views of the Whirlpool Galaxy (M51).",
+    caption:
+      "M51 in optical (left) and 21-cm radio (right) — different physics, same galaxy.",
+  },
+];
+
+export const figureUsages = [
+  {
+    name: "cosmic-distance-ladder",
+    chapter: "spoiler-alerts",
+    anchor: "fig-cosmic-distance-ladder",
+    number: 1,
+    canonical: true,
+  },
+  {
+    name: "m51-optical-radio",
+    chapter: "spoiler-alerts",
+    anchor: "fig-m51-optical-radio",
+    number: 2,
+    canonical: true,
+    captionOverride: "Optical (HST) vs. 21-cm radio (VLA).",
+  },
+];

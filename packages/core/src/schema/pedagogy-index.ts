@@ -57,6 +57,9 @@ export type EquationEntry = z.infer<typeof EquationEntrySchema>;
  * PR-C3. Shape locked here.
  */
 export const KeyInsightEntrySchema = z.object({
+  /** Optional human-readable title (from <Aside title>). NEW in PR-C3. */
+  title: z.string().optional(),
+  /** Pre-rendered HTML of the aside body. */
   body: z.string(),
   chapter: Slug,
   anchor: NonEmptyString,
@@ -64,16 +67,48 @@ export const KeyInsightEntrySchema = z.object({
 export type KeyInsightEntry = z.infer<typeof KeyInsightEntrySchema>;
 
 /**
- * A registry-mode figure (`<Figure name="..." />`) — extracted in
- * PR-C3. Shape locked here.
+ * Registry entry for a figure asset (`<Figure name="..." />` registry
+ * mode). The consumer app owns the registry source-of-truth in
+ * `src/content/figures.ts`; the extractor never populates this
+ * collection — TextbookLayout receives it as a prop and forwards it to
+ * the figure-registry SSR setter.
+ *
+ * Per ADR 0001: figure asset data shape lives in `@sophie/core`. The
+ * matching component-runtime types re-export from this module.
  */
-export const FigureEntrySchema = z.object({
+export const FigureRegistryEntrySchema = z.object({
+  /** Canonical figure name (registry key; flat namespace). */
   name: NonEmptyString,
+  /** Image asset URL or local path. */
+  src: NonEmptyString,
+  /** Alt text for accessibility. */
+  alt: NonEmptyString,
+  /** Default caption (used when no per-usage override). */
   caption: z.string().optional(),
+  /** Attribution / credit text. */
+  credit: z.string().optional(),
+});
+export type FigureRegistryEntry = z.infer<typeof FigureRegistryEntrySchema>;
+
+/**
+ * Per-chapter usage record for a registry-mode `<Figure name="...">`.
+ * Multi-chapter figures produce N usage entries; exactly one should be
+ * canonical (default `false`; the extractor sets `true` when the author
+ * passes the `canonical` JSX prop).
+ */
+export const FigureUsageEntrySchema = z.object({
+  /** Registry key — must resolve to a FigureRegistryEntry at SSR merge time. */
+  name: NonEmptyString,
   chapter: Slug,
   anchor: NonEmptyString,
+  /** Per-chapter sequential number, extractor-assigned at appearance order. */
+  number: z.number().int().positive(),
+  /** Exactly one usage per name should be canonical. Default false set by extractor (not by schema); author opts in via `<Figure name="X" canonical />`. */
+  canonical: z.boolean(),
+  /** Optional caption override from `<Figure caption="...">` JSX prop; wins over registry caption. */
+  captionOverride: z.string().optional(),
 });
-export type FigureEntry = z.infer<typeof FigureEntrySchema>;
+export type FigureUsageEntry = z.infer<typeof FigureUsageEntrySchema>;
 
 /**
  * A misconception entry — extracted in PR-C3 from BOTH `<Aside
@@ -81,12 +116,17 @@ export type FigureEntry = z.infer<typeof FigureEntrySchema>;
  * variant="misconception">` (length="long") source components. The
  * length discriminator is the source-component tag (ADR 0038's
  * role-aggregation principle in concrete form).
+ *
+ * Both source primitives expose an optional `title` prop; that prop
+ * surfaces here as the optional `label` field.
  */
 export const MisconceptionEntrySchema = z.object({
   body: z.string(),
   chapter: Slug,
   anchor: NonEmptyString,
+  /** "short" = from <Aside kind="misconception">; "long" = from <Callout variant="misconception">. */
   length: z.enum(["short", "long"]),
+  /** Optional label — from Aside.title OR Callout.title (both source primitives' titles are optional). */
   label: z.string().optional(),
 });
 export type MisconceptionEntry = z.infer<typeof MisconceptionEntrySchema>;
@@ -100,7 +140,10 @@ export const PedagogyIndexSchema = z.object({
   definitions: z.array(DefinitionEntrySchema).readonly(),
   equations: z.array(EquationEntrySchema).readonly(),
   keyInsights: z.array(KeyInsightEntrySchema).readonly(),
-  figures: z.array(FigureEntrySchema).readonly(),
+  /** Consumer-app-owned asset data, forwarded into the index at SSR-merge time. */
+  figureRegistry: z.array(FigureRegistryEntrySchema).readonly(),
+  /** Per-chapter usage records, populated by the extractor (renamed from `figures` in PR-C3). */
+  figureUsages: z.array(FigureUsageEntrySchema).readonly(),
   misconceptions: z.array(MisconceptionEntrySchema).readonly(),
 });
 export type PedagogyIndex = z.infer<typeof PedagogyIndexSchema>;

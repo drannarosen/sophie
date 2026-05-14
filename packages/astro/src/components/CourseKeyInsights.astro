@@ -1,0 +1,74 @@
+---
+import type { KeyInsightEntry } from "@sophie/core/schema";
+import { indexAccumulator } from "../lib/pedagogy-index-extractor";
+
+const { keyInsights } = indexAccumulator.asPedagogyIndex();
+
+/**
+ * `<CourseKeyInsights heading="..." />` — Astro consumer that lists
+ * every key insight across the whole textbook with a back-link to the
+ * source chapter + anchor.
+ *
+ * Sort: appearance-only (PR-C3 design decision #9). Key-insights have
+ * OPTIONAL titles, so alphabetical sort doesn't fit untitled entries —
+ * no `order` prop. Entries are emitted by the extractor in source-walk
+ * order; sort stable by chapter slug, preserving in-chapter appearance
+ * order.
+ *
+ * Diverges from `<CourseEquations>` (which offers `chapter`/
+ * `alphabetical` order modes) because untitled key insights can't
+ * alphabetize. Mirrors `<ChapterKeyInsights>`'s appearance-only sort.
+ *
+ * Bodies are pre-rendered HTML embedded via `set:html`. Pure Astro;
+ * no client JS. Reads the accumulator directly per ADR 0038's
+ * Revisions section.
+ */
+export interface Props {
+  /** Optional heading rendered above the list. */
+  heading?: string;
+}
+
+const { heading } = Astro.props;
+
+// Sort by chapter slug (ascending), preserving the extractor's
+// source-walk order WITHIN each chapter (stable sort guaranteed by
+// ECMAScript spec since 2019).
+const sorted: KeyInsightEntry[] = [...keyInsights].sort((a, b) => {
+  if (a.chapter !== b.chapter) return a.chapter.localeCompare(b.chapter);
+  return 0; // preserve insertion order within chapter
+});
+---
+
+{heading && <h1 class='sophie-course-key-insights__heading'>{heading}</h1>}
+{
+  sorted.length === 0 ? (
+    <p class='sophie-course-key-insights__empty'>
+      No key insights across the textbook yet.
+    </p>
+  ) : (
+    <dl
+      class='sophie-course-key-insights'
+      data-sophie-course-key-insights=''
+    >
+      {sorted.map((entry) => (
+        <Fragment>
+          <dt
+            id={`ki-${entry.anchor}`}
+            class='sophie-course-key-insights__term'
+          >
+            {entry.title ?? "Key insight"}
+          </dt>
+          <dd class='sophie-course-key-insights__body'>
+            <div set:html={entry.body} />
+            <p class='sophie-course-key-insights__backlink'>
+              defined in{" "}
+              <a href={`/chapters/${entry.chapter}#${entry.anchor}`}>
+                <code>{entry.chapter}</code>
+              </a>
+            </p>
+          </dd>
+        </Fragment>
+      ))}
+    </dl>
+  )
+}

@@ -9,6 +9,7 @@ const KINDS: readonly AsideKind[] = [
   "definition",
   "digression",
   "key-insight",
+  "misconception",
 ];
 
 describe("<Aside>", () => {
@@ -32,6 +33,7 @@ describe("<Aside>", () => {
       definition: "Definition",
       digression: "Digression",
       "key-insight": "Key insight",
+      misconception: "Misconception",
     };
     render(<Aside kind={kind}>body</Aside>);
     expect(screen.getByText(labelByKind[kind])).toBeInTheDocument();

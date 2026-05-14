@@ -1,3 +1,6 @@
+// Canonical asset-data shape lives in @sophie/core/schema
+// (per ADR 0001 + PR-C3 decision #11).
+export type { FigureRegistryEntry } from "@sophie/core/schema";
 export type {
   BroadcastChannelLayer,
   BroadcastMessage,
@@ -22,11 +25,7 @@ export type { SelfAssessmentWidget } from "./useSelfAssessment.ts";
 export { useSelfAssessment } from "./useSelfAssessment.ts";
 
 /** FigureRegistry shape used by <Figure registry={...}> and consumers. */
-export interface FigureEntry {
-  name: string;
-  src: string;
-  alt: string;
-  caption?: string;
-  credit?: string;
-}
-export type FigureRegistry = Record<string, FigureEntry>;
+export type FigureRegistry = Record<
+  string,
+  import("@sophie/core/schema").FigureRegistryEntry
+>;

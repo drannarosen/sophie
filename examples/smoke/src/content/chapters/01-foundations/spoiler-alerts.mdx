@@ -15,6 +15,7 @@ import {
   ConfidenceCheck,
   EffortLog,
   EqRef,
+  FigureRef,
   GlossaryTerm,
   InteractiveCallout,
   LearningObjectives,
@@ -487,7 +488,7 @@ The **cosmic distance ladder** works in steps:
 
 Each rung calibrates the next. Parallax calibrates Cepheids; Cepheids calibrate Type Ia supernovae. Uncertainty propagates upward—errors in lower rungs affect all higher rungs.
 
-The ladder's power comes from its self-consistency: multiple methods overlap in certain distance ranges, allowing cross-checks.
+<FigureRef client:load name="cosmic-distance-ladder">This distance ladder</FigureRef> derives its power from self-consistency: multiple methods overlap in certain distance ranges, allowing cross-checks.
 
 <Figure name="standard-candles" />
 </CollapsibleCard>
@@ -872,7 +873,7 @@ Astronomy works because we follow a systematic process:
 5. **Prediction:** The model tells us what *else* should be true.
 6. **Test:** We compare predictions to new observations.
 
-When tests fail, we revise models. That cycle is how science progresses.
+When tests fail, we revise models. That cycle (<FigureRef client:load name="decoder-ring" />) is how science progresses.
 
 <Figure name="answering-big-questions" />
 
@@ -1206,7 +1207,7 @@ Today you saw the spoilers. Now we build the tools to understand them—one infe
 
 ---
 
-<Callout variant="caution" title="Misconception Alert">
+<Callout variant="misconception" title="Misconception Alert">
 **"Astronomy is just looking through telescopes."**
 
 Many imagine astronomers peering through eyepieces all night. Modern astronomy is almost entirely *data analysis*. Telescopes collect photons automatically; astronomers write code to analyze the resulting datasets.

@@ -1,0 +1,140 @@
+---
+import type {
+  FigureRegistryEntry,
+  FigureUsageEntry,
+} from "@sophie/core/schema";
+import { indexAccumulator } from "../lib/pedagogy-index-extractor";
+
+const { figureRegistry, figureUsages } = indexAccumulator.asPedagogyIndex();
+
+/**
+ * `<CourseFigures order="..." heading="..." />` — Astro consumer that
+ * lists every figure across the whole textbook with a back-link to
+ * the canonical chapter.
+ *
+ * Each unique figure NAME appears once. If the same registry name is
+ * used by multiple `<Figure>` calls across chapters, the canonical
+ * usage is preferred (`canonical: true` flag); otherwise the first
+ * build-order usage wins. Per ADR 0038 + PR-C3 decision #3 (two-tier
+ * registry + usage model).
+ *
+ * Sort: chapter-order default (chapter slug + canonical number);
+ * `order="alphabetical"` opt-in sorts by caption-or-name. Mirrors
+ * `<CourseEquations>` per decision #9; diverges from `<CourseGlossary>`
+ * (alphabetical-only) because figure lookup is topic/chapter-anchored
+ * (matches print-textbook "List of Figures" convention).
+ *
+ * Two-tier model (decision #3): `figureUsages` come from the extractor
+ * (chapter MDX walk); `figureRegistry` comes from the consumer app
+ * (passed via TextbookLayout's `figureRegistry` prop, wired in Task 11).
+ * Both feed `indexAccumulator.asPedagogyIndex()`.
+ *
+ * Defensive: if a usage's name is not present in the registry (e.g.
+ * during build before Task 11 wires the registry through), the
+ * missing-figure marker is rendered instead of bombing the build.
+ *
+ * Pure Astro; no client JS.
+ */
+export interface Props {
+  /** Sort strategy. Default chapter-order (slug asc, then number asc). */
+  order?: "chapter" | "alphabetical";
+  /** Optional heading rendered above the list. */
+  heading?: string;
+}
+
+const { order = "chapter", heading } = Astro.props;
+
+// O(1) registry lookup by name. May be empty during PR-C3 build steps
+// before the registry is wired through TextbookLayout (Task 11) —
+// downstream rendering guards on the per-usage `registry &&` check.
+const registryByName = new Map<string, FigureRegistryEntry>(
+  figureRegistry.map((r) => [r.name, r])
+);
+
+// Pick the canonical usage per unique figure name. Priority order:
+//   1. usage with `canonical: true` (decision #3 canonical flag)
+//   2. otherwise the first usage encountered in build order (which is
+//      chapter source-walk order — the extractor preserves this)
+// If both happen to be canonical, the first one wins (consumer-app
+// validation should prevent duplicate canonicals; until then we don't
+// crash).
+const canonicalByName = new Map<string, FigureUsageEntry>();
+for (const usage of figureUsages) {
+  const existing = canonicalByName.get(usage.name);
+  if (!existing) {
+    canonicalByName.set(usage.name, usage);
+    continue;
+  }
+  // Prefer a later canonical over an earlier non-canonical.
+  if (usage.canonical && !existing.canonical) {
+    canonicalByName.set(usage.name, usage);
+    continue;
+  }
+  // Otherwise (existing canonical wins; or neither canonical; or both
+  // canonical) keep the existing first-build-order entry.
+}
+
+const uniqueUsages: FigureUsageEntry[] = Array.from(canonicalByName.values());
+
+const sorted =
+  order === "alphabetical"
+    ? [...uniqueUsages].sort((a, b) => {
+        const aLabel = registryByName.get(a.name)?.caption ?? a.name;
+        const bLabel = registryByName.get(b.name)?.caption ?? b.name;
+        return aLabel.localeCompare(bLabel);
+      })
+    : [...uniqueUsages].sort((a, b) =>
+        a.chapter === b.chapter
+          ? a.number - b.number
+          : a.chapter.localeCompare(b.chapter)
+      );
+---
+
+{heading && <h1 class='sophie-course-figures__heading'>{heading}</h1>}
+{
+  sorted.length === 0 ? (
+    <p class='sophie-course-figures__empty'>
+      No figures across the textbook yet.
+    </p>
+  ) : (
+    <ol class='sophie-course-figures' data-sophie-course-figures=''>
+      {sorted.map((usage) => {
+        const registry = registryByName.get(usage.name);
+        return (
+          <li
+            id={`fig-${usage.anchor}`}
+            class='sophie-course-figures__item'
+          >
+            <span class='sophie-course-figures__number'>
+              Fig. {usage.number}
+            </span>
+            {registry && (
+              <figure class='sophie-course-figures__figure'>
+                <img
+                  src={registry.src}
+                  alt={registry.alt}
+                  class='sophie-course-figures__image'
+                  loading='lazy'
+                />
+                <figcaption class='sophie-course-figures__caption'>
+                  {usage.captionOverride ?? registry.caption ?? registry.name}
+                </figcaption>
+              </figure>
+            )}
+            {!registry && (
+              <span class='sophie-course-figures__missing'>
+                Missing figure: <code>{usage.name}</code>
+              </span>
+            )}
+            <p class='sophie-course-figures__backlink'>
+              in{" "}
+              <a href={`/chapters/${usage.chapter}#${usage.anchor}`}>
+                <code>{usage.chapter}</code>
+              </a>
+            </p>
+          </li>
+        );
+      })}
+    </ol>
+  )
+}

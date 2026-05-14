@@ -9,18 +9,36 @@ export const CalloutVariant = z.enum([
   "caution",
   // In-chapter section markers (Trio 2 expansion, 2026-05-10).
   // Each shipped because the smoke chapter already uses the pattern;
-  // additional pedagogical variants (misconception, prediction,
-  // worked-example, etc.) follow when their consuming components ship.
+  // additional pedagogical variants (prediction, worked-example, etc.)
+  // follow when their consuming components ship.
   "roadmap",
   "summary",
   "key-insight",
+  // PR-C3 (2026-05-14): long-form misconception alert. Per decision
+  // #2, ADDED alongside the existing generic "caution" (NOT a rename).
+  // Pairs with `<Aside kind="misconception">` (short-form) — the
+  // pedagogy index discriminator is component-name + variant/kind.
+  "misconception",
 ]);
 export type CalloutVariant = z.infer<typeof CalloutVariant>;
 
-/** Props for the static `<Callout>` component. */
+/**
+ * Props for the static `<Callout>` component.
+ *
+ *   - `variant` selects the visual + semantic kind (defaults to "info"
+ *     at render time).
+ *   - `title` is shown as a leading bold label when provided;
+ *     `aria-label` falls back to the variant default otherwise.
+ *   - `id` (PR-C3 decision #8) is an optional anchor that lands on
+ *     the root `<aside>` element. Symmetric with `Aside.id?` so
+ *     `<Callout variant="misconception" id="...">` and
+ *     `<Aside kind="misconception" id="...">` both contribute
+ *     stable in-chapter anchors to the pedagogy index.
+ */
 export const CalloutPropsSchema = z.object({
   variant: CalloutVariant.optional(),
   title: z.string().optional(),
+  id: z.string().optional(),
   children: z.custom<ReactNode>(),
 });
 

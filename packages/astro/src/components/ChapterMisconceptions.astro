@@ -1,0 +1,76 @@
+---
+import type { MisconceptionEntry } from "@sophie/core/schema";
+import { indexAccumulator } from "../lib/pedagogy-index-extractor";
+
+const { misconceptions } = indexAccumulator.asPedagogyIndex();
+
+/**
+ * `<ChapterMisconceptions chapter="..." heading="..." />` — Astro
+ * consumer of the build-time pedagogy index (ADR 0038). Renders one
+ * chapter's misconceptions (dual-source: `<Aside kind="misconception">`
+ * → `length: "short"`, `<Callout variant="misconception">` →
+ * `length: "long"`) as a `<dl>`.
+ *
+ * Visual distinction by length (PR-C3 design decision #12): the
+ * length discriminator drives a modifier CSS class on both `<dt>` and
+ * `<dd>` (`--short` vs `--long`) so the consumer-app stylesheet can
+ * render `short` entries inline/compactly and `long` entries as
+ * full-width blocks — matching the source-component visual treatment
+ * (Aside vs Callout).
+ *
+ * Sort: appearance order only (mirrors `<ChapterKeyInsights>` —
+ * misconceptions are reading-flow-anchored; alphabetical doesn't help
+ * since labels are optional and often absent for Aside short-form).
+ *
+ * Default labels per length (when `entry.label` is absent): short →
+ * "Misconception (brief)"; long → "Misconception".
+ *
+ * Bodies are pre-rendered HTML embedded via `set:html`. Pure Astro;
+ * no client JS.
+ */
+export interface Props {
+  /** Chapter slug to filter the index by (e.g. "spoiler-alerts"). */
+  chapter: string;
+  /** Optional heading rendered above the list. */
+  heading?: string;
+}
+
+const { chapter, heading } = Astro.props;
+
+const inChapter: MisconceptionEntry[] = misconceptions.filter(
+  (m) => m.chapter === chapter
+);
+// Appearance-order sort: entries are already in source-walk order; no resort.
+---
+
+{heading && <h2 class='sophie-chapter-misconceptions__heading'>{heading}</h2>}
+{
+  inChapter.length === 0 ? (
+    <p class='sophie-chapter-misconceptions__empty'>
+      No misconceptions in this chapter yet.
+    </p>
+  ) : (
+    <dl
+      class='sophie-chapter-misconceptions'
+      data-sophie-chapter-misconceptions=''
+    >
+      {inChapter.map((entry) => (
+        <Fragment>
+          <dt
+            id={`misc-${entry.anchor}`}
+            class={`sophie-chapter-misconceptions__term sophie-chapter-misconceptions__term--${entry.length}`}
+          >
+            {entry.label ??
+              (entry.length === "short"
+                ? "Misconception (brief)"
+                : "Misconception")}
+          </dt>
+          <dd
+            class={`sophie-chapter-misconceptions__body sophie-chapter-misconceptions__body--${entry.length}`}
+            set:html={entry.body}
+          />
+        </Fragment>
+      ))}
+    </dl>
+  )
+}

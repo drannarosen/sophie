@@ -1,8 +1,16 @@
-import type { EquationEntry } from "@sophie/core/schema";
-import { describe, expect, test } from "vitest";
+import type {
+  EquationEntry,
+  FigureUsageEntry,
+  KeyInsightEntry,
+  MisconceptionEntry,
+} from "@sophie/core/schema";
+import { describe, expect, test, vi } from "vitest";
 import {
   extractDefinitions,
   extractEquations,
+  extractFigures,
+  extractKeyInsights,
+  extractMisconceptions,
   indexAccumulator,
   pedagogyIndexRemarkPlugin,
 } from "./pedagogy-index-extractor.ts";
@@ -753,5 +761,876 @@ describe("indexAccumulator equations (cross-chapter)", () => {
     expect(inChA).toHaveLength(2);
     const slugs = inChA.map((e) => e.slug).sort();
     expect(slugs).toEqual(["alpha", "beta"]);
+  });
+});
+
+describe("extractKeyInsights (pure)", () => {
+  // T21
+  test("returns one KeyInsightEntry for one <Aside kind='key-insight' title='X'>", () => {
+    const tree = root([
+      mdxAside({ kind: "key-insight", title: "Light is a messenger" }, [
+        para("Everything we know about distant objects arrives as light."),
+      ]),
+    ]);
+
+    const entries = extractKeyInsights(tree as never, "spoiler-alerts");
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      title: "Light is a messenger",
+      chapter: "spoiler-alerts",
+      anchor: "light-is-a-messenger",
+    });
+    expect(entries[0]?.body).toContain(
+      "Everything we know about distant objects arrives as light."
+    );
+  });
+
+  // T22
+  test("untitled key-insight gets auto-anchor 'key-insight-1'", () => {
+    const tree = root([
+      mdxAside({ kind: "key-insight" }, [para("An untitled insight body.")]),
+    ]);
+
+    const entries = extractKeyInsights(tree as never, "ch");
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.anchor).toBe("key-insight-1");
+    expect(entries[0]?.title).toBeUndefined();
+  });
+
+  // T23
+  test("throws on intra-chapter anchor collision (two untitled key-insights collide on 'key-insight-1' vs 'key-insight-2'? — instead force same explicit id)", () => {
+    // Two key-insights sharing an explicit `id` collide on the same anchor.
+    const tree = root([
+      mdxAside({ kind: "key-insight", id: "shared-anchor" }, [para("first")]),
+      mdxAside({ kind: "key-insight", id: "shared-anchor" }, [para("second")]),
+    ]);
+
+    expect(() => extractKeyInsights(tree as never, "ch")).toThrow(
+      /anchor collision|duplicate/i
+    );
+  });
+
+  test("skips Aside blocks with non-key-insight kinds", () => {
+    const tree = root([
+      mdxAside({ kind: "note", title: "A note" }, [para("not a key-insight")]),
+      mdxAside({ kind: "definition", title: "Term" }, [para("a definition")]),
+      mdxAside({ kind: "key-insight", title: "Real insight" }, [para("body")]),
+    ]);
+
+    const entries = extractKeyInsights(tree as never, "ch");
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.title).toBe("Real insight");
+  });
+
+  test("explicit `id` overrides slug(title) for the anchor", () => {
+    const tree = root([
+      mdxAside(
+        { kind: "key-insight", title: "Some Title", id: "custom-anchor" },
+        [para("body")]
+      ),
+    ]);
+
+    const entries = extractKeyInsights(tree as never, "ch");
+    expect(entries[0]?.anchor).toBe("custom-anchor");
+    expect(entries[0]?.title).toBe("Some Title");
+  });
+
+  test("auto-numbered anchors increment per-chapter (untitled+untitled → key-insight-1, key-insight-2)", () => {
+    const tree = root([
+      mdxAside({ kind: "key-insight" }, [para("first")]),
+      mdxAside({ kind: "key-insight" }, [para("second")]),
+    ]);
+
+    const entries = extractKeyInsights(tree as never, "ch");
+    expect(entries).toHaveLength(2);
+    expect(entries.map((e) => e.anchor)).toEqual([
+      "key-insight-1",
+      "key-insight-2",
+    ]);
+  });
+});
+
+describe("indexAccumulator key-insights (cross-chapter)", () => {
+  const ki = (overrides: Partial<KeyInsightEntry> = {}): KeyInsightEntry => ({
+    title: "Default",
+    body: "",
+    chapter: "ch-a",
+    anchor: "default-anchor",
+    ...overrides,
+  });
+
+  test("addKeyInsights populates keyInsights collection accessible via asPedagogyIndex", () => {
+    indexAccumulator.clearChapter("ki-ch-a");
+    indexAccumulator.clearChapter("ki-ch-b");
+    indexAccumulator.addKeyInsights([
+      ki({ title: "Alpha", chapter: "ki-ch-a", anchor: "alpha" }),
+      ki({ title: "Beta", chapter: "ki-ch-b", anchor: "beta" }),
+    ]);
+
+    const index = indexAccumulator.asPedagogyIndex();
+    const titles = index.keyInsights
+      .filter((k) => k.chapter === "ki-ch-a" || k.chapter === "ki-ch-b")
+      .map((k) => k.title)
+      .sort();
+    expect(titles).toEqual(["Alpha", "Beta"]);
+  });
+
+  test("clearChapter removes key-insights for the target chapter; other chapters survive", () => {
+    indexAccumulator.clearChapter("ki-clear-a");
+    indexAccumulator.clearChapter("ki-clear-b");
+    indexAccumulator.addKeyInsights([
+      ki({ title: "Insight A", chapter: "ki-clear-a", anchor: "insight-a" }),
+      ki({ title: "Insight B", chapter: "ki-clear-b", anchor: "insight-b" }),
+    ]);
+
+    indexAccumulator.clearChapter("ki-clear-a");
+
+    const index = indexAccumulator.asPedagogyIndex();
+    expect(
+      index.keyInsights.filter((k) => k.chapter === "ki-clear-a")
+    ).toHaveLength(0);
+    expect(
+      index.keyInsights.find((k) => k.chapter === "ki-clear-b")?.title
+    ).toBe("Insight B");
+  });
+
+  test("two chapters can share an auto-anchor (e.g. 'key-insight-1') without collision", () => {
+    indexAccumulator.clearChapter("ki-share-a");
+    indexAccumulator.clearChapter("ki-share-b");
+    indexAccumulator.addKeyInsights([
+      ki({ chapter: "ki-share-a", anchor: "key-insight-1" }),
+    ]);
+    indexAccumulator.addKeyInsights([
+      ki({ chapter: "ki-share-b", anchor: "key-insight-1" }),
+    ]);
+
+    const index = indexAccumulator.asPedagogyIndex();
+    const shared = index.keyInsights.filter(
+      (k) => k.anchor === "key-insight-1"
+    );
+    const chapters = shared.map((k) => k.chapter).sort();
+    expect(chapters).toContain("ki-share-a");
+    expect(chapters).toContain("ki-share-b");
+  });
+});
+
+/**
+ * Figure-test fixture. Supports both string-valued and boolean-presence
+ * (value === null) attributes. The `canonical` JSX prop on `<Figure>`
+ * is a boolean-presence prop — the mdast `mdxJsxAttribute` carries
+ * `value: null` when authored as `<Figure name="X" canonical />`. We
+ * model both shapes here so tests can exercise the canonical-detection
+ * branch authentically.
+ */
+const mdxFigure = (
+  attrs: Record<string, string | null | true>,
+  children: ReadonlyArray<Record<string, unknown>> = []
+) => ({
+  type: "mdxJsxFlowElement",
+  name: "Figure",
+  attributes: Object.entries(attrs).map(([name, value]) => ({
+    type: "mdxJsxAttribute",
+    name,
+    value,
+  })),
+  children,
+});
+
+describe("extractFigures (pure)", () => {
+  // T24
+  test("one <Figure name='X' /> produces one usage entry with number=1, canonical=false, no captionOverride", () => {
+    const tree = root([mdxFigure({ name: "decoder-ring" })]);
+
+    const entries = extractFigures(tree as never, "spoiler-alerts");
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      name: "decoder-ring",
+      chapter: "spoiler-alerts",
+      anchor: "fig-decoder-ring-1",
+      number: 1,
+      canonical: false,
+    });
+    expect(entries[0]?.captionOverride).toBeUndefined();
+  });
+
+  // T25
+  test("three <Figure name='...'> get number 1, 2, 3 in source order", () => {
+    const tree = root([
+      mdxFigure({ name: "alpha" }),
+      mdxFigure({ name: "beta" }),
+      mdxFigure({ name: "gamma" }),
+    ]);
+
+    const entries = extractFigures(tree as never, "ch");
+    expect(entries).toHaveLength(3);
+    expect(entries.map((e) => e.number)).toEqual([1, 2, 3]);
+    expect(entries.map((e) => e.name)).toEqual(["alpha", "beta", "gamma"]);
+    expect(entries.map((e) => e.anchor)).toEqual([
+      "fig-alpha-1",
+      "fig-beta-2",
+      "fig-gamma-3",
+    ]);
+  });
+
+  // T26
+  test("<Figure name='X' canonical /> (boolean-presence prop) produces canonical=true", () => {
+    // Boolean-presence JSX prop: AST value is `null` (no `=` follows).
+    const tree = root([mdxFigure({ name: "decoder-ring", canonical: null })]);
+
+    const entries = extractFigures(tree as never, "ch");
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.canonical).toBe(true);
+  });
+
+  test("<Figure name='X' canonical={true} /> (explicit-true) also produces canonical=true", () => {
+    // Some MDX serializations represent `canonical={true}` with
+    // `value: true` directly. Accept that shape too.
+    const tree = root([mdxFigure({ name: "x", canonical: true })]);
+
+    const entries = extractFigures(tree as never, "ch");
+    expect(entries[0]?.canonical).toBe(true);
+  });
+
+  // T27
+  test("<Figure src='...' /> (inline mode, no name) is NOT extracted", () => {
+    const tree = root([
+      mdxFigure({ src: "/img/hero.png" }),
+      mdxFigure({ src: "/img/illustration.png" }),
+      mdxFigure({ name: "real-figure" }),
+    ]);
+
+    const entries = extractFigures(tree as never, "ch");
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.name).toBe("real-figure");
+    expect(entries[0]?.number).toBe(1); // counter not incremented by skipped inline figures
+  });
+
+  // Extra: explicit caption override
+  test("<Figure name='X' caption='custom' /> produces captionOverride='custom'", () => {
+    const tree = root([
+      mdxFigure({ name: "x", caption: "An overriding caption." }),
+    ]);
+
+    const entries = extractFigures(tree as never, "ch");
+    expect(entries[0]?.captionOverride).toBe("An overriding caption.");
+  });
+
+  test("whitespace-only caption collapses to undefined captionOverride", () => {
+    const tree = root([mdxFigure({ name: "x", caption: "   " })]);
+
+    const entries = extractFigures(tree as never, "ch");
+    expect(entries[0]?.captionOverride).toBeUndefined();
+  });
+
+  test("whitespace-only `name` is treated as inline-mode and skipped", () => {
+    const tree = root([
+      mdxFigure({ name: "   " }),
+      mdxFigure({ name: "real" }),
+    ]);
+
+    const entries = extractFigures(tree as never, "ch");
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.name).toBe("real");
+  });
+
+  test("skips JSX elements that aren't named 'Figure'", () => {
+    const tree = root([
+      {
+        type: "mdxJsxFlowElement",
+        name: "Callout",
+        attributes: [
+          { type: "mdxJsxAttribute", name: "variant", value: "info" },
+        ],
+        children: [],
+      },
+      mdxFigure({ name: "real" }),
+    ]);
+
+    const entries = extractFigures(tree as never, "ch");
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.name).toBe("real");
+  });
+});
+
+describe("indexAccumulator figures (cross-chapter)", () => {
+  const fu = (overrides: Partial<FigureUsageEntry> = {}): FigureUsageEntry => ({
+    name: "decoder-ring",
+    chapter: "ch-a",
+    anchor: "fig-decoder-ring-1",
+    number: 1,
+    canonical: false,
+    ...overrides,
+  });
+
+  // T31
+  test("addFigureUsages throws on F3 (multiple canonical for same name across chapters)", () => {
+    indexAccumulator.clearChapter("fig-a");
+    indexAccumulator.clearChapter("fig-b");
+    indexAccumulator.addFigureUsages([
+      fu({
+        name: "decoder-ring",
+        chapter: "fig-a",
+        anchor: "fig-decoder-ring-1",
+        canonical: true,
+      }),
+    ]);
+
+    expect(() =>
+      indexAccumulator.addFigureUsages([
+        fu({
+          name: "decoder-ring",
+          chapter: "fig-b",
+          anchor: "fig-decoder-ring-1",
+          canonical: true,
+        }),
+      ])
+    ).toThrow(/F3 invariant/);
+    // Error message names BOTH chapter slugs.
+    expect(() =>
+      indexAccumulator.addFigureUsages([
+        fu({
+          name: "decoder-ring",
+          chapter: "fig-b",
+          anchor: "fig-decoder-ring-1",
+          canonical: true,
+        }),
+      ])
+    ).toThrow(/fig-a/);
+    expect(() =>
+      indexAccumulator.addFigureUsages([
+        fu({
+          name: "decoder-ring",
+          chapter: "fig-b",
+          anchor: "fig-decoder-ring-1",
+          canonical: true,
+        }),
+      ])
+    ).toThrow(/fig-b/);
+  });
+
+  test("addFigureUsages detects multiple canonical within a SINGLE batch", () => {
+    indexAccumulator.clearChapter("fig-batch-a");
+    indexAccumulator.clearChapter("fig-batch-b");
+    // Both entries in the same call, both canonical, different chapters.
+    expect(() =>
+      indexAccumulator.addFigureUsages([
+        fu({
+          name: "spectrum",
+          chapter: "fig-batch-a",
+          anchor: "fig-spectrum-1",
+          canonical: true,
+        }),
+        fu({
+          name: "spectrum",
+          chapter: "fig-batch-b",
+          anchor: "fig-spectrum-1",
+          canonical: true,
+        }),
+      ])
+    ).toThrow(/F3 invariant/);
+  });
+
+  test("addFigureUsages allows multi-chapter usages when only ONE is canonical", () => {
+    indexAccumulator.clearChapter("fig-ok-a");
+    indexAccumulator.clearChapter("fig-ok-b");
+    indexAccumulator.addFigureUsages([
+      fu({
+        name: "hr-diagram",
+        chapter: "fig-ok-a",
+        anchor: "fig-hr-diagram-1",
+        canonical: true,
+      }),
+    ]);
+    expect(() =>
+      indexAccumulator.addFigureUsages([
+        fu({
+          name: "hr-diagram",
+          chapter: "fig-ok-b",
+          anchor: "fig-hr-diagram-1",
+          canonical: false,
+        }),
+      ])
+    ).not.toThrow();
+
+    const index = indexAccumulator.asPedagogyIndex();
+    const usages = index.figureUsages.filter((u) => u.name === "hr-diagram");
+    expect(usages).toHaveLength(2);
+    expect(usages.filter((u) => u.canonical)).toHaveLength(1);
+  });
+
+  test("addFigureUsages validates the whole batch BEFORE mutating (canonical-collision in entry 2 leaves entry 1 unwritten)", () => {
+    indexAccumulator.clearChapter("fig-pre-a");
+    indexAccumulator.clearChapter("fig-pre-b");
+    // Seed: chapter "fig-pre-a" has a canonical usage of "x".
+    indexAccumulator.addFigureUsages([
+      fu({
+        name: "x",
+        chapter: "fig-pre-a",
+        anchor: "fig-x-1",
+        canonical: true,
+      }),
+    ]);
+
+    // Batch: entry 1 is a fresh non-colliding usage; entry 2 collides
+    // canonically. The whole batch must throw with entry 1 unwritten.
+    expect(() =>
+      indexAccumulator.addFigureUsages([
+        fu({
+          name: "fresh-fig",
+          chapter: "fig-pre-b",
+          anchor: "fig-fresh-fig-1",
+          canonical: false,
+        }),
+        fu({
+          name: "x",
+          chapter: "fig-pre-b",
+          anchor: "fig-x-1",
+          canonical: true,
+        }),
+      ])
+    ).toThrow(/F3 invariant/);
+
+    const index = indexAccumulator.asPedagogyIndex();
+    expect(
+      index.figureUsages.find((u) => u.name === "fresh-fig")
+    ).toBeUndefined();
+  });
+
+  // T32
+  test("clearChapter removes figureUsages for that chapter; other chapters survive", () => {
+    indexAccumulator.clearChapter("fig-clr-a");
+    indexAccumulator.clearChapter("fig-clr-b");
+    indexAccumulator.addFigureUsages([
+      fu({
+        name: "fig-a",
+        chapter: "fig-clr-a",
+        anchor: "fig-fig-a-1",
+        canonical: false,
+      }),
+      fu({
+        name: "fig-b",
+        chapter: "fig-clr-b",
+        anchor: "fig-fig-b-1",
+        canonical: false,
+      }),
+    ]);
+
+    indexAccumulator.clearChapter("fig-clr-a");
+
+    const index = indexAccumulator.asPedagogyIndex();
+    expect(
+      index.figureUsages.filter((u) => u.chapter === "fig-clr-a")
+    ).toHaveLength(0);
+    expect(
+      index.figureUsages.find((u) => u.chapter === "fig-clr-b")?.name
+    ).toBe("fig-b");
+  });
+
+  test("asPedagogyIndex returns populated figureUsages (was empty `[]` in earlier PRs)", () => {
+    indexAccumulator.clearChapter("fig-ap-a");
+    indexAccumulator.addFigureUsages([
+      fu({
+        name: "fig-1",
+        chapter: "fig-ap-a",
+        anchor: "fig-fig-1-1",
+        canonical: false,
+      }),
+      fu({
+        name: "fig-2",
+        chapter: "fig-ap-a",
+        anchor: "fig-fig-2-2",
+        number: 2,
+        canonical: false,
+      }),
+    ]);
+
+    const index = indexAccumulator.asPedagogyIndex();
+    const inChApA = index.figureUsages.filter((u) => u.chapter === "fig-ap-a");
+    expect(inChApA).toHaveLength(2);
+    expect(inChApA.map((u) => u.name).sort()).toEqual(["fig-1", "fig-2"]);
+  });
+
+  test("asPedagogyIndex leaves figureRegistry as [] (extractor never populates it; SSR merge does)", () => {
+    indexAccumulator.clearChapter("fig-reg-a");
+    indexAccumulator.addFigureUsages([
+      fu({
+        name: "anything",
+        chapter: "fig-reg-a",
+        anchor: "fig-anything-1",
+        canonical: false,
+      }),
+    ]);
+
+    const index = indexAccumulator.asPedagogyIndex();
+    expect(index.figureRegistry).toEqual([]);
+  });
+});
+
+/**
+ * Misconception-test fixture. Misconceptions are extracted from BOTH
+ * `<Aside kind="misconception">` (length="short") via the existing
+ * `mdxAside` factory above, and `<Callout variant="misconception">`
+ * (length="long") via `mdxCallout` below.
+ */
+const mdxCallout = (
+  attrs: Record<string, string>,
+  children: ReadonlyArray<Record<string, unknown>> = []
+) => ({
+  type: "mdxJsxFlowElement",
+  name: "Callout",
+  attributes: Object.entries(attrs).map(([name, value]) => ({
+    type: "mdxJsxAttribute",
+    name,
+    value,
+  })),
+  children,
+});
+
+describe("extractMisconceptions (pure)", () => {
+  // T28
+  test("<Aside kind='misconception'> produces entry with length='short'", () => {
+    const tree = root([
+      mdxAside({ kind: "misconception", title: "Heavier falls faster" }, [
+        para("Galileo's experiment showed otherwise."),
+      ]),
+    ]);
+
+    const entries = extractMisconceptions(tree as never, "spoiler-alerts");
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      chapter: "spoiler-alerts",
+      anchor: "heavier-falls-faster",
+      length: "short",
+      label: "Heavier falls faster",
+    });
+    expect(entries[0]?.body).toContain(
+      "Galileo's experiment showed otherwise."
+    );
+  });
+
+  // T29
+  test("<Callout variant='misconception'> produces entry with length='long'", () => {
+    const tree = root([
+      mdxCallout({ variant: "misconception", title: "Seasons from distance" }, [
+        para(
+          "Earth's tilt — not its distance from the Sun — drives the seasons."
+        ),
+      ]),
+    ]);
+
+    const entries = extractMisconceptions(tree as never, "spoiler-alerts");
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      chapter: "spoiler-alerts",
+      anchor: "seasons-from-distance",
+      length: "long",
+      label: "Seasons from distance",
+    });
+    expect(entries[0]?.body).toContain("Earth's tilt");
+  });
+
+  // T30
+  test("BOTH source primitives in the same chapter — each gets its own entry, no collision", () => {
+    const tree = root([
+      mdxAside({ kind: "misconception", title: "Short one" }, [
+        para("short body"),
+      ]),
+      mdxCallout({ variant: "misconception", title: "Long one" }, [
+        para("long body"),
+      ]),
+    ]);
+
+    const entries = extractMisconceptions(tree as never, "ch");
+    expect(entries).toHaveLength(2);
+    expect(entries[0]).toMatchObject({
+      anchor: "short-one",
+      length: "short",
+    });
+    expect(entries[1]).toMatchObject({
+      anchor: "long-one",
+      length: "long",
+    });
+  });
+
+  test("untitled misconception gets auto-anchor 'misconception-1'", () => {
+    const tree = root([
+      mdxAside({ kind: "misconception" }, [para("anonymous misconception")]),
+    ]);
+
+    const entries = extractMisconceptions(tree as never, "ch");
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.anchor).toBe("misconception-1");
+    expect(entries[0]?.label).toBeUndefined();
+    expect(entries[0]?.length).toBe("short");
+  });
+
+  test("counter increments across BOTH source primitives in source order", () => {
+    const tree = root([
+      mdxAside({ kind: "misconception" }, [para("first")]),
+      mdxCallout({ variant: "misconception" }, [para("second")]),
+      mdxAside({ kind: "misconception" }, [para("third")]),
+    ]);
+
+    const entries = extractMisconceptions(tree as never, "ch");
+    expect(entries).toHaveLength(3);
+    expect(entries.map((e) => e.anchor)).toEqual([
+      "misconception-1",
+      "misconception-2",
+      "misconception-3",
+    ]);
+    expect(entries.map((e) => e.length)).toEqual(["short", "long", "short"]);
+  });
+
+  test("explicit `id` overrides slug(title) for the anchor", () => {
+    const tree = root([
+      mdxCallout(
+        { variant: "misconception", title: "Some title", id: "custom-id" },
+        [para("body")]
+      ),
+    ]);
+
+    const entries = extractMisconceptions(tree as never, "ch");
+    expect(entries[0]?.anchor).toBe("custom-id");
+    expect(entries[0]?.label).toBe("Some title");
+  });
+
+  test("M1 — throws on intra-chapter anchor collision (two Asides with same explicit id)", () => {
+    const tree = root([
+      mdxAside({ kind: "misconception", id: "shared" }, [para("first")]),
+      mdxAside({ kind: "misconception", id: "shared" }, [para("second")]),
+    ]);
+
+    expect(() => extractMisconceptions(tree as never, "ch")).toThrow(
+      /M1 invariant|anchor collision/i
+    );
+  });
+
+  test("M1 — throws on intra-chapter anchor collision across Aside + Callout sharing an id", () => {
+    const tree = root([
+      mdxAside({ kind: "misconception", id: "shared" }, [para("short body")]),
+      mdxCallout({ variant: "misconception", id: "shared" }, [
+        para("long body"),
+      ]),
+    ]);
+
+    expect(() => extractMisconceptions(tree as never, "ch")).toThrow(
+      /M1 invariant|anchor collision/i
+    );
+  });
+
+  test("M3 — empty body emits a console.warn (non-production)", () => {
+    const spy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      const tree = root([
+        mdxAside({ kind: "misconception", title: "Empty one" }, []),
+      ]);
+      const entries = extractMisconceptions(tree as never, "ch");
+      expect(entries).toHaveLength(1);
+      expect(spy).toHaveBeenCalled();
+      const msg = spy.mock.calls.map((c) => String(c[0])).join("\n");
+      expect(msg).toMatch(/M3 warning|empty body/i);
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  test("skips Aside blocks with non-misconception kinds and Callouts with non-misconception variants", () => {
+    const tree = root([
+      mdxAside({ kind: "note", title: "A note" }, [para("not it")]),
+      mdxAside({ kind: "key-insight", title: "Insight" }, [para("not it")]),
+      mdxCallout({ variant: "caution", title: "Caution" }, [para("not it")]),
+      mdxCallout({ variant: "info" }, [para("not it")]),
+      mdxAside({ kind: "misconception", title: "Real" }, [para("real body")]),
+    ]);
+
+    const entries = extractMisconceptions(tree as never, "ch");
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.label).toBe("Real");
+  });
+});
+
+describe("indexAccumulator misconceptions (cross-chapter)", () => {
+  const mc = (
+    overrides: Partial<MisconceptionEntry> = {}
+  ): MisconceptionEntry => ({
+    body: "",
+    chapter: "mc-ch-a",
+    anchor: "default-anchor",
+    length: "short",
+    ...overrides,
+  });
+
+  test("addMisconceptions populates misconceptions collection accessible via asPedagogyIndex", () => {
+    indexAccumulator.clearChapter("mc-pop-a");
+    indexAccumulator.clearChapter("mc-pop-b");
+    indexAccumulator.addMisconceptions([
+      mc({
+        chapter: "mc-pop-a",
+        anchor: "alpha",
+        label: "Alpha",
+        length: "short",
+      }),
+      mc({
+        chapter: "mc-pop-b",
+        anchor: "beta",
+        label: "Beta",
+        length: "long",
+      }),
+    ]);
+
+    const index = indexAccumulator.asPedagogyIndex();
+    const labels = index.misconceptions
+      .filter((m) => m.chapter === "mc-pop-a" || m.chapter === "mc-pop-b")
+      .map((m) => m.label)
+      .sort();
+    expect(labels).toEqual(["Alpha", "Beta"]);
+  });
+
+  test("M2 — throws on cross-chapter explicit-id anchor collision", () => {
+    indexAccumulator.clearChapter("mc-m2-a");
+    indexAccumulator.clearChapter("mc-m2-b");
+    indexAccumulator.addMisconceptions([
+      mc({ chapter: "mc-m2-a", anchor: "shared-explicit-id" }),
+    ]);
+
+    expect(() =>
+      indexAccumulator.addMisconceptions([
+        mc({ chapter: "mc-m2-b", anchor: "shared-explicit-id" }),
+      ])
+    ).toThrow(/M2 invariant/);
+    // Error names BOTH chapter slugs.
+    expect(() =>
+      indexAccumulator.addMisconceptions([
+        mc({ chapter: "mc-m2-b", anchor: "shared-explicit-id" }),
+      ])
+    ).toThrow(/mc-m2-a/);
+    expect(() =>
+      indexAccumulator.addMisconceptions([
+        mc({ chapter: "mc-m2-b", anchor: "shared-explicit-id" }),
+      ])
+    ).toThrow(/mc-m2-b/);
+  });
+
+  test("M2 — auto-anchors ('misconception-N') do NOT trigger cross-chapter collision", () => {
+    indexAccumulator.clearChapter("mc-auto-a");
+    indexAccumulator.clearChapter("mc-auto-b");
+    indexAccumulator.addMisconceptions([
+      mc({ chapter: "mc-auto-a", anchor: "misconception-1" }),
+    ]);
+    expect(() =>
+      indexAccumulator.addMisconceptions([
+        mc({ chapter: "mc-auto-b", anchor: "misconception-1" }),
+      ])
+    ).not.toThrow();
+
+    const index = indexAccumulator.asPedagogyIndex();
+    const shared = index.misconceptions.filter(
+      (m) => m.anchor === "misconception-1"
+    );
+    const chapters = shared.map((m) => m.chapter).sort();
+    expect(chapters).toContain("mc-auto-a");
+    expect(chapters).toContain("mc-auto-b");
+  });
+
+  test("addMisconceptions validates the whole batch BEFORE mutating", () => {
+    indexAccumulator.clearChapter("mc-pre-a");
+    indexAccumulator.clearChapter("mc-pre-b");
+    // Seed.
+    indexAccumulator.addMisconceptions([
+      mc({ chapter: "mc-pre-a", anchor: "seeded-id" }),
+    ]);
+
+    // Batch: entry 1 is a fresh non-colliding misconception; entry 2 collides.
+    expect(() =>
+      indexAccumulator.addMisconceptions([
+        mc({ chapter: "mc-pre-b", anchor: "fresh-id" }),
+        mc({ chapter: "mc-pre-b", anchor: "seeded-id" }),
+      ])
+    ).toThrow(/M2 invariant/);
+
+    const index = indexAccumulator.asPedagogyIndex();
+    expect(
+      index.misconceptions.find(
+        (m) => m.chapter === "mc-pre-b" && m.anchor === "fresh-id"
+      )
+    ).toBeUndefined();
+  });
+
+  test("clearChapter removes misconceptions for the target chapter; other chapters survive", () => {
+    indexAccumulator.clearChapter("mc-clr-a");
+    indexAccumulator.clearChapter("mc-clr-b");
+    indexAccumulator.addMisconceptions([
+      mc({ chapter: "mc-clr-a", anchor: "mc-a-1", label: "A" }),
+      mc({ chapter: "mc-clr-b", anchor: "mc-b-1", label: "B" }),
+    ]);
+
+    indexAccumulator.clearChapter("mc-clr-a");
+
+    const index = indexAccumulator.asPedagogyIndex();
+    expect(
+      index.misconceptions.filter((m) => m.chapter === "mc-clr-a")
+    ).toHaveLength(0);
+    expect(
+      index.misconceptions.find((m) => m.chapter === "mc-clr-b")?.label
+    ).toBe("B");
+  });
+
+  test("asPedagogyIndex returns populated misconceptions (was empty `[]` before Task 7)", () => {
+    indexAccumulator.clearChapter("mc-ap-a");
+    indexAccumulator.addMisconceptions([
+      mc({
+        chapter: "mc-ap-a",
+        anchor: "ap-1",
+        label: "AP One",
+        length: "short",
+      }),
+      mc({
+        chapter: "mc-ap-a",
+        anchor: "ap-2",
+        label: "AP Two",
+        length: "long",
+      }),
+    ]);
+
+    const index = indexAccumulator.asPedagogyIndex();
+    const inCh = index.misconceptions.filter((m) => m.chapter === "mc-ap-a");
+    expect(inCh).toHaveLength(2);
+    expect(inCh.map((m) => m.label).sort()).toEqual(["AP One", "AP Two"]);
+  });
+});
+
+describe("pedagogyIndexRemarkPlugin (figures)", () => {
+  test("populates figureUsages for the parsed chapter", () => {
+    indexAccumulator.clearChapter("fig-plugin");
+    const plugin = pedagogyIndexRemarkPlugin();
+    // Use figure names unique to this test to avoid collision with
+    // leftover canonical entries from F3 tests above (shared module
+    // state across describe blocks).
+    const tree = root([
+      mdxFigure({ name: "plugin-fig-canonical", canonical: null }),
+      mdxFigure({ name: "plugin-fig-plain" }),
+    ]);
+
+    plugin(tree as never, {
+      path: "/repo/src/content/chapters/fig-plugin.mdx",
+    });
+
+    const index = indexAccumulator.asPedagogyIndex();
+    const inCh = index.figureUsages.filter((u) => u.chapter === "fig-plugin");
+    expect(inCh).toHaveLength(2);
+    expect(inCh.map((u) => u.name).sort()).toEqual([
+      "plugin-fig-canonical",
+      "plugin-fig-plain",
+    ]);
+    expect(inCh.find((u) => u.name === "plugin-fig-canonical")?.canonical).toBe(
+      true
+    );
+    expect(inCh.find((u) => u.name === "plugin-fig-plain")?.canonical).toBe(
+      false
+    );
   });
 });

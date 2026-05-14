@@ -2,7 +2,8 @@ import { describe, expect, test } from "vitest";
 import {
   DefinitionEntrySchema,
   EquationEntrySchema,
-  FigureEntrySchema,
+  FigureRegistryEntrySchema,
+  FigureUsageEntrySchema,
   KeyInsightEntrySchema,
   MisconceptionEntrySchema,
   PedagogyIndexSchema,
@@ -85,8 +86,21 @@ describe("EquationEntrySchema", () => {
   });
 });
 
-describe("future-PR entry schemas (stub-tested in PR-C1)", () => {
-  test("KeyInsightEntrySchema accepts a minimal valid entry", () => {
+describe("KeyInsightEntrySchema", () => {
+  // T1
+  test("accepts a valid entry with title", () => {
+    expect(
+      KeyInsightEntrySchema.safeParse({
+        title: "Color is encoded physics",
+        body: "<p>Color is encoded physics.</p>",
+        chapter: "spoiler-alerts",
+        anchor: "color-physics",
+      }).success
+    ).toBe(true);
+  });
+
+  // T2
+  test("accepts a valid entry without title (title optional)", () => {
     expect(
       KeyInsightEntrySchema.safeParse({
         body: "<p>Color is encoded physics.</p>",
@@ -95,18 +109,57 @@ describe("future-PR entry schemas (stub-tested in PR-C1)", () => {
       }).success
     ).toBe(true);
   });
+});
 
-  test("FigureEntrySchema accepts a minimal valid entry", () => {
+describe("FigureRegistryEntrySchema", () => {
+  // T3
+  test("accepts a valid registry entry (name, src, alt)", () => {
     expect(
-      FigureEntrySchema.safeParse({
+      FigureRegistryEntrySchema.safeParse({
         name: "cosmic-distance-ladder",
-        chapter: "spoiler-alerts",
-        anchor: "fig-ladder",
+        src: "/figures/ladder.png",
+        alt: "Cosmic distance ladder schematic",
       }).success
     ).toBe(true);
   });
 
-  test("MisconceptionEntrySchema accepts both length discriminators", () => {
+  // T4
+  test("rejects a registry entry with empty src (NonEmptyString)", () => {
+    expect(
+      FigureRegistryEntrySchema.safeParse({
+        name: "cosmic-distance-ladder",
+        src: "",
+        alt: "Cosmic distance ladder schematic",
+      }).success
+    ).toBe(false);
+  });
+});
+
+describe("FigureUsageEntrySchema", () => {
+  const validUsage = {
+    name: "cosmic-distance-ladder",
+    chapter: "spoiler-alerts",
+    anchor: "fig-cosmic-distance-ladder-1",
+    number: 1,
+    canonical: false,
+  };
+
+  // T5
+  test("accepts a valid usage entry", () => {
+    expect(FigureUsageEntrySchema.safeParse(validUsage).success).toBe(true);
+  });
+
+  // T6
+  test("rejects a usage entry with number: 0 (positive() required)", () => {
+    expect(
+      FigureUsageEntrySchema.safeParse({ ...validUsage, number: 0 }).success
+    ).toBe(false);
+  });
+});
+
+describe("MisconceptionEntrySchema", () => {
+  // T7
+  test("accepts a valid short-length entry", () => {
     expect(
       MisconceptionEntrySchema.safeParse({
         body: "<p>Stars don't twinkle in space.</p>",
@@ -115,6 +168,9 @@ describe("future-PR entry schemas (stub-tested in PR-C1)", () => {
         length: "short",
       }).success
     ).toBe(true);
+  });
+
+  test("accepts a valid long-length entry", () => {
     expect(
       MisconceptionEntrySchema.safeParse({
         body: "<p>Long-form misconception treatment...</p>",
@@ -125,7 +181,7 @@ describe("future-PR entry schemas (stub-tested in PR-C1)", () => {
     ).toBe(true);
   });
 
-  test("MisconceptionEntrySchema rejects invalid length value", () => {
+  test("rejects invalid length value", () => {
     expect(
       MisconceptionEntrySchema.safeParse({
         body: "<p>x</p>",
@@ -144,7 +200,8 @@ describe("PedagogyIndexSchema", () => {
         definitions: [],
         equations: [],
         keyInsights: [],
-        figures: [],
+        figureRegistry: [],
+        figureUsages: [],
         misconceptions: [],
       }).success
     ).toBe(true);
@@ -156,7 +213,8 @@ describe("PedagogyIndexSchema", () => {
         definitions: [validDefinition],
         equations: [],
         keyInsights: [],
-        figures: [],
+        figureRegistry: [],
+        figureUsages: [],
         misconceptions: [],
       }).success
     ).toBe(true);
@@ -168,7 +226,8 @@ describe("PedagogyIndexSchema", () => {
         definitions: [],
         equations: [],
         keyInsights: [],
-        figures: [],
+        figureRegistry: [],
+        figureUsages: [],
         // misconceptions missing
       }).success
     ).toBe(false);

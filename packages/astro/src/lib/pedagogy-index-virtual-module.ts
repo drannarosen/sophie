@@ -61,7 +61,8 @@ export function pedagogyIndexVirtualModule() {
         `export const definitions = ${JSON.stringify(index.definitions)};`,
         `export const equations = ${JSON.stringify(index.equations)};`,
         `export const keyInsights = ${JSON.stringify(index.keyInsights)};`,
-        `export const figures = ${JSON.stringify(index.figures)};`,
+        `export const figureRegistry = ${JSON.stringify(index.figureRegistry)};`,
+        `export const figureUsages = ${JSON.stringify(index.figureUsages)};`,
         `export const misconceptions = ${JSON.stringify(index.misconceptions)};`,
       ].join("\n");
     },
