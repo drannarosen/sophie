@@ -1,8 +1,9 @@
-import type { EquationEntry } from "@sophie/core/schema";
+import type { EquationEntry, KeyInsightEntry } from "@sophie/core/schema";
 import { describe, expect, test } from "vitest";
 import {
   extractDefinitions,
   extractEquations,
+  extractKeyInsights,
   indexAccumulator,
   pedagogyIndexRemarkPlugin,
 } from "./pedagogy-index-extractor.ts";
@@ -753,5 +754,156 @@ describe("indexAccumulator equations (cross-chapter)", () => {
     expect(inChA).toHaveLength(2);
     const slugs = inChA.map((e) => e.slug).sort();
     expect(slugs).toEqual(["alpha", "beta"]);
+  });
+});
+
+describe("extractKeyInsights (pure)", () => {
+  // T21
+  test("returns one KeyInsightEntry for one <Aside kind='key-insight' title='X'>", () => {
+    const tree = root([
+      mdxAside({ kind: "key-insight", title: "Light is a messenger" }, [
+        para("Everything we know about distant objects arrives as light."),
+      ]),
+    ]);
+
+    const entries = extractKeyInsights(tree as never, "spoiler-alerts");
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      title: "Light is a messenger",
+      chapter: "spoiler-alerts",
+      anchor: "light-is-a-messenger",
+    });
+    expect(entries[0]?.body).toContain(
+      "Everything we know about distant objects arrives as light."
+    );
+  });
+
+  // T22
+  test("untitled key-insight gets auto-anchor 'key-insight-1'", () => {
+    const tree = root([
+      mdxAside({ kind: "key-insight" }, [para("An untitled insight body.")]),
+    ]);
+
+    const entries = extractKeyInsights(tree as never, "ch");
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.anchor).toBe("key-insight-1");
+    expect(entries[0]?.title).toBeUndefined();
+  });
+
+  // T23
+  test("throws on intra-chapter anchor collision (two untitled key-insights collide on 'key-insight-1' vs 'key-insight-2'? — instead force same explicit id)", () => {
+    // Two key-insights sharing an explicit `id` collide on the same anchor.
+    const tree = root([
+      mdxAside({ kind: "key-insight", id: "shared-anchor" }, [para("first")]),
+      mdxAside({ kind: "key-insight", id: "shared-anchor" }, [para("second")]),
+    ]);
+
+    expect(() => extractKeyInsights(tree as never, "ch")).toThrow(
+      /anchor collision|duplicate/i
+    );
+  });
+
+  test("skips Aside blocks with non-key-insight kinds", () => {
+    const tree = root([
+      mdxAside({ kind: "note", title: "A note" }, [para("not a key-insight")]),
+      mdxAside({ kind: "definition", title: "Term" }, [para("a definition")]),
+      mdxAside({ kind: "key-insight", title: "Real insight" }, [para("body")]),
+    ]);
+
+    const entries = extractKeyInsights(tree as never, "ch");
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.title).toBe("Real insight");
+  });
+
+  test("explicit `id` overrides slug(title) for the anchor", () => {
+    const tree = root([
+      mdxAside(
+        { kind: "key-insight", title: "Some Title", id: "custom-anchor" },
+        [para("body")]
+      ),
+    ]);
+
+    const entries = extractKeyInsights(tree as never, "ch");
+    expect(entries[0]?.anchor).toBe("custom-anchor");
+    expect(entries[0]?.title).toBe("Some Title");
+  });
+
+  test("auto-numbered anchors increment per-chapter (untitled+untitled → key-insight-1, key-insight-2)", () => {
+    const tree = root([
+      mdxAside({ kind: "key-insight" }, [para("first")]),
+      mdxAside({ kind: "key-insight" }, [para("second")]),
+    ]);
+
+    const entries = extractKeyInsights(tree as never, "ch");
+    expect(entries).toHaveLength(2);
+    expect(entries.map((e) => e.anchor)).toEqual([
+      "key-insight-1",
+      "key-insight-2",
+    ]);
+  });
+});
+
+describe("indexAccumulator key-insights (cross-chapter)", () => {
+  const ki = (overrides: Partial<KeyInsightEntry> = {}): KeyInsightEntry => ({
+    title: "Default",
+    body: "",
+    chapter: "ch-a",
+    anchor: "default-anchor",
+    ...overrides,
+  });
+
+  test("addKeyInsights populates keyInsights collection accessible via asPedagogyIndex", () => {
+    indexAccumulator.clearChapter("ki-ch-a");
+    indexAccumulator.clearChapter("ki-ch-b");
+    indexAccumulator.addKeyInsights([
+      ki({ title: "Alpha", chapter: "ki-ch-a", anchor: "alpha" }),
+      ki({ title: "Beta", chapter: "ki-ch-b", anchor: "beta" }),
+    ]);
+
+    const index = indexAccumulator.asPedagogyIndex();
+    const titles = index.keyInsights
+      .filter((k) => k.chapter === "ki-ch-a" || k.chapter === "ki-ch-b")
+      .map((k) => k.title)
+      .sort();
+    expect(titles).toEqual(["Alpha", "Beta"]);
+  });
+
+  test("clearChapter removes key-insights for the target chapter; other chapters survive", () => {
+    indexAccumulator.clearChapter("ki-clear-a");
+    indexAccumulator.clearChapter("ki-clear-b");
+    indexAccumulator.addKeyInsights([
+      ki({ title: "Insight A", chapter: "ki-clear-a", anchor: "insight-a" }),
+      ki({ title: "Insight B", chapter: "ki-clear-b", anchor: "insight-b" }),
+    ]);
+
+    indexAccumulator.clearChapter("ki-clear-a");
+
+    const index = indexAccumulator.asPedagogyIndex();
+    expect(
+      index.keyInsights.filter((k) => k.chapter === "ki-clear-a")
+    ).toHaveLength(0);
+    expect(
+      index.keyInsights.find((k) => k.chapter === "ki-clear-b")?.title
+    ).toBe("Insight B");
+  });
+
+  test("two chapters can share an auto-anchor (e.g. 'key-insight-1') without collision", () => {
+    indexAccumulator.clearChapter("ki-share-a");
+    indexAccumulator.clearChapter("ki-share-b");
+    indexAccumulator.addKeyInsights([
+      ki({ chapter: "ki-share-a", anchor: "key-insight-1" }),
+    ]);
+    indexAccumulator.addKeyInsights([
+      ki({ chapter: "ki-share-b", anchor: "key-insight-1" }),
+    ]);
+
+    const index = indexAccumulator.asPedagogyIndex();
+    const shared = index.keyInsights.filter(
+      (k) => k.anchor === "key-insight-1"
+    );
+    const chapters = shared.map((k) => k.chapter).sort();
+    expect(chapters).toContain("ki-share-a");
+    expect(chapters).toContain("ki-share-b");
   });
 });
