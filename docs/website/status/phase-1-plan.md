@@ -179,7 +179,7 @@ of the [ADR 0004 contract](../decisions/0004-component-contract-revisions.md)
 |---|---|---|---|
 | **2 (closed)** | `<LearningObjectives>` ✅ · Callout variant expansion (roadmap/summary/key-insight) ✅ · `<Predict>` ✅ | chapter primitive · variant-extension · persistence-bearing | `callouts.scss` variants; Predict no SCSS port (new design) |
 | **2.5 (closed)** | Self-assessment family ✅: `<ConfidenceCheck>` · `<ComprehensionGate>` · `<EffortLog>` · `<Reflection>` | self-assessment widgets, all persistence-bearing | Shared `useSelfAssessment` hook prefixes IDB keys with `self-assessment:${widget}:` for Phase 5 dashboard queries |
-| **3** | `<CollapsibleCard>` (owns "deep-dive") · `<KeyEquation>` · `<MiniGlossary>` | structural · content · structural | `collapsible-cards.scss`, `glossary.scss` |
+| **3** | `<CollapsibleCard>` (owns "deep-dive") · `<KeyEquation>` · ~~`<MiniGlossary>`~~ → see revision note below | structural · content · structural | `collapsible-cards.scss`, `glossary.scss` |
 | **4** | `<PullQuote>` · `<Equation>` (numbered/captioned KaTeX wrapper) · further Callout variants (`misconception`, `checkpoint`, `prediction`-styled wrapper for `<Predict>`) | content · content · variant-extension | Patterns from `callouts.scss` |
 
 Each component PR carries: contract-conformance test, axe-core
@@ -188,6 +188,20 @@ Storybook story (from the third component in Trio 2 onward).
 Trio composition is fixed; ordering within a trio is flexible.
 Trio 1 in this numbering is the Phase 0 trio
 (Callout, Figure, InteractiveCallout) — already shipped.
+
+:::{important}
+**Revision note (2026-05-14):** `<MiniGlossary>` in Trio 3 was
+superseded by the pedagogy-index pattern before Trio 3 shipped.
+The Bucket C round-2 brainstorm
+([overview](../../plans/2026-05-13-bucket-c-pedagogy-index-overview.md))
+deprecated MiniGlossary in favor of `<Aside kind="definition">` as
+the canonical source, with `<ChapterGlossary>` + `<CourseGlossary>` +
+`<GlossaryTerm>` as the three consumers reading from the build-time
+index. PR-C1 shipped the replacement;
+[ADR 0038](../decisions/0038-pedagogy-index-pattern.md) codifies the
+pattern. Trio 3 therefore shipped as `<CollapsibleCard>` +
+`<KeyEquation>` only; the glossary-shaped slot moved into Bucket C.
+:::
 
 **Why Predict in the next trio:** it's the only persistence-bearing
 component in the 9, so it exercises ADR 0027 a second time.
