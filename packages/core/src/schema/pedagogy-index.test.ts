@@ -46,19 +46,40 @@ describe("DefinitionEntrySchema", () => {
   });
 });
 
-describe("future-PR entry schemas (stub-tested in PR-C1)", () => {
-  test("EquationEntrySchema accepts a minimal valid entry", () => {
-    expect(
-      EquationEntrySchema.safeParse({
-        slug: "snell-law",
-        label: "Snell's law",
-        body: "<span class='katex'>...</span>",
-        chapter: "optics",
-        anchor: "eq-snell",
-      }).success
-    ).toBe(true);
+const validEquation = {
+  slug: "wiens-law",
+  title: "Wien's Law",
+  number: 1,
+  tex: "\\lambda_{\\text{peak}} = b T^{-1}",
+  body: "<p>where b is...</p>",
+  chapter: "spoiler-alerts",
+  anchor: "wiens-law",
+};
+
+describe("EquationEntrySchema", () => {
+  test("accepts a valid entry with all required fields", () => {
+    expect(EquationEntrySchema.safeParse(validEquation).success).toBe(true);
   });
 
+  test("rejects an entry missing number (now required)", () => {
+    const { number: _number, ...rest } = validEquation;
+    expect(EquationEntrySchema.safeParse(rest).success).toBe(false);
+  });
+
+  test("rejects an entry with empty tex", () => {
+    expect(
+      EquationEntrySchema.safeParse({ ...validEquation, tex: "" }).success
+    ).toBe(false);
+  });
+
+  test("rejects an entry with empty title", () => {
+    expect(
+      EquationEntrySchema.safeParse({ ...validEquation, title: "" }).success
+    ).toBe(false);
+  });
+});
+
+describe("future-PR entry schemas (stub-tested in PR-C1)", () => {
   test("KeyInsightEntrySchema accepts a minimal valid entry", () => {
     expect(
       KeyInsightEntrySchema.safeParse({

@@ -35,11 +35,19 @@ export type DefinitionEntry = z.infer<typeof DefinitionEntrySchema>;
  * the extractor is implemented in PR-C2.
  */
 export const EquationEntrySchema = z.object({
+  /** Canonical slug = KeyEquation.id prop. Author-explicit, no auto-derivation. */
   slug: Slug,
-  label: NonEmptyString,
-  number: z.number().int().positive().optional(),
+  /** Human-readable name = KeyEquation.title prop. */
+  title: NonEmptyString,
+  /** Per-chapter sequential number, assigned by the extractor at appearance order. REQUIRED. */
+  number: z.number().int().positive(),
+  /** Raw TeX source of the FIRST $$...$$ block in the KeyEquation body. Powers EqRef KaTeX popover, LaTeX export, symbol search, AI dim-analysis. */
+  tex: NonEmptyString,
+  /** Pre-rendered HTML of the full KeyEquation body (matches DefinitionEntry.body shape). Consumers embed via `set:html`. */
   body: z.string(),
+  /** Chapter slug containing the source KeyEquation. */
   chapter: Slug,
+  /** DOM id on the source <section>; back-link target. Invariant: anchor === slug for equations. */
   anchor: NonEmptyString,
 });
 export type EquationEntry = z.infer<typeof EquationEntrySchema>;
