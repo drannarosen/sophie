@@ -120,6 +120,31 @@ project:
         - file: status/phase-0-report.md
         - file: status/phase-1-plan.md
         - file: status/changelog.md
+    - title: Strategy
+      children:
+        - file: strategy/index.md
+        - file: strategy/positioning.md
+        - file: strategy/why-now.md
+        - file: strategy/agpl-rationale.md
+        - file: strategy/funding-roadmap.md
+        - file: strategy/2026-calendar.md
+        - file: strategy/dber-positioning.md
+        - file: strategy/commercialization.md
+        - title: Grants
+          children:
+            - file: strategy/grants/index.md
+            - file: strategy/grants/cottrell-2026.md
+            - file: strategy/grants/career-2026.md
+            - file: strategy/grants/sloan-2026.md
+            - file: strategy/grants/aas-epd-mini.md
+            - file: strategy/grants/sdsu-internal.md
+        - title: Papers
+          children:
+            - file: strategy/papers/index.md
+            - file: strategy/papers/paper-1-methods.md
+            - file: strategy/papers/paper-2-hitl.md
+            - file: strategy/papers/paper-3-outcomes.md
+            - file: strategy/papers/paper-4-predict.md
     - title: Contributing
       children:
         - file: contributing/setup.md
