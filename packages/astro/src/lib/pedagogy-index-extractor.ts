@@ -791,6 +791,25 @@ class IndexAccumulator {
 export const indexAccumulator = new IndexAccumulator();
 
 /**
+ * Test-only helper: wipe ALL accumulator state in one call. Use in a
+ * vitest `beforeEach` to remove cross-test ordering coupling. Not for
+ * production use — `clearChapter` is the production-shape API (it
+ * preserves entries from other chapters and is what the remark plugin
+ * calls); `resetIndexAccumulator` blows away every collection,
+ * including the consumer-supplied `figureRegistry`, which a build
+ * never wants.
+ */
+export function resetIndexAccumulator(): void {
+  const state = getGlobalState();
+  state.definitions.clear();
+  state.equations.clear();
+  state.keyInsights.clear();
+  state.figureUsages.clear();
+  state.misconceptions.clear();
+  state.figureRegistry = [];
+}
+
+/**
  * Default chapter-slug deriver. Matches Astro 6's glob-loader
  * default: the chapter id is the file's BASENAME, without the
  * `.mdx` extension. For

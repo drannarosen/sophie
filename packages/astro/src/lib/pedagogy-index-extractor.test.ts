@@ -5,7 +5,7 @@ import type {
   KeyInsightEntry,
   MisconceptionEntry,
 } from "@sophie/core/schema";
-import { describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import {
   extractDefinitions,
   extractEquations,
@@ -14,7 +14,24 @@ import {
   extractMisconceptions,
   indexAccumulator,
   pedagogyIndexRemarkPlugin,
+  resetIndexAccumulator,
 } from "./pedagogy-index-extractor.ts";
+
+/**
+ * Top-level `beforeEach` resets the entire accumulator (all five
+ * collections + the consumer-supplied figureRegistry) so every test
+ * starts from a clean slate. Without this, tests share `globalThis`
+ * state across describe blocks and depend on per-test
+ * `indexAccumulator.clearChapter(...)` hygiene — a future test that
+ * forgets re-introduces ordering coupling silently.
+ *
+ * `clearChapter` calls that remain in tests below are load-bearing:
+ * they're part of the test's assertion (verifying `clearChapter`
+ * behavior itself), not pure cleanup.
+ */
+beforeEach(() => {
+  resetIndexAccumulator();
+});
 
 /**
  * Tests over synthetic mdast trees. We don't parse real MDX here;
@@ -389,11 +406,9 @@ describe("extractEquations (pure)", () => {
 });
 
 describe("indexAccumulator (cross-chapter)", () => {
-  // Tests share module state, so each clears the chapters they touch.
+  // Top-level beforeEach wipes accumulator state before each test.
 
   test("aggregates definitions from multiple chapters", () => {
-    indexAccumulator.clearChapter("ch-a");
-    indexAccumulator.clearChapter("ch-b");
     indexAccumulator.addDefinitions([
       {
         term: "Parallax",
@@ -420,8 +435,6 @@ describe("indexAccumulator (cross-chapter)", () => {
   });
 
   test("throws on cross-chapter slug duplication", () => {
-    indexAccumulator.clearChapter("ch-a");
-    indexAccumulator.clearChapter("ch-b");
     indexAccumulator.addDefinitions([
       {
         term: "Standard candle",
@@ -446,8 +459,6 @@ describe("indexAccumulator (cross-chapter)", () => {
   });
 
   test("clearChapter removes only that chapter's entries", () => {
-    indexAccumulator.clearChapter("ch-a");
-    indexAccumulator.clearChapter("ch-b");
     indexAccumulator.addDefinitions([
       {
         term: "Alpha",
@@ -474,7 +485,6 @@ describe("indexAccumulator (cross-chapter)", () => {
   });
 
   test("re-adding a chapter's entries after clearChapter does not throw cross-chapter", () => {
-    indexAccumulator.clearChapter("ch-a");
     indexAccumulator.addDefinitions([
       {
         term: "Gamma",
@@ -502,7 +512,6 @@ describe("indexAccumulator (cross-chapter)", () => {
 
 describe("pedagogyIndexRemarkPlugin", () => {
   test("populates the accumulator for the parsed chapter", () => {
-    indexAccumulator.clearChapter("test-chapter");
     const plugin = pedagogyIndexRemarkPlugin();
     const tree = root([
       mdxAside({ kind: "definition", title: "Cepheid variable" }, [
@@ -521,7 +530,6 @@ describe("pedagogyIndexRemarkPlugin", () => {
   });
 
   test("uses the default getChapterSlug which returns the basename (matching Astro 6's glob-loader id default)", () => {
-    indexAccumulator.clearChapter("test-chapter");
     const plugin = pedagogyIndexRemarkPlugin();
     const tree = root([
       mdxAside({ kind: "definition", title: "Pulsar" }, [para("body")]),
@@ -540,7 +548,6 @@ describe("pedagogyIndexRemarkPlugin", () => {
   });
 
   test("honors a custom getChapterSlug", () => {
-    indexAccumulator.clearChapter("custom-slug");
     const plugin = pedagogyIndexRemarkPlugin({
       getChapterSlug: () => "custom-slug",
     });
@@ -557,7 +564,6 @@ describe("pedagogyIndexRemarkPlugin", () => {
   });
 
   test("re-parsing a chapter replaces its entries (clears stale on each run)", () => {
-    indexAccumulator.clearChapter("hmr-test");
     const plugin = pedagogyIndexRemarkPlugin();
     const fileCtx = { path: "/repo/src/content/chapters/hmr-test.mdx" };
 
@@ -604,7 +610,6 @@ describe("pedagogyIndexRemarkPlugin", () => {
 
   // T13
   test("populates BOTH definitions AND equations from one parsed chapter", () => {
-    indexAccumulator.clearChapter("dual-test");
     const plugin = pedagogyIndexRemarkPlugin();
     const tree = root([
       mdxAside({ kind: "definition", title: "Standard candle" }, [
@@ -631,7 +636,7 @@ describe("pedagogyIndexRemarkPlugin", () => {
 });
 
 describe("indexAccumulator equations (cross-chapter)", () => {
-  // Tests share module state, so each clears the chapters they touch.
+  // Top-level beforeEach wipes accumulator state before each test.
 
   const eq = (overrides: Partial<EquationEntry> = {}): EquationEntry => ({
     slug: "default-slug",
@@ -646,8 +651,6 @@ describe("indexAccumulator equations (cross-chapter)", () => {
 
   // T10
   test("addEquations validates the whole batch BEFORE mutating (cross-chapter collision in entry 2 leaves entry 1 unwritten)", () => {
-    indexAccumulator.clearChapter("ch-a");
-    indexAccumulator.clearChapter("ch-b");
     // Seed: chapter "ch-a" already has equation slug "shared".
     indexAccumulator.addEquations([
       eq({
@@ -689,8 +692,6 @@ describe("indexAccumulator equations (cross-chapter)", () => {
 
   // T11
   test("clearChapter removes BOTH definitions AND equations for the given chapter; entries from other chapters stay", () => {
-    indexAccumulator.clearChapter("ch-a");
-    indexAccumulator.clearChapter("ch-b");
     indexAccumulator.addDefinitions([
       {
         term: "Def A",
@@ -740,7 +741,6 @@ describe("indexAccumulator equations (cross-chapter)", () => {
 
   // T12
   test("asPedagogyIndex returns populated `equations` array (was empty `[]` in PR-C1)", () => {
-    indexAccumulator.clearChapter("ch-a");
     indexAccumulator.addEquations([
       eq({
         slug: "alpha",
@@ -859,8 +859,6 @@ describe("indexAccumulator key-insights (cross-chapter)", () => {
   });
 
   test("addKeyInsights populates keyInsights collection accessible via asPedagogyIndex", () => {
-    indexAccumulator.clearChapter("ki-ch-a");
-    indexAccumulator.clearChapter("ki-ch-b");
     indexAccumulator.addKeyInsights([
       ki({ title: "Alpha", chapter: "ki-ch-a", anchor: "alpha" }),
       ki({ title: "Beta", chapter: "ki-ch-b", anchor: "beta" }),
@@ -875,8 +873,6 @@ describe("indexAccumulator key-insights (cross-chapter)", () => {
   });
 
   test("clearChapter removes key-insights for the target chapter; other chapters survive", () => {
-    indexAccumulator.clearChapter("ki-clear-a");
-    indexAccumulator.clearChapter("ki-clear-b");
     indexAccumulator.addKeyInsights([
       ki({ title: "Insight A", chapter: "ki-clear-a", anchor: "insight-a" }),
       ki({ title: "Insight B", chapter: "ki-clear-b", anchor: "insight-b" }),
@@ -894,8 +890,6 @@ describe("indexAccumulator key-insights (cross-chapter)", () => {
   });
 
   test("two chapters can share an auto-anchor (e.g. 'ki-1') without collision", () => {
-    indexAccumulator.clearChapter("ki-share-a");
-    indexAccumulator.clearChapter("ki-share-b");
     indexAccumulator.addKeyInsights([
       ki({ chapter: "ki-share-a", anchor: "ki-1" }),
     ]);
@@ -1062,8 +1056,6 @@ describe("indexAccumulator figures (cross-chapter)", () => {
 
   // T31
   test("addFigureUsages throws on F3 (multiple canonical for same name across chapters)", () => {
-    indexAccumulator.clearChapter("fig-a");
-    indexAccumulator.clearChapter("fig-b");
     indexAccumulator.addFigureUsages([
       fu({
         name: "decoder-ring",
@@ -1107,8 +1099,6 @@ describe("indexAccumulator figures (cross-chapter)", () => {
   });
 
   test("addFigureUsages detects multiple canonical within a SINGLE batch", () => {
-    indexAccumulator.clearChapter("fig-batch-a");
-    indexAccumulator.clearChapter("fig-batch-b");
     // Both entries in the same call, both canonical, different chapters.
     expect(() =>
       indexAccumulator.addFigureUsages([
@@ -1129,8 +1119,6 @@ describe("indexAccumulator figures (cross-chapter)", () => {
   });
 
   test("addFigureUsages allows multi-chapter usages when only ONE is canonical", () => {
-    indexAccumulator.clearChapter("fig-ok-a");
-    indexAccumulator.clearChapter("fig-ok-b");
     indexAccumulator.addFigureUsages([
       fu({
         name: "hr-diagram",
@@ -1157,8 +1145,6 @@ describe("indexAccumulator figures (cross-chapter)", () => {
   });
 
   test("addFigureUsages validates the whole batch BEFORE mutating (canonical-collision in entry 2 leaves entry 1 unwritten)", () => {
-    indexAccumulator.clearChapter("fig-pre-a");
-    indexAccumulator.clearChapter("fig-pre-b");
     // Seed: chapter "fig-pre-a" has a canonical usage of "x".
     indexAccumulator.addFigureUsages([
       fu({
@@ -1195,7 +1181,6 @@ describe("indexAccumulator figures (cross-chapter)", () => {
   });
 
   test('two <Figure name="X"> in one chapter produce two distinct usages (no clobber)', () => {
-    indexAccumulator.clearChapter("ch-fig-dupe");
     indexAccumulator.addFigureUsages([
       fu({
         name: "hr-diagram",
@@ -1225,8 +1210,6 @@ describe("indexAccumulator figures (cross-chapter)", () => {
 
   // T32
   test("clearChapter removes figureUsages for that chapter; other chapters survive", () => {
-    indexAccumulator.clearChapter("fig-clr-a");
-    indexAccumulator.clearChapter("fig-clr-b");
     indexAccumulator.addFigureUsages([
       fu({
         name: "fig-a",
@@ -1254,7 +1237,6 @@ describe("indexAccumulator figures (cross-chapter)", () => {
   });
 
   test("asPedagogyIndex returns populated figureUsages (was empty `[]` in earlier PRs)", () => {
-    indexAccumulator.clearChapter("fig-ap-a");
     indexAccumulator.addFigureUsages([
       fu({
         name: "fig-1",
@@ -1278,7 +1260,6 @@ describe("indexAccumulator figures (cross-chapter)", () => {
   });
 
   test("asPedagogyIndex leaves figureRegistry as [] (extractor never populates it; SSR merge does)", () => {
-    indexAccumulator.clearChapter("fig-reg-a");
     indexAccumulator.addFigureUsages([
       fu({
         name: "anything",
@@ -1300,9 +1281,6 @@ describe("indexAccumulator setFigureRegistry / figureRegistry", () => {
   // so future refactors of the accumulator can't silently break them.
 
   test("setFigureRegistry overwrites prior entries (last-write-wins)", () => {
-    // Reset to empty so this test doesn't depend on prior accumulator state.
-    indexAccumulator.setFigureRegistry([]);
-
     const entryA: FigureRegistryEntry = {
       name: "set-fr-a",
       src: "/a.png",
@@ -1330,9 +1308,6 @@ describe("indexAccumulator setFigureRegistry / figureRegistry", () => {
   });
 
   test("clearChapter does NOT touch figureRegistry (consumer-global, not per-chapter)", () => {
-    // Reset to empty so this test doesn't depend on prior accumulator state.
-    indexAccumulator.setFigureRegistry([]);
-
     const entry: FigureRegistryEntry = {
       name: "clr-fr-x",
       src: "/x.png",
@@ -1542,8 +1517,6 @@ describe("indexAccumulator misconceptions (cross-chapter)", () => {
   });
 
   test("addMisconceptions populates misconceptions collection accessible via asPedagogyIndex", () => {
-    indexAccumulator.clearChapter("mc-pop-a");
-    indexAccumulator.clearChapter("mc-pop-b");
     indexAccumulator.addMisconceptions([
       mc({
         chapter: "mc-pop-a",
@@ -1568,8 +1541,6 @@ describe("indexAccumulator misconceptions (cross-chapter)", () => {
   });
 
   test("M2 — throws on cross-chapter explicit-id anchor collision", () => {
-    indexAccumulator.clearChapter("mc-m2-a");
-    indexAccumulator.clearChapter("mc-m2-b");
     indexAccumulator.addMisconceptions([
       mc({ chapter: "mc-m2-a", anchor: "shared-explicit-id" }),
     ]);
@@ -1597,8 +1568,6 @@ describe("indexAccumulator misconceptions (cross-chapter)", () => {
     // silently let an author-supplied `id="misc-orbital"` bypass M2.
     // The tightened `/^misc-\d+$/` matches only the literal auto-anchor
     // shape, so explicit ids like `misc-orbital` still validate.
-    indexAccumulator.clearChapter("mc-misc-a");
-    indexAccumulator.clearChapter("mc-misc-b");
     indexAccumulator.addMisconceptions([
       mc({ chapter: "mc-misc-a", anchor: "misc-orbital" }),
     ]);
@@ -1610,8 +1579,6 @@ describe("indexAccumulator misconceptions (cross-chapter)", () => {
   });
 
   test("M2 — auto-anchors ('misc-N') do NOT trigger cross-chapter collision", () => {
-    indexAccumulator.clearChapter("mc-auto-a");
-    indexAccumulator.clearChapter("mc-auto-b");
     indexAccumulator.addMisconceptions([
       mc({ chapter: "mc-auto-a", anchor: "misc-1" }),
     ]);
@@ -1629,8 +1596,6 @@ describe("indexAccumulator misconceptions (cross-chapter)", () => {
   });
 
   test("addMisconceptions validates the whole batch BEFORE mutating", () => {
-    indexAccumulator.clearChapter("mc-pre-a");
-    indexAccumulator.clearChapter("mc-pre-b");
     // Seed.
     indexAccumulator.addMisconceptions([
       mc({ chapter: "mc-pre-a", anchor: "seeded-id" }),
@@ -1653,8 +1618,6 @@ describe("indexAccumulator misconceptions (cross-chapter)", () => {
   });
 
   test("clearChapter removes misconceptions for the target chapter; other chapters survive", () => {
-    indexAccumulator.clearChapter("mc-clr-a");
-    indexAccumulator.clearChapter("mc-clr-b");
     indexAccumulator.addMisconceptions([
       mc({ chapter: "mc-clr-a", anchor: "mc-a-1", label: "A" }),
       mc({ chapter: "mc-clr-b", anchor: "mc-b-1", label: "B" }),
@@ -1672,7 +1635,6 @@ describe("indexAccumulator misconceptions (cross-chapter)", () => {
   });
 
   test("asPedagogyIndex returns populated misconceptions (was empty `[]` before Task 7)", () => {
-    indexAccumulator.clearChapter("mc-ap-a");
     indexAccumulator.addMisconceptions([
       mc({
         chapter: "mc-ap-a",
@@ -1697,7 +1659,6 @@ describe("indexAccumulator misconceptions (cross-chapter)", () => {
 
 describe("pedagogyIndexRemarkPlugin (figures)", () => {
   test("populates figureUsages for the parsed chapter", () => {
-    indexAccumulator.clearChapter("fig-plugin");
     const plugin = pedagogyIndexRemarkPlugin();
     // Use figure names unique to this test to avoid collision with
     // leftover canonical entries from F3 tests above (shared module
