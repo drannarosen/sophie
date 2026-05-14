@@ -162,6 +162,23 @@ describe("<InteractiveCallout>", () => {
     expect(container.querySelector(`p.${styles.title}`)).toBeNull();
   });
 
+  it("renders the required `id` prop on the root <aside> (hash-anchor parity with static Callout)", () => {
+    const { container } = render(
+      withProfile(
+        <InteractiveCallout
+          course='test-course'
+          chapter='test-chapter'
+          id='my-anchor'
+          variant='info'
+        >
+          <p>body</p>
+        </InteractiveCallout>
+      )
+    );
+    const root = container.querySelector("aside");
+    expect(root?.id).toBe("my-anchor");
+  });
+
   it("renders the visible title element when a title prop IS provided", () => {
     const { container } = render(
       withProfile(
