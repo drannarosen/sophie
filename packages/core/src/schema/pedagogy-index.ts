@@ -7,6 +7,25 @@ import { NonEmptyString, Slug } from "./primitives.ts";
  * are declared up-front so the index's shape is locked across the
  * Bucket C PR sequence (PRs C2–C4 materialize the runtime
  * extractors).
+ *
+ * Canonical anchor prefix convention.
+ *
+ * Author-supplied identifiers (definitions, equations) use the prefix
+ * the author writes. Auto-generated anchors (key-insights, figures,
+ * misconceptions) use these short prefixes:
+ *
+ * | Role          | Prefix  | Source                                                    |
+ * |---------------|---------|-----------------------------------------------------------|
+ * | Definition    | `def-`  | author-supplied via title/id slug                         |
+ * | Equation      | `eq-`   | author-supplied via id slug                               |
+ * | Key insight   | `ki-`   | auto: `ki-${counter}`                                     |
+ * | Figure        | `fig-`  | auto: `fig-${slug(name)}-${counter}`                      |
+ * | Misconception | `misc-` | auto: `misc-${counter}` (auto only)                       |
+ * | Chapter       | `ch-`   | RESERVED for PR-C4 ChapterRef anchors (not chapter slugs) |
+ *
+ * Authors can override any auto-generated anchor via explicit `id`
+ * props on the source component. The anchor uniqueness invariants
+ * (M1, M2, F5, etc.) apply regardless of source.
  */
 
 /**

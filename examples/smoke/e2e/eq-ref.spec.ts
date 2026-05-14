@@ -84,10 +84,11 @@ test.describe("PR-C2: <EqRef> on the smoke chapter", () => {
     page,
   }) => {
     await page.goto(CHAPTER_URL);
-    // Chapter is a `client:load` React island. Wait for hydration
-    // before hovering so HoverCard handlers are attached (matches
-    // the glossary-term.spec.ts pattern for the GlossaryTerm trigger).
-    await page.waitForLoadState("networkidle");
+    // Wait for the `<EqRef>` trigger to flip
+    // `data-react-hydrated="true"` (via `useHydrated`) before
+    // hovering — `networkidle` fires before React hydration
+    // completes in full-suite runs (followup #10).
+    await page.locator('[data-react-hydrated="true"]').first().waitFor();
     const trigger = page
       .locator('a[href="/chapters/spoiler-alerts#inverse-square-law"]')
       .first();
@@ -112,7 +113,8 @@ test.describe("PR-C2: <EqRef> on the smoke chapter", () => {
     page,
   }) => {
     await page.goto(CHAPTER_URL);
-    await page.waitForLoadState("networkidle");
+    // Wait for React hydration (followup #10).
+    await page.locator('[data-react-hydrated="true"]').first().waitFor();
     const trigger = page
       .locator('a[href="/chapters/spoiler-alerts#wiens-law"]')
       .first();

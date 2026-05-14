@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { axe } from "jest-axe";
 import { describe, expect, it, vi } from "vitest";
 
@@ -97,5 +97,17 @@ describe("<GlossaryTerm>", () => {
     const svg = link.querySelector("svg");
     expect(svg).not.toBeNull();
     expect(svg?.getAttribute("aria-hidden")).toBe("true");
+  });
+
+  // E2E hydration signal (followup #10). The trigger anchor flips
+  // `data-react-hydrated="true"` after `useEffect` runs. Playwright
+  // waits on this attribute before hovering, replacing the unreliable
+  // `networkidle` wait. SSR pass should NOT carry the attribute.
+  it("sets data-react-hydrated=true on the trigger after mount", async () => {
+    render(<GlossaryTerm name='Parallax'>parallax</GlossaryTerm>);
+    const link = screen.getByRole("link", { name: /parallax/i });
+    await waitFor(() => {
+      expect(link).toHaveAttribute("data-react-hydrated", "true");
+    });
   });
 });

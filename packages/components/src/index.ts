@@ -161,6 +161,7 @@ export type {
 export {
   IndexedDBResponseStore,
   ProfileProvider,
+  useHydrated,
   useInteractive,
   useProfile,
   useSelfAssessment,

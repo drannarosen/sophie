@@ -15,7 +15,7 @@ const variantTitles: Record<CalloutVariant, string> = {
   caution: "Caution",
   roadmap: "Roadmap",
   summary: "Summary",
-  "key-insight": "Key Insight",
+  "key-insight": "Key insight",
   misconception: "Misconception",
 };
 
@@ -58,7 +58,12 @@ export function InteractiveCallout({
   const className = `${styles.callout} ${styles[variant] ?? ""}`.trim();
 
   return (
-    <aside role='note' aria-label={accessibleTitle} className={className}>
+    <aside
+      role='note'
+      aria-label={accessibleTitle}
+      className={className}
+      id={id}
+    >
       {title !== undefined && <p className={styles.title}>{accessibleTitle}</p>}
       <div className={styles.body}>{children}</div>
       <ReviewedRow

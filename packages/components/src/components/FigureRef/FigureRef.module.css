@@ -48,7 +48,7 @@
   background: var(--sophie-surface-1);
   border: 1px solid var(--sophie-border-subtle);
   border-radius: var(--sophie-radius-md);
-  box-shadow: var(--sophie-shadow-popover, 0 4px 12px rgb(0 0 0 / 0.12));
+  box-shadow: var(--sophie-shadow-popover);
   color: var(--sophie-text);
   font-family: var(--sophie-font-sans);
   font-size: var(--sophie-text-sm);

@@ -33,7 +33,7 @@ describe("<Callout> (static)", () => {
     const expected = {
       roadmap: "Roadmap",
       summary: "Summary",
-      "key-insight": "Key Insight",
+      "key-insight": "Key insight",
     } as const;
     for (const [variant, title] of Object.entries(expected)) {
       const { unmount } = render(
@@ -160,6 +160,23 @@ describe("<InteractiveCallout>", () => {
     expect(screen.getByRole("note", { name: "Note" })).toBeInTheDocument();
     // But no visible "Note" heading is rendered as a <p>.
     expect(container.querySelector(`p.${styles.title}`)).toBeNull();
+  });
+
+  it("renders the required `id` prop on the root <aside> (hash-anchor parity with static Callout)", () => {
+    const { container } = render(
+      withProfile(
+        <InteractiveCallout
+          course='test-course'
+          chapter='test-chapter'
+          id='my-anchor'
+          variant='info'
+        >
+          <p>body</p>
+        </InteractiveCallout>
+      )
+    );
+    const root = container.querySelector("aside");
+    expect(root?.id).toBe("my-anchor");
   });
 
   it("renders the visible title element when a title prop IS provided", () => {

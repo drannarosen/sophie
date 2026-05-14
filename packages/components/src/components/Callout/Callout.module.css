@@ -110,6 +110,22 @@
   color: var(--sophie-status-warning);
 }
 
+/* Ported from astr101-sp26 `.callout-misconception`; uses status-danger
+   because rose, violet, and warning are owned by sibling variants.
+   Mirrors `.key-insight` shape since misconception is its semantic pair. */
+.misconception {
+  border-left-color: var(--sophie-status-danger);
+  background: color-mix(
+    in oklab,
+    var(--sophie-status-danger) 6%,
+    var(--sophie-surface-1)
+  );
+}
+
+.misconception .title {
+  color: var(--sophie-status-danger);
+}
+
 .reviewedRow {
   display: flex;
   gap: var(--sophie-space-2);

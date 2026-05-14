@@ -75,9 +75,11 @@ test.describe("PR-C3: <CourseMisconceptions /> on /misconceptions", () => {
       "href",
       "/chapters/spoiler-alerts#misconception-alert"
     );
-    // The <dt> on the course route carries the `misc-` prefix
-    // id used for in-page linking on the course route itself.
-    await expect(page.locator("#misc-misconception-alert")).toBeAttached();
+    // The <dt> on the course route uses the entry's anchor directly
+    // as its DOM id (the anchor is the slugified title, no extra
+    // prefix). The chapter back-link target resolves to the same id
+    // on the chapter route via ChapterMisconceptions.
+    await expect(page.locator("#misconception-alert")).toBeAttached();
   });
 
   test("/misconceptions is axe-clean", async ({ page }) => {

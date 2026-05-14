@@ -108,3 +108,13 @@
 .key-insight .marker {
   color: var(--sophie-brand-teal-text);
 }
+
+/* Ported from astr101-sp26 `.callout-misconception`; uses status-danger
+   because rose, violet, and warning are owned by sibling variants. */
+.misconception {
+  border-left-color: var(--sophie-status-danger);
+}
+
+.misconception .marker {
+  color: var(--sophie-status-danger);
+}

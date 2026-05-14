@@ -1,5 +1,6 @@
 import * as HoverCard from "@radix-ui/react-hover-card";
 import { ImageIcon } from "lucide-react";
+import { useHydrated } from "../../runtime/useHydrated.ts";
 import styles from "./FigureRef.module.css.js";
 import type { FigureRefProps } from "./FigureRef.schema.ts";
 import { lookupFigureRegistry } from "./figure-registry-store.ts";
@@ -34,6 +35,9 @@ import { lookupCanonicalUsageByName } from "./figure-usages-store.ts";
 export function FigureRef({ name, children }: FigureRefProps) {
   const registry = lookupFigureRegistry(name);
   const canonical = lookupCanonicalUsageByName(name);
+  // E2E hydration signal (followup #10): see useHydrated.ts and
+  // GlossaryTerm.tsx for rationale.
+  const hydrated = useHydrated();
 
   if (!registry || !canonical) {
     if (
@@ -55,7 +59,11 @@ export function FigureRef({ name, children }: FigureRefProps) {
   return (
     <HoverCard.Root openDelay={150} closeDelay={120}>
       <HoverCard.Trigger asChild>
-        <a className={styles.trigger} href={href}>
+        <a
+          className={styles.trigger}
+          data-react-hydrated={hydrated ? "true" : undefined}
+          href={href}
+        >
           {linkText}
           <ImageIcon
             aria-hidden

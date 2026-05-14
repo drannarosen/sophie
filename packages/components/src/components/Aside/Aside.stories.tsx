@@ -10,7 +10,13 @@ const meta = {
   argTypes: {
     kind: {
       control: { type: "select" },
-      options: ["note", "definition", "digression", "key-insight"],
+      options: [
+        "note",
+        "definition",
+        "digression",
+        "key-insight",
+        "misconception",
+      ],
     },
     title: { control: { type: "text" } },
   },
@@ -62,6 +68,7 @@ export const Digression: Story = {
 };
 
 export const KeyInsight: Story = {
+  name: "Key insight",
   args: {
     kind: "key-insight",
     children: (
@@ -69,6 +76,19 @@ export const KeyInsight: Story = {
         Every distance method in astronomy ultimately rests on geometric
         parallax. Subsequent rungs (standard candles, redshift) are calibrated
         against parallax-measured distances of nearby objects.
+      </p>
+    ),
+  },
+};
+
+export const Misconception: Story = {
+  args: {
+    kind: "misconception",
+    children: (
+      <p>
+        Stars do <em>not</em> twinkle because they are physically pulsating.
+        Twinkling (scintillation) comes from atmospheric turbulence refracting
+        the starlight on its way to your eye.
       </p>
     ),
   },

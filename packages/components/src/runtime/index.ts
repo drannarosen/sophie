@@ -15,6 +15,7 @@ export {
   type ResponseStore,
 } from "./ResponseStore.ts";
 export type { SyncedResponseStore } from "./SyncedResponseStore.ts";
+export { useHydrated } from "./useHydrated.ts";
 export type {
   InteractiveControlProps,
   InteractiveStatus,

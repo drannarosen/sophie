@@ -12,10 +12,10 @@ const KEY_INSIGHTS_URL = "/key-insights";
  * The smoke chapter (`spoiler-alerts.mdx`) ships two
  * `<Aside kind="key-insight">` blocks (lines 419 + 471 in the
  * source). Neither has a `title` attribute, so the extractor
- * auto-generates anchors `key-insight-1` and `key-insight-2`
- * (per PR-C3 design decision #7 — title OPTIONAL on key-insight
- * Asides; auto-anchor pattern `key-insight-{n}` when title and
- * id are both absent).
+ * auto-generates anchors `ki-1` and `ki-2` (per PR-C3 design
+ * decision #7 — title OPTIONAL on key-insight Asides; auto-anchor
+ * pattern `ki-{n}` when title and id are both absent; canonical
+ * anchor-prefix table in `@sophie/core/schema/pedagogy-index.ts`).
  *
  * `<CourseKeyInsights />` ships with appearance-only sort (no
  * `order` prop, per decision #9 — untitled key-insights can't
@@ -47,11 +47,14 @@ test.describe("PR-C3: <CourseKeyInsights /> on /key-insights", () => {
       .evaluateAll((els) => els.map((el) => (el.textContent ?? "").trim()));
     expect(terms).toEqual(["Key insight", "Key insight"]);
 
-    // <dt id="ki-key-insight-1"> + <dt id="ki-key-insight-2">
-    // confirm the auto-anchor pattern AND the "ki-" id-prefix
-    // shape used for in-page linking on the course route.
-    await expect(page.locator("#ki-key-insight-1")).toBeAttached();
-    await expect(page.locator("#ki-key-insight-2")).toBeAttached();
+    // <dt id="ki-1"> + <dt id="ki-2"> — the CourseKeyInsights
+    // template uses the entry's anchor directly as the DOM id. The
+    // anchor itself already carries the `ki-` prefix (auto shape
+    // `ki-{n}`), so no extra prefixing is required. The chapter
+    // back-link target `#ki-{n}` resolves to the same id on the
+    // chapter route via ChapterKeyInsights.
+    await expect(page.locator("#ki-1")).toBeAttached();
+    await expect(page.locator("#ki-2")).toBeAttached();
 
     // Bodies contain the source prose; verify a fragment of each
     // (smart-quote tolerance via regex — the source MDX has
@@ -74,8 +77,8 @@ test.describe("PR-C3: <CourseKeyInsights /> on /key-insights", () => {
       els.map((el) => (el as HTMLAnchorElement).getAttribute("href") ?? "")
     );
     expect(hrefs).toEqual([
-      "/chapters/spoiler-alerts#key-insight-1",
-      "/chapters/spoiler-alerts#key-insight-2",
+      "/chapters/spoiler-alerts#ki-1",
+      "/chapters/spoiler-alerts#ki-2",
     ]);
   });
 
@@ -87,7 +90,7 @@ test.describe("PR-C3: <CourseKeyInsights /> on /key-insights", () => {
       .locator(".sophie-course-key-insights__backlink a")
       .first();
     await firstBacklink.click();
-    await expect(page).toHaveURL(/\/chapters\/spoiler-alerts#key-insight-1$/);
+    await expect(page).toHaveURL(/\/chapters\/spoiler-alerts#ki-1$/);
   });
 
   test("/key-insights is axe-clean", async ({ page }) => {

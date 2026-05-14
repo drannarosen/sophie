@@ -18,6 +18,7 @@ const meta = {
         "roadmap",
         "summary",
         "key-insight",
+        "misconception",
       ],
     },
     title: { control: { type: "text" } },
@@ -97,12 +98,26 @@ export const Summary: Story = {
 };
 
 export const KeyInsight: Story = {
+  name: "Key insight",
   args: {
     variant: "key-insight",
     children: (
       <p>
         Hotter stars peak at shorter wavelengths — Wien's displacement law in
         one sentence.
+      </p>
+    ),
+  },
+};
+
+export const Misconception: Story = {
+  args: {
+    variant: "misconception",
+    children: (
+      <p>
+        Seasons are <em>not</em> caused by Earth's distance from the Sun. They
+        result from the 23.5° tilt of Earth's axis, which changes how directly
+        sunlight strikes each hemisphere through the year.
       </p>
     ),
   },
