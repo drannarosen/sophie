@@ -57,7 +57,7 @@ const inChapter: MisconceptionEntry[] = misconceptions.filter(
       {inChapter.map((entry) => (
         <Fragment>
           <dt
-            id={`misc-${entry.anchor}`}
+            id={entry.anchor}
             class={`sophie-chapter-misconceptions__term sophie-chapter-misconceptions__term--${entry.length}`}
           >
             {entry.label ??

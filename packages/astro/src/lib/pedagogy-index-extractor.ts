@@ -741,7 +741,10 @@ class IndexAccumulator {
     // M2: cross-chapter slug collision check (only for EXPLICIT id-
     // derived anchors, not for auto-anchors which are chapter-scoped).
     for (const entry of entries) {
-      if (entry.anchor.startsWith("misc-")) continue;
+      // Match only the literal auto-anchor shape `misc-${counter}`.
+      // `startsWith("misc-")` would also skip explicit ids like
+      // `misc-orbital`, silently bypassing M2 cross-chapter validation.
+      if (/^misc-\d+$/.test(entry.anchor)) continue;
       for (const existing of state.misconceptions.values()) {
         if (
           existing.chapter !== entry.chapter &&

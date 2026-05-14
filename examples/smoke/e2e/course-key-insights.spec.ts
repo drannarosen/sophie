@@ -47,13 +47,14 @@ test.describe("PR-C3: <CourseKeyInsights /> on /key-insights", () => {
       .evaluateAll((els) => els.map((el) => (el.textContent ?? "").trim()));
     expect(terms).toEqual(["Key insight", "Key insight"]);
 
-    // <dt id="ki-ki-1"> + <dt id="ki-ki-2"> — the CourseKeyInsights
-    // template prefixes the DOM id with "ki-" for in-page linking
-    // on the course route; the underlying anchor is the extractor's
-    // short auto-anchor `ki-{n}`, producing the doubled `ki-ki-{n}`
-    // shape. The chapter back-link uses the raw anchor (`#ki-{n}`).
-    await expect(page.locator("#ki-ki-1")).toBeAttached();
-    await expect(page.locator("#ki-ki-2")).toBeAttached();
+    // <dt id="ki-1"> + <dt id="ki-2"> — the CourseKeyInsights
+    // template uses the entry's anchor directly as the DOM id. The
+    // anchor itself already carries the `ki-` prefix (auto shape
+    // `ki-{n}`), so no extra prefixing is required. The chapter
+    // back-link target `#ki-{n}` resolves to the same id on the
+    // chapter route via ChapterKeyInsights.
+    await expect(page.locator("#ki-1")).toBeAttached();
+    await expect(page.locator("#ki-2")).toBeAttached();
 
     // Bodies contain the source prose; verify a fragment of each
     // (smart-quote tolerance via regex — the source MDX has

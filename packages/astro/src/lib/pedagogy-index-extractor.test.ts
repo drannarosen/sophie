@@ -799,7 +799,7 @@ describe("extractKeyInsights (pure)", () => {
   });
 
   // T23
-  test("throws on intra-chapter anchor collision (two untitled key-insights collide on 'ki-1' vs 'ki-2'? — instead force same explicit id)", () => {
+  test("throws on intra-chapter anchor collision (two key-insights share explicit id)", () => {
     // Two key-insights sharing an explicit `id` collide on the same anchor.
     const tree = root([
       mdxAside({ kind: "key-insight", id: "shared-anchor" }, [para("first")]),
@@ -1508,6 +1508,23 @@ describe("indexAccumulator misconceptions (cross-chapter)", () => {
         mc({ chapter: "mc-m2-b", anchor: "shared-explicit-id" }),
       ])
     ).toThrow(/mc-m2-b/);
+  });
+
+  test("M2 — explicit id starting with 'misc-' still triggers cross-chapter collision", () => {
+    // Regression for tightened predicate: `startsWith("misc-")` would
+    // silently let an author-supplied `id="misc-orbital"` bypass M2.
+    // The tightened `/^misc-\d+$/` matches only the literal auto-anchor
+    // shape, so explicit ids like `misc-orbital` still validate.
+    indexAccumulator.clearChapter("mc-misc-a");
+    indexAccumulator.clearChapter("mc-misc-b");
+    indexAccumulator.addMisconceptions([
+      mc({ chapter: "mc-misc-a", anchor: "misc-orbital" }),
+    ]);
+    expect(() =>
+      indexAccumulator.addMisconceptions([
+        mc({ chapter: "mc-misc-b", anchor: "misc-orbital" }),
+      ])
+    ).toThrow(/M2 invariant/);
   });
 
   test("M2 — auto-anchors ('misc-N') do NOT trigger cross-chapter collision", () => {

@@ -48,7 +48,7 @@ const inChapter: KeyInsightEntry[] = keyInsights.filter(
       {inChapter.map((entry) => (
         <Fragment>
           <dt
-            id={`ki-${entry.anchor}`}
+            id={entry.anchor}
             class='sophie-chapter-key-insights__term'
           >
             {entry.title ?? "Key insight"}
