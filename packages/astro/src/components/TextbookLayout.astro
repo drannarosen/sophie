@@ -1,6 +1,12 @@
 ---
 import "../styles/textbook-layout.css";
-import { __setEquations, __setGlossaryDefinitions } from "@sophie/components";
+import {
+  __setEquations,
+  __setFigureRegistry,
+  __setFigureUsages,
+  __setGlossaryDefinitions,
+} from "@sophie/components";
+import type { FigureRegistryEntry } from "@sophie/core/schema";
 import { type CollectionEntry, getCollection, render } from "astro:content";
 import { indexAccumulator } from "../lib/pedagogy-index-extractor";
 import ContentColumn from "./ContentColumn.astro";
@@ -10,6 +16,20 @@ import SidebarToggle from "./SidebarToggle.astro";
 import ThemeToggle from "./ThemeToggle.astro";
 import TopBar from "./TopBar.astro";
 import ViewModeToggle from "./ViewModeToggle.astro";
+
+interface Props {
+  /**
+   * Figure registry from the consumer app's `content/figures.ts`.
+   * PR-C3 addition. The pedagogy-index accumulator never populates
+   * `figureRegistry` (its `figureRegistry` is always `[]` per the
+   * two-tier model — decision #3 of the PR-C3 design doc); the
+   * consumer app owns the registry as build-time content and passes
+   * it through this prop. Defaults to `[]` so consumers that don't
+   * use `<FigureRef>` keep working unchanged.
+   */
+  figureRegistry?: ReadonlyArray<FigureRegistryEntry>;
+}
+const { figureRegistry = [] } = Astro.props;
 
 // Wire the build-time pedagogy index (ADR 0038) into the
 // @sophie/components pedagogy stores so <GlossaryTerm> and <EqRef>
@@ -41,30 +61,54 @@ import ViewModeToggle from "./ViewModeToggle.astro";
 const chapters: CollectionEntry<"chapters">[] = await getCollection("chapters");
 await Promise.all(chapters.map((c) => render(c)));
 const pedagogy = indexAccumulator.asPedagogyIndex();
-// Both definitions and equations follow the same setter-call pattern
-// (ADR 0038 Revisions section): the chrome layer reads the accumulator
-// directly, then pushes into each role's React store via a setter
-// exported from @sophie/components. This keeps the components package
+// All four setters follow the same pattern (ADR 0038 Revisions
+// section): the chrome layer reads the accumulator directly, then
+// pushes into each role's React store via a setter exported from
+// @sophie/components. This keeps the components package
 // Vite-protocol-agnostic.
+//
+// `__setFigureRegistry` receives the consumer-app prop, NOT
+// `pedagogy.figureRegistry` (which is always `[]` per the two-tier
+// model: the accumulator only collects in-MDX `<Figure>` USAGES;
+// the REGISTRY of canonical figure metadata is consumer-owned in
+// `content/figures.ts`). PR-C3 decision #3.
+//
+// Key-insights and misconceptions have no React-side inline-ref
+// component in v1 (no `<KeyInsightRef>` / `<MisconceptionRef>` ships),
+// so no `__setKeyInsights` / `__setMisconceptions` setter exists yet.
+// When those land (PR-C4+), they'll be added here in the same shape.
 __setGlossaryDefinitions(pedagogy.definitions);
 __setEquations(pedagogy.equations);
+__setFigureRegistry(figureRegistry);
+__setFigureUsages(pedagogy.figureUsages);
 // Serialize the same payloads into <script> tags so each role's
 // client-side store can hydrate after React mount. Server-side module
 // state doesn't survive to the wire, so without these script tags
-// <GlossaryTerm> / <EqRef> rerender as bare prose on hydration (empty
-// client store wins). See packages/components/.../definitions-store.ts
-// and packages/components/.../equations-store.ts.
+// <GlossaryTerm> / <EqRef> / <FigureRef> rerender as bare prose on
+// hydration (empty client store wins). See
+// packages/components/.../definitions-store.ts,
+// packages/components/.../equations-store.ts,
+// packages/components/.../figure-registry-store.ts,
+// packages/components/.../figure-usages-store.ts.
 //
 // Escape `<` as `<` after JSON.stringify to prevent the
 // HTML parser from terminating the <script> tag early on any
-// `</script>` substring inside a definition / equation body (realistic
-// for AI-authored CS/web content per ADR 0030). The escape survives
+// `</script>` substring inside a payload body (realistic for
+// AI-authored CS/web content per ADR 0030). The escape survives
 // JSON.parse on the consumer side (< → <).
 const pedagogyDefinitionsJson = JSON.stringify(pedagogy.definitions).replace(
   /</g,
   "\\u003c"
 );
 const pedagogyEquationsJson = JSON.stringify(pedagogy.equations).replace(
+  /</g,
+  "\\u003c"
+);
+const pedagogyFigureRegistryJson = JSON.stringify(figureRegistry).replace(
+  /</g,
+  "\\u003c"
+);
+const pedagogyFigureUsagesJson = JSON.stringify(pedagogy.figureUsages).replace(
   /</g,
   "\\u003c"
 );
@@ -133,6 +177,26 @@ const collapsedVars = [
   id='sophie-pedagogy-equations'
   type='application/json'
   set:html={pedagogyEquationsJson}
+/>
+{/* Figure registry payload (two-tier figures, PR-C3 decision #3):
+    canonical figure metadata supplied by the consumer app's
+    content/figures.ts via the `figureRegistry` prop. Hydrates
+    <FigureRef>'s figure-registry store after React mount. */}
+<script
+  is:inline
+  id='sophie-figure-registry'
+  type='application/json'
+  set:html={pedagogyFigureRegistryJson}
+/>
+{/* Figure usages payload (two-tier figures, PR-C3 decision #3):
+    per-chapter `<Figure>` occurrences harvested by the pedagogy
+    extractor. Hydrates <FigureRef>'s figure-usages store after
+    React mount. */}
+<script
+  is:inline
+  id='sophie-pedagogy-figure-usages'
+  type='application/json'
+  set:html={pedagogyFigureUsagesJson}
 />
 
 <div
