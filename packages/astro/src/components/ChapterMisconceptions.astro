@@ -43,6 +43,12 @@ const inChapter: MisconceptionEntry[] = misconceptions.filter(
 // Appearance-order sort: entries are already in source-walk order; no resort.
 ---
 
+{/*
+  TODO (PR-C4 or later): expose `headingLevel?: 2 | 3 | 4` prop to allow
+  nested-section usage. Current behavior hardcodes <h2>; promote to
+  variable-level when a real consumer needs it. Forward-looking note,
+  no API change here.
+*/}
 {heading && <h2 class='sophie-chapter-misconceptions__heading'>{heading}</h2>}
 {
   inChapter.length === 0 ? (

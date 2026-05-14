@@ -38,6 +38,12 @@ const sorted =
     : [...inChapter].sort((a, b) => a.number - b.number);
 ---
 
+{/*
+  TODO (PR-C4 or later): expose `headingLevel?: 2 | 3 | 4` prop to allow
+  nested-section usage. Current behavior hardcodes <h2>; promote to
+  variable-level when a real consumer needs it. Forward-looking note,
+  no API change here.
+*/}
 {heading && <h2 class='sophie-chapter-equations__heading'>{heading}</h2>}
 {
   sorted.length === 0 ? (
