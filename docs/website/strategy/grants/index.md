@@ -58,7 +58,7 @@ methods-paper contribution. Pair Sophie work with ≥1 astrophysics
 paper per year to keep the research narrative live alongside the
 infrastructure narrative.
 
-### 40+ ADRs are a proposal asset
+### 50+ ADRs are a proposal asset
 
 Sophie's [decision records](../../decisions/template.md) are not just
 engineering hygiene. Cite them in sustainability sections and data

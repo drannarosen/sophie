@@ -153,7 +153,7 @@ activities:
 
 ### 4. Sustainability + governance
 
-Sophie's [40+ ADRs](../../decisions/template.md), AGPL license,
+Sophie's [50+ ADRs](../../decisions/template.md), AGPL license,
 contributor process, and roadmap demonstrate that the platform is
 designed for sustained community use beyond the funded period. Cite
 this explicitly — it differentiates Sophie from grant-funded prototype
