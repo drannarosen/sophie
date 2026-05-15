@@ -266,11 +266,53 @@ JSX expression syntax. Example output for the smoke chapter:
 [{"id":"stub","verb":"Recognize","body":"this as placeholder content..."}]
 ```
 
-@astrojs/mdx evaluates the `mdxJsxAttributeValueExpression.value` as a
-real JS expression at build time. The serialized string becomes a
-genuine array at runtime; Astro's island system serializes it into the
-hydration props blob (alongside `course`, `chapter`, `id`, `heading`)
-because it's a plain-JSON-serializable prop value.
+**Pitfall — `mdxJsxAttributeValueExpression` requires `data.estree`.**
+The downstream lowering pass (`hast-util-to-estree`, the
+`mdx-jsx-element` handler that runs after our remark plugin) reads
+`value.data.estree` — an ESTree `Program` node — when it emits the JSX
+attribute expression. It does **not** parse the string `value` field
+as JavaScript source. With `data.estree` absent, the attribute
+compiles to `objectives={}` (a `JSXEmptyExpression`), which evaluates
+to `objectives: undefined` at runtime and crashes the SSR pass.
+
+The transform must therefore produce both fields: keep
+`value: JSON.stringify(items)` as the string form some tooling reads
+for display/debugging, **and** attach a parsed ESTree expression at
+`data.estree`. Use
+[`estree-util-value-to-estree`](https://github.com/remcohaszing/estree-util-value-to-estree)
+(canonical unified-ecosystem helper by the same author as
+mdast/remark/hast) to convert the JS items array into an ESTree
+`Expression`, then wrap it in a `Program` → `ExpressionStatement` →
+`expression` chain to match the shape `hast-util-to-estree` expects:
+
+```ts
+import { valueToEstree } from "estree-util-value-to-estree";
+
+parent.attributes.push({
+  type: "mdxJsxAttribute",
+  name: "objectives",
+  value: {
+    type: "mdxJsxAttributeValueExpression",
+    value: JSON.stringify(items),
+    data: {
+      estree: {
+        type: "Program",
+        sourceType: "module",
+        body: [{
+          type: "ExpressionStatement",
+          expression: valueToEstree(items),
+        }],
+      },
+    },
+  },
+});
+```
+
+Once `data.estree` carries the parsed form, the compiled JSX prop
+becomes `objectives: [{...}]` (real array data). Astro's island
+system serializes the resulting prop value into the hydration props
+blob (alongside `course`, `chapter`, `id`, `heading`) using its
+plain-JSON serializer.
 
 If a future iteration moves body to mdast nodes (for inline cross-refs
 inside objective text), this serializer needs replacing with mdast→JSX
@@ -402,7 +444,7 @@ export function LearningObjectives({
       </h2>
       <ul
         className={styles.list}
-        aria-busy={controlProps["aria-busy"] ? "true" : "false"}
+        aria-busy={controlProps["aria-busy"]}
       >
         {objectives.map((o) => {
           const checked = stateRecord[o.id] ?? false;
@@ -742,6 +784,20 @@ pair needs this pattern. Likely candidates:
 When the second pair ships, the design doc for *that* PR cites this
 precedent + extracts the helper in the same PR (per the engineering
 principle "abstract after ≥2 callers, in the same PR as the second").
+
+**Pitfall to carry forward** (codified during live execution, see
+§2 "Pitfall — `mdxJsxAttributeValueExpression` requires `data.estree`"):
+the harvested array MUST be attached as a parsed ESTree expression at
+`value.data.estree`, not just JSON-stringified into the string `value`
+field. `hast-util-to-estree` reads the estree node and ignores the
+string. Use `estree-util-value-to-estree`'s `valueToEstree(items)`
+wrapped in `Program` → `ExpressionStatement` → `expression`. The
+Layer 1.6 test (`packages/astro/src/lib/transform-mdx-compile.test.ts`)
+guards against regression by running a fixture through `@mdx-js/mdx`'s
+`compile()` and asserting the array literal survives into the compiled
+JS — this is the test pyramid layer between Layer 1.5 (mdast snapshot)
+and Layer 2 (built-HTML e2e). Any future `<Parent><Child>` transform
+needs the same data-estree shape and an analogous Layer 1.6 test.
 
 This is the architectural contribution of the LO fix. The checkbox
 interactivity is the proximate goal; the pattern is the lasting one.

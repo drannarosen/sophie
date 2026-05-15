@@ -2,13 +2,13 @@ import { describe, expect, it } from "vitest";
 import { learningObjectivesContract } from "./LearningObjectives.contract.ts";
 
 describe("learningObjectivesContract", () => {
-  it("exports a no-op audit (children-mode shape moves checks to remark + runPedagogyAudit)", () => {
+  it("exports a no-op audit (cross-chapter checks live in runPedagogyAudit)", () => {
     expect(learningObjectivesContract.audit).toBeDefined();
     const findings = learningObjectivesContract.audit?.({
       course: "test",
       chapter: "test",
       id: "lo",
-      children: null,
+      objectives: [],
     });
     expect(findings).toEqual([]);
   });
@@ -18,7 +18,7 @@ describe("learningObjectivesContract", () => {
       course: "test",
       chapter: "test",
       id: "lo",
-      children: null,
+      objectives: [{ id: "o1", verb: "State", body: "the thesis." }],
     };
     const state = { thesis: true };
     expect(learningObjectivesContract.serialize(props, state)).toEqual({

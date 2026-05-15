@@ -105,6 +105,9 @@ importers:
       esbuild:
         specifier: ^0.27.0
         version: 0.27.7
+      estree-util-value-to-estree:
+        specifier: ^3.5.0
+        version: 3.5.0
       hast-util-to-html:
         specifier: ^9.0.5
         version: 9.0.5
@@ -136,6 +139,9 @@ importers:
         specifier: ^7.3.0 || ^8.0.0
         version: 8.0.11(@types/node@25.6.2)(esbuild@0.27.7)(tsx@4.21.0)(yaml@2.8.4)
     devDependencies:
+      '@mdx-js/mdx':
+        specifier: ^3.1.1
+        version: 3.1.1
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
@@ -2964,6 +2970,9 @@ packages:
 
   estree-util-to-js@2.0.0:
     resolution: {integrity: sha512-WDF+xj5rRWmD5tj6bIqRi6CkLIXbbNQUcxQHzGysQzvHmdYG2G7p/Tf0J0gpxGgkeMZNTIjT/AoSvC9Xehcgdg==}
+
+  estree-util-value-to-estree@3.5.0:
+    resolution: {integrity: sha512-aMV56R27Gv3QmfmF1MY12GWkGzzeAezAX+UplqHVASfjc9wNzI/X6hC0S9oxq61WT4aQesLGslWP9tKk6ghRZQ==}
 
   estree-util-visit@2.0.0:
     resolution: {integrity: sha512-m5KgiH85xAhhW8Wta0vShLcUvOsh3LLPI2YVwcbio1l7E09NTLL1EyMZFM1OyWowoH0skScNbhOPl4kcBgzTww==}
@@ -8153,6 +8162,10 @@ snapshots:
       '@types/estree-jsx': 1.0.5
       astring: 1.9.0
       source-map: 0.7.6
+
+  estree-util-value-to-estree@3.5.0:
+    dependencies:
+      '@types/estree': 1.0.8
 
   estree-util-visit@2.0.0:
     dependencies:

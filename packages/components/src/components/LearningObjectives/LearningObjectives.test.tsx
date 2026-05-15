@@ -3,7 +3,6 @@ import { axe } from "jest-axe";
 import type { ReactNode } from "react";
 import { describe, expect, it } from "vitest";
 import { ProfileProvider } from "../../runtime/ProfileContext.tsx";
-import { Objective } from "../Objective/Objective.tsx";
 import { LearningObjectivesPropsSchema } from "./LearningObjectives.schema.ts";
 import { LearningObjectives } from "./LearningObjectives.tsx";
 
@@ -11,15 +10,18 @@ function withProfile(node: ReactNode) {
   return <ProfileProvider profile='student'>{node}</ProfileProvider>;
 }
 
-function sampleChildren() {
+function sampleObjectives() {
   return [
-    <Objective key='thesis' id='thesis' verb='State'>
-      the course thesis in one sentence: pretty pictures → measurements → models
-      → inferences
-    </Objective>,
-    <Objective key='fls' id='fls' verb='Explain'>
-      why the finite speed of light makes astronomy a 'lookback time' science
-    </Objective>,
+    {
+      id: "thesis",
+      verb: "State",
+      body: "the course thesis in one sentence: pretty pictures → measurements → models → inferences",
+    },
+    {
+      id: "fls",
+      verb: "Explain",
+      body: "why the finite speed of light makes astronomy a 'lookback time' science",
+    },
   ];
 }
 
@@ -31,9 +33,8 @@ describe("<LearningObjectives>", () => {
           course='test-course'
           chapter='test-chapter'
           id='lo-1'
-        >
-          {sampleChildren()}
-        </LearningObjectives>
+          objectives={sampleObjectives()}
+        />
       )
     );
     expect(
@@ -41,16 +42,15 @@ describe("<LearningObjectives>", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders each provided <Objective> child's verb + body", () => {
+  it("renders each objective's verb + body", () => {
     render(
       withProfile(
         <LearningObjectives
           course='test-course'
           chapter='test-chapter'
           id='lo-2'
-        >
-          {sampleChildren()}
-        </LearningObjectives>
+          objectives={sampleObjectives()}
+        />
       )
     );
     expect(screen.getByText("State")).toBeInTheDocument();
@@ -59,16 +59,15 @@ describe("<LearningObjectives>", () => {
     expect(screen.getByText(/finite speed of light/)).toBeInTheDocument();
   });
 
-  it("injects a checkbox into each <Objective> child", async () => {
+  it("renders a checkbox for each objective", async () => {
     render(
       withProfile(
         <LearningObjectives
           course='test-course'
           chapter='test-chapter'
           id='lo-checkboxes'
-        >
-          {sampleChildren()}
-        </LearningObjectives>
+          objectives={sampleObjectives()}
+        />
       )
     );
     const checkboxes = await screen.findAllByRole("checkbox");
@@ -85,9 +84,8 @@ describe("<LearningObjectives>", () => {
           course='persist-course'
           chapter='persist-chapter'
           id='lo-persist'
-        >
-          {sampleChildren()}
-        </LearningObjectives>
+          objectives={sampleObjectives()}
+        />
       )
     );
     // Wait for hydration so parent useInteractive is ready and a click
@@ -115,9 +113,8 @@ describe("<LearningObjectives>", () => {
           course='persist-course'
           chapter='persist-chapter'
           id='lo-persist'
-        >
-          {sampleChildren()}
-        </LearningObjectives>
+          objectives={sampleObjectives()}
+        />
       )
     );
     await waitFor(async () => {
@@ -135,9 +132,8 @@ describe("<LearningObjectives>", () => {
           chapter='test-chapter'
           id='lo-heading'
           heading='By the end of this lecture'
-        >
-          {sampleChildren()}
-        </LearningObjectives>
+          objectives={sampleObjectives()}
+        />
       )
     );
     expect(
@@ -153,32 +149,34 @@ describe("<LearningObjectives>", () => {
       LearningObjectivesPropsSchema.safeParse({
         chapter: "c",
         id: "i",
-        children: null,
+        objectives: [],
       }).success
     ).toBe(false);
     expect(
       LearningObjectivesPropsSchema.safeParse({
         course: "c",
         id: "i",
-        children: null,
+        objectives: [],
       }).success
     ).toBe(false);
     expect(
       LearningObjectivesPropsSchema.safeParse({
         course: "c",
         chapter: "c",
-        children: null,
+        objectives: [],
       }).success
     ).toBe(false);
   });
 
-  it("schema accepts a complete callsite with children", () => {
+  it("schema accepts a complete callsite with objectives", () => {
     expect(
       LearningObjectivesPropsSchema.safeParse({
         course: "astr201",
         chapter: "spoiler-alerts",
         id: "lo",
-        children: null,
+        objectives: [
+          { id: "thesis", verb: "State", body: "the course thesis." },
+        ],
       }).success
     ).toBe(true);
   });
@@ -190,9 +188,8 @@ describe("<LearningObjectives>", () => {
           course='test-course'
           chapter='test-chapter'
           id='lo-axe'
-        >
-          {sampleChildren()}
-        </LearningObjectives>
+          objectives={sampleObjectives()}
+        />
       )
     );
     await screen.findAllByRole("checkbox");

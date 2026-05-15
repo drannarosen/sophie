@@ -1,11 +1,4 @@
-import {
-  Children,
-  cloneElement,
-  isValidElement,
-  type ReactElement,
-} from "react";
 import { useInteractive } from "../../runtime/useInteractive.ts";
-import type { ObjectiveProps } from "../Objective/Objective.schema.ts";
 import { Objective } from "../Objective/Objective.tsx";
 import styles from "./LearningObjectives.module.css.js";
 import type { LearningObjectivesProps } from "./LearningObjectives.schema.ts";
@@ -23,30 +16,37 @@ const EMPTY_RECORD: Record<string, boolean> = Object.freeze({});
 
 /**
  * Persistence-bearing chapter primitive. Renders the standard "By the
- * end of this lecture..." block as a checkable list of `<Objective>`
- * children. Students mark objectives they feel confident about; state
- * persists across reloads.
+ * end of this lecture..." block as a checkable list of objectives.
+ * Students mark objectives they feel confident about; state persists
+ * across reloads.
  *
  * Per ADR 0027, must be used with `client:load` in MDX so each
  * instance becomes its own React island. `course`/`chapter`/`id`
  * thread the state into per-course IndexedDB; the context-from-parent
  * alternative does not work across the MDX render boundary.
  *
+ * The `objectives` array is the runtime contract. Authors write
+ * `<Objective>` children in MDX; the build-time remark transform
+ * (`transformLearningObjectives` in `@sophie/astro`) harvests those
+ * children into the prop before the React island hydrates. The
+ * previous `Children.map` + `cloneElement` shape was abandoned because
+ * Astro's island boundary serves children as server-rendered HTML
+ * inside an `<astro-slot>` — the cloneElement guard fell open in
+ * production and zero checkboxes rendered. Per ADR 0027, data crosses
+ * the MDX render boundary as props, not as React children.
+ *
  * Per-objective state shape: one IDB record per (course, chapter, id),
- * value is `Record<objectiveId, boolean>`. The PR-C3 children-mode
- * refactor centralizes state in the parent so the parent owns the
- * shared `useInteractive` call (and its hydration-loading gate),
- * injecting `checked` + `onToggle` into each `<Objective>` child via
- * `React.Children.map` + `cloneElement`. Pure-display `<Objective>`
- * callsites (e.g., the `/objectives` roll-up page) omit the injection
- * and render without a checkbox.
+ * value is `Record<objectiveId, boolean>`. Centralizing state in the
+ * parent lets the parent own the shared `useInteractive` call (and
+ * its hydration-loading gate); `<Objective>` stays a pure-display
+ * primitive that also serves the `/objectives` roll-up route.
  */
 export function LearningObjectives({
   course,
   chapter,
   id,
   heading = "Learning Objectives",
-  children,
+  objectives,
 }: LearningObjectivesProps) {
   const {
     value: stateRecord,
@@ -59,37 +59,33 @@ export function LearningObjectives({
     EMPTY_RECORD
   );
 
-  const wrappedChildren = Children.map(children, (child) => {
-    if (!isValidElement(child)) return child;
-    if (child.type !== Objective) return child;
-    const objectiveChild = child as ReactElement<ObjectiveProps>;
-    const objectiveId = objectiveChild.props.id;
-    if (objectiveId === undefined || objectiveId === "") return child;
-    const checked = stateRecord[objectiveId] ?? false;
-    return cloneElement<ObjectiveProps>(objectiveChild, {
-      checked,
-      onToggle: () => {
-        // Gate writes while loading so a click in the hydration window
-        // doesn't get silently overwritten by the IDB fetch's
-        // setLocalValue(initial). The `controlProps` flag mirrors
-        // `<InteractiveCheckbox>`'s convention; this is the parent-
-        // aggregated equivalent.
-        if (controlProps.disabled) return;
-        setValue({ ...stateRecord, [objectiveId]: !checked });
-      },
-    });
-  });
-
   return (
     <section className={styles.section} aria-labelledby={`${id}-heading`}>
       <h2 id={`${id}-heading`} className={styles.heading}>
         {heading}
       </h2>
-      <ul
-        className={styles.list}
-        aria-busy={controlProps["aria-busy"] ? "true" : "false"}
-      >
-        {wrappedChildren}
+      <ul className={styles.list} aria-busy={controlProps["aria-busy"]}>
+        {objectives.map((o) => {
+          const checked = stateRecord[o.id] ?? false;
+          return (
+            <Objective
+              key={o.id}
+              id={o.id}
+              verb={o.verb}
+              body={o.body}
+              checked={checked}
+              onToggle={() => {
+                // Gate writes while loading so a click in the hydration
+                // window doesn't get silently overwritten by the IDB
+                // fetch's setLocalValue(initial). Mirrors the
+                // `<InteractiveCheckbox>` convention; this is the
+                // parent-aggregated equivalent.
+                if (controlProps.disabled) return;
+                setValue({ ...stateRecord, [o.id]: !checked });
+              }}
+            />
+          );
+        })}
       </ul>
     </section>
   );
