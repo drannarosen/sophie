@@ -625,7 +625,18 @@
     padding: 0;
   }
 
-  /* (3) Page-break-inside protection — moderate contract */
+  /* (3) Page-break-inside protection — moderate contract.
+
+     Two shapes: (a) self-contained block elements (figure, key-
+     equation, key-insight, aside, objective-item, glossary-footnote,
+     and the <ol>+<li> rollup-entry pattern) use `break-inside: avoid`
+     to keep one entry coherent. (b) <dl>+<dt>+<dd> rollups (the 8
+     Chapter*/Course* aggregators for equations / key-insights /
+     misconceptions / glossary) can't wrap in a shared parent
+     (HTML forbids non-<dt>/<dd> children inside <dl>), so we apply
+     `break-after: avoid` to the <dt> and `break-inside: avoid` to
+     the <dd> — keeping the term attached to its body without
+     restructuring the DOM. */
   figure,
   .sophie-key-equation,
   .sophie-key-insight,
@@ -633,6 +644,28 @@
   .sophie-objective-item,
   .sophie-glossary-footnote,
   .sophie-rollup-entry {
+    break-inside: avoid;
+  }
+
+  .sophie-chapter-equations__term,
+  .sophie-course-equations__term,
+  .sophie-chapter-key-insights__term,
+  .sophie-course-key-insights__term,
+  .sophie-chapter-misconceptions__term,
+  .sophie-course-misconceptions__term,
+  .sophie-chapter-glossary__term,
+  .sophie-course-glossary__term {
+    break-after: avoid;
+  }
+
+  .sophie-chapter-equations__body,
+  .sophie-course-equations__body,
+  .sophie-chapter-key-insights__body,
+  .sophie-course-key-insights__body,
+  .sophie-chapter-misconceptions__body,
+  .sophie-course-misconceptions__body,
+  .sophie-chapter-glossary__body,
+  .sophie-course-glossary__body {
     break-inside: avoid;
   }
 
