@@ -3,10 +3,11 @@ import { ChapterSchema } from "./chapter.ts";
 
 // Baseline valid-chapter fixture. Every chapter belongs to a
 // module per PR 3 (2026-05-12); the `module` field is required.
-const M = { module: "foundations" };
+// Every chapter also declares a maturity `status` per ADR 0051.
+const M = { module: "foundations", status: "stable" as const };
 
 describe("ChapterSchema", () => {
-  it("accepts the minimum-valid chapter (title + slug + module)", () => {
+  it("accepts the minimum-valid chapter (title + slug + module + status)", () => {
     const result = ChapterSchema.safeParse({
       title: "Lecture 1: Spoiler Alerts",
       slug: "spoiler-alerts",
@@ -152,5 +153,50 @@ describe("ChapterSchema", () => {
       tags: ["ok", ""],
     });
     expect(result.success).toBe(false);
+  });
+
+  // ADR 0051: `status` is a required frontmatter field. Enforcing
+  // presence at the Zod layer makes the CS1 "missing status" audit
+  // invariant unreachable from below — the schema rejects the chapter
+  // before the audit ever runs. The tests pin both shape (enum values)
+  // and the required-ness of the field.
+  describe("status (ADR 0051)", () => {
+    it("accepts each of draft, review, stable", () => {
+      for (const status of ["draft", "review", "stable"] as const) {
+        const result = ChapterSchema.safeParse({
+          title: "T",
+          slug: "t",
+          module: "foundations",
+          status,
+        });
+        expect(
+          result.success,
+          `expected status "${status}" to be accepted`
+        ).toBe(true);
+      }
+    });
+
+    it("rejects a chapter without a status field (CS1)", () => {
+      const result = ChapterSchema.safeParse({
+        title: "T",
+        slug: "t",
+        module: "foundations",
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects an invalid status value", () => {
+      for (const bad of ["published", "archived", "Stable", "", "DRAFT"]) {
+        const result = ChapterSchema.safeParse({
+          title: "T",
+          slug: "t",
+          module: "foundations",
+          status: bad,
+        });
+        expect(result.success, `expected status "${bad}" to be rejected`).toBe(
+          false
+        );
+      }
+    });
   });
 });

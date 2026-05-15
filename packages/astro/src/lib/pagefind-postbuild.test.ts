@@ -50,7 +50,13 @@ describe("buildPagefindIndex (Layer 1.6)", () => {
     resetIndexAccumulator();
     indexAccumulator.setModules([{ slug: "m", title: "M", order: 1 }]);
     indexAccumulator.setChapters([
-      { slug: "ch", title: "Test chapter", module: "m", order: 1 },
+      {
+        slug: "ch",
+        title: "Test chapter",
+        module: "m",
+        order: 1,
+        status: "stable",
+      },
     ]);
     indexAccumulator.addDefinitions([
       {
@@ -154,7 +160,13 @@ describe("pedagogy-index.json artifact (ADR 0045)", () => {
     resetIndexAccumulator();
     indexAccumulator.setModules([{ slug: "m", title: "M", order: 1 }]);
     indexAccumulator.setChapters([
-      { slug: "ch", title: "Test chapter", module: "m", order: 1 },
+      {
+        slug: "ch",
+        title: "Test chapter",
+        module: "m",
+        order: 1,
+        status: "stable",
+      },
     ]);
     indexAccumulator.addDefinitions([
       {
@@ -179,7 +191,15 @@ describe("pedagogy-index.json artifact (ADR 0045)", () => {
     const parsed = JSON.parse(readFileSync(artifactPath, "utf-8"));
     expect(parsed).toMatchObject({
       modules: [{ slug: "m", title: "M", order: 1 }],
-      chapters: [{ slug: "ch", title: "Test chapter", module: "m", order: 1 }],
+      chapters: [
+        {
+          slug: "ch",
+          title: "Test chapter",
+          module: "m",
+          order: 1,
+          status: "stable",
+        },
+      ],
       definitions: [
         {
           term: "luminosity",

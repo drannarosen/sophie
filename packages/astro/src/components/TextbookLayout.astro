@@ -11,6 +11,7 @@ import {
 } from "@sophie/components";
 import type { FigureRegistryEntry } from "@sophie/core/schema";
 import { type CollectionEntry, getCollection, render } from "astro:content";
+import { getStudentChapters } from "../lib/get-student-chapters";
 import {
   auditExitCode,
   formatAuditReport,
@@ -67,9 +68,19 @@ const { figureRegistry = [] } = Astro.props;
 // definitions and equations through its `__setGlossaryDefinitions`
 // and `__setEquations` setters rather than importing the virtual
 // module itself.
-const chapters: CollectionEntry<"chapters">[] = await getCollection("chapters");
+// ADR 0051: read the full chapters collection (drafts included) so we
+// can surface CS2 INFO for any drafts; then filter to the student-
+// visible subset for everything that ships to students — the pedagogy
+// index, the client-side `__setChapters` store, and the routes (the
+// route filter lives in the consumer-app's [...slug].astro). Drafts
+// still run per-chapter audit because `render(c)` triggers the MDX
+// remark plugin against EVERY chapter (per ADR 0051 §"DOES still run
+// per-chapter audit").
+const allChapters: CollectionEntry<"chapters">[] =
+  await getCollection("chapters");
 const modules: CollectionEntry<"modules">[] = await getCollection("modules");
-await Promise.all(chapters.map((c) => render(c)));
+await Promise.all(allChapters.map((c) => render(c)));
+const chapters = getStudentChapters(allChapters);
 // Push the consumer-supplied figure registry into the accumulator
 // BEFORE snapshotting / before the slot renders so that
 // <CourseFigures> and <ChapterFigures> (which read figureRegistry via
@@ -90,6 +101,7 @@ indexAccumulator.setChapters(
     module: c.data.module,
     order: c.data.order,
     description: c.data.description,
+    status: c.data.status,
   }))
 );
 indexAccumulator.setModules(
@@ -114,7 +126,14 @@ const auditCache = globalThis as unknown as {
   __sophiePedagogyAuditDone?: boolean;
 };
 if (!import.meta.env.PROD || !auditCache.__sophiePedagogyAuditDone) {
-  const auditReport = runPedagogyAudit(pedagogy);
+  // ADR 0051 CS2: drafts were filtered out of `chapters` (and therefore
+  // out of `pedagogy.chapters`) by `getStudentChapters`. Compute the
+  // draft slug list from the unfiltered `allChapters` so the audit can
+  // emit CS2 INFO for each excluded chapter.
+  const draftChapterSlugs = allChapters
+    .filter((c) => c.data.status === "draft")
+    .map((c) => c.data.slug);
+  const auditReport = runPedagogyAudit(pedagogy, { draftChapterSlugs });
   console.log(formatAuditReport(auditReport));
   if (auditExitCode(auditReport) !== 0) {
     // Astro's build pipeline surfaces thrown errors as build failures

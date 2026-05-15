@@ -24,6 +24,13 @@ export default defineConfig({
     // must exist at dist/lib/aside-positioning.js to resolve from
     // the copied-verbatim .astro files.
     "lib/aside-positioning": "src/lib/aside-positioning.ts",
+    // `lib/get-student-chapters` is the ADR 0051 student-build filter.
+    // Imported by TextbookLayout.astro (filters drafts before they
+    // reach the pedagogy index) and re-exported from the package
+    // entrypoint for consumer-app `[...slug].astro` route files.
+    // Must exist at dist/lib/get-student-chapters.js to resolve from
+    // the copied-verbatim .astro files in dist/components/.
+    "lib/get-student-chapters": "src/lib/get-student-chapters.ts",
     // `lib/pedagogy-index-extractor` is the remark plugin + cross-
     // chapter accumulator (PR-C1 / ADR 0038). Imported by .astro
     // components (TextbookLayout, ChapterGlossary, CourseGlossary)

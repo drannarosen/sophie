@@ -50,6 +50,7 @@ const chFoundations: ChapterEntry = {
   slug: "foundations",
   title: "Foundations",
   module: "core",
+  status: "stable",
 };
 
 const chSpoiler: ChapterEntry = {
@@ -57,6 +58,7 @@ const chSpoiler: ChapterEntry = {
   title: "Spoiler Alerts",
   module: "core",
   order: 1,
+  status: "stable",
 };
 
 const modCore: ModuleEntry = {
@@ -535,6 +537,7 @@ describe("O1 — duplicate objective id within a chapter (defense-in-depth)", ()
           slug: "measuring-the-sky",
           title: "Measuring",
           module: "core",
+          status: "stable",
         },
       ],
     };
@@ -592,8 +595,20 @@ describe("MG1 — cycle in prerequisite_misconceptions (ADR 0044)", () => {
     const index: PedagogyIndex = {
       ...emptyIndex(),
       chapters: [
-        { slug: "ch-a", title: "A", module: "core", order: 1 },
-        { slug: "ch-b", title: "B", module: "core", order: 2 },
+        {
+          slug: "ch-a",
+          title: "A",
+          module: "core",
+          order: 1,
+          status: "stable" as const,
+        },
+        {
+          slug: "ch-b",
+          title: "B",
+          module: "core",
+          order: 2,
+          status: "stable" as const,
+        },
       ],
       misconceptions: [
         mc({
@@ -618,9 +633,27 @@ describe("MG1 — cycle in prerequisite_misconceptions (ADR 0044)", () => {
     const index: PedagogyIndex = {
       ...emptyIndex(),
       chapters: [
-        { slug: "ch-a", title: "A", module: "core", order: 1 },
-        { slug: "ch-b", title: "B", module: "core", order: 2 },
-        { slug: "ch-c", title: "C", module: "core", order: 3 },
+        {
+          slug: "ch-a",
+          title: "A",
+          module: "core",
+          order: 1,
+          status: "stable" as const,
+        },
+        {
+          slug: "ch-b",
+          title: "B",
+          module: "core",
+          order: 2,
+          status: "stable" as const,
+        },
+        {
+          slug: "ch-c",
+          title: "C",
+          module: "core",
+          order: 3,
+          status: "stable" as const,
+        },
       ],
       misconceptions: [
         mc({
@@ -649,7 +682,15 @@ describe("MG1 — cycle in prerequisite_misconceptions (ADR 0044)", () => {
   it("emits an ERROR for a self-cycle (A → A)", () => {
     const index: PedagogyIndex = {
       ...emptyIndex(),
-      chapters: [{ slug: "ch-a", title: "A", module: "core", order: 1 }],
+      chapters: [
+        {
+          slug: "ch-a",
+          title: "A",
+          module: "core",
+          order: 1,
+          status: "stable" as const,
+        },
+      ],
       misconceptions: [
         mc({
           chapter: "ch-a",
@@ -667,9 +708,27 @@ describe("MG1 — cycle in prerequisite_misconceptions (ADR 0044)", () => {
     const index: PedagogyIndex = {
       ...emptyIndex(),
       chapters: [
-        { slug: "ch-a", title: "A", module: "core", order: 1 },
-        { slug: "ch-b", title: "B", module: "core", order: 2 },
-        { slug: "ch-c", title: "C", module: "core", order: 3 },
+        {
+          slug: "ch-a",
+          title: "A",
+          module: "core",
+          order: 1,
+          status: "stable" as const,
+        },
+        {
+          slug: "ch-b",
+          title: "B",
+          module: "core",
+          order: 2,
+          status: "stable" as const,
+        },
+        {
+          slug: "ch-c",
+          title: "C",
+          module: "core",
+          order: 3,
+          status: "stable" as const,
+        },
       ],
       misconceptions: [
         mc({
@@ -697,9 +756,27 @@ describe("MG1 — cycle in prerequisite_misconceptions (ADR 0044)", () => {
     const index: PedagogyIndex = {
       ...emptyIndex(),
       chapters: [
-        { slug: "ch-a", title: "A", module: "core", order: 1 },
-        { slug: "ch-b", title: "B", module: "core", order: 2 },
-        { slug: "ch-c", title: "C", module: "core", order: 3 },
+        {
+          slug: "ch-a",
+          title: "A",
+          module: "core",
+          order: 1,
+          status: "stable" as const,
+        },
+        {
+          slug: "ch-b",
+          title: "B",
+          module: "core",
+          order: 2,
+          status: "stable" as const,
+        },
+        {
+          slug: "ch-c",
+          title: "C",
+          module: "core",
+          order: 3,
+          status: "stable" as const,
+        },
       ],
       misconceptions: [
         mc({
@@ -739,7 +816,15 @@ describe("MG2 — prerequisite_misconceptions ordering + dangling (ADR 0044)", (
   it("emits an ERROR when a prerequisite references no known misconception (dangling)", () => {
     const index: PedagogyIndex = {
       ...emptyIndex(),
-      chapters: [{ slug: "ch-a", title: "A", module: "core", order: 1 }],
+      chapters: [
+        {
+          slug: "ch-a",
+          title: "A",
+          module: "core",
+          order: 1,
+          status: "stable" as const,
+        },
+      ],
       misconceptions: [
         mc({
           chapter: "ch-a",
@@ -758,7 +843,15 @@ describe("MG2 — prerequisite_misconceptions ordering + dangling (ADR 0044)", (
   it("emits an ERROR when a prerequisite lives in the same chapter", () => {
     const index: PedagogyIndex = {
       ...emptyIndex(),
-      chapters: [{ slug: "ch-a", title: "A", module: "core", order: 1 }],
+      chapters: [
+        {
+          slug: "ch-a",
+          title: "A",
+          module: "core",
+          order: 1,
+          status: "stable" as const,
+        },
+      ],
       misconceptions: [
         mc({
           chapter: "ch-a",
@@ -782,8 +875,20 @@ describe("MG2 — prerequisite_misconceptions ordering + dangling (ADR 0044)", (
     const index: PedagogyIndex = {
       ...emptyIndex(),
       chapters: [
-        { slug: "ch-a", title: "A", module: "core", order: 1 },
-        { slug: "ch-b", title: "B", module: "core", order: 2 },
+        {
+          slug: "ch-a",
+          title: "A",
+          module: "core",
+          order: 1,
+          status: "stable" as const,
+        },
+        {
+          slug: "ch-b",
+          title: "B",
+          module: "core",
+          order: 2,
+          status: "stable" as const,
+        },
       ],
       misconceptions: [
         mc({
@@ -807,8 +912,20 @@ describe("MG2 — prerequisite_misconceptions ordering + dangling (ADR 0044)", (
     const index: PedagogyIndex = {
       ...emptyIndex(),
       chapters: [
-        { slug: "ch-a", title: "A", module: "core", order: 1 },
-        { slug: "ch-b", title: "B", module: "core", order: 2 },
+        {
+          slug: "ch-a",
+          title: "A",
+          module: "core",
+          order: 1,
+          status: "stable" as const,
+        },
+        {
+          slug: "ch-b",
+          title: "B",
+          module: "core",
+          order: 2,
+          status: "stable" as const,
+        },
       ],
       misconceptions: [
         mc({
@@ -830,7 +947,15 @@ describe("MG2 — prerequisite_misconceptions ordering + dangling (ADR 0044)", (
   it("does not flag misconceptions with no prerequisite_misconceptions field (pre-ADR-0044 shape)", () => {
     const index: PedagogyIndex = {
       ...emptyIndex(),
-      chapters: [{ slug: "ch-a", title: "A", module: "core", order: 1 }],
+      chapters: [
+        {
+          slug: "ch-a",
+          title: "A",
+          module: "core",
+          order: 1,
+          status: "stable" as const,
+        },
+      ],
       misconceptions: [mc({ chapter: "ch-a", anchor: "alpha" })],
     };
     const report = runPedagogyAudit(index);
@@ -840,7 +965,15 @@ describe("MG2 — prerequisite_misconceptions ordering + dangling (ADR 0044)", (
   it("does not flag an empty prerequisite list (declared DAG root)", () => {
     const index: PedagogyIndex = {
       ...emptyIndex(),
-      chapters: [{ slug: "ch-a", title: "A", module: "core", order: 1 }],
+      chapters: [
+        {
+          slug: "ch-a",
+          title: "A",
+          module: "core",
+          order: 1,
+          status: "stable" as const,
+        },
+      ],
       misconceptions: [
         mc({
           chapter: "ch-a",
@@ -857,8 +990,8 @@ describe("MG2 — prerequisite_misconceptions ordering + dangling (ADR 0044)", (
     const index: PedagogyIndex = {
       ...emptyIndex(),
       chapters: [
-        { slug: "ch-a", title: "A", module: "core" },
-        { slug: "ch-b", title: "B", module: "core" },
+        { slug: "ch-a", title: "A", module: "core", status: "stable" as const },
+        { slug: "ch-b", title: "B", module: "core", status: "stable" as const },
       ],
       misconceptions: [
         mc({
@@ -905,6 +1038,39 @@ describe("K1 — chapters with zero <KeyInsight>s (INFO)", () => {
     };
     const report = runPedagogyAudit(index);
     expect(report.info.filter((i) => i.code === "K1")).toEqual([]);
+  });
+});
+
+describe("CS2 — draft chapters excluded from student build (ADR 0051)", () => {
+  it("emits no CS2 finding when no draft slugs are passed", () => {
+    const report = runPedagogyAudit(emptyIndex());
+    expect(report.info.filter((i) => i.code === "CS2")).toEqual([]);
+  });
+
+  it("emits no CS2 finding for an empty draft slug array", () => {
+    const report = runPedagogyAudit(emptyIndex(), { draftChapterSlugs: [] });
+    expect(report.info.filter((i) => i.code === "CS2")).toEqual([]);
+  });
+
+  it("emits one INFO per draft chapter slug", () => {
+    const report = runPedagogyAudit(emptyIndex(), {
+      draftChapterSlugs: ["in-progress", "scratch-chapter"],
+    });
+    const cs2 = report.info.filter((i) => i.code === "CS2");
+    expect(cs2).toHaveLength(2);
+    expect(cs2[0]).toMatchObject({ severity: "INFO", code: "CS2" });
+    expect(cs2[0]?.message).toContain("in-progress");
+    expect(cs2[0]?.location).toMatchObject({ chapter: "in-progress" });
+    expect(cs2[1]?.message).toContain("scratch-chapter");
+  });
+
+  it("CS2 message mentions student-build exclusion + ADR 0051", () => {
+    const report = runPedagogyAudit(emptyIndex(), {
+      draftChapterSlugs: ["wip"],
+    });
+    const cs2 = report.info.find((i) => i.code === "CS2");
+    expect(cs2?.message).toMatch(/excluded from the student build/i);
+    expect(cs2?.message).toContain("ADR 0051");
   });
 });
 

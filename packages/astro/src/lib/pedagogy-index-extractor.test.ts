@@ -2059,16 +2059,19 @@ describe("indexAccumulator setChapters / setModules", () => {
       slug: "ch-a",
       title: "Chapter A",
       module: "mod-1",
+      status: "stable",
     };
     const b: ChapterEntry = {
       slug: "ch-b",
       title: "Chapter B",
       module: "mod-1",
+      status: "stable",
     };
     const c: ChapterEntry = {
       slug: "ch-c",
       title: "Chapter C",
       module: "mod-1",
+      status: "stable",
     };
 
     indexAccumulator.setChapters([a, b]);
@@ -2102,6 +2105,7 @@ describe("indexAccumulator setChapters / setModules", () => {
       slug: "ch-x",
       title: "X",
       module: "mod-1",
+      status: "stable",
     };
     const mod: ModuleEntry = { slug: "mod-1", title: "Module 1", order: 0 };
 
@@ -2306,7 +2310,7 @@ describe("indexAccumulator inlineRefUsages (cross-chapter)", () => {
 describe("asPedagogyIndex (PR-C4 collections)", () => {
   test("returns all four new collections populated", () => {
     indexAccumulator.setChapters([
-      { slug: "ch-x", title: "X", module: "mod-1" },
+      { slug: "ch-x", title: "X", module: "mod-1", status: "stable" },
     ]);
     indexAccumulator.setModules([
       { slug: "mod-1", title: "Module 1", order: 0 },

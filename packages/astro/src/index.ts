@@ -7,6 +7,10 @@ export {
   type SophieIntegrationOptions,
 } from "./integration.ts";
 export {
+  getStudentChapters,
+  isStudentVisible,
+} from "./lib/get-student-chapters.ts";
+export {
   extractDefinitions,
   indexAccumulator,
   type PedagogyIndexRemarkPluginOptions,
