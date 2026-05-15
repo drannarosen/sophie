@@ -67,6 +67,45 @@ revisions.
 |---|---|---|---|
 | **A7** | [0046](../decisions/0046-equation-biography.md) | [equation-biography-schema](../reference/equation-biography-schema.md) | Equation Biography — children-mode extension to `<KeyEquation>` with six biography children (`<Observable>`, `<Assumption>` with optional `type=` slot, `<Units symbol unit>`, `<BreaksWhen>`, `<CommonMisuse>` with optional `misconception=` cross-ref). Three rendering surfaces detail-tuned (compact hover, full chapter-end, full /equations route). Three new E-prefix audit invariants (E7 INFO, E8 WARNING — fires only when NR is opted-in, E9 INFO). Universal scope; per-equation opt-in. |
 
+### Foundation hardening + cross-cutting ADRs (2026-05-15)
+
+Following the 2026-05-14
+[expert review](/Users/anna/Teaching/sophie/docs/reviews/2026-05-14-adrs-0040-0045-foundation-review.md)
+of the foundation tranche, a hardening pass landed:
+
+- **In-place revisions to ADRs 0040–0046** under Anna's explicit
+  one-time mutability override (12 commits, 2026-05-14 through
+  2026-05-15). Revisions captured in each ADR's Revisions
+  section. Immutability convention re-applies after the
+  hardening pass completes.
+- **Eight new cross-cutting ADRs** addressing the systemic
+  concerns surfaced by the review (S1–S6 + two Missing-domain
+  gaps):
+
+| ADR | Title | Addresses | Description |
+|---|---|---|---|
+| [0047](../decisions/0047-empirical-validation-plan.md) | Empirical Validation Plan | S2 | Two-paper SoTL strategy. Eight metrics (M1–M8) derived from existing structured data; four headline metrics. `sophie audit --metrics` + `sophie metrics history`. No new audit invariants; no deadlines. B9 forward-compatibility commitment. |
+| [0048](../decisions/0048-sophie-lds-content-plugins.md) | Sophie LDS Content Plugin System | S3 | Field-specific plugins (`@sophie/commons-universal` + `@sophie/discipline-*`). v1 ships empty; content lands in successor ADRs (0048-A/B/C). Three autonomy guarantees: no plugin required; per-entry override always allowed; plugins cannot impose ERROR invariants. |
+| [0049](../decisions/0049-sophie-refactor-cli.md) | `sophie refactor` CLI Family | S4 | Subcommand-per-entity-type (`misconception` / `concept` / `equation`); operations `rename` / `split` / `merge` / `delete`. Dry-run default; atomic apply via in-memory staging; audit-revert-on-new-ERRORs; auto-generated TDR-seed stubs. |
+| [0051](../decisions/0051-chapter-status-course-versioning.md) | Chapter Status + Course Versioning | CS / CV | Chapter `status: draft` / `review` / `stable` (draft EXCLUDED from student build); course-level semver via git tags following `course-semester-vN.N.N` convention; `course_version` block in pedagogy-contract.yaml. Five invariants CS1/CS2/CS3 + CV1/CV2. |
+| [0052](../decisions/0052-scheduled-publication-visibility.md) | Scheduled Publication & Visibility Windows | SP / Missing-2 | Build-time gating (NOT client-side hiding); chapter `publishes_at` / `unpublishes_at`; three components `<Solution>` / `<ExamKey>` / `<ScheduledReveal>`; `sophie publish-state` + `sophie publish-schedule list`. 6-hour cron default. Four invariants SP1–SP4 (SP3 ERROR for `<ExamKey>` without `unlocks_at`). |
+| [0053](../decisions/0053-conformance-failure-modes.md) | Conformance Failure Modes | Missing-2 | Five-failure-mode taxonomy; `audit_overrides` chapter frontmatter with three-grain control (invariant + anchor + TDR-ref); TDR-ref required (CF2 ERROR). Runtime fallbacks for IndexedDB + BroadcastChannel formalized (CF5). |
+| [0054](../decisions/0054-course-schedule-calendar.md) | Course Schedule + Calendar Page | SC | `schedule.yaml` + four components `<CourseSchedule>` / `<ScheduleTable>` / `<ScheduleCalendar>` / `<ScheduleICal>` + `/schedule.ics` RFC 5545 feed. Bidirectional auto-extraction from ADR 0052 timestamps. Four invariants SC1–SC4. |
+
+Plus three cross-cutting amendments to existing ADRs / docs:
+
+- **ADR 0030 §AI-Primary by Design** (S1): names the cumulative
+  authoring lift of the LDS foundation as deliberate
+  structural-labor relocation, not accidental overhead.
+- **ADR 0007 §Revisions** (Missing-2): formalizes runtime
+  fallbacks (`MemoryResponseStore` when IndexedDB unavailable;
+  silent BroadcastChannel degradation). Cross-refs ADR 0053
+  §CF5.
+- **`audit-and-ai-authoring.md` §What the audit does and
+  doesn't do** (S5): names audit-as-presence framing explicitly.
+  Several v1 invariants are gameable by perfunctory
+  satisfaction — by design. Quality lives elsewhere.
+
 **Next up:** future ADRs promote from
 [backlog](../vision/features/backlog.md) as authoring volume
 surfaces real friction. Highest-leverage near-term candidates:
@@ -75,7 +114,11 @@ with prose-style `≈`/`∼`/"roughly" detection; complements A7's
 biography of *exact* equations with first-class handling of
 *approximate* ones); B4 (Course Brain — serialized pedagogy
 index for AI consumption); B5 (Human Expertise Required gates —
-operationalizes A6's `requires-judgment` severity as CI gates).
+operationalizes A6's `requires-judgment` severity as CI gates);
+B8 (Semester Journal + AI Context Surface — longitudinal
+instructor observations that seed future TDRs and feed the AI
+author); B9 (Learning Telemetry — outcome-side measurement
+deferred from ADR 0047; paper #2 substrate).
 
 This page covers:
 
@@ -486,6 +529,17 @@ Cross-cutting:
   students.
 - `drannarosen.github.io/comp521/` is the URL Anna gives COMP 521
   students.
+- **v1-invariant-audit pass complete after ASTR 201 Module 1**
+  (per the 2026-05-14 foundation review's S6 concern). After
+  migrating Module 1 of ASTR 201 onto the LDS foundation contracts,
+  pause and audit the v1 invariant set (D/E/F/C/O/K + PC/AC +
+  NR/MR + MG/I + CS/CV + SP + CF + SC families) against actual
+  authoring usage. Outcome: a one-paragraph entry in each
+  foundation ADR's Revisions section naming which invariants
+  earned their keep, which were over-engineered, and which are
+  missing. The audit is a *one-time post-launch reflection*, not
+  an ongoing process; future revisions land as new ADRs under
+  the standard immutability discipline.
 
 ### Phase 5 — Dual-profile v2 + COMP 536 (~8 weeks, fall 2026 → early 2027)
 
