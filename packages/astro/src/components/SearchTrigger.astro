@@ -1,0 +1,73 @@
+---
+import { SearchModal } from "@sophie/components";
+
+/**
+ * <SearchTrigger> — Pagefind faceted search affordance in chapter chrome.
+ *
+ * Static Astro button (paint-fast discovery — visible immediately, no
+ * React hydration delay) plus the `<SearchModal client:idle>` React
+ * island that defers hydration until after the chapter's primary
+ * content paints.
+ *
+ * The button is a visible/keyboard-discoverable affordance; the
+ * primary entry is Cmd/Ctrl+K, handled by SearchModal's own
+ * document-level keydown listener (ADR 0037 cross-bundle pattern not
+ * required for v1 since the modal owns its own open state). Future
+ * polish: a click handler dispatching a synthetic keyboard event
+ * (design doc §11 follow-up).
+ *
+ * `data-pagefind-ignore` keeps the trigger's own UI strings ("Search",
+ * "⌘K") out of the next build's index — without it, Pagefind would
+ * surface the trigger as a hit on its own.
+ *
+ * `aria-keyshortcuts` advertises the Cmd/Ctrl+K binding to assistive
+ * tech that exposes keyboard shortcut hints.
+ *
+ * @media print hides the trigger (design doc §11 print-hide
+ * follow-up; PR 10 covers full print polish).
+ */
+---
+
+<button
+  type='button'
+  class='sophie-search-trigger'
+  data-pagefind-ignore
+  aria-keyshortcuts='Control+K Meta+K'
+  aria-label='Open search'
+>
+  <span class='sophie-search-trigger__icon' aria-hidden='true'>🔍</span>
+  <span class='sophie-search-trigger__label'>Search</span>
+  <kbd class='sophie-search-trigger__kbd'>⌘K</kbd>
+</button>
+
+<SearchModal client:idle />
+
+<style>
+  .sophie-search-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sophie-space-2);
+    padding: var(--sophie-space-1) var(--sophie-space-3);
+    border: 1px solid var(--sophie-color-border);
+    border-radius: var(--sophie-radius-md);
+    background: transparent;
+    color: var(--sophie-color-text-muted);
+    cursor: pointer;
+    font-size: 0.9em;
+  }
+  .sophie-search-trigger:hover {
+    background: var(--sophie-color-surface-2);
+  }
+  .sophie-search-trigger__kbd {
+    font-size: 0.8em;
+    padding: 0 var(--sophie-space-1);
+    border: 1px solid var(--sophie-color-border);
+    border-radius: var(--sophie-radius-sm);
+    background: var(--sophie-color-surface-0);
+  }
+  @media print {
+    .sophie-search-trigger {
+      display: none;
+    }
+  }
+</style>

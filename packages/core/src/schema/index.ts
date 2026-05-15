@@ -29,5 +29,6 @@ export {
   PedagogyIndexSchema,
 } from "./pedagogy-index.js";
 export { LangTag, NonEmptyString, Slug } from "./primitives.js";
+export type { EntityType } from "./search-facet.js";
 export { type Section, SectionSchema } from "./section.js";
 export { slugify } from "./slugify.js";

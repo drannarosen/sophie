@@ -1,6 +1,8 @@
+import { fileURLToPath } from "node:url";
 import mdx from "@astrojs/mdx";
 import react from "@astrojs/react";
 import type { AstroIntegration } from "astro";
+import { buildPagefindIndex } from "./lib/pagefind-postbuild.ts";
 import { pedagogyIndexVirtualModule } from "./lib/pedagogy-index-virtual-module.ts";
 import { sophieMdxOptions } from "./mdx-config.ts";
 
@@ -101,6 +103,12 @@ export function defineSophieIntegration(
           },
         });
         logger.info("Sophie integration loaded (MDX + React)");
+      },
+      "astro:build:done": async ({ dir, logger }) => {
+        const distPath = fileURLToPath(dir);
+        logger.info(`Building Pagefind index in ${distPath}/pagefind/`);
+        await buildPagefindIndex(distPath);
+        logger.info("Pagefind index complete");
       },
     },
   };

@@ -155,6 +155,8 @@ export {
   ReflectionPropsSchema,
   reflectionContract,
 } from "./components/Reflection/index.ts";
+export type { SearchResult } from "./components/Search/index.ts";
+export { SearchModal } from "./components/Search/index.ts";
 
 // Contract
 export type {

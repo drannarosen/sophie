@@ -1,0 +1,137 @@
+import * as Dialog from "@radix-ui/react-dialog";
+import {
+  type KeyboardEvent as ReactKeyboardEvent,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
+import { type ChipFilter, ChipStrip } from "./ChipStrip.tsx";
+import { ResultList } from "./ResultList.tsx";
+import styles from "./SearchModal.module.css.js";
+import type { SearchResult } from "./types.ts";
+
+// Narrow shape of the Pagefind JS client we use. Pagefind ships no
+// types; the runtime module exposes more than this, but only `search`
+// is consumed here.
+type PagefindAPI = {
+  search: (
+    query: string,
+    opts?: { filters?: Record<string, string | string[]> }
+  ) => Promise<{ results: Array<{ data: () => Promise<SearchResult> }> }>;
+};
+
+const DEBOUNCE_MS = 150;
+const MAX_RESULTS = 25;
+
+export function SearchModal(): ReactNode {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
+  const [activeFilter, setActiveFilter] = useState<ChipFilter>("all");
+  const [pagefind, setPagefind] = useState<PagefindAPI | null>(null);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const isMod = e.metaKey || e.ctrlKey;
+      if (isMod && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setOpen((prev) => !prev);
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, []);
+
+  useEffect(() => {
+    if (open && !pagefind) {
+      // The /pagefind/ path is a runtime-served asset, not a build-time
+      // module. Hide it from Vite's import-analysis by binding the URL
+      // to a local const before the dynamic import — the analyzer can
+      // resolve string literals but not variable arguments. Without this
+      // indirection, Vite errors at transform time (`Failed to resolve
+      // import "/pagefind/pagefind.js"`) before the .catch handler can
+      // fire. Production behavior is unchanged: the Astro client island
+      // dynamically fetches /pagefind/pagefind.js from the served origin
+      // after Task 7's postbuild emits dist/pagefind/.
+      const pagefindUrl = "/pagefind/pagefind.js";
+      import(/* @vite-ignore */ pagefindUrl)
+        .then((mod) => setPagefind(mod as PagefindAPI))
+        .catch((err) => {
+          console.error("Pagefind load failed", err);
+        });
+    }
+  }, [open, pagefind]);
+
+  useEffect(() => {
+    if (!pagefind || !query) {
+      setResults([]);
+      return;
+    }
+    const handle = setTimeout(async () => {
+      const filters =
+        activeFilter === "all" ? undefined : { type: [activeFilter] };
+      const search = await pagefind.search(query, { filters });
+      const data = await Promise.all(
+        search.results.slice(0, MAX_RESULTS).map((r) => r.data())
+      );
+      setResults(data);
+      setHighlightedIndex(0);
+    }, DEBOUNCE_MS);
+    return () => clearTimeout(handle);
+  }, [pagefind, query, activeFilter]);
+
+  const onInputKeyDown = useCallback(
+    (e: ReactKeyboardEvent<HTMLInputElement>) => {
+      if (results.length === 0) return;
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setHighlightedIndex((i) => Math.min(i + 1, results.length - 1));
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setHighlightedIndex((i) => Math.max(i - 1, 0));
+      }
+    },
+    [results.length]
+  );
+
+  const onSelect = useCallback((r: SearchResult) => {
+    setOpen(false);
+    window.location.href = r.url;
+  }, []);
+
+  return (
+    <Dialog.Root open={open} onOpenChange={setOpen}>
+      <Dialog.Portal>
+        <Dialog.Overlay className={styles.overlay} />
+        <Dialog.Content
+          className={styles.content}
+          aria-labelledby='sophie-search-title'
+          data-pagefind-ignore
+        >
+          <Dialog.Title id='sophie-search-title' className={styles.srOnly}>
+            Search
+          </Dialog.Title>
+          <input
+            type='text'
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={onInputKeyDown}
+            placeholder='search query…'
+            className={styles.input}
+            aria-controls='sophie-search-results'
+            // biome-ignore lint/a11y/noAutofocus: modal-scoped focus trap — the input must take focus when the dialog opens, per WAI-ARIA combobox/listbox APG and the SearchModal test contract (Task 3).
+            autoFocus
+          />
+          <ChipStrip active={activeFilter} onChange={setActiveFilter} />
+          <ResultList
+            results={results}
+            highlightedIndex={highlightedIndex}
+            onSelect={onSelect}
+          />
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+  );
+}
