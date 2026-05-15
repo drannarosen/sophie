@@ -1,9 +1,38 @@
+import { mkdir, writeFile } from "node:fs/promises";
+import { join } from "node:path";
+import type { PedagogyIndex } from "@sophie/core/schema";
 import * as pagefind from "pagefind";
 import {
   converters,
   type PagefindCustomRecord,
 } from "./pagefind-converters/index.ts";
 import { indexAccumulator } from "./pedagogy-index-extractor.ts";
+
+/**
+ * Emit the consumer's `PedagogyIndex` snapshot to
+ * `<distPath>/.sophie/pedagogy-index.json` — the build artifact that
+ * `sophie diff` (Phase 3, ADR 0045) consumes to compare semantic
+ * content across two git refs.
+ *
+ * Per ADR 0045 §"Artifact 2": this file is the contract between
+ * `sophie build` and `sophie diff`; diff does not import in-process
+ * from build, it reads the JSON. Keeps the two commands independent
+ * so a future `@sophie/diff` package can ship without depending on
+ * `@sophie/astro`.
+ *
+ * 2-space indent matches Sophie's general formatting convention and
+ * keeps diffs readable. `mkdir({ recursive: true })` covers the case
+ * where `.sophie/` doesn't exist yet (always true on a fresh build).
+ */
+export async function writePedagogyIndexJson(
+  distPath: string,
+  pedagogyIndex: PedagogyIndex
+): Promise<void> {
+  const sophieDir = join(distPath, ".sophie");
+  await mkdir(sophieDir, { recursive: true });
+  const outPath = join(sophieDir, "pedagogy-index.json");
+  await writeFile(outPath, JSON.stringify(pedagogyIndex, null, 2), "utf-8");
+}
 
 /**
  * Pagefind postbuild orchestrator. Runs from the
@@ -18,11 +47,11 @@ import { indexAccumulator } from "./pedagogy-index-extractor.ts";
  *      in-memory indexAccumulator (the same singleton populated by
  *      pedagogyIndexRemarkPlugin during MDX render).
  *
- * Reads indexAccumulator directly per plan errata §1 — the
- * dist/.sophie/pedagogy-index.json artifact referenced in design
- * doc §4 doesn't exist today (ADR 0045 is docs-only). When that
- * artifact ships, the read can switch to it without changing the
- * converters or the pipeline shape.
+ * Reads indexAccumulator directly per plan errata §1. The
+ * `dist/.sophie/pedagogy-index.json` artifact (ADR 0045) is emitted
+ * as a byproduct via `writePedagogyIndexJson` below; Pagefind
+ * conversion still consumes the in-memory accumulator (same data,
+ * one source of truth per build).
  */
 export async function buildPagefindIndex(distPath: string): Promise<void> {
   const pedagogyIndex = indexAccumulator.asPedagogyIndex();
@@ -105,4 +134,9 @@ export async function buildPagefindIndex(distPath: string): Promise<void> {
   }
 
   await pagefind.close();
+
+  // ADR 0045 Artifact 2: emit the PedagogyIndex JSON snapshot for
+  // `sophie diff` to consume across git refs. Independent of Pagefind;
+  // emitted after Pagefind close so a Pagefind failure surfaces first.
+  await writePedagogyIndexJson(distPath, pedagogyIndex);
 }

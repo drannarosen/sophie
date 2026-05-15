@@ -1,8 +1,10 @@
 import {
+  existsSync,
   mkdirSync,
   mkdtempSync,
   readdirSync,
   readFileSync,
+  statSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -119,5 +121,109 @@ describe("buildPagefindIndex (Layer 1.6)", () => {
       f.endsWith(".pf_filter")
     );
     expect(filterFiles.length).toBeGreaterThan(0);
+  });
+});
+
+/**
+ * ADR 0045 Artifact 2 — `dist/.sophie/pedagogy-index.json` is the
+ * build byproduct that `sophie diff` (Phase 3) reads to compare two
+ * git refs. These tests pin the file's location, structure, and
+ * formatting; the contract is "the same PedagogyIndex that
+ * `runPedagogyAudit()` consumes, serialized to disk."
+ */
+describe("pedagogy-index.json artifact (ADR 0045)", () => {
+  async function runWithPopulatedIndex(): Promise<string> {
+    const dir = mkdtempSync(join(tmpdir(), "sophie-pedindex-"));
+    mkdirSync(join(dir, "chapters", "ch"), { recursive: true });
+    writeFileSync(
+      join(dir, "chapters", "ch", "index.html"),
+      `<!doctype html>
+<html lang="en">
+  <body>
+    <main data-pagefind-body>
+      <h1 data-pagefind-meta="title">Test chapter</h1>
+      <p>Some prose.</p>
+    </main>
+  </body>
+</html>`
+    );
+
+    const { resetIndexAccumulator, indexAccumulator } = await import(
+      "./pedagogy-index-extractor.ts"
+    );
+    resetIndexAccumulator();
+    indexAccumulator.setModules([{ slug: "m", title: "M", order: 1 }]);
+    indexAccumulator.setChapters([
+      { slug: "ch", title: "Test chapter", module: "m", order: 1 },
+    ]);
+    indexAccumulator.addDefinitions([
+      {
+        term: "luminosity",
+        slug: "luminosity",
+        body: "Total radiant power.",
+        chapter: "ch",
+        anchor: "def-luminosity",
+      },
+    ]);
+
+    await buildPagefindIndex(dir);
+    return dir;
+  }
+
+  test("writes dist/.sophie/pedagogy-index.json with the in-memory index", async () => {
+    const dir = await runWithPopulatedIndex();
+    const artifactPath = join(dir, ".sophie", "pedagogy-index.json");
+
+    expect(existsSync(artifactPath)).toBe(true);
+
+    const parsed = JSON.parse(readFileSync(artifactPath, "utf-8"));
+    expect(parsed).toMatchObject({
+      modules: [{ slug: "m", title: "M", order: 1 }],
+      chapters: [{ slug: "ch", title: "Test chapter", module: "m", order: 1 }],
+      definitions: [
+        {
+          term: "luminosity",
+          slug: "luminosity",
+          chapter: "ch",
+          anchor: "def-luminosity",
+        },
+      ],
+    });
+    // Every PedagogyIndex collection field is present (plain arrays —
+    // no Maps, no Dates — already JSON-safe per
+    // `indexAccumulator.asPedagogyIndex()`).
+    for (const key of [
+      "definitions",
+      "equations",
+      "keyInsights",
+      "figureRegistry",
+      "figureUsages",
+      "misconceptions",
+      "chapters",
+      "modules",
+      "objectives",
+      "inlineRefUsages",
+    ]) {
+      expect(Array.isArray(parsed[key])).toBe(true);
+    }
+  });
+
+  test("creates the .sophie/ directory when missing", async () => {
+    const dir = await runWithPopulatedIndex();
+    const sophieDir = join(dir, ".sophie");
+    expect(existsSync(sophieDir)).toBe(true);
+    expect(statSync(sophieDir).isDirectory()).toBe(true);
+  });
+
+  test("writes JSON with 2-space indent", async () => {
+    const dir = await runWithPopulatedIndex();
+    const raw = readFileSync(
+      join(dir, ".sophie", "pedagogy-index.json"),
+      "utf-8"
+    );
+    // 2-space indent leaves a `\n  ` (newline + two spaces) before any
+    // first-level key — the formatting signal `JSON.stringify(_, _, 2)`
+    // emits. Bare `JSON.stringify(value)` would be a single line.
+    expect(raw).toContain("\n  ");
   });
 });

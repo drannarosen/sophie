@@ -1347,6 +1347,43 @@ const mdxCallout = (
   children,
 });
 
+/**
+ * Build the mdast shape for a JSX expression-valued attribute (the
+ * `={[...]}` form authors use for ADR-0044 misconception-graph
+ * fields). The unified pipeline normally emits this with `data.estree`
+ * populated; the extractor only reads the raw `value` string so we
+ * synthesize the minimum shape here.
+ */
+const mdxExprAttr = (name: string, exprSource: string) => ({
+  type: "mdxJsxAttribute" as const,
+  name,
+  value: { type: "mdxJsxAttributeValueExpression" as const, value: exprSource },
+});
+
+/**
+ * Build an Aside / Callout flow element with a MIX of plain-string
+ * attrs and JSX expression-valued attrs. Used for ADR-0044
+ * misconception-graph-fields tests.
+ */
+const mdxFlowEl = (
+  name: string,
+  stringAttrs: Record<string, string>,
+  exprAttrs: Record<string, string>,
+  children: ReadonlyArray<Record<string, unknown>> = []
+) => ({
+  type: "mdxJsxFlowElement",
+  name,
+  attributes: [
+    ...Object.entries(stringAttrs).map(([k, v]) => ({
+      type: "mdxJsxAttribute",
+      name: k,
+      value: v,
+    })),
+    ...Object.entries(exprAttrs).map(([k, v]) => mdxExprAttr(k, v)),
+  ],
+  children,
+});
+
 describe("extractMisconceptions (pure)", () => {
   // T28
   test("<Aside kind='misconception'> produces entry with length='short'", () => {
@@ -1509,6 +1546,135 @@ describe("extractMisconceptions (pure)", () => {
     const entries = extractMisconceptions(tree as never, "ch");
     expect(entries).toHaveLength(1);
     expect(entries[0]?.label).toBe("Real");
+  });
+});
+
+describe("extractMisconceptions — ADR 0044 graph fields", () => {
+  test("Aside with all four graph fields populated → entry carries them", () => {
+    const tree = root([
+      mdxFlowEl(
+        "Aside",
+        { kind: "misconception", title: "Redshift as ordinary Doppler" },
+        {
+          prerequisite_misconceptions:
+            '["universe-with-a-center", "expansion-vs-motion-in-space"]',
+          related_misconceptions: '["big-bang-as-explosion-in-space"]',
+          concept_refs: '["redshift", "recession-velocity"]',
+          discipline_scope: '["astronomy"]',
+        },
+        [para("body")]
+      ),
+    ]);
+
+    const entries = extractMisconceptions(tree as never, "ch");
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      anchor: "redshift-as-ordinary-doppler",
+      length: "short",
+      prerequisite_misconceptions: [
+        "universe-with-a-center",
+        "expansion-vs-motion-in-space",
+      ],
+      related_misconceptions: ["big-bang-as-explosion-in-space"],
+      concept_refs: ["redshift", "recession-velocity"],
+      discipline_scope: ["astronomy"],
+    });
+  });
+
+  test("Callout with graph fields → long-form entry carries them too", () => {
+    const tree = root([
+      mdxFlowEl(
+        "Callout",
+        { variant: "misconception", title: "Brightness is intrinsic" },
+        {
+          related_misconceptions:
+            '["flux-and-luminosity-interchangeable", "all-stars-equally-bright"]',
+          concept_refs: '["flux", "stellar-luminosity", "distance-modulus"]',
+        },
+        [para("body")]
+      ),
+    ]);
+
+    const entries = extractMisconceptions(tree as never, "ch");
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      anchor: "brightness-is-intrinsic",
+      length: "long",
+      related_misconceptions: [
+        "flux-and-luminosity-interchangeable",
+        "all-stars-equally-bright",
+      ],
+      concept_refs: ["flux", "stellar-luminosity", "distance-modulus"],
+    });
+    // Unpopulated fields stay undefined (omitted from the entry).
+    expect(entries[0]?.prerequisite_misconceptions).toBeUndefined();
+    expect(entries[0]?.discipline_scope).toBeUndefined();
+  });
+
+  test("misconception with NO graph fields → fields are undefined (pre-ADR-0044 shape preserved)", () => {
+    const tree = root([
+      mdxAside({ kind: "misconception", title: "Plain misconception" }, [
+        para("no graph relationships declared"),
+      ]),
+    ]);
+
+    const entries = extractMisconceptions(tree as never, "ch");
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.prerequisite_misconceptions).toBeUndefined();
+    expect(entries[0]?.related_misconceptions).toBeUndefined();
+    expect(entries[0]?.concept_refs).toBeUndefined();
+    expect(entries[0]?.discipline_scope).toBeUndefined();
+  });
+
+  test("empty prerequisite_misconceptions list (`[]`) is preserved — declares a DAG root", () => {
+    const tree = root([
+      mdxFlowEl(
+        "Aside",
+        { kind: "misconception", title: "Universe with a center" },
+        { prerequisite_misconceptions: "[]" },
+        [para("body")]
+      ),
+    ]);
+
+    const entries = extractMisconceptions(tree as never, "ch");
+    expect(entries[0]?.prerequisite_misconceptions).toEqual([]);
+  });
+
+  test("single-quoted JS string literals inside the expression are normalized to JSON", () => {
+    const tree = root([
+      mdxFlowEl(
+        "Aside",
+        { kind: "misconception", title: "Single-quoted" },
+        { concept_refs: "['redshift', 'flux']" },
+        [para("body")]
+      ),
+    ]);
+
+    const entries = extractMisconceptions(tree as never, "ch");
+    expect(entries[0]?.concept_refs).toEqual(["redshift", "flux"]);
+  });
+
+  test("extracted entries pass MisconceptionEntrySchema validation", async () => {
+    const { MisconceptionEntrySchema } = await import("@sophie/core/schema");
+    const tree = root([
+      mdxFlowEl(
+        "Aside",
+        { kind: "misconception", title: "Schema-validated" },
+        {
+          prerequisite_misconceptions: '["root"]',
+          related_misconceptions: '["sibling"]',
+          concept_refs: '["c1"]',
+          discipline_scope: '["astronomy"]',
+        },
+        [para("body")]
+      ),
+      mdxAside({ kind: "misconception", title: "Plain" }, [para("body")]),
+    ]);
+
+    const entries = extractMisconceptions(tree as never, "ch");
+    for (const e of entries) {
+      expect(MisconceptionEntrySchema.safeParse(e).success).toBe(true);
+    }
   });
 });
 

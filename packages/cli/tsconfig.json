@@ -7,8 +7,9 @@
     "ignoreDeprecations": "6.0",
     "allowImportingTsExtensions": true,
     "paths": {
-      "@sophie/core/schema": ["./src/schema/index.ts"],
-      "@sophie/core/audit": ["./src/audit/index.ts"]
+      "@sophie/cli/commands/start": ["./src/commands/start.ts"],
+      "@sophie/cli/commands/preview": ["./src/commands/preview.ts"],
+      "@sophie/cli/commands/audit": ["./src/commands/audit.ts"]
     }
   },
   "include": ["src", "vitest.config.ts"],

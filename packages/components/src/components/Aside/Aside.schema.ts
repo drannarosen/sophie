@@ -56,6 +56,19 @@ export const AsidePropsSchema = z
     title: z.string().optional(),
     id: z.string().optional(),
     children: z.custom<ReactNode>(),
+    /**
+     * ADR 0044 misconception-graph fields. Only meaningful when
+     * `kind === "misconception"`; ignored on other kinds. All four
+     * are optional — a misconception with no declared relationships
+     * is a valid v1 entry. The extractor (`extractMisconceptions`)
+     * reads these as JSX expression-valued props and threads them
+     * into the pedagogy index; the build-time audit pass enforces
+     * MG1 (cycle) + MG2 (earlier-chapter ordering / dangling refs).
+     */
+    prerequisite_misconceptions: z.array(z.string().min(1)).optional(),
+    related_misconceptions: z.array(z.string().min(1)).optional(),
+    concept_refs: z.array(z.string().min(1)).optional(),
+    discipline_scope: z.array(z.string().min(1)).optional(),
   })
   .refine(
     (props) =>
