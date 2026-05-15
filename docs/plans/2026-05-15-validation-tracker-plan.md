@@ -16,18 +16,62 @@
 
 **Sequencing:** Six PRs land sequentially on `main` per `feedback_branch_pr_scope` memory (full PR flow for code changes). Each PR is independently reviewable + revertable. Approximate effort: ~2–3 weeks at Sophie's Bucket B / Bucket C pace.
 
-| PR | Scope | Depends on |
+| PR | Scope | Status |
 |---|---|---|
-| **PR 1** | Zod schema in `@sophie/core/schema/validation.ts` | — |
-| **PR 2** | Bulk migration — default `validation: { status: "unvalidated" }` block on all ~74 ADRs + reference docs | PR 1 schema |
-| **PR 3** | Audit invariants V1–V7 in `pedagogy-audit.ts` (initially WARNING-grade across the board) | PR 1 + PR 2 |
-| **PR 4** | MyST admonition plugin (per-page rendering + staleness detection), gated behind `SOPHIE_DOCS_INCLUDE_VALIDATION` flag | PR 1 + PR 2 |
-| **PR 5** | Vite index plugin (generated `/status/validation/` page), same build flag | PR 1 + PR 4 |
-| **PR 6** | Reference doc `reference/validation-tracker.md` + curated initial-pass migration that lifts substantial contracts to actual current state; promote V1/V2 invariants WARNING → ERROR | PRs 1–5 |
+| **PR 1** | Zod schema in `@sophie/core/schema/validation.ts` | ✅ Merged 2026-05-15 (#43, `ad0a13d`) |
+| **PR 2** | Bulk migration — default `validation: { status: "unvalidated" }` block on all ~74 ADRs + reference docs | ✅ Merged 2026-05-15 (#44, `faf041c`) |
+| **PR 4** | MyST admonition plugin (per-page rendering + staleness detection), gated behind `SOPHIE_DOCS_INCLUDE_VALIDATION` flag | ✅ Merged 2026-05-15 (#50, `47f6e5c`, replaces auto-closed #46) |
+| **PR 3** | Audit invariants V1–V7 in `pedagogy-audit.ts` (initially WARNING-grade across the board) | ⏳ Pending |
+| **PR 5** | Vite index plugin (generated `/status/validation/` page), same build flag | ⏳ Pending |
+| **PR 6** | Reference doc `reference/validation-tracker.md` + curated initial-pass migration that lifts substantial contracts to actual current state; promote V1/V2 invariants WARNING → ERROR | ⏳ Pending |
+
+**Merge order**: PRs 1/2/4 landed on 2026-05-15 in the order #43 → #44 → #50. PR 4 was reordered ahead of PR 3 per a code-review recommendation (the original "collapse warn-flood" rationale turned out to be moot — mystmd 1.9 silently accepts unknown frontmatter keys, so the warn-flood never appeared — but PR 4 first still gave faster review on the rendered surface).
+
+---
+
+## Progress (2026-05-15)
+
+### Today's landings
+
+- **PR #43 (validation schema)** — 21 unit tests (`it.each` expanded from the plan's predicted 14); biome 0/0; cross-field refinement V3 at schema layer enforced.
+- **PR #44 (bulk migration)** — 77 contract files migrated (55 ADRs + 22 reference docs, excluding `template.md`); the plan's "~74" was a soft estimate. gray-matter added as root devDep. **Roundtrip side-effects accepted**: `date: YYYY-MM-DD` → `date: YYYY-MM-DDT00:00:00.000Z` and inline `tags: [a, b, c]` → block-style lists; semantically equivalent; YAGNI to round-trip-preserve for a one-shot script.
+- **Direct-to-main follow-up (`8e7df6f`)** — closed PR 2's code review Important #1: `decisions/template.md` + `contributing/adr-process.md` now include `validation:` in the documented frontmatter shape so new ADRs ship correctly. Cherry-picked to main per `feedback_branch_pr_scope` docs convention.
+- **PR #50 (admonition plugin)** — 34 new tests (12 renderer + 5 builder + 5 isContractFile + 5 staleness + 4 axe-core + 1 integration); biome 0/0; staleness detection matches both Revisions shapes (canonical `**§N — date —**` + H2-inline `## Revisions (date — …)`). Theme palette extended with `info` + `neutral` status anchors (brand-teal + slate-gray); 8 new validation-status CSS vars via color-mix. Replaces auto-closed #46 (closed when its base branch `feat/validation-schema` was deleted on PR #43 merge).
+
+### Parallel-track work that landed in main today (affects remaining PRs)
+
+Anna ran a parallel session shipping Phase 3 first moves identified by the Bucket B+C audit:
+
+- **PR #45** (`d390d5a`) — `@sophie/cli` carve-out as its own package.
+- **PR #47** (`6821b11`) — emits `dist/.sophie/pedagogy-index.json` at build time. **Relevant to PR 5**: the Vite plugin should consume this JSON rather than re-walking frontmatter (DRY with #47's extraction).
+- **PR #48** (`de8b1ec`) — misconception graph fields + MG audit invariants in `pedagogy-audit.ts`. **Relevant to PR 3**: pedagogy-audit.ts has changed since the plan was written; PR 3 subagent must re-read the file in its current post-#48 state and integrate cleanly with the MG-family invariants.
+- **PR #49** (`8248774`) — `chapter.status` frontmatter (`draft | review | stable`) + `get-student-chapters.ts` filter. **Relevant to PR 6**: ADR 0051 (chapter-level status) and ADR 0056 (contract-level validation) are sibling status surfaces; reference doc should note the distinction without conflating them.
+
+### Code-review deferred items to fold into remaining PRs
+
+**For PR 3** (from PR #43 review):
+
+- **V4 implementation** at the audit layer ("unvalidated must be clean: empty evidence + null date"). Schema only enforces V3; V4 is the audit's job per ADR 0056 §"Audit / validation invariants".
+- **V8 / V4b**: warn on unknown keys inside the `validation` block (Zod's default `.strip()` drops unknown keys silently). New audit invariant; INFO severity. Composes cleanly with the existing V1–V7 family.
+- **Header comment** in `packages/core/src/schema/validation.ts` documenting the V3-here / V4-V7-audit split for future readers (optional cleanup).
+
+**For PR 5 or PR 6** (from PR #50 review):
+
+- **Integration-test coverage extension (I2)**: the existing integration test in PR 4 covers ADR 0007 only. Extend to assert every ADR + reference artifact carries a validation class.
+
+**Follow-up issue, not blocking** (from PR #50 review I1):
+
+- `docs/website/scripts/validation-admonition-plugin.mjs` imports `../../../packages/astro/dist/index.js`. Needs either turbo `dependsOn: ["@sophie/astro#build"]` or promoting `docs/website` to a workspace member. Track as a separate issue; not blocking PR 5.
+
+### Mystmd warn-flood prediction (resolved)
+
+The original plan + PR 2 reviewer predicted 77 "extra key ignored: validation" warnings between PR 2 (data lands) and PR 4 (renderer claims the key). **Never appeared**: mystmd 1.9 silently accepts unknown frontmatter keys without warning. Informational; no plan impact.
 
 ---
 
 ## PR 1 — Zod schema for validation block
+
+**Status:** ✅ Merged 2026-05-15 as [#43](https://github.com/drannarosen/sophie/pull/43) (`ad0a13d`). 21 tests; biome 0/0; cross-field refinement V3 enforced. Tasks 1.1–1.5 below are kept as historical record of the TDD steps executed.
 
 **Branch:** `feat/validation-schema`
 **Files:**
@@ -346,11 +390,13 @@ EOF
 
 ## PR 2 — Bulk migration: default-unvalidated frontmatter on all contracts
 
+**Status:** ✅ Merged 2026-05-15 as [#44](https://github.com/drannarosen/sophie/pull/44) (`faf041c`). 77 files migrated (55 ADRs + 22 reference docs); idempotent; MyST build clean; biome 0/0 on the script. Code review surfaced template.md + adr-process.md gap which was closed in follow-up direct-to-main commit `8e7df6f`. Tasks 2.1–2.4 below are kept as historical record.
+
 **Branch:** `feat/validation-bulk-migration`
 **Files:**
 
-- Modify: all `docs/website/decisions/NNNN-*.md` (54 files)
-- Modify: all `docs/website/reference/*.md` (~20 files)
+- Modify: all `docs/website/decisions/NNNN-*.md` (55 files; plan estimated 54)
+- Modify: all `docs/website/reference/*.md` (22 files; plan estimated ~20)
 - Create: `scripts/migrate-validation-blocks.mjs` (one-shot migration script)
 
 ### Task 2.1: Write the migration script
@@ -484,12 +530,22 @@ gh pr create --title "feat(docs): bulk default-unvalidated frontmatter migration
 
 ## PR 3 — Audit invariants V1–V7
 
+**Status:** ⏳ Pending — next in queue.
+
+**Critical context** (not in original plan; folded in 2026-05-15 after PR 1 + PR 2 review + parallel-track merges):
+
+- **PR #48 modified `pedagogy-audit.ts`** to add MG (misconception graph) audit invariants. **Re-read `pedagogy-audit.ts` in its current post-#48 state** before adding V1–V7. The validation invariants must integrate cleanly with the MG family; don't clobber the existing `runMisconceptionGraphInvariants` (or equivalent) function.
+- **Ship V4** at the audit layer: "if status is `unvalidated`, then evidence is empty AND last_validated_date is null." ERROR severity. Catches the stale-half-filled-block failure mode (PR 1 reviewer's deferred item).
+- **Ship V8 (or V4b)**: warn on unknown keys inside the `validation` frontmatter block. Schema strips unknown keys silently (Zod default `.strip()`); audit-layer check catches typos like `last_validation_date` (missing "ed") or `evidence_summary`. INFO severity. PR 1 reviewer suggested this.
+- **Optional header comment** in `packages/core/src/schema/validation.ts` documenting the V3-here / V4–V7-audit split for future readers (PR 1 reviewer suggested).
+
 **Branch:** `feat/validation-audit-invariants`
 **Files:**
 
 - Modify: `packages/astro/src/lib/pedagogy-audit.ts`
 - Modify: `packages/astro/src/lib/pedagogy-audit.test.ts`
 - Modify: `packages/core/src/schema/pedagogy-index.ts` (add `contractValidations` field)
+- Modify: `packages/core/src/schema/validation.ts` (optional header comment)
 
 ### Task 3.1: Add `ContractValidation` to the pedagogy index
 
@@ -775,6 +831,8 @@ gh pr create --title "feat(astro): audit invariants V1-V7 (ADR 0056)" --body "..
 
 ## PR 4 — MyST admonition plugin (per-page rendering + staleness)
 
+**Status:** ✅ Merged 2026-05-15 as [#50](https://github.com/drannarosen/sophie/pull/50) (`47f6e5c`, replaces auto-closed #46). 34 new tests (renderer + AST builder + isContractFile + staleness + axe-core + integration); biome 0/0. Theme palette extended with `info` + `neutral` status anchors (brand-teal + slate-gray) — code review found this defensible (no conflict with existing `Callout.info` mapping; reversible). Two follow-up items for PR 5/6: build-order I1 (turbo dependsOn or workspace-promote `docs/website`) + integration-test I2 (extend to every ADR + reference doc). Tasks 4.1–4.7 below are kept as historical record.
+
 **Branch:** `feat/validation-admonition-plugin`
 **Files:**
 
@@ -986,6 +1044,13 @@ gh pr create --title "feat(astro): MyST validation admonition plugin (ADR 0056 D
 
 ## PR 5 — Vite index plugin
 
+**Status:** ⏳ Pending — runs after PR 3.
+
+**Critical context** (not in original plan; folded in 2026-05-15 after parallel-track merges):
+
+- **PR #47 emits `dist/.sophie/pedagogy-index.json`** at build time. PR 5's Vite plugin should **consume that JSON artifact** rather than re-walking frontmatter — DRY with #47's extraction pipeline. If the JSON doesn't yet include `contractValidations`, extend #47's emitter (in `packages/astro/src/lib/pedagogy-index-*` or its sibling) to include it; that's PR 5's first task.
+- **Extend the integration test from PR 4 (I2)**: assert every ADR + reference doc artifact carries a `validation-*` class in the rendered output. Land this in PR 5 alongside the index-page rendering test, or in PR 6 with the curated-pass changes.
+
 **Branch:** `feat/validation-index-page`
 **Files:**
 
@@ -993,6 +1058,7 @@ gh pr create --title "feat(astro): MyST validation admonition plugin (ADR 0056 D
 - Create: `packages/astro/src/lib/validation-index-generator.test.ts`
 - Modify: `packages/astro/src/integration.ts` (or wherever the Vite plugins register; verify exact path)
 - Modify: `docs/website/myst.yml` (add `status/validation.md` to the toc with `private: true` tag)
+- Possibly modify: `packages/astro/src/lib/pedagogy-index-*` to extend the emitted JSON with `contractValidations`
 
 ### Task 5.1: Write failing tests for index generation
 
@@ -1050,12 +1116,24 @@ Render the index page in local dev (with the flag on); verify summary table accu
 
 ## PR 6 — Reference doc + curated initial-pass + promote V1/V2 to ERROR
 
+**Status:** ⏳ Pending — runs after PR 5.
+
+**Critical context** (not in original plan; folded in 2026-05-15 after parallel-track merges):
+
+- **Expanded curated-initial-pass scope**: substantial contracts now include the newly-shipped Phase 3 ADRs Anna landed in parallel today. Suggested list for the initial pass — adjust per actual evidence:
+  - **Foundation primitives** (high test + chapter coverage): ADRs 0001, 0002, 0003, 0004, 0007, 0011, 0013, 0014, 0029, 0038. Many ship `kind: test + chapter`.
+  - **LDS foundation tranche, docs-only**: ADRs 0040–0046 with `status: in-progress` (contracts spec'd, code partially shipped). #44 (misconception graph fields, ADR 0044), #45 (sophie/cli carve-out), #47 (pedagogy-index JSON, ADR 0045), #48 (MG audit invariants), #49 (chapter.status, ADR 0051) all advanced the implementation today.
+  - **Validation tracker itself** (ADR 0056): self-referential. Set to `in-progress` until PR 6 closes; promote to `validated` once curated initial-pass + spot-check completes.
+- **ADR 0051 (chapter.status) ↔ ADR 0056 (validation status) distinction**: these are sibling status surfaces — chapter-level vs contract-level. The new reference doc `reference/validation-tracker.md` should note this in a "See also" or comparison block so future readers don't conflate them.
+- **Promote V1 + V2 WARNING → ERROR** after the bulk migration is verified clean (which it is — PR #44 covered all 77 contracts). Update `pedagogy-audit.ts` severity tables in this PR.
+
 **Branch:** `feat/validation-reference-doc-and-initial-pass`
 **Files:**
 
 - Create: `docs/website/reference/validation-tracker.md`
-- Modify: ~20 substantial ADRs/reference docs with curated initial-pass validation state (the contracts that have real evidence today; e.g., ADRs 0001/0004/0007/0029/0038, ADRs 0040–0046 with `status: in-progress` due to docs-only shipping, etc.)
+- Modify: ~20–25 substantial ADRs/reference docs with curated initial-pass validation state (see expanded list above)
 - Modify: `packages/astro/src/lib/pedagogy-audit.ts` (promote V1+V2 from WARNING to ERROR)
+- Modify: `docs/website/decisions/0056-validation-tracker.md` (its own validation block — `in-progress` → `validated` after spot-check)
 - Modify: `docs/website/myst.yml` (add reference doc to toc)
 
 ### Task 6.1: Author the companion reference doc
@@ -1100,19 +1178,24 @@ Update the audit invariants V1+V2 from WARNING → ERROR severity. The build now
 
 ### Acceptance criteria (whole tracker)
 
-- [ ] All ~74 ADRs + reference docs carry a `validation:` frontmatter block.
-- [ ] The per-page admonition renders at the top of each contract page (local dev with flag on).
-- [ ] `/status/validation/` index page lists every contract with status + last_validated_date + evidence kinds.
-- [ ] V1–V7 audit invariants fire correctly against fixture frontmatter; V1+V2 are ERROR-grade post-PR-6.
-- [ ] `SOPHIE_DOCS_INCLUDE_VALIDATION=0` (or default) excludes both the per-page admonition and the index page from rendered output; data layer (frontmatter) always present.
-- [ ] Self-referential: ADR 0056 + `reference/validation-tracker.md` carry their own validation blocks and graduate from `in-progress` to `validated` post-PR-6 spot-check.
+- [x] All ADRs + reference docs carry a `validation:` frontmatter block. **77 contracts via PR #44** (plan estimated ~74).
+- [x] The per-page admonition renders at the top of each contract page (local dev with flag on). **Shipped via PR #50.**
+- [x] `SOPHIE_DOCS_INCLUDE_VALIDATION=0` excludes the per-page admonition from rendered output; data layer (frontmatter) always present. **Shipped via PR #50.**
+- [ ] `/status/validation/` index page lists every contract with status + last_validated_date + evidence kinds. **PR 5 ships this.**
+- [ ] V1–V7 audit invariants fire correctly against fixture frontmatter; V1+V2 are ERROR-grade post-PR-6. **PR 3 ships V1–V7 (initially WARNING); PR 6 promotes V1+V2 to ERROR.**
+- [ ] `SOPHIE_DOCS_INCLUDE_VALIDATION=0` excludes the index page too. **PR 5 ships this.**
+- [ ] Self-referential: ADR 0056 + `reference/validation-tracker.md` carry their own validation blocks and graduate from `in-progress` to `validated` post-PR-6 spot-check. **PR 6.**
 
-### Open implementation questions for follow-up
+### Open implementation questions — resolved by execution
 
-- Build-flag mechanism precise wiring (env var vs MyST tag exclusion vs both).
-- Exact MyST plugin registration path (verify `docs/website/myst.yml` plugin field shape).
-- Whether to ship `:::{validation}` as a custom directive name or stay with `:::{admonition} Validation`.
-- Index-page toc placement (Status section sibling vs new section).
+- ~~Build-flag mechanism precise wiring~~ → **Resolved:** env var `SOPHIE_DOCS_INCLUDE_VALIDATION=0` suppresses admonition (PR #50). PR 5 will use the same flag for the index page.
+- ~~Exact MyST plugin registration path~~ → **Resolved:** PR #50 registered the plugin in `docs/website/myst.yml` via the `plugins:` field; concrete shape locked.
+- ~~Whether to ship `:::{validation}` as a custom directive name~~ → **Resolved:** PR #50 went with `:::{admonition} Validation` + status-keyed CSS class (`validation-{state}`); no custom directive needed.
+
+### Open implementation questions — still pending
+
+- **Index-page toc placement** (Status section sibling vs new section). PR 5 decides.
+- **Build-order enforcement** for `docs/website/scripts/validation-admonition-plugin.mjs`'s `dist/` import — PR #50 review I1. Track as a follow-up issue.
 
 ### Skill handoff
 
