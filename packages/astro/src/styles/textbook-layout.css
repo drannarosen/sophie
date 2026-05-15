@@ -627,16 +627,16 @@
 
   /* (3) Page-break-inside protection — moderate contract.
 
-     Two shapes: (a) self-contained block elements (figure, key-
-     equation, key-insight, aside, objective-item, glossary-footnote,
-     and the <ol>+<li> rollup-entry pattern) use `break-inside: avoid`
-     to keep one entry coherent. (b) <dl>+<dt>+<dd> rollups (the 8
-     Chapter*/Course* aggregators for equations / key-insights /
-     misconceptions / glossary) can't wrap in a shared parent
-     (HTML forbids non-<dt>/<dd> children inside <dl>), so we apply
-     `break-after: avoid` to the <dt> and `break-inside: avoid` to
-     the <dd> — keeping the term attached to its body without
-     restructuring the DOM. */
+     Two shapes: (a) self-contained block elements (figure,
+     key-equation, key-insight, aside, objective-item,
+     glossary-footnote, and the ol+li rollup-entry pattern) use
+     `break-inside: avoid` to keep one entry coherent.
+     (b) dl+dt+dd rollups (the eight Chapter- and Course-prefixed
+     aggregators for equations, key-insights, misconceptions, and
+     glossary) cannot wrap in a shared parent because HTML forbids
+     non-dt/dd children inside dl. So we apply `break-after: avoid`
+     to the dt and `break-inside: avoid` to the dd — keeping the
+     term attached to its body without restructuring the DOM. */
   figure,
   .sophie-key-equation,
   .sophie-key-insight,
