@@ -32,6 +32,85 @@ Top-level keys (all required at v1 unless marked optional):
 | `ai_policy` | object | Instructor authority, AI use boundaries, review requirements |
 | `out_of_scope` | list of prose entries (optional) | Topics deliberately excluded + reason |
 | `superseded_by` | string (optional) | Pointer to a replacement contract when this one is retired |
+| **`ai_training_provenance`** | object | **NEW (2026-05-14 hardening, required)**: course's public stance on AI training data |
+| **`ai_ledger`** | object | **NEW (2026-05-14 hardening, conditional)**: framing preamble for the public AI Ledger; required only when any chapter has `visibility: public` |
+| **`tdr_coverage`** | object (optional) | **NEW (2026-05-14 hardening)**: gates TDR-1 audit invariant from ADR 0040; sets minimum TDR-coverage ratio |
+
+## Hardening 2026-05-14 — three new top-level fields
+
+Per [ADR 0042 Revisions §1](../decisions/0042-pedagogy-contract-and-ai-contribution-ledger.md#revisions),
+three new top-level fields were added in the 2026-05-14 hardening
+pass.
+
+### `ai_training_provenance` (required, per PC2-A)
+
+The course's public stance on AI training data. Required at the
+contract level regardless of per-chapter visibility — the course
+declares its position even when no per-chapter records are
+published. Mixed shape per the *structured-for-facts, prose-for-
+stances* principle (ADR 0043 hardening): the allowed-models list
+is structured; limitations and policy are prose.
+
+```yaml
+ai_training_provenance:
+  models_allowed: ["claude-opus-4-7", "gpt-5", "gemini-3"]
+  known_limitations: |
+    AI models used may have been trained on copyrighted astronomy
+    textbooks. Sophie does not pretend otherwise.
+  primary_source_policy: |
+    All quantitative claims and historical citations are
+    independently verified against peer-reviewed sources or
+    canonical textbooks listed in /references. AI-generated
+    citations are never accepted without independent confirmation.
+```
+
+- `models_allowed` (required list of strings) — AI model identifiers
+  the course permits. Other models flagged by audit if encountered
+  in chapter `ai_workflow.models`.
+- `known_limitations` (required prose) — author's narrative
+  acknowledgment of training-data limitations and how the course
+  mitigates them.
+- `primary_source_policy` (required prose) — author's narrative
+  policy on citation verification.
+
+### `ai_ledger.preamble` (required only when any chapter is public, per PC2-B)
+
+Framing copy rendered at the top of the
+`/about-this-course/ai-ledger` route. Required only if any chapter
+declares `ai_contribution.visibility: public`. Anchored on the
+**structural-labor argument** per ADR 0030's amendment — AI-primary
+authoring relocates instructor labor from prose-drafting to
+pedagogical decision-making + verification.
+
+```yaml
+ai_ledger:
+  preamble: |
+    This course is authored with AI as the primary drafter under
+    instructor supervision. That choice is deliberate: it relocates
+    my labor from prose-drafting to pedagogical decision-making
+    (which students need, what they get confused by, how to verify
+    learning), which is where my expertise actually applies and
+    where AI cannot substitute. The structured records below
+    surface what AI drafted and how I reviewed it. The intent is
+    visibility, not penance.
+```
+
+### `tdr_coverage` (optional)
+
+Gates the TDR-1 audit invariant from
+[ADR 0040](../decisions/0040-teaching-decision-records.md).
+Configures the minimum TDR-coverage ratio for the course.
+
+```yaml
+tdr_coverage:
+  min_ratio: 0.1   # default: 1 TDR per 10 load-bearing entities
+```
+
+Load-bearing entities counted: `<KeyEquation>` instances,
+`<Aside kind="misconception">` instances, `<LearningObjectives>`
+items. If `tdr_coverage` is omitted entirely, defaults to
+`{min_ratio: 0.1}`. Anna can tune up or down based on course-
+authoring practice.
 
 ## Field specifications
 

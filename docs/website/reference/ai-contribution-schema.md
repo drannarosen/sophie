@@ -31,53 +31,158 @@ chapter was not AI-assisted (or pre-dates Sophie's adoption of the
 schema). The rendered footer simply omits the transparency note
 rather than asserting either AI or non-AI authorship.
 
-## Schema overview
+## Schema overview (hardened 2026-05-14)
+
+The schema was substantially restructured in the 2026-05-14
+hardening pass (per
+[ADR 0042 Revisions §1](../decisions/0042-pedagogy-contract-and-ai-contribution-ledger.md#revisions)):
+coarse booleans replaced with structured objects; `visibility` field
+added; default visibility is **internal**.
 
 Top-level `ai_contribution` object in chapter MDX frontmatter:
 
 | Field | Required | Type | Purpose |
 |---|---|---|---|
-| `drafted_by` | required | string | AI session/model identifier |
-| `instructor_reviewed` | required | boolean | Has the instructor reviewed the draft? |
-| `last_review_date` | required | ISO 8601 date | When the most recent review happened |
-| `transparency_note` | recommended | prose string | Plain-language footer note for readers |
+| `visibility` | optional, default `internal` | `internal` \| `public` | Two-tier visibility — internal records stay private; opt-in `public` surfaces on `/about-this-course/ai-ledger` |
+| `ai_workflow` | required when AI was involved | object | Replaces `drafted_by`; structured workflow shape |
+| `instructor_reviewed` | required when reviewed | object | Replaces binary; structured review shape (`by` + `date` + `depth` + `against`) |
+| `transparency_note` | recommended | prose string | Plain-language footer note (renders only when `visibility: public`) |
 | `brainstormed_by` | optional | string \| list | AI session(s) used for ideation pre-draft |
 | `reviewed_by` | optional | string \| list | AI session(s) used for review/critique passes |
 | `instructor_decisions` | optional | list of strings | Notes recording load-bearing instructor judgment calls |
+| ~~`drafted_by`~~ | **deprecated** | — | Replaced by `ai_workflow.models` |
+| ~~`last_review_date`~~ | **deprecated** | — | Replaced by `instructor_reviewed.date` |
+
+No back-compat shim per Sophie's pre-launch no-back-compat stance.
+Chapters using the pre-hardening shape get hard-renamed at the
+v1 platform code PR.
 
 ## Field specifications
 
-### `drafted_by` (required)
+### `visibility` (optional, default `internal`)
 
-Identifies the AI session or model that produced the draft. Format
-is free-form string — typical values:
+Two-tier visibility per the 2026-05-14 hardening. Most chapters
+stay internal — frank operational records protected; opt-in
+`public` for SoTL citation, departmental sharing, or tenure-case
+artifacts.
 
-- `"claude-opus-4.7-2026-05-14-session-abc123"` (Anthropic with
-  session ID)
-- `"gpt-5.5-2026-05-14"` (OpenAI dated)
-- `"none"` (chapter authored entirely by the instructor; rare but
-  permitted when explicit disclosure helps SoTL claims)
+```yaml
+ai_contribution:
+  visibility: internal      # default
+# OR
+ai_contribution:
+  visibility: public        # opt-in
+```
 
-The string is opaque to the schema — it's recorded for
-auditability, not parsed. Consistent format within a course is
-the author's responsibility; the field accepts any non-empty
-string.
+Render behavior:
 
-### `instructor_reviewed` (required)
+| Visibility | `/about-this-course/ai-ledger` | Chapter footer |
+|---|---|---|
+| `internal` (default) | Not rendered | No `transparency_note` rendered |
+| `public` | Full `ai_contribution` block rendered | `transparency_note` rendered if present |
 
-Boolean. `true` if the instructor has reviewed the draft for
-scientific accuracy, pedagogical fit, and citation completeness.
-`false` if the chapter is still in pre-review draft state.
+The course-level *stance* (Pedagogy Contract + AI Training
+Provenance) stays public regardless of per-chapter visibility —
+the contract declares the course's position even when no
+per-chapter records are published.
 
-Audit invariant **AC1** (per ADR 0042) flags published chapters
-with `instructor_reviewed: false` as a WARNING. (Build doesn't
-fail — the field's purpose is *disclosure*, not *gating*. The
-warning surfaces in the build report.)
+### `ai_workflow` (required when AI was involved)
 
-### `last_review_date` (required)
+Structured object replacing `drafted_by`. Captures the
+collaboration shape, not just identity.
 
-ISO 8601 date (`YYYY-MM-DD`) of the most recent instructor review.
-Updated whenever the instructor reviews a revision.
+```yaml
+ai_contribution:
+  ai_workflow:
+    models: ["claude-opus-4-7"]     # required: list of AI model identifiers
+    generation_share: ai-primary    # required: ai-primary | mixed | instructor-primary
+    iterations: 3                   # optional: AI↔instructor handoff count
+    edit_intensity: heavy           # optional: light | moderate | heavy | rewrite
+```
+
+- **`models`** (required, list of strings) — AI model identifiers
+  involved in drafting. List supports multi-model authoring (rare
+  but real). Must be drawn from `pedagogy-contract.yaml`'s
+  `ai_training_provenance.models_allowed` list; otherwise audit
+  flags.
+- **`generation_share`** (required, three-value enum) —
+  categorical share of generation between AI and instructor.
+  Values:
+  - `ai-primary` — AI drafted the majority; instructor edited.
+    **Sophie's default workflow per ADR 0030 amendment**.
+  - `mixed` — substantial co-authoring; neither dominant.
+  - `instructor-primary` — instructor drafted; AI assisted at the
+    margins.
+  Categorical over percentage because nobody can estimate "80%
+  AI-generated" reliably; three buckets capture what's knowable.
+- **`iterations`** (optional, integer) — count of AI↔instructor
+  handoff cycles during drafting.
+- **`edit_intensity`** (optional, four-value enum) — the analog of
+  review depth for the editing pass:
+  - `light` — typos and small tweaks
+  - `moderate` — paragraph-level edits
+  - `heavy` — restructuring
+  - `rewrite` — fundamental rewrite of AI's draft
+
+Chapters that were *not* AI-assisted set `ai_workflow: null` (or
+omit `ai_contribution` entirely). The field's null/absence is
+meaningful — does not assert AI or non-AI authorship positively.
+
+### `instructor_reviewed` (required when reviewed)
+
+Structured object replacing the binary. Absence-means-not-reviewed
+— omit the block entirely if review hasn't happened yet.
+
+```yaml
+ai_contribution:
+  instructor_reviewed:
+    by: alrosen               # required when block present
+    date: 2026-05-14          # required (replaces top-level last_review_date)
+    depth: full-pass          # required: line-by-line | full-pass | skim
+    against:                  # required: non-empty list
+      - pedagogy_contract
+      - scientific_accuracy
+      - citation_check
+      - misconception_handling
+```
+
+- **`by`** (required, string) — reviewer identifier (typically
+  instructor username or email). Sets up for future shared-course
+  scenarios where multiple reviewers may sign.
+- **`date`** (required, ISO 8601 date) — when the review happened.
+  Replaces deprecated top-level `last_review_date`.
+- **`depth`** (required, three-value enum) — captures review
+  effort honestly:
+  - `line-by-line` — every line examined
+  - `full-pass` — read end-to-end, key sections scrutinized
+  - `skim` — quick pass for obvious errors
+- **`against`** (required, list, must be non-empty) — review-
+  dimension keywords. The v1 recognized values:
+  - `pedagogy_contract` — verified against the course's contract
+  - `scientific_accuracy` — checked claims for correctness
+  - `citation_check` — verified all cited sources
+  - `misconception_handling` — verified misconception coverage
+  Other values land in v2 as authoring surfaces them (e.g.,
+  `accessibility_check`, `tone_and_voice`, `code_correctness`).
+
+Audit invariants per ADR 0042:
+
+- **AC1** (ERROR): chapter with `status: stable` declares
+  `ai_workflow` but lacks `instructor_reviewed`. Published AI-
+  contributed content must be reviewed before shipping.
+- **AC2** (WARNING): `instructor_reviewed.date` predates the most
+  recent change touching the chapter (stale review).
+- **AC4** (WARNING): `ai_workflow.generation_share = ai-primary`
+  AND `instructor_reviewed.depth = skim`. The highest-risk
+  combination; instructor value-add lives in review depth.
+- **AC5** (INFO): `visibility: public` AND
+  `instructor_reviewed.depth = skim`. Discourages publishing
+  skim-reviewed records.
+
+### `last_review_date` (deprecated)
+
+Replaced by `instructor_reviewed.date` in the 2026-05-14
+hardening. Old field removed; no back-compat.
 
 ### `transparency_note` (recommended)
 
@@ -140,9 +245,23 @@ lectureNumber: 1
 date: "2026-08-26"
 
 ai_contribution:
-  drafted_by: "claude-opus-4.7-2026-08-15-session-7f2a9c"
-  instructor_reviewed: true
-  last_review_date: "2026-08-18"
+  visibility: internal
+
+  ai_workflow:
+    models: ["claude-opus-4-7"]
+    generation_share: ai-primary
+    iterations: 3
+    edit_intensity: heavy
+
+  instructor_reviewed:
+    by: alrosen
+    date: 2026-08-18
+    depth: full-pass
+    against:
+      - pedagogy_contract
+      - scientific_accuracy
+      - citation_check
+      - misconception_handling
 
   transparency_note: |
     This chapter was drafted with AI assistance, then reviewed and
@@ -182,11 +301,16 @@ ai_contribution:
 ---
 ```
 
-## Rendering surfaces
+## Rendering surfaces (hardened 2026-05-14)
 
-### Per-chapter footer (visible default)
+Render behavior was restructured in the 2026-05-14 hardening
+pass — per-chapter records are visibility-gated; only the
+course-level stance is always public.
 
-When `ai_contribution.transparency_note` is present, the
+### Per-chapter footer (renders only when `visibility: public`)
+
+When `ai_contribution.visibility == "public"` AND
+`ai_contribution.transparency_note` is present, the
 `<ChapterFooter>` component renders:
 
 ```html
@@ -204,18 +328,28 @@ code PR per [ADR 0042 Consequences](../decisions/0042-pedagogy-contract-and-ai-c
 
 ### Course-wide ledger page (`/about-this-course/ai-ledger/`)
 
-`<AiLedgerPage.astro>` aggregates `ai_contribution` from every
-chapter in the course and renders:
+`<AiLedgerPage.astro>` renders conditionally based on per-chapter
+visibility:
 
-- Course-level summary stats (N chapters with AI assistance; M
-  reviewed; etc.)
-- Per-chapter record table sorted by date
-- Drill-down per chapter showing the full `ai_contribution` record
-  including `instructor_decisions` list
+- **When no chapters have `visibility: public`**: renders only
+  `pedagogy-contract.yaml`'s `ai_ledger.preamble` (if declared) +
+  a placeholder note *"per-chapter records will publish as the
+  course matures."*
+- **When some chapters are `public`**: renders the preamble +
+  per-chapter `ai_contribution` blocks for those chapters only;
+  internal chapters silently omitted.
+- **When all chapters are `public`**: full per-chapter ledger.
+
+The `ai_training_provenance` block from `pedagogy-contract.yaml`
+renders at the top of the page regardless (it's the course's
+permanent public stance, independent of per-chapter visibility).
 
 This is the *SoTL-citable artifact* — the public URL a paper, grant
 proposal, or tenure-case narrative points to as evidence of
-responsible AI use.
+responsible AI use. Per the hardening, the artifact accumulates
+selectively as the instructor opts records into public visibility;
+the course-level stance (contract + provenance + preamble) is the
+permanent anchor.
 
 ## Updating an ai_contribution record
 
