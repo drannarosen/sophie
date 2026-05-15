@@ -277,6 +277,89 @@ Tasks below already reflect them.
    wrap. Future "consume pedagogy-index" features must apply the
    same discipline; the helper is the canonical seam.
 
+10. **`SearchModal` export landed in the root barrel, not the
+    `/Search` subpath.** Plan §Task 9 and §Task 10 originally
+    imported `SearchModal` from `@sophie/components/Search`. The
+    package's `tsup.config.ts` only exposes three entry points —
+    `index`, `contract/index`, `runtime/index` (lines 4–8) — so
+    `@sophie/components/Search` is not a valid import specifier.
+    The export landed in `packages/components/src/index.ts:158–159`
+    as part of the main barrel:
+
+    ```ts
+    export type { SearchResult } from "./components/Search/index.ts";
+    export { SearchModal } from "./components/Search/index.ts";
+    ```
+
+    `SearchTrigger.astro` (commit `17450a9`) imports
+    `SearchModal` from `@sophie/components` accordingly. Any future
+    deep-link consumers must either use the root barrel or add a
+    new `tsup` entry point.
+
+11. **`ResultCard` carries a defensive `filters.type[0] ?? "page"`
+    fallback for default-crawl page records.** Plan §Task 8
+    (`ResultCard.tsx`) assumed every Pagefind result carries
+    `filters.type` populated by a converter. In practice, Pagefind's
+    default HTML crawl (`index.addDirectory`) emits records *without*
+    custom filters, so chapter-page hits arrive with
+    `filters.type === undefined`. `ResultCard.tsx:44` reads:
+
+    ```ts
+    const type = result.filters?.type?.[0] ?? "page";
+    ```
+
+    This keeps page-level hits surfaced under a stable "page" facet
+    rather than crashing the card. **Structural follow-up** (out of
+    PR 7 scope, captured here for a future PR): emit
+    `data-pagefind-filter="type:page"` on chapter HTML templates so
+    default-crawl records carry the facet at index time and the
+    fallback can be dropped. Until then the runtime fallback is
+    load-bearing.
+
+12. **Task 4 e2e preconditions: trigger visibility + `networkidle`
+    waits before `Meta+K`.** Plan §Task 4 spec sketches pressed
+    `Meta+K` immediately after navigation. Tests 2 + 3 failed
+    intermittently because `SearchModal` mounts with `client:idle`
+    in `TextbookLayout.astro`; its `document.addEventListener("keydown")`
+    listener isn't installed until React hydrates, which Astro
+    defers to `requestIdleCallback` — after `networkidle` in
+    practice. The two affected specs now gate the keystroke on
+    both the visible static trigger and `networkidle` (see
+    `examples/smoke/e2e/search.spec.ts:79–86`):
+
+    ```ts
+    await expect(
+      page.getByRole("button", { name: /search/i })
+    ).toBeVisible();
+    await page.waitForLoadState("networkidle");
+    await page.keyboard.press("Meta+k");
+    ```
+
+    Three consecutive Playwright runs × 3 tests = 9/9 pass with
+    this discipline (final verification). Same pattern as the
+    glossary-term hover specs (`glossary-term.spec.ts:142`,
+    `chapter-ref.spec.ts:89`).
+
+13. **Pagefind filter-file naming: hashed `en_<hash>.pf_filter`,
+    not `type.pf_filter`.** Plan §Task 7 test assertion originally
+    expected a fixed filename like `type.pf_filter`. Pagefind
+    hashes filter-bucket filenames per language (`en_<hash>.pf_filter`)
+    so cache busting works without manifest updates. The Task 7
+    test (`packages/astro/src/lib/pagefind-postbuild.test.ts:111–119`)
+    was amended in-execution to check that a `.pf_filter` file
+    exists in the filter directory rather than asserting an exact
+    name:
+
+    ```ts
+    // Pagefind hashes filter filenames (en_<hash>.pf_filter); the exact
+    // hash is build-content-dependent, so we just check at least one
+    // filter directory exists and contains at least one .pf_filter file
+    expect(filterFiles.some((f) => f.endsWith(".pf_filter"))).toBe(true);
+    ```
+
+    Future tests asserting on Pagefind filter outputs must use
+    suffix-based assertions, not exact-filename equality.
+
 ---
 
 ## Pre-task: Worktree setup
