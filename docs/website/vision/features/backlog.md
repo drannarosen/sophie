@@ -16,43 +16,12 @@ Promotion to [accepted-pending-ADR](accepted.md) requires a defended
 items? See [Transitions](../transitions/index.md) for the gate
 criteria.
 
-## B1. Equation Biography (`<KeyEquation>` extended fields)
+## B1. Equation Biography — promoted to A7 (2026-05-14)
 
-**Motivating use case.** STEM equations are not just rendered math —
-they have stories: what they observe, what assumptions they encode,
-what units they require, where they break, what students commonly
-misuse. ASTR 201's Wien's law has all of these (`λ_peak = b/T`, valid
-for blackbody only, implies Planck-distribution, students misuse for
-non-thermal emission). Sophie's `<KeyEquation>` currently captures
-the equation and a title; the rest lives in surrounding prose if
-anywhere.
-
-**Design sketch.** Extend `<KeyEquation>` props (and the equations
-index) with optional fields: `observable_meaning`, `assumptions: []`,
-`units: { symbol → unit }`, `common_misuses: []`, `breaks_when`.
-Existing chapters don't break (fields optional); new chapters opt
-in. Sophie auto-generates an equation-glossary view + an equation
-biography appendix per chapter when fields are populated.
-
-**Estimated cost.** Schema extension + audit invariant (~3–4 hours)
-+ rendering for the new fields in chapter consumers (~half-day) +
-documentation (~1 hour). Total: ~1 day.
-
-**Dependencies.** Notation Registry (A4) — `units` field references
-the registry's symbol entries. Should land after or alongside A4.
-
-**Open questions.** Is the equation-biography view a per-equation
-expander on hover, an appendix at chapter-end, both, or a separate
-`/equations` route enhancement? Should `assumptions` be free-form or
-typed (`small-angle`, `non-relativistic`, `thermal-equilibrium`)?
-
-**Status.**
-- 2026-05-14 — surfaced (speculative)
-- 2026-05-14 — promoted to backlog (motivating use case clear;
-  depends on A4)
-- Promotion criteria for accepted: Module 1 of ASTR 201 has at least
-  one equation that *wants* the affordance (likely Wien's law or
-  Hubble–Lemaître).
+Promoted to [accepted-pending-ADR as A7](accepted.md#a7-equation-biography)
+on 2026-05-14 after a six-question brainstorm resolved the open
+design questions (component shape, assumption typing, rendering
+surface, audit invariants, NR cross-ref depth, scope).
 
 ---
 
