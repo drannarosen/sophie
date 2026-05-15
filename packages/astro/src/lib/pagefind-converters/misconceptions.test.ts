@@ -38,4 +38,14 @@ describe("toMisconceptionRecord", () => {
       "Many beginners conflate apparent brightness with temperature."
     );
   });
+
+  test("strips HTML tags from body in content", () => {
+    const html = '<p>foo <span class="katex"><span>bar</span></span> baz</p>';
+    const htmlFixture: MisconceptionEntry = { ...fixture, body: html };
+    const record = toMisconceptionRecord(htmlFixture, ctx);
+    expect(record.content).toContain("foo");
+    expect(record.content).toContain("bar");
+    expect(record.content).toContain("baz");
+    expect(record.content).not.toMatch(/<|>/);
+  });
 });

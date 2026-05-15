@@ -1,11 +1,12 @@
 import type { MisconceptionEntry } from "@sophie/core/schema";
 import type { EntityToPagefindRecord } from "./index.ts";
+import { stripHtml } from "./strip-html.ts";
 
 export const toMisconceptionRecord: EntityToPagefindRecord<
   MisconceptionEntry
 > = (entity, ctx) => ({
   url: `/chapters/${entity.chapter}#${entity.anchor}`,
-  content: entity.body,
+  content: stripHtml(entity.body),
   language: "en",
   meta: {
     title: entity.label ?? "Misconception",

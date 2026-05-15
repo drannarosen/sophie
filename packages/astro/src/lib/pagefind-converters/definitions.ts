@@ -1,12 +1,13 @@
 import type { DefinitionEntry } from "@sophie/core/schema";
 import type { EntityToPagefindRecord } from "./index.ts";
+import { stripHtml } from "./strip-html.ts";
 
 export const toDefinitionRecord: EntityToPagefindRecord<DefinitionEntry> = (
   entity,
   ctx
 ) => ({
   url: `/chapters/${entity.chapter}#${entity.anchor}`,
-  content: entity.body,
+  content: stripHtml(entity.body),
   language: "en",
   meta: {
     title: entity.term,

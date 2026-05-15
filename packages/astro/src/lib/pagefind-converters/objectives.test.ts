@@ -36,4 +36,15 @@ describe("toObjectiveRecord", () => {
       "State the course thesis in one sentence."
     );
   });
+
+  test("strips HTML tags from body in content and meta.title", () => {
+    const html = '<p>foo <span class="katex"><span>bar</span></span> baz</p>';
+    const htmlFixture: ObjectiveEntry = { ...fixture, body: html };
+    const record = toObjectiveRecord(htmlFixture, ctx);
+    expect(record.content).toContain("foo");
+    expect(record.content).toContain("bar");
+    expect(record.content).toContain("baz");
+    expect(record.content).not.toMatch(/<|>/);
+    expect(record.meta.title).not.toMatch(/<|>/);
+  });
 });
