@@ -75,6 +75,8 @@ project:
         - file: reference/multirep-component.md
         - file: reference/misconception-graph-schema.md
         - file: reference/intervention-library.md
+        - file: reference/sophie-diff-cli.md
+        - file: reference/pedagogical-change-taxonomy.md
     - title: Explanation
       children:
         - file: explanation/architecture.md
@@ -142,6 +144,7 @@ project:
         - file: decisions/0042-pedagogy-contract-and-ai-contribution-ledger.md
         - file: decisions/0043-notation-registry-multirep-alignment-audit.md
         - file: decisions/0044-misconception-graph-and-intervention-library.md
+        - file: decisions/0045-pedagogical-diff-curriculum-ci.md
     - title: Status
       children:
         - file: status/roadmap.md
