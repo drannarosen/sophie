@@ -152,6 +152,22 @@ export const MisconceptionEntrySchema = z.object({
   length: z.enum(["short", "long"]),
   /** Optional label — from Aside.title OR Callout.title (both source primitives' titles are optional). */
   label: z.string().optional(),
+  /**
+   * Misconception-graph fields (ADR 0044 Artifact 1).
+   *
+   * All four are optional. A misconception with no declared
+   * relationships is a valid v1 entry; adding relationships is a
+   * progressive enhancement. The audit reassembles the full graph
+   * at build time from the union of chapter declarations.
+   */
+  /** Misconceptions that must be addressed in earlier chapters before this one. DAG; ordering-sensitive. Empty list (`[]`) is meaningful — declares "this is a root in the DAG." */
+  prerequisite_misconceptions: z.array(NonEmptyString).optional(),
+  /** Bidirectional siblings without ordering semantics. Two misconceptions that share conceptual structure or co-occur in student responses. */
+  related_misconceptions: z.array(NonEmptyString).optional(),
+  /** Notation Registry `concept.id`s this misconception attaches to (ADR 0043). Powers the reverse "misconceptions attached to this concept" index. */
+  concept_refs: z.array(NonEmptyString).optional(),
+  /** Disciplines this misconception applies to. Defaults to the discipline implied by the course's pedagogy contract. Useful for cross-field misconceptions. */
+  discipline_scope: z.array(NonEmptyString).optional(),
 });
 export type MisconceptionEntry = z.infer<typeof MisconceptionEntrySchema>;
 
