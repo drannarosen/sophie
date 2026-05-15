@@ -1,12 +1,13 @@
 # @sophie/core
 
-Sophie's core package: schema definitions, audit machinery, and CLI.
+Sophie's core package: schema definitions and audit machinery
+(audit-as-library). The `sophie` CLI now lives in `@sophie/cli`.
 
 ## Internal-boundary contract
 
-`@sophie/core` is **one** package today but contains three internal
-sub-packages — `schema/`, `audit/`, `cli/` — that will eventually
-split into separate `@sophie/*` packages. To keep that future split
+`@sophie/core` is **one** package today but contains two internal
+sub-packages — `schema/` and `audit/` — that will eventually split
+into separate `@sophie/*` packages. To keep that future split
 mechanical (a `git mv` plus a `package.json` dance, not a refactor of
 intertwined imports), cross-folder imports inside `src/` must go
 through the public subpath, **not** a relative path.
@@ -27,7 +28,7 @@ import { ChapterSchema } from "../schema/chapter";
 ```
 
 The forbidden pattern is enforced by the Biome
-`noRestrictedImports` rule scoped to `packages/core/src/{schema,audit,cli}/**`
+`noRestrictedImports` rule scoped to `packages/core/src/{schema,audit}/**`
 in the repo-root `biome.json`.
 
 ## Public surface
@@ -36,8 +37,9 @@ in the repo-root `biome.json`.
 | --- | --- |
 | `@sophie/core/schema` | `ChapterSchema`, `FigureSchema`, `SectionSchema`, inferred TS types |
 | `@sophie/core/audit` | `auditFile()` — parses MDX frontmatter and validates against `ChapterSchema` |
-| `@sophie/core/cli` | Programmatic CLI entry (mostly for tests) |
-| `sophie` (bin) | The CLI binary |
+
+The `sophie` CLI binary is published from `@sophie/cli`, which depends
+on `@sophie/core/audit` as a library.
 
 ## Phase 0 scope
 
@@ -47,8 +49,6 @@ this package ships only what the proving slice needs:
 - Minimal `Chapter` / `Figure` / `Section` schemas (frontmatter-level only).
 - `audit` stub: schema validation pass/fail. No Tier 1 / Tier 2 checks
   (those are Phase 3).
-- `sophie dev <path>` shells out to `astro dev`. No audit watcher.
-- `sophie audit <path>` runs the schema validation stub.
 
 ## Build
 
@@ -60,8 +60,6 @@ Outputs:
 
 - `dist/schema/index.{js,d.ts}`
 - `dist/audit/index.{js,d.ts}`
-- `dist/cli/index.{js,d.ts}`
-- `dist/cli/bin.js` (executable; shebang preserved by tsup)
 
 ## Known build-tooling quirks
 

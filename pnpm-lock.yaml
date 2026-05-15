@@ -38,6 +38,9 @@ importers:
       '@sophie/astro':
         specifier: workspace:*
         version: link:../../packages/astro
+      '@sophie/cli':
+        specifier: workspace:*
+        version: link:../../packages/cli
       '@sophie/components':
         specifier: workspace:*
         version: link:../../packages/components
@@ -333,9 +336,6 @@ importers:
 
   packages/core:
     dependencies:
-      citty:
-        specifier: ^0.2.2
-        version: 0.2.2
       gray-matter:
         specifier: ^4.0.3
         version: 4.0.3

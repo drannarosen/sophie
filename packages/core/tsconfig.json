@@ -8,8 +8,7 @@
     "allowImportingTsExtensions": true,
     "paths": {
       "@sophie/core/schema": ["./src/schema/index.ts"],
-      "@sophie/core/audit": ["./src/audit/index.ts"],
-      "@sophie/core/cli": ["./src/cli/index.ts"]
+      "@sophie/core/audit": ["./src/audit/index.ts"]
     }
   },
   "include": ["src", "vitest.config.ts"],
