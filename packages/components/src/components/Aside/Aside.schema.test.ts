@@ -154,4 +154,49 @@ describe("AsidePropsSchema", () => {
       AsidePropsSchema.safeParse({ title: 123, children: null }).success
     ).toBe(false);
   });
+
+  // ADR 0044 — misconception-graph fields.
+  it("accepts kind='misconception' with all four graph fields populated", () => {
+    expect(
+      AsidePropsSchema.safeParse({
+        kind: "misconception",
+        title: "Universe with a center",
+        prerequisite_misconceptions: ["expansion-vs-motion-in-space"],
+        related_misconceptions: ["big-bang-as-explosion-in-space"],
+        concept_refs: ["redshift", "hubble-parameter"],
+        discipline_scope: ["astronomy"],
+        children: null,
+      }).success
+    ).toBe(true);
+  });
+
+  it("accepts kind='misconception' without any graph fields (pre-ADR-0044 shape)", () => {
+    expect(
+      AsidePropsSchema.safeParse({
+        kind: "misconception",
+        children: null,
+      }).success
+    ).toBe(true);
+  });
+
+  it("accepts an empty prerequisite_misconceptions list (DAG root)", () => {
+    expect(
+      AsidePropsSchema.safeParse({
+        kind: "misconception",
+        title: "Root misconception",
+        prerequisite_misconceptions: [],
+        children: null,
+      }).success
+    ).toBe(true);
+  });
+
+  it("rejects an empty-string slug inside related_misconceptions", () => {
+    expect(
+      AsidePropsSchema.safeParse({
+        kind: "misconception",
+        related_misconceptions: [""],
+        children: null,
+      }).success
+    ).toBe(false);
+  });
 });

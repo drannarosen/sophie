@@ -58,10 +58,95 @@ interface MdxJsxFlowElement {
   children: ReadonlyArray<unknown>;
 }
 
-interface AsideAttributes {
+interface MisconceptionGraphFields {
+  prerequisite_misconceptions?: string[];
+  related_misconceptions?: string[];
+  concept_refs?: string[];
+  discipline_scope?: string[];
+}
+
+interface AsideAttributes extends MisconceptionGraphFields {
   kind?: string;
   title?: string;
   id?: string;
+}
+
+/**
+ * Read a JSX expression-valued attribute as a list of strings.
+ *
+ * The four ADR-0044 misconception-graph fields are authored as JSX
+ * expression attrs:
+ *
+ *   <Aside kind="misconception" prerequisite_misconceptions={["a", "b"]} ...>
+ *
+ * mdast surfaces these as `mdxJsxAttributeValueExpression` nodes
+ * whose raw source lives on `attr.value.value` (the string between
+ * `{` and `}`). We parse that source as JSON after a light
+ * normalization (JS single-quoted string literals → JSON double-
+ * quoted) so the common authoring shape `["x", "y"]` round-trips.
+ * Anything that doesn't parse to an array of non-empty strings is
+ * dropped (returns `undefined`); the schema-layer Zod validator is
+ * the source of truth for shape enforcement, and undefined values
+ * are pre-ADR-0044 schema-compatible.
+ *
+ * An empty array (`[]`) is preserved — per the schema reference
+ * doc, `prerequisite_misconceptions: []` is meaningful (it asserts
+ * "this is a root in the DAG").
+ */
+function readStringListAttr(
+  node: MdxJsxFlowElement,
+  name: string
+): string[] | undefined {
+  for (const attr of node.attributes ?? []) {
+    if (attr.type !== "mdxJsxAttribute") continue;
+    if (attr.name !== name) continue;
+    const value = attr.value;
+    if (!value || typeof value !== "object") continue;
+    const v = value as { type?: string; value?: unknown };
+    if (v.type !== "mdxJsxAttributeValueExpression") continue;
+    if (typeof v.value !== "string") continue;
+    // Normalize single-quoted string literals to JSON double-quoted form.
+    // Authors commonly write `={['a', 'b']}`; JSON requires double quotes.
+    // This is a deliberate one-shot normalization for the array-of-string
+    // shape; arbitrary JS expressions are not supported.
+    const normalized = v.value
+      .trim()
+      .replace(
+        /'([^'\\]*)'/g,
+        (_, inner) => `"${String(inner).replace(/"/g, '\\"')}"`
+      );
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(normalized);
+    } catch {
+      continue;
+    }
+    if (!Array.isArray(parsed)) continue;
+    const out: string[] = [];
+    for (const item of parsed) {
+      if (typeof item !== "string") return undefined;
+      const trimmed = item.trim();
+      if (trimmed.length === 0) return undefined;
+      out.push(trimmed);
+    }
+    return out;
+  }
+  return undefined;
+}
+
+function readMisconceptionGraphFields(
+  node: MdxJsxFlowElement
+): MisconceptionGraphFields {
+  const out: MisconceptionGraphFields = {};
+  const prereqs = readStringListAttr(node, "prerequisite_misconceptions");
+  if (prereqs !== undefined) out.prerequisite_misconceptions = prereqs;
+  const related = readStringListAttr(node, "related_misconceptions");
+  if (related !== undefined) out.related_misconceptions = related;
+  const concepts = readStringListAttr(node, "concept_refs");
+  if (concepts !== undefined) out.concept_refs = concepts;
+  const disciplines = readStringListAttr(node, "discipline_scope");
+  if (disciplines !== undefined) out.discipline_scope = disciplines;
+  return out;
 }
 
 function readAsideAttributes(node: MdxJsxFlowElement): AsideAttributes {
@@ -73,6 +158,7 @@ function readAsideAttributes(node: MdxJsxFlowElement): AsideAttributes {
     if (attr.name === "title") out.title = attr.value;
     if (attr.name === "id") out.id = attr.value;
   }
+  Object.assign(out, readMisconceptionGraphFields(node));
   return out;
 }
 
@@ -161,7 +247,7 @@ function readStringAttr(
   return undefined;
 }
 
-interface CalloutAttributes {
+interface CalloutAttributes extends MisconceptionGraphFields {
   variant?: string;
   title?: string;
   id?: string;
@@ -176,6 +262,7 @@ function readCalloutAttributes(node: MdxJsxFlowElement): CalloutAttributes {
     if (attr.name === "title") out.title = attr.value;
     if (attr.name === "id") out.id = attr.value;
   }
+  Object.assign(out, readMisconceptionGraphFields(node));
   return out;
 }
 
@@ -503,18 +590,32 @@ export function extractMisconceptions(
   visit(tree, "mdxJsxFlowElement", (node: unknown) => {
     const el = node as MdxJsxFlowElement;
     let length: "short" | "long";
-    let attrs: { title?: string; id?: string };
+    let attrs: { title?: string; id?: string } & MisconceptionGraphFields;
 
     if (el.name === "Aside") {
       const a = readAsideAttributes(el);
       if (a.kind !== "misconception") return;
       length = "short";
-      attrs = { title: a.title, id: a.id };
+      attrs = {
+        title: a.title,
+        id: a.id,
+        prerequisite_misconceptions: a.prerequisite_misconceptions,
+        related_misconceptions: a.related_misconceptions,
+        concept_refs: a.concept_refs,
+        discipline_scope: a.discipline_scope,
+      };
     } else if (el.name === "Callout") {
       const c = readCalloutAttributes(el);
       if (c.variant !== "misconception") return;
       length = "long";
-      attrs = { title: c.title, id: c.id };
+      attrs = {
+        title: c.title,
+        id: c.id,
+        prerequisite_misconceptions: c.prerequisite_misconceptions,
+        related_misconceptions: c.related_misconceptions,
+        concept_refs: c.concept_refs,
+        discipline_scope: c.discipline_scope,
+      };
     } else {
       return;
     }
@@ -543,13 +644,30 @@ export function extractMisconceptions(
       }
     }
 
-    out.push({
+    const entry: MisconceptionEntry = {
       body,
       chapter: chapterSlug,
       anchor,
       length,
       label: attrs.title?.trim() || undefined,
-    });
+    };
+    // Graph fields (ADR 0044). Omit when undefined to keep the
+    // pre-ADR-0044 shape on misconceptions that don't declare any
+    // relationships. Empty arrays are preserved (meaningful per the
+    // schema reference doc).
+    if (attrs.prerequisite_misconceptions !== undefined) {
+      entry.prerequisite_misconceptions = attrs.prerequisite_misconceptions;
+    }
+    if (attrs.related_misconceptions !== undefined) {
+      entry.related_misconceptions = attrs.related_misconceptions;
+    }
+    if (attrs.concept_refs !== undefined) {
+      entry.concept_refs = attrs.concept_refs;
+    }
+    if (attrs.discipline_scope !== undefined) {
+      entry.discipline_scope = attrs.discipline_scope;
+    }
+    out.push(entry);
   });
 
   return out;

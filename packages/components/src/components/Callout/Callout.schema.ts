@@ -40,6 +40,17 @@ export const CalloutPropsSchema = z.object({
   title: z.string().optional(),
   id: z.string().optional(),
   children: z.custom<ReactNode>(),
+  /**
+   * ADR 0044 misconception-graph fields. Only meaningful when
+   * `variant === "misconception"`; ignored on other variants.
+   * Mirrors `<Aside kind="misconception">`'s prop surface — both
+   * source primitives feed the same `MisconceptionEntry` shape in
+   * the pedagogy index (ADR 0038 role-aggregation).
+   */
+  prerequisite_misconceptions: z.array(z.string().min(1)).optional(),
+  related_misconceptions: z.array(z.string().min(1)).optional(),
+  concept_refs: z.array(z.string().min(1)).optional(),
+  discipline_scope: z.array(z.string().min(1)).optional(),
 });
 
 export type CalloutProps = z.infer<typeof CalloutPropsSchema>;

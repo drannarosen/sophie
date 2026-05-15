@@ -243,6 +243,124 @@ describe("MisconceptionEntrySchema", () => {
       }).success
     ).toBe(false);
   });
+
+  // ADR 0044 — misconception graph fields. All four are optional;
+  // unpopulated entries (the pre-ADR shape) must continue to validate.
+  test("accepts an entry without any graph fields (backward-compat)", () => {
+    expect(
+      MisconceptionEntrySchema.safeParse({
+        body: "<p>x</p>",
+        chapter: "ch",
+        anchor: "misc-1",
+        length: "short",
+      }).success
+    ).toBe(true);
+  });
+
+  test("accepts populated prerequisite_misconceptions (list of name slugs)", () => {
+    expect(
+      MisconceptionEntrySchema.safeParse({
+        body: "<p>x</p>",
+        chapter: "ch",
+        anchor: "redshift-as-ordinary-doppler",
+        length: "short",
+        prerequisite_misconceptions: [
+          "universe-with-a-center",
+          "expansion-vs-motion-in-space",
+        ],
+      }).success
+    ).toBe(true);
+  });
+
+  test("accepts an empty prerequisite_misconceptions list (root in the DAG)", () => {
+    expect(
+      MisconceptionEntrySchema.safeParse({
+        body: "<p>x</p>",
+        chapter: "ch",
+        anchor: "universe-with-a-center",
+        length: "short",
+        prerequisite_misconceptions: [],
+      }).success
+    ).toBe(true);
+  });
+
+  test("accepts populated related_misconceptions", () => {
+    expect(
+      MisconceptionEntrySchema.safeParse({
+        body: "<p>x</p>",
+        chapter: "ch",
+        anchor: "brightness-is-intrinsic",
+        length: "short",
+        related_misconceptions: [
+          "flux-and-luminosity-interchangeable",
+          "all-stars-equally-bright",
+        ],
+      }).success
+    ).toBe(true);
+  });
+
+  test("accepts populated concept_refs", () => {
+    expect(
+      MisconceptionEntrySchema.safeParse({
+        body: "<p>x</p>",
+        chapter: "ch",
+        anchor: "brightness-is-intrinsic",
+        length: "short",
+        concept_refs: ["flux", "stellar-luminosity", "distance-modulus"],
+      }).success
+    ).toBe(true);
+  });
+
+  test("accepts populated discipline_scope", () => {
+    expect(
+      MisconceptionEntrySchema.safeParse({
+        body: "<p>x</p>",
+        chapter: "ch",
+        anchor: "correlation-implies-causation",
+        length: "short",
+        discipline_scope: ["statistics", "epidemiology", "social-science"],
+      }).success
+    ).toBe(true);
+  });
+
+  test("rejects non-string elements in prerequisite_misconceptions", () => {
+    expect(
+      MisconceptionEntrySchema.safeParse({
+        body: "<p>x</p>",
+        chapter: "ch",
+        anchor: "a",
+        length: "short",
+        prerequisite_misconceptions: [42],
+      }).success
+    ).toBe(false);
+  });
+
+  test("rejects empty-string slugs inside the graph-field arrays", () => {
+    expect(
+      MisconceptionEntrySchema.safeParse({
+        body: "<p>x</p>",
+        chapter: "ch",
+        anchor: "a",
+        length: "short",
+        related_misconceptions: [""],
+      }).success
+    ).toBe(false);
+  });
+
+  test("accepts ALL four graph fields populated together", () => {
+    expect(
+      MisconceptionEntrySchema.safeParse({
+        body: "<p>x</p>",
+        chapter: "ch",
+        anchor: "redshift-as-ordinary-doppler",
+        length: "short",
+        prerequisite_misconceptions: ["universe-with-a-center"],
+        related_misconceptions: ["expansion-vs-motion-in-space"],
+        concept_refs: ["redshift", "recession-velocity"],
+        discipline_scope: ["astronomy"],
+      }).success
+    ).toBe(true);
+  });
 });
 
 describe("ChapterEntrySchema", () => {
