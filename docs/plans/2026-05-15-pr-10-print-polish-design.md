@@ -5,6 +5,59 @@
 **Bucket:** B (closeout). Last item before Bucket B = 10/10.
 **Scope:** chapter-print contract. Slide-deck print is out of scope.
 
+## Architectural revision (2026-05-15, post-initial-commit)
+
+The initial commit of this design proposed a two-file CSS split:
+`textbook-layout.css` for chrome reset + a new `packages/theme/src/print.css`
+for the a11y + ink-savings contract. A pre-flight file audit performed
+while drafting the implementation plan revealed two facts that
+invalidate that split:
+
+1. **There is no `packages/theme/src/index.ts`.** The package's CSS is
+   *emitted* by `packages/theme/scripts/build-theme.ts` (writes
+   `dist/theme.css`), and exported via `package.json` as
+   `"./css": "./dist/theme.css"`. No hand-authored CSS file in `src/`.
+2. **`packages/theme/src/tokens.ts` has no `*-light` variants.** The
+   build-time emission in `generate-css.ts` derives all semantic
+   tokens via `color-mix(in oklch, ${bg} ...)` from two anchor inputs
+   (`light = { bg: anchors.paper, fg: anchors.ink }` and
+   `dark = { bg: anchors.ink, fg: anchors.paper }`), producing two
+   blocks: `:root { ... }` (light) and `[data-theme="dark"] { ... }`
+   (dark). There are no separate `--sophie-bg-light` /
+   `--sophie-bg-dark` variables to redirect to.
+
+The revised architecture is **single-file inside each package**:
+
+1. **`packages/theme/scripts/generate-css.ts`** — extend to emit a
+   third `colorBlock(light)` wrapped in
+   `@media print { :root, html[data-theme="dark"] { ... } }`,
+   appended to `dist/theme.css`. Consumers who already use
+   `@sophie/theme/css` automatically get print-mode token rebinding;
+   no extra import or export to manage.
+
+2. **`packages/astro/src/styles/textbook-layout.css`** — single
+   `@media print` block at file end covering all four concerns from
+   the original two-file plan: (a) chrome reset, (b) view-mode-Wide
+   override, (c) page-break-inside protection on pedagogy components,
+   (d) interactive component expansion (CollapsibleCard,
+   InteractiveCheckbox, Predict, SelfAssessment, GlossaryTerm
+   footnote reveal).
+
+Page-break and interactive-expansion rules reference component class
+names (`.sophie-key-equation`, `.sophie-aside`, etc.) owned by
+`@sophie/components`. textbook-layout.css already references
+component classes (it IS the layout consumer); adding print rules to
+the same file is consistent with what's there.
+
+**Slide-deck print mode (future)** picks up forced-light tokens for
+free via `@sophie/theme/css`. Slide-deck's own layout file owns its
+chrome reset rules (slide controls, progress bar, etc.) — those
+weren't reusable from textbook anyway.
+
+Sections below are revised in place to reflect this architecture.
+The original two-file rationale lives in this section as the
+historical record.
+
 ## Context
 
 Bucket B's nine other items landed without a print pass. Sophie
@@ -68,22 +121,27 @@ isn't possible.
 
 ## Architecture
 
-**Two-file split** motivated by ADR 0001 (package purity) and ADR
-0005 (three-layer theming):
+**Two emit-points, no new files** (revised — see "Architectural
+revision" section above):
 
-1. **`packages/astro/src/styles/textbook-layout.css`** — single
-   `@media print` block at file end. Hides chrome
-   (`.sophie-topbar`, `.sophie-sidebar`, `.sophie-right`,
-   `.sophie-search-trigger`). Overrides `.sophie-shell` grid to
-   single-column block layout regardless of `<html data-view-mode>`.
-   Touches only classes owned by `@sophie/astro`.
+1. **`packages/theme/scripts/generate-css.ts`** — extend to emit a
+   `@media print` block at the end of `dist/theme.css` that
+   re-applies `colorBlock(light)` to both `:root` and
+   `html[data-theme="dark"]`. Forces light-mode token bindings in
+   print regardless of the reader's active theme. Consumers using
+   `@sophie/theme/css` get this automatically.
 
-2. **`packages/theme/src/print.css` (new)** — exported by
-   `@sophie/theme`, imported into `@sophie/astro`'s entry styles.
-   Contains the layout-agnostic a11y + ink-savings contract:
-   forced-light token overrides, page-break-inside protection per
-   pedagogy component, interactive-to-static rendering rules.
-   Reusable by future slide-deck print mode without duplication.
+2. **`packages/astro/src/styles/textbook-layout.css`** — single
+   `@media print` block at file end. Covers four concerns:
+   (a) hide chrome (`.sophie-topbar`, `.sophie-sidebar`,
+   `.sophie-right`, `.sophie-search-trigger`); (b) override
+   `.sophie-shell` grid to single-column block layout regardless of
+   `<html data-view-mode>`; (c) `break-inside: avoid` on pedagogy
+   atoms (`.sophie-key-equation`, `.sophie-key-insight`,
+   `.sophie-aside`, etc.); (d) interactive components expand to
+   static form (`.sophie-collapsible-card` opens,
+   `.sophie-predict::after` draws answer space,
+   `.sophie-self-assessment-answer` displays, etc.).
 
 **One targeted MDX-pipeline change**:
 
@@ -93,8 +151,9 @@ isn't possible.
    first `<GlossaryTerm>` per slug per chapter with
    `data-first-use="true"` and inject a sibling
    `<span class="sophie-glossary-footnote">` carrying the definition
-   HTML. CSS in `print.css` hides the footnote by default and
-   reveals it under `@media print`.
+   HTML. CSS in `textbook-layout.css` hides the footnote by default
+   and reveals it under `@media print` when adjacent to
+   `[data-first-use="true"]`.
 
 **No runtime JavaScript.** View-mode override is CSS specificity over
 `data-view-mode` attribute selectors. Theme override is `@media print`
@@ -103,28 +162,37 @@ rebinding of CSS custom properties — fires after the boot script's
 
 ## Decisions settled in the brainstorm (2026-05-15)
 
-### 1. Print CSS home: split between `textbook-layout.css` and `@sophie/theme/print.css`
+### 1. Print CSS home: theme emits print tokens; textbook-layout.css holds chrome + page-break + interactive rules
 
-**Layout chrome reset** rules know class names owned by `@sophie/astro`
-(`.sophie-topbar`, `.sophie-shell`, etc.) and must stay co-located
-with the layout that defines them — `textbook-layout.css`.
+**Theme side (`packages/theme/scripts/generate-css.ts`):** emits a
+`@media print` block at the end of `dist/theme.css` that re-applies
+`colorBlock(light)` to `:root, html[data-theme="dark"]`. This is
+the natural extension point — `generate-css.ts` already emits the
+light and dark blocks; print is a third mode emitted by the same
+mechanism. Forced-light tokens propagate to every consumer of
+`@sophie/theme/css` automatically.
 
-**A11y + ink-savings contract** rules (forced-light tokens,
-page-break-inside protection, interactive-to-static rendering,
-roll-up entry atomicity) are layout-agnostic. They live in a new
-`packages/theme/src/print.css` exported by `@sophie/theme`. Future
-slide-deck print polish (ADR 0006) imports the same file — no
-duplication.
+**Layout side (`textbook-layout.css`):** one `@media print` block
+at file end covering chrome reset, view-mode-Wide override,
+page-break-inside protection on pedagogy atoms, and interactive
+component expansion. Page-break rules reference component class
+names like `.sophie-key-equation`; textbook-layout.css already
+references component classes (it's the layout consumer) so this
+is consistent with the file's existing scope.
 
-**Why not single-file:** collapses two change vectors. Future
-slide-deck print mode would duplicate the a11y rules. Cheap now,
-costly later — violates ADR 0023's "vertical-slice but plan
-ahead" framing.
+**Why this over the original two-file plan:** the original split
+assumed `*-light` token variants existed and a separate
+`packages/theme/src/print.css` could host layout-agnostic a11y
+rules. Neither held up to file audit. Token redirection is a
+generated-CSS concern (extension to `generate-css.ts`);
+page-break rules reference layout class names anyway, so
+"layout-agnostic" was illusory. Single-file in each package is
+the honest shape.
 
-**Why not theme-only:** violates ADR 0001 package purity.
-`@sophie/theme` cannot import from `@sophie/astro`. Putting
-`.sophie-topbar` in a theme stylesheet means theme would need to
-know layout class names.
+**Future slide-deck print mode** picks up forced-light tokens
+for free via `@sophie/theme/css`. Slide-deck owns its own chrome
+and page-break rules in its own layout file — they wouldn't have
+been reusable from textbook anyway.
 
 ### 2. Greenfield, not a port
 
