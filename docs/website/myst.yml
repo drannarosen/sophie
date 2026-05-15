@@ -160,6 +160,7 @@ project:
         - file: decisions/0052-scheduled-publication-visibility.md
         - file: decisions/0053-conformance-failure-modes.md
         - file: decisions/0054-course-schedule-calendar.md
+        - file: decisions/0055-squash-merge-for-code-prs.md
     - title: Status
       children:
         - file: status/roadmap.md
