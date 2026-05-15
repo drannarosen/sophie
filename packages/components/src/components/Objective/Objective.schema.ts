@@ -1,33 +1,28 @@
 import { NonEmptyString } from "@sophie/core/schema";
-import type { ReactNode } from "react";
 import { z } from "zod";
 
 /**
- * `<Objective>` — pure-display primitive for a single learning objective.
+ * `<Objective>` — pure-display primitive for one learning objective.
  *
- * Authored as a child of `<LearningObjectives>` in MDX:
+ * Rendered in two contexts, both via the `body` HTML-string prop:
  *
- * ```mdx
- * <LearningObjectives id="ch-objectives">
- *   <Objective verb="Recognize" id="lo-1">body text</Objective>
- * </LearningObjectives>
- * ```
+ *   (a) Inside `<LearningObjectives>` after the remark transform has
+ *       harvested it into the parent's `objectives` prop. The parent
+ *       renders Objective itself with `checked` + `onToggle` wired up.
+ *   (b) On the `/objectives` course-wide roll-up page, server-rendered
+ *       from `PedagogyIndex.objectives`. `checked`/`onToggle` omitted —
+ *       pure display, no checkbox.
  *
- * Also renders sensibly outside a `<LearningObjectives>` wrapper —
- * e.g., on the `/objectives` course-wide roll-up page — by omitting
- * the optional `checked` and `onToggle` props. The remark extractor
- * walks `<Objective>` flow elements inside `<LearningObjectives>`
- * to populate `PedagogyIndex.objectives` (PR-C4 design doc Task 3).
- *
- * Per ADR 0027: when used inside `<LearningObjectives>`, the parent
- * injects `checked` and `onToggle` via `React.Children.map +
- * cloneElement`. Pure-display callsites omit them and render without
- * a checkbox.
+ * Authored in MDX as `<Objective id="..." verb="...">prose</Objective>`;
+ * the remark plugin harvests attributes + serializes the body via
+ * `renderChildrenToHtml`, then rewrites the parent <LearningObjectives>
+ * to a props-driven shape. The author-side JSX never reaches React.
  */
 export const ObjectivePropsSchema = z.object({
   id: NonEmptyString,
   verb: NonEmptyString,
-  children: z.custom<ReactNode>(),
+  /** HTML string. Rendered via dangerouslySetInnerHTML. */
+  body: NonEmptyString,
   /** Injected by `<LearningObjectives>` parent. Omit for pure-display. */
   checked: z.boolean().optional(),
   /** Injected by `<LearningObjectives>` parent. Omit for pure-display. */

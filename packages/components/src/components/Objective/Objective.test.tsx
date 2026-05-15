@@ -8,9 +8,11 @@ describe("<Objective>", () => {
   it("renders an <li> with id 'lo-<id>', the verb, and the body", () => {
     render(
       <ul>
-        <Objective id='thesis' verb='State'>
-          the course thesis in one sentence
-        </Objective>
+        <Objective
+          id='thesis'
+          verb='State'
+          body='the course thesis in one sentence'
+        />
       </ul>
     );
     const item = document.getElementById("lo-thesis");
@@ -22,6 +24,21 @@ describe("<Objective>", () => {
     ).toBeInTheDocument();
   });
 
+  it("renders body as HTML via dangerouslySetInnerHTML", () => {
+    render(
+      <ul>
+        <Objective
+          id='html-body'
+          verb='Recognize'
+          body='inline <em>emphasis</em> survives'
+        />
+      </ul>
+    );
+    const em = document.querySelector("#lo-html-body em");
+    expect(em).not.toBeNull();
+    expect(em?.textContent).toBe("emphasis");
+  });
+
   it("renders a checkbox bound to checked/onToggle when both props are provided", () => {
     const onToggle = vi.fn();
     render(
@@ -29,11 +46,10 @@ describe("<Objective>", () => {
         <Objective
           id='check-1'
           verb='Recognize'
+          body='something to recognize'
           checked={false}
           onToggle={onToggle}
-        >
-          something to recognize
-        </Objective>
+        />
       </ul>
     );
     const checkbox = screen.getByRole("checkbox");
@@ -48,11 +64,10 @@ describe("<Objective>", () => {
         <Objective
           id='check-2'
           verb='Recognize'
+          body='something already learned'
           checked={true}
           onToggle={() => undefined}
-        >
-          something already learned
-        </Objective>
+        />
       </ul>
     );
     expect(screen.getByRole("checkbox")).toBeChecked();
@@ -61,34 +76,39 @@ describe("<Objective>", () => {
   it("renders no checkbox in pure-display mode (no checked/onToggle)", () => {
     render(
       <ul>
-        <Objective id='display' verb='Apply'>
-          a pure-display objective
-        </Objective>
+        <Objective id='display' verb='Apply' body='a pure-display objective' />
       </ul>
     );
     expect(screen.queryByRole("checkbox")).toBeNull();
   });
 
-  it("schema rejects empty id and empty verb", () => {
+  it("schema rejects empty id, empty verb, and empty body", () => {
     expect(
       ObjectivePropsSchema.safeParse({
         id: "",
         verb: "Recognize",
-        children: "body",
+        body: "body",
       }).success
     ).toBe(false);
     expect(
       ObjectivePropsSchema.safeParse({
         id: "lo-1",
         verb: "",
-        children: "body",
+        body: "body",
       }).success
     ).toBe(false);
     expect(
       ObjectivePropsSchema.safeParse({
         id: "lo-1",
         verb: "Recognize",
-        children: "body",
+        body: "",
+      }).success
+    ).toBe(false);
+    expect(
+      ObjectivePropsSchema.safeParse({
+        id: "lo-1",
+        verb: "Recognize",
+        body: "body",
       }).success
     ).toBe(true);
   });
@@ -96,9 +116,11 @@ describe("<Objective>", () => {
   it("has zero axe violations in pure-display mode", async () => {
     const { container } = render(
       <ul>
-        <Objective id='axe-display' verb='Recognize'>
-          a pure-display objective
-        </Objective>
+        <Objective
+          id='axe-display'
+          verb='Recognize'
+          body='a pure-display objective'
+        />
       </ul>
     );
     const results = await axe(container);
@@ -111,11 +133,10 @@ describe("<Objective>", () => {
         <Objective
           id='axe-checkbox'
           verb='Recognize'
+          body='an interactive objective'
           checked={false}
           onToggle={() => undefined}
-        >
-          an interactive objective
-        </Objective>
+        />
       </ul>
     );
     const results = await axe(container);
