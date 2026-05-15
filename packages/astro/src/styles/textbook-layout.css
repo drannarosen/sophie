@@ -564,3 +564,36 @@
     display: none;
   }
 }
+
+/* ============================================================
+   PR 10 — chapter-print polish (@media print).
+   Design doc: docs/plans/2026-05-15-pr-10-print-polish-design.md
+   ============================================================ */
+
+@media print {
+  /* (1) Hide chrome */
+  .sophie-topbar,
+  .sophie-sidebar,
+  .sophie-right,
+  .sophie-search-trigger {
+    display: none;
+  }
+
+  /* (2) Force Wide layout regardless of data-view-mode */
+  .sophie-shell,
+  html[data-view-mode="default"] .sophie-shell,
+  html[data-view-mode="focused"] .sophie-shell,
+  html[data-view-mode="wide"] .sophie-shell {
+    display: block;
+    grid-template-columns: none;
+    grid-template-areas: none;
+    max-width: none;
+    padding: 0;
+  }
+
+  .sophie-content {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+}
