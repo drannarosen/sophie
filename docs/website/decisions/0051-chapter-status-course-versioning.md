@@ -1,6 +1,17 @@
 ---
-date: 2026-05-14
-tags: [pedagogy, decisions, status, versioning, semver, course-shell, lds]
+date: 2026-05-14T00:00:00.000Z
+tags:
+  - pedagogy
+  - decisions
+  - status
+  - versioning
+  - semver
+  - course-shell
+  - lds
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0051: Chapter Status + Course Versioning

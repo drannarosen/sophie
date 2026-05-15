@@ -1,6 +1,16 @@
 ---
-date: 2026-05-14
-tags: [pedagogy, decisions, plugins, commons, cross-course, lds]
+date: 2026-05-14T00:00:00.000Z
+tags:
+  - pedagogy
+  - decisions
+  - plugins
+  - commons
+  - cross-course
+  - lds
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0048: Sophie LDS Content Plugin System

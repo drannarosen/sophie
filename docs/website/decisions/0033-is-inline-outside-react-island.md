@@ -1,6 +1,15 @@
 ---
-date: 2026-05-12
-tags: [astro, react, ssr, scripts, gotcha]
+date: 2026-05-12T00:00:00.000Z
+tags:
+  - astro
+  - react
+  - ssr
+  - scripts
+  - gotcha
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0033: `is:inline` scripts MUST live outside React islands

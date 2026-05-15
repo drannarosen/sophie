@@ -1,6 +1,13 @@
 ---
-date: 2026-05-09
-tags: [foundation, repo-structure, distribution]
+date: 2026-05-09T00:00:00.000Z
+tags:
+  - foundation
+  - repo-structure
+  - distribution
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0001: Sophie is a standalone platform, not a course monorepo

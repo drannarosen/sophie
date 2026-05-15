@@ -1,8 +1,22 @@
 ---
 title: Notation Registry schema
 short_title: Notation registry
-description: YAML schema for a Sophie-LDS-compliant STEM course's notation-registry.yaml — the course-level declaration of canonical symbols, their meanings, units, code aliases, and common confusions. Includes a fully-filled ASTR 201 example.
-tags: [pedagogy, reference, notation, schema, stem, lds, multirep]
+description: >-
+  YAML schema for a Sophie-LDS-compliant STEM course's notation-registry.yaml —
+  the course-level declaration of canonical symbols, their meanings, units, code
+  aliases, and common confusions. Includes a fully-filled ASTR 201 example.
+tags:
+  - pedagogy
+  - reference
+  - notation
+  - schema
+  - stem
+  - lds
+  - multirep
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # Notation Registry schema

@@ -1,6 +1,15 @@
 ---
-date: 2026-05-13
-tags: [chrome, state, astro, bundling, gotcha]
+date: 2026-05-13T00:00:00.000Z
+tags:
+  - chrome
+  - state
+  - astro
+  - bundling
+  - gotcha
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0037: Cross-bundle chrome communication via DOM attributes + MutationObserver

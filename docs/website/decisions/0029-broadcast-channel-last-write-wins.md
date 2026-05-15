@@ -1,6 +1,14 @@
 ---
-date: 2026-05-10
-tags: [persistence, broadcast, concurrency, hardening]
+date: 2026-05-10T00:00:00.000Z
+tags:
+  - persistence
+  - broadcast
+  - concurrency
+  - hardening
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0029: BroadcastChannel last-write-wins via per-write timestamps

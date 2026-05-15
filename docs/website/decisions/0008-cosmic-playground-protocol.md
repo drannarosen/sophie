@@ -1,6 +1,14 @@
 ---
-date: 2026-05-09
-tags: [cosmic-playground, demos, integration, postmessage]
+date: 2026-05-09T00:00:00.000Z
+tags:
+  - cosmic-playground
+  - demos
+  - integration
+  - postmessage
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0008: Cosmic Playground integration via manifest + iframe + postMessage protocol

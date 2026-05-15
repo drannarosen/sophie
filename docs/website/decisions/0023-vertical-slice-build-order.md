@@ -1,6 +1,15 @@
 ---
-date: 2026-05-09
-tags: [build-order, phase-0, scope, philosophy, foundation]
+date: 2026-05-09T00:00:00.000Z
+tags:
+  - build-order
+  - phase-0
+  - scope
+  - philosophy
+  - foundation
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0023: Vertical-slice-first build order for Phase 0 and beyond

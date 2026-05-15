@@ -1,6 +1,17 @@
 ---
-date: 2026-05-14
-tags: [pedagogy, decisions, validation, sotl, measurement, metrics, lds]
+date: 2026-05-14T00:00:00.000Z
+tags:
+  - pedagogy
+  - decisions
+  - validation
+  - sotl
+  - measurement
+  - metrics
+  - lds
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0047: Empirical Validation Plan for the LDS Conformance Foundation

@@ -1,6 +1,15 @@
 ---
-date: 2026-05-10
-tags: [tooling, storybook, dx, testing, visual-regression]
+date: 2026-05-10T00:00:00.000Z
+tags:
+  - tooling
+  - storybook
+  - dx
+  - testing
+  - visual-regression
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0028: Storybook setup — location, builder, and visual regression

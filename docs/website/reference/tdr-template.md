@@ -1,8 +1,20 @@
 ---
 title: Teaching Decision Record (TDR) template
 short_title: TDR template
-description: The canonical Teaching Decision Record template, with one fully-worked illustrative example. Consumer repos copy this file as their `teaching-decisions/template.md` and create numbered TDRs alongside.
-tags: [reference, tdr, teaching-decisions, template, curriculum-design]
+description: >-
+  The canonical Teaching Decision Record template, with one fully-worked
+  illustrative example. Consumer repos copy this file as their
+  `teaching-decisions/template.md` and create numbered TDRs alongside.
+tags:
+  - reference
+  - tdr
+  - teaching-decisions
+  - template
+  - curriculum-design
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # Teaching Decision Record (TDR) template

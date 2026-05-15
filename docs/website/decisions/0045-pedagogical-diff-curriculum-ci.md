@@ -1,6 +1,17 @@
 ---
-date: 2026-05-14
-tags: [pedagogy, decisions, diff, audit, ci, tooling, lds]
+date: 2026-05-14T00:00:00.000Z
+tags:
+  - pedagogy
+  - decisions
+  - diff
+  - audit
+  - ci
+  - tooling
+  - lds
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0045: Pedagogical Diff + Curriculum CI

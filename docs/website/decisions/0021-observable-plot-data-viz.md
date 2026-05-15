@@ -1,6 +1,14 @@
 ---
-date: 2026-05-09
-tags: [data-viz, observable-plot, calibration, dashboards]
+date: 2026-05-09T00:00:00.000Z
+tags:
+  - data-viz
+  - observable-plot
+  - calibration
+  - dashboards
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0021: Observable Plot for data viz and dashboards

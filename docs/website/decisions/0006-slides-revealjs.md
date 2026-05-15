@@ -1,6 +1,13 @@
 ---
-date: 2026-05-09
-tags: [slides, revealjs, lecture]
+date: 2026-05-09T00:00:00.000Z
+tags:
+  - slides
+  - revealjs
+  - lecture
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0006: Reveal.js + thin Astro adapter for slides

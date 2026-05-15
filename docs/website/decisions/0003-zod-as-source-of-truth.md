@@ -1,6 +1,13 @@
 ---
-date: 2026-05-09
-tags: [foundation, schema, types]
+date: 2026-05-09T00:00:00.000Z
+tags:
+  - foundation
+  - schema
+  - types
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0003: Zod as schema source of truth

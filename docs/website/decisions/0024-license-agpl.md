@@ -1,6 +1,14 @@
 ---
-date: 2026-05-10
-tags: [license, governance, foundation, phase-0]
+date: 2026-05-10T00:00:00.000Z
+tags:
+  - license
+  - governance
+  - foundation
+  - phase-0
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0024: License — AGPL-3.0-or-later for platform code

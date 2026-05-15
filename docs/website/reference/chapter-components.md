@@ -1,8 +1,18 @@
 ---
 title: Chapter components reference
 short_title: Chapter components
-description: Every Sophie component a chapter author can use, with import patterns and the three category distinctions.
-tags: [components, authoring, mdx, reference]
+description: >-
+  Every Sophie component a chapter author can use, with import patterns and the
+  three category distinctions.
+tags:
+  - components
+  - authoring
+  - mdx
+  - reference
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # Chapter components

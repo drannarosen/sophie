@@ -1,6 +1,13 @@
 ---
-date: 2026-05-09
-tags: [naming, branding, foundation]
+date: 2026-05-09T00:00:00.000Z
+tags:
+  - naming
+  - branding
+  - foundation
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0017: Rename Sophia → Sophie

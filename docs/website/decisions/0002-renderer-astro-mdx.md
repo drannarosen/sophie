@@ -1,6 +1,14 @@
 ---
-date: 2026-05-09
-tags: [foundation, renderer, astro, mdx]
+date: 2026-05-09T00:00:00.000Z
+tags:
+  - foundation
+  - renderer
+  - astro
+  - mdx
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0002: Astro + MDX as the renderer

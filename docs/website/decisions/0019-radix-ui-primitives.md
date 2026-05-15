@@ -1,6 +1,14 @@
 ---
-date: 2026-05-09
-tags: [components, accessibility, radix, primitives]
+date: 2026-05-09T00:00:00.000Z
+tags:
+  - components
+  - accessibility
+  - radix
+  - primitives
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0019: Radix UI primitives for accessible interactive components

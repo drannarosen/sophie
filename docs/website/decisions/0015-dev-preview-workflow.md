@@ -1,6 +1,17 @@
 ---
-date: 2026-05-09
-tags: [tooling, dx, preview, hmr, storybook, playwright, ai]
+date: 2026-05-09T00:00:00.000Z
+tags:
+  - tooling
+  - dx
+  - preview
+  - hmr
+  - storybook
+  - playwright
+  - ai
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0015: Dev preview workflow — `sophie dev` + Storybook + Playwright MCP

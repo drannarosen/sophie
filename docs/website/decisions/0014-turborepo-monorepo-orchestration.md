@@ -1,6 +1,15 @@
 ---
-date: 2026-05-09
-tags: [tooling, monorepo, ci, build, turborepo]
+date: 2026-05-09T00:00:00.000Z
+tags:
+  - tooling
+  - monorepo
+  - ci
+  - build
+  - turborepo
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0014: Turborepo for monorepo task orchestration

@@ -1,6 +1,13 @@
 ---
-date: 2026-05-12
-tags: [theming, design-tokens, naming-convention]
+date: 2026-05-12T00:00:00.000Z
+tags:
+  - theming
+  - design-tokens
+  - naming-convention
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0035: Theme tokens use flat, kind-less names

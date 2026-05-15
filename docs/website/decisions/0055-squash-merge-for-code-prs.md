@@ -1,6 +1,13 @@
 ---
-date: 2026-05-15
-tags: [process, contributing, git]
+date: 2026-05-15T00:00:00.000Z
+tags:
+  - process
+  - contributing
+  - git
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0055: Squash-merge for code PRs

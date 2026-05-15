@@ -1,8 +1,22 @@
 ---
 title: Intervention Library
 short_title: Interventions
-description: Sophie's canonical library of 12 named misconception interventions across 4 families (confrontation, bridging, restructuring, reinforcement) with citations, descriptions, and Teaching Move bindings. Also documents the `<Intervention>` component and the `type="custom"` escape hatch.
-tags: [pedagogy, reference, interventions, misconceptions, library, lds]
+description: >-
+  Sophie's canonical library of 12 named misconception interventions across 4
+  families (confrontation, bridging, restructuring, reinforcement) with
+  citations, descriptions, and Teaching Move bindings. Also documents the
+  `<Intervention>` component and the `type="custom"` escape hatch.
+tags:
+  - pedagogy
+  - reference
+  - interventions
+  - misconceptions
+  - library
+  - lds
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # Intervention Library

@@ -1,8 +1,19 @@
 ---
 title: sophie diff CLI reference
 short_title: sophie diff CLI
-description: User-facing specification for `sophie diff <ref>` — flags, output formats, exit codes, and worked examples.
-tags: [cli, reference, diff, audit, sophie-lds]
+description: >-
+  User-facing specification for `sophie diff <ref>` — flags, output formats,
+  exit codes, and worked examples.
+tags:
+  - cli
+  - reference
+  - diff
+  - audit
+  - sophie-lds
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # `sophie diff` CLI

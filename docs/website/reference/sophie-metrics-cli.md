@@ -1,8 +1,20 @@
 ---
 title: sophie audit --metrics + sophie metrics history CLI reference
 short_title: sophie metrics CLI
-description: User-facing specification for the empirical-measurement CLI surface — `--metrics` flag and `metrics history` subcommand.
-tags: [cli, reference, metrics, validation, sotl, sophie-lds]
+description: >-
+  User-facing specification for the empirical-measurement CLI surface —
+  `--metrics` flag and `metrics history` subcommand.
+tags:
+  - cli
+  - reference
+  - metrics
+  - validation
+  - sotl
+  - sophie-lds
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # `sophie audit --metrics` + `sophie metrics history`

@@ -1,6 +1,15 @@
 ---
-date: 2026-05-09
-tags: [components, codecell, editor, codemirror, comp]
+date: 2026-05-09T00:00:00.000Z
+tags:
+  - components
+  - codecell
+  - editor
+  - codemirror
+  - comp
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0018: CodeMirror 6 as the editor inside `<CodeCell>`

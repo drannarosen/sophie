@@ -1,6 +1,15 @@
 ---
-date: 2026-05-15
-tags: [foundation, validation, docs-infrastructure, audit, sotl]
+date: 2026-05-15T00:00:00.000Z
+tags:
+  - foundation
+  - validation
+  - docs-infrastructure
+  - audit
+  - sotl
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0056: Validation tracker — contract-level validation status surface
