@@ -1,4 +1,5 @@
 import { defineCommand } from "citty";
+import { runPreview } from "../lib/run-preview.ts";
 
 export const previewCommand = defineCommand({
   meta: {
@@ -34,6 +35,24 @@ export const previewCommand = defineCommand({
   },
   async run({ args }) {
     const port = Number.parseInt(String(args.port), 10);
-    return { args: { ...args, port } };
+    if (Number.isNaN(port)) {
+      throw new Error(`Invalid --port value: ${args.port}`);
+    }
+    const normalized = {
+      path: String(args.path),
+      port,
+      host: String(args.host),
+      build: Boolean(args.build),
+    };
+
+    // Test-harness escape: the citty arg-parsing tests in preview.test.ts
+    // exercise runCommand which invokes run(). Without this guard those
+    // tests would trigger real `astro build` + `astro preview` spawns.
+    // The env flag is set by the preview.test.ts beforeAll hook.
+    if (process.env.SOPHIE_CLI_TEST_HARNESS === "1") {
+      return { args: normalized };
+    }
+    await runPreview(normalized);
+    return { args: normalized };
   },
 });
