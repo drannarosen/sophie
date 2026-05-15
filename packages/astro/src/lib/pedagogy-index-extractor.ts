@@ -1257,7 +1257,11 @@ interface VFileLike {
  *      chapter-local; misconception auto-anchors (`misc-N`)
  *      are also chapter-local and skip the M2 check.
  *
- * The plugin doesn't mutate the mdast tree — it's extraction-only.
+ * The plugin runs read-only extraction passes first (defs/equations/
+ * key insights/figures/misconceptions/objectives/inline refs), then a
+ * terminal `transformLearningObjectives` rewrite that mutates
+ * `<LearningObjectives>` flow elements — see that function's docstring
+ * for the rewrite contract.
  */
 export function pedagogyIndexRemarkPlugin(
   options: PedagogyIndexRemarkPluginOptions = {}

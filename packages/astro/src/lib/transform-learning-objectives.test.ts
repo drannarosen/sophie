@@ -20,11 +20,21 @@ interface MdxJsxFlowElement {
   type: "mdxJsxFlowElement";
   name: string;
   attributes: MdxAttribute[];
-  children: ReadonlyArray<Record<string, unknown>>;
+  children: ReadonlyArray<MdastChild>;
 }
+/**
+ * `MdastChild` is the test-side union of node shapes we hand to
+ * `transformLearningObjectives` via `tree as never`. The factories
+ * (`mdxLearningObjectives`, `mdxObjective`) return `MdxJsxFlowElement`,
+ * while inline text/paragraph nodes flow through as the open
+ * `Record<string, unknown>` shape. The union keeps factory outputs
+ * assignable to `children` slots without weakening the structural
+ * types the assertions read.
+ */
+type MdastChild = MdxJsxFlowElement | Record<string, unknown>;
 interface Root {
   type: "root";
-  children: ReadonlyArray<Record<string, unknown>>;
+  children: ReadonlyArray<MdastChild>;
 }
 
 const para = (text: string) => ({
@@ -32,14 +42,14 @@ const para = (text: string) => ({
   children: [{ type: "text", value: text }],
 });
 
-const root = (children: ReadonlyArray<Record<string, unknown>>): Root => ({
+const root = (children: ReadonlyArray<MdastChild>): Root => ({
   type: "root",
   children,
 });
 
 const mdxLearningObjectives = (
   attrs: Record<string, string>,
-  children: ReadonlyArray<Record<string, unknown>> = []
+  children: ReadonlyArray<MdastChild> = []
 ): MdxJsxFlowElement => ({
   type: "mdxJsxFlowElement",
   name: "LearningObjectives",
@@ -53,7 +63,7 @@ const mdxLearningObjectives = (
 
 const mdxObjective = (
   attrs: Record<string, string>,
-  children: ReadonlyArray<Record<string, unknown>> = []
+  children: ReadonlyArray<MdastChild> = []
 ): MdxJsxFlowElement => ({
   type: "mdxJsxFlowElement",
   name: "Objective",
@@ -67,7 +77,7 @@ const mdxObjective = (
 
 function findLO(tree: Root): MdxJsxFlowElement | undefined {
   for (const node of tree.children) {
-    const n = node as MdxJsxFlowElement;
+    const n = node as unknown as MdxJsxFlowElement;
     if (n.type === "mdxJsxFlowElement" && n.name === "LearningObjectives") {
       return n;
     }
