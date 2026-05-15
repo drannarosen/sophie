@@ -24,6 +24,79 @@ ground in this list. A subsequent code PR will populate
 `packages/components/src/pedagogy/move-index.ts` mirroring this
 content.
 
+## Move entry schema (post-2026-05-14 hardening)
+
+Per [ADR 0041 hardening §1](../decisions/0041-teaching-move-library.md#hardening-additions-2026-05-14),
+each move entry in `move-index.ts` carries the following fields. The
+docs entries below are summaries; the canonical machine-readable
+form lives in the TypeScript map.
+
+| Field | Type | Authored or computed |
+|---|---|---|
+| `slug` | string (kebab-case ID) | authored |
+| `family` | string (one of 7) | authored |
+| `canonical_name` | string (literature-grounded) | authored |
+| `practice_gloss` | string (Anna's working vocabulary) | authored |
+| `citation` | string \| string[] | authored |
+| `description` | string (1–3 paragraphs) | authored |
+| `instantiated_by` | array of component patterns (e.g., `["Predict"]`, `["Intervention[type=contrasting-cases]"]`) | **authored** — declares which Sophie components invoke this move; audit infers usage |
+| `validated_in` | array of semester slugs (e.g., `["astr201-sp25", "astr201-sp26-ch4"]`) | **authored** — implicit lifecycle: empty = provisional, non-empty = validated |
+| `instantiated_as` | array of intervention slugs | **computed** — reverse pointer from `intervention-index.ts` entries' `move:` field; do not author manually |
+| `dont_confuse_with` | array of move slugs | authored (adjacency notes) |
+
+**`instantiated_by` semantics.** A move entry declares which
+Sophie components implement it at chapter-author level. The audit
+walks the chapter-level PedagogyIndex, counts component instances
+matching each pattern, and emits move-usage counts. Examples:
+
+- `["Predict"]` — counts every `<Predict>` instance
+- `["MultiRep"]` — counts every `<MultiRep>` instance
+- `["Intervention[type=contrasting-cases]"]` — counts `<Intervention>` instances with `type="contrasting-cases"`
+- `["MultiRep[mode=comparison]"]` — counts `<MultiRep>` instances with `mode="comparison"` (when MultiRep gains such a mode prop)
+
+**`validated_in` semantics.** Free-form strings; convention is
+`<course>-<semester>` or `<course>-<semester>-ch<N>` for chapter-
+specific validation. Empty array means provisional (move is in the
+v1 catalog but Anna hasn't exercised it yet); non-empty means
+validated (exercised in at least one course-semester combination).
+A future ADR (or `sophie metrics history`) can plot validation
+diffusion across the catalog.
+
+**`instantiated_as` semantics.** Reverse-pointer from
+`intervention-index.ts` (per [ADR 0044](../decisions/0044-misconception-graph-and-intervention-library.md))
+— each intervention declares `move: <slug>`; the audit-build
+computes the reverse map and populates `instantiated_as` on each
+move entry. Authors do *not* manually fill this field; the build
+populates it. Readers see "this move has interventions X, Y, Z"
+without authoring a back-pointer.
+
+## Course-level `move_usage` aggregation
+
+The audit emits a course-level move-usage summary in
+`sophie audit --summary` (also accessible via the structured
+metrics export in [ADR 0047](../decisions/0047-empirical-validation-plan.md)
+`sophie audit --metrics`):
+
+```text
+Move usage across course:
+  predict-observe-explain        12 instances across 7 chapters
+  contrasting-cases               5 instances across 4 chapters
+  retrieval-with-feedback         9 instances across 6 chapters
+  bridging-analogy                3 instances across 3 chapters
+  metacognition-prompts           1 instance  across 1 chapter   (outlier?)
+  observable-model-inference      0 instances                    (unused)
+
+Validation status:
+  3 of 18 moves validated in current course (astr201-fa26)
+  5 validated in prior courses but unused here
+  10 remain provisional
+```
+
+No new audit invariant; derived statistics. Surfaces curriculum-
+coverage imbalances without forcing thresholds. Future ADRs may
+add invariants ("at least N moves from K families per course")
+once authoring data shows the right threshold.
+
 ## Move families
 
 The 18 v1 moves cluster into 7 families. Move IDs (kebab-case) are

@@ -122,6 +122,138 @@ in the component's documentation). A future audit invariant reads
 the same map to verify every shipped component declares at least one
 move.
 
+### Hardening additions (2026-05-14)
+
+Per the [foundation review](/Users/anna/Teaching/sophie/docs/reviews/2026-05-14-adrs-0040-0045-foundation-review.md),
+the original `move-index.ts` shape was extended with four
+coordinated refinements. All ship as part of the v1 platform-docs +
+follow-up code PR; together they resolve the Move/Intervention
+overlap surfaced by the review, add a measurement layer the
+original ADR lacked, and tag the v1 catalog with provisional/
+validated lifecycle data.
+
+**1. Move–Intervention linkage** (extends ADR 0044). Each entry in
+`packages/components/src/intervention/intervention-index.ts` (per
+[ADR 0044](./0044-misconception-graph-and-intervention-library.md))
+gains a `move: <slug>` field pointing at the parent move in
+`move-index.ts`. Required on canonical interventions; optional on
+custom interventions.
+
+```ts
+// intervention-index.ts (post-hardening)
+export const interventionIndex: Record<string, InterventionEntry> = {
+  "contrasting-cases": {
+    family: "Confrontation",
+    move: "comparison-cases",          // ← NEW: parent-move link
+    citation: "Schwartz & Bransford 1998",
+    ...
+  },
+  "bridging-analogy-with-limits": {
+    family: "Bridging",
+    move: "bridging-analogy",
+    citation: "Clement 1993",
+    ...
+  },
+  // ...
+};
+```
+
+Establishes the clean two-level hierarchy: 18 moves → 12 v1
+canonical interventions (each linked to its parent move) →
+arbitrary chapter-authored `<Intervention type="custom">`
+instances (optional `move=` for self-classification).
+
+**2. Reverse-direction `instantiated_as` field** on move entries
+(computed, not authored). The audit-build process walks
+`intervention-index.ts` and populates each move entry's
+`instantiated_as: [<intervention-slug>, ...]` reverse-pointer.
+Readers of `move-index.ts` see "this move has interventions X, Y,
+Z" without manual back-pointer authoring.
+
+**3. Inferred move-usage attribution.** Each move entry gains an
+`instantiated_by: [<component-pattern>, ...]` field declaring
+which Sophie components invoke it at chapter level:
+
+```ts
+// move-index.ts (post-hardening)
+export const moveIndex: Record<string, MoveEntry> = {
+  "predict-observe-explain": {
+    family: "Eliciting prior knowledge",
+    canonical_name: "Predict-Observe-Explain (POE)",
+    practice_gloss: "predict-then-reveal",
+    citation: "White & Gunstone 1992",
+    instantiated_by: ["Predict"],            // ← NEW
+    validated_in: ["astr201-sp25", "astr201-sp26-ch4"],  // ← NEW
+    instantiated_as: ["predict-then-reveal-with-stakes"], // ← computed
+    ...
+  },
+  "multiple-representations-binding": {
+    family: "Representations + comparison",
+    instantiated_by: ["MultiRep"],
+    ...
+  },
+  "contrasting-cases": {
+    instantiated_by: [
+      "Intervention[type=contrasting-cases]",
+      "MultiRep[mode=comparison]"
+    ],
+    ...
+  },
+  // ...
+};
+```
+
+The audit walks the chapter-level PedagogyIndex, counts component
+instantiations matching each move's `instantiated_by` patterns,
+and emits a **course-level `move_usage` aggregation** in
+`sophie audit --summary` (per
+[ADR 0047 Empirical Validation Plan](./0047-empirical-validation-plan.md)
+`sophie audit --metrics`):
+
+```text
+Move usage across course:
+  predict-observe-explain        12 instances across 7 chapters
+  contrasting-cases               5 instances across 4 chapters
+  retrieval-with-feedback         9 instances across 6 chapters
+  bridging-analogy                3 instances across 3 chapters
+  metacognition-prompts           1 instance  across 1 chapter   (outlier?)
+  pedagogical-diff                0 instances                    (unused)
+```
+
+Surfaces curriculum-coverage imbalances (over-reliance on one
+move family) without forcing any threshold. **Inferred attribution
+keeps authoring burden zero** — no per-component `move=` prop;
+the declarative `instantiated_by` mapping in `move-index.ts` is
+the only declaration.
+
+**4. Provisional-vs-validated tagging.** Each move entry gains
+`validated_in: string[]` (default `[]`, semester-anchored slugs
+like `astr201-sp25` or `astr201-sp26-ch4`). v1 catalog ships with
+realistic values reflecting Anna's prior course experience — moves
+exercised in past semesters land as `validated_in: ["astr201-sp25"]`;
+speculative moves stay `[]`. The audit summary includes a
+validation-status footer:
+
+```text
+Validation status: 3 of 18 moves validated in current course;
+                   5 validated in prior courses but unused here;
+                   10 remain provisional.
+```
+
+Implicit lifecycle via `validated_in` (empty = provisional;
+non-empty = validated). No separate `status: provisional | validated`
+field — it would drift from `validated_in` over time.
+
+### Audit invariant I4 (extends ADR 0044's I-family)
+
+**I4 (WARNING)** — every canonical intervention's `move:` field
+must resolve to a real move in `move-index.ts`. Custom
+interventions (`type="custom"`) can declare `move=` too; if they
+do, I4 applies. Cross-ADR couples ADR 0041 and ADR 0044 — the
+invariant lives in ADR 0044's I-family because that's where
+`<Intervention>` lives, but its target is ADR 0041's move
+library.
+
 ### Move list (v1: 18 moves)
 
 The full move list with citations, descriptions, and component
@@ -218,17 +350,32 @@ This commit ships **docs only**:
 
 A subsequent code PR will ship:
 
-1. `packages/components/src/pedagogy/move-index.ts` — the
-   component → moves map, populated for every component in
-   `@sophie/components`.
-2. `packages/core/src/schema/pedagogy.ts` — the `TeachingMove` type
-   (string-literal union matching the 18 move IDs).
-3. Storybook integration — each component's story reads from the
+1. `packages/components/src/pedagogy/move-index.ts` — the move
+   library map, populated for every move in v1, with
+   `instantiated_by` patterns + `validated_in` slugs per move,
+   plus computed `instantiated_as` reverse-pointers from the
+   intervention library.
+2. `packages/components/src/intervention/intervention-index.ts`
+   amendment (per ADR 0044) — each canonical intervention gains
+   the `move:` field pointing at its parent move.
+3. `packages/core/src/schema/pedagogy.ts` — the `TeachingMove`
+   type (string-literal union matching the 18 move IDs) +
+   `MoveEntry` shape including `instantiated_by`, `validated_in`,
+   `instantiated_as`.
+4. Storybook integration — each component's story reads from the
    map and renders a "Implements moves: …" panel.
-4. Audit invariant `MOVE1` (Sophie-platform-audit, not consumer-
+5. `<Intervention>` render update — citation-grade caption at use
+   site: *"Intervention: contrasting-cases (instance of move
+   `comparison-cases`, Schwartz & Bransford 1998)"*.
+6. Audit invariant `MOVE1` (Sophie-platform-audit, not consumer-
    repo-audit) — every component must declare at least one move OR
    explicitly declare itself non-pedagogical (e.g., layout
    primitives like `<Spacer>`, `<TwoColumn>`).
+7. Audit invariant **I4** (cross-ADR with ADR 0044) — every
+   canonical intervention's `move:` resolves in `move-index.ts`.
+8. Audit aggregation: `sophie audit --summary` emits course-level
+   `move_usage` statistics (counts + chapter coverage per move +
+   validation-status footer).
 
 That code PR follows the standard branch + PR cadence per
 [`feedback_branch_pr_scope`](../../../) memory. This commit doesn't
@@ -323,22 +470,63 @@ the *floor*, not the ceiling.
 
 ## Revisions
 
-*None yet.* Revisions to the taxonomy follow the pattern established
-by [ADR 0038 §1, §2](./0038-pedagogy-index-pattern.md) and PR-C3
-followups: a new `## Revisions §N` section appended to this ADR
-documenting the change + reason.
+**§1 — 2026-05-14 Hardening pass.** Per
+[the foundation review](/Users/anna/Teaching/sophie/docs/reviews/2026-05-14-adrs-0040-0045-foundation-review.md),
+this ADR was edited in place (under Anna's explicit mutability
+override for the first hardening pass) to add:
+
+- Move/Intervention linkage: `move: <slug>` field on
+  `intervention-index.ts` entries (resolves the architectural
+  overlap with ADR 0044).
+- Reverse `instantiated_as` field on move entries (computed,
+  not authored).
+- Inferred move-usage attribution: `instantiated_by:
+  [<component-pattern>]` on move entries; audit infers usage from
+  PedagogyIndex; no per-component `move=` prop burden.
+- Course-level `move_usage` aggregation in `sophie audit --summary`
+  (no new audit invariant; derived statistics).
+- Provisional-vs-validated tagging: `validated_in: string[]` on
+  move entries (default `[]`, semester-anchored slugs); implicit
+  lifecycle, no separate status field.
+- Cross-ADR audit invariant **I4** (WARNING): intervention's
+  `move=` must resolve in `move-index.ts` (extends ADR 0044's
+  I-family).
+- `<Intervention>` renders parent move as citation-grade caption
+  at use site.
+
+The immutability convention re-applies after this hardening pass
+completes. Future revisions land as new ADRs.
+
+Further taxonomy revisions (move additions / renames / refinements
+beyond the hardening pass) follow the pattern established by
+[ADR 0038 §1, §2](./0038-pedagogy-index-pattern.md): a new
+`## Revisions §N` section appended documenting the change + reason.
 
 ## References
 
 - [`reference/teaching-moves.md`](../reference/teaching-moves.md) —
   the 18-move library with full entries (citations, descriptions,
-  Sophie-component mappings).
+  Sophie-component mappings, `instantiated_by`, `validated_in`).
 - [ADR 0040 — Teaching Decision Records](./0040-teaching-decision-records.md)
   — TDR Rationale sections cite teaching moves by canonical name.
 - [ADR 0030 — audience and AI author model](./0030-audience-and-ai-author-model.md)
-  — AI authoring grounds in this taxonomy.
+  — AI authoring grounds in this taxonomy. Per the 2026-05-14
+  hardening, ADR 0030 also documents Sophie's commitment to AI-
+  primary authoring.
 - [ADR 0038 — pedagogy index pattern](./0038-pedagogy-index-pattern.md)
   — the centralized-metadata-map precedent.
+- [ADR 0044 — Misconception Graph + Intervention Library](./0044-misconception-graph-and-intervention-library.md)
+  — the parent-move link from each intervention; cross-ADR audit
+  invariant I4 lives here.
+- [ADR 0047 — Empirical Validation Plan](./0047-empirical-validation-plan.md)
+  — move-usage aggregation feeds the eight-metric headline set;
+  `validated_in` tagging surfaces in the validation summary.
+- [ADR 0049 — `sophie refactor` CLI Family](./0049-sophie-refactor-cli-family.md)
+  — refactor commands may touch move-index entries when a move is
+  renamed or merged.
+- [`reference/intervention-library.md`](../reference/intervention-library.md)
+  — the 12-v1 canonical intervention list; each entry's `move:`
+  field points at this ADR's taxonomy.
 - [`vision/features/accepted.md`](../vision/features/accepted.md) A2
   — the staging-area entry this ADR graduates.
 - [`vision/index.md`](../vision/index.md) — the Sophie-as-LDS

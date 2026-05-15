@@ -53,6 +53,66 @@ Child content is the intervention's prose / structure (the
 predict-then-reveal sequence, the contrasting cases, the analogy
 mapping, etc.).
 
+## Intervention → Move linkage (post-2026-05-14 hardening)
+
+Per [ADR 0041 hardening §1](../decisions/0041-teaching-move-library.md#hardening-additions-2026-05-14),
+every canonical intervention in `intervention-index.ts` declares a
+**parent move** via the `move: <slug>` field. The parent move is
+the primary teaching move the intervention instantiates — the one
+whose name pattern the intervention follows. Each intervention may
+*also* implement secondary moves (listed below as *Teaching Moves
+implemented*), but exactly one is the parent.
+
+```ts
+// intervention-index.ts (post-hardening)
+export const interventionIndex: Record<string, InterventionEntry> = {
+  "contrasting-cases": {
+    family: "Confrontation",
+    move: "comparison-cases",          // parent move (required)
+    secondary_moves: [                  // additional moves invoked
+      "productive-cognitive-conflict",
+      "misconception-confrontation"
+    ],
+    citation: "Bransford & Schwartz 1999",
+    ...
+  },
+  // ...
+};
+```
+
+In this reference doc, each intervention entry's *"Teaching Moves
+implemented"* line lists the parent move first, then secondary
+moves. The machine-readable shape distinguishes them; the docs
+shape sequences them.
+
+**Audit invariant I4 (WARNING, cross-ADR with ADR 0041).** Every
+canonical intervention's `move:` field must resolve to a real move
+in `move-index.ts`. Custom interventions (`type="custom"`) can
+declare `move=` too; if they do, I4 applies. Couples the two
+libraries structurally — there's no way to ship an intervention
+whose parent move doesn't exist.
+
+**Render: citation-grade caption at use site.** The `<Intervention>`
+component renders a small caption below the intervention's body
+naming the parent move with citation:
+
+```text
+[intervention body]
+─────
+Intervention: contrasting-cases (instance of move
+`comparison-cases`, Bransford & Schwartz 1999)
+```
+
+Caption is screen-reader-accessible (rendered as `<figcaption>` or
+equivalent semantic element); subtly styled in print and on
+screen. Authors don't write the caption — it's auto-rendered from
+the intervention's `move:` field + move-index citation lookup.
+
+**Reverse-pointer.** Each move entry's `instantiated_as: [<intervention-slug>]`
+is computed at audit-build time from the intervention library's
+`move:` declarations. Readers of `move-index.ts` see "this move
+has interventions X, Y, Z" without authoring the back-pointer.
+
 ## The 4 families
 
 | Family | What it does | When to use |
