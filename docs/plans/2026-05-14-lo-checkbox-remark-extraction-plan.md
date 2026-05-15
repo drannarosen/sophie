@@ -64,7 +64,30 @@ instead of the original plan text where they conflict.
    The gate opens once Task 6 wires the transform; from then on the
    snapshot generates correctly and becomes the legitimate baseline.
 
-Tasks 1, 2, and 3 reflect these corrections in their committed code.
+7. **Task 6 originally shipped without ESTree lowering and broke
+   the smoke build; fixed in a follow-up commit before merge.** The
+   first Task 6 attempt wrote `JSON.stringify(items)` into
+   `mdxJsxAttributeValueExpression.value` and stopped there. The
+   downstream `hast-util-to-estree` lowering pass (between remark
+   and JSX compilation) reads `value.data.estree`, not the string
+   `value` — with `data.estree` absent, the JSX attribute compiled
+   to `JSXEmptyExpression`, the `objectives` prop arrived as
+   `undefined` at runtime, and `<LearningObjectives>` SSR crashed.
+   All of Layers 1, 1.5, and component-unit tests stayed green
+   because none of them ran the transformed tree through
+   `@mdx-js/mdx`'s `compile()`; the bug surfaced only at smoke
+   build / Layer 2 e2e. Fix (commit `fa8c38d`): use
+   `estree-util-value-to-estree` (canonical unified-ecosystem
+   helper) to produce a real ESTree `Program`, wrap in
+   `ExpressionStatement`, attach as `value.data.estree`. Same
+   commit added Layer 1.6 (`transform-mdx-compile.test.ts`) to
+   close the test-pyramid gap between mdast-snapshot and built-
+   HTML/e2e; the design doc §2 pitfall callout + §10 pattern-
+   precedent note codify the lesson for future
+   `<Parent><Child>` transforms.
+
+Tasks 1, 2, and 3 reflect corrections 1–6 in their committed
+code; correction 7 reflects the merged state of Task 6.
 
 ---
 
