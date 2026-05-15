@@ -20,6 +20,46 @@ The authoring decision behind this taxonomy lives in
 The CLI that emits items in this shape is specified in
 [sophie-diff-cli.md](sophie-diff-cli.md).
 
+## Severity-threshold reference table (hardened 2026-05-14)
+
+The canonical rule reference for classification. A CI integrator
+reads this table; the per-axis prose sections expand each rule
+with rationale.
+
+| Granularity | Change kind | Default severity | Threshold rule |
+|---|---|---|---|
+| `structural` | `added` | `substantive` | always (unless routine exception below) |
+| `structural` | `added` | `routine` | trivial: empty container, no body, no anchor cross-refs |
+| `structural` | `removed` | `substantive` | always |
+| `semantic` | `body_changed` (prose) | `substantive` | word-delta ≥ 5% OR ≥ 1 paragraph rewritten |
+| `semantic` | `body_changed` (prose) | `routine` | word-delta < 5% AND only whitespace / punctuation / typo fixes |
+| `semantic` | `body_changed` (equation) | `substantive` | equation body changed at all (equation changes are never routine) |
+| `semantic` | `title_changed` | `substantive` | title is part of the chapter's semantic surface |
+| `semantic` | `caption_changed` (figure) | `substantive` | caption changes affect reader interpretation |
+| `relational` | `resolved` (new ref works) | `substantive` | new resolution adds curriculum coverage |
+| `relational` | `broken` (existing ref fails) | `breaking` | always — broken refs are correctness failures |
+| `relational` | `target_changed` | `substantive` | reference points at different target |
+| `relational` | `list_changed` (prereqs, related) | `substantive` | misconception graph edges added/removed |
+| `relational` | `prerequisite_cycle_introduced` | `breaking` | MG1 cycle is always breaking |
+| `conformance` | `audit_warning_added` | `substantive` | when `level=WARNING` |
+| `conformance` | `audit_warning_added` | `breaking` | when `level=ERROR` |
+| `conformance` | `audit_warning_cleared` | `substantive` | clearing a warning is curriculum improvement |
+| `conformance` | `audit_warning_level_changed` | `substantive` | escalation/de-escalation visible |
+| `conformance` | `contract_field_changed` | `requires-judgment` | pedagogy-contract changes are instructor-judgment-load-bearing |
+| (any) | (anchor in HEAD TDR `affects_anchors`) | **one-level demotion** | per ADR 0045 hardening: `breaking` → `substantive`; `substantive` → `routine`; `requires-judgment` → `routine`. Item tagged with source TDR-id. |
+| `requires-judgment` trigger | (anchor is `lo-*` LO body) | `requires-judgment` | learning-objective bodies are instructor-judgment surfaces |
+| `requires-judgment` trigger | (anchor is `def-*` definition body) | `requires-judgment` | definitions are foundational claims |
+| `requires-judgment` trigger | (anchor is `ai_policy` in contract) | `requires-judgment` | course-wide AI-use policy |
+| `requires-judgment` trigger | (anchor is `misconception.prerequisite_*` order) | `requires-judgment` | sequencing is pedagogically load-bearing per ADR 0044 MG2 |
+| `requires-judgment` trigger | (`ai_contribution.instructor_reviewed.date` predates change) | `requires-judgment` | stale-review nudge per ADR 0042 hardening |
+| `requires-judgment` trigger | (`ai_contribution` missing on changed chapter) | `requires-judgment` + `breaking` (AC1) | AC1 ERROR also fires |
+
+The table is the **canonical rule reference**; the prose sections
+below expand each rule with rationale. Adding a new component
+type to `PedagogyIndex` requires adding rows here AND in
+`@sophie/core/diff/classify.ts` (the latter is failure-mode-
+tested per "Classification rules — coverage testing" below).
+
 ## Why two axes
 
 A one-axis taxonomy fails one of two reviewer needs. Severity-

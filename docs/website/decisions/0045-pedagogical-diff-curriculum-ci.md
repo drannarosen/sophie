@@ -72,19 +72,33 @@ A top-level peer of `sophie audit` / `sophie build` /
 answers *"is this good?"*; `sophie diff` answers *"what changed?"*
 
 ```
-sophie diff <ref> [--format=text|json|markdown] [--base-index <path>]
+sophie diff [<ref> | --semester=<id>] [--format=text|json|markdown] [--base-index <path>] [--include-routine]
 ```
 
 - `<ref>` — any git ref valid for `git worktree add` (branch name,
   SHA, tag, `HEAD~N`, etc.).
+- `--semester=<id>` (**new in 2026-05-14 hardening**) — semester-
+  aware alternative to `<ref>`. Resolves to a git tag following
+  the convention `<course>-<semester>-start` (e.g.,
+  `astr201-fa25` resolves to `astr201-fa25-start`). Convention
+  documented in `sophie-diff-cli.md`; if the matching tag doesn't
+  exist, exits code 2 with a `git tag astr201-fa25-start <sha>`
+  hint. Lets `sophie diff --semester=astr201-fa25` answer "what
+  changed between last fall and now" without manual ref-lookup.
 - `--format` — output format. Default: `text` when stdout is a TTY,
   `json` when piped (modern CLI convention). Markdown is a thin
   template over the JSON; useful for PR-comment integrations and
   AI Ledger entries.
-- `--base-index <path>` — skip the worktree build and read the
-  base `PedagogyIndex` from `<path>` instead. Reserved for future
-  cache-as-caller flows (CI runners that already produced the
-  base index in an earlier step).
+- `--base-index <path>` (**operationalized in 2026-05-14
+  hardening**) — skip the worktree build and read the base
+  `PedagogyIndex` from `<path>` instead. v1 ships a canonical
+  GitHub Actions workflow that builds the base index once per PR
+  as a cached artifact and passes it via `--base-index` to avoid
+  per-PR worktree-build overhead. Worked example in
+  `sophie-diff-cli.md` *CI integration* section.
+- `--include-routine` (**new in 2026-05-14 hardening**) — text
+  formatter suppresses `routine` severity items by default; flag
+  forces inclusion. JSON output always includes them.
 
 Exit codes:
 
@@ -172,6 +186,55 @@ The full taxonomy specification — every change category, what
 triggers it, what fields it surfaces, and worked examples for each
 component type — lives in
 [pedagogical-change-taxonomy.md](../reference/pedagogical-change-taxonomy.md).
+A **precise severity-threshold reference table** at the top of
+that doc (hardened 2026-05-14) lists every triggers→severity rule
+explicitly — readers consult the table rather than scanning
+narrative prose.
+
+### Intentional-change demotion via TDR `affects_anchors` (hardened 2026-05-14)
+
+A diff item whose anchor is listed in any HEAD TDR's
+`affects_anchors` field (per
+[ADR 0040 hardening](./0040-teaching-decision-records.md)) is
+**demoted one severity level** and tagged with the source TDR-id.
+Honors intentional changes automatically — no opt-in commit
+annotation; the intention lives in the TDR.
+
+Demotion ladder:
+
+| Original severity | Demoted to |
+|---|---|
+| `breaking` | `substantive` (with TDR-id annotation) |
+| `substantive` | `routine` (with TDR-id annotation) |
+| `requires-judgment` | `routine` (with TDR-id annotation) |
+| `routine` | (no change; already lowest) |
+
+Example: a TDR removes the Drake equation from ch3 and lists
+`affects_anchors: [eq-drake-equation, misc-overconfident-civilization-counting]`.
+Without the TDR, `sophie diff` would emit:
+
+```text
+breaking: <EqRef slug="drake-equation"> broken (eq removed)
+```
+
+With the TDR, it emits:
+
+```text
+substantive: <EqRef slug="drake-equation"> broken
+  (intentional, see TDR-007)
+```
+
+CI doesn't fail; the diff report still surfaces the change with
+provenance. This is *automatic* (not opt-in) because
+`affects_anchors` is *intentional declaration by definition* —
+if a TDR lists anchors it affects, the author is claiming they
+meant to affect them.
+
+Cross-ADR coupling: **TDR-2** (INFO, per ADR 0040 hardening)
+verifies that every anchor in `affects_anchors` resolves in the
+*base* PedagogyIndex (the anchor existed before the TDR's effect
+was applied — that's why it was changeable). Authoring-
+correctness nudge for this flow.
 
 ### Artifact 4: Output formatters
 
@@ -537,34 +600,85 @@ audit per coherent contract.
 
 ## Revisions
 
-None yet.
+**§1 — 2026-05-14 Hardening pass.** Per
+[the foundation review](/Users/anna/Teaching/sophie/docs/reviews/2026-05-14-adrs-0040-0045-foundation-review.md),
+this ADR was edited in place (under Anna's explicit mutability
+override for the first hardening pass) to add:
+
+- **Intentional-change demotion via TDR `affects_anchors`** — a
+  diff item whose anchor is claimed in any HEAD TDR's
+  `affects_anchors` field is automatically demoted one severity
+  level with TDR-id annotation. Honors intentional changes
+  without requiring opt-in commit annotations. Couples to ADR
+  0040 hardening's TDR schema; ADR 0040 TDR-2 invariant verifies
+  `affects_anchors` resolves.
+- **`--base-index` CI-artifact-passing flow operationalized in
+  v1** (not just future seam). Canonical GitHub Actions workflow
+  builds the base index once per PR, caches it, passes via
+  `--base-index` to avoid worktree-rebuild overhead. Worked
+  example in `sophie-diff-cli.md` CI integration section.
+- **`--semester=<semester-id>` flag** — semester-aware ref
+  resolution via tag convention `<course>-<semester>-start`.
+  Lets `sophie diff --semester=astr201-fa25` answer "what
+  changed between last fall and now" without manual ref-lookup.
+- **`--include-routine` flag** — text formatter suppresses
+  `routine`-severity items by default; flag forces inclusion.
+  JSON output always includes them.
+- **Precise severity-threshold reference table** in
+  `pedagogical-change-taxonomy.md` (replaces narrative-prose
+  description of thresholds; spec-grade clarity for the classifier
+  rules).
+
+The immutability convention re-applies after this hardening pass
+completes. Future revisions land as new ADRs.
 
 ## References
 
 - [ADR 0030 — Audience + AI author model](./0030-audience-and-ai-author-model.md)
-  — HITL mandate; AI primary-authors, instructor supervises.
+  — HITL mandate; AI primary-authors, instructor supervises. Per
+  the 2026-05-14 amendment, also documents Sophie's commitment to
+  AI-primary authoring as deliberate design.
 - [ADR 0038 — Pedagogy-index pattern](./0038-pedagogy-index-pattern.md)
   — `PedagogyIndex` shape; render-time accumulator pattern.
 - [ADR 0040 — Teaching Decision Records](./0040-teaching-decision-records.md)
   — TDRs as the curriculum audit trail; diff output is a natural
-  artifact to cite.
+  artifact to cite. **TDR `affects_anchors` field** (hardened
+  2026-05-14) feeds the intentional-change demotion classifier;
+  TDR-2 invariant verifies anchors resolve in base PedagogyIndex.
 - [ADR 0041 — Teaching Move Library](./0041-teaching-move-library.md)
   — `move-index.ts`; the classifier tags diff items with move
   IDs.
 - [ADR 0042 — Pedagogy Contract + AI Contribution Ledger](./0042-pedagogy-contract-and-ai-contribution-ledger.md)
-  — `ai_contribution` block feeds `requires-judgment` classifier;
-  pedagogy-contract changes surface in `conformance` axis.
+  — `ai_contribution.instructor_reviewed.date` staleness feeds
+  the `requires-judgment` classifier; pedagogy-contract changes
+  (e.g., `ai_training_provenance` updates) surface in `conformance`
+  axis.
 - [ADR 0043 — Notation Registry + MultiRep + Alignment Audit](./0043-notation-registry-multirep-alignment-audit.md)
-  — NR1–NR4 + MR1–MR4 invariants surface in `conformance` axis.
+  — NR1–NR4 + MR1–MR6 invariants surface in `conformance` axis;
+  the *structured-for-facts, prose-for-stances* principle (declared
+  in 0043 hardening) constrains diff classifier shape.
 - [ADR 0044 — Misconception Graph + Intervention Library](./0044-misconception-graph-and-intervention-library.md)
-  — MG1–MG3 + I1–I3 invariants surface in `conformance` axis;
+  — MG1–MG4 + I1–I4 invariants surface in `conformance` axis;
   prerequisite-cycle introduction is a `breaking` item.
+- [ADR 0049 — `sophie refactor` CLI Family](./0049-sophie-refactor-cli-family.md)
+  — refactor commands auto-generate TDR-seed stubs with
+  `affects_anchors` pre-populated; intentional-change demotion
+  flows from refactor → TDR → diff.
+- [ADR 0051 — Chapter Status + Course Versioning](./0051-chapter-status-and-course-versioning.md)
+  — `--semester=<id>` flag resolves to `<course>-<semester>-start`
+  tag per ADR 0051's git-tag convention; diff can plot across
+  course versions.
+- [ADR 0053 — Conformance Failure Modes](./0053-conformance-failure-modes.md)
+  — chapter-frontmatter `audit_overrides` reference TDRs;
+  CF1–CF5 invariants extend the diff's conformance-axis surface.
 - [`vision/features/backlog.md`](../vision/features/backlog.md) —
   B3 entry surfaced this ADR; collapsed to one-line pointer in
   the 2026-05-14 promotion commit.
 - [`vision/features/accepted.md`](../vision/features/accepted.md)
   A6 — defended priority claim and brainstorm Q1–Q6 summaries.
 - [sophie-diff-cli.md](../reference/sophie-diff-cli.md) — the
-  user-facing CLI spec.
+  user-facing CLI spec; includes CI integration section + worked
+  example workflow YAML.
 - [pedagogical-change-taxonomy.md](../reference/pedagogical-change-taxonomy.md)
-  — full taxonomy specification with per-component triggers.
+  — full taxonomy specification with per-component triggers +
+  precise severity-threshold reference table (hardened 2026-05-14).
