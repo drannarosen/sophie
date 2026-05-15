@@ -32,3 +32,13 @@ export { LangTag, NonEmptyString, Slug } from "./primitives.js";
 export type { EntityType } from "./search-facet.js";
 export { type Section, SectionSchema } from "./section.js";
 export { slugify } from "./slugify.js";
+export {
+  type Validation,
+  type ValidationEvidence,
+  ValidationEvidenceSchema,
+  type ValidationKind,
+  ValidationKindSchema,
+  ValidationSchema,
+  type ValidationStatus,
+  ValidationStatusSchema,
+} from "./validation.js";
