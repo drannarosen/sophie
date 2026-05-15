@@ -81,6 +81,7 @@ project:
         - file: reference/sophie-metrics-cli.md
         - file: reference/sophie-plugin-system.md
         - file: reference/sophie-refactor-cli.md
+        - file: reference/sophie-publish-schedule-cli.md
     - title: Explanation
       children:
         - file: explanation/architecture.md
@@ -153,6 +154,9 @@ project:
         - file: decisions/0047-empirical-validation-plan.md
         - file: decisions/0048-sophie-lds-content-plugins.md
         - file: decisions/0049-sophie-refactor-cli.md
+        - file: decisions/0051-chapter-status-course-versioning.md
+        - file: decisions/0052-scheduled-publication-visibility.md
+        - file: decisions/0053-conformance-failure-modes.md
     - title: Status
       children:
         - file: status/roadmap.md
