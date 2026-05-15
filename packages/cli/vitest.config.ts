@@ -8,6 +8,8 @@ export default defineConfig({
       include: ["src/**/*.ts"],
       exclude: [
         "src/bin.ts", // shebang-only entry; covered transitively
+        "src/index.ts", // citty subCommands composition root; covered transitively
+        "src/commands/audit.ts", // Phase 6 placeholder; throws-only stub
         "src/**/*.test.ts",
       ],
       reporter: ["text", "html"],
