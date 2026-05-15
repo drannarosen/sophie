@@ -716,3 +716,45 @@
 .sophie-glossary-footnote {
   display: none;
 }
+
+/* Validation tracker admonition (ADR 0056).
+   Per-contract surface rendered at the top of every ADR + reference doc.
+   Four status-keyed classes mapped to the validation status palette in
+   @sophie/theme (status-success / status-warning / status-info /
+   status-neutral). The left-edge stripe + background tint give readers
+   an at-a-glance signal of the contract's current validation state.
+
+   Renderer: packages/astro/src/lib/validation-admonition-plugin.ts.
+   MyST emits `<aside class="admonition validation-<status>">…</aside>`;
+   the styles below tint that aside without overriding other admonition
+   conventions (typography, icon placement). */
+.admonition.validation-unvalidated,
+.admonition.validation-in-progress,
+.admonition.validation-validated,
+.admonition.validation-re-validation-needed {
+  border-inline-start: 4px solid var(--sophie-border);
+  padding-inline-start: 1rem;
+  background: var(--sophie-surface-1);
+}
+
+.admonition.validation-unvalidated {
+  border-inline-start-color: var(--sophie-validation-unvalidated-stripe);
+  background: var(--sophie-validation-unvalidated-bg);
+}
+
+.admonition.validation-in-progress {
+  border-inline-start-color: var(--sophie-validation-in-progress-stripe);
+  background: var(--sophie-validation-in-progress-bg);
+}
+
+.admonition.validation-validated {
+  border-inline-start-color: var(--sophie-validation-validated-stripe);
+  background: var(--sophie-validation-validated-bg);
+}
+
+.admonition.validation-re-validation-needed {
+  border-inline-start-color: var(
+    --sophie-validation-re-validation-needed-stripe
+  );
+  background: var(--sophie-validation-re-validation-needed-bg);
+}

@@ -18,6 +18,8 @@ const colors = [
   "status-success",
   "status-warning",
   "status-danger",
+  "status-info",
+  "status-neutral",
   "accent",
   "link",
   "link-hover",
