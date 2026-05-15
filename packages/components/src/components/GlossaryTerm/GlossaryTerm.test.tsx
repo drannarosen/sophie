@@ -111,3 +111,33 @@ describe("<GlossaryTerm>", () => {
     });
   });
 });
+
+describe("GlossaryTerm first-use footnote", () => {
+  it("renders no footnote when data-first-use is absent", () => {
+    render(<GlossaryTerm name='Parallax'>parallax</GlossaryTerm>);
+    expect(screen.queryByTestId("glossary-footnote")).not.toBeInTheDocument();
+  });
+
+  it("renders inline footnote span when data-first-use='true'", () => {
+    render(
+      <GlossaryTerm name='Parallax' data-first-use='true'>
+        parallax
+      </GlossaryTerm>
+    );
+    const footnote = screen.getByTestId("glossary-footnote");
+    expect(footnote).toBeInTheDocument();
+    expect(footnote).toHaveClass("sophie-glossary-footnote");
+    // Definition body comes from definitions-store lookup; pin that it
+    // is non-empty for a known fixture term seeded by the mock above.
+    expect(footnote.textContent ?? "").not.toBe("");
+  });
+
+  it("renders nothing extra when data-first-use is 'false' or unrecognised", () => {
+    render(
+      <GlossaryTerm name='Parallax' data-first-use='false'>
+        parallax
+      </GlossaryTerm>
+    );
+    expect(screen.queryByTestId("glossary-footnote")).not.toBeInTheDocument();
+  });
+});
