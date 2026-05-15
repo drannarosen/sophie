@@ -88,6 +88,14 @@ This page is the chapter author's quick reference.
 | `<EqRef slug="X" />` | `equations` | Equation title with hover preview (KaTeX-rendered tex + title) | Self-closing or children |
 | `<FigureRef name="X" />` | `figureRegistry` + `figureUsages` | "Fig. N" (ordinal) with hover preview (thumbnail + caption) | Self-closing or children |
 | `<ChapterRef slug="X" />` | `chapters` + `modules` | Chapter title with hover preview (module breadcrumb + title + description) | Self-closing or children |
+| `<TDRRef num="14" />` | `tdrReferences` (Teaching Decision Records) | `TDR-N: [title]` with hover preview (title + evidence_type + evidence_strength + 1-line summary) | Self-closing or children |
+
+`<TDRRef>` respects per-ADR-0040 visibility rules: in student-facing
+build, internal TDRs render as `<span class="sr-only">` (screen-reader
+accessible + instructor HTML inspection) instead of as a visible link;
+public TDRs render as normal cross-references. Instructor-build
+(dual-profile v2+) renders all TDRs with full hover preview regardless
+of visibility.
 
 Each carries the new `data-react-hydrated="true"` attribute after
 mount via the `useHydrated()` hook (Phase 1 item #10 pattern); e2e
@@ -104,6 +112,7 @@ tests wait on this signal before exercising hover behavior.
 | `<ChapterFigures chapter="X" />` | All `<Figure>` usages in chapter X, joined with `figureRegistry` for src/alt/caption |
 | `<ChapterKeyInsights chapter="X" />` | All key-insight Asides + Callouts in chapter X |
 | `<ChapterMisconceptions chapter="X" />` | All misconception Asides + Callouts in chapter X |
+| `<ChapterTDRs chapter="X" />` | All TDRs referenced from chapter X via `<TDRRef>`. In student-facing build, filters to public TDRs only (often empty); in instructor build, includes all referenced TDRs |
 
 Each component currently hardcodes `<h2>` for its section heading. A
 forward-looking `headingLevel?: 2 | 3 | 4` prop will land when a real
@@ -304,6 +313,7 @@ errors at build time, not at runtime.
 | Inline reference to an equation | `<EqRef slug="X" />` |
 | Inline reference to a figure | `<FigureRef name="X" />` |
 | Inline reference to another chapter | `<ChapterRef slug="X" />` |
+| Inline reference to a Teaching Decision Record | `<TDRRef num="14" />` (per [ADR 0040](../decisions/0040-teaching-decision-records.md)) |
 | The chapter-opening "you will be able to..." list | `<LearningObjectives>` with `<Objective>` children |
 | One concept presented across multiple representational modes (prose + equation + figure + code + intuition) with explicit cross-bindings | `<MultiRep>` with `<RepVerbal>` / `<RepEquation>` / `<RepFigure>` / `<RepCode>` / `<RepIntuition>` children |
 | A pedagogical intervention paired with a misconception (worked example, contrasting cases, bridging analogy, etc.) | `<Intervention type="..." addresses="this">` nested inside a misconception `<Aside>` or `<Callout>` |
@@ -319,6 +329,7 @@ errors at build time, not at runtime.
 | Chapter-end roll-up of figures | `<ChapterFigures chapter="X" />` |
 | Chapter-end roll-up of key insights | `<ChapterKeyInsights chapter="X" />` |
 | Chapter-end roll-up of misconceptions | `<ChapterMisconceptions chapter="X" />` |
+| Chapter-end roll-up of referenced Teaching Decision Records | `<ChapterTDRs chapter="X" />` |
 | Course-wide pages | `<Course*>` on the matching `/glossary`, `/equations`, `/figures`, `/key-insights`, `/misconceptions`, `/objectives` route |
 
 Pick by pedagogical intent first; the static-vs-interactive split
@@ -341,6 +352,7 @@ JSDoc:
 | Misconception | `misc-` | auto: `misc-${counter}` (auto only); explicit ids slugify directly |
 | Chapter | `ch-` | passthrough chapter slug |
 | Objective | `lo-` | author-supplied via id |
+| TDR | `tdr-` | passthrough TDR number (e.g., `tdr-14` for TDR-014) |
 
 ## References
 

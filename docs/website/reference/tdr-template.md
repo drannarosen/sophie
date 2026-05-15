@@ -37,6 +37,13 @@ all bracketed placeholders.
 ---
 date: YYYY-MM-DD
 tags: [pedagogy, decision, ...optional course/topic tags]
+evidence_type: <required: course_eval | student_artifact | participation_data | literature | instructor_observation | student_feedback | audit_signal | forward_hypothesis>
+evidence_strength: <optional: strong | moderate | weak | exploratory>
+evidence_summary: <optional 1-2 sentences anchoring the evidence>
+scope: <optional, default chapter: chapter | module | course_shell | semester>
+visibility: <optional, default internal: internal | public>
+affects_anchors: [<optional list of pedagogy-index anchor slugs>]
+affects_versions: [<optional list of course version strings>]
 ---
 
 # TDR-NNN: Brief decision title
@@ -109,6 +116,39 @@ ones ("students who saw X first showed Y improvement on Z").]
 - external sources (papers, OER, conference talks)]
 ````
 
+### Frontmatter field semantics (hardened 2026-05-14)
+
+The frontmatter shape was extended in the 2026-05-14 hardening pass.
+All fields except those marked **required** are optional. Full
+authoring guidance lives in
+[ADR 0040](../decisions/0040-teaching-decision-records.md); brief
+guidance below.
+
+| Field | Required? | Purpose |
+|---|---|---|
+| `date` | yes | When the TDR was authored |
+| `tags` | yes | Free-form tags; convention includes `pedagogy`, `decision`, course slug |
+| `evidence_type` | **yes** | One of 8 values classifying the decision's basis. `instructor_observation` is legitimate when basis is informal professional judgment. `forward_hypothesis` for predictive / exploratory TDRs |
+| `evidence_strength` | no | One of 4 values: self-disclosure of quality within the type. `exploratory` pairs naturally with `evidence_type: forward_hypothesis` |
+| `evidence_summary` | no | 1–2 sentences anchoring the evidence to specifics (e.g., *"sp25 evals n=47, 18/47 flagged section as confusing"*) |
+| `scope` | no | One of: `chapter` (default) \| `module` \| `course_shell` \| `semester`. Lets course-shell decisions live in the same TDR machinery |
+| `visibility` | no | `internal` (default) \| `public`. Most TDRs stay internal — frank reflection + forward-hypotheses need safety. Opt-in `public` for SoTL citation, departmental sharing, or tenure-case artifacts |
+| `affects_anchors` | no | List of pedagogy-index anchor slugs this TDR claims to affect (`eq-wiens-law`, `misc-redshift-doppler`, etc.). Feeds `sophie diff` intentional-change demotion (ADR 0045) and chapter-frontmatter `audit_overrides` provenance coupling (ADR 0053) |
+| `affects_versions` | no | List of course versions this TDR spans (`["1.0.0", "1.1.0"]`). Auto-populated by `sophie refactor` (ADR 0049); editable when decision genuinely spans versions |
+
+### Evidence-type quick reference
+
+| `evidence_type` value | Use when |
+|---|---|
+| `course_eval` | Formal end-of-semester evaluations (rated items, free-response patterns) |
+| `student_artifact` | Homework / exam / discussion-board responses showing a pattern |
+| `participation_data` | Engagement metrics (attendance, completion rates, time-on-task) |
+| `literature` | Cited research applied to this course |
+| `instructor_observation` | Pattern noticed across office hours / class discussion / teaching memory |
+| `student_feedback` | Informal — emails, office-hour comments, mid-semester feedback |
+| `audit_signal` | Sophie's own audit caught the issue (NR1/MR2/MG/etc. drove the change) |
+| `forward_hypothesis` | Predictive / exploratory — trying something new with no prior evidence; pair with `evidence_strength: exploratory` |
+
 ## Example — fully worked
 
 Below is an illustrative example showing what a real TDR looks like
@@ -119,6 +159,20 @@ introduce *parallax distance* before *standard candles*.
 ---
 date: 2026-05-14
 tags: [pedagogy, decision, astr201, distance-scale, parallax]
+evidence_type: instructor_observation
+evidence_strength: moderate
+evidence_summary: |
+  Across sp24 + sp25 office hours, students consistently struggled to
+  reason about photon counts and distance inference without parallax's
+  observable-to-inference scaffolding established first.
+scope: module
+visibility: internal
+affects_anchors:
+  - lo-parallax-distance
+  - misc-brightness-is-intrinsic
+  - eq-small-angle-parallax
+affects_versions:
+  - 1.0.0
 ---
 
 # TDR-001: Introduce parallax distance before standard candles

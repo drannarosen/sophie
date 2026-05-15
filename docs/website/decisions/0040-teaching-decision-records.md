@@ -100,12 +100,19 @@ admonition, same five canonical sections. Reasons for parity:
 - Reuses Sophie's existing markdownlint + mystmd build pipeline; no
   new validators required.
 
-Full schema:
+Full schema (hardened 2026-05-14):
 
 ```markdown
 ---
 date: YYYY-MM-DD
 tags: [pedagogy, decision, ...optional course/topic tags]
+evidence_type: <required: see 8-value enum below>
+evidence_strength: <optional: strong | moderate | weak | exploratory>
+evidence_summary: <optional 1-2 sentences anchoring the evidence>
+scope: <optional, default chapter: chapter | module | course_shell | semester>
+visibility: <optional, default internal: internal | public>
+affects_anchors: [<optional pedagogy-index anchor list, e.g., misc-redshift-doppler>]
+affects_versions: [<optional course version list, e.g., 1.0.0, 1.1.0>]
 ---
 
 # TDR-NNN: Brief decision title
@@ -136,6 +143,100 @@ cite specific student-confusion patterns observed in past semesters]
 [Related TDRs, ADRs, vision/pedagogy/ essays, external sources]
 ```
 
+### Field-by-field semantics
+
+**`evidence_type` (required)** — one of eight values; classifies the
+*basis* for the decision. Required even when the basis is informal —
+`instructor_observation` is a legitimate value that captures expert
+judgment without forcing data the author doesn't have.
+
+| Value | Use when |
+|---|---|
+| `course_eval` | Formal end-of-semester evaluations (rated items, free-response patterns) |
+| `student_artifact` | Homework / exam / discussion-board responses showing a pattern |
+| `participation_data` | Engagement metrics from prior runs (attendance, completion rates, time-on-task) |
+| `literature` | Cited research applied to this course |
+| `instructor_observation` | Pattern Anna noticed across office hours / class discussion / her own teaching memory |
+| `student_feedback` | Informal — emails, office-hour comments, mid-semester feedback |
+| `audit_signal` | Sophie's own audit caught the issue (e.g., NR1 + MR2 fires drove a registry refactor) |
+| `forward_hypothesis` | Predictive / exploratory — trying something new with no prior evidence yet; pair with `evidence_strength: exploratory` |
+
+**`evidence_strength` (optional)** — one of four values; the
+author's self-disclosure of evidence *quality within its type*. A
+TDR marked `evidence_strength: weak` doesn't fail any check; it
+just signals "I'm acting on thin evidence, future-me should
+re-evaluate." That self-disclosure is what makes the TDR corpus
+useful as a SoTL artifact.
+
+| Value | Use when |
+|---|---|
+| `strong` | High-n data, peer-reviewed citation, or pattern across multiple semesters |
+| `moderate` | Modest-n data, recurring observation, or partial literature support |
+| `weak` | Single anecdote, n=1 semester, or speculative-but-defensible |
+| `exploratory` | No prior evidence; testing a hypothesis (pairs naturally with `evidence_type: forward_hypothesis`) |
+
+**`evidence_summary` (optional)** — 1–2 sentences narratively
+anchoring the evidence type to specifics. Cultural-norm
+recommended; not schema-gated. Example:
+*"sp25 evals (n=47, 73% response): Q12 flagged the Drake-equation
+section as 'most confusing' by 18/47 students."*
+
+**`scope` (optional, default `chapter`)** — one of four values.
+Lets course-shell decisions (syllabus reorderings, due-date changes,
+rubric tweaks, paper-swap decisions) live in the same TDR machinery
+without conflating with chapter-bound pedagogical decisions.
+
+| Value | Use when |
+|---|---|
+| `chapter` (default) | Decision affects one chapter |
+| `module` | Decision spans multiple chapters in a module |
+| `course_shell` | Schedule, assignment dates, rubric, paper-swap, recitation structure |
+| `semester` | Semester-wide policy (grading scheme, AI policy adjustments mid-semester) |
+
+**`visibility` (optional, default `internal`)** — one of two values.
+**TDRs are internal-default**; opt-in publish is the *exceptional*
+path. Frank reflection requires safety; forward-hypothesis TDRs
+contaminate when public (priming the natural experiment); TDRs
+often reference student data that has FERPA implications; some
+pedagogical strategy works because it's not declared. The public-
+facing accountability layer is the Pedagogy Contract + AI
+Contribution Ledger ([ADR 0042](0042-pedagogy-contract-and-ai-contribution-ledger.md)),
+not TDRs.
+
+| Value | Behavior |
+|---|---|
+| `internal` (default) | Visible to instructor + AI primary author + course-build inspection; not rendered on student-facing chapter pages or in `<TDRRef>` cross-references in student build |
+| `public` | Opt-in; renders on student-facing chapter pages; rendered in `<TDRRef>` hover cards; surfaces on `/teaching-decisions/` route when published |
+
+The instructor opts in selectively — likely for SoTL citation,
+departmental sharing, or tenure-case artifacts — once the TDR is
+calibration-mature.
+
+**`affects_anchors` (optional, list of pedagogy-index anchor slugs)** —
+declares the chapter-level anchors this TDR claims to affect
+(`eq-wiens-law`, `misc-redshift-doppler`, `def-luminosity`,
+`lo-flux-vs-luminosity`, etc.). Two consumers integrate:
+
+1. **`sophie diff` intentional-change demotion**
+   ([ADR 0045](0045-pedagogical-diff-curriculum-ci.md)): a diff
+   item whose anchor is listed in any HEAD TDR's `affects_anchors`
+   is demoted one severity level and tagged with the source
+   TDR-id. Honors intentional changes automatically.
+2. **Audit-override coupling**
+   ([ADR 0053](0053-conformance-failure-modes.md), forward-ref):
+   chapter-frontmatter `audit_overrides` reference TDRs by id;
+   the audit verifies the referenced TDR has the overridden anchor
+   in its `affects_anchors`. Couples overrides to provenance
+   structurally.
+
+**`affects_versions` (optional, list of course version strings)** —
+declares which course versions this TDR spans (e.g.,
+`["1.0.0", "1.1.0"]`). Auto-populated by `sophie refactor`
+([ADR 0049](0049-sophie-refactor-cli-family.md)) with
+`[<current_version>]` based on the pedagogy contract's
+`course_version` ([ADR 0051](0051-chapter-status-and-course-versioning.md)).
+Author can edit if the decision genuinely spans multiple versions.
+
 The full canonical template — with one fully-worked example — lives
 at [`reference/tdr-template.md`](../reference/tdr-template.md).
 
@@ -160,6 +261,81 @@ decisions, but the *acceptance* signal comes from the instructor — the
 same human-in-the-loop pattern Sophie's
 [CLAUDE.md](../../../CLAUDE.md) Engineering Principles codify at the
 platform level. The `Deciders` field records this explicitly.
+
+### Discoverability — `<TDRRef>` cross-references
+
+A TDR that no chapter points at is dead infrastructure. Sophie ships
+two components that make TDRs discoverable from the chapters they
+govern.
+
+**`<TDRRef num="14">`** — interactive React island (hover-preview
+pattern from PR-C2, parallel to `<EqRef>` / `<FigureRef>` /
+`<GlossaryTerm>` / `<ChapterRef>`). Renders inline as `TDR-14: <title>`
+linked to the TDR file; hover card shows title + evidence_type +
+evidence_strength + 1-line summary. Self-closing or with children for
+custom anchor text:
+
+```mdx
+The decision to introduce parallax before standard candles is recorded
+in <TDRRef num="14" />. We pursue this scaffolding throughout
+Module 1.
+```
+
+Single anchor source (`num=` only; no parallel `slug=` system). TDRs
+are numbered per ADR 0040's folder-scoped numbering; renumbering
+should be rare-to-never, and renumbering on commit can be done with
+`sophie refactor tdr renumber`
+([ADR 0049](0049-sophie-refactor-cli-family.md)) when needed.
+
+**`<ChapterTDRs chapter="X">`** — Astro consumer (server-rendered
+aggregator, parallel to `<ChapterEquations>` / `<ChapterMisconceptions>`).
+Roll-up of TDRs referenced from the chapter, rendered at chapter-end.
+Sources the references by walking `<TDRRef>` occurrences in the
+chapter's MDX.
+
+Both components respect `visibility`:
+
+| Build profile | Internal TDR `<TDRRef>` | Public TDR `<TDRRef>` |
+|---|---|---|
+| **Student-facing** (default v1 build) | Not rendered (or rendered as `<span class="sr-only">` for screen-reader / instructor inspection of HTML source) | Renders as normal cross-reference with hover preview |
+| **Instructor-build** (dual-profile v2+) | Full hover preview | Full hover preview |
+
+`<ChapterTDRs>` in student-facing build surfaces only public TDRs
+referenced from the chapter (often empty in v1); in instructor-build,
+all referenced TDRs surface.
+
+### Audit invariants
+
+ADR 0040 ships two audit invariants in the foundation tranche:
+
+**TDR-1** (WARNING, course-level) — *minimum TDR coverage proportional
+to load-bearing-entity count*. Formal check: total-TDR-count /
+load-bearing-entity-count must be ≥ a ratio configured in the
+pedagogy contract.
+
+- Load-bearing entities counted: `<KeyEquation>` instances,
+  `<Aside kind="misconception">` instances, `<LearningObjectives>`
+  items.
+- Default ratio: `0.1` (one TDR per ten load-bearing entities).
+  Configurable in `pedagogy-contract.yaml` at
+  `tdr_coverage.min_ratio`.
+- Operates on **total** TDR count regardless of visibility — the
+  question is "do you have enough teaching-decisions documented?",
+  not "have you published enough?".
+
+Rationale: TDR fatigue is a known anti-pattern (teams stop writing
+ADRs after initial enthusiasm); TDR-1 nudges against it without
+gating CI on every chapter individually having a TDR. A course with
+14 load-bearing entities should have ≥1 TDR; a course with 140
+should have ≥14.
+
+**TDR-2** (INFO) — *`affects_anchors` entries resolve in base
+PedagogyIndex*. Each anchor in a TDR's `affects_anchors` should
+resolve to an entity that *exists in the base ref's PedagogyIndex*
+(i.e., the anchor existed before the TDR's effect was applied —
+that's why it was changeable). Authoring-correctness nudge for the
+intentional-change-annotation flow defined in
+[ADR 0045](0045-pedagogical-diff-curriculum-ci.md).
 
 ## Rationale
 
@@ -231,20 +407,27 @@ teaching-decision audit trail (or instructors can dual-profile it per
 [ADR 0001 + Phase 5 plans](../status/roadmap.md)). Researchers see
 it. Future-Anna sees it. The artifact is publicly citable.
 
-### Audit invariants follow
+### Audit invariant code PR (TDR-1 + TDR-2)
 
-Future Sophie audit invariants can reason about TDRs (orphan TDRs
-that no longer match shipped course shape; TDRs referencing removed
-chapters; TDRs without a `Deciders` field). These ship as a
-follow-up; this ADR ratifies the convention, not the audit pass.
+This ADR ships **TDR-1** (course-level coverage WARNING) and
+**TDR-2** (INFO on `affects_anchors` resolution) as part of the
+foundation. Their full specifications appear in the *Audit
+invariants* section above; the audit pass that fires them is
+registered in `packages/astro/src/lib/pedagogy-audit.ts` in the
+follow-up code PR. Future ADRs may add additional TDR-prefix
+invariants as authoring data shows the need; v1 ships these two.
 
-### Bucket C pedagogy index extension (later)
+### Pedagogy index integration via `<TDRRef>` and `<ChapterTDRs>`
 
-TDRs are reachable from the pedagogy index in principle — a chapter
-could declare "TDR-014 governs my design" via frontmatter, and the
-index could surface "show me every TDR active across my course."
-This is *not* shipped here; it's a candidate backlog entry that
-emerges if and when the audit need surfaces.
+TDRs are reachable from the pedagogy index via the
+`<TDRRef num="14">` cross-reference component and the
+`<ChapterTDRs chapter="X">` chapter-end roll-up consumer (full
+specs in the *Discoverability* section above). The pedagogy index
+gains a new collection at `PedagogyIndex.tdrReferences` populated
+by the remark extractor walking `<TDRRef>` occurrences in chapter
+source; the audit consumes it for cross-chapter dangling-reference
+checks (TDR-2). The code-PR layer is part of the same follow-up
+that lands the audit invariant code.
 
 ### Other instructors
 
@@ -305,15 +488,71 @@ identity is sufficient.
   the textbook/course-site separation TDRs align with.
 - [ADR 0030 — audience and AI-author model](0030-audience-and-ai-author-model.md):
   the instructor-as-supervisor framing TDRs codify at the curriculum
-  level.
+  level. Per the 2026-05-14 hardening, ADR 0030 also documents
+  Sophie's explicit commitment to AI-primary authoring (the framing
+  TDRs operationalize).
 - [ADR 0038 — pedagogy index pattern](0038-pedagogy-index-pattern.md):
-  the structured-pedagogy substrate TDRs sit alongside.
+  the structured-pedagogy substrate TDRs sit alongside;
+  `<TDRRef>` cross-references and `<ChapterTDRs>` consumers register
+  with the pedagogy index via the same extractor pattern as
+  `<EqRef>` / `<ChapterEquations>`.
+- [ADR 0042 — Pedagogy Contract + AI Contribution Ledger](0042-pedagogy-contract-and-ai-contribution-ledger.md):
+  the public-facing accountability layer; TDRs are the *internal
+  operational layer* that justifies the contract's claims.
+  `visibility: internal | public` on TDRs parallels the `visibility`
+  field on `ai_contribution` blocks.
+- [ADR 0045 — Pedagogical Diff + Curriculum CI](0045-pedagogical-diff-curriculum-ci.md):
+  the `affects_anchors` field on TDRs feeds the diff classifier's
+  intentional-change demotion.
+- [ADR 0049 — `sophie refactor` CLI Family](0049-sophie-refactor-cli-family.md):
+  refactor commands auto-generate TDR-seed stubs with
+  `affects_anchors` and `affects_versions` pre-populated.
+- [ADR 0051 — Chapter Status + Course Versioning](0051-chapter-status-and-course-versioning.md):
+  the `affects_versions` field on TDRs maps to the course-level
+  semver declared in the pedagogy contract.
+- [ADR 0053 — Conformance Failure Modes](0053-conformance-failure-modes.md):
+  chapter-frontmatter `audit_overrides` reference TDRs by id; the
+  audit (CF1) verifies the referenced TDR lists the overridden anchor
+  in `affects_anchors`. Couples overrides to provenance structurally.
 - [`vision/features/accepted.md` A1](../vision/features/accepted.md#a1-teaching-decision-records-tdrs):
   the originating entry; graduates to *graduated* on acceptance of
   this ADR.
+- [`vision/features/backlog.md` B8 — Semester Journal](../vision/features/backlog.md):
+  related but distinct feature; the journal captures *observations*
+  that may mature into TDRs (which capture *decisions*).
 - [`reference/tdr-template.md`](../reference/tdr-template.md): the
   canonical template consumer repos copy.
+- [`reference/chapter-components.md`](../reference/chapter-components.md):
+  authoring reference for `<TDRRef>` and `<ChapterTDRs>` components.
 - [Sophie Engineering Principles](../../../CLAUDE.md): the HITL +
   SoTA-not-simple + no-back-compat-pre-launch values that shape
   Sophie's authoring culture; TDRs apply the same values to
   curriculum-design culture.
+
+## Revisions
+
+**2026-05-14 — Hardening pass.** Per
+[the foundation review](/Users/anna/Teaching/sophie/docs/reviews/2026-05-14-adrs-0040-0045-foundation-review.md),
+this ADR was edited in place (under Anna's explicit mutability
+override for the first hardening pass) to add:
+
+- Evidence-rigor fields: `evidence_type` (required, 8-value enum),
+  `evidence_strength` (optional, 4-value enum), `evidence_summary`
+  (optional prose).
+- `scope` field (default `chapter`; 4-value enum) — lets course-shell
+  decisions live in the same TDR machinery without conflating with
+  chapter-bound decisions.
+- `visibility` field (default `internal`) — TDRs are internal by
+  default; opt-in publish per-TDR.
+- `affects_anchors` field — connects TDRs to `sophie diff`
+  intentional-change demotion (ADR 0045) and to chapter-level
+  `audit_overrides` (ADR 0053).
+- `affects_versions` field — connects TDRs to course-level semver
+  (ADR 0051).
+- `<TDRRef num="N">` component and `<ChapterTDRs chapter="X">`
+  consumer (Discoverability section).
+- Audit invariants TDR-1 (course-level coverage WARNING) and TDR-2
+  (INFO on `affects_anchors` resolution).
+
+The immutability convention re-applies after this hardening pass
+completes. Future revisions land as new ADRs.
