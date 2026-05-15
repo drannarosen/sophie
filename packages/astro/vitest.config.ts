@@ -10,12 +10,30 @@ export default defineConfig({
       reporter: ["text", "html", "json", "json-summary"],
       // Narrow to JS/TS only so the coverage report doesn't list
       // `.astro` files as 0%-uncovered — they're exercised at smoke
-      // e2e, not at this package's unit-test level. v8 will still
-      // print a stderr "Failed to parse <file>.astro" message for
-      // each .astro file Vite loaded (its rolldown parser doesn't
-      // grok .astro source), then gracefully excludes them itself;
-      // that noise is upstream v8-coverage behavior and not fixable
-      // from this config. Cosmetic only; tests pass.
+      // e2e, not at this package's unit-test level.
+      //
+      // Known-issue caveat: v8 will still print a stderr "Failed to
+      // parse <file>.astro" line for each .astro file Vite loaded
+      // during setup. Its rolldown parser doesn't grok .astro source,
+      // then `V8CoverageProvider.remapCoverage` gracefully excludes
+      // them itself. The parse is gated by what V8 captured at
+      // runtime, NOT by `coverage.include`/`coverage.exclude`, so
+      // narrowing the include glob (as above) silences the *report*
+      // listings but not the *parse-attempt stderr*. Cosmetic;
+      // tests pass.
+      //
+      // If this noise ever becomes annoying enough to address, the
+      // decision tree:
+      //   1. Check if @vitest/coverage-v8 or rolldown has added an
+      //      "exclude from parse" option since this was written
+      //      (2026-05-14, vitest 4.1, @vitest/coverage-v8 4.1.5,
+      //      rolldown 1.0.0-rc.18). If yes, use it.
+      //   2. Otherwise file an upstream issue at
+      //      github.com/vitest-dev/vitest with a minimal repro
+      //      (any test suite that imports an .astro module).
+      //   3. Last resort: wrap `vitest run --coverage` in a script
+      //      that filters stderr — DON'T do this blindly, it can
+      //      hide legitimate failures.
       include: ["src/**/*.{ts,tsx}"],
       exclude: [
         "**/*.test.ts",
