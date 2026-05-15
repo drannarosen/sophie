@@ -50,15 +50,24 @@ flow (`vision/features/accepted.md` → ADR) on the same day.
 | **A3** | [0042](../decisions/0042-pedagogy-contract-and-ai-contribution-ledger.md) | [pedagogy-contract-schema](../reference/pedagogy-contract-schema.md), [ai-contribution-schema](../reference/ai-contribution-schema.md) | Pedagogy Contract + AI Contribution Ledger — course-level `pedagogy-contract.yaml` + per-chapter `ai_contribution` frontmatter. Public-facing accountability layer. Invariants **PC1**, **AC1**, **AC2**. |
 | **A4** | [0043](../decisions/0043-notation-registry-multirep-alignment-audit.md) | [notation-registry-schema](../reference/notation-registry-schema.md), [multirep-component](../reference/multirep-component.md) | Notation Registry + `<MultiRep>` + Representation Alignment Audit — `notation-registry.yaml` declares canonical symbols/units/aliases per concept; `<MultiRep>` binds one concept across modes (verbal/equation/figure/code/intuition). Invariants **NR1–NR4** + **MR1–MR4**. Opt-in via Pedagogy Contract. |
 | **A5** | [0044](../decisions/0044-misconception-graph-and-intervention-library.md) | [misconception-graph-schema](../reference/misconception-graph-schema.md), [intervention-library](../reference/intervention-library.md) | Misconception Graph + Intervention Library + `<Intervention>` — extends PR-C4 misconception schema with graph fields (`prerequisite_misconceptions`, `related_misconceptions`, `concept_refs`); 12 canonical interventions (4 families) in `intervention-index.ts`. Invariants **MG1–MG3** + **I1–I3**. Universal scope. |
+| **A6** | [0045](../decisions/0045-pedagogical-diff-curriculum-ci.md) | [sophie-diff-cli](../reference/sophie-diff-cli.md), [pedagogical-change-taxonomy](../reference/pedagogical-change-taxonomy.md) | Pedagogical Diff + Curriculum CI — `sophie diff <ref>` CLI command + persisted `dist/.sophie/pedagogy-index.json` build artifact + two-axis pedagogical-change taxonomy (granularity × severity) + three formatters (text/JSON/markdown). No new audit-invariant family — *tool over* the foundation contracts; consumes NR/MR/MG/I/PC/AC/D/E/F/C/O/K via the `conformance` axis. |
 
-The five ADRs ship **docs only**; schema enforcement, components,
-audit-invariant code, and route emitters follow in code PRs (Phase 3).
+The six ADRs ship **docs only**; schema enforcement, components,
+audit-invariant code, route emitters, and the `sophie diff`
+implementation follow in code PRs (Phase 3). With A6 graduated,
+the **v1 LDS-conformance-and-revision-discipline tranche is
+complete**: A1+A2 declare convention/vocabulary; A3+A4+A5 declare
+content contracts with single-snapshot audit invariants; A6 makes
+those invariants observable across revisions.
 
-**Next up: A6 — Pedagogical Diff / Curriculum CI** (promoting from
-backlog [B3](../vision/features/backlog.md)). Operationalizes the
-A3+A4+A5 invariant families across revisions — `sophie diff` compares
-two `PedagogyIndex` snapshots and emits a structured pedagogical-
-change set. Targets Phase 3 audit work.
+**Next up:** future ADRs promote from
+[backlog](../vision/features/backlog.md) as authoring volume
+surfaces real friction. Highest-leverage near-term candidates:
+B1 (Equation Biography — extends `<KeyEquation>` with assumptions,
+units, common misuses; ASTR 201 Module 1 will exercise it),
+B4 (Course Brain — serialized pedagogy index for AI consumption),
+B5 (Human Expertise Required gates — operationalizes A6's
+`requires-judgment` severity as CI gates).
 
 This page covers:
 

@@ -154,106 +154,55 @@ subsequent accepted entries promote from the backlog.
 ---
 
 (a6-pedagogical-diff-curriculum-ci)=
-## A6. Pedagogical Diff / Curriculum CI
+## A6. Pedagogical Diff / Curriculum CI — graduated 2026-05-14
 
-**Motivating use case.** When AI (or Anna) revises a chapter,
-`git diff` shows text changes but not *pedagogical* changes. Did
-this revision add or remove a `<Predict>`? Change a definition?
-Break a cross-reference? Introduce a new misconception target?
-Bump a learning objective body without bumping `last_review_date`
-in the AI Contribution Ledger? Today: the reviewer compares
-pre/post manually. The five graduated foundation ADRs each define
-schemas and audit invariants (NR1–NR4, MR1–MR4, MG1–MG3, I1–I3,
-PC1, AC1–AC2, plus the Bucket-C families D/E/F/C/O/K); without
-a diff tool, those invariants only fire against a single snapshot.
-**A6 makes the foundation observable across revisions.**
+**Graduated** → [ADR 0045 — Pedagogical Diff + Curriculum CI](../../decisions/0045-pedagogical-diff-curriculum-ci.md)
++ [`sophie diff` CLI reference](../../reference/sophie-diff-cli.md)
++ [Pedagogical change taxonomy](../../reference/pedagogical-change-taxonomy.md).
 
-**Design sketch (refined from 2026-05-14 brainstorm).** Three
-artifacts, no new audit invariant family. (Unlike A3/A4/A5, A6 is
-a *tool over the existing contracts*, not a contract on content.)
+The ADR resolved six brainstorm open questions: (Q1) two-axis
+taxonomy (granularity ∈ {`structural`, `semantic`, `relational`,
+`conformance`} × severity ∈ {`routine`, `substantive`,
+`breaking`, `requires-judgment`}) over a one-axis shape — both
+reviewer-attention triage and structural detail are needed, and
+two axes set up [B5](backlog.md#b5-human-expertise-required-gates)
+cleanly. (Q2) Three output formats — text on TTY, JSON on pipe,
+markdown via template — with smart default; PR comments and AI
+Ledger paste-in get markdown day-one rather than waiting on a
+downstream converter. (Q3) Worktree build + persisted
+`dist/.sophie/pedagogy-index.json` artifact over a parallel
+static-MDX extractor or cache-first scheme — diff and audit
+must read the *same* index code path so they cannot disagree
+about what the index contains; cache-first is deferred behind
+the `--base-index` seam until measurable CI pressure justifies
+the invalidation complexity. (Q4) Top-level peer
+`sophie diff <ref>` over `sophie audit --diff` — `audit` answers
+*"is this good?"* and `diff` answers *"what changed?"*; one verb
+per question, mirroring `git diff`. (Q5) AI Ledger report-only
+with staleness flagged as `requires-judgment` — the Ledger is
+intentionally authored, the HITL mandate applies, write-through
+is rejected even opt-in. (Q6) Textbook only in v1 — course-shell
+audit invariants don't yet exist; shipping diff over unaudited
+course-shell content would emit noise.
 
-1. **`sophie diff <ref>` CLI command** — top-level peer of
-   `sophie audit` / `sophie build` / etc. (matches `git diff`
-   mental model). Flags: `--format=text|json|markdown` (default
-   `text` when stdout is a TTY, `json` when piped, modern CLI
-   convention); `--base-index <path>` (skip worktree build if a
-   pre-computed base index is passed in; future caching seam).
-2. **Persisted index build artifact** — `sophie build` is amended
-   to write `dist/.sophie/pedagogy-index.json` as a byproduct
-   (the HEAD snapshot). `sophie diff` materializes the base ref
-   via `git worktree add -d /tmp/sophie-diff-<sha> <ref>`, runs
-   `sophie build` inside the worktree, reads the worktree's
-   `pedagogy-index.json`, computes the diff, removes the
-   worktree. *Why not a static MDX extractor?* — diff and audit
-   must read the same index code path so they can't disagree
-   about what the index contains. *Why not cache snapshots by
-   SHA?* — Sophie has no production CI pressure yet; cache-
-   invalidation complexity isn't worth it. Caching can land
-   later through the `--base-index` seam without redesigning
-   diff.
-3. **Canonical pedagogical-change taxonomy** — Zod-schema'd
-   structured type in `@sophie/core/diff`. **Two-axis**:
-   - *Granularity*: `structural` (component instance added or
-     removed) | `semantic` (body/content change to existing
-     entry) | `relational` (cross-ref resolution changed) |
-     `conformance` (audit-warning delta vs base).
-   - *Severity*: `routine` (typo/format) | `substantive` (real
-     pedagogical change) | `breaking` (broken refs, new ERROR-
-     tier audit warnings) | `requires-judgment` (touches LO body,
-     definition body, ai_policy, pedagogy-contract fields,
-     misconception prerequisites, OR `ai_contribution.last_review_date`
-     is older than the most recent change touching the chapter).
-   Each diff item carries both labels; the top-line summary is
-   severity-keyed ("3 substantive · 1 breaking · 1 requires-
-   judgment").
-
-**Scope (v1).** Textbook only (`src/content/textbook/`). Course-
-shell changes are tracked by `git diff` like any other YAML/text;
-course-shell audit + diff is a future ADR (likely paired with B5
-or a dedicated "Course Shell Audit" ADR).
-
-**AI Ledger integration (v1).** Notice + report staleness as
-`requires-judgment`; **no writes** — the ledger is intentionally
-authored, and auto-bumping defeats the audit-trail purpose. JSON
-output includes the chapter's current `ai_contribution` block so
-downstream tools can compute their own suggestions.
-
-**Estimated cost.** ~2–3 days for the doc-only ADR + paired
-references; ~1–1.5 weeks for the follow-up code PR (CLI
-plumbing + Zod schema + worktree orchestration + three
-formatters + classification rules + tests). Phase 3 dependency
-(audit + AI authoring + first skill); lands in `@sophie/core/diff`
-and `@sophie/cli`.
-
-**Defended priority claim.** A3+A4+A5 ship schemas and audit
-invariants on 2026-05-14. Without A6, those invariants only fire
-against single snapshots — there is no routine signal when a PR
-*introduces* a new MR2 WARNING or breaks a misconception
-prerequisite. A6 is the keystone that converts the foundation
-from "invariants Sophie checks at build time" into "invariants
-Sophie polices across revisions." Promoting A6 ahead of B1
-(Equation Biography) and B6 (Multi-modal generation pipeline)
-because:
-- B1 is an authoring affordance; useful but doesn't unlock the
-  foundation invariants' CI value.
-- B6 is bigger scope (6–10 weeks) and depends on a mature
-  authoring loop that A6 helps establish.
-- A6 has the smallest doc-only cost (~2–3 days, here) and the
-  highest leverage over the foundation tranche.
-
-**Framed ADR question.** *How is the pedagogical-change taxonomy
-shaped, and what tool surface emits it?* Brainstorm resolved six
-sub-questions: (Q1) two-axis taxonomy (granularity + severity);
-(Q2) three output formats with smart TTY default; (Q3) worktree
-build + persisted artifact + `--base-index` seam; (Q4) top-level
-peer `sophie diff <ref>`; (Q5) AI Ledger report-only with
-staleness flagged as `requires-judgment`; (Q6) textbook only in
-v1.
+A6 is the **sixth graduation** through the staging-area
+lifecycle and the **first ADR in the LDS series that adds a
+tool over the foundation contracts** rather than a new contract
+on content. Unlike A3/A4/A5, A6 does **not** ship a new audit-
+invariant family — the diff's correctness is governed by Zod
+schema validation, classifier-completeness tests against every
+known component type, and CI consumption of the existing
+NR/MR/MG/I/PC/AC/D/E/F/C/O/K invariants via the `conformance`
+granularity axis. Together with A1+A2+A3+A4+A5, A6 closes the
+v1 LDS-conformance-and-revision-discipline tranche: the
+foundation declares contracts, audit checks single snapshots,
+and diff polices changes across revisions.
 
 **Status.**
 - 2026-05-14 — surfaced (speculative) as B3 in [backlog.md](backlog.md)
 - 2026-05-14 — brainstorm resolved 6 open questions; promoted
   to accepted-pending-ADR with defended priority claim
+- 2026-05-14 — graduated → [ADR 0045](../../decisions/0045-pedagogical-diff-curriculum-ci.md)
 
 ---
 
@@ -278,3 +227,6 @@ is no longer load-bearing for ongoing work.
 - **A5 — Misconception Graph + Intervention Library** → [ADR 0044](../../decisions/0044-misconception-graph-and-intervention-library.md)
   + [Misconception graph schema](../../reference/misconception-graph-schema.md)
   + [Intervention Library reference](../../reference/intervention-library.md). Graduated 2026-05-14.
+- **A6 — Pedagogical Diff / Curriculum CI** → [ADR 0045](../../decisions/0045-pedagogical-diff-curriculum-ci.md)
+  + [`sophie diff` CLI reference](../../reference/sophie-diff-cli.md)
+  + [Pedagogical change taxonomy](../../reference/pedagogical-change-taxonomy.md). Graduated 2026-05-14.
