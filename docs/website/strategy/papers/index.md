@@ -1,136 +1,82 @@
 ---
 title: Papers
 short_title: Papers
-description: Sophie's 24-month publication pipeline — four planned peer-reviewed papers with target journals, types, timing, and co-author leads.
+description: Sophie's publication strategy — one committed methods paper (Q4 2026) plus a brainstorming parking lot for future research threads opened by the platform.
 tags: [strategy, papers, publications, dber]
 ---
 
 # Papers
 
-Sophie's 24-month publication pipeline. Four planned peer-reviewed
-papers between Q4 2026 and Q4 2027, mixing methods, conceptual, and
-empirical contributions. The pipeline serves the tenure case
-([Funding roadmap](../funding-roadmap.md)), validates the proposals
-in flight ([CAREER](../grants/career-2026.md),
-[Sloan](../grants/sloan-2026.md)), and establishes Anna's reputation
-in the AI-augmented STEM authoring space.
+Sophie's publication strategy is intentionally narrow: **one
+committed paper** (Paper #1 — methods/infrastructure, Q4 2026) plus
+a parking lot of [future research threads](future-contributions.md)
+the platform opens up but Anna has not yet committed to. The
+narrowness is deliberate — committing to a methods paper that the
+work already supports beats over-committing to empirical papers
+whose data, IRB, or co-authors are not yet lined up.
 
-## Overview
+## Committed paper
 
 | # | Working title | Target | Type | Timing |
 |---|---------------|--------|------|--------|
 | 1 | [Pedagogy-aware authoring: schema-driven design for AI-coauthored interactive STEM content](paper-1-methods.md) | JOSS + Computers & Education | Methods / infrastructure | **Q4 2026** |
-| 2 | [AI-primary, instructor-supervised: a structural HITL model for educational content authoring](paper-2-hitl.md) | IJAIED or AERA | Conceptual + methodological | **Q1 2027** |
-| 3 | [Learning outcomes from Sophie-authored content in undergraduate astronomy: a comparative study at an HSI](paper-3-outcomes.md) | AER or PRPER | Empirical | **Q2–Q3 2027** |
-| 4 | [Predict-then-run: confidence calibration in interactive astronomical reasoning](paper-4-predict.md) (stretch) | PRPER | Empirical | **Q4 2027** |
 
-## Reading order rationale
+Paper #1 aligns with
+[ADR 0047](../../decisions/0047-empirical-validation-plan.md)'s
+authoring-side empirical validation plan. The work is largely
+already done — the paper condenses Sophie's
+[architecture explanation](../../explanation/architecture.md), the
+ADR registry under
+[`decisions/`](../../decisions/template.md), and Phase 0 + v1 launch
+evidence into a publishable methods contribution.
 
-The pipeline is sequenced so that *the easiest paper goes first* and
-*the highest-impact paper supports the CAREER mid-period report*:
+## Future contributions (brainstorming)
 
-- **Paper #1 (methods / JOSS)** is the easiest first paper because
-  the work is already done — it documents Sophie's architecture,
-  which exists. Q4 2026 timing means the paper accompanies the v1
-  launch.
-- **Paper #2 (HITL conceptual)** builds on Paper #1's methods to
-  frame the *generalizable* contribution: structural HITL as a
-  pedagogy-of-AI-authoring model. Higher impact, more ambitious.
-- **Paper #3 (empirical outcomes)** is the highest-impact and
-  hardest-to-fake contribution: real student outcome data from
-  ASTR 201 Sophie cohorts. Times perfectly to support a CAREER
-  mid-period report and to inform any 2027 CAREER resubmission.
-- **Paper #4 (predict-then-run)** is the stretch goal — useful if
-  bandwidth permits, optional if not.
+Three additional research threads are documented at
+[Future contributions](future-contributions.md): a structural-HITL
+conceptual paper, an HSI outcomes study, and a predict-then-run
+calibration study. **None are committed.** They exist as a parking
+lot so the proposal narrative
+([CAREER](../grants/career-2026.md),
+[Cottrell](../grants/cottrell-2026.md),
+[Sloan](../grants/sloan-2026.md)) can honestly reference "research
+directions opened by Sophie" without committing to specific papers,
+target venues, or timelines.
 
-## Why these specific contributions
-
-Sophie produces three publishable assets:
-
-1. **The platform itself** (Paper #1: methods).
-2. **The structural-HITL model** the platform embodies (Paper #2:
-   conceptual).
-3. **Student outcomes** from using the platform in real courses
-   (Papers #3 and #4: empirical).
-
-These contributions are mutually reinforcing — each strengthens the
-others. Reviewers of any one paper can verify the claims by reading
-the others. The pipeline is internally consistent.
+Each thread graduates to a real committed paper only if data,
+bandwidth, and tenure-case priorities align. The outcome-side
+threads (B and C) explicitly depend on backlog item B9 (Learning
+Telemetry), which is itself uncommitted.
 
 ## Strategic notes
 
-### Mix DBER and astro frames
-
-Per [DBER positioning](../dber-positioning.md), Anna's tenure case is
-strongest if the publication record reads coherently regardless of
-whether SDSU astronomy counts DBER. The pipeline above leans heavily
-into DBER, which is the right bet if the chair conversation confirms
-DBER counts.
-
-**Hedge**: at least one of Papers #3 or #4 should be framed so it
-also reads as an astronomy contribution — e.g., "Learning outcomes
-*for specific astrophysical reasoning* in undergraduate astronomy"
-rather than purely pedagogy-of-AI framing. The HSI-population angle
-helps here: a paper on *how HSI undergraduates develop reasoning
-about astrophysical scales* is a hybrid contribution that reads as
-both DBER and astronomy education research.
-
 ### First-author prioritization
 
-For the tenure case, first-authorship is strongly preferred. The
-pipeline above assumes Anna is first-author on all four papers.
-Co-authors (DBER methodologist, stats collaborator, AAS-EPD
-contributor) appear as second-or-later author.
+For the tenure case, first-authorship is strongly preferred. Paper #1
+is solo-authored. Any future-contributions thread that graduates
+would also be first-authored by Anna; co-authors (DBER methodologist,
+stats collaborator, AAS-EPD contributor) would appear as
+second-or-later author.
 
 If the [chair conversation](../dber-positioning.md#sequence-of-moves-next-6-weeks)
-reveals that the dept de-prioritizes co-authored or DBER work,
-revise toward solo-author papers where possible, and add a parallel
-traditional-astrophysics paper (2nd-author OK) to the 24-month plan.
+reveals that the department de-prioritizes co-authored or DBER work,
+revise toward solo-author publications where possible and add a
+parallel traditional-astrophysics paper (2nd-author OK) to the
+24-month plan.
 
-### Co-author leads
+### Open-access plan
 
-The strongest co-author candidates fall into four buckets:
-
-- **SDSU CRMSE** (Center for Research in Math and Science Education):
-  walk over, introduce yourself, look for a physics-ed or
-  astronomy-ed faculty member open to a Sophie-flavored
-  collaboration.
-- **SDSU stats / quantitative methods**: for experimental design on
-  Paper #3.
-- **AAS-EPD community**: members of the AAS Education and Public
-  Engagement Division. AAS summer meeting is the cold-introduction
-  venue. Anna's [AAS-EPD Mini-Grant](../grants/aas-epd-mini.md)
-  application is a credible community-entry move.
-- **External DBER stars** (cold-email candidates):
-  - **Edward Prather** (Center for Astronomy Education, Arizona) —
-    longtime astro-ed research leader, frequent NSF-funded PI.
-  - **Janelle Bailey** (Temple University) — strong astronomy
-    education researcher; DBER methodology depth.
-  - **Stephanie Slater** (CAPER Center for Astronomy and Physics
-    Education Research, Wyoming) — independent CAPER program with
-    NSF-funded astronomy education work.
-  - **Tim Slater** (former director, CAE; now consulting) — central
-    figure in US astronomy DBER community.
-
-A cold-email to one of these (after Paper #1 drafts and Cottrell is
-submitted) is a legitimate move. The hook: Sophie's distinctive
-AI-authoring + structural HITL angle is fresh enough to warrant
-attention.
-
-## Open-access plan
-
-All four papers should target open-access venues or publish
-open-access where possible. Specifically:
-
-- **JOSS** is OA by design.
-- **PRPER, AER, IJAIED, AERA Open** all support OA.
-- **Computers & Education** offers OA option (~\$3K APC).
-- **NSF and Cottrell** both fund OA publication costs; budget
-  accordingly.
+Paper #1 targets open-access venues (JOSS by design; Computers &
+Education offers an OA option). NSF and Cottrell both fund OA
+publication costs; budget accordingly. The future-contributions
+threads default to OA targets too —
+[Future contributions § Open-access plan](future-contributions.md#open-access-plan).
 
 ## See also
 
-- [Funding roadmap](../funding-roadmap.md) — why this pipeline supports the tenure case
-- [2026 calendar](../2026-calendar.md) — when drafting begins
-- [DBER positioning](../dber-positioning.md) — how chair conversation shapes framing
-- [NSF CAREER 2026](../grants/career-2026.md) — what proposals this pipeline supports
+- [Paper #1 — Methods / infrastructure](paper-1-methods.md) — the committed paper.
+- [Future contributions](future-contributions.md) — uncommitted research threads.
+- [ADR 0047 — Empirical Validation Plan](../../decisions/0047-empirical-validation-plan.md) — what Paper #1 implements.
+- [Funding roadmap](../funding-roadmap.md) — why this publication strategy supports the tenure case.
+- [2026 calendar](../2026-calendar.md) — when Paper #1 drafting begins.
+- [DBER positioning](../dber-positioning.md) — how chair conversation shapes framing.

@@ -18,12 +18,21 @@ export type InteractiveStatus = "loading" | "ready" | "error";
  * a click that lands between mount and IDB-fetch resolution gets
  * silently overwritten by the fetch's `setLocalValue(persisted ?? initial)`.
  *
+ * The `data-sophie-write-pending` attribute signals async-write
+ * commit state — true while at least one IDB write is in flight,
+ * false when all writes settle. Playwright e2e tests wait on this
+ * before `page.reload()` so the LWW state observed after reload
+ * reflects the user's last interaction. Surfaces hook-internal
+ * pending-write state to the DOM per SoTA "data attribute = truth
+ * source" convention (ADR 0037-adjacent).
+ *
  * Convention codified in `docs/website/contributing/coding-standards.md`
  * § "Persistence-bearing controls".
  */
 export interface InteractiveControlProps {
   disabled: boolean;
   "aria-busy": boolean;
+  "data-sophie-write-pending": boolean;
 }
 
 export interface UseInteractiveResult<T> {
@@ -104,6 +113,15 @@ export function useInteractive<T>(
   const [value, setLocalValue] = useState<T>(initial);
   const [status, setStatus] = useState<InteractiveStatus>("loading");
   const [error, setError] = useState<Error | null>(null);
+
+  // Counter of in-flight IDB writes. Increments at setValue entry,
+  // decrements when the write settles (success or error). Surfaced
+  // via `controlProps["data-sophie-write-pending"]` so callers (and
+  // e2e tests) can wait for write-commit before navigating away.
+  // Counter (not boolean) handles re-entrant writes: rapid successive
+  // setValue() calls each increment, and pending stays true until the
+  // last one settles.
+  const [writesPending, setWritesPending] = useState(0);
 
   const valueRef = useRef(value);
   valueRef.current = value;
@@ -187,6 +205,7 @@ export function useInteractive<T>(
       const store = getStore(course);
       const channel = getChannel(course, chapter);
       const fullKey = compositeKey(profile, chapter, componentKey);
+      setWritesPending((n) => n + 1);
       store
         .set(profile, chapter, componentKey, { value: next, ts })
         .then(() => {
@@ -199,6 +218,10 @@ export function useInteractive<T>(
           if (!mountedRef.current) return;
           setError(err instanceof Error ? err : new Error(String(err)));
           setStatus("error");
+        })
+        .finally(() => {
+          if (!mountedRef.current) return;
+          setWritesPending((n) => n - 1);
         });
     },
     [course, chapter, profile, componentKey, senderId]
@@ -208,6 +231,7 @@ export function useInteractive<T>(
   const controlProps: InteractiveControlProps = {
     disabled: !hydrated,
     "aria-busy": !hydrated,
+    "data-sophie-write-pending": writesPending > 0,
   };
 
   return { value, setValue, status, error, hydrated, controlProps };

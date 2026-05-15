@@ -1,6 +1,7 @@
 import { defineCommand } from "citty";
-import { auditCommand } from "./commands/audit.js";
-import { devCommand } from "./commands/dev.js";
+import { auditCommand } from "./commands/audit.ts";
+import { previewCommand } from "./commands/preview.ts";
+import { startCommand } from "./commands/start.ts";
 
 export const main = defineCommand({
   meta: {
@@ -10,7 +11,9 @@ export const main = defineCommand({
       "Sophie CLI — schema-driven, AI-authorable scientific textbooks.",
   },
   subCommands: {
-    dev: devCommand,
+    start: startCommand,
+    dev: startCommand,
+    preview: previewCommand,
     audit: auditCommand,
   },
 });

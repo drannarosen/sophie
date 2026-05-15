@@ -621,49 +621,6 @@ unit-conversion verification, etc.). Reject as speculative — the
 v1 list covers Sophie's existing components; further invariants
 follow real authoring experience.
 
-## Revisions
-
-**§1 — 2026-05-14 Hardening pass.** Per
-[the foundation review](/Users/anna/Teaching/sophie/docs/reviews/2026-05-14-adrs-0040-0045-foundation-review.md),
-this ADR was edited in place (under Anna's explicit mutability
-override for the first hardening pass) to add:
-
-- **Drop `<RepIntuition>` entirely** — prose by another name;
-  `<RepVerbal>` handles intuition framing. Reduces component
-  inventory; the six v1 children become five.
-- **`<RepCode>` two-mode binding**: in-chapter `<CodeCell>`
-  (preferred) OR external mode with required `external_url` +
-  `external_cache_hash` + `external_version` + 4 structured
-  provenance fields (`authored_by`, `authored_date`,
-  `reviewed_by`, `reviewed_date`). Half-specified external mode
-  is now an ERROR (MR5).
-- **`<RepEquation equivalent_to="<refKey>" via="<slug>">`** —
-  declares variable-substitution-equivalent forms (Wien's law
-  λ-form vs ν-form; SI vs CGS; dimensional vs non-dimensional;
-  exact vs approximation). Optional. MR6 (INFO) verifies target
-  resolves.
-- **New audit invariants MR5 (ERROR)** for `<RepCode>` half-
-  specification, **MR6 (INFO)** for `<RepEquation equivalent_to>`
-  unresolved target. Total v1 invariants: 10 (was 8).
-- **The structured-for-facts, prose-for-stances principle** —
-  declared in this ADR's Rationale section as a cross-cutting
-  design principle for the foundation. ADRs 0040, 0042, 0046 all
-  follow it; this ADR makes it explicit.
-- **Forward-ref to Sophie LDS Commons (ADR 0048)** — future
-  cross-course catalog inheritance for shared concepts. v1 ships
-  per-course registry only; the contract is forward-compatible
-  with a `commons:` block in `pedagogy-contract.yaml` that hasn't
-  yet been populated.
-
-The immutability convention re-applies after this hardening pass
-completes. Future revisions land as new ADRs.
-
-Further revisions (invariant additions, schema changes, child-
-taxonomy extensions) follow the pattern established by
-[ADR 0038 §1, §2](./0038-pedagogy-index-pattern.md) — a new
-`## Revisions §N` section appended to this ADR documenting the
-change + reason.
-
 ## References
 
 - [`reference/notation-registry-schema.md`](../reference/notation-registry-schema.md)

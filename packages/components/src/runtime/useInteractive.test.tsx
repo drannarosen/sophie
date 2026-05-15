@@ -288,4 +288,52 @@ describe("useInteractive", () => {
     );
     otherTab.close();
   });
+
+  it("exposes data-sophie-write-pending true during in-flight setValue and false once the IDB write settles", async () => {
+    function WritePendingProbe({ keyName }: { keyName: string }) {
+      const { value, setValue, controlProps, hydrated } = useInteractive(
+        "write-pending-course",
+        "write-pending-chapter",
+        keyName,
+        false
+      );
+      return (
+        <div>
+          <span data-testid='hydrated'>{String(hydrated)}</span>
+          <span data-testid='value'>{String(value)}</span>
+          <span data-testid='write-pending'>
+            {String(controlProps["data-sophie-write-pending"])}
+          </span>
+          <button type='button' onClick={() => setValue(!value)}>
+            toggle
+          </button>
+        </div>
+      );
+    }
+    render(
+      <ProfileWrapper>
+        <WritePendingProbe keyName='probe:write-pending' />
+      </ProfileWrapper>
+    );
+
+    // Pending starts false before any setValue is called.
+    await waitFor(() =>
+      expect(screen.getByTestId("hydrated").textContent).toBe("true")
+    );
+    expect(screen.getByTestId("write-pending").textContent).toBe("false");
+
+    // Synchronously after click, pending flips true (counter increments
+    // before the awaited IDB write resolves).
+    act(() => {
+      screen.getByRole("button", { name: "toggle" }).click();
+    });
+    expect(screen.getByTestId("write-pending").textContent).toBe("true");
+
+    // After the write settles, pending flips back to false.
+    await waitFor(() =>
+      expect(screen.getByTestId("write-pending").textContent).toBe("false")
+    );
+    // And the value is persisted in local state.
+    expect(screen.getByTestId("value").textContent).toBe("true");
+  });
 });

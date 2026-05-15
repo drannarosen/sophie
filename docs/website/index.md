@@ -84,9 +84,11 @@ content types, four user needs:
 
 Plus two time-anchored sections:
 
-- **[Decisions](decisions/template.md)** — chronological ADRs. Each
-  ADR is immutable once accepted; revisions are new ADRs that
-  supersede prior ones.
+- **[Decisions](decisions/template.md)** — chronological ADRs.
+  Editing rules are state-dependent: pre-implementation ADRs are
+  freely editable in place; post-implementation changes land as
+  Revisions sections. See [ADR process](contributing/adr-process.md)
+  for details.
 - **[Status](status/roadmap.md)** — what's shipped per phase, plus
   the roadmap and changelog.
 

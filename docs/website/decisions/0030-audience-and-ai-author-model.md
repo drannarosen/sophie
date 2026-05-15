@@ -106,6 +106,43 @@ instructor review.
   instructors productive and makes AI authorship credible to
   reviewers, tenure committees, and prospective adopters.
 
+### AI-primary is structural, not optional
+
+The cumulative authoring lift of Sophie's LDS foundation
+(ADRs 0040–0046) is substantial: every chapter that takes the
+contract seriously declares concepts in a Notation Registry,
+paths through a Misconception Graph, structured AI-contribution
+records, TDRs with typed evidence, equation biographies, and
+optionally `<MultiRep>` alignments. A solo human author,
+drafting prose first and retrofitting structure, would
+experience this as overhead — too much scaffolding for the
+chapter being written.
+
+That lift is deliberate. Sophie's authoring model relocates
+instructor labor *away from drafting prose* and *toward
+pedagogical decision-making + verification.* The AI
+primary-authors against the foundation contracts; the
+instructor declares the pedagogical positions (concepts,
+misconceptions, key equations, TDRs) and reviews AI-drafted
+artifacts against them. The structured scaffolding is *what
+the AI uses to draft well* and *what the instructor uses to
+supervise efficiently.* Strip the scaffolding and you get
+either AI drafts the instructor can't efficiently verify or
+instructor labor that doesn't scale.
+
+This framing — labor relocated, not added — surfaces in
+public Ledger renders via
+[ADR 0042](0042-pedagogy-contract-and-ai-contribution-ledger.md)'s
+`ai_ledger.preamble` field. Sophie's contracts assume this
+workflow; instructors choosing Sophie are choosing the
+relocation. The contracts are AI-primary-friendly *because
+that is the design*, not because it is the cheapest path.
+
+The HITL mandate ([CLAUDE.md](../../../CLAUDE.md)) makes the
+relocation defensible: AI proposes, instructor decides, AI
+implements, instructor reviews. The scaffolding makes both
+halves of the loop tractable.
+
 ## Alternatives considered
 
 - **AI as helper (Phase 3 polish).** The original roadmap framing.
@@ -154,42 +191,6 @@ instructor review.
   AI co-design the whole pedagogical arc *before* any chapter
   exists.
 
-## AI-Primary by Design, Not by Accident
-
-The cumulative authoring lift of Sophie's LDS foundation
-(ADRs 0040–0046) is substantial: every chapter that takes the
-contract seriously declares concepts in a Notation Registry, paths
-through a Misconception Graph, structured AI-contribution records,
-TDRs with typed evidence, equation biographies, and (optionally)
-`<MultiRep>` alignments. A solo human author, drafting prose first
-and retrofitting structure, would experience this as overhead —
-"too much scaffolding for the chapter I'm trying to write." The
-review surfaced this honestly as a systemic concern (S1).
-
-**The lift is deliberate, not an oversight.** Sophie's authoring
-model relocates instructor labor *away from drafting prose* and
-*toward pedagogical decision-making + verification.* The AI
-primary-authors against the foundation contracts; the instructor
-declares the pedagogical positions (concepts, misconceptions, key
-equations, TDRs) and reviews AI-drafted artifacts against them.
-The structured scaffolding is *what the AI uses to draft well* and
-*what the instructor uses to supervise efficiently.* Strip the
-scaffolding and you get either AI drafts the instructor can't
-efficiently verify or instructor labor that doesn't scale.
-
-This framing — labor relocated, not added — is named in
-[ADR 0042](0042-pedagogy-contract-and-ai-contribution-ledger.md)
-as the `ai_ledger.preamble` framing copy that surfaces in
-student-facing public Ledger renders. Sophie's contracts assume
-this workflow; instructors choosing Sophie are choosing the
-relocation. The contracts are AI-primary-friendly *because that
-is the design*, not because it is the cheapest path.
-
-The HITL mandate ([CLAUDE.md](../../../CLAUDE.md)) is what makes
-this relocation defensible: AI proposes, instructor decides, AI
-implements, instructor reviews. The scaffolding makes both halves
-of the loop tractable.
-
 ## References
 
 - [overview.md §1–§2](../overview.md) — full audience and
@@ -201,16 +202,5 @@ of the loop tractable.
 - [ADR 0024](0024-license-agpl.md) — AGPL license presumes external
   adoption.
 - [ADR 0042](0042-pedagogy-contract-and-ai-contribution-ledger.md)
-  — `ai_ledger.preamble` carries the structural-labor framing into
-  public Ledger renders.
-
-## Revisions
-
-**2026-05-15 — S1 framing addition.** Per the
-[2026-05-14 foundation review](/Users/anna/Teaching/sophie/docs/reviews/2026-05-14-adrs-0040-0045-foundation-review.md)
-S1 concern, the *AI-Primary by Design, Not by Accident* section
-was appended to name the cumulative-authoring-lift of the LDS
-foundation contracts as a deliberate workflow choice (structural-
-labor relocation) rather than an oversight. Cross-refs ADR 0042's
-`ai_ledger.preamble` framing copy. No change to the original
-Decision; the addition is explanatory.
+  — `ai_ledger.preamble` carries the structural-labor framing
+  into public Ledger renders.

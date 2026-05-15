@@ -75,12 +75,37 @@ Each entity-type subcommand supports four operations:
 | `rename` | `sophie refactor misconception rename <old-slug> <new-slug>` | Change an entity's slug everywhere it is declared or referenced. |
 | `split` | `sophie refactor misconception split <old-slug> <new-slug-a> <new-slug-b>` | Replace one entity with two; consumer chapters get an interactive (or `--map`-driven) re-assignment. |
 | `merge` | `sophie refactor misconception merge <slug-a> <slug-b> --into=<target-slug>` | Collapse two entities into one; consumer references get redirected. |
-| `delete` | `sophie refactor misconception delete <slug>` | Remove an entity. Requires `--force` if any active references remain. |
+| `delete` | `sophie refactor misconception delete <slug>` | Remove an entity. Refuses unless all references are removed first; `--force` re-runs the operation after acknowledging that dangling references will be left for the audit to surface as ERRORs (and the audit-revert-on-new-ERRORs guarantee will then block the apply). In practice `--force` is rarely usable on its own — pair with `rename` or `merge` of the call-site references first. |
 
 The operation set is deliberately small. More exotic
 transformations (e.g., "promote a misconception to a concept") are
 out of scope for v1 and likely belong as AI-assisted slash
 commands rather than deterministic refactors.
+
+#### Concept rename and `<KeyEquation>` math
+
+`sophie refactor concept rename <old> <new>` is **slug-level
+only**. It renames the entry in `notation-registry.yaml`,
+updates `<MultiRep refName=…>`, `<RepEquation>`, and
+`equivalent_to:` cross-references, and updates `aliases:` arrays
+in other concept entries that point at the renamed slug. It
+does **NOT** rewrite LaTeX glyphs inside `<KeyEquation>` math
+strings.
+
+If a concept's `canonical_symbol` changes (e.g., from `F` to
+`S` for flux vs. spectral irradiance), the LaTeX glyph in every
+`<KeyEquation>` math block referencing the concept stays
+unchanged at refactor time. The author then either (a) leaves
+the math as-is and uses the new `aliases:` to keep registry
+resolution working, or (b) edits the LaTeX strings manually as
+a separate commit. The deterministic CLI cannot safely rewrite
+math glyphs because LaTeX glyph identity is context-sensitive
+(`F` might be flux, force, or function depending on chapter);
+parsing LaTeX to disambiguate is AI-judgment territory.
+
+Audit NR1 (Notation Registry coverage) will surface mismatches
+post-refactor if the math wasn't updated; the author resolves
+them at the chapter level.
 
 ### Dry-run as default
 
@@ -145,12 +170,33 @@ When `--apply` is passed:
      - 4 <Intervention addresses=...> updates
 
    TDR seed: .sophie/refactor-seeds/2026-05-15-rename-misconception.md
-   Author: complete the TDR before merging.
+   Author: complete the TDR before merging, then amend
+   `TDR: pending-seed-...` below to the resolved trailer.
 
+   TDR: pending-seed-rename-misconception
    Co-authored-by: sophie-refactor <noreply@sophie.cli>
    ```
 5. CLI emits the path to the auto-generated TDR-seed stub and
    exits with status 0.
+
+The `TDR:` trailer follows ADR 0045's bidirectional traceability
+convention. `pending-seed-<slug>` is a placeholder; the author
+amends it to `TDR: <N>` (substantive — seed promoted to a real
+TDR) or `TDR: none` (mechanical — seed deleted).
+
+#### `--mechanical` flag
+
+`sophie refactor <entity> <op> [args] --apply --mechanical` skips
+seed generation entirely and emits `TDR: none` in the commit
+trailer directly. Use for refactors the author already knows are
+mechanical: typo fixes, slug spelling corrections, name-only
+churn that doesn't reflect a pedagogical position change.
+
+Default off. The expected flow for substantive refactors is to
+let the CLI generate a seed (and `TDR: pending-seed-<slug>`
+placeholder) and resolve it post-hoc. `--mechanical` is an
+ergonomic shortcut for batch operations where the author already
+knows seed generation would just produce delete-this-stub work.
 
 ### Atomicity guarantee
 
@@ -179,18 +225,40 @@ Every `--apply` invocation emits a TDR-seed file at
 
 ```markdown
 ---
-tdr_number: NEW  # author: replace with next sequential number
+tdr_number: NEW         # author: replace with next sequential number,
+                        # OR delete this seed file if no TDR needed
 title: "Rename misconception: intensity-vs-luminosity → flux-vs-luminosity"
 date: 2026-05-15
 scope: course_shell
-evidence_type: forward_hypothesis  # author: adjust as appropriate
-evidence_strength: exploratory
-visibility: internal  # author: adjust if surfacing publicly
+evidence_type:          # author: pick one of
+                        #   course_eval | student_artifact |
+                        #   participation_data | literature |
+                        #   instructor_observation | student_feedback |
+                        #   audit_signal | forward_hypothesis
+evidence_strength:      # author: pick one of
+                        #   strong | moderate | weak | exploratory
+visibility: internal    # author: adjust if surfacing publicly
 affects_anchors:
   - misc-intensity-vs-luminosity
   - misc-flux-vs-luminosity
-affects_versions: []  # author: list affected course-versions
+affects_versions: []    # author: list affected course-versions
 ---
+
+> **Is this refactor pedagogically substantive?**
+>
+> - **NO** (typo fix, slug spelling correction, name-only
+>   mechanical change): delete this seed file. Amend the commit's
+>   trailer to `TDR: none`.
+> - **YES** (renaming reflects a clearer pedagogical position,
+>   splits a conflated misconception, encodes evidence from a
+>   semester's worth of student work, etc.): fill in the
+>   sections below, set `tdr_number` to the next sequential
+>   number, amend the commit's trailer to `TDR: <N>`.
+>
+> The empty `evidence_type:` and `evidence_strength:` fields
+> above are deliberate — only the author knows which of ADR
+> 0040's evidence types applies. A mechanical rename does not
+> default to `forward_hypothesis`; it has no TDR at all.
 
 ## What changed
 
@@ -202,9 +270,10 @@ Renamed misconception `intensity-vs-luminosity` to
 <!-- Author: complete this section. The CLI knows _what_ changed
 mechanically; only the author knows _why_ the rename happened.
 Common reasons:
-- Original slug name was misleading.
 - A pedagogical re-think suggested a different framing.
 - A misconception-graph review surfaced inconsistent naming.
+- A semester's worth of student-artifact evidence motivated the
+  split or reframing.
 -->
 
 ## How to apply
@@ -214,8 +283,9 @@ downstream consumer courses, if any. -->
 
 ## Evidence
 
-<!-- Author: brief evidence narrative. For exploratory renames,
-the evidence is usually "internal-review reflection." -->
+<!-- Author: brief evidence narrative tied to the evidence_type
+chosen above. For forward_hypothesis renames, the evidence is
+typically "internal-review reflection." -->
 
 ## References
 
@@ -225,14 +295,28 @@ the evidence is usually "internal-review reflection." -->
 - ADR 0049 (sophie refactor CLI) for the auto-seed generator.
 ```
 
-The stub is **not auto-committed alongside the refactor**. The
-author edits the stub (filling in *why*, *how to apply*, *evidence*)
-and commits it as a TDR in a follow-up step. The refactor commit
-references the seed path so it can be located later.
+The stub is **staged with the refactor commit** at its
+`.sophie/refactor-seeds/` path (so it travels with the refactor
+through any branch/PR flow), but it is **not yet a TDR**. The
+author resolves it post-hoc:
+
+- **Substantive refactor**: fill in *why*, *how to apply*, *evidence*;
+  set `tdr_number` to the next sequential number; move the file
+  to its TDR home (e.g., `docs/decisions/tdrs/`); commit the
+  filled TDR; **amend the refactor commit's `TDR:` trailer**
+  from `pending-seed-<slug>` to `TDR: <N>`.
+- **Mechanical refactor (post-hoc decision)**: delete the seed
+  file; amend the refactor commit's `TDR:` trailer to
+  `TDR: none`.
+
+Using `--mechanical` at refactor time skips seed generation
+entirely and emits `TDR: none` directly in the trailer; the
+post-hoc amend isn't needed in that flow.
 
 This pairing — mechanical change as one commit, TDR-with-rationale
-as another — keeps audit-trail discipline honest. A mechanical
-rename without a TDR can land (small enough); a deliberate
+as a separate follow-up commit when warranted — keeps audit-trail
+discipline honest. A mechanical rename without a TDR can land
+(small enough); a deliberate
 pedagogical re-framing without a TDR cannot, because the seed
 sits in `.sophie/refactor-seeds/` until the author resolves it.
 
@@ -323,17 +407,21 @@ diff taxonomy itself (ADR 0045) does not change.
 
 ### Subcommand per entity type, not one polymorphic `sophie refactor`
 
-A polymorphic `sophie refactor <slug> --to=<new-slug>` would
-require type inference (is the slug a misconception or a
-concept?). Two slugs with the same string in different namespaces
-(e.g., `inverse-square` as a concept and `inverse-square-misread`
-as a misconception) make the inference brittle. Explicit
-subcommand-per-entity-type is mechanically simpler and reads
-better.
+Sophie's CLI follows `git`'s subcommand pattern (`git merge`,
+`git rebase`, `git branch`) rather than a single polymorphic
+verb with a `--type` flag. Each entity type has different
+operational semantics — `misconception` traverses cross-references
+in `misconception-graph.yaml` + `<MisconceptionRef>` /
+`<Intervention addresses=…>` sites; `concept` traverses
+`notation-registry.yaml` + `<KeyEquation>` math symbols +
+`<MultiRep>` bindings; `equation` traverses `<KeyEquation id=…>`
+sites + biography children. Per-type subcommands let each one
+have type-specific flags (e.g., `--surviving-body` on
+`merge` makes sense for misconceptions; the analogous concept
+operation has different semantics).
 
-This also aligns with `git`'s subcommand pattern (`git merge`,
-`git rebase`, `git branch`) rather than `git refactor --type=
-branch ...`.
+A polymorphic alternative would also require type inference at
+each invocation; the per-type form makes the contract explicit.
 
 ### Four operations: rename / split / merge / delete
 

@@ -64,7 +64,11 @@ export function LearningObjectives({
       <h2 id={`${id}-heading`} className={styles.heading}>
         {heading}
       </h2>
-      <ul className={styles.list} aria-busy={controlProps["aria-busy"]}>
+      <ul
+        className={styles.list}
+        aria-busy={controlProps["aria-busy"]}
+        data-sophie-write-pending={controlProps["data-sophie-write-pending"]}
+      >
         {objectives.map((o) => {
           const checked = stateRecord[o.id] ?? false;
           return (

@@ -191,14 +191,14 @@ that doc (hardened 2026-05-14) lists every triggers→severity rule
 explicitly — readers consult the table rather than scanning
 narrative prose.
 
-### Intentional-change demotion via TDR `affects_anchors` (hardened 2026-05-14)
+### Intentional-change demotion via TDR `affects_anchors`
 
 A diff item whose anchor is listed in any HEAD TDR's
 `affects_anchors` field (per
-[ADR 0040 hardening](./0040-teaching-decision-records.md)) is
+[ADR 0040](./0040-teaching-decision-records.md)) is
 **demoted one severity level** and tagged with the source TDR-id.
-Honors intentional changes automatically — no opt-in commit
-annotation; the intention lives in the TDR.
+Honors intentional changes automatically by reading provenance
+from the TDR itself; no manual annotation required at diff time.
 
 Demotion ladder:
 
@@ -230,11 +230,97 @@ provenance. This is *automatic* (not opt-in) because
 if a TDR lists anchors it affects, the author is claiming they
 meant to affect them.
 
-Cross-ADR coupling: **TDR-2** (INFO, per ADR 0040 hardening)
-verifies that every anchor in `affects_anchors` resolves in the
-*base* PedagogyIndex (the anchor existed before the TDR's effect
-was applied — that's why it was changeable). Authoring-
-correctness nudge for this flow.
+Cross-ADR coupling: **TDR-2** (INFO, per ADR 0040) verifies that
+every anchor in `affects_anchors` resolves in the *base*
+PedagogyIndex (the anchor existed before the TDR's effect was
+applied — that's why it was changeable). Authoring-correctness
+nudge for this flow.
+
+### Bidirectional TDR ↔ commit traceability
+
+The `affects_anchors:` mechanism above answers *"what anchors
+does TDR-14 change?"* from the TDR's perspective. The dual
+question — *"which TDR does commit `a1b2c3d` implement?"* — is
+answered by a **structured commit trailer** on the commit itself.
+
+The two mechanisms are dual, not redundant. Together they enable
+bidirectional traceability: `git log --grep="TDR: 14"` shows every
+commit citing a decision; the TDR's `affects_anchors:` shows every
+anchor that decision affects; their intersection is the well-
+explained subset of the course's authoring activity. ADR 0047's
+M2 metric measures exactly this intersection.
+
+#### Commit trailer convention
+
+Chapter-modifying commits carry a `TDR:` trailer using git's
+standard `interpret-trailers` convention (RFC822-style key-value
+pairs at the bottom of the commit message):
+
+```text
+feat(astr201): tighten Wien's law intervention
+
+Reworked the contrasting-cases intervention based on fa25
+evidence that students were collapsing two misconceptions
+into one.
+
+TDR: 14
+```
+
+**Allowed values:**
+
+- `TDR: <N>` — commit implements the decision recorded in TDR-N.
+  Multi-trailer support: commits implementing multiple decisions
+  carry multiple `TDR:` lines (one per implemented decision).
+- `TDR: none` — commit deliberately carries no pedagogical
+  intent (typo fix, formatting, dependency bump, mechanical
+  refactor per ADR 0049 `--mechanical`). Explicit declaration,
+  not omission.
+- `TDR: pending-seed-<slug>` — emitted by `sophie refactor` when
+  it auto-generates an unfilled TDR seed (per
+  [ADR 0049](./0049-sophie-refactor-cli.md)). The author resolves
+  to `TDR: <N>` (substantive — seed promoted to a real TDR) or
+  `TDR: none` (mechanical — seed deleted) by amending the
+  commit's trailer after deciding.
+
+The trailer convention is platform-standard
+(`git interpret-trailers` parses it natively); SoTA tooling
+treats trailers as first-class metadata, not as prose
+annotation.
+
+#### Optional CI enforcement
+
+Consumer courses opt in to enforcement via
+`pedagogy-contract.yaml`:
+
+```yaml
+tdr_traceability:
+  enforce_commit_trailers: true       # default false
+  trailer_severity: warning           # warning | error
+  excluded_paths:
+    - "*.css"
+    - "*.scss"
+    - "package.json"
+    - "pnpm-lock.yaml"
+```
+
+When `enforce_commit_trailers: true`, the audit (via a pre-receive
+hook, GitHub Action, or `sophie audit --trailers` invocation)
+checks every chapter-touching commit on `main` for a `TDR:`
+trailer. Commits without one trip the configured severity.
+`excluded_paths:` covers non-pedagogical surfaces that don't need
+trailers even when enforcement is on.
+
+Default disabled. Courses opt in when they're ready — typically
+after Phase 4 launches and authoring discipline is settled.
+
+#### Sophie refactor integration
+
+`sophie refactor --apply` (per
+[ADR 0049](./0049-sophie-refactor-cli.md)) auto-emits the `TDR:`
+trailer in the commit it creates. Substantive refactors emit
+`TDR: pending-seed-<slug>` (with the author amending after seed
+resolution); `--mechanical` invocations emit `TDR: none`
+directly.
 
 ### Artifact 4: Output formatters
 
@@ -597,40 +683,6 @@ Course-shell diff is a future ADR.
 *Rejected.* Tightly coupled; splitting forces forward-references.
 Same pattern as ADRs 0042/0043/0044 bundling schema + component +
 audit per coherent contract.
-
-## Revisions
-
-**§1 — 2026-05-14 Hardening pass.** Per
-[the foundation review](/Users/anna/Teaching/sophie/docs/reviews/2026-05-14-adrs-0040-0045-foundation-review.md),
-this ADR was edited in place (under Anna's explicit mutability
-override for the first hardening pass) to add:
-
-- **Intentional-change demotion via TDR `affects_anchors`** — a
-  diff item whose anchor is claimed in any HEAD TDR's
-  `affects_anchors` field is automatically demoted one severity
-  level with TDR-id annotation. Honors intentional changes
-  without requiring opt-in commit annotations. Couples to ADR
-  0040 hardening's TDR schema; ADR 0040 TDR-2 invariant verifies
-  `affects_anchors` resolves.
-- **`--base-index` CI-artifact-passing flow operationalized in
-  v1** (not just future seam). Canonical GitHub Actions workflow
-  builds the base index once per PR, caches it, passes via
-  `--base-index` to avoid worktree-rebuild overhead. Worked
-  example in `sophie-diff-cli.md` CI integration section.
-- **`--semester=<semester-id>` flag** — semester-aware ref
-  resolution via tag convention `<course>-<semester>-start`.
-  Lets `sophie diff --semester=astr201-fa25` answer "what
-  changed between last fall and now" without manual ref-lookup.
-- **`--include-routine` flag** — text formatter suppresses
-  `routine`-severity items by default; flag forces inclusion.
-  JSON output always includes them.
-- **Precise severity-threshold reference table** in
-  `pedagogical-change-taxonomy.md` (replaces narrative-prose
-  description of thresholds; spec-grade clarity for the classifier
-  rules).
-
-The immutability convention re-applies after this hardening pass
-completes. Future revisions land as new ADRs.
 
 ## References
 

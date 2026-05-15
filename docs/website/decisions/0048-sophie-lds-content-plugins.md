@@ -96,6 +96,12 @@ import type { SophiePlugin } from "@sophie/cli";
 const disciplineAstrophysics: SophiePlugin = {
   name: "@sophie/discipline-astrophysics",
   version: "1.0.0",
+  description:
+    "Astrophysics-discipline LDS content. Misconception taxonomy " +
+    "following Bailey (2011) + Sadler (1992).",
+  taxonomic_stance: "bailey-2011-extended",   // strongly encouraged
+                                              // for content-bearing
+                                              // plugins
   contributes: {
     misconceptions: [
       {
@@ -137,6 +143,16 @@ const disciplineAstrophysics: SophiePlugin = {
 export default disciplineAstrophysics;
 ```
 
+The `name`, `version`, and `contributes` fields are required.
+`description` is a one-line summary surfaced in
+`sophie audit --plugins` output. `taxonomic_stance` is optional
+but **strongly encouraged** for content-bearing plugins —
+astrophysics has multiple defensible misconception taxonomies
+(Bailey 2011 vs. Sadler 1992 vs. Liu 2005); a plugin's taxonomic
+stance lets consumer courses compare frameworks before adopting.
+Convention: short slug like `"bailey-2011-extended"` or
+`"hestenes-mechanics-baseline"`.
+
 The course's `PedagogyIndex` is populated from (a) the consumer
 chapters' `<MisconceptionDecl>` / `<KeyEquation>` / etc., **plus**
 (b) plugin contributions registered in `sophie.config.ts`,
@@ -145,6 +161,31 @@ chapters' `<MisconceptionDecl>` / `<KeyEquation>` / etc., **plus**
 Plugins are **declarative**; they cannot execute arbitrary code at
 audit time. The CLI loads each plugin's `contributes` block
 statically.
+
+### Plugin-resolution order
+
+When `sophie audit` builds the populated PedagogyIndex with
+plugins:
+
+1. The plugin loader walks `sophie.config.ts`'s `plugins:`
+   list **in declaration order**. On entry-slug collision
+   between plugins, the **later plugin wins** (last-write-wins).
+   Conventional ordering: universal core first, then
+   discipline-specific.
+2. Consumer-course `pedagogy-contract.yaml` `plugins.overrides:`
+   are applied next — they modify (per-field) the plugin
+   contributions from step 1.
+3. `pedagogy-contract.yaml` `plugins.excludes:` removes the
+   listed entries from the merged set.
+4. Consumer chapters' own `<MisconceptionDecl>` /
+   `<KeyEquation>` / etc. are then layered on top. A chapter's
+   in-source declaration **wins over** any plugin-or-override
+   value for the same slug.
+
+The full precedence chain: **consumer chapters > pedagogy-contract
+overrides > pedagogy-contract excludes > later plugins > earlier
+plugins**. Step (4) — the chapter-source layer — is what
+preserves consumer autonomy on individual chapters.
 
 ### Three autonomy guarantees
 
@@ -157,9 +198,11 @@ plugin system additive without becoming coercive.
    the **v1 default** — Sophie does not push courses toward plugin
    adoption.
 
-2. **Per-entry override is always allowed.** A course that uses
-   `@sophie/discipline-astrophysics` can override any single entry
-   the plugin contributes. The override mechanism:
+2. **Per-field override is always allowed within any plugin
+   entry.** A course that uses
+   `@sophie/discipline-astrophysics` can modify any individual
+   *field* of any plugin entry while inheriting the rest from the
+   plugin. The override mechanism uses three operators:
 
    ```yaml
    # courses/astr201-fa26/pedagogy-contract.yaml
@@ -167,32 +210,54 @@ plugin system additive without becoming coercive.
      overrides:
        misconceptions:
          intensity-vs-luminosity:
-           # The plugin's body is replaced by the course's body.
-           description: "ASTR 201 framing: ..."
-       concepts:
-         inverse-square-law:
-           # The plugin's aliases are extended; not replaced.
-           aliases_add: ["irradiance"]
+           description: "ASTR 201 framing: ..."     # replace scalar
+           aliases_add: ["irradiance"]              # extend array
+           aliases_remove: ["legacy-alias"]         # trim array
+           # All other fields inherit unchanged from the plugin.
+     excludes:
+       misconceptions:
+         - unwanted-plugin-slug       # drop entire entry; not used
    ```
 
-   Override granularity is at the **entry level** (one
-   misconception, one concept), not at the plugin level. A course
-   can keep 19 out of 20 plugin-contributed misconceptions and
-   override one without forking the plugin.
+   - **Plain key (`<field>:`)** — replace the plugin's value for
+     this field. Inherits all other plugin fields unchanged.
+   - **`<field>_add:`** — for array fields, append to the
+     plugin's array.
+   - **`<field>_remove:`** — for array fields, remove specific
+     entries from the plugin's array.
+   - **`excludes:`** block — drop a plugin entry entirely.
+     Use sparingly; the more common case is overriding fields.
+
+   Nested-field overrides (modifying one element inside an array
+   field like `assumptions[]`) are **not supported in v1**. To
+   modify nested structure, replace the entire containing field.
+   If real authoring data shows need, a future ADR can extend
+   the grammar.
+
+   Per-field granularity (rather than entry-level replace-only)
+   is load-bearing: it makes plugin inheritance real. A consumer
+   course that uses 19 of 20 plugin-contributed misconceptions
+   and wants to tweak one description doesn't have to maintain a
+   20-entry copy of the plugin's catalog.
 
 3. **Plugins cannot impose ERROR-level audit invariants.** A
    plugin's content participates in *existing* foundation
    invariants (MG1–MG3, NR1–NR4, etc.), but a plugin cannot
    declare a new ERROR-severity invariant against consumer
    chapters. Plugin-declared invariants are capped at
-   **WARNING**. The autonomy direction is one-way: a course can
-   declare an ERROR against itself (per ADR 0053's audit_overrides
-   surface); a plugin cannot.
+   **WARNING**. The autonomy direction is one-way: ERROR-severity
+   invariants are reserved for foundation ADRs themselves and
+   for consumer-course local exceptions via
+   [ADR 0053](./0053-conformance-failure-modes.md)'s
+   `audit_overrides` surface (which *suppresses* findings, not
+   *declares* new ones). Plugins have no symmetric authority.
 
    Mechanically: `SophiePlugin.contributes` does not include an
    `invariants` field. A future ADR may add a constrained
    `contributes.invariants` slot capped at WARNING; v1 omits it
-   entirely.
+   entirely. Plugins also cannot define `audit_overrides` for
+   consumer chapters — that authority is consumer-side only
+   (per ADR 0053).
 
 ### What ships in v1 of *this* ADR
 
@@ -247,14 +312,15 @@ lockfile.
 
 When `sophie audit` runs in a consumer course:
 
-1. CLI loads `sophie.config.ts`.
-2. For each declared plugin, CLI reads `contributes` blocks.
-3. CLI merges plugin contributions into the populated
-   PedagogyIndex **before** consumer-chapter contributions, so
-   consumer chapters can override.
-4. Override blocks in `pedagogy-contract.yaml` are applied next
-   (consumer chapters > pedagogy-contract overrides > plugin
-   defaults).
+The full plugin-resolution order (defined in the "Plugin-resolution
+order" subsection of the Decision above) runs:
+
+1. Plugins from `sophie.config.ts` merged in declaration order
+   (last-write-wins on collisions).
+2. `pedagogy-contract.yaml.plugins.overrides:` applied per-field.
+3. `pedagogy-contract.yaml.plugins.excludes:` removes entries.
+4. Consumer chapter declarations layer on top (highest
+   precedence).
 5. Existing foundation invariants (MG1–MG3, NR1–NR4, etc.) run
    against the merged index.
 

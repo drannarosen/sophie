@@ -96,8 +96,8 @@ When the review is settled:
 
 - Update frontmatter: `status: accepted`, `date: <today>`.
 - Merge the PR.
-- The ADR is now **immutable**. Substantive changes require a new
-  ADR that supersedes it.
+- The ADR is now in **pre-implementation** state. Editing rules
+  per the next section apply.
 
 ### 5. Update consumers
 
@@ -109,9 +109,77 @@ After acceptance:
 - Update [Roadmap](../status/roadmap.md) if the ADR shifts phase
   scope.
 
+## ADR editing rules (state-dependent immutability)
+
+Sophie distinguishes **pre-implementation** ADRs from
+**post-implementation** ADRs. The two states have different
+editing rules. The state is tracked by the optional
+`implemented_in:` frontmatter field.
+
+### Pre-implementation: freely editable in place
+
+An ADR with `implemented_in: null` (or with the field absent) is
+**pre-implementation** — its decision has been accepted, but no
+code PR has shipped to implement it. In this state:
+
+- **Substantive changes land in place**, directly editing the
+  Decision / Rationale / Alternatives / Consequences / References
+  sections.
+- **No Revisions section needed.** Git history is the audit trail.
+  `git log --follow <adr>.md` shows every change.
+- The rationale: ADRs that haven't been built against are still
+  *design proposals*. Forcing changelog overhead onto design-stage
+  iteration produces unreadable changelogs and discourages real
+  refinement.
+- The cost of in-place editing is bounded: nothing depends on the
+  ADR's prior text yet.
+
+### Post-implementation: Revisions sections + new-ADR escape hatch
+
+An ADR transitions to **post-implementation** when its
+`implemented_in:` field becomes non-null (typically populated with
+the merging PR number or commit SHA). At that point:
+
+- **Substantive changes land as Revisions sections** at the end of
+  the ADR (`## Revisions` heading, with `**§N — <date>: <label>**`
+  sub-headings for each revision).
+- The rationale: the ADR now represents a contract with deployed
+  code. Future readers (and future authors maintaining that code)
+  benefit from seeing how the contract evolved alongside the
+  implementation.
+- **Hard renames or breaking shifts** still land as new ADRs that
+  supersede the old one (see "Superseding" below). Revisions
+  sections are for *amendments*, not *replacements*.
+
+### Setting `implemented_in:`
+
+The first code PR that ships an implementation of an ADR's
+contract updates that ADR's frontmatter:
+
+```yaml
+---
+date: 2026-05-14
+implemented_in: "#123"   # or commit SHA, or list of PRs
+tags: [...]
+---
+```
+
+Once set, the ADR is in post-implementation state. Subsequent
+substantive changes use Revisions sections.
+
+### When in doubt, ask
+
+If a change feels like it might warrant a new ADR (e.g., a broad
+architectural shift that would substantively rewrite the Decision
+section), it probably does. The in-place editing path is for
+*refinement* — clarifying language, tightening prose, fixing
+contradictions, adding examples. Re-deciding the core call is a
+new-ADR move regardless of state.
+
 ## Superseding an ADR
 
-When a previously-accepted decision needs to change:
+When a previously-accepted decision needs to change *substantively*
+(beyond what Revisions can carry):
 
 1. Write a new ADR (`NNNN+`) with `supersedes: <old-id>`.
 2. Update the old ADR's frontmatter: `status: superseded`,

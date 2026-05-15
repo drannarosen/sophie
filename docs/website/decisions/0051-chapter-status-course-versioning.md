@@ -72,6 +72,35 @@ Enum values:
 | `review` | Structurally complete; under review (instructor or external). | Included; surfaces with a "Under review" badge. |
 | `stable` | Reviewed; ready for students; revisions land via TDRs. | Included; no badge. |
 
+### `exam_key_for:` chapter frontmatter (optional)
+
+Chapters that contain an exam's answer key declare which exam
+they belong to via an optional `exam_key_for:` frontmatter field
+naming the exam event in `schedule.yaml` (per
+[ADR 0054](./0054-course-schedule-calendar.md)):
+
+```yaml
+---
+title: Exam 1 Answer Key
+status: stable
+exam_key_for: exam-2026-10-21      # matches schedule.yaml event id
+publishes_at: 2026-10-21T18:00:00-07:00
+---
+```
+
+The field is **optional** — most chapters aren't exam keys. When
+present, it triggers the SC5 audit invariant (per ADR 0054):
+the chapter's `publishes_at` must be later than the referenced
+exam's end time plus a grace period (default 30 minutes,
+configurable via
+`pedagogy-contract.yaml.scheduled_publish.exam_key_grace_minutes`).
+
+Explicit declaration via `exam_key_for:` is preferred over
+heuristic slug-matching ("chapter slug includes `key`"; "schedule
+event title includes `Exam`"); heuristic matching produces
+false positives and false negatives. Audit-as-presence: explicit
+declaration triggers explicit check.
+
 ### `status: draft` excludes entirely from student build
 
 This is **the** load-bearing semantic of the field. A draft
@@ -103,7 +132,7 @@ signals to students that content may change before semester end.
 Course-level indices include review chapters; audit invariants
 treat them the same as stable.
 
-### `status: stable` is the default
+### `status: draft` is the scaffold default; `stable` is the steady state
 
 A new chapter scaffold defaults to `status: draft`. As authoring
 proceeds, the author moves it to `review` then `stable`. Most
@@ -149,6 +178,7 @@ course:
 course_version:
   current: v1.2.0
   released_at: 2026-09-01
+  stale_review_days: 14            # optional; default 14; CS3 threshold
   semver_policy: |
     - PATCH: typos, formatting, non-pedagogical edits
     - MINOR: new chapter, expanded intervention, new misconception
@@ -184,6 +214,17 @@ review` becoming a permanent state. Real review takes time
 that has been `review` for a month is either ready to ship
 (`stable`) or in transition to `draft` (significant rework
 needed).
+
+CV1/CV2 severity rationale: drift between `course_version.current`
+and the latest git tag (CV1, WARNING) corrupts downstream
+tooling that reads `current` for display (dashboards, schedule
+metadata, etc.) — visible-but-wrong is worse than missing.
+Missing bookend tags (CV2, INFO) breaks `sophie diff --semester=`
+and `sophie metrics history --semester=` resolution loudly at
+CLI runtime, so the audit signal is a soft surface — the loud
+break is the bookend-tag prompt. Severities target the failure
+modes asymmetrically because the failure modes are
+asymmetrically self-announcing.
 
 ### Interaction with `sophie publish-state` (ADR 0052)
 
@@ -224,9 +265,28 @@ A course tag captures plugin versions transitively via the
 identical to the lockfile snapshot. Reverting to a past tag
 restores the past lockfile, including past plugin versions.
 
-This makes "reproduce ASTR 201 fa26 v1.0.0 exactly as students
-saw it" a `git checkout <tag> && pnpm install --frozen-lockfile
-&& pnpm build` operation.
+This makes "reproduce the code state of ASTR 201 fa26 v1.0.0" a
+`git checkout <tag> && pnpm install --frozen-lockfile &&
+pnpm build` operation. Lockfile-pin guarantees plugin-version
+reproduction; tag-checkout guarantees source reproduction.
+
+**Caveat — reproducing what students *saw* is a different
+operation.** The build pipeline evaluates publication state
+against `now()` at build time (per
+[ADR 0052](./0052-scheduled-publication-visibility.md)): chapters
+with `publishes_at` or `unpublishes_at` near a checkpoint render
+differently depending on when the build runs. Re-building a
+2026-fa tag in 2027 produces the same *code*, but
+`publishes_at` timestamps in the future at tag-build time may now
+be in the past, so the rendered student view differs.
+
+To reproduce a specific point-in-time student view, the rebuilder
+must additionally mock `now()` (via build-time env var, e.g.,
+`SOPHIE_BUILD_NOW=2026-09-15T08:00:00-07:00 pnpm build`). The
+v1 CLI does not ship a `--at-time` flag for this; if SoTL
+reproduction work needs the affordance, it lands as a future
+ADR. Course tags reproduce *code*; full point-in-time
+reproduction requires *code + clock*.
 
 ## Rationale
 

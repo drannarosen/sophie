@@ -165,12 +165,18 @@ Embed-helper that renders a subscribe link to `/schedule.ics`.
 
 Optional props:
 
-- `label` — string; the link text. Default: `"📅 Add to your
-  calendar (subscribe)"`.
-- `format` — `"subscribe" | "download"`. `"subscribe"` (default)
-  emits a `webcal://` link that triggers calendar-app
-  subscription on click; `"download"` emits a plain `.ics`
-  download link.
+- `format` — `"subscribe" | "download" | "both"` (default
+  `"both"`). `"subscribe"` emits a `webcal://` link only;
+  `"download"` emits an HTTPS `.ics` link with a `download`
+  attribute for one-time snapshot; `"both"` (default) renders
+  both side-by-side with the subscribe option labeled
+  "(recommended)". The default exists because `webcal://` is
+  honored unevenly across calendar apps; the download
+  fallback works universally but loses the auto-update behavior.
+- `subscribe_label` — string; the subscribe link's text. Default:
+  `"📅 Subscribe (recommended) — auto-updates as schedule changes"`.
+- `download_label` — string; the download link's text. Default:
+  `"⬇ Download .ics — one-time snapshot"`.
 
 ## `/schedule.ics` route
 
@@ -184,19 +190,13 @@ BEGIN:VCALENDAR
 VERSION:2.0
 PRODID:-//Sophie//Course Schedule//EN
 X-WR-CALNAME:<Course Title> <Semester>
-X-WR-TIMEZONE:<timezone from schedule.yaml>
 X-WR-CALDESC:Schedule for <Course Title> <Semester>. Auto-generated
             by Sophie.
 
-BEGIN:VTIMEZONE
-TZID:<timezone>
-[...]
-END:VTIMEZONE
-
 BEGIN:VEVENT
 UID:<unique-event-id>@<course>-<semester>
-DTSTART;TZID=<timezone>:<date in YYYYMMDDTHHMMSS>
-DTEND;TZID=<timezone>:<date in YYYYMMDDTHHMMSS>
+DTSTART:<UTC instant, YYYYMMDDTHHMMSSZ>
+DTEND:<UTC instant, YYYYMMDDTHHMMSSZ>
 SUMMARY:<event title with kind prefix>
 DESCRIPTION:<longer description, includes week + chapter link if any>
 URL:<course-relative URL if applicable>
@@ -205,6 +205,19 @@ END:VEVENT
 
 END:VCALENDAR
 ```
+
+**No `VTIMEZONE` block.** Each event's source ISO-8601
+timestamp from `schedule.yaml` (e.g.,
+`2026-09-02T10:00:00-07:00`) is converted to UTC for emission
+(`20260902T170000Z`). DST transitions are baked into the source
+timestamp's offset (pre-DST `-07:00` vs post-DST `-08:00` in
+Pacific); the UTC conversion is unambiguous. Display timezone is
+the calendar app's responsibility, not Sophie's, so
+`X-WR-TIMEZONE` is also omitted.
+
+This matches ADR 0052's per-event-absolute-timestamp convention.
+Recurrence rules (which would require VTIMEZONE blocks for
+DST-aware expansion) are deferred to backlog B10.
 
 ### Event UIDs
 
@@ -238,6 +251,7 @@ Per ADR 0054:
 | **SC2** | WARNING | An event references a `chapter:` slug that doesn't exist. |
 | **SC3** | WARNING | A scheduled event date falls outside the semester range (`weeks[0].start` to `weeks[-1].end`). |
 | **SC4** | INFO | An `assignment` event's `due:` is *after* the `unlocks_at` of any `<Solution>` in the referenced chapter. |
+| **SC5** | WARNING | A chapter declares `exam_key_for: <event-id>` and its `publishes_at` is earlier than the referenced exam's end + grace period (default 30 min; configurable in pedagogy-contract). Catches exam-key-published-too-early. |
 
 SC4 is INFO because legitimate authoring patterns exist (a
 `<Solution>` may demonstrate method, not answer the specific
@@ -319,8 +333,8 @@ title: Syllabus
 - [ADR 0052 — Scheduled Publication & Visibility Windows](../decisions/0052-scheduled-publication-visibility.md)
   — bidirectional auto-extraction source.
 - [ADR 0053 — Conformance Failure Modes](../decisions/0053-conformance-failure-modes.md)
-  — SC4 INFO can be overridden via `audit_overrides`; SC1
-  ERROR cannot.
+  — SC4 INFO and SC2/SC3/SC5 WARNINGs can be overridden via
+  `audit_overrides`; SC1 ERROR cannot.
 - [sophie-publish-schedule-cli.md](sophie-publish-schedule-cli.md)
   — `sophie publish-schedule list --format=ical` produces a
   subset of the same iCal feed.

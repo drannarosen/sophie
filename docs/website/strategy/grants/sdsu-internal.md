@@ -56,10 +56,12 @@ Concrete uses for ~\$25–40K:
 - Conference travel to present pilot results (AAS-EPD, AAPT).
 - Open-access publication fee for the resulting paper.
 
-This pilot study becomes the seed for **[Paper #3](../papers/paper-3-outcomes.md)**
-(the empirical learning-outcomes paper), produces preliminary data
-referenced in the CAREER mid-period report, and demonstrates active
-institutional research support.
+This pilot study seeds an **HSI outcomes thread** documented at
+[Future contributions § Thread B](../papers/future-contributions.md#thread-b--hsi-learning-outcomes-comparative-study)
+(the empirical learning-outcomes thread is not yet a committed
+paper), produces preliminary data referenced in the CAREER
+mid-period report, and demonstrates active institutional research
+support.
 
 ## Tactical notes
 
@@ -86,5 +88,5 @@ institutional research support.
 ## See also
 
 - [Grants overview](index.md) — full 2026 pipeline
-- [Paper #3 — Learning outcomes](../papers/paper-3-outcomes.md) — what this pilot seeds
+- [Future contributions § Thread B](../papers/future-contributions.md#thread-b--hsi-learning-outcomes-comparative-study) — the uncommitted HSI outcomes thread this pilot seeds
 - [SDSU University Grants Program](https://research.sdsu.edu/research_affairs/university_grants_program)

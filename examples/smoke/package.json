@@ -12,12 +12,13 @@
     "preview": "astro preview",
     "typecheck": "astro check",
     "figures": "tsx scripts/build-figures.ts && biome format --write src/content/figures.ts",
-    "sophie:audit": "sophie audit src/content/chapters/spoiler-alerts.mdx"
+    "sophie:audit": "sophie audit src/content/chapters/01-foundations/spoiler-alerts.mdx"
   },
   "dependencies": {
     "@astrojs/mdx": "^5.0.4",
     "@astrojs/react": "^5.0.4",
     "@sophie/astro": "workspace:*",
+    "@sophie/cli": "workspace:*",
     "@sophie/components": "workspace:*",
     "@sophie/core": "workspace:*",
     "@sophie/theme": "workspace:*",

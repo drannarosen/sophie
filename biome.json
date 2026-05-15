@@ -55,18 +55,12 @@
               "level": "error",
               "options": {
                 "paths": {
-                  "../audit": "Cross-folder relative import inside @sophie/core. Use '@sophie/core/audit' subpath.",
-                  "../cli": "Cross-folder relative import inside @sophie/core. Use '@sophie/core/cli' subpath."
+                  "../audit": "Cross-folder relative import inside @sophie/core. Use '@sophie/core/audit' subpath."
                 },
                 "patterns": [
                   {
-                    "group": [
-                      "../audit/**",
-                      "../cli/**",
-                      "../../audit/**",
-                      "../../cli/**"
-                    ],
-                    "message": "Cross-folder relative import inside @sophie/core. Use '@sophie/core/{audit,cli}' subpath."
+                    "group": ["../audit/**", "../../audit/**"],
+                    "message": "Cross-folder relative import inside @sophie/core. Use '@sophie/core/audit' subpath."
                   }
                 ]
               }
@@ -84,47 +78,12 @@
               "level": "error",
               "options": {
                 "paths": {
-                  "../schema": "Cross-folder relative import inside @sophie/core. Use '@sophie/core/schema' subpath.",
-                  "../cli": "Cross-folder relative import inside @sophie/core. Use '@sophie/core/cli' subpath."
+                  "../schema": "Cross-folder relative import inside @sophie/core. Use '@sophie/core/schema' subpath."
                 },
                 "patterns": [
                   {
-                    "group": [
-                      "../schema/**",
-                      "../cli/**",
-                      "../../schema/**",
-                      "../../cli/**"
-                    ],
-                    "message": "Cross-folder relative import inside @sophie/core. Use '@sophie/core/{schema,cli}' subpath."
-                  }
-                ]
-              }
-            }
-          }
-        }
-      }
-    },
-    {
-      "includes": ["packages/core/src/cli/**"],
-      "linter": {
-        "rules": {
-          "style": {
-            "noRestrictedImports": {
-              "level": "error",
-              "options": {
-                "paths": {
-                  "../schema": "Cross-folder relative import inside @sophie/core. Use '@sophie/core/schema' subpath.",
-                  "../audit": "Cross-folder relative import inside @sophie/core. Use '@sophie/core/audit' subpath."
-                },
-                "patterns": [
-                  {
-                    "group": [
-                      "../schema/**",
-                      "../audit/**",
-                      "../../schema/**",
-                      "../../audit/**"
-                    ],
-                    "message": "Cross-folder relative import inside @sophie/core. Use '@sophie/core/{schema,audit}' subpath."
+                    "group": ["../schema/**", "../../schema/**"],
+                    "message": "Cross-folder relative import inside @sophie/core. Use '@sophie/core/schema' subpath."
                   }
                 ]
               }

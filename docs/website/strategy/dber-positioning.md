@@ -97,7 +97,7 @@ outcomes compared to existing OER and commercial alternatives?
 
 3-YEAR CONTRIBUTIONS
 1. Software infrastructure (Sophie) — open-source AGPL platform.
-   4 packages, 40+ ADRs, deployed in ASTR 101, ASTR 201, COMP 521.
+   4 packages, 50+ ADRs, deployed in ASTR 101, ASTR 201, COMP 521.
 2. Empirical learning-outcomes research — comparative studies with
    disaggregated ASTR 201 cohorts (HSI population).
 3. Pedagogy-of-AI-authoring — novel structural HITL model with

@@ -21,7 +21,7 @@ TDR-seed stubs.
 ## Synopsis
 
 ```text
-sophie refactor <entity-type> <operation> [args...] [--apply] [options]
+sophie refactor <entity-type> <operation> [args...] [--apply] [--mechanical] [options]
 ```
 
 ### Entity types (v1)
@@ -125,14 +125,48 @@ Mechanical changes:
   ...
 
 TDR seed: .sophie/refactor-seeds/<date>-<slug>.md
-Author: complete the TDR before merging.
+Author: resolve the seed then amend the TDR: trailer below.
 
+TDR: pending-seed-<slug>
 Co-authored-by: sophie-refactor <noreply@sophie.cli>
 ```
 
+The `TDR:` trailer follows
+[ADR 0045 §Bidirectional TDR ↔ commit traceability](../decisions/0045-pedagogical-diff-curriculum-ci.md).
+The `pending-seed-<slug>` placeholder is the unresolved state;
+the author amends it to either `TDR: <N>` (substantive — seed
+promoted to a real TDR-N) or `TDR: none` (mechanical — seed
+deleted).
+
 The commit is created on the current branch; the author still
-owns the commit and can amend, edit the TDR seed, or split the
-commit before pushing.
+owns the commit and can amend, edit the TDR seed, resolve the
+trailer, or split the commit before pushing.
+
+### `--mechanical` flag (skip seed; emit `TDR: none` directly)
+
+For refactors the author already knows are mechanical (typo
+fixes, slug spelling corrections, name-only churn that doesn't
+reflect a pedagogical position change), pass `--mechanical`:
+
+```bash
+sophie refactor misconception rename old-slug-typoo old-slug-typo --apply --mechanical
+```
+
+Behavior change vs. default `--apply`:
+
+- **No TDR seed generated.** Nothing written to
+  `.sophie/refactor-seeds/`.
+- **Commit trailer is `TDR: none` directly** (not
+  `pending-seed-<slug>`). No author follow-up needed for the
+  trailer.
+- Commit message body still surfaces the mechanical-changes
+  list; only the trailer + seed path differ.
+
+The flag is off by default. The expected substantive flow is to
+let the CLI generate a seed and resolve it post-hoc; `--mechanical`
+is the ergonomic escape hatch for batch operations where the
+author already knows the seed would just be delete-this-stub
+work.
 
 ## Atomicity guarantee
 
@@ -183,10 +217,20 @@ Every `--apply` invocation emits a TDR-seed file:
 
 The stub contains:
 
-- **Filled-in frontmatter**: `title`, `date`, `scope`,
-  `evidence_type: forward_hypothesis`, `evidence_strength:
-  exploratory`, `visibility: internal`, `affects_anchors`,
-  `affects_versions: []` (author to fill).
+- **Filled-in frontmatter** for the structural fields the CLI
+  can determine deterministically: `title`, `date`, `scope`,
+  `visibility: internal`, `affects_anchors` (the slugs the
+  refactor touched), `affects_versions: []` (author to fill).
+- **Empty `evidence_type:` and `evidence_strength:` fields** —
+  the eight valid evidence-type values (per ADR 0040) are
+  pedagogically distinct; the CLI cannot guess which applies.
+  The seed includes comments listing all valid values for the
+  author to pick from. A mechanical rename has no TDR at all
+  (delete the seed); a substantive rename has an
+  author-chosen evidence type.
+- **Guidance block** (blockquote at the top of the seed):
+  prompts the author to decide substantive-vs-mechanical, with
+  explicit instructions for both paths.
 - **Filled-in "What changed" section**: mechanical narrative
   derived from the refactor.
 - **Empty "Why" section**: author to fill.
@@ -197,23 +241,41 @@ The stub contains:
 
 ### Seed lifecycle
 
-The seed is **staged with the refactor commit** (per the commit
-format above) but the **TDR is not yet committed** — the seed
-needs the author to fill in *why*, *how to apply*, *evidence*
-before it becomes a real TDR.
+The seed is **staged with the refactor commit** at its
+`.sophie/refactor-seeds/` path (so it travels through any
+branch/PR flow with the refactor). The author resolves it
+post-hoc.
 
-Workflow:
+Substantive workflow:
 
 1. `sophie refactor misconception rename ... --apply` lands the
-   refactor commit including the seed.
-2. Author edits the seed in `.sophie/refactor-seeds/`, completing
-   the Why / How / Evidence sections.
+   refactor commit. Commit's `TDR:` trailer is
+   `pending-seed-<slug>`; seed file is in
+   `.sophie/refactor-seeds/`.
+2. Author edits the seed: picks `evidence_type` and
+   `evidence_strength`, completes Why / How / Evidence sections,
+   sets `tdr_number` to the next sequential number.
 3. Author moves the seed to its TDR home (`docs/decisions/tdrs/`
-   or wherever the course stores TDRs) with the next sequential
-   `tdr_number`.
+   or wherever the course stores TDRs).
 4. Author commits the completed TDR.
-5. Author deletes the now-empty `.sophie/refactor-seeds/<file>.md`
-   stub (or a future pre-PR hook auto-detects unresolved seeds).
+5. Author **amends the refactor commit's `TDR:` trailer** from
+   `TDR: pending-seed-<slug>` to `TDR: <N>` matching the new
+   TDR's number.
+
+Mechanical workflow (post-hoc decision):
+
+1. `sophie refactor misconception rename ... --apply` lands the
+   refactor commit as above.
+2. Author decides the refactor doesn't warrant a TDR (typo fix,
+   slug spelling correction, name-only churn).
+3. Author deletes the `.sophie/refactor-seeds/<file>.md` stub.
+4. Author **amends the refactor commit's `TDR:` trailer** to
+   `TDR: none`.
+
+Mechanical workflow (decided at refactor time): pass
+`--mechanical` to `sophie refactor … --apply`. The CLI emits
+`TDR: none` directly and skips seed generation; no follow-up
+needed.
 
 Refactors that genuinely *do not need a TDR* (mechanical slug
 fixes, typo corrections) can have the seed deleted without

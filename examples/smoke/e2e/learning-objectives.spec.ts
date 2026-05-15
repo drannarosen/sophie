@@ -33,6 +33,17 @@ import { expect, test } from "@playwright/test";
  * Condition-based-waiting: aria-busy flips false on hydration. Wait
  * via `expect(locator).toHaveAttribute("aria-busy", "false")` — do
  * NOT use `{ timeout: N }` knobs (per CLAUDE.md SoTA-over-simple).
+ *
+ * Persistence-race-waiting (P1-2 fix from the 2026-05-15 Bucket B+C
+ * audit): after a `setValue()` call, the React DOM reflects the new
+ * state synchronously but the async IDB write is still in flight.
+ * Reloading before the write commits surfaces stale state and was the
+ * root cause of the 1-in-4 flake observed in the PR 10 gauntlet. The
+ * `<ul>` now carries `data-sophie-write-pending` (true while any
+ * useInteractive setValue is awaiting IDB; false when settled) — wait
+ * on it before `page.reload()`. See
+ * `packages/components/src/runtime/useInteractive.ts` for the runtime
+ * contract.
  */
 
 const CHAPTER_URL = "/chapters/measuring-the-sky/";
@@ -67,6 +78,11 @@ test.describe("Learning Objectives checkbox interactivity", () => {
     const checkbox = page.locator(LO_CHECKBOX_SELECTOR).first();
     await checkbox.check();
     await expect(checkbox).toBeChecked();
+    // Wait for the IDB write to commit before reload — without this,
+    // `page.reload()` can race the async store.set() and surface stale
+    // state on the next page-load. Tracks `controlProps["data-sophie-
+    // write-pending"]` from useInteractive's pending-writes counter.
+    await expect(ul).toHaveAttribute("data-sophie-write-pending", "false");
 
     await page.reload();
     await expect(ul).toHaveAttribute("aria-busy", "false");

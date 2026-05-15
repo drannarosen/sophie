@@ -468,40 +468,6 @@ updating the map, updating TDRs that referenced an absent move) is
 higher than the cost of including it at v1. The 18-move list is
 the *floor*, not the ceiling.
 
-## Revisions
-
-**§1 — 2026-05-14 Hardening pass.** Per
-[the foundation review](/Users/anna/Teaching/sophie/docs/reviews/2026-05-14-adrs-0040-0045-foundation-review.md),
-this ADR was edited in place (under Anna's explicit mutability
-override for the first hardening pass) to add:
-
-- Move/Intervention linkage: `move: <slug>` field on
-  `intervention-index.ts` entries (resolves the architectural
-  overlap with ADR 0044).
-- Reverse `instantiated_as` field on move entries (computed,
-  not authored).
-- Inferred move-usage attribution: `instantiated_by:
-  [<component-pattern>]` on move entries; audit infers usage from
-  PedagogyIndex; no per-component `move=` prop burden.
-- Course-level `move_usage` aggregation in `sophie audit --summary`
-  (no new audit invariant; derived statistics).
-- Provisional-vs-validated tagging: `validated_in: string[]` on
-  move entries (default `[]`, semester-anchored slugs); implicit
-  lifecycle, no separate status field.
-- Cross-ADR audit invariant **I4** (WARNING): intervention's
-  `move=` must resolve in `move-index.ts` (extends ADR 0044's
-  I-family).
-- `<Intervention>` renders parent move as citation-grade caption
-  at use site.
-
-The immutability convention re-applies after this hardening pass
-completes. Future revisions land as new ADRs.
-
-Further taxonomy revisions (move additions / renames / refinements
-beyond the hardening pass) follow the pattern established by
-[ADR 0038 §1, §2](./0038-pedagogy-index-pattern.md): a new
-`## Revisions §N` section appended documenting the change + reason.
-
 ## References
 
 - [`reference/teaching-moves.md`](../reference/teaching-moves.md) —

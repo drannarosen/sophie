@@ -155,10 +155,12 @@ project:
         - file: decisions/0047-empirical-validation-plan.md
         - file: decisions/0048-sophie-lds-content-plugins.md
         - file: decisions/0049-sophie-refactor-cli.md
+        # ADR 0050 reserved (intentional gap).
         - file: decisions/0051-chapter-status-course-versioning.md
         - file: decisions/0052-scheduled-publication-visibility.md
         - file: decisions/0053-conformance-failure-modes.md
         - file: decisions/0054-course-schedule-calendar.md
+        - file: decisions/0055-squash-merge-for-code-prs.md
     - title: Status
       children:
         - file: status/roadmap.md
@@ -187,9 +189,7 @@ project:
           children:
             - file: strategy/papers/index.md
             - file: strategy/papers/paper-1-methods.md
-            - file: strategy/papers/paper-2-hitl.md
-            - file: strategy/papers/paper-3-outcomes.md
-            - file: strategy/papers/paper-4-predict.md
+            - file: strategy/papers/future-contributions.md
     - title: Contributing
       children:
         - file: contributing/setup.md

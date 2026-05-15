@@ -124,22 +124,33 @@ The `schedule.yaml` and ADR 0052 timestamps are kept in sync
   with `unlocks_at` produces an auto-generated `kind: reveal`
   event scoped to the component.
 
-**Direction 2 — From schedule into frontmatter (recommended,
-not enforced):**
+**Direction 2 — From schedule into frontmatter (enforced where
+useful):**
 
 - An `assignment` event with `due:` is the canonical due-date
   declaration. If the chapter referenced by the assignment has
   a `<Solution>` with `unlocks_at` ≤ `due:`, SC4 fires (see
   invariants).
-- An `exam` event suggests an `<ExamKey>` chapter with
-  `publishes_at` matching the exam end-time + a grace period.
-  Audit does NOT enforce this; it surfaces in audit verbose
-  output as a soft suggestion.
+- An `exam` event paired with a chapter that declares
+  `exam_key_for: <exam-event-id>` triggers SC5: the chapter's
+  `publishes_at` must be ≥ the exam's end + grace period.
+- An `<ExamKey>` component without `unlocks_at` trips SP3
+  (ERROR; per [ADR 0052](./0052-scheduled-publication-visibility.md)).
 
 The bidirectional surface means: authors who declare the
 schedule once in `schedule.yaml` get auto-generated reveal
 events; authors who declare the schedule once in frontmatter
 get auto-included events.
+
+**Precedence on conflict:** if `schedule.yaml` declares a manual
+`reveal` event for the same chapter or component that auto-
+extracts (e.g., a manual `kind: reveal` event with the same
+target slug as an auto-extracted reveal from a chapter's
+`publishes_at`), **the manual declaration wins** and the
+auto-extracted event is suppressed. This lets authors override
+specific reveals without losing the auto-extraction default for
+the rest. The precedence is implemented in the extractor
+walker; authors don't see merge conflicts.
 
 ### Four components
 
@@ -193,28 +204,63 @@ Embeds a calendar-style monthly grid view:
 ```
 
 The `month=` prop accepts `YYYY-MM` (single month),
-`current` (the current calendar month), or `course` (all
-months covered by the schedule, multi-month grid).
+`current` (the current calendar month), or `course` (all months
+covered by the schedule).
+
+**Multi-month layout (`month="course"`):** months render as a
+vertical stack of single-month grids — one month per row of the
+container, top-to-bottom. Each month carries its own heading
+(e.g., "September 2026", "October 2026"). The stacked layout
+avoids the responsive nightmare of a 4-up grid on narrow viewports
+and matches the syllabus-style "month-by-month walk" most
+students scan a course schedule for. Optional `compact` prop on
+`<ScheduleCalendar>` switches each month to a tight 2-line-per-week
+form (date + abbreviated event list) for at-a-glance viewing.
 
 #### `<ScheduleICal>`
 
-Helper component that emits a subscription link to the
-auto-generated `.ics` feed:
+Helper component that emits subscription + download links to
+the auto-generated `.ics` feed.
 
 ```mdx
 <ScheduleICal />
 ```
 
-Renders:
+Default rendering (`format="both"`):
 
 ```html
-<a href="/schedule.ics" class="schedule-ical-link">
-  📅 Add to your calendar (subscribe)
-</a>
+<div class="schedule-ical">
+  <a href="webcal://courses.example.edu/schedule.ics"
+     class="schedule-ical-subscribe">
+    📅 Subscribe (recommended) — auto-updates as schedule changes
+  </a>
+  <a href="https://courses.example.edu/schedule.ics"
+     class="schedule-ical-download"
+     download="astr201-fa26-schedule.ics">
+    ⬇ Download .ics — one-time snapshot
+  </a>
+</div>
 ```
 
-Standard pattern — students click, their OS prompts them to
-add the calendar subscription.
+`format` prop accepts `"both"` (default), `"subscribe"`
+(webcal:// only), or `"download"` (HTTPS .ics only). The
+two-button default exists because `webcal://` is not universally
+honored: modern macOS/iOS Calendar, Google Calendar, Apple
+Calendar app, and current Outlook 365 handle it cleanly, but
+older Outlook (Windows desktop) and some corporate webmail
+clients don't. The download fallback works in every calendar
+app universally but produces a one-time snapshot rather than a
+live subscription. The "Subscribe (recommended)" labeling steers
+most students to the live-updating path; the fallback exists for
+the cases where `webcal://` doesn't fire.
+
+Microcopy ("auto-updates as schedule changes") deliberately
+hedges on update timing — the build server's cron + the
+subscriber's calendar-app refresh combine to produce typical
+end-to-end latencies of 6h–24h (see
+[ADR 0052](./0052-scheduled-publication-visibility.md)'s
+cron-and-subscriber-refresh discussion). Students who need
+immediate updates use the download.
 
 ### `/schedule.ics` route
 
@@ -226,16 +272,15 @@ BEGIN:VCALENDAR
 VERSION:2.0
 PRODID:-//Sophie//Course Schedule//EN
 X-WR-CALNAME:ASTR 201 Fa26
-X-WR-TIMEZONE:America/Los_Angeles
 BEGIN:VEVENT
 UID:lecture-2026-09-02@astr201-fa26
-DTSTART;TZID=America/Los_Angeles:20260902T100000
+DTSTART:20260902T170000Z
 SUMMARY:Lecture: Course overview + flux and luminosity
 DESCRIPTION:Week 1 — Light as information
 END:VEVENT
 BEGIN:VEVENT
 UID:assignment-ps-1@astr201-fa26
-DTSTART;TZID=America/Los_Angeles:20260907T235900
+DTSTART:20260908T065900Z
 SUMMARY:Due: Problem set 1
 DESCRIPTION:Problem set on flux and luminosity. Chapter: flux-luminosity-distance.
 URL:https://courses.example.edu/astr201-fa26/flux-luminosity-distance
@@ -244,12 +289,33 @@ END:VEVENT
 END:VCALENDAR
 ```
 
+The feed uses **absolute-UTC `DTSTART:YYYYMMDDTHHMMSSZ` form**
+per RFC 5545. Each event's source ISO-8601 timestamp from
+`schedule.yaml` (e.g., `2026-09-02T10:00:00-07:00`) is
+converted to UTC for emission (`20260902T170000Z`). This means
+**no `VTIMEZONE` block is needed** in the feed: each event
+carries its own absolute instant, and DST transitions are
+already baked into each source timestamp's offset (`-07:00`
+pre-DST, `-08:00` post-DST in Pacific). The
+`X-WR-TIMEZONE` header is also omitted from the v1 feed because
+display-timezone preferences are the calendar app's
+responsibility, not Sophie's.
+
+This pairs with [ADR 0052](./0052-scheduled-publication-visibility.md)'s
+per-event-absolute-timestamp convention: every Sophie
+publication timestamp is an absolute instant; recurrence rules
+(which would require VTIMEZONE blocks and DST-aware expansion)
+are deferred to backlog B10.
+
 The feed is **static** (generated at build time, not
 dynamically). Updates appear on the next build; the cron
 schedule from ADR 0052 (6-hour default) covers refresh
-cadence for students who have subscribed.
+cadence for students who have subscribed. End-to-end subscriber
+latency depends on the subscriber's calendar-app refresh cadence
+(typically additional hours); see ADR 0052's cron-and-subscriber-
+refresh note.
 
-### Four SC audit invariants
+### Five SC audit invariants
 
 | ID | Level | Fires when |
 |---|---|---|
@@ -257,11 +323,31 @@ cadence for students who have subscribed.
 | **SC2** | WARNING | An `assignment` event's `chapter:` does not match any chapter in the course. Dangling chapter reference. |
 | **SC3** | WARNING | A scheduled `lecture` or `assignment` falls outside the course semester (`schedule.yaml.weeks[0].start` to `schedule.yaml.weeks[-1].end`). Catches typos and dates from a previous semester. |
 | **SC4** | INFO | An `assignment` event's `due:` is later than the `unlocks_at` of any `<Solution>` component in the referenced chapter. Soft warning: the solution unlocks before the assignment is due (students could just-in-time copy). |
+| **SC5** | WARNING | A chapter declares `exam_key_for: <event-id>` (per [ADR 0051](./0051-chapter-status-course-versioning.md)) AND the chapter's `publishes_at` is *earlier than* the referenced exam event's `end` + grace period (default 30 min; configurable via `pedagogy-contract.yaml.scheduled_publish.exam_key_grace_minutes`). Catches the symmetric exam-key-published-too-early failure mode that SP3 (`<ExamKey>` without `unlocks_at`) does not detect. |
 
 SC4 is INFO rather than WARNING because there are legitimate
 reasons for it (a `<Solution>` may be a worked example
 demonstrating method, not the answer to the specific assignment
 problems). The audit nudges; the author decides.
+
+SC5 is WARNING (not ERROR) because the `exam_key_for:`
+cross-reference is explicit-but-not-guaranteed-accurate — the
+author chooses which exam event the chapter is the key for; the
+audit trusts that declaration. WARNING catches real timing
+mismatches (key publishes before exam ends) without false-
+positive blocking on edge cases the explicit declaration can't
+anticipate. The symmetric ERROR — SP3 from ADR 0052 — catches
+the *unambiguous* failure mode (`<ExamKey>` without
+`unlocks_at`); SC5 catches the cross-reference-bearing failure
+mode at the appropriate severity.
+
+SC2 and SC3 also overlap in some authoring failures (an
+assignment imported from a previous semester referencing a
+chapter that doesn't exist in the new course fires both): they
+remain distinct invariants because they catch the failure for
+different reasons (SC2 = dangling reference; SC3 = wrong
+semester window), and authors typically resolve them with
+different edits.
 
 SC1 is the only ERROR — invalid `schedule.yaml` breaks the
 build pipeline because downstream components consume the file.
@@ -351,7 +437,8 @@ contract; over-auditing it would penalize valid course-design
 patterns (e.g., assignments that span chapters; readings
 without exact dates).
 
-SC1 is the structural ERROR; SC2/SC3/SC4 are nudges. CI passes
+SC1 is the structural ERROR; SC2/SC3 are WARNING; SC4 is INFO;
+SC5 is WARNING. CI passes
 on a course with no `schedule.yaml` at all — the file is
 optional, and a course without it simply doesn't get a
 schedule page.
@@ -400,7 +487,7 @@ sync seam pattern).
     `<ScheduleCalendar>`, `<ScheduleICal>` in
     `packages/components/src/schedule/`.
   - Build: `/schedule.ics` static route in `@sophie/astro`.
-  - Audit: SC1–SC4 in
+  - Audit: SC1–SC5 in
     `packages/astro/src/lib/pedagogy-audit.ts`.
   - axe-core tests per ADR 0004.
 
