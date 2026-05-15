@@ -28,13 +28,14 @@ export function spawnOrchestrator(spec: SpawnSpec): OrchestratorHandle {
   const astro = execa("astro", spec.astro.args, {
     cwd: spec.astro.cwd,
     reject: false,
+    preferLocal: true,
   });
   astro.stdout?.pipe(prefixStream("astro")).pipe(process.stdout);
   astro.stderr?.pipe(prefixStream("astro")).pipe(process.stderr);
   children.push({ label: "astro", handle: astro });
 
   if (spec.componentsWatch) {
-    const comp = execa("pnpm", ["exec", "tsup", "--watch"], {
+    const comp = execa("pnpm", ["exec", "tsup", "--watch", "--no-clean"], {
       cwd: spec.componentsWatch.cwd,
       reject: false,
     });
@@ -44,7 +45,7 @@ export function spawnOrchestrator(spec: SpawnSpec): OrchestratorHandle {
   }
 
   if (spec.themeWatch) {
-    const theme = execa("pnpm", ["exec", "tsup", "--watch"], {
+    const theme = execa("pnpm", ["exec", "tsup", "--watch", "--no-clean"], {
       cwd: spec.themeWatch.cwd,
       reject: false,
     });

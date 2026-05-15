@@ -20,6 +20,7 @@ export async function runPreview(args: RunPreviewArgs): Promise<void> {
     await execa("astro", ["build"], {
       cwd: consumerRoot,
       stdio: "inherit",
+      preferLocal: true,
     });
   }
 
@@ -30,6 +31,7 @@ export async function runPreview(args: RunPreviewArgs): Promise<void> {
       cwd: consumerRoot,
       stdio: "inherit",
       reject: false,
+      preferLocal: true,
     }
   );
 
