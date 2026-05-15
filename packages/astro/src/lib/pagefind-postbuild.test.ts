@@ -1,4 +1,10 @@
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
@@ -102,18 +108,16 @@ describe("buildPagefindIndex (Layer 1.6)", () => {
     expect(entry).toBeDefined();
     expect(typeof entry.version).toBe("string");
 
-    // The filter list should include 'type' with all 6 entity-type
-    // values that the fixture authored (no 'figure' since fixture
-    // has none).
-    const filterMeta = JSON.parse(
-      readFileSync(join(dir, "pagefind", "filter", "type.pf_filter"))
-        .toString()
-        .replace(/[^\x20-\x7E\n]+/g, "") // strip Pagefind's binary chunk prefix
+    // Pagefind hashes filter filenames (en_<hash>.pf_filter); the exact
+    // path is an implementation detail. The real signal is that the
+    // filter directory exists and contains at least one .pf_filter file
+    // (Pagefind only writes filter files when ≥1 record carries that
+    // filter — six of our records carry `filters.type`, so at least one
+    // filter file must exist).
+    const filterDir = join(dir, "pagefind", "filter");
+    const filterFiles = readdirSync(filterDir).filter((f) =>
+      f.endsWith(".pf_filter")
     );
-    // The exact filter-file format is an implementation detail of
-    // Pagefind; the assertion above is structural. The real signal
-    // is that the file EXISTS (Pagefind only writes filter files
-    // when at least one record carries that filter).
-    expect(filterMeta).toBeDefined();
+    expect(filterFiles.length).toBeGreaterThan(0);
   });
 });
