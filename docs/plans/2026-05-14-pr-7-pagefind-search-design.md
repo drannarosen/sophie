@@ -30,7 +30,7 @@ The brainstorm answered six decision points:
 |---|---|---|
 | 1 | Search mental model | "Find a thing" — pedagogy entities as first-class results |
 | 2 | Facet set | All 7 entity types (chapters, terms, equations, key insights, figures, misconceptions, objectives); Module as scope filter |
-| 3 | Preview cards | Tiered — uniform base + KaTeX rich tail for equations + severity badge for misconceptions |
+| 3 | Preview cards | Tiered — uniform base + KaTeX rich tail for equations + length indicator (short/long) for misconceptions |
 | 4 | Index mechanics | Default HTML crawl + postbuild custom-records from pedagogy-index |
 | 5 | LDS-foundation entities | Out of v1 (no indexable data yet); converter registry leaves the seam open |
 | 6 | A11y + UX state | Radix Dialog mechanics + `aria-activedescendant` listbox model |
@@ -72,20 +72,20 @@ The Pagefind output is built by two pipelines feeding one
    with `filters: { type: ["page"] }`. Free; no component changes.
 
 2. **Custom records from pedagogy-index** — the postbuild step
-   iterates the 6 structured entity arrays
-   (`definitions`, `equations`, `keyInsights`, `figureRegistry`,
+   iterates the 6 structured entity sources
+   (`definitions`, `equations`, `keyInsights`, `figureUsages`,
    `misconceptions`, `objectives`) and calls
    `index.addCustomRecord(...)` per entity, emitting:
 
    ```ts
    {
      url: `/chapters/${entity.chapter}#${entity.anchor}`,
-     content: stripHtml(entity.body ?? entity.definition ?? entity.statement),
+     content: stripHtml(entity.body),
      language: "en",
      meta: {
        title: deriveTitle(entity),   // type-specific
        locator: `${chapterTitle} · ${moduleTitle}`,
-       // type-specific extras (e.g., equation.lhs, misconception.severity)
+       // type-specific extras (e.g., equation.tex, misconception.length)
      },
      filters: {
        type: [entityTypeKey],  // see filter-value gotcha §1.3
@@ -94,6 +94,11 @@ The Pagefind output is built by two pipelines feeding one
      },
    }
    ```
+
+   Figures are 1:N to chapters: the source is `figureUsages` (per-
+   chapter usage records), with each usage joining to the flat-
+   namespace `figureRegistry` for `src` / `alt` / `caption` metadata.
+   The figure converter takes both arguments (see §1.5 below).
 
 Both pipelines share one `dist/pagefind/` output directory.
 
@@ -139,15 +144,20 @@ type EntityToPagefindRecord<Entity> = (
   ctx: { chapterTitle: string; moduleTitle: string; moduleSlug: string },
 ) => PagefindCustomRecord;
 
-const converters: {
-  [K in keyof PedagogyIndexEntitySources]: EntityToPagefindRecord<
-    PedagogyIndexEntitySources[K]
-  >;
-} = {
+// Figures need a registry lookup for src/alt/caption; the usage entry
+// carries chapter/anchor/captionOverride. Minimal extension of the
+// base converter signature; only figures use it in v1.
+type EntityWithLookupToPagefindRecord<Entity, Lookup> = (
+  entity: Entity,
+  lookup: Lookup,
+  ctx: { chapterTitle: string; moduleTitle: string; moduleSlug: string },
+) => PagefindCustomRecord;
+
+const converters = {
   definitions: toDefinitionRecord,
   equations: toEquationRecord,
   keyInsights: toKeyInsightRecord,
-  figureRegistry: toFigureRecord,
+  figureUsages: toFigureUsageRecord,   // takes (usage, registryEntry, ctx)
   misconceptions: toMisconceptionRecord,
   objectives: toObjectiveRecord,
 };
@@ -213,7 +223,7 @@ The modal contents:
 │    L = 4πR²σT⁴   [rendered]                          │
 │    Ch. 7 · Stellar radiation                          │
 │                                                       │
-│ ⚠ Misconception · [dangerous]                    0.74 │   ← severity tail
+│ ⚠ Misconception · [short note]                   0.74 │   ← length tail
 │    "Brighter stars are hotter."                      │
 │    Ch. 4 · Measuring the sky                          │
 └────────────────────────────────────────────────────── ┘
@@ -300,9 +310,9 @@ packages/astro/src/lib/
 │  ├─ equations.test.ts
 │  ├─ key-insights.ts
 │  ├─ key-insights.test.ts
-│  ├─ figures.ts                 — uses alt + caption for content; thumbnail URL in meta
-│  ├─ figures.test.ts
-│  ├─ misconceptions.ts          — severity in meta (intuitive | inconsistent | dangerous)
+│  ├─ figure-usages.ts           — joins FigureUsageEntry to FigureRegistryEntry; alt + (captionOverride ?? caption) into content; thumbnail URL in meta
+│  ├─ figure-usages.test.ts
+│  ├─ misconceptions.ts          — length in meta (short | long); optional label
 │  ├─ misconceptions.test.ts
 │  ├─ objectives.ts              — verb + body
 │  └─ objectives.test.ts
@@ -342,7 +352,13 @@ export async function buildPagefindIndex(distPath: string): Promise<void> {
     throw new Error(`Pagefind HTML crawl errors: ${dirErrors.join("; ")}`);
   }
 
-  // Pipeline 2: custom records per entity, via the converter registry
+  // Pipeline 2: custom records per entity, via the converter registry.
+  // Figures are special-cased — each FigureUsageEntry joins to the
+  // flat-namespace FigureRegistryEntry by `name` for src/alt/caption.
+  const registryByName = new Map(
+    pedagogyIndex.figureRegistry.map((r) => [r.name, r]),
+  );
+
   for (const [entitySource, converter] of Object.entries(converters)) {
     const entities = pedagogyIndex[entitySource as keyof typeof converters];
     for (const entity of entities) {
@@ -354,11 +370,19 @@ export async function buildPagefindIndex(distPath: string): Promise<void> {
       );
       if (!chapter || !module) continue;
 
-      const record = converter(entity, {
+      const ctx = {
         chapterTitle: chapter.title,
         moduleTitle: module.title,
         moduleSlug: module.slug,
-      });
+      };
+      let record;
+      if (entitySource === "figureUsages") {
+        const registry = registryByName.get(entity.name);
+        if (!registry) continue;  // orphan usage; audit catches this
+        record = (converter as typeof toFigureUsageRecord)(entity, registry, ctx);
+      } else {
+        record = (converter as EntityToPagefindRecord<typeof entity>)(entity, ctx);
+      }
       const { errors } = await index.addCustomRecord(record);
       if (errors.length > 0) {
         throw new Error(
@@ -477,8 +501,8 @@ Vitest + Testing Library + axe-core. Tests:
 - `ResultCard.test.tsx`:
   - Renders all 7 type variants from fixture records.
   - Equation variant renders KaTeX (assert `<span class="katex">` in DOM).
-  - Misconception variant renders severity badge with correct
-    aria-label.
+  - Misconception variant renders length indicator (short | long) with
+    correct aria-label.
   - Locator (`Ch · Module`) is consistent across all variants.
   - axe-core: zero violations on each variant.
 

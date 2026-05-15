@@ -35,8 +35,8 @@ decisions are locked in the design doc §0:
 2. All 7 entity types: chapters · terms · equations · key insights ·
    figures · misconceptions · objectives. Module as scope filter.
 3. Tiered preview cards: uniform base + KaTeX rich tail for
-   equations + severity badge for misconceptions; other 5 use the
-   base layout.
+   equations + length indicator (short/long) for misconceptions;
+   other 5 use the base layout.
 4. Two-pipeline index: default HTML crawl for page records (free) +
    custom-records per entity via Pagefind's Node API.
 5. LDS-foundation entities (notation registry, misconception graph,
@@ -92,6 +92,36 @@ Tasks below already reflect them.
    with `astro:build:done`. No new exported function; the existing
    `defineSophieIntegration` gains a hook.
 
+6. **Test fixtures + converter implementations realigned to canonical
+   `@sophie/core/schema/pedagogy-index.ts`.** The plan's original
+   Task 1 + Task 2 + Task 6 fixtures and the design doc's example
+   record shapes were written against an imagined schema that didn't
+   match the canonical Zod schemas. Code review caught the mismatch
+   after Task 1 RED was attempted. Corrections (applied across this
+   file + the design doc):
+
+   - **Field renames:** `definition` → `body` (Definition); `id` →
+     `slug` + `context` → `title` + add `number`/`body` (Equation);
+     drop `id`/`index` from KeyInsight; drop `id`/`severity`/
+     `statement` from Misconception (use `length`/`label`).
+   - **Figure model is 1:N to chapters.** `FigureRegistryEntry` is
+     flat-namespace (no chapter). Per-chapter usage lives in the
+     separate `FigureUsageEntry` collection. The search converter
+     operates over `figureUsages`, joining to `figureRegistry` for
+     src/alt/caption metadata. Registry key in the converter map
+     is `figureUsages` (not `figureRegistry` / `figures`).
+   - **Misconception rich tail = length, not severity.** Schema
+     carries `length: "short" | "long"` (the source-component
+     discriminator), not a graded severity. Anna's decision: drop
+     the severity badge from preview cards; show the length
+     indicator instead. Severity as a graded concept is a future
+     ADR.
+   - **Objective anchor = `lo-${id}`** (passthrough per
+     `ObjectiveEntry` JSDoc), not `obj-${id}`.
+
+   Tasks 1, 2, 6, 7, 8 in this file reflect these corrections in
+   their prescribed code.
+
 ---
 
 ## Pre-task: Worktree setup
@@ -129,7 +159,7 @@ not defined" or "registry not defined", not with assertion mismatches.
 - Create: `packages/astro/src/lib/pagefind-converters/definitions.test.ts`
 - Create: `packages/astro/src/lib/pagefind-converters/equations.test.ts`
 - Create: `packages/astro/src/lib/pagefind-converters/key-insights.test.ts`
-- Create: `packages/astro/src/lib/pagefind-converters/figures.test.ts`
+- Create: `packages/astro/src/lib/pagefind-converters/figure-usages.test.ts`
 - Create: `packages/astro/src/lib/pagefind-converters/misconceptions.test.ts`
 - Create: `packages/astro/src/lib/pagefind-converters/objectives.test.ts`
 
@@ -158,20 +188,20 @@ const ctx = {
 
 const fixture: DefinitionEntry = {
   term: "luminosity",
-  definition: "Total radiant power emitted by a body.",
+  slug: "luminosity",
+  body: "Total radiant power emitted by a body.",
   chapter: "measuring-the-sky",
-  anchor: "term-luminosity",
-  serializedSlot: "Total radiant power emitted by a body.",
+  anchor: "def-luminosity",
 };
 
 describe("toDefinitionRecord", () => {
   test("emits url with chapter slug + anchor", () => {
     expect(toDefinitionRecord(fixture, ctx).url).toBe(
-      "/chapters/measuring-the-sky#term-luminosity",
+      "/chapters/measuring-the-sky#def-luminosity",
     );
   });
 
-  test("emits content as flat text from serializedSlot", () => {
+  test("emits content as the pre-rendered body HTML", () => {
     expect(toDefinitionRecord(fixture, ctx).content).toBe(
       "Total radiant power emitted by a body.",
     );
@@ -217,17 +247,19 @@ const ctx = {
 };
 
 const fixture: EquationEntry = {
-  id: "E12",
-  anchor: "eq-E12",
-  chapter: "stellar-radiation",
+  slug: "stefan-boltzmann-luminosity",
+  title: "Stefan-Boltzmann luminosity",
+  number: 12,
   tex: "L = 4\\pi R^2 \\sigma T^4",
-  context: "Stefan-Boltzmann luminosity",
+  body: "<p>The Stefan-Boltzmann law for stellar luminosity.</p>",
+  chapter: "stellar-radiation",
+  anchor: "stefan-boltzmann-luminosity",
 };
 
 describe("toEquationRecord", () => {
   test("emits url with anchor", () => {
     expect(toEquationRecord(fixture, ctx).url).toBe(
-      "/chapters/stellar-radiation#eq-E12",
+      "/chapters/stellar-radiation#stefan-boltzmann-luminosity",
     );
   });
 
@@ -235,7 +267,7 @@ describe("toEquationRecord", () => {
     expect(toEquationRecord(fixture, ctx).filters.type).toEqual(["equation"]);
   });
 
-  test("meta.title carries the equation context", () => {
+  test("meta.title carries the equation title", () => {
     expect(toEquationRecord(fixture, ctx).meta.title).toBe(
       "Stefan-Boltzmann luminosity",
     );
@@ -247,11 +279,11 @@ describe("toEquationRecord", () => {
     );
   });
 
-  test("meta.equationId carries the canonical id E12", () => {
-    expect(toEquationRecord(fixture, ctx).meta.equationId).toBe("E12");
+  test("meta.number carries the per-chapter sequence number", () => {
+    expect(toEquationRecord(fixture, ctx).meta.number).toBe("12");
   });
 
-  test("content includes the equation context (so prose-text search hits)", () => {
+  test("content includes the equation title (so prose-text search hits)", () => {
     expect(toEquationRecord(fixture, ctx).content).toContain(
       "Stefan-Boltzmann luminosity",
     );
@@ -273,11 +305,9 @@ const ctx = {
 };
 
 const fixture: KeyInsightEntry = {
-  id: "KI-3",
-  anchor: "ki-3",
-  chapter: "measuring-the-sky",
   body: "Distance hides itself in every photometric measurement.",
-  index: 3,
+  chapter: "measuring-the-sky",
+  anchor: "ki-3",
 };
 
 describe("toKeyInsightRecord", () => {
@@ -308,12 +338,19 @@ describe("toKeyInsightRecord", () => {
 });
 ```
 
-**Step 1.5 — Write `figures.test.ts`.**
+**Step 1.5 — Write `figure-usages.test.ts`.**
+
+Figures are 1:N to chapters: each `FigureUsageEntry` carries the
+chapter/anchor; the registry-side `FigureRegistryEntry` holds the
+shared src/alt/caption. The converter takes both arguments.
 
 ```ts
 import { describe, expect, test } from "vitest";
-import type { FigureRegistryEntry } from "@sophie/core/schema";
-import { toFigureRecord } from "./figures.ts";
+import type {
+  FigureRegistryEntry,
+  FigureUsageEntry,
+} from "@sophie/core/schema";
+import { toFigureUsageRecord } from "./figure-usages.ts";
 
 const ctx = {
   chapterTitle: "Measuring the sky",
@@ -321,21 +358,30 @@ const ctx = {
   moduleSlug: "01-foundations",
 };
 
-const fixture: FigureRegistryEntry = {
+const registry: FigureRegistryEntry = {
   name: "hr-diagram",
   src: "/figures/hr-diagram.svg",
   alt: "Hertzsprung-Russell diagram with main sequence highlighted",
   caption: "Stars cluster along the main sequence in luminosity-temperature space.",
-  chapter: "measuring-the-sky",
 };
 
-describe("toFigureRecord", () => {
+const usage: FigureUsageEntry = {
+  name: "hr-diagram",
+  chapter: "measuring-the-sky",
+  anchor: "fig-hr-diagram-1",
+  number: 1,
+  canonical: true,
+};
+
+describe("toFigureUsageRecord", () => {
   test("filters.type is ['figure']", () => {
-    expect(toFigureRecord(fixture, ctx).filters.type).toEqual(["figure"]);
+    expect(toFigureUsageRecord(usage, registry, ctx).filters.type).toEqual([
+      "figure",
+    ]);
   });
 
-  test("content combines alt + caption (both searchable)", () => {
-    const content = toFigureRecord(fixture, ctx).content;
+  test("content combines alt + registry caption (both searchable)", () => {
+    const content = toFigureUsageRecord(usage, registry, ctx).content;
     expect(content).toContain(
       "Hertzsprung-Russell diagram with main sequence highlighted",
     );
@@ -344,13 +390,33 @@ describe("toFigureRecord", () => {
     );
   });
 
-  test("meta.title is the figure name", () => {
-    expect(toFigureRecord(fixture, ctx).meta.title).toBe("hr-diagram");
+  test("captionOverride wins over registry caption when present", () => {
+    const withOverride: FigureUsageEntry = {
+      ...usage,
+      captionOverride: "Per-chapter caption override.",
+    };
+    const content = toFigureUsageRecord(withOverride, registry, ctx).content;
+    expect(content).toContain("Per-chapter caption override.");
+    expect(content).not.toContain(
+      "Stars cluster along the main sequence in luminosity-temperature space.",
+    );
   });
 
-  test("meta.thumbnail carries the src URL", () => {
-    expect(toFigureRecord(fixture, ctx).meta.thumbnail).toBe(
+  test("meta.title is the figure name", () => {
+    expect(toFigureUsageRecord(usage, registry, ctx).meta.title).toBe(
+      "hr-diagram",
+    );
+  });
+
+  test("meta.thumbnail carries the registry src URL", () => {
+    expect(toFigureUsageRecord(usage, registry, ctx).meta.thumbnail).toBe(
       "/figures/hr-diagram.svg",
+    );
+  });
+
+  test("url uses chapter slug + usage anchor", () => {
+    expect(toFigureUsageRecord(usage, registry, ctx).url).toBe(
+      "/chapters/measuring-the-sky#fig-hr-diagram-1",
     );
   });
 });
@@ -370,12 +436,11 @@ const ctx = {
 };
 
 const fixture: MisconceptionEntry = {
-  id: "M-2",
-  anchor: "misc-2",
-  chapter: "measuring-the-sky",
-  severity: "dangerous",
-  statement: "Brighter stars are hotter.",
   body: "Many beginners conflate apparent brightness with temperature.",
+  chapter: "measuring-the-sky",
+  anchor: "misc-2",
+  length: "short",
+  label: "Brighter ≠ hotter",
 };
 
 describe("toMisconceptionRecord", () => {
@@ -385,22 +450,18 @@ describe("toMisconceptionRecord", () => {
     ]);
   });
 
-  test("meta.severity carries the severity string", () => {
-    expect(toMisconceptionRecord(fixture, ctx).meta.severity).toBe(
-      "dangerous",
-    );
+  test("meta.length carries the length discriminator", () => {
+    expect(toMisconceptionRecord(fixture, ctx).meta.length).toBe("short");
   });
 
-  test("meta.title is the statement", () => {
+  test("meta.title is the optional label when present", () => {
     expect(toMisconceptionRecord(fixture, ctx).meta.title).toBe(
-      "Brighter stars are hotter.",
+      "Brighter ≠ hotter",
     );
   });
 
-  test("content includes both statement and body", () => {
-    const content = toMisconceptionRecord(fixture, ctx).content;
-    expect(content).toContain("Brighter stars are hotter.");
-    expect(content).toContain(
+  test("content carries the body HTML", () => {
+    expect(toMisconceptionRecord(fixture, ctx).content).toContain(
       "Many beginners conflate apparent brightness with temperature.",
     );
   });
@@ -422,7 +483,7 @@ const ctx = {
 
 const fixture: ObjectiveEntry = {
   id: "thesis",
-  anchor: "obj-thesis",
+  anchor: "lo-thesis",
   chapter: "measuring-the-sky",
   verb: "State",
   body: "the course thesis in one sentence.",
@@ -466,7 +527,7 @@ describe("converter registry", () => {
       [
         "definitions",
         "equations",
-        "figureRegistry",
+        "figureUsages",
         "keyInsights",
         "misconceptions",
         "objectives",
@@ -505,8 +566,8 @@ git add packages/astro/src/lib/pagefind-converters/
 git commit -m "test(astro): RED — 6 pagefind-converter unit tests + registry
 
 Layer 1.5 RED state for PR 7 (Pagefind faceted search). One test
-file per pedagogy entity type (definitions, equations, keyInsights,
-figureRegistry, misconceptions, objectives) plus an
+file per pedagogy entity source (definitions, equations, keyInsights,
+figureUsages, misconceptions, objectives) plus an
 index.test.ts that pins the registry as exhaustive over the
 6 entity sources.
 
@@ -592,49 +653,50 @@ describe("buildPagefindIndex (Layer 1.6)", () => {
     indexAccumulator.addDefinitions([
       {
         term: "luminosity",
-        definition: "Total radiant power.",
+        slug: "luminosity",
+        body: "Total radiant power.",
         chapter: "ch",
-        anchor: "term-luminosity",
-        serializedSlot: "Total radiant power.",
+        anchor: "def-luminosity",
       },
     ]);
     indexAccumulator.addEquations([
       {
-        id: "E1",
-        anchor: "eq-E1",
-        chapter: "ch",
+        slug: "stefan-boltzmann",
+        title: "Stefan-Boltzmann",
+        number: 1,
         tex: "L = 4\\pi R^2 \\sigma T^4",
-        context: "Stefan-Boltzmann",
+        body: "<p>Stefan-Boltzmann luminosity.</p>",
+        chapter: "ch",
+        anchor: "stefan-boltzmann",
       },
     ]);
     indexAccumulator.addKeyInsights([
       {
-        id: "KI-1",
-        anchor: "ki-1",
-        chapter: "ch",
         body: "Distance hides itself.",
-        index: 1,
+        chapter: "ch",
+        anchor: "ki-1",
       },
     ]);
     indexAccumulator.addMisconceptions([
       {
-        id: "M-1",
-        anchor: "misc-1",
+        body: "A common confusion: brighter is hotter.",
         chapter: "ch",
-        severity: "dangerous",
-        statement: "Brighter is hotter.",
-        body: "A common confusion.",
+        anchor: "misc-1",
+        length: "short",
+        label: "Brighter ≠ hotter",
       },
     ]);
     indexAccumulator.addObjectives([
       {
         id: "obj-1",
-        anchor: "obj-1",
+        anchor: "lo-obj-1",
         chapter: "ch",
         verb: "State",
         body: "the thesis.",
       },
     ]);
+    // Fixture omits figureUsages + figureRegistry — figures are
+    // optional per chapter; the count assertion below adjusts.
 
     await buildPagefindIndex(dir);
 
@@ -742,7 +804,8 @@ describe("ResultCard", () => {
         ...baseFixture.meta,
         title: "Stefan-Boltzmann luminosity",
         tex: "L = 4\\pi R^2 \\sigma T^4",
-        equationId: "E12",
+        slug: "stefan-boltzmann-luminosity",
+        number: "12",
       },
       filters: { type: ["equation"] },
     };
@@ -750,20 +813,24 @@ describe("ResultCard", () => {
     expect(container.querySelector(".katex")).toBeInTheDocument();
   });
 
-  test("renders severity badge for misconception results", () => {
+  test("renders length indicator for misconception results", () => {
     const misc: SearchResult = {
       ...baseFixture,
       meta: {
         ...baseFixture.meta,
-        title: "Brighter stars are hotter.",
-        severity: "dangerous",
+        title: "Brighter ≠ hotter",
+        length: "short",
+        label: "Brighter ≠ hotter",
       },
       filters: { type: ["misconception"] },
     };
     render(<ResultCard result={misc} />);
-    const badge = screen.getByText(/dangerous/i);
+    const badge = screen.getByText(/short note/i);
     expect(badge).toBeInTheDocument();
-    expect(badge).toHaveAttribute("aria-label", expect.stringMatching(/severity/i));
+    expect(badge).toHaveAttribute(
+      "aria-label",
+      expect.stringMatching(/length/i),
+    );
   });
 
   test("renders locator (chapter · module)", () => {
@@ -1002,8 +1069,8 @@ Four test files for PR 7's React island. All fail with
 'Cannot find module' — Tasks 8 + 9 land the implementations.
 
 ResultCard.test.tsx (5 tests): 7-variant render, KaTeX in
-equation tail, severity badge for misconception, locator
-consistency, axe-core.
+equation tail, length indicator (short/long) for misconception,
+locator consistency, axe-core.
 
 ResultList.test.tsx (6 tests): empty state, option count,
 aria-activedescendant on highlight, Enter calls onSelect, count
@@ -1187,6 +1254,7 @@ import type {
   DefinitionEntry,
   EquationEntry,
   FigureRegistryEntry,
+  FigureUsageEntry,
   KeyInsightEntry,
   MisconceptionEntry,
   ObjectiveEntry,
@@ -1234,13 +1302,23 @@ export type EntityToPagefindRecord<Entity> = (
   ctx: ChapterContext,
 ) => PagefindCustomRecord;
 
+// Figures join `FigureUsageEntry` (per-chapter usage) to
+// `FigureRegistryEntry` (flat-namespace asset metadata) at convert
+// time. Minimal extension of the base signature; only figures use
+// it in v1.
+export type EntityWithLookupToPagefindRecord<Entity, Lookup> = (
+  entity: Entity,
+  lookup: Lookup,
+  ctx: ChapterContext,
+) => PagefindCustomRecord;
+
 // One converter per entity-source key on the PedagogyIndex.
 // Exhaustiveness is unit-tested in index.test.ts.
 export const converters: {
   definitions: EntityToPagefindRecord<DefinitionEntry>;
   equations: EntityToPagefindRecord<EquationEntry>;
   keyInsights: EntityToPagefindRecord<KeyInsightEntry>;
-  figureRegistry: EntityToPagefindRecord<FigureRegistryEntry>;
+  figureUsages: EntityWithLookupToPagefindRecord<FigureUsageEntry, FigureRegistryEntry>;
   misconceptions: EntityToPagefindRecord<MisconceptionEntry>;
   objectives: EntityToPagefindRecord<ObjectiveEntry>;
 } = {
@@ -1250,7 +1328,7 @@ export const converters: {
   definitions: null as never,
   equations: null as never,
   keyInsights: null as never,
-  figureRegistry: null as never,
+  figureUsages: null as never,
   misconceptions: null as never,
   objectives: null as never,
 };
@@ -1300,7 +1378,7 @@ the converter map, turn all 7 Task 1 test files GREEN.
 - Create: `packages/astro/src/lib/pagefind-converters/definitions.ts`
 - Create: `packages/astro/src/lib/pagefind-converters/equations.ts`
 - Create: `packages/astro/src/lib/pagefind-converters/key-insights.ts`
-- Create: `packages/astro/src/lib/pagefind-converters/figures.ts`
+- Create: `packages/astro/src/lib/pagefind-converters/figure-usages.ts`
 - Create: `packages/astro/src/lib/pagefind-converters/misconceptions.ts`
 - Create: `packages/astro/src/lib/pagefind-converters/objectives.ts`
 - Modify: `packages/astro/src/lib/pagefind-converters/index.ts` — wire the registry
@@ -1316,11 +1394,12 @@ export const toDefinitionRecord: EntityToPagefindRecord<DefinitionEntry> = (
   ctx,
 ) => ({
   url: `/chapters/${entity.chapter}#${entity.anchor}`,
-  content: entity.serializedSlot ?? entity.definition,
+  content: entity.body,
   language: "en",
   meta: {
     title: entity.term,
     locator: `${ctx.chapterTitle} · ${ctx.moduleTitle}`,
+    slug: entity.slug,
   },
   filters: {
     type: ["term"],
@@ -1341,13 +1420,14 @@ export const toEquationRecord: EntityToPagefindRecord<EquationEntry> = (
   ctx,
 ) => ({
   url: `/chapters/${entity.chapter}#${entity.anchor}`,
-  content: [entity.context, entity.tex].filter(Boolean).join(" — "),
+  content: [entity.title, entity.tex].filter(Boolean).join(" — "),
   language: "en",
   meta: {
-    title: entity.context ?? entity.id,
+    title: entity.title,
     locator: `${ctx.chapterTitle} · ${ctx.moduleTitle}`,
     tex: entity.tex,
-    equationId: entity.id,
+    slug: entity.slug,
+    number: String(entity.number),
   },
   filters: {
     type: ["equation"],
@@ -1390,28 +1470,40 @@ export const toKeyInsightRecord: EntityToPagefindRecord<KeyInsightEntry> = (
 };
 ```
 
-**Step 6.4 — `figures.ts`.**
+**Step 6.4 — `figure-usages.ts`.**
+
+Figures are 1:N to chapters. The converter joins the per-chapter
+`FigureUsageEntry` to the flat-namespace `FigureRegistryEntry` (by
+`name`) for `src`/`alt`/`caption`. Caption-override on the usage
+wins over the registry caption.
 
 ```ts
-import type { FigureRegistryEntry } from "@sophie/core/schema";
-import type { EntityToPagefindRecord } from "./index.ts";
+import type {
+  FigureRegistryEntry,
+  FigureUsageEntry,
+} from "@sophie/core/schema";
+import type { EntityWithLookupToPagefindRecord } from "./index.ts";
 
-export const toFigureRecord: EntityToPagefindRecord<FigureRegistryEntry> = (
-  entity,
-  ctx,
-) => ({
-  url: `/chapters/${entity.chapter}#fig-${entity.name}`,
-  content: [entity.alt, entity.caption].filter(Boolean).join(" — "),
+export const toFigureUsageRecord: EntityWithLookupToPagefindRecord<
+  FigureUsageEntry,
+  FigureRegistryEntry
+> = (usage, registry, ctx) => ({
+  url: `/chapters/${usage.chapter}#${usage.anchor}`,
+  content: [registry.alt, usage.captionOverride ?? registry.caption ?? ""]
+    .filter(Boolean)
+    .join(" — "),
   language: "en",
   meta: {
-    title: entity.name,
+    title: usage.name,
     locator: `${ctx.chapterTitle} · ${ctx.moduleTitle}`,
-    thumbnail: entity.src,
-    alt: entity.alt,
+    thumbnail: registry.src,
+    alt: registry.alt,
+    number: String(usage.number),
+    canonical: usage.canonical ? "true" : "false",
   },
   filters: {
     type: ["figure"],
-    chapter: [entity.chapter],
+    chapter: [usage.chapter],
     module: [ctx.moduleSlug],
   },
 });
@@ -1428,12 +1520,13 @@ export const toMisconceptionRecord: EntityToPagefindRecord<MisconceptionEntry> =
   ctx,
 ) => ({
   url: `/chapters/${entity.chapter}#${entity.anchor}`,
-  content: [entity.statement, entity.body].filter(Boolean).join(" — "),
+  content: entity.body,
   language: "en",
   meta: {
-    title: entity.statement,
+    title: entity.label ?? "Misconception",
     locator: `${ctx.chapterTitle} · ${ctx.moduleTitle}`,
-    severity: entity.severity,
+    length: entity.length,
+    label: entity.label ?? "",
   },
   filters: {
     type: ["misconception"],
@@ -1480,7 +1573,7 @@ Replace the stub object:
 import { toDefinitionRecord } from "./definitions.ts";
 import { toEquationRecord } from "./equations.ts";
 import { toKeyInsightRecord } from "./key-insights.ts";
-import { toFigureRecord } from "./figures.ts";
+import { toFigureUsageRecord } from "./figure-usages.ts";
 import { toMisconceptionRecord } from "./misconceptions.ts";
 import { toObjectiveRecord } from "./objectives.ts";
 
@@ -1488,7 +1581,7 @@ export const converters = {
   definitions: toDefinitionRecord,
   equations: toEquationRecord,
   keyInsights: toKeyInsightRecord,
-  figureRegistry: toFigureRecord,
+  figureUsages: toFigureUsageRecord,   // joins to figureRegistry by name
   misconceptions: toMisconceptionRecord,
   objectives: toObjectiveRecord,
 } as const;
@@ -1631,6 +1724,11 @@ export async function buildPagefindIndex(distPath: string): Promise<void> {
   const moduleBySlug = new Map(
     pedagogyIndex.modules.map((m) => [m.slug, m]),
   );
+  // Figures are 1:N to chapters; each FigureUsageEntry joins to
+  // FigureRegistryEntry by `name` for src/alt/caption metadata.
+  const registryByName = new Map(
+    pedagogyIndex.figureRegistry.map((r) => [r.name, r]),
+  );
 
   const entitySources = Object.keys(converters) as Array<
     keyof typeof converters
@@ -1643,21 +1741,37 @@ export async function buildPagefindIndex(distPath: string): Promise<void> {
       const chapter = chapterBySlug.get(entity.chapter);
       const module = chapter ? moduleBySlug.get(chapter.module) : undefined;
       if (!chapter || !module) continue;
-      // `converter` and `entity` are correlated by entitySource; the
-      // narrow-key type-check below is enforced by TypeScript even
-      // though we're iterating over a union of converter signatures.
-      // We funnel through the PagefindCustomRecord return type which
-      // is shared.
-      const record: PagefindCustomRecord = (
-        converter as (
-          e: typeof entity,
-          ctx: { chapterTitle: string; moduleTitle: string; moduleSlug: string },
-        ) => PagefindCustomRecord
-      )(entity, {
+      const ctx = {
         chapterTitle: chapter.title,
         moduleTitle: module.title,
         moduleSlug: module.slug,
-      });
+      };
+
+      // figureUsages is the only converter that takes a lookup arg
+      // (the matching FigureRegistryEntry for src/alt/caption).
+      // Orphan usages (no matching registry entry) are skipped — the
+      // audit pass catches them as F-class invariants.
+      let record: PagefindCustomRecord;
+      if (entitySource === "figureUsages") {
+        const registry = registryByName.get(
+          (entity as { name: string }).name,
+        );
+        if (!registry) continue;
+        record = (
+          converter as (
+            e: typeof entity,
+            r: typeof registry,
+            c: typeof ctx,
+          ) => PagefindCustomRecord
+        )(entity, registry, ctx);
+      } else {
+        record = (
+          converter as (
+            e: typeof entity,
+            c: typeof ctx,
+          ) => PagefindCustomRecord
+        )(entity, ctx);
+      }
       const { errors } = await index.addCustomRecord(record);
       if (errors.length > 0) {
         throw new Error(
@@ -1815,11 +1929,14 @@ export type SearchResult = {
     locator: string;
     // Per-type extras (read defensively in ResultCard)
     tex?: string;
-    equationId?: string;
-    severity?: "intuitive" | "inconsistent" | "dangerous";
+    slug?: string;
+    number?: string;
+    length?: "short" | "long";
+    label?: string;
     verb?: string;
     thumbnail?: string;
     alt?: string;
+    canonical?: string;
   };
   excerpt: string;
   filters: {
@@ -1881,12 +1998,12 @@ export function ResultCard({ result, highlighted, id }: ResultCardProps): ReactN
         </span>
         <span className={styles.typeLabel}>{TYPE_LABEL[type]}</span>
         <span className={styles.title}>{result.meta.title}</span>
-        {type === "misconception" && result.meta.severity ? (
+        {type === "misconception" && result.meta.length ? (
           <span
-            className={`${styles.severityBadge} ${styles[`severity-${result.meta.severity}`]}`}
-            aria-label={`severity: ${result.meta.severity}`}
+            className={`${styles.lengthBadge} ${styles[`length-${result.meta.length}`]}`}
+            aria-label={`length: ${result.meta.length === "short" ? "short note" : "full callout"}`}
           >
-            {result.meta.severity}
+            {result.meta.length === "short" ? "short note" : "full callout"}
           </span>
         ) : null}
       </div>
@@ -1925,15 +2042,14 @@ export function ResultCard({ result, highlighted, id }: ResultCardProps): ReactN
   color: var(--sophie-color-text-muted);
 }
 .title { font-weight: 600; }
-.severityBadge {
+.lengthBadge {
   margin-left: auto;
   padding: 0 var(--sophie-space-2);
   border-radius: var(--sophie-radius-full);
   font-size: 0.75em;
 }
-.severity-dangerous   { background: var(--sophie-color-danger);   color: var(--sophie-color-on-danger); }
-.severity-inconsistent{ background: var(--sophie-color-warning);  color: var(--sophie-color-on-warning); }
-.severity-intuitive   { background: var(--sophie-color-surface-3);color: var(--sophie-color-text); }
+.length-short { background: var(--sophie-color-surface-3); color: var(--sophie-color-text); }
+.length-long  { background: var(--sophie-color-surface-2); color: var(--sophie-color-text); }
 .excerpt { margin: var(--sophie-space-2) 0 0; color: var(--sophie-color-text-muted); }
 .richTail { margin: var(--sophie-space-2) 0; }
 .locator { margin-top: var(--sophie-space-2); font-size: 0.85em; color: var(--sophie-color-text-muted); }
@@ -2134,8 +2250,9 @@ Three of the four PR 7 React components — the static, framework-
 pure ones that don't need Pagefind client integration.
 
 ResultCard.tsx: switch on result.filters.type[0] for the rich tail.
-Equations render KaTeX inline; misconceptions render a severity
-badge (intuitive/inconsistent/dangerous); other 5 types use the
+Equations render KaTeX inline; misconceptions render a length
+indicator (short note / full callout) from the schema's
+length: 'short' | 'long' discriminator; other 5 types use the
 uniform base layout (icon + type label + title + excerpt + locator).
 Per design doc §2 preview cards.
 
