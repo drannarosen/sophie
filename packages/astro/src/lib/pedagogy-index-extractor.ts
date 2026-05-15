@@ -638,6 +638,115 @@ export function extractObjectives(
 }
 
 /**
+ * Walks `<LearningObjectives>` JSX flow elements in the mdast tree.
+ * For each, harvests `<Objective>` children into a JS array, then
+ * mutates the parent node: clears children, appends an `objectives`
+ * attribute holding the serialized array.
+ *
+ * Runs AFTER `extractObjectives` (which validates and harvests as a
+ * read-only pass). Uses the same `readObjectiveAttributes` +
+ * `renderChildrenToHtml` helpers as `extractObjectives` — single
+ * source of truth for body serialization.
+ *
+ * Throws on:
+ *   - Empty `<LearningObjectives>` block (no `<Objective>` children)
+ *   - Non-`<Objective>` JSX flow children of `<LearningObjectives>`
+ *   - Missing or empty `id` / `verb` / `body` on any `<Objective>`
+ *   - Duplicate `<Objective id="...">` within one `<LearningObjectives>`
+ *
+ * The transform pattern is the durable answer for any future
+ * `<Parent><Child>` source-component pair. See the design doc's
+ * §10 "Pattern precedent" for codified guidance.
+ */
+export function transformLearningObjectives(
+  tree: Root,
+  chapterSlug: string
+): void {
+  visit(tree, "mdxJsxFlowElement", (node: unknown) => {
+    const parent = node as MdxJsxFlowElement & {
+      attributes: Array<{
+        type: string;
+        name: string;
+        value: string | boolean | null | { type: string; value: string };
+      }>;
+      children: Array<unknown>;
+    };
+    if (parent.name !== "LearningObjectives") return;
+
+    const items: Array<{ id: string; verb: string; body: string }> = [];
+    const seenIds = new Set<string>();
+
+    for (const child of parent.children) {
+      // mdast emits whitespace-only text nodes between JSX siblings for
+      // source like `<Parent>\n  <Child>`; these carry no semantic
+      // content and must not trip the "non-Objective child" check.
+      if (isWhitespaceTextNode(child)) continue;
+
+      const el = child as MdxJsxFlowElement;
+      if (!el || typeof el !== "object" || el.type !== "mdxJsxFlowElement") {
+        throw new Error(
+          `transform: <LearningObjectives> in chapter "${chapterSlug}" contains a non-JSX child. Only <Objective> JSX flow elements are allowed.`
+        );
+      }
+      if (el.name !== "Objective") {
+        throw new Error(
+          `transform: <LearningObjectives> in chapter "${chapterSlug}" contains an unexpected child <${el.name}>. Only <Objective> children are allowed.`
+        );
+      }
+
+      const attrs = readObjectiveAttributes(el);
+      const id = attrs.id?.trim();
+      const verb = attrs.verb?.trim();
+      if (!id) {
+        throw new Error(
+          `transform: <Objective> in chapter "${chapterSlug}" is missing a non-empty \`id\`.`
+        );
+      }
+      if (!verb) {
+        throw new Error(
+          `transform: <Objective id="${id}"> in chapter "${chapterSlug}" is missing a non-empty \`verb\`.`
+        );
+      }
+      const body = renderChildrenToHtml(el.children);
+      if (body.trim().length === 0) {
+        throw new Error(
+          `transform: <Objective id="${id}"> in chapter "${chapterSlug}" has an empty body.`
+        );
+      }
+      if (seenIds.has(id)) {
+        throw new Error(
+          `transform O1: duplicate <Objective id="${id}"> within one <LearningObjectives> in chapter "${chapterSlug}".`
+        );
+      }
+      seenIds.add(id);
+      items.push({ id, verb, body });
+    }
+
+    if (items.length === 0) {
+      throw new Error(
+        `transform: <LearningObjectives> in chapter "${chapterSlug}" has no <Objective> children. An empty LO block is a content bug.`
+      );
+    }
+
+    parent.children = [];
+    parent.attributes.push({
+      type: "mdxJsxAttribute",
+      name: "objectives",
+      value: {
+        type: "mdxJsxAttributeValueExpression",
+        value: JSON.stringify(items),
+      },
+    });
+  });
+}
+
+function isWhitespaceTextNode(node: unknown): boolean {
+  if (!node || typeof node !== "object") return false;
+  const n = node as { type?: string; value?: string };
+  return n.type === "text" && (n.value ?? "").trim() === "";
+}
+
+/**
  * Map from JSX element name → (kind, lookup-prop-name) for the four
  * inline-ref components. Centralized so the extractor and any future
  * audit-config diagnostics share a single source of truth.
@@ -1173,5 +1282,13 @@ export function pedagogyIndexRemarkPlugin(
     indexAccumulator.addInlineRefUsages(
       extractInlineRefUsages(tree, chapterSlug)
     );
+
+    // Rewrite <LearningObjectives> AST shape so the React island
+    // receives a props-driven `objectives` array instead of JSX
+    // children (which Astro renders server-side as <astro-slot>
+    // HTML, breaking children-mode interactivity). Runs last so all
+    // read-only harvesters see the unmutated tree. See
+    // docs/plans/2026-05-14-lo-checkbox-remark-extraction-design.md.
+    transformLearningObjectives(tree, chapterSlug);
   };
 }

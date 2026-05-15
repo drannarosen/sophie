@@ -1,0 +1,116 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`pedagogyIndexRemarkPlugin round-trip > transforms LO in place while leaving every non-LO node intact 1`] = `
+"{
+  "type": "root",
+  "children": [
+    {
+      "type": "heading",
+      "depth": 1,
+      "children": [
+        {
+          "type": "text",
+          "value": "Chapter title"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "children": [
+        {
+          "type": "text",
+          "value": "Prose with "
+        },
+        {
+          "type": "strong",
+          "children": [
+            {
+              "type": "text",
+              "value": "bold"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": " and a "
+        },
+        {
+          "type": "link",
+          "url": "https://example.com",
+          "children": [
+            {
+              "type": "text",
+              "value": "link"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "value": "."
+        }
+      ]
+    },
+    {
+      "type": "mdxJsxFlowElement",
+      "name": "LearningObjectives",
+      "attributes": [
+        {
+          "type": "mdxJsxAttribute",
+          "name": "course",
+          "value": "c"
+        },
+        {
+          "type": "mdxJsxAttribute",
+          "name": "chapter",
+          "value": "ch"
+        },
+        {
+          "type": "mdxJsxAttribute",
+          "name": "id",
+          "value": "lo"
+        },
+        {
+          "type": "mdxJsxAttribute",
+          "name": "objectives",
+          "value": {
+            "type": "mdxJsxAttributeValueExpression",
+            "value": "[{\\"id\\":\\"o1\\",\\"verb\\":\\"State\\",\\"body\\":\\"<p>the thesis</p>\\"},{\\"id\\":\\"o2\\",\\"verb\\":\\"Explain\\",\\"body\\":\\"<p>the reason</p>\\"}]"
+          }
+        }
+      ],
+      "children": []
+    },
+    {
+      "type": "paragraph",
+      "children": [
+        {
+          "type": "text",
+          "value": "More prose after."
+        }
+      ]
+    },
+    {
+      "type": "mdxJsxFlowElement",
+      "name": "Aside",
+      "attributes": [
+        {
+          "type": "mdxJsxAttribute",
+          "name": "title",
+          "value": "x"
+        }
+      ],
+      "children": [
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "type": "text",
+              "value": "untouched aside body"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}"
+`;
