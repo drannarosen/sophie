@@ -63,6 +63,7 @@
     "@sophie/components": "workspace:*",
     "@sophie/core": "workspace:*",
     "@sophie/theme": "workspace:*",
+    "estree-util-value-to-estree": "^3.5.0",
     "hast-util-to-html": "^9.0.5",
     "katex": "^0.16.45",
     "lucide-static": "^1.14.0",
@@ -74,6 +75,7 @@
     "unist-util-visit": "^5.1.0"
   },
   "devDependencies": {
+    "@mdx-js/mdx": "^3.1.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/mdast": "^4.0.4",

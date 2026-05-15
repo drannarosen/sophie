@@ -74,7 +74,123 @@ exports[`pedagogyIndexRemarkPlugin round-trip > transforms LO in place while lea
           "name": "objectives",
           "value": {
             "type": "mdxJsxAttributeValueExpression",
-            "value": "[{\\"id\\":\\"o1\\",\\"verb\\":\\"State\\",\\"body\\":\\"<p>the thesis</p>\\"},{\\"id\\":\\"o2\\",\\"verb\\":\\"Explain\\",\\"body\\":\\"<p>the reason</p>\\"}]"
+            "value": "[{\\"id\\":\\"o1\\",\\"verb\\":\\"State\\",\\"body\\":\\"<p>the thesis</p>\\"},{\\"id\\":\\"o2\\",\\"verb\\":\\"Explain\\",\\"body\\":\\"<p>the reason</p>\\"}]",
+            "data": {
+              "estree": {
+                "type": "Program",
+                "sourceType": "module",
+                "body": [
+                  {
+                    "type": "ExpressionStatement",
+                    "expression": {
+                      "type": "ArrayExpression",
+                      "elements": [
+                        {
+                          "type": "ObjectExpression",
+                          "properties": [
+                            {
+                              "type": "Property",
+                              "method": false,
+                              "shorthand": false,
+                              "computed": false,
+                              "kind": "init",
+                              "key": {
+                                "type": "Literal",
+                                "value": "id"
+                              },
+                              "value": {
+                                "type": "Literal",
+                                "value": "o1"
+                              }
+                            },
+                            {
+                              "type": "Property",
+                              "method": false,
+                              "shorthand": false,
+                              "computed": false,
+                              "kind": "init",
+                              "key": {
+                                "type": "Literal",
+                                "value": "verb"
+                              },
+                              "value": {
+                                "type": "Literal",
+                                "value": "State"
+                              }
+                            },
+                            {
+                              "type": "Property",
+                              "method": false,
+                              "shorthand": false,
+                              "computed": false,
+                              "kind": "init",
+                              "key": {
+                                "type": "Literal",
+                                "value": "body"
+                              },
+                              "value": {
+                                "type": "Literal",
+                                "value": "<p>the thesis</p>"
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "ObjectExpression",
+                          "properties": [
+                            {
+                              "type": "Property",
+                              "method": false,
+                              "shorthand": false,
+                              "computed": false,
+                              "kind": "init",
+                              "key": {
+                                "type": "Literal",
+                                "value": "id"
+                              },
+                              "value": {
+                                "type": "Literal",
+                                "value": "o2"
+                              }
+                            },
+                            {
+                              "type": "Property",
+                              "method": false,
+                              "shorthand": false,
+                              "computed": false,
+                              "kind": "init",
+                              "key": {
+                                "type": "Literal",
+                                "value": "verb"
+                              },
+                              "value": {
+                                "type": "Literal",
+                                "value": "Explain"
+                              }
+                            },
+                            {
+                              "type": "Property",
+                              "method": false,
+                              "shorthand": false,
+                              "computed": false,
+                              "kind": "init",
+                              "key": {
+                                "type": "Literal",
+                                "value": "body"
+                              },
+                              "value": {
+                                "type": "Literal",
+                                "value": "<p>the reason</p>"
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
           }
         }
       ],

@@ -13,6 +13,7 @@ import {
   type PedagogyIndex,
   slugify,
 } from "@sophie/core/schema";
+import { valueToEstree } from "estree-util-value-to-estree";
 import { toHtml } from "hast-util-to-html";
 import type { Root } from "mdast";
 import { toHast } from "mdast-util-to-hast";
@@ -667,7 +668,15 @@ export function transformLearningObjectives(
       attributes: Array<{
         type: string;
         name: string;
-        value: string | boolean | null | { type: string; value: string };
+        value:
+          | string
+          | boolean
+          | null
+          | {
+              type: string;
+              value: string;
+              data?: { estree?: unknown };
+            };
       }>;
       children: Array<unknown>;
     };
@@ -729,12 +738,38 @@ export function transformLearningObjectives(
     }
 
     parent.children = [];
+    // The downstream mdast→hast→estree lowering pass (`hast-util-to-estree`)
+    // reads `value.data.estree` — an ESTree `Program` node — and ignores
+    // the string `value` field when lowering JSX attribute expressions.
+    // Pushing only the JSON.stringify'd string produces an attribute that
+    // compiles to `objectives={}` (JSXEmptyExpression) → undefined at
+    // runtime → SSR crash. We must hand the parsed ESTree form through
+    // `data.estree`. `valueToEstree` (canonical helper, same unified-
+    // ecosystem author as mdast/remark/hast) converts the JS array into
+    // an ESTree Expression; we wrap it in a Program/ExpressionStatement
+    // to match the shape `hast-util-to-estree` expects. The string
+    // `value` is retained as a debugging fallback some tooling reads.
+    // See design doc §2 "Why JSON.stringify is the right serialization"
+    // and §10 "Pattern precedent" pitfall.
+    const estreeExpression = valueToEstree(items);
     parent.attributes.push({
       type: "mdxJsxAttribute",
       name: "objectives",
       value: {
         type: "mdxJsxAttributeValueExpression",
         value: JSON.stringify(items),
+        data: {
+          estree: {
+            type: "Program",
+            sourceType: "module",
+            body: [
+              {
+                type: "ExpressionStatement",
+                expression: estreeExpression,
+              },
+            ],
+          },
+        },
       },
     });
   });
