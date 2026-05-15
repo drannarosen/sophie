@@ -46,7 +46,8 @@ Five concrete failure-mode questions:
    build do when IndexedDB is unavailable (private browsing,
    Safari edge cases) or BroadcastChannel is unavailable (older
    browsers, cross-origin embedding)? This was partly addressed
-   in [ADR 0007's 2026-05-15 amendment](./0007-persistence-indexeddb.md#revisions);
+   partly addressed in
+   [ADR 0007's runtime-fallback-semantics section](./0007-persistence-indexeddb.md);
    this ADR formalizes the failure mode in the broader taxonomy.
 
 The 2026-05-14 brainstorm locked: **five named failure modes**,
@@ -244,7 +245,8 @@ passes `--no-audit`.
 
 ### CF5 — Runtime fallback: graceful, surfaced, session-only
 
-Per [ADR 0007 §Revisions](./0007-persistence-indexeddb.md#revisions):
+Per [ADR 0007](./0007-persistence-indexeddb.md)'s
+*Runtime fallback semantics* section under Consequences:
 
 - **IndexedDB unavailable** → `MemoryResponseStore` in-memory
   fallback. Persistence is session-scoped (lost on tab close).

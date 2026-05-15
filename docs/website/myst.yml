@@ -155,6 +155,7 @@ project:
         - file: decisions/0047-empirical-validation-plan.md
         - file: decisions/0048-sophie-lds-content-plugins.md
         - file: decisions/0049-sophie-refactor-cli.md
+        # ADR 0050 reserved (intentional gap).
         - file: decisions/0051-chapter-status-course-versioning.md
         - file: decisions/0052-scheduled-publication-visibility.md
         - file: decisions/0053-conformance-failure-modes.md

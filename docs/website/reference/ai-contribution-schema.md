@@ -33,11 +33,9 @@ rather than asserting either AI or non-AI authorship.
 
 ## Schema overview (hardened 2026-05-14)
 
-The schema was substantially restructured in the 2026-05-14
-hardening pass (per
-[ADR 0042 Revisions §1](../decisions/0042-pedagogy-contract-and-ai-contribution-ledger.md#revisions)):
-coarse booleans replaced with structured objects; `visibility` field
-added; default visibility is **internal**.
+Per [ADR 0042](../decisions/0042-pedagogy-contract-and-ai-contribution-ledger.md),
+the schema replaces coarse booleans with structured objects and
+adds a `visibility` field (default **internal**).
 
 Top-level `ai_contribution` object in chapter MDX frontmatter:
 

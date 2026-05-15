@@ -106,16 +106,47 @@ honestly describes how the chapter was authored. **This is by
 design**, not a v1-only compromise. The audit surface is the
 *presence floor*, not the *quality ceiling*. Quality lives in
 TDRs ([ADR 0040](../decisions/0040-teaching-decision-records.md)),
-in the Tier 3 AI review prompts (§5), in instructor review
+in the Tier 3 AI review prompts (see §3 prompt-file format and
+§9 trust + reproducibility), in instructor review
 (`instructor_reviewed.depth`), and — most importantly — in the
-empirical outcomes Sophie measures longitudinally
-([ADR 0047](../decisions/0047-empirical-validation-plan.md)).
+authoring-side empirical metrics
+([ADR 0047](../decisions/0047-empirical-validation-plan.md)) plus
+the outcome-side telemetry deferred to backlog B9.
 
 The structural invariants exist to make perfunctory satisfaction
 *visible* (anyone scanning the contract sees what got declared)
 and to make absent structure *impossible* (CI blocks the merge).
 That floor is load-bearing precisely because it is gameable — it
 forces the gaming to be legible.
+
+### Severity philosophy (canonical)
+
+Every invariant in every family carries one of three severities.
+The canonical meaning, referenced by every invariant-family ADR:
+
+| Level | Meaning | CI behavior |
+|---|---|---|
+| **ERROR** | Catastrophic-if-deployed. The invariant catches an unambiguous failure mode whose deployment would mislead students or break tooling. Examples: SP3 `<ExamKey>` without `unlocks_at`; PC1 missing `pedagogy-contract.yaml`; CS1 missing chapter `status:`. | Blocks CI. |
+| **WARNING** | Reviewable accumulator. The invariant surfaces a concern that's reviewable in PR but does not block merge. Multiple WARNINGs accumulate as visible technical debt. Examples: CS3 stuck-in-review; CF3 stale override; SC5 exam-key-publishes-too-early. | Surfaced in audit report; does not block CI. |
+| **INFO** | Surfaced exception. The invariant names a condition the author should be aware of but the audit explicitly does not gate or warn on. Examples: CS2 chapter has `status: draft`; SP1 chapter has both `status: draft` and `publishes_at`; CF1 chapter declares `audit_overrides:`. | Surfaced in `--verbose` output only; does not appear in default summary. |
+
+Three properties make the philosophy work:
+
+- **ERROR is reserved for unambiguous failures.** Cross-reference-
+  bearing invariants (where the audit's confidence depends on an
+  author declaration that could be wrong) cap at WARNING. ERROR
+  on cross-references would block CI on the audit's failure to
+  resolve the reference rather than on a real failure.
+- **WARNING accumulates visibly.** Stale WARNINGs are exactly the
+  technical debt the platform should surface; sweeping them under
+  "lower severity" defeats the purpose.
+- **INFO is not free.** INFO findings still appear in
+  `--verbose`; over-INFOing produces noise that swamps real
+  signal. New invariants should justify their severity, not
+  default to INFO as the easy path.
+
+Future invariant-family ADRs cite this section instead of
+re-justifying severities individually.
 
 ## 2. The Sophie CLI surface
 
@@ -292,8 +323,15 @@ Examples:
   write prose stubs, suggest figures, run audit, iterate until
   audit passes, return final draft for author review.
 - **`quality-reviewer`** — full Tier 3 review pipeline.
-- **`refactor-agent`** — cross-chapter refactoring (e.g., rename a
-  concept across all ASTR 201 chapters).
+- **`refactor-agent`** — AI-judgment refactoring (e.g.,
+  rewriting prose to reflect a renamed concept's clearer
+  framing; suggesting which call sites of a split misconception
+  belong to which child slug). The *mechanical* refactor work
+  (slug rename + cross-reference updates across the corpus) is
+  the deterministic `sophie refactor` CLI per
+  [ADR 0049](../decisions/0049-sophie-refactor-cli.md);
+  the AI subagent handles the prose-judgment work that
+  `sophie refactor`'s slug-level mechanics cannot.
 
 Subagents work for multi-skill workflows; slash commands work for
 single-skill invocations.

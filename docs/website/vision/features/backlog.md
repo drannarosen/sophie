@@ -271,7 +271,7 @@ and offer to create a TDR seed? Possibly, but YAGNI for v1.
 
 **Status.**
 - 2026-05-14 — surfaced during ADR 0040 evidence-rigor brainstorm
-  as Missing-3 cross-cutting concern
+  as a missing-domain gap from the foundation review
 - 2026-05-14 — promoted to backlog
 - Promotion criteria for accepted: ASTR 201 fa26 starts and Anna
   needs the journal to begin accumulating observations. ADR for
@@ -303,21 +303,21 @@ this is *student-behavior data with consent*.
 
 **Design sketch.** Extend `ResponseStore` (per ADR 0007 +
 ADR 0047's preservation commitment) with additive telemetry
-tables: `response_outcomes` (per-submission correctness +
-confidence-calibration deltas), `engagement_signals`
-(timing-anchored response patterns; explicit opt-in per ADR
-0007's strict data minimization policy). New audit invariants
-LT family: LT1 consent UI present when telemetry enabled (ERROR);
-LT2 telemetry schema matches B9 schema version (ERROR); LT3
-per-chapter telemetry coverage (INFO). New CLI: `sophie
-telemetry export` for aggregated, anonymized outcome reports
-suitable for paper-writing pipelines.
+tables: per-submission correctness + confidence-calibration
+deltas; timing-anchored engagement signals under explicit opt-in
+consent per ADR 0007's strict data minimization policy. Some
+form of audit-invariant family (consent-UI presence,
+telemetry-schema versioning, per-chapter coverage) — invariant
+codes and severities deferred to the eventual B9 ADR, not
+pre-committed at backlog tier. CLI surface for aggregated,
+anonymized outcome export to paper-writing pipelines.
 
-The B9 ADR will also formally answer: what's the consent UI?
+The B9 ADR will formally answer: what's the consent UI?
 Where does aggregated outcome data live (in-tree commits, or
-external storage with a controlled join key)? How does the
-v3 cross-device sync seam (per ADR 0007) interact with
-opt-in telemetry?
+external storage with a controlled join key)? How does the v3
+cross-device sync seam (per ADR 0007) interact with opt-in
+telemetry? Which subset of telemetry is paper #2's load-bearing
+outcome signal?
 
 **Estimated cost.** Medium — ~2-3 weeks. Schema design + consent
 UI + audit invariants + outcome-export pipeline. The persistence
@@ -339,12 +339,71 @@ boundary. Outcome metrics paper #2 will use: which subset of
 B9 telemetry are the load-bearing outcome signals?
 
 **Status.**
-- 2026-05-14 — surfaced during ADR 0047 brainstorm as Missing-1
-  cross-cutting concern; deferred per Anna's directive ("ship the
-  instructor version first")
+- 2026-05-14 — surfaced during ADR 0047 brainstorm as a
+  missing-domain gap from the foundation review; deferred to
+  ship the instructor-side metrics first
 - 2026-05-14 — promoted to backlog
 - Promotion criteria for accepted: ADR 0047's M1-M8 metrics
   validated through one full ASTR 201 semester, AND paper #1
   draft underway (so paper #2's data needs are concrete), AND
-  Anna has bandwidth to design the consent UI carefully (FERPA-
-  sensitive work that can't be rushed).
+  bandwidth to design the consent UI carefully (FERPA-sensitive
+  work that can't be rushed).
+
+References:
+
+- ADR 0047 Empirical Validation Plan (Paper #2 of the SoTL
+  strategy is the outcome-side paper this backlog entry serves;
+  see `strategy/papers/paper-2-hitl.md`).
+
+---
+
+## B10. Recurring schedule events with DST-aware rules
+
+**Motivating use case.** ADR 0052 (Scheduled Publication) +
+ADR 0054 (Course Schedule + Calendar Page) ship per-event
+absolute ISO-8601 timestamps in v1 — every lecture, assignment,
+exam, and reading is declared individually in `schedule.yaml`.
+A 14-week course with weekly lectures means ~30 event entries
+per semester per course, distributed across weekly sections.
+
+The deferral is deliberate (DST is structurally bulletproof
+under absolute timestamps; recurrence-with-DST tooling is
+exactly where DST bugs hide). But if authoring data shows the
+per-event approach scales poorly (multi-course instructors;
+many-week courses; tight cadences like daily readings), a
+recurrence-rule extension would reduce authoring overhead.
+
+**Design sketch.** Extend `schedule.yaml` event shape with an
+optional `recurrence:` field accepting RFC 5545 RRULE syntax
+(`FREQ=WEEKLY;BYDAY=MO,WE;UNTIL=20261215T235959`). At build
+time, the recurrence expands to individual VEVENTs in the iCal
+feed using a tested library (likely `ical.js` from Mozilla;
+~30 KB; bundled DST/IANA tz data). The Sophie build pipeline
+emits proper `VTIMEZONE` blocks in the feed when recurrence
+rules are present. Audit invariants extend SC family with a
+recurrence-DST sanity check (does the rule cross a DST
+transition? does the iCal feed's VTIMEZONE block contain the
+DST rule?).
+
+**Estimated cost.** Small-to-medium — ~3–5 days. Schema field +
+`ical.js` integration + audit invariant + tests covering DST
+transitions in the IANA tz database.
+
+**Dependencies.** ADR 0054 shipped. Real authoring data from
+ASTR 201 fa26 + COMP 521 fa26 (and ideally sp27) showing
+per-event authoring is producing real friction.
+
+**Open questions.** Should recurrence rules be authored in
+`schedule.yaml` or in a separate `recurrences.yaml`? Probably
+inline in `schedule.yaml` (one file is simpler). What's the
+default RRULE for "the rest of the semester through the end
+tag"? Probably explicit `UNTIL=<end-tag-date>` per RFC 5545.
+
+**Status.**
+- 2026-05-15 — surfaced during ADR 0052 + 0054 hardening
+  brainstorm; deferred deliberately to keep v1 DST-bulletproof
+- 2026-05-15 — promoted to backlog
+- Promotion criteria for accepted: ASTR 201 fa26 + sp27
+  authoring data shows recurrence-rule demand (e.g., authoring
+  >100 events per semester becomes a real pain point), OR an
+  external adopter with daily-cadence content surfaces.

@@ -402,15 +402,20 @@ misconception is load-bearing. Often the most robust treatment is
 
 ## Updating the library
 
-Revisions to the library follow the ADR-revisions pattern (per
-[ADR 0044](../decisions/0044-misconception-graph-and-intervention-library.md#revisions)):
+Library evolution follows
+[ADR 0044](../decisions/0044-misconception-graph-and-intervention-library.md)
+and the state-dependent ADR editing rule in
+[contributing/adr-process.md](../contributing/adr-process.md):
 
 1. New interventions earning entries: appended with a citation +
-   move mapping.
-2. Renamed or refined entries: documented in the ADR's `## Revisions
-   §N` section.
-3. Promotions from `type="custom"`: file an ADR amendment proposing
-   the new canonical entry with evidence of cross-course reuse.
+   move mapping. Pre-implementation: edit ADR 0044 in place.
+   Post-implementation: append a Revisions §N entry.
+2. Renamed or refined entries: same rule — pre-implementation
+   edits land in body; post-implementation edits land as
+   Revisions entries.
+3. Promotions from `type="custom"`: file an ADR amendment
+   proposing the new canonical entry with evidence of cross-
+   course reuse.
 
 ## Connections to other Sophie machinery
 

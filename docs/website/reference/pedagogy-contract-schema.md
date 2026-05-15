@@ -39,7 +39,7 @@ Top-level keys (all required at v1 unless marked optional):
 
 ## Hardening 2026-05-14 — three new top-level fields
 
-Per [ADR 0042 Revisions §1](../decisions/0042-pedagogy-contract-and-ai-contribution-ledger.md#revisions),
+Per [ADR 0042](../decisions/0042-pedagogy-contract-and-ai-contribution-ledger.md),
 three new top-level fields were added in the 2026-05-14 hardening
 pass.
 
