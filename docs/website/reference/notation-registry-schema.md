@@ -46,6 +46,32 @@ drannarosen/astr201/
 Single file at repo root. Parallels ADR 0042's
 `pedagogy-contract.yaml` placement.
 
+## Cross-course catalog inheritance (forward-ref to ADR 0048)
+
+Per the 2026-05-14 hardening, the per-course `notation-registry.yaml`
+shape is forward-compatible with platform-level catalog
+inheritance. When [ADR 0048 Sophie LDS Content Plugin System](../decisions/0048-sophie-lds-content-plugin-system.md)
+populates discipline plugins (e.g., `@sophie/discipline-astronomy`),
+this registry will gain an `inherits_from` field declaring which
+upstream catalogs the course extends:
+
+```yaml
+# Future shape (v2+, populated by 0048 when content lands):
+inherits_from:
+  - "@sophie/commons-universal@1.x"
+  - "@sophie/discipline-astronomy@1.x"
+
+concepts:
+  # ... course-specific entries here, extending or refining
+  # inherited entries
+```
+
+v1 ships per-course registry only — the catalog content lives
+entirely in the course's own `notation-registry.yaml`. Inheritance
+support arrives in the v0048 follow-up code PR + the populated
+plugin catalogs (estimated post-ASTR-201-Module-1 once recurrence
+patterns reveal themselves).
+
 ## Schema overview
 
 Top-level keys:

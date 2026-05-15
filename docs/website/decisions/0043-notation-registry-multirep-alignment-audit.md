@@ -135,31 +135,88 @@ children declare data, the parent component renders + indexes:
 <MultiRep concept="orbital-radius">
   <RepVerbal>
     The distance from the central mass to the orbiting body.
+    (Authoring tip: intuitive framings belong in prose here —
+    e.g., "imagine an ant walking around the orbit; how far must
+    it travel to reach the central mass?". The dedicated
+    `<RepIntuition>` primitive was removed in the 2026-05-14
+    hardening — prose handles it.)
   </RepVerbal>
   <RepEquation refKey="kepler-3rd-law" symbol="r" />
+  <RepEquation
+    refKey="kepler-3rd-law-au-form"
+    symbol="r_au"
+    equivalent_to="kepler-3rd-law"
+    via="natural-units-substitution"
+  />
   <RepFigure refName="orbit-geometry" symbolLabel="r" />
   <RepCode refName="orbit-simulation" symbol="r_au" />
-  <RepIntuition>
-    Imagine an ant walking around the orbit — how far must it travel
-    to reach the central mass?
-  </RepIntuition>
 </MultiRep>
 ```
 
-Child element types and their referents:
+Child element types and their referents (hardened 2026-05-14):
 
 | Child | Purpose | References |
 |---|---|---|
-| `<RepVerbal>` | Plain-language description | Prose only |
-| `<RepEquation refKey symbol>` | Equation form | `<KeyEquation>` by `eqKey` |
+| `<RepVerbal>` | Plain-language description (including intuition framing) | Prose only |
+| `<RepEquation refKey symbol [equivalent_to via]>` | Equation form | `<KeyEquation>` by `refKey`. Optional `equivalent_to=<refKey>` + `via=<substitution-slug>` for variable-substitution-equivalent forms (Wien's law λ-form vs ν-form; SI vs CGS; non-dimensionalized form) |
 | `<RepFigure refName symbolLabel>` | Visual representation | `<Figure>` by `name` |
-| `<RepCode refName symbol>` | Code form | `<CodeCell>` by `name` |
-| `<RepIntuition>` | Physical/conceptual intuition | Prose only |
+| `<RepCode refName [symbol] [external_url external_cache_hash external_version authored_by authored_date reviewed_by reviewed_date]>` | Code form | Two binding modes: in-chapter `<CodeCell>` by `name` (preferred), or external artifact requiring all eight external-mode attributes |
+| ~~`<RepIntuition>`~~ | **DROPPED in 2026-05-14 hardening** — `<RepVerbal>` handles intuition framing in prose; the separate primitive added overhead without earning its keep | — |
 
 A `<MultiRep>` block doesn't need every form — it declares the
 *binding for the forms actually present*. A chapter may declare
 verbal + equation + figure without code if no code representation
 exists for that concept yet.
+
+**`<RepCode>` two-mode binding (hardened 2026-05-14).** Code
+artifacts can live in two places — preferred is in-chapter
+`<CodeCell>`; alternative is an external artifact with full
+provenance.
+
+```mdx
+<!-- In-chapter binding (preferred) -->
+<RepCode refName="orbit-simulation" symbol="r_au" />
+<!-- ... and somewhere in the chapter: -->
+<CodeCell name="orbit-simulation" pedagogical_kind="predict-then-run">
+  # python code here
+</CodeCell>
+
+<!-- External binding -->
+<RepCode
+  refName="orbit-simulation"
+  symbol="r_au"
+  external_url="https://github.com/drannarosen/astr201-demos/blob/v1.2/orbit.py"
+  external_cache_hash="sha256:abc1234..."
+  external_version="v1.2"
+  authored_by="alrosen"
+  authored_date="2026-05-14"
+  reviewed_by="alrosen"
+  reviewed_date="2026-05-14"
+/>
+```
+
+External-mode requires all eight attributes (the `external_*` trio
++ four structured provenance fields). Half-specified external-mode
+references are an audit ERROR (MR5; see Artifact 3).
+
+**`<RepEquation equivalent_to>` for variable-substitution equivalents**
+(hardened 2026-05-14). The optional `equivalent_to=<refKey>` +
+`via=<substitution-slug>` attributes declare "this equation
+describes the same concept under a known transformation."
+Use cases:
+
+- Wien's law in wavelength form (`λ_peak = b/T`) vs frequency
+  form (`ν_peak = aT`); `via="planck-substitution"`.
+- SI vs CGS expressions of the same law; `via="unit-system-conversion"`.
+- Dimensional vs non-dimensional forms; `via="non-dimensionalization"`.
+- Exact vs approximation forms (e.g., full relativistic Hubble vs `z << 1`
+  approximation); `via="small-z-limit"`.
+
+`via` is a free-form slug (no v1 platform catalog; same shape as
+`<Assumption type=>` in ADR 0046's Equation Biography). Audit
+invariant MR6 (INFO) verifies the `equivalent_to` target resolves
+to a real `<KeyEquation>` or to another `<RepEquation>` in the
+same MultiRep.
 
 Full reference at
 [`reference/multirep-component.md`](../reference/multirep-component.md).
@@ -178,7 +235,7 @@ with two new invariant families:
 | **NR3** | ERROR | Same symbol bound to different `concept.id`s across the registry (declaration collision) |
 | **NR4** | WARNING | Symbol declared in registry with explicit units; `<KeyEquation>` uses it without unit context in prose |
 
-**MR (MultiRep) invariants**:
+**MR (MultiRep) invariants** (hardened 2026-05-14; MR5 + MR6 added):
 
 | ID | Severity | Check |
 |---|---|---|
@@ -186,6 +243,8 @@ with two new invariant families:
 | **MR2** | WARNING | `<MultiRep><RepEquation refKey=… symbol=…>` — the explicitly-declared binding `symbol` doesn't appear among the referenced equation's declared symbols, *or* doesn't match the concept's `canonical_symbol` (or a declared alias) |
 | **MR3** | WARNING | `<MultiRep><RepCode refName=…>` — the referenced code's variable name doesn't match the concept's `code_alias` |
 | **MR4** | INFO | `<MultiRep><RepFigure refName=…>` — the referenced figure's `alt` text doesn't mention the concept's `verbal_label` or `canonical_symbol` |
+| **MR5** (new) | **ERROR** | `<RepCode>` is half-specified: declares `external_url` without all of `external_cache_hash`, `external_version`, `authored_by`, `authored_date`, `reviewed_by`, `reviewed_date` — OR has none of these attributes AND no in-chapter `<CodeCell name="...">` matching `refName`. Severity raised from WARNING during the 2026-05-14 hardening because half-specified external code breaks audit reproducibility (an unversioned URL is a moving target). |
+| **MR6** (new) | INFO | `<RepEquation equivalent_to="X">` — the target `X` doesn't resolve to a `<KeyEquation>` in the chapter's equation index OR to another `<RepEquation refKey="X">` in the same MultiRep. Authoring nudge for the equivalent-equation surface; not gated. |
 
 Invariant severity rationale:
 
@@ -203,14 +262,19 @@ schema enforcement code lands in a follow-up PR:
 - `packages/core/src/schema/notation-registry.ts` — Zod
   `NotationRegistrySchema` matching the YAML structure.
 - `packages/components/src/multirep/index.tsx` — `<MultiRep>`,
-  `<RepVerbal>`, `<RepEquation>`, `<RepFigure>`, `<RepCode>`,
-  `<RepIntuition>` components with `serialize` separation per
-  [ADR 0004](./0004-component-contract-revisions.md).
+  `<RepVerbal>`, `<RepEquation>` (with optional `equivalent_to` +
+  `via` attributes), `<RepFigure>`, `<RepCode>` (two binding
+  modes: in-chapter + external) components with `serialize`
+  separation per
+  [ADR 0004](./0004-component-contract-revisions.md). **No
+  `<RepIntuition>` component** — dropped in the 2026-05-14
+  hardening; `<RepVerbal>` handles intuition framing in prose.
 - `packages/components/src/multirep/multirep-index.ts` —
   pedagogy-index extractor (children-mode, per
   [PR-C4 precedent](./0038-pedagogy-index-pattern.md)).
-- 8 new audit invariants added to
-  `packages/astro/src/lib/pedagogy-audit.ts`.
+- **10** new audit invariants added to
+  `packages/astro/src/lib/pedagogy-audit.ts` (was 8; MR5 + MR6
+  added in 2026-05-14 hardening).
 - A `<MultiRepRenderer>` UI that lets the reader toggle between
   representations (or view them side-by-side); design TBD in the
   code-PR's Storybook stories.
@@ -237,6 +301,54 @@ standards; A4's STEM-specificity doesn't break the universal
 Sophie LDS conformance triple.
 
 ## Rationale
+
+### The structured-for-facts, prose-for-stances principle (introduced 2026-05-14)
+
+Sophie's schemas across ADRs 0040–0046 follow a consistent pattern
+that this ADR's hardening surfaced explicitly: **structured fields
+for facts about specific things; prose fields for course-level
+stances**. Facts are enumerable and recurrent (`authored_by`,
+`reviewed_by`, `date`, `cache_hash`, `symbol`, `unit`); the schema
+captures them so audits can verify and tools can query. Stances
+are narrative and per-course (the instructor's position on AI
+training data, primary-source policy, AI Ledger framing); the
+schema captures only the *structural slot* (the field's
+existence), the *content* is prose authored in the instructor's
+voice.
+
+Conflating the two — structuring stances or prose-ifying facts —
+degrades both. A structured `primary_source_verification_method:
+"independent"` field loses the normative force of the prose
+*"all quantitative claims and historical citations are
+independently verified against peer-reviewed sources or canonical
+textbooks."* A prose `authored_by: "I think it was claude probably
+around mid-May"` loses the audit-grade specificity of
+`authored_by: "alrosen", authored_date: "2026-05-14"`.
+
+Examples of the principle in practice:
+
+- **`<RepCode>` external-mode provenance** (this ADR, hardened
+  2026-05-14): structured (`authored_by`, `authored_date`,
+  `reviewed_by`, `reviewed_date`) — facts about a specific code
+  artifact.
+- **`<Units>` in Equation Biography** (ADR 0046): structured
+  (`symbol`, `unit`) — facts about an equation's symbol/unit pair.
+- **`instructor_reviewed`** (ADR 0042): structured
+  (`by`, `date`, `depth`, `against`) — facts about a specific
+  review event.
+- **`ai_training_provenance.known_limitations`** (ADR 0042
+  contract): prose stance about training data.
+- **`ai_ledger.preamble`** (ADR 0042 contract): prose stance
+  framing the public Ledger.
+- **`evidence_summary`** (ADR 0040 TDRs): prose narrative
+  anchoring the evidence to specifics.
+- **`<Observable>`, `<Assumption>` body, `<BreaksWhen>`,
+  `<CommonMisuse>` body** (ADR 0046 biography): prose stances on
+  the equation's meaning, assumptions, and limits.
+
+The principle is cited from ADR 0046 and ADR 0042; this ADR
+declares it as a cross-cutting design principle for the
+foundation.
 
 ### Three artifacts paired beats one combined artifact
 
@@ -511,8 +623,43 @@ follow real authoring experience.
 
 ## Revisions
 
-*None yet.* Revisions to the invariant list, registry schema, or
-`<MultiRep>` child taxonomy follow the pattern established by
+**§1 — 2026-05-14 Hardening pass.** Per
+[the foundation review](/Users/anna/Teaching/sophie/docs/reviews/2026-05-14-adrs-0040-0045-foundation-review.md),
+this ADR was edited in place (under Anna's explicit mutability
+override for the first hardening pass) to add:
+
+- **Drop `<RepIntuition>` entirely** — prose by another name;
+  `<RepVerbal>` handles intuition framing. Reduces component
+  inventory; the six v1 children become five.
+- **`<RepCode>` two-mode binding**: in-chapter `<CodeCell>`
+  (preferred) OR external mode with required `external_url` +
+  `external_cache_hash` + `external_version` + 4 structured
+  provenance fields (`authored_by`, `authored_date`,
+  `reviewed_by`, `reviewed_date`). Half-specified external mode
+  is now an ERROR (MR5).
+- **`<RepEquation equivalent_to="<refKey>" via="<slug>">`** —
+  declares variable-substitution-equivalent forms (Wien's law
+  λ-form vs ν-form; SI vs CGS; dimensional vs non-dimensional;
+  exact vs approximation). Optional. MR6 (INFO) verifies target
+  resolves.
+- **New audit invariants MR5 (ERROR)** for `<RepCode>` half-
+  specification, **MR6 (INFO)** for `<RepEquation equivalent_to>`
+  unresolved target. Total v1 invariants: 10 (was 8).
+- **The structured-for-facts, prose-for-stances principle** —
+  declared in this ADR's Rationale section as a cross-cutting
+  design principle for the foundation. ADRs 0040, 0042, 0046 all
+  follow it; this ADR makes it explicit.
+- **Forward-ref to Sophie LDS Commons (ADR 0048)** — future
+  cross-course catalog inheritance for shared concepts. v1 ships
+  per-course registry only; the contract is forward-compatible
+  with a `commons:` block in `pedagogy-contract.yaml` that hasn't
+  yet been populated.
+
+The immutability convention re-applies after this hardening pass
+completes. Future revisions land as new ADRs.
+
+Further revisions (invariant additions, schema changes, child-
+taxonomy extensions) follow the pattern established by
 [ADR 0038 §1, §2](./0038-pedagogy-index-pattern.md) — a new
 `## Revisions §N` section appended to this ADR documenting the
 change + reason.
@@ -533,15 +680,23 @@ change + reason.
 - [ADR 0042 — Pedagogy Contract + AI Contribution Ledger](./0042-pedagogy-contract-and-ai-contribution-ledger.md)
   — `math_and_units_standards.notation_registry` is the opt-in field.
 - [ADR 0004 — component contract revisions](./0004-component-contract-revisions.md)
-  — `serialize` separation + a11y testing applies to all six new components.
+  — `serialize` separation + a11y testing applies to all five new components.
 - [ADR 0008 — Cosmic Playground protocol](./0008-cosmic-playground-protocol.md)
   — speculative future extension; a `<RepDemo>` child element could
   bind Cosmic Playground demos as the interactive representation of
   a concept, but not committed by this ADR (see Consequences).
+- [ADR 0046 — Equation Biography](./0046-equation-biography.md) —
+  the `<Units>` biography child uses structured form (symbol +
+  unit) following the principle declared in this ADR's Rationale.
+- [ADR 0048 — Sophie LDS Content Plugin System](./0048-sophie-lds-content-plugin-system.md)
+  — future cross-course catalog inheritance; v1 ships the seam
+  empty, populated as ASTR 201 + COMP 521 reveal real recurrence
+  patterns.
 - [`vision/features/accepted.md`](../vision/features/accepted.md) A4
   — the staging-area entry this ADR graduates.
 - [`vision/features/backlog.md`](../vision/features/backlog.md) B1
-  (Equation Biography) — layers provenance on this registry.
+  (Equation Biography, now graduated as ADR 0046) — layers provenance
+  on this registry.
 
 ### Key cognitive-science citations
 

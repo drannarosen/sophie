@@ -1,7 +1,7 @@
 ---
 title: MultiRep component reference
 short_title: MultiRep component
-description: Chapter-author reference for the `<MultiRep>` component and its child elements (`<RepVerbal>`, `<RepEquation>`, `<RepFigure>`, `<RepCode>`, `<RepIntuition>`). The component binds multiple representations of one concept and feeds the Representation Alignment Audit. Includes a fully-filled ASTR 201 example.
+description: Chapter-author reference for the `<MultiRep>` component and its child elements (`<RepVerbal>`, `<RepEquation>`, `<RepFigure>`, `<RepCode>`). The component binds multiple representations of one concept and feeds the Representation Alignment Audit. Includes a fully-filled ASTR 201 example.
 tags: [pedagogy, reference, components, multirep, representation-alignment, multiple-representations, lds]
 ---
 
@@ -46,14 +46,15 @@ by [PR-C4's LearningObjectives refactor](../decisions/0038-pedagogy-index-patter
 <MultiRep concept="orbital-radius">
   <RepVerbal>
     The distance from the central mass to the orbiting body.
+    (Authoring tip: intuitive framing belongs in this prose body —
+    e.g., "imagine an ant walking around the orbit; how far must
+    it travel to reach the central mass?" The dedicated
+    `<RepIntuition>` primitive was dropped in the 2026-05-14
+    hardening; prose handles intuition.)
   </RepVerbal>
   <RepEquation refKey="kepler-3rd-law" symbol="r" />
   <RepFigure refName="orbit-geometry" symbolLabel="r" />
   <RepCode refName="orbit-simulation" symbol="r_au" />
-  <RepIntuition>
-    Imagine an ant walking around the orbit — how far must it travel
-    to reach the central mass?
-  </RepIntuition>
 </MultiRep>
 ```
 
@@ -67,9 +68,9 @@ component:
    [Representation Alignment Audit](../decisions/0043-notation-registry-multirep-alignment-audit.md#artifact-3-representation-alignment-audit-v1-8-invariants).
 
 A `<MultiRep>` block declares *only the forms actually present* in
-the chapter. Verbal + equation without figure is valid; all five
-forms together is valid; verbal + figure + intuition (skipping
-equation + code) is valid.
+the chapter. Verbal + equation without figure is valid; all four
+forms together is valid; verbal + figure (skipping equation + code)
+is valid.
 
 ## `<MultiRep>` props
 
@@ -105,19 +106,46 @@ References an existing `<KeyEquation>` (per
 
 ```mdx
 <RepEquation refKey="kepler-3rd-law" symbol="r" />
+
+<!-- Variable-substitution-equivalent form (hardened 2026-05-14) -->
+<RepEquation
+  refKey="kepler-3rd-law-au-form"
+  symbol="r_au"
+  equivalent_to="kepler-3rd-law"
+  via="natural-units-substitution"
+/>
 ```
 
 | Prop | Required | Type | Purpose |
 |---|---|---|---|
 | `refKey` | required | string | The referenced `<KeyEquation>`'s `eqKey` |
 | `symbol` | required | string | Which symbol in the equation represents this concept |
+| `equivalent_to` | optional | string (refKey) | **NEW (2026-05-14 hardening)**: declares this equation is a variable-substitution-equivalent form of another `<KeyEquation>` or `<RepEquation>` |
+| `via` | optional | string (substitution slug) | **NEW (2026-05-14 hardening)**: names the substitution (e.g., `planck-substitution`, `unit-system-conversion`, `non-dimensionalization`, `small-z-limit`). Free-form slug; no v1 platform catalog. |
 
 The `symbol` field is required because a single equation typically
 contains many symbols; the binding declares *which one* is this
 concept's representation.
 
-Audit invariant **MR2** checks that `symbol` matches the
-registered concept's `canonical_symbol` (or a declared alias).
+**Equivalent forms.** `equivalent_to=<refKey>` + `via=<slug>`
+declares two equations describe the same concept under a known
+transformation. Use cases:
+
+- Wien's law in wavelength form (`λ_peak = b/T`) vs frequency form
+  (`ν_peak = aT`); `via="planck-substitution"`.
+- SI vs CGS expressions; `via="unit-system-conversion"`.
+- Dimensional vs non-dimensional forms; `via="non-dimensionalization"`.
+- Exact vs approximation (e.g., full relativistic Hubble vs `z << 1`);
+  `via="small-z-limit"`.
+
+Audit invariants:
+
+- **MR2** (WARNING) checks that `symbol` matches the registered
+  concept's `canonical_symbol` (or a declared alias).
+- **MR6** (INFO, hardened 2026-05-14) checks that
+  `equivalent_to="X"` resolves to a real `<KeyEquation refKey="X">`
+  in the chapter's equation index OR to another
+  `<RepEquation refKey="X">` in the same MultiRep.
 
 ### `<RepFigure>`
 
@@ -136,42 +164,103 @@ References an existing `<Figure>` (per
 Audit invariant **MR4** checks that the figure's `alt` text
 references the concept's `verbal_label` or `canonical_symbol`.
 
-### `<RepCode>`
+### `<RepCode>` (two-mode binding, hardened 2026-05-14)
 
-References an existing `<CodeCell>` (per
-[ADR 0018](../decisions/0018-codemirror-6-for-codecell.md)) by its
-`name`.
+Two binding modes — preferred is in-chapter `<CodeCell>`; alternative
+is external artifact with full provenance.
+
+**In-chapter binding (preferred):**
 
 ```mdx
 <RepCode refName="orbit-simulation" symbol="r_au" />
+<!-- ... and somewhere in the chapter: -->
+<CodeCell name="orbit-simulation" pedagogical_kind="predict-then-run">
+  # python code here
+</CodeCell>
 ```
 
-| Prop | Required | Type | Purpose |
-|---|---|---|---|
-| `refName` | required | string | The referenced `<CodeCell>`'s `name` |
-| `symbol` | required | string | The variable name representing this concept in the code |
-
-Audit invariant **MR3** checks that `symbol` matches the
-registered concept's `code_alias`.
-
-### `<RepIntuition>`
-
-Physical or conceptual intuition — analogies, mental models,
-embodied descriptions. Prose-only.
+**External-mode binding (when in-chapter isn't appropriate):**
 
 ```mdx
-<RepIntuition>
-  Imagine an ant walking around the orbit — how far must it travel
-  to reach the central mass?
-</RepIntuition>
+<RepCode
+  refName="orbit-simulation"
+  symbol="r_au"
+  external_url="https://github.com/drannarosen/astr201-demos/blob/v1.2/orbit.py"
+  external_cache_hash="sha256:abc1234..."
+  external_version="v1.2"
+  authored_by="alrosen"
+  authored_date="2026-05-14"
+  reviewed_by="alrosen"
+  reviewed_date="2026-05-14"
+/>
 ```
 
 | Prop | Required | Type | Purpose |
 |---|---|---|---|
-| (children) | required | inline markdown | The intuition prose |
+| `refName` | required | string | The referenced `<CodeCell>`'s `name` (in-chapter mode) OR a stable identifier (external mode) |
+| `symbol` | recommended | string | The variable name representing this concept in the code |
+| `external_url` | required for external mode | string (URL) | Location of the external artifact |
+| `external_cache_hash` | required for external mode | string (sha256) | Content hash at review time |
+| `external_version` | required for external mode | string (tag) | Human-readable version (e.g., `v1.2`) |
+| `authored_by` | required for external mode | string | Who authored the external artifact |
+| `authored_date` | required for external mode | ISO 8601 date | When it was authored |
+| `reviewed_by` | required for external mode | string | Who reviewed it |
+| `reviewed_date` | required for external mode | ISO 8601 date | When it was reviewed |
 
-No external references. The audit doesn't validate `<RepIntuition>`
-beyond presence.
+**Mode discrimination**: presence of `external_url` selects external
+mode; absence selects in-chapter mode. Mode-specific required
+attributes:
+
+- *In-chapter mode*: only `refName` required; `<CodeCell name>`
+  matching must exist in chapter.
+- *External mode*: ALL eight attributes required (the three
+  `external_*` + four structured provenance fields).
+
+Audit invariants:
+
+- **MR3** (WARNING) checks `symbol` matches the registered
+  concept's `code_alias`.
+- **MR5** (ERROR, hardened 2026-05-14) — half-specified external
+  mode (declares `external_url` but missing any of the other
+  external-mode required attributes) OR neither mode resolves
+  (no `external_url` AND no in-chapter `<CodeCell>` matching
+  `refName`). Severity is ERROR because half-specified external
+  code breaks audit reproducibility.
+
+Runtime diagnostic behavior (per
+[ADR 0053](../decisions/0053-conformance-failure-modes.md) when it
+graduates): when an external URL becomes unreachable post-deploy,
+`<RepCode>` renders a diagnostic placeholder showing the URL +
+provenance + Wayback link.
+
+### ~~`<RepIntuition>`~~ (DROPPED in 2026-05-14 hardening)
+
+The `<RepIntuition>` primitive was dropped during the 2026-05-14
+hardening pass. Rationale: it was prose by another name — every
+intuition framing could equally well live inside `<RepVerbal>`,
+and the separate primitive's distinction was conceptually fuzzy.
+Reduces component-inventory surface; no functional loss.
+
+**Migration**: move any intuition content into `<RepVerbal>` (use
+a leading framing sentence like *"Think of this as..."* if you
+want to foreground the intuition):
+
+```mdx
+<!-- Before (pre-hardening): -->
+<MultiRep concept="orbital-radius">
+  <RepVerbal>The distance from the central mass...</RepVerbal>
+  <RepIntuition>Imagine an ant walking around the orbit...</RepIntuition>
+</MultiRep>
+
+<!-- After (post-hardening): -->
+<MultiRep concept="orbital-radius">
+  <RepVerbal>
+    The distance from the central mass to the orbiting body.
+    Imagine an ant walking around the orbit — how far must it
+    travel to reach the central mass?
+  </RepVerbal>
+</MultiRep>
+```
 
 ## Fully-filled example: ASTR 201 Module 2 — Kepler's Third Law
 
@@ -190,7 +279,11 @@ its representations.
     The orbital radius is the instantaneous distance between the
     orbiting body and the gravitational center it orbits. For a
     circular orbit it's constant; for an elliptical orbit it
-    varies between perihelion and aphelion.
+    varies between perihelion and aphelion. (Intuition: picture
+    an ant walking along the orbit. Its distance from the Sun —
+    measured by a string stretched taut from the Sun to the
+    ant — is *r*. The ant's path doesn't matter; only the
+    stretched-string length does.)
   </RepVerbal>
 
   <RepEquation refKey="kepler-3rd-law" symbol="r" />
@@ -198,16 +291,9 @@ its representations.
   <RepFigure refName="orbit-geometry" symbolLabel="r" />
 
   <RepCode refName="orbit-simulation" symbol="r_au" />
-
-  <RepIntuition>
-    Picture an ant walking along the orbit. Its distance from the
-    Sun — measured by a string stretched taut from the Sun to the
-    ant — is *r*. The ant's path doesn't matter; only the
-    stretched-string length does.
-  </RepIntuition>
 </MultiRep>
 
-The five representations above are *the same thing* — when you
+The four representations above are *the same thing* — when you
 encounter *r* in an equation later in this chapter, your mental
 model should already include the orbital geometry, the simulation
 variable, and the ant analogy. Notation drift is how we lose that
@@ -284,10 +370,13 @@ ADR 0043.
   blocks are at the *introduction* of a concept. Subsequent
   appearances assume the binding established earlier; they don't
   need to be re-bound unless a new representation is introduced.
-- **Include `<RepIntuition>` even when the rest is rigorous.**
-  Embodied / analogical intuition is the
+- **Include intuition framing in `<RepVerbal>` even when the rest
+  is rigorous.** Embodied / analogical intuition is the
   hardest-to-teach but easiest-to-omit form. Forcing yourself to
-  write one surfaces what's missing from your conceptual model.
+  include an intuition sentence ("Think of this as...") in
+  `<RepVerbal>` surfaces what's missing from your conceptual
+  model. (Pre-hardening this used to be its own `<RepIntuition>`
+  primitive; dropped 2026-05-14 — prose handles it.)
 - **Keep `<RepVerbal>` short.** One or two sentences. The
   representations are the substance; the verbal label is the
   handle that ties them together.
