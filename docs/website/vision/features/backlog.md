@@ -225,3 +225,126 @@ relative to ASTR 201 Phase-4 launch?
 - Promotion criteria for accepted: A1 + A3 shipped AND ASTR 201
   Phase 4 launched AND Anna has paper-writing bandwidth (likely
   Spring 2027 or summer 2027 per strategy/papers/ planning).
+
+---
+
+## B8. Semester Journal + AI Context Surface
+
+**Motivating use case.** During the 2026-05-14 foundation hardening
+brainstorm, ADR 0040's evidence-rigor sub-decisions surfaced a
+distinct authoring artifact that TDRs do *not* cover: longitudinal
+*observations + in-flight notes* (not yet decisions, not yet
+evidenced) that should both (a) accumulate as instructor
+professional-development memory and (b) feed the AI primary author
+as additional context. Anna explicitly named this in-thread:
+"I'll be patient 0 for my courses." The journal needs to be usable
+by Anna in fa26 when ASTR 201 migration happens.
+
+Distinct from TDRs (TDRs are decisions with evidence; the journal
+is freeform observations that *seed* future TDRs). Distinct from
+B4 Course Brain (B4 is index-as-AI-context; the journal is
+human-authored prose, longitudinal, freeform).
+
+**Design sketch.** Per-semester markdown file
+(`docs/journals/<course>-<semester>.md`) with optional
+chapter-scoped sub-entries. Schema-loose by design: each entry is
+a dated section with freeform body. CLI surface: `sophie journal
+new <slug>` opens a templated entry; `sophie journal context
+--for=<chapter>` extracts journal entries relevant to a chapter
+as an AI prompt-context block. Storage is plain markdown in the
+consumer-course repo (same persistence model as TDRs).
+
+**Estimated cost.** Small — ~1 day. The freeform structure is
+intentional; tooling is mostly extraction + templating, not
+schema.
+
+**Dependencies.** A1 (TDRs) shipped (so the journal-vs-TDR
+distinction is clean) + the consumer-course migration starting
+(so there's a real chapter to journal about).
+
+**Open questions.** Journal entries are always `visibility:
+internal` (per the ADR 0040 hardening lock). Promotion path: a
+journal entry that becomes a decision graduates to a TDR; the
+original entry remains for historical traceability. Should the
+CLI auto-detect "this journal entry references a recent commit"
+and offer to create a TDR seed? Possibly, but YAGNI for v1.
+
+**Status.**
+- 2026-05-14 — surfaced during ADR 0040 evidence-rigor brainstorm
+  as Missing-3 cross-cutting concern
+- 2026-05-14 — promoted to backlog
+- Promotion criteria for accepted: ASTR 201 fa26 starts and Anna
+  needs the journal to begin accumulating observations. ADR for
+  it would naturally pair with the AI authoring loop ADR work
+  (Phase 3 of the Sophie roadmap).
+
+---
+
+## B9. Learning Telemetry (outcome-side measurement)
+
+**Motivating use case.** ADR 0047 (Empirical Validation Plan)
+ships Sophie's authoring-side metrics in v1, but explicitly defers
+outcome-side measurement — concept inventory Hake gain,
+calibration improvement, time-on-task distributions, code-cell
+error trajectories — to a future ADR. Paper #2 of the SoTL
+strategy (PER-audience, outcome-side claims) requires this
+infrastructure.
+
+The deferral is deliberate (per Anna's directive: ship the
+instructor version first; outcomes follow once the conformance
+discipline is exercised in production). But the telemetry needs
+to be designed with paper #2's joins in mind: per-chapter outcome
+× per-chapter conformance state, anchored on
+`course-version × chapter-anchor × semester-id`.
+
+Distinct from `ai_ledger` (ledger is what the instructor did);
+distinct from M1-M8 metrics (those are structured-data-derived);
+this is *student-behavior data with consent*.
+
+**Design sketch.** Extend `ResponseStore` (per ADR 0007 +
+ADR 0047's preservation commitment) with additive telemetry
+tables: `response_outcomes` (per-submission correctness +
+confidence-calibration deltas), `engagement_signals`
+(timing-anchored response patterns; explicit opt-in per ADR
+0007's strict data minimization policy). New audit invariants
+LT family: LT1 consent UI present when telemetry enabled (ERROR);
+LT2 telemetry schema matches B9 schema version (ERROR); LT3
+per-chapter telemetry coverage (INFO). New CLI: `sophie
+telemetry export` for aggregated, anonymized outcome reports
+suitable for paper-writing pipelines.
+
+The B9 ADR will also formally answer: what's the consent UI?
+Where does aggregated outcome data live (in-tree commits, or
+external storage with a controlled join key)? How does the
+v3 cross-device sync seam (per ADR 0007) interact with
+opt-in telemetry?
+
+**Estimated cost.** Medium — ~2-3 weeks. Schema design + consent
+UI + audit invariants + outcome-export pipeline. The persistence
+substrate is already in place via ADR 0007; B9 is additive over
+it.
+
+**Dependencies.** A3 (Pedagogy Contract + AI Ledger) — telemetry
+ties outcomes to the chapters that produced them, which requires
+the contract to be live. A6 (sophie diff) for course-version
+joins. ASTR 201 + COMP 521 fa26 in production (so there's actual
+student-outcome data to design against).
+
+**Open questions.** Default consent posture (opt-in vs opt-out
+— Anna's stated preference per ADR 0007 is opt-in only). What
+data is collected without consent (presumably: nothing). FERPA
+compliance: per-course-database boundaries per ADR 0007 already
+support FERPA; B9 adds analytics that must respect the same
+boundary. Outcome metrics paper #2 will use: which subset of
+B9 telemetry are the load-bearing outcome signals?
+
+**Status.**
+- 2026-05-14 — surfaced during ADR 0047 brainstorm as Missing-1
+  cross-cutting concern; deferred per Anna's directive ("ship the
+  instructor version first")
+- 2026-05-14 — promoted to backlog
+- Promotion criteria for accepted: ADR 0047's M1-M8 metrics
+  validated through one full ASTR 201 semester, AND paper #1
+  draft underway (so paper #2's data needs are concrete), AND
+  Anna has bandwidth to design the consent UI carefully (FERPA-
+  sensitive work that can't be rushed).
