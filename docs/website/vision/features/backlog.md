@@ -93,39 +93,12 @@ limit="z << 1">redshift ≈ v/c</Approximation>` mid-prose)?
 
 ---
 
-## B3. Pedagogical Diff / Curriculum CI
+## B3. Pedagogical Diff / Curriculum CI — promoted to A6 (2026-05-14)
 
-**Motivating use case.** When AI (or Anna) revises a chapter, `git
-diff` shows text changes but not *pedagogical* changes. Did this
-revision add or remove a `<Predict>`? Change a definition? Break a
-cross-reference? Introduce a new misconception target? Today: the
-human reviewer (Anna) compares pre/post manually. Tomorrow: `sophie
-diff` shows the pedagogical change set.
-
-**Design sketch.** Build on PR-C4's audit invariants. Diff = compare
-the PedagogyIndex between two refs (pre/post commit) and emit a
-structured pedagogical-change report: "Added 2 retrieval prompts, 1
-worked example, removed 1 misconception target, broke 1 equation
-reference, introduced 3 uncited claims." Surface in `sophie audit`
-CLI output and (eventually) GitHub PR comments.
-
-**Estimated cost.** ~2–3 days. Real implementation work; the audit
-substrate exists (PR-C4 + post-Bucket-C cleanup), but the diff
-computation + report formatting is new.
-
-**Dependencies.** None hard. Multi-modal (B6) and AI Contribution
-Ledger (A3) integrate naturally if both ship.
-
-**Open questions.** What's the canonical change taxonomy? Where does
-the diff render — terminal output, JSON for tooling, HTML for PR
-comments, all three?
-
-**Status.**
-- 2026-05-14 — surfaced (speculative)
-- 2026-05-14 — promoted to backlog
-- Promotion criteria for accepted: AI-authoring volume grows to where
-  manual revision review is the bottleneck (likely Phase 4 mid-sprint
-  or later).
+Promoted to [accepted-pending-ADR as A6](accepted.md#a6-pedagogical-diff-curriculum-ci)
+on 2026-05-14 after a six-question brainstorm resolved the open
+design questions (taxonomy shape, output formats, index-pair source,
+CLI shape, AI Ledger integration depth, scope).
 
 ---
 
