@@ -1,4 +1,5 @@
 import { defineCommand } from "citty";
+import { runStart } from "../lib/run-start.ts";
 
 export const startCommand = defineCommand({
   meta: {
@@ -33,9 +34,25 @@ export const startCommand = defineCommand({
     },
   },
   async run({ args }) {
-    // Implementation lands in Task 5.1. For now, return parsed args so
-    // the citty arg-parsing tests can assert against the shape.
     const port = Number.parseInt(String(args.port), 10);
-    return { args: { ...args, port } };
+    if (Number.isNaN(port)) {
+      throw new Error(`Invalid --port value: ${args.port}`);
+    }
+    const normalized = {
+      path: String(args.path),
+      port,
+      host: String(args.host),
+      open: Boolean(args.open),
+    };
+
+    // Test-harness escape: the citty arg-parsing tests in start.test.ts
+    // exercise runCommand which invokes run(). Without this guard those
+    // tests would trigger real spawn orchestration. The env flag is set
+    // by the start.test.ts beforeAll hook.
+    if (process.env.SOPHIE_CLI_TEST_HARNESS === "1") {
+      return { args: normalized };
+    }
+    await runStart(normalized);
+    return { args: normalized };
   },
 });

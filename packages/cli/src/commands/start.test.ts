@@ -1,8 +1,15 @@
 import { runCommand } from "citty";
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { startCommand } from "./start.ts";
 
 describe("start command — arg parsing", () => {
+  beforeAll(() => {
+    process.env.SOPHIE_CLI_TEST_HARNESS = "1";
+  });
+  afterAll(() => {
+    delete process.env.SOPHIE_CLI_TEST_HARNESS;
+  });
+
   it("parses --port flag as number", async () => {
     const result = await runCommand(startCommand, {
       rawArgs: ["--port", "3000", "./examples/smoke"],
