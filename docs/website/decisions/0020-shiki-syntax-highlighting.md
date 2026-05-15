@@ -1,6 +1,14 @@
 ---
-date: 2026-05-09
-tags: [syntax-highlighting, shiki, code, mdx]
+date: 2026-05-09T00:00:00.000Z
+tags:
+  - syntax-highlighting
+  - shiki
+  - code
+  - mdx
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0020: Shiki (via rehype-pretty-code) for syntax highlighting

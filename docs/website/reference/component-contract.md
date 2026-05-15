@@ -2,7 +2,14 @@
 title: Component Contract
 short_title: Component contract
 description: The TypeScript interface every Sophie pedagogy component implements.
-tags: [components, contract, reference]
+tags:
+  - components
+  - contract
+  - reference
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # Component contract

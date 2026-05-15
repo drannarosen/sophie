@@ -1,6 +1,15 @@
 ---
-date: 2026-05-09
-tags: [components, mdx, hydration, persistence, astro]
+date: 2026-05-09T00:00:00.000Z
+tags:
+  - components
+  - mdx
+  - hydration
+  - persistence
+  - astro
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0027: MDX-rendered React components are isolated SSR roots; data threads as props

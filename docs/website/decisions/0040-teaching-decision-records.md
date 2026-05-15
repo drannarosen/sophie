@@ -1,6 +1,16 @@
 ---
-date: 2026-05-14
-tags: [pedagogy, decision-records, tdr, curriculum-design, sotl, lds]
+date: 2026-05-14T00:00:00.000Z
+tags:
+  - pedagogy
+  - decision-records
+  - tdr
+  - curriculum-design
+  - sotl
+  - lds
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0040: Teaching Decision Records (TDRs)

@@ -1,6 +1,14 @@
 ---
-date: 2026-05-09
-tags: [tooling, package-manager, monorepo, foundation]
+date: 2026-05-09T00:00:00.000Z
+tags:
+  - tooling
+  - package-manager
+  - monorepo
+  - foundation
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0011: pnpm as the JavaScript package manager

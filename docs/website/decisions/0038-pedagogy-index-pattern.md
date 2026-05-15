@@ -1,6 +1,16 @@
 ---
-date: 2026-05-13
-tags: [pedagogy, content, mdx, remark, indexing, schema-driven]
+date: 2026-05-13T00:00:00.000Z
+tags:
+  - pedagogy
+  - content
+  - mdx
+  - remark
+  - indexing
+  - schema-driven
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0038: Pedagogy index pattern + role-aggregation principle

@@ -1,6 +1,15 @@
 ---
-date: 2026-05-10
-tags: [theming, design-tokens, css, tailwind, phase-0]
+date: 2026-05-10T00:00:00.000Z
+tags:
+  - theming
+  - design-tokens
+  - css
+  - tailwind
+  - phase-0
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0026: Tailwind v4 (CSS-first configuration)

@@ -1,6 +1,14 @@
 ---
-date: 2026-05-09
-tags: [persistence, storage, privacy, ferpa]
+date: 2026-05-09T00:00:00.000Z
+tags:
+  - persistence
+  - storage
+  - privacy
+  - ferpa
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0007: IndexedDB + ResponseStore repository for persistence

@@ -1,6 +1,15 @@
 ---
-date: 2026-05-13
-tags: [icons, chrome, components, adapter, lucide]
+date: 2026-05-13T00:00:00.000Z
+tags:
+  - icons
+  - chrome
+  - components
+  - adapter
+  - lucide
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0039: Two-adapter Lucide icon convention (`lucide-static` for chrome, `lucide-react` for pedagogy)

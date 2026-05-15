@@ -2,7 +2,13 @@
 title: Glossary
 short_title: Glossary
 description: Terms used across the Sophie documentation.
-tags: [glossary, reference]
+tags:
+  - glossary
+  - reference
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # Glossary

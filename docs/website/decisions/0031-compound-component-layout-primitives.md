@@ -1,6 +1,14 @@
 ---
-date: 2026-05-12
-tags: [layout, components, astro, api-design]
+date: 2026-05-12T00:00:00.000Z
+tags:
+  - layout
+  - components
+  - astro
+  - api-design
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0031: Compound-component pattern for layout primitives

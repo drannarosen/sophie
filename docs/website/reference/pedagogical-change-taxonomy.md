@@ -1,8 +1,19 @@
 ---
 title: Pedagogical change taxonomy
 short_title: Change taxonomy
-description: The canonical two-axis taxonomy for `sophie diff` output — granularity × severity, with per-component triggers and JSON schema.
-tags: [reference, diff, audit, taxonomy, sophie-lds]
+description: >-
+  The canonical two-axis taxonomy for `sophie diff` output — granularity ×
+  severity, with per-component triggers and JSON schema.
+tags:
+  - reference
+  - diff
+  - audit
+  - taxonomy
+  - sophie-lds
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # Pedagogical change taxonomy

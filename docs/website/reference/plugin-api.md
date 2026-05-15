@@ -1,8 +1,18 @@
 ---
 title: Plugin API
 short_title: Plugin API
-description: Public API for extending Sophie — registerComponent, registerAuditCheck, registerPromptTemplate, extendChapterSchema, theme tokens.
-tags: [plugin, extension, api, reference]
+description: >-
+  Public API for extending Sophie — registerComponent, registerAuditCheck,
+  registerPromptTemplate, extendChapterSchema, theme tokens.
+tags:
+  - plugin
+  - extension
+  - api
+  - reference
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # Plugin API

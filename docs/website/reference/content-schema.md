@@ -1,8 +1,16 @@
 ---
 title: Content Schema
 short_title: Content schema
-description: Zod schemas for Sophie's content (Chapter, Mission, MediaAsset, Concept, Skill, Misconception, Course).
-tags: [schema, reference]
+description: >-
+  Zod schemas for Sophie's content (Chapter, Mission, MediaAsset, Concept,
+  Skill, Misconception, Course).
+tags:
+  - schema
+  - reference
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # Content schema

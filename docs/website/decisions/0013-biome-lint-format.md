@@ -1,6 +1,15 @@
 ---
-date: 2026-05-09
-tags: [tooling, lint, format, biome, dx]
+date: 2026-05-09T00:00:00.000Z
+tags:
+  - tooling
+  - lint
+  - format
+  - biome
+  - dx
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0013: Biome for lint and format

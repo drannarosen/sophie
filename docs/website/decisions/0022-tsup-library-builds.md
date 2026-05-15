@@ -1,6 +1,15 @@
 ---
-date: 2026-05-09
-tags: [build, tsup, esbuild, library, packaging]
+date: 2026-05-09T00:00:00.000Z
+tags:
+  - build
+  - tsup
+  - esbuild
+  - library
+  - packaging
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0022: tsup for `@sophie/*` library package builds

@@ -1,6 +1,17 @@
 ---
-date: 2026-05-14
-tags: [pedagogy, decisions, misconceptions, interventions, graph, audit, lds]
+date: 2026-05-14T00:00:00.000Z
+tags:
+  - pedagogy
+  - decisions
+  - misconceptions
+  - interventions
+  - graph
+  - audit
+  - lds
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0044: Misconception Graph + Intervention Library

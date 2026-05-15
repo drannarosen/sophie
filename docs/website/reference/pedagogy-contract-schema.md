@@ -1,8 +1,21 @@
 ---
 title: Pedagogy Contract schema
 short_title: Pedagogy contract
-description: YAML schema for a Sophie-LDS-compliant course's pedagogy-contract.yaml — the course-level declaration of teaching philosophy, standards, AI policy, and out-of-scope commitments. Includes a fully-filled ASTR 201 example.
-tags: [pedagogy, reference, contract, schema, responsible-ai, lds]
+description: >-
+  YAML schema for a Sophie-LDS-compliant course's pedagogy-contract.yaml — the
+  course-level declaration of teaching philosophy, standards, AI policy, and
+  out-of-scope commitments. Includes a fully-filled ASTR 201 example.
+tags:
+  - pedagogy
+  - reference
+  - contract
+  - schema
+  - responsible-ai
+  - lds
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # Pedagogy Contract schema

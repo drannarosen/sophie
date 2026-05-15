@@ -1,6 +1,13 @@
 ---
-date: 2026-05-09
-tags: [i18n, l10n, scope]
+date: 2026-05-09T00:00:00.000Z
+tags:
+  - i18n
+  - l10n
+  - scope
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0009: i18n posture — `lang` reserved, no real i18n in v1

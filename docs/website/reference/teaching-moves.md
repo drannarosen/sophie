@@ -1,8 +1,20 @@
 ---
 title: Teaching Move Library
 short_title: Teaching moves
-description: Sophie's canonical taxonomy of pedagogical moves — 18 named moves with cognitive-science citations, practice glosses, descriptions, and the Sophie components that implement each one.
-tags: [pedagogy, reference, teaching-moves, taxonomy, cognitive-science]
+description: >-
+  Sophie's canonical taxonomy of pedagogical moves — 18 named moves with
+  cognitive-science citations, practice glosses, descriptions, and the Sophie
+  components that implement each one.
+tags:
+  - pedagogy
+  - reference
+  - teaching-moves
+  - taxonomy
+  - cognitive-science
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # Teaching Move Library

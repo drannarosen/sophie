@@ -1,8 +1,19 @@
 ---
 title: sophie publish-state + sophie publish-schedule CLI reference
 short_title: sophie publish-state CLI
-description: User-facing specification for build-time scheduled publication and visibility windows.
-tags: [cli, reference, publication, scheduling, lds]
+description: >-
+  User-facing specification for build-time scheduled publication and visibility
+  windows.
+tags:
+  - cli
+  - reference
+  - publication
+  - scheduling
+  - lds
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # `sophie publish-state` + `sophie publish-schedule`

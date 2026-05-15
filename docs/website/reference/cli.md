@@ -1,8 +1,16 @@
 ---
 title: CLI Reference
 short_title: CLI
-description: The `sophie` command surface — build, audit, eval, validate, fmt, create, upgrade.
-tags: [cli, reference]
+description: >-
+  The `sophie` command surface — build, audit, eval, validate, fmt, create,
+  upgrade.
+tags:
+  - cli
+  - reference
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # CLI reference

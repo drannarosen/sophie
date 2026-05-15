@@ -1,8 +1,19 @@
 ---
 title: sophie refactor CLI reference
 short_title: sophie refactor CLI
-description: User-facing specification for `sophie refactor <entity> <op>` — subcommands, operations, dry-run defaults, atomic apply, TDR-seed generation.
-tags: [cli, reference, refactor, lds, sophie-lds]
+description: >-
+  User-facing specification for `sophie refactor <entity> <op>` — subcommands,
+  operations, dry-run defaults, atomic apply, TDR-seed generation.
+tags:
+  - cli
+  - reference
+  - refactor
+  - lds
+  - sophie-lds
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # `sophie refactor` CLI

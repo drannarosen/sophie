@@ -1,8 +1,22 @@
 ---
 title: Misconception graph schema
 short_title: Misconception graph
-description: Extended schema for `<Aside kind="misconception">` carrying graph fields — prerequisite chains (DAG), related-misconception siblings (loose links), and concept-reference links to the Notation Registry. Includes a fully-filled ASTR 201 graph example.
-tags: [pedagogy, reference, misconceptions, graph, schema, lds]
+description: >-
+  Extended schema for `<Aside kind="misconception">` carrying graph fields —
+  prerequisite chains (DAG), related-misconception siblings (loose links), and
+  concept-reference links to the Notation Registry. Includes a fully-filled ASTR
+  201 graph example.
+tags:
+  - pedagogy
+  - reference
+  - misconceptions
+  - graph
+  - schema
+  - lds
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # Misconception graph schema

@@ -1,8 +1,23 @@
 ---
 title: MultiRep component reference
 short_title: MultiRep component
-description: Chapter-author reference for the `<MultiRep>` component and its child elements (`<RepVerbal>`, `<RepEquation>`, `<RepFigure>`, `<RepCode>`). The component binds multiple representations of one concept and feeds the Representation Alignment Audit. Includes a fully-filled ASTR 201 example.
-tags: [pedagogy, reference, components, multirep, representation-alignment, multiple-representations, lds]
+description: >-
+  Chapter-author reference for the `<MultiRep>` component and its child elements
+  (`<RepVerbal>`, `<RepEquation>`, `<RepFigure>`, `<RepCode>`). The component
+  binds multiple representations of one concept and feeds the Representation
+  Alignment Audit. Includes a fully-filled ASTR 201 example.
+tags:
+  - pedagogy
+  - reference
+  - components
+  - multirep
+  - representation-alignment
+  - multiple-representations
+  - lds
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # MultiRep component reference

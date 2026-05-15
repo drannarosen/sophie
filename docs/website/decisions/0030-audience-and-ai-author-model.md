@@ -1,6 +1,14 @@
 ---
-date: 2026-05-12
-tags: [foundation, audience, authoring-model, ai-authoring]
+date: 2026-05-12T00:00:00.000Z
+tags:
+  - foundation
+  - audience
+  - authoring-model
+  - ai-authoring
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0030: Audience priority and AI-as-primary-author / instructor-as-supervisor

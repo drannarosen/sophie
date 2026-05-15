@@ -1,6 +1,14 @@
 ---
-date: 2026-05-09
-tags: [components, contract, accessibility, persistence]
+date: 2026-05-09T00:00:00.000Z
+tags:
+  - components
+  - contract
+  - accessibility
+  - persistence
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0004: Component contract revisions

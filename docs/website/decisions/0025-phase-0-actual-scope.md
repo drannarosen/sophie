@@ -1,6 +1,14 @@
 ---
-date: 2026-05-10
-tags: [phase-0, scope, calendar, retrospective]
+date: 2026-05-10T00:00:00.000Z
+tags:
+  - phase-0
+  - scope
+  - calendar
+  - retrospective
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0025: Phase 0 actual scope (lean-but-realistic)

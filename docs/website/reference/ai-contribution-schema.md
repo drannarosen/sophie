@@ -1,8 +1,22 @@
 ---
 title: AI Contribution schema
 short_title: AI contribution
-description: Per-chapter frontmatter schema for `ai_contribution` — the chapter-level disclosure of AI authoring assistance + instructor review. Includes a fully-filled example from ASTR 201 Module 1.
-tags: [pedagogy, reference, ai-contribution, schema, responsible-ai, transparency, lds]
+description: >-
+  Per-chapter frontmatter schema for `ai_contribution` — the chapter-level
+  disclosure of AI authoring assistance + instructor review. Includes a
+  fully-filled example from ASTR 201 Module 1.
+tags:
+  - pedagogy
+  - reference
+  - ai-contribution
+  - schema
+  - responsible-ai
+  - transparency
+  - lds
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # AI Contribution schema

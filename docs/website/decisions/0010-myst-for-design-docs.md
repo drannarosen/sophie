@@ -1,6 +1,14 @@
 ---
-date: 2026-05-09
-tags: [docs, myst, dogfooding, meta]
+date: 2026-05-09T00:00:00.000Z
+tags:
+  - docs
+  - myst
+  - dogfooding
+  - meta
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0010: MyST for design docs; Sophie-hosted docs later

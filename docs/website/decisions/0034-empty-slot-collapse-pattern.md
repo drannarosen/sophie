@@ -1,6 +1,14 @@
 ---
-date: 2026-05-12
-tags: [layout, astro, slots, ux]
+date: 2026-05-12T00:00:00.000Z
+tags:
+  - layout
+  - astro
+  - slots
+  - ux
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0034: Empty layout slots collapse to 0 width via `Astro.slots.has()`

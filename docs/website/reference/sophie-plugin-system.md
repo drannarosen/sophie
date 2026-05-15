@@ -1,8 +1,19 @@
 ---
 title: Sophie LDS Content Plugin System reference
 short_title: Sophie plugin system
-description: User-facing specification for the Sophie LDS content plugin API — plugin shape, override semantics, autonomy guarantees.
-tags: [reference, plugins, commons, cross-course, sophie-lds]
+description: >-
+  User-facing specification for the Sophie LDS content plugin API — plugin
+  shape, override semantics, autonomy guarantees.
+tags:
+  - reference
+  - plugins
+  - commons
+  - cross-course
+  - sophie-lds
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # Sophie LDS Content Plugin System

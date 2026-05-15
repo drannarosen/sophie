@@ -1,6 +1,16 @@
 ---
-date: 2026-05-09
-tags: [components, visualization, concept-maps, v2, v3, proposed]
+date: 2026-05-09T00:00:00.000Z
+tags:
+  - components
+  - visualization
+  - concept-maps
+  - v2
+  - v3
+  - proposed
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0016: React Flow for concept maps and interactive diagrams (v2+)

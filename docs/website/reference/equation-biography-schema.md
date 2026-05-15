@@ -1,8 +1,21 @@
 ---
 title: Equation Biography schema
 short_title: Equation Biography schema
-description: Children-mode schema for `<KeyEquation>` biography fields (Observable, Assumption, Units, BreaksWhen, CommonMisuse) plus the three new E-prefix audit invariants and the three rendering surfaces.
-tags: [reference, equations, key-equation, biography, audit, sophie-lds]
+description: >-
+  Children-mode schema for `<KeyEquation>` biography fields (Observable,
+  Assumption, Units, BreaksWhen, CommonMisuse) plus the three new E-prefix audit
+  invariants and the three rendering surfaces.
+tags:
+  - reference
+  - equations
+  - key-equation
+  - biography
+  - audit
+  - sophie-lds
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # Equation Biography schema

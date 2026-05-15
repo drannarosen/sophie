@@ -1,6 +1,18 @@
 ---
-date: 2026-05-14
-tags: [pedagogy, decisions, notation, multirep, representation-alignment, audit, stem, lds]
+date: 2026-05-14T00:00:00.000Z
+tags:
+  - pedagogy
+  - decisions
+  - notation
+  - multirep
+  - representation-alignment
+  - audit
+  - stem
+  - lds
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0043: Notation Registry + MultiRep + Representation Alignment Audit

@@ -1,6 +1,14 @@
 ---
-date: 2026-05-09
-tags: [theming, design-tokens, css, tailwind]
+date: 2026-05-09T00:00:00.000Z
+tags:
+  - theming
+  - design-tokens
+  - css
+  - tailwind
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0005: Three-layer theming (TS tokens → CSS vars + Tailwind preset; CSS Modules in components)

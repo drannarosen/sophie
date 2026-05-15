@@ -1,6 +1,15 @@
 ---
-date: 2026-05-12
-tags: [chrome, state, performance, astro, react]
+date: 2026-05-12T00:00:00.000Z
+tags:
+  - chrome
+  - state
+  - performance
+  - astro
+  - react
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR 0032: Vanilla JS + `data-*` attributes for chrome state (not React islands)

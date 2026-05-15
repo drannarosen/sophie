@@ -1,8 +1,20 @@
 ---
 title: Course Schedule reference
 short_title: Course Schedule
-description: User-facing specification for schedule.yaml, the four schedule components, and the /schedule.ics route.
-tags: [reference, schedule, calendar, ical, components, lds]
+description: >-
+  User-facing specification for schedule.yaml, the four schedule components, and
+  the /schedule.ics route.
+tags:
+  - reference
+  - schedule
+  - calendar
+  - ical
+  - components
+  - lds
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # Course Schedule + Calendar Page
