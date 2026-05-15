@@ -57,8 +57,22 @@ function modeInvariantBlock(): string {
     `--sophie-status-success: ${status.success};`,
     `--sophie-status-warning: ${status.warning};`,
     `--sophie-status-danger: ${status.danger};`,
+    `--sophie-status-info: ${status.info};`,
+    `--sophie-status-neutral: ${status.neutral};`,
     "--sophie-accent: var(--sophie-brand-teal);",
     "--sophie-link-hover: var(--sophie-accent);",
+    // Validation tracker palette (ADR 0056). Stripes reuse the
+    // semantic status palette directly; backgrounds derive 6%-tint
+    // surfaces via color-mix so admonitions read as subtle wash
+    // rather than saturated alert.
+    "--sophie-validation-unvalidated-stripe: var(--sophie-status-neutral);",
+    "--sophie-validation-unvalidated-bg: color-mix(in oklch, var(--sophie-status-neutral) 6%, transparent);",
+    "--sophie-validation-in-progress-stripe: var(--sophie-status-info);",
+    "--sophie-validation-in-progress-bg: color-mix(in oklch, var(--sophie-status-info) 6%, transparent);",
+    "--sophie-validation-validated-stripe: var(--sophie-status-success);",
+    "--sophie-validation-validated-bg: color-mix(in oklch, var(--sophie-status-success) 6%, transparent);",
+    "--sophie-validation-re-validation-needed-stripe: var(--sophie-status-warning);",
+    "--sophie-validation-re-validation-needed-bg: color-mix(in oklch, var(--sophie-status-warning) 6%, transparent);",
   ].join("\n  ");
 }
 
