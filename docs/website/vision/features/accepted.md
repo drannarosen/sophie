@@ -116,50 +116,38 @@ forced into empty registries.
 
 ---
 
-## A5. Misconception Graph + Intervention Library
+(a5-misconception-graph-and-intervention-library)=
+## A5. Misconception Graph + Intervention Library — graduated 2026-05-14
 
-**Motivating use case.** PR-C4 shipped a `misconceptions` collection
-in the pedagogy index — each misconception has a name, a chapter
-locator, and short/long content discriminator. But misconceptions
-*relate*: "universe expands from a center" is a *prerequisite* to
-"redshift is ordinary Doppler motion"; "brightness is intrinsic"
-*relates to* "flux and luminosity are interchangeable." And
-misconceptions have *reusable interventions*: contrasting cases,
-Predict-then-reveal sequences, specific analogies. Today: each
-chapter rediscovers these. Tomorrow: a graph + library makes them
-queryable + reusable across courses.
+**Graduated** → [ADR 0044 — Misconception Graph + Intervention Library](../../decisions/0044-misconception-graph-and-intervention-library.md)
++ [Misconception graph schema](../../reference/misconception-graph-schema.md)
++ [Intervention Library reference](../../reference/intervention-library.md).
 
-**Design sketch.** Two paired sub-features: (1) **Misconception
-Graph** — extend `MisconceptionEntry` schema with `related_concepts`,
-`prerequisite_misconceptions`, `addressed_by` (chapter/component
-FKs); (2) **Intervention Library** — reusable misconception →
-intervention pairings (Predict + contrasting cases; analogy with
-explicit limits; etc.) that any chapter can reference. The
-PR-C4 audit pass extends with M3 (orphan misconception),
-M4 (misconception addressed but no intervention paired), M5
-(intervention used but no misconception cited).
+The ADR resolved the *"graph topology"* open question (**hybrid**:
+DAG for `prerequisite_misconceptions` — directional, cycle-detected
+by audit invariant M5 — and loose `related_misconceptions` for
+bidirectional siblings without ordering; parallels ADR 0043's
+hybrid `common_confusions` + `related_concepts` modeling) and the
+*"intervention reuse model"* sub-question (**hybrid**: 12 canonical
+named interventions in a platform-level `intervention-index.ts`
+mirroring ADR 0041's `move-index.ts`, plus `type="custom"` for
+course-specific bespoke patterns; parallels ADR 0041's hybrid
+taxonomy). Also resolved a third open question not in the original
+framing: **distributively declared (no central YAML)** — graph
+relations are new fields on the existing PR-C4 `<Aside
+kind="misconception">` schema; the audit walks the existing
+pedagogy index and reassembles the graph. `<Intervention>` nests
+inside misconception Asides (children-mode source pattern). The
+audit adds 6 new invariants (M3–M8) extending PR-C4's M1–M2.
 
-**Estimated cost.** ~1 week. Schema extension on existing collection;
-new lightweight intervention-library schema; audit invariant
-additions.
-
-**Priority claim.** Highest *curriculum-design distinctiveness*
-leverage of any accepted item. Most courses track "what students
-should know"; Sophie tracks "what wrong models students bring and
-how the course transforms them." That's the deepest pedagogical
-claim Sophie can make. Builds directly on PR-C4's shipped
-misconceptions index; no greenfield work.
-
-**Open ADR question.** *Graph topology — should misconception
-prerequisites form a DAG (build-time audit catches cycles) or just
-loose `related_to` links?* Plus: *intervention-library reuse model —
-named interventions referenced by anchor (rigid), or per-chapter
-inline interventions tagged with type (flexible)?*
+All five originally-accepted entries now graduated. The
+`accepted.md` section becomes a list of graduated pointers;
+subsequent accepted entries promote from the backlog.
 
 **Status.**
-- 2026-05-14 — surfaced (speculative)
-- 2026-05-14 — promoted to accepted-pending-ADR
-- ADR target: after A1 (TDRs)
+- 2026-05-14 — surfaced (speculative) during vision-section brainstorm
+- 2026-05-14 — promoted to accepted-pending-ADR (triage)
+- 2026-05-14 — graduated → [ADR 0044](../../decisions/0044-misconception-graph-and-intervention-library.md)
 
 ---
 

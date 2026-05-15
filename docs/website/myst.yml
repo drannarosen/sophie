@@ -73,6 +73,8 @@ project:
         - file: reference/ai-contribution-schema.md
         - file: reference/notation-registry-schema.md
         - file: reference/multirep-component.md
+        - file: reference/misconception-graph-schema.md
+        - file: reference/intervention-library.md
     - title: Explanation
       children:
         - file: explanation/architecture.md
@@ -139,6 +141,7 @@ project:
         - file: decisions/0041-teaching-move-library.md
         - file: decisions/0042-pedagogy-contract-and-ai-contribution-ledger.md
         - file: decisions/0043-notation-registry-multirep-alignment-audit.md
+        - file: decisions/0044-misconception-graph-and-intervention-library.md
     - title: Status
       children:
         - file: status/roadmap.md

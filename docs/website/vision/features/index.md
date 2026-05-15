@@ -74,9 +74,11 @@ they are.
 
 ## Graduations (2026-05-14)
 
-Four accepted entries graduated on the same day as the triage that
-promoted them. The staging-area model's first four end-to-end tests:
-ideas moving from speculative → accepted → graduated within one day.
+All five originally-accepted entries graduated on the same day as
+the triage that promoted them. The staging-area model's first five
+end-to-end tests: ideas moving from speculative → accepted →
+graduated within one day. Subsequent accepted entries will promote
+from the [backlog](backlog.md).
 
 **A1 — Teaching Decision Records (TDRs)** ratified by
 [ADR 0040 — Teaching Decision Records](../../decisions/0040-teaching-decision-records.md)
@@ -104,7 +106,32 @@ rich-ledger fields). Public-facing by default. Together with ADR 0040
 and ADR 0041, this commit completes the **Sophie LDS conformance
 triple** (TDRs + Teaching Moves + Pedagogy Contract & AI Ledger).
 
-Remaining graduation candidates from `accepted.md`: A4 MultiRep +
-Notation Registry + Representation Alignment Audit, A5 Misconception
-Graph + Intervention Library. Each graduates when its authoring ADR
-is drafted.
+**A4 — MultiRep + Notation Registry + Representation Alignment Audit**
+ratified by [ADR 0043 — Notation Registry + MultiRep + Representation Alignment Audit](../../decisions/0043-notation-registry-multirep-alignment-audit.md)
++ [Notation Registry schema](../../reference/notation-registry-schema.md)
++ [MultiRep component reference](../../reference/multirep-component.md).
+The ADR locked the declarative-YAML registry shape (chapters audited
+against the registry as external truth, not the reverse), the
+children-mode `<MultiRep>` source pattern (parallel to PR-C4's LO
+refactor), the eight v1 audit invariants (NR1–NR4 + MR1–MR4), and
+opt-in via `pedagogy-contract.yaml.math_and_units_standards.notation_registry`
+so non-STEM courses aren't forced into empty registries. First
+STEM-specific consumer-repo contract; Sophie LDS conformance triple
+(ADRs 0040/0041/0042) stays universal.
+
+**A5 — Misconception Graph + Intervention Library** ratified by
+[ADR 0044 — Misconception Graph + Intervention Library](../../decisions/0044-misconception-graph-and-intervention-library.md)
++ [Misconception graph schema](../../reference/misconception-graph-schema.md)
++ [Intervention Library reference](../../reference/intervention-library.md).
+The ADR locked the hybrid graph topology (DAG for prerequisites,
+loose links for siblings), the hybrid intervention reuse model (12
+canonical interventions in a platform-level `intervention-index.ts`
+mirroring `move-index.ts`; `type="custom"` for course-specific
+bespoke), the distributive declaration shape (graph fields on the
+existing PR-C4 `<Aside kind="misconception">` schema; no central
+YAML), the nested children-mode `<Intervention>` component, and 6
+new audit invariants (M3–M8) extending PR-C4's M1–M2. Universal
+scope across Sophie LDS courses.
+
+The first-triage cohort is now fully graduated. Subsequent
+graduations promote from the [backlog](backlog.md).
