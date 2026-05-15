@@ -137,6 +137,102 @@ Tasks below already reflect them.
    bad fixture landed. Plan §Task 2 §2.1 corrected; tests now call
    `setModules([{...}])` and `setChapters([{...}])`.
 
+8. **Pre-flight audit corrections (Tasks 3, 5, 8, 9) — project-convention
+   alignment.** Comprehensive pre-execution audit caught six divergences
+   between the plan's prescribed imports/patterns and the actual
+   `@sophie/components` setup. Anna approved a single new dep
+   (`@radix-ui/react-dialog`); the rest are project-pattern alignments.
+   Tasks 3 + 5 + 8 + 9 sub-steps below reflect these corrections.
+
+   - **Axe library is `jest-axe`, not `vitest-axe`** (Task 3, Task 8).
+     `jest-axe` is at `@sophie/components` devDeps with `@types/jest-axe`.
+     Convention: `import { axe } from "jest-axe"` then
+     `expect(await axe(container)).toHaveNoViolations()`. The
+     `toHaveNoViolations` matcher is registered via
+     `@testing-library/jest-dom/vitest` (already in `test-setup.ts`).
+     `vitest-axe` is not a project dep and won't be added.
+
+   - **Keyboard testing uses `fireEvent`, not `@testing-library/user-event`**
+     (Task 3 SearchModal.test.tsx). Project convention is
+     `fireEvent.keyDown(target, { key: "k", metaKey: true })`
+     (see `CollapsibleCard.test.tsx`, `Predict.test.tsx`).
+     `@testing-library/user-event` is not installed and won't be
+     added. All `userEvent.keyboard(...)` and `userEvent.click(...)`
+     calls in plan §Task 3 rewrite to `fireEvent` equivalents.
+
+   - **KaTeX render pattern: `katex.renderToString` +
+     `dangerouslySetInnerHTML`, not `react-katex`** (Task 8
+     ResultCard.tsx). Project precedent in
+     `packages/components/src/components/EqRef/EqRef.tsx:43`:
+
+     ```tsx
+     import katex from "katex";
+     // ...
+     <span
+       className={styles.tex}
+       // biome-ignore lint/security/noDangerouslySetInnerHtml: tex is
+       // rendered by katex.renderToString from extractor-captured TeX
+       // source (not user-supplied content). Same trust boundary as
+       // ADR 0038 + EqRef precedent.
+       dangerouslySetInnerHTML={{
+         __html: katex.renderToString(result.meta.tex, {
+           displayMode: true,
+           throwOnError: false,
+         }),
+       }}
+     />
+     ```
+
+     `react-katex` is not a project dep and won't be added. The DOM
+     output is the same `<span class="katex">…</span>` either way,
+     so Task 3's assertion `container.querySelector(".katex")`
+     works unchanged.
+
+   - **`EntityType` lives in `@sophie/core/schema`** (Tasks 5, 8).
+     Originally the plan placed `EntityType` in
+     `@sophie/astro/lib/pagefind-converters` and imported it into
+     `@sophie/components/Search/types.ts` via
+     `@sophie/astro/lib/pagefind-converters`. Two problems:
+     (a) `@sophie/astro` has no such subpath export (verified
+     against `packages/astro/package.json` exports config), and
+     (b) `@sophie/components` is framework-pure per ADR 0001 —
+     importing from `@sophie/astro` is structurally wrong even at
+     type level. **Fix:** create
+     `packages/core/src/schema/search-facet.ts` with the
+     `EntityType` union and re-export from
+     `@sophie/core/schema`. Both `@sophie/astro/lib/pagefind-converters/index.ts`
+     and `@sophie/components/src/components/Search/types.ts`
+     import it as `import type { EntityType } from "@sophie/core/schema"`.
+     Aligns with ADR 0003 (schema as source of truth).
+
+   - **Add `@radix-ui/react-dialog` to `@sophie/components` deps**
+     (Task 5). Approved by Anna. Other Radix primitives
+     (`react-collapsible`, `react-hover-card`) are already direct
+     deps; this is consistent with ADR 0019. Task 5's dep-install
+     step adds two deps total: `pagefind` to `@sophie/astro` and
+     `@radix-ui/react-dialog` to `@sophie/components`.
+
+   - **Drop `vi.mock("/pagefind/pagefind.js", …)` from SearchModal
+     unit tests** (Task 3 §3.4). Vitest can't resolve URL paths
+     beginning with `/`, so the mock is a no-op anyway. SearchModal
+     unit tests at Layer 1 only verify chrome behavior (Cmd+K opens,
+     Esc closes, input autofocus); they don't exercise Pagefind
+     query/result behavior — that's Layer 1.6 + Layer 2. The modal's
+     own `import(…).catch(…)` swallows the failure-to-resolve under
+     jsdom.
+
+   - **Use `it` not `test`** (Tasks 3, 4 spec). Project convention
+     across `@sophie/components` (see `LearningObjectives.test.tsx`,
+     `CollapsibleCard.test.tsx`, etc.) imports `{ describe, expect, it }`
+     from `"vitest"`. `@sophie/astro` happens to use `test` (see
+     `pedagogy-index-extractor.test.ts`); Tasks 1 + 2 already use
+     `test` correctly. The convention differs by package; respect
+     each package's existing style.
+
+   Tasks 3, 5, 8, 9 sub-steps below reflect all of the above. No
+   change to Tasks 1 + 2 + 6 + 7 (those are `@sophie/astro` and use
+   `test` correctly; no Radix or KaTeX involvement).
+
 ---
 
 ## Pre-task: Worktree setup
@@ -1239,11 +1335,15 @@ RED tests turn GREEN here; this is pure infrastructure.
 
 ```bash
 pnpm --filter @sophie/astro add pagefind
+pnpm --filter @sophie/components add @radix-ui/react-dialog
 ```
 
-Verify the version pinned in `packages/astro/package.json` (Pagefind
-stable is currently `^1.x`). Note the exact version in the commit
-message.
+Two deps total. `pagefind` powers the Node-API build pipeline +
+the JS client served from `dist/pagefind/`. `@radix-ui/react-dialog`
+powers the SearchModal's focus trap + keyboard accessibility
+(per ADR 0019 + brainstorm decision 6; approved by Anna in errata
+item 8). Verify the versions pinned in each `package.json` and
+note them in the commit message.
 
 **Step 5.2 — Verify lockfile is consistent.**
 
@@ -1253,31 +1353,27 @@ pnpm install --frozen-lockfile
 
 Must finish clean (per Anna's pre-PR lockfile-check feedback).
 
-**Step 5.3 — Write the registry index.**
-
-`packages/astro/src/lib/pagefind-converters/index.ts`:
+**Step 5.2.5 — Add `EntityType` to `@sophie/core/schema`** (per
+errata item 8). Create `packages/core/src/schema/search-facet.ts`:
 
 ```ts
-import type {
-  DefinitionEntry,
-  EquationEntry,
-  FigureRegistryEntry,
-  FigureUsageEntry,
-  KeyInsightEntry,
-  MisconceptionEntry,
-  ObjectiveEntry,
-} from "@sophie/core/schema";
-
 /**
  * The 7 v1 entity types surfaced by Pagefind search. 'page' arrives
  * from Pagefind's default HTML crawl; the other 6 come from
- * custom-records produced by the converters below.
+ * custom-records produced by the converters in
+ * `@sophie/astro/lib/pagefind-converters`.
+ *
+ * Lives in `@sophie/core/schema` (not in either consumer package)
+ * because both `@sophie/components` (UI: chip strip labels, card
+ * type icons) and `@sophie/astro` (build pipeline: converter
+ * registry keys) need to agree on the union. Aligns with ADR 0003
+ * schema-as-source-of-truth.
  *
  * Extensibility: when LDS-foundation entities (notation registry,
  * misconception graph, intervention library, teaching moves,
  * equation biography) ship code-side data in Phase 3, add them
- * here AND in the `converters` map below. No UI change required if
- * the existing tiered-card base layout fits.
+ * here AND in `@sophie/astro/lib/pagefind-converters/index.ts`
+ * AND in `@sophie/components/src/components/Search/ChipStrip.tsx`.
  */
 export type EntityType =
   | "page"
@@ -1287,6 +1383,31 @@ export type EntityType =
   | "figure"
   | "misconception"
   | "objective";
+```
+
+Re-export from `packages/core/src/schema/index.ts` (add one line:
+`export type { EntityType } from "./search-facet.ts";`).
+
+**Step 5.3 — Write the registry index.**
+
+`packages/astro/src/lib/pagefind-converters/index.ts`:
+
+```ts
+import type {
+  DefinitionEntry,
+  EntityType,
+  EquationEntry,
+  FigureRegistryEntry,
+  FigureUsageEntry,
+  KeyInsightEntry,
+  MisconceptionEntry,
+  ObjectiveEntry,
+} from "@sophie/core/schema";
+
+// EntityType is now sourced from @sophie/core/schema per errata
+// item 8. Re-export here for ergonomic access from the same module
+// that defines the converter map.
+export type { EntityType };
 
 export type ChapterContext = {
   chapterTitle: string;
