@@ -1386,7 +1386,9 @@ export type EntityType =
 ```
 
 Re-export from `packages/core/src/schema/index.ts` (add one line:
-`export type { EntityType } from "./search-facet.ts";`).
+`export type { EntityType } from "./search-facet.js";` — NodeNext
+resolves `.js` against the source `.ts`; the file's other 9
+re-exports also use `.js`, so use it here for consistency).
 
 **Step 5.3 — Write the registry index.**
 
