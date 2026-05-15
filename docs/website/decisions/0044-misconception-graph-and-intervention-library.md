@@ -579,54 +579,6 @@ Reject — misconceptions and interventions apply universally beyond
 STEM (history-of-science, science-communication, statistics, etc.).
 Sophie LDS keeps the universal scope.
 
-## Revisions
-
-**§1 — 2026-05-14 Hardening pass.** Per
-[the foundation review](/Users/anna/Teaching/sophie/docs/reviews/2026-05-14-adrs-0040-0045-foundation-review.md),
-this ADR was edited in place (under Anna's explicit mutability
-override for the first hardening pass) to add:
-
-- **`depth: light | substantial`** field on `<Intervention>`
-  (optional, default `light`). Two-tier quality signal addressing
-  the review's "MG3 is gameable" critique — `light` is fine for
-  minor misconceptions; `substantial` (worked example + practice +
-  reflection) is the bar for high-leverage interventions. Not
-  gated.
-- **MG4** (INFO, new): course-level intervention-depth coverage
-  summary in `sophie audit --summary`. Derived statistic; nudges
-  authors toward depth without forcing thresholds.
-- **I4** (WARNING, new, cross-ADR with ADR 0041): every canonical
-  intervention's `move:` field (declared in `intervention-index.ts`
-  per ADR 0041 hardening) must resolve to a real move in
-  `move-index.ts`. Couples the Intervention Library to the
-  Teaching Move Library structurally.
-- Total v1 invariants: 6 → 8.
-- **Scope decision (no schema change)**: Intervention Library
-  stays misconception-paired only (not extended with a fifth
-  "Scaffolding" family). Scaffolding moves live in the Teaching
-  Move Library per ADR 0041 — the Move/Intervention distinction
-  established in ADR 0041 hardening (interventions are concrete
-  instantiations of moves paired with misconceptions) is the load-
-  bearing semantic; adding scaffolding interventions would break
-  it.
-- **Forward-ref to Sophie LDS Commons (ADR 0048)** — future
-  cross-course misconception inheritance via
-  `core-misconceptions.yaml` in `@sophie/commons-universal` and
-  discipline-specific plugins. v1 ships per-course misconception
-  declarations only; the per-course shape is forward-compatible
-  with Commons inheritance.
-- **Forward-ref to `sophie refactor misconception` ADR (0049)** —
-  refactoring CLI tooling for atomic rename / split / merge /
-  delete across the misconception graph's cross-references.
-  Addresses the graph-maintenance burden surfaced by the review.
-
-The immutability convention re-applies after this hardening pass
-completes. Future revisions land as new ADRs.
-
-Further revisions to the graph schema, intervention library, or
-invariant list follow the pattern established by
-[ADR 0038 §1, §2](./0038-pedagogy-index-pattern.md).
-
 ## References
 
 - [`reference/misconception-graph-schema.md`](../reference/misconception-graph-schema.md)

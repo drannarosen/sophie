@@ -573,56 +573,6 @@ would make CLAUDE.md grow unboundedly with every adopted course
 and would muddle Sophie-the-platform's commitments with each
 course's commitments.
 
-## Revisions
-
-**§1 — 2026-05-14 Hardening pass.** Per
-[the foundation review](/Users/anna/Teaching/sophie/docs/reviews/2026-05-14-adrs-0040-0045-foundation-review.md),
-this ADR was edited in place (under Anna's explicit mutability
-override for the first hardening pass) to add:
-
-- **`ai_workflow` structured object** (replaces `drafted_by`
-  string): `models: []` required, `generation_share: ai-primary |
-  mixed | instructor-primary` required, `iterations: <int>`
-  optional, `edit_intensity: light | moderate | heavy | rewrite`
-  optional. Captures collaboration shape, not just identity.
-- **`instructor_reviewed` structured object** (replaces binary):
-  `by` + `date` + `depth: line-by-line | full-pass | skim` +
-  `against: [<four-value enum>]` all required when present.
-  Absence-means-not-reviewed. Top-level `last_review_date`
-  deprecated.
-- **`ai_training_provenance`** at `pedagogy-contract.yaml` (PC2-A):
-  `models_allowed` list + `known_limitations` prose +
-  `primary_source_policy` prose. Always required at contract
-  level — the course's public stance on AI training data,
-  independent of per-chapter visibility.
-- **`ai_ledger.preamble`** at `pedagogy-contract.yaml` (PC2-B):
-  framing copy anchored on the structural-labor argument; required
-  only when any chapter has `visibility: public`.
-- **`visibility: internal | public`** per chapter, default
-  `internal`. Two-tier visibility model — course stance public;
-  per-chapter operational records internal by default; opt-in
-  public per chapter.
-- **Audit invariants restructured**: PC1 raised ERROR (was
-  WARNING); new PC2-A (ERROR) and PC2-B (ERROR, conditional);
-  AC1 rephrased to ERROR-published-without-review; new AC2 stale-
-  review (was old AC2 elsewhere); new AC3 INFO generation_share
-  validity; new AC4 WARNING `ai-primary + skim` re-review nudge
-  (framed as protection of the ai-primary model); new AC5 INFO
-  `public + skim` discourage.
-- **`tdr_coverage.min_ratio`** at `pedagogy-contract.yaml`
-  (default `0.1`) — gates the TDR-1 audit invariant from
-  [ADR 0040](./0040-teaching-decision-records.md).
-
-The "Public-facing by default" Rationale section was rewritten as
-"Public stance, internal operational records" reflecting the
-two-tier model.
-
-Naming: "AI Contribution Ledger" stays (no rename despite the
-structural-labor framing slightly shifting emphasis).
-
-The immutability convention re-applies after this hardening pass
-completes. Future revisions land as new ADRs.
-
 ## References
 
 - [`reference/pedagogy-contract-schema.md`](../reference/pedagogy-contract-schema.md)

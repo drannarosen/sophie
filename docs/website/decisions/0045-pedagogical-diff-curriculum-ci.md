@@ -598,40 +598,6 @@ Course-shell diff is a future ADR.
 Same pattern as ADRs 0042/0043/0044 bundling schema + component +
 audit per coherent contract.
 
-## Revisions
-
-**§1 — 2026-05-14 Hardening pass.** Per
-[the foundation review](/Users/anna/Teaching/sophie/docs/reviews/2026-05-14-adrs-0040-0045-foundation-review.md),
-this ADR was edited in place (under Anna's explicit mutability
-override for the first hardening pass) to add:
-
-- **Intentional-change demotion via TDR `affects_anchors`** — a
-  diff item whose anchor is claimed in any HEAD TDR's
-  `affects_anchors` field is automatically demoted one severity
-  level with TDR-id annotation. Honors intentional changes
-  without requiring opt-in commit annotations. Couples to ADR
-  0040 hardening's TDR schema; ADR 0040 TDR-2 invariant verifies
-  `affects_anchors` resolves.
-- **`--base-index` CI-artifact-passing flow operationalized in
-  v1** (not just future seam). Canonical GitHub Actions workflow
-  builds the base index once per PR, caches it, passes via
-  `--base-index` to avoid worktree-rebuild overhead. Worked
-  example in `sophie-diff-cli.md` CI integration section.
-- **`--semester=<semester-id>` flag** — semester-aware ref
-  resolution via tag convention `<course>-<semester>-start`.
-  Lets `sophie diff --semester=astr201-fa25` answer "what
-  changed between last fall and now" without manual ref-lookup.
-- **`--include-routine` flag** — text formatter suppresses
-  `routine`-severity items by default; flag forces inclusion.
-  JSON output always includes them.
-- **Precise severity-threshold reference table** in
-  `pedagogical-change-taxonomy.md` (replaces narrative-prose
-  description of thresholds; spec-grade clarity for the classifier
-  rules).
-
-The immutability convention re-applies after this hardening pass
-completes. Future revisions land as new ADRs.
-
 ## References
 
 - [ADR 0030 — Audience + AI author model](./0030-audience-and-ai-author-model.md)

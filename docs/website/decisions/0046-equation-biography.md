@@ -587,42 +587,6 @@ incrementally (just `<Assumption>` first, `<Observable>` added
 later) should be supported; nudging without gating is the right
 posture for v1.
 
-## Revisions
-
-**§1 — 2026-05-14 Hardening pass.** Per
-[the foundation review](/Users/anna/Teaching/sophie/docs/reviews/2026-05-14-adrs-0040-0045-foundation-review.md),
-this ADR was edited in place (under Anna's explicit mutability
-override) to add:
-
-- **Citation of the structured-for-facts, prose-for-stances
-  principle** (declared in ADR 0043 hardening). The biography
-  schema is the canonical exemplar — `<Units>` is structured
-  (facts); `<Observable>` / `<Assumption>` / `<BreaksWhen>` /
-  `<CommonMisuse>` are prose (stances). This makes the principle
-  visible as a cross-ADR design rule.
-- **Anchor granularity documentation**: biography changes are
-  tracked at the equation anchor (`eq-wiens-law`), not at
-  sub-equation level. TDR `affects_anchors` lists equation
-  anchors; the diff's semantic-axis body_diff payload surfaces
-  the specific biography field that changed. Sub-equation
-  anchors deferred to a future ADR if authoring data shows the
-  need.
-- **Propagated changes from ADR 0043 hardening** (no direct edit
-  needed in 0046, but worth noting): `<RepIntuition>` dropped
-  affects any `<MultiRep>` containing biography-bearing
-  equations; `<RepCode>` two-mode binding affects any equation
-  whose multi-representation includes external code; the
-  *structured-for-facts-prose-for-stances* principle now governs
-  biography's mixed shape explicitly.
-
-Note: this hardening is *lighter* than ADRs 0040–0045 because
-0046 is structurally derivative — every architectural decision it
-could have gotten wrong was already settled by earlier ADRs.
-Hardening propagation, not new design.
-
-The immutability convention re-applies after this hardening pass
-completes. Future revisions land as new ADRs.
-
 ## References
 
 - [ADR 0004 — Component contract revisions](./0004-component-contract-revisions.md)

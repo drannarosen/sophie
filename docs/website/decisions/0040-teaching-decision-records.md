@@ -528,31 +528,3 @@ identity is sufficient.
   SoTA-not-simple + no-back-compat-pre-launch values that shape
   Sophie's authoring culture; TDRs apply the same values to
   curriculum-design culture.
-
-## Revisions
-
-**2026-05-14 — Hardening pass.** Per
-[the foundation review](/Users/anna/Teaching/sophie/docs/reviews/2026-05-14-adrs-0040-0045-foundation-review.md),
-this ADR was edited in place (under Anna's explicit mutability
-override for the first hardening pass) to add:
-
-- Evidence-rigor fields: `evidence_type` (required, 8-value enum),
-  `evidence_strength` (optional, 4-value enum), `evidence_summary`
-  (optional prose).
-- `scope` field (default `chapter`; 4-value enum) — lets course-shell
-  decisions live in the same TDR machinery without conflating with
-  chapter-bound decisions.
-- `visibility` field (default `internal`) — TDRs are internal by
-  default; opt-in publish per-TDR.
-- `affects_anchors` field — connects TDRs to `sophie diff`
-  intentional-change demotion (ADR 0045) and to chapter-level
-  `audit_overrides` (ADR 0053).
-- `affects_versions` field — connects TDRs to course-level semver
-  (ADR 0051).
-- `<TDRRef num="N">` component and `<ChapterTDRs chapter="X">`
-  consumer (Discoverability section).
-- Audit invariants TDR-1 (course-level coverage WARNING) and TDR-2
-  (INFO on `affects_anchors` resolution).
-
-The immutability convention re-applies after this hardening pass
-completes. Future revisions land as new ADRs.
