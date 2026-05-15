@@ -8,6 +8,12 @@ import type {
   MisconceptionEntry,
   ObjectiveEntry,
 } from "@sophie/core/schema";
+import { toDefinitionRecord } from "./definitions.ts";
+import { toEquationRecord } from "./equations.ts";
+import { toFigureUsageRecord } from "./figure-usages.ts";
+import { toKeyInsightRecord } from "./key-insights.ts";
+import { toMisconceptionRecord } from "./misconceptions.ts";
+import { toObjectiveRecord } from "./objectives.ts";
 
 export type { EntityType };
 
@@ -43,9 +49,10 @@ export type EntityWithLookupToPagefindRecord<Entity, Lookup> = (
   ctx: ChapterContext
 ) => PagefindCustomRecord;
 
-// One converter per entity-source key on the PedagogyIndex.
-// Exhaustiveness is unit-tested in index.test.ts.
-export const converters: {
+// Compile-time exhaustiveness: the registry's value types must satisfy
+// the per-entity converter signatures, and the key set must match the
+// PedagogyIndex entity-source keys (asserted in index.test.ts).
+type ConverterRegistry = {
   definitions: EntityToPagefindRecord<DefinitionEntry>;
   equations: EntityToPagefindRecord<EquationEntry>;
   keyInsights: EntityToPagefindRecord<KeyInsightEntry>;
@@ -55,11 +62,13 @@ export const converters: {
   >;
   misconceptions: EntityToPagefindRecord<MisconceptionEntry>;
   objectives: EntityToPagefindRecord<ObjectiveEntry>;
-} = {
-  definitions: null as never,
-  equations: null as never,
-  keyInsights: null as never,
-  figureUsages: null as never,
-  misconceptions: null as never,
-  objectives: null as never,
 };
+
+export const converters = {
+  definitions: toDefinitionRecord,
+  equations: toEquationRecord,
+  keyInsights: toKeyInsightRecord,
+  figureUsages: toFigureUsageRecord,
+  misconceptions: toMisconceptionRecord,
+  objectives: toObjectiveRecord,
+} as const satisfies ConverterRegistry;
