@@ -77,6 +77,7 @@ project:
         - file: reference/intervention-library.md
         - file: reference/sophie-diff-cli.md
         - file: reference/pedagogical-change-taxonomy.md
+        - file: reference/equation-biography-schema.md
     - title: Explanation
       children:
         - file: explanation/architecture.md
@@ -145,6 +146,7 @@ project:
         - file: decisions/0043-notation-registry-multirep-alignment-audit.md
         - file: decisions/0044-misconception-graph-and-intervention-library.md
         - file: decisions/0045-pedagogical-diff-curriculum-ci.md
+        - file: decisions/0046-equation-biography.md
     - title: Status
       children:
         - file: status/roadmap.md
