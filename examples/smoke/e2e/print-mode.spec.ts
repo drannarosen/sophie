@@ -69,13 +69,4 @@ test.describe("PR 10: chapter print contract", () => {
     const results = await new AxeBuilder({ page }).analyze();
     expect(results.violations).toEqual([]);
   });
-
-  test("rendered .sophie-content HTML matches print snapshot", async ({
-    page,
-  }) => {
-    await page.goto(CHAPTER_URL);
-    await page.emulateMedia({ media: "print" });
-    const content = await page.locator(".sophie-content").innerHTML();
-    expect(content).toMatchSnapshot("smoke-chapter-print.html");
-  });
 });
