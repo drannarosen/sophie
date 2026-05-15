@@ -105,6 +105,30 @@ Neither field defaults; absence means "no time-based gate." A
 chapter with neither field is always included (subject to
 `status` per ADR 0051).
 
+**Per-event absolute ISO-8601 timestamps; no recurrence rules
+in v1.** Every `publishes_at`/`unpublishes_at`/`unlocks_at`
+timestamp in Sophie is an absolute instant with explicit
+timezone offset (e.g., `2026-09-15T08:00:00-07:00`,
+`2026-11-04T08:00:00-08:00`). Sophie does NOT support recurrence
+rules (e.g., "every Wednesday at 10am Pacific through the
+semester") in v1. Two reasons:
+
+- **DST is structurally bulletproof under absolute timestamps.**
+  Each timestamp's offset is baked in (`-07:00` pre-DST,
+  `-08:00` post-DST in Pacific); the build server reads each
+  instant unambiguously. Recurrence-with-DST rules are exactly
+  where DST bugs hide (most tooling gets the November transition
+  subtly wrong).
+- **Schedule structure already supports per-event authoring.** ADR
+  0054's `schedule.yaml` declares events per-week with explicit
+  dates; per-occurrence authoring is the natural shape.
+
+Recurrence rules (with proper DST-aware VTIMEZONE expansion)
+are deferred to backlog B10. Promotable when authoring data shows
+real demand. The deferral does mean ~30 events per semester per
+course in `schedule.yaml`, distributed across weekly sections;
+real but bounded.
+
 **`status: draft` overrides `publishes_at`**: a draft chapter
 with a future `publishes_at` does NOT publish at that time. The
 override is named in [ADR 0051](0051-chapter-status-course-versioning.md)
@@ -261,6 +285,20 @@ the next cron window").
 The cron interval is **configurable** per course; 6h is the
 recommended default but consumer repos can adjust based on their
 delivery pattern.
+
+**Cron + iCal subscriber refresh: two-step latency.** The cron
+controls how often the *deployed site* rebuilds. Students who
+subscribe to the iCal feed at `/schedule.ics` (per ADR 0054) get
+the *feed*'s updated content only after their calendar app
+polls it — and most calendar apps poll on their own cadence
+(Google Calendar's webcal/HTTPS subscription refresh is typically
+hourly to several-hourly; Apple Calendar honors the
+`X-PUBLISHED-TTL` hint but real-world refresh varies). End-to-end
+"exam date moved → student sees update in their calendar" is
+therefore `cron + calendar-app-refresh` — typically 6h to ~24h
+total, not 6h. Authors who need faster propagation use
+`workflow_dispatch` to trigger an immediate rebuild and tell
+students to manually refresh their calendar subscription.
 
 ### Audit invariants
 

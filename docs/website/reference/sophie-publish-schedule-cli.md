@@ -25,7 +25,9 @@ Neither verb modifies the build; both are read-only inspection.
 ### Synopsis
 
 ```text
-sophie publish-state [--check] [--as-of=<iso-timestamp>] [--format=text|json]
+sophie publish-state [--check --deployed-base=<url>]
+                     [--as-of=<iso-timestamp>]
+                     [--format=text|json]
 ```
 
 ### Default behavior
@@ -63,18 +65,33 @@ Build is reproducible. Use --as-of=<timestamp> to preview a future state.
 
 ### `--check` flag
 
-Performs the same inspection but exits with a structured status
-code suitable for CI:
+Performs a post-deploy check: fetches the deployed site's actual
+content and compares against the publication state that should
+be live at the current clock. Suitable for a cron-driven monitor
+that verifies the deployed site hasn't drifted from what the
+schedule expects.
 
-- Exit `0` if the build state matches the expected state for
-  the current clock (i.e., no `publishes_at` in the past but
-  not yet rebuilt).
-- Exit `1` if there is at least one chapter or component whose
-  expected visibility (based on its timestamp) does not match
-  its actual visibility. Suggests a rebuild.
+Required parameter: `--deployed-base=<https-url>` (the deployed
+site's root URL).
 
-Use case: a CI step that verifies the deployed site is up-to-date
-with the latest schedule, before declaring the deploy successful.
+- Exit `0` if the deployed site's actual content matches the
+  expected publication state for the current clock — every
+  chapter with `publishes_at` in the past is present at its URL;
+  every chapter with `publishes_at` in the future is absent;
+  every `unpublishes_at` boundary is respected.
+- Exit `1` if any chapter or component's deployed visibility
+  diverges from its expected state. Useful for "the cron didn't
+  fire" or "the deployment lagged" detection.
+
+This is distinct from a *local-build* check — checking the
+local working tree's build output against `now()` is tautological
+(the build evaluated `now()` to produce that output). The
+deployment-vs-clock comparison is what catches real drift.
+
+Use case: a separate scheduled GitHub Actions workflow (running
+hourly, say) calls `sophie publish-state --check
+--deployed-base=https://courses.example.edu/astr201-fa26` and
+alerts if exit code is 1 — the cron job didn't keep up.
 
 ### `--as-of=<iso-timestamp>` flag
 
@@ -246,7 +263,6 @@ jobs:
       - uses: pnpm/action-setup@v3
       - run: pnpm install --frozen-lockfile
       - run: pnpm sophie build
-      - run: pnpm sophie publish-state --check
       - uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist
@@ -257,6 +273,11 @@ The default 6-hour cron means worst-case 6-hour latency between
 an `unlocks_at` time and the content actually appearing.
 `workflow_dispatch` lets the instructor manually rebuild on
 demand.
+
+For deployment-vs-clock drift monitoring, a *separate* workflow
+calls `sophie publish-state --check --deployed-base=<url>`
+on its own schedule (typically hourly, to catch missed cron
+firings); see the `--check` flag documentation above.
 
 The cron interval is **configurable per course**. Tighten to 1
 hour for high-frequency unlock patterns; loosen to 24 hours for
