@@ -85,6 +85,38 @@ emits an `INFO` / `WARNING` / `ERROR` row. CI fails on `ERROR`;
 `WARNING` is surfaced and reviewable. Future ADR families append
 to this list rather than replacing it.
 
+### What the audit does and doesn't do
+
+Sophie's audit checks **presence + well-formedness**, not
+**quality**. An invariant fires when a structurally required piece
+is missing, an anchor doesn't resolve, a field has the wrong shape,
+or a cross-reference dangles. None of the v1 invariants ask "is
+this misconception actually well-chosen for this audience?" or "is
+this teaching move applied with the intent its catalog entry
+describes?" Those are judgments — they live with the instructor
+(decider) and the AI (proposer-with-citations), not with the
+deterministic audit.
+
+This means **several v1 invariants are gameable by perfunctory
+satisfaction.** An author can silence MG3 by adding a one-sentence
+`<Intervention>` that nominally addresses a misconception without
+actually changing whether students confront it. AC1 fires only on
+schema-shape; it cannot tell whether the ai_contribution record
+honestly describes how the chapter was authored. **This is by
+design**, not a v1-only compromise. The audit surface is the
+*presence floor*, not the *quality ceiling*. Quality lives in
+TDRs ([ADR 0040](../decisions/0040-teaching-decision-records.md)),
+in the Tier 3 AI review prompts (§5), in instructor review
+(`instructor_reviewed.depth`), and — most importantly — in the
+empirical outcomes Sophie measures longitudinally
+([ADR 0047](../decisions/0047-empirical-validation-plan.md)).
+
+The structural invariants exist to make perfunctory satisfaction
+*visible* (anyone scanning the contract sees what got declared)
+and to make absent structure *impossible* (CI blocks the merge).
+That floor is load-bearing precisely because it is gameable — it
+forces the gaming to be legible.
+
 ## 2. The Sophie CLI surface
 
 The CLI is purely deterministic. See

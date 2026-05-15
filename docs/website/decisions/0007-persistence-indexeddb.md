@@ -127,3 +127,42 @@ different implementation.
 - [ADR 0004](0004-component-contract-revisions.md) —
   `useInteractive` hook context.
 - [`idb` library](https://github.com/jakearchibald/idb).
+- [ADR 0029](0029-broadcastchannel-lww.md) — BroadcastChannel
+  last-write-wins refinement.
+- [ADR 0053](0053-conformance-failure-modes.md) §CF5 — runtime
+  fallback semantics formalized.
+
+## Revisions
+
+**2026-05-15 — Runtime fallback semantics formalized.** Per the
+[2026-05-14 foundation review](/Users/anna/Teaching/sophie/docs/reviews/2026-05-14-adrs-0040-0045-foundation-review.md)
+Missing-2 concern and the
+[ADR 0053](0053-conformance-failure-modes.md) §CF5 design, the
+fallback paths that were implicit in the original Decision are
+now named explicitly:
+
+- **IndexedDB unavailable** (private browsing, quota exhaustion,
+  storage-disabled browsers, Safari edge cases). `ResponseStore`
+  swaps in `MemoryResponseStore` — same interface, in-memory
+  Map-backed, scoped to the page session. Persistence is lost
+  on tab close; nothing breaks at runtime. The fallback emits a
+  one-time console warning (`[sophie] IndexedDB unavailable;
+  responses will not persist across sessions`) and surfaces via
+  `useInteractive`'s `persistence: 'session' | 'persistent'`
+  hook return value so chapter UI can optionally show a session-
+  only banner. `MemoryResponseStore` is **not** for testing-only
+  use; it is the production fallback.
+
+- **BroadcastChannel unavailable** (older Safari versions,
+  cross-origin iframes, restrictive embedding contexts).
+  Cross-tab sync degrades **silently** — `useInteractive`
+  continues to function within a single tab; concurrent tabs
+  diverge until next page load. No banner, no warning surface to
+  students. ADR 0029's LWW timestamps still resolve conflicts
+  on the next read from disk in the IndexedDB-available case.
+
+ADR 0053 §CF5 carries the full failure-mode table; this section
+documents the persistence-layer entries for completeness. No
+change to the v3 sync seam decision; `SyncedResponseStore` is
+still the future replacement, with the same in-process fallback
+behavior.
