@@ -34,7 +34,14 @@ export function ResultCard({
   highlighted,
   id,
 }: ResultCardProps): ReactNode {
-  const type = result.filters.type[0];
+  // Pagefind's default HTML crawl emits page records without
+  // `filters.type` (only converter-emitted custom records carry the
+  // facet). Fall back to "page" so the listbox renders both shapes
+  // through one component instead of crashing on the page-record
+  // branch. The crawl-side fix (data-pagefind-filter markup on chapter
+  // templates) is a Task-7/Task-8-adjacent follow-up; see Task 10
+  // implementation report for the deviation.
+  const type = result.filters?.type?.[0] ?? "page";
   const typeLabel = TYPE_LABEL[type] ?? type;
   const typeIcon = TYPE_ICON[type] ?? "";
 

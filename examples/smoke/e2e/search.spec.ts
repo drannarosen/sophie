@@ -76,6 +76,13 @@ test.describe("Pagefind search modal (Layer 2)", () => {
 
   test("chip filter narrows results to one type", async ({ page }) => {
     await page.goto("/chapters/measuring-the-sky/");
+    // Wait for the static trigger AND a network-idle state before
+    // pressing the keyboard shortcut. The SearchModal mounts with
+    // `client:idle`; its document keydown listener isn't installed
+    // until React hydrates, which Astro defers until `requestIdleCallback`
+    // (after network-idle in practice). Mirrors test 1's discipline.
+    await expect(page.getByRole("button", { name: /search/i })).toBeVisible();
+    await page.waitForLoadState("networkidle");
     await page.keyboard.press("Meta+k");
     const dialog = page.getByRole("dialog");
     await expect(dialog).toHaveAttribute("data-state", "open");
@@ -97,6 +104,9 @@ test.describe("Pagefind search modal (Layer 2)", () => {
 
   test("Esc closes the modal", async ({ page }) => {
     await page.goto("/chapters/measuring-the-sky/");
+    // Same trigger-visible precondition as test 1 + test 2: wait for
+    // SearchModal hydration before invoking the Cmd+K shortcut.
+    await expect(page.getByRole("button", { name: /search/i })).toBeVisible();
     await page.keyboard.press("Meta+k");
     await expect(page.getByRole("dialog")).toBeVisible();
     await page.keyboard.press("Escape");

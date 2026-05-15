@@ -19,6 +19,7 @@ import {
 import { indexAccumulator } from "../lib/pedagogy-index-extractor";
 import ContentColumn from "./ContentColumn.astro";
 import RightColumn from "./RightColumn.astro";
+import SearchTrigger from "./SearchTrigger.astro";
 import Sidebar from "./Sidebar.astro";
 import SidebarToggle from "./SidebarToggle.astro";
 import ThemeToggle from "./ThemeToggle.astro";
@@ -337,6 +338,7 @@ const collapsedVars = [
       <SidebarToggle />
     </slot>
     <slot name='topbar-trailing'>
+      <SearchTrigger />
       <ViewModeToggle />
       <ThemeToggle />
     </slot>
