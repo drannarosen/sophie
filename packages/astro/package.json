@@ -68,6 +68,7 @@
     "katex": "^0.16.45",
     "lucide-static": "^1.14.0",
     "mdast-util-to-hast": "^13.2.1",
+    "pagefind": "^1.5.2",
     "rehype-katex": "^7.0.1",
     "remark-frontmatter": "^5.0.0",
     "remark-gfm": "^4.0.1",
