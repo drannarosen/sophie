@@ -1,6 +1,6 @@
+import { auditFile } from "@sophie/core/audit";
 import { defineCommand } from "citty";
 
-// Placeholder; full relocation in Phase 6.
 export const auditCommand = defineCommand({
   meta: {
     name: "audit",
@@ -14,7 +14,17 @@ export const auditCommand = defineCommand({
       required: true,
     },
   },
-  async run() {
-    throw new Error("audit command relocation pending (Phase 6).");
+  async run({ args }) {
+    const findings = await auditFile(args.file);
+    if (findings.length === 0) {
+      console.log(`OK  ${args.file}`);
+      return;
+    }
+    console.error(`FAIL  ${args.file}`);
+    for (const finding of findings) {
+      const where = finding.path.length > 0 ? finding.path.join(".") : "<root>";
+      console.error(`  [${finding.severity}] ${where}: ${finding.message}`);
+    }
+    process.exit(1);
   },
 });
