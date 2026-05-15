@@ -136,9 +136,20 @@ The deterministic operations:
   templates.
 - `sophie upgrade` — apply forward-only schema migrations.
 
-What's **not** in the CLI by design: `sophie generate`, `sophie fix`,
-`sophie refactor`. Those need an AI in the loop and live as Claude
-Code slash commands and skills.
+What's **not** in the CLI by design: `sophie generate`, `sophie fix`.
+Those need an AI in the loop and live as Claude Code slash commands
+and skills.
+
+`sophie refactor` ships in v1 (per
+[ADR 0049](../decisions/0049-sophie-refactor-cli.md)) as a
+deterministic verb family — slug-level rename / split / merge /
+delete with atomic apply, audit-revert-on-new-ERRORs, and
+auto-generated TDR-seed stubs. Refactoring slugged LDS entities is
+*structurally representable*; it does not require AI judgment.
+The AI-assisted slash commands handle the *semantically rich*
+operations (drafting prose, suggesting figures, evaluating
+clarity); the deterministic CLI handles the *structurally
+mechanical* operations (rename slug X to Y across the corpus).
 
 ## 3. The prompt file format
 

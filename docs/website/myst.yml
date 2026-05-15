@@ -78,6 +78,9 @@ project:
         - file: reference/sophie-diff-cli.md
         - file: reference/pedagogical-change-taxonomy.md
         - file: reference/equation-biography-schema.md
+        - file: reference/sophie-metrics-cli.md
+        - file: reference/sophie-plugin-system.md
+        - file: reference/sophie-refactor-cli.md
     - title: Explanation
       children:
         - file: explanation/architecture.md
@@ -147,6 +150,9 @@ project:
         - file: decisions/0044-misconception-graph-and-intervention-library.md
         - file: decisions/0045-pedagogical-diff-curriculum-ci.md
         - file: decisions/0046-equation-biography.md
+        - file: decisions/0047-empirical-validation-plan.md
+        - file: decisions/0048-sophie-lds-content-plugins.md
+        - file: decisions/0049-sophie-refactor-cli.md
     - title: Status
       children:
         - file: status/roadmap.md
