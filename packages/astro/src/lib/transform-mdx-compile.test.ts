@@ -32,6 +32,19 @@ import {
  * (literal `"o-state"` / `"State"` strings, with an array `[...]`
  * around them) — not the empty-expression shape `objectives={}` that
  * the bug produced.
+ *
+ * `@mdx-js/mdx` is declared as a direct devDep of `@sophie/astro` for
+ * this test's `compile()` import. The runtime version is already
+ * transitive via `@astrojs/mdx` at the same major; the direct devDep
+ * makes the import honest and the version-coupling explicit.
+ *
+ * Assertion shape: the positive assertions (`toContain`, the
+ * array-literal `toMatch`) carry the actual contract — if the array
+ * doesn't survive into compiled JS, the test fails regardless of
+ * what shape replaces it. The negative `not.toMatch` assertions belt
+ * the two specific failure modes we've already seen (`objectives={}`
+ * and `objectives: undefined`) so a regression to either shape gives
+ * a more legible failure message.
  */
 
 const mdxSource = [

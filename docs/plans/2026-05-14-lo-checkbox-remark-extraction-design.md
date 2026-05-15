@@ -444,7 +444,7 @@ export function LearningObjectives({
       </h2>
       <ul
         className={styles.list}
-        aria-busy={controlProps["aria-busy"] ? "true" : "false"}
+        aria-busy={controlProps["aria-busy"]}
       >
         {objectives.map((o) => {
           const checked = stateRecord[o.id] ?? false;
