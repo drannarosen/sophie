@@ -337,7 +337,7 @@ are authoring suggestions that don't justify ERROR or WARNING
 status. The audit's role here is "Sophie has opinions about good
 equation biographies, even where it doesn't gate on them."
 
-### Prose-only for non-`<Units>` biography children
+### Prose-only for non-`<Units>` biography children — follows the structured-for-facts, prose-for-stances principle
 
 Q5's choice. `<Units>` carries a `symbol=` that meaningfully cross-
 refers to the Notation Registry — it's a tag pointing at a typed
@@ -345,6 +345,27 @@ thing. `<Observable>`, `<Assumption>`, `<CommonMisuse>`,
 `<BreaksWhen>` are prose; the meaning IS the body. Adding a
 `concept_ref=` slot to them mixes two registers (tag + prose) in
 one element, which is hard to author cleanly.
+
+This decision is the canonical exemplar of the
+**structured-for-facts, prose-for-stances** principle declared in
+[ADR 0043 Rationale](./0043-notation-registry-multirep-alignment-audit.md#the-structured-for-facts-prose-for-stances-principle-introduced-2026-05-14)
+(hardened 2026-05-14). The biography schema sorts cleanly:
+
+- **Structured (facts):** `<Units symbol="X" unit="Y">` — facts
+  about an equation's symbol/unit pair. Enumerable, recurrent,
+  audit-checkable (E8 fires on symbol mismatch with NR).
+- **Prose (stances):** `<Observable>`, `<Assumption>` body,
+  `<BreaksWhen>`, `<CommonMisuse>` body — author's narrative
+  position on what the equation observes, what it assumes, where
+  it breaks, what students commonly misuse. Conflating either
+  direction (structuring stances or prose-ifying facts) degrades
+  both.
+
+Same pattern applies in ADRs 0040 (TDR `evidence_summary` is prose;
+fields like `evidence_type` are enumerable), 0042 (`ai_workflow`
+is structured; `ai_training_provenance.known_limitations` is
+prose), 0043 (`<RepCode>` external-mode provenance is structured;
+NR concept descriptions are prose).
 
 If a chapter needs to reference an NR concept inside biography
 prose, it does so by inline link (`Peak wavelength of *thermal*
@@ -474,6 +495,17 @@ existing taxonomy:
 No taxonomy changes needed — the existing two-axis schema covers
 biography changes the same way it covers everything else.
 
+**Anchor granularity** (hardened 2026-05-14): biography changes
+are tracked at the **equation anchor** (`eq-wiens-law`), not at
+sub-equation level (`eq-wiens-law/breaks-when`). v1 simplicity —
+TDR `affects_anchors: [eq-wiens-law]` covers all of an equation's
+biography children; the diff surfaces the specific biography field
+that changed via the semantic-axis `body_diff` payload. If
+authoring data eventually shows the need for finer granularity, a
+future ADR can add sub-equation anchors (`eq-wiens-law/observable`,
+`eq-wiens-law/breaks-when`, etc.); the schema is forward-
+compatible.
+
 ### For AI authoring (future)
 
 The biography schema is the natural target for a
@@ -557,7 +589,39 @@ posture for v1.
 
 ## Revisions
 
-None yet.
+**§1 — 2026-05-14 Hardening pass.** Per
+[the foundation review](/Users/anna/Teaching/sophie/docs/reviews/2026-05-14-adrs-0040-0045-foundation-review.md),
+this ADR was edited in place (under Anna's explicit mutability
+override) to add:
+
+- **Citation of the structured-for-facts, prose-for-stances
+  principle** (declared in ADR 0043 hardening). The biography
+  schema is the canonical exemplar — `<Units>` is structured
+  (facts); `<Observable>` / `<Assumption>` / `<BreaksWhen>` /
+  `<CommonMisuse>` are prose (stances). This makes the principle
+  visible as a cross-ADR design rule.
+- **Anchor granularity documentation**: biography changes are
+  tracked at the equation anchor (`eq-wiens-law`), not at
+  sub-equation level. TDR `affects_anchors` lists equation
+  anchors; the diff's semantic-axis body_diff payload surfaces
+  the specific biography field that changed. Sub-equation
+  anchors deferred to a future ADR if authoring data shows the
+  need.
+- **Propagated changes from ADR 0043 hardening** (no direct edit
+  needed in 0046, but worth noting): `<RepIntuition>` dropped
+  affects any `<MultiRep>` containing biography-bearing
+  equations; `<RepCode>` two-mode binding affects any equation
+  whose multi-representation includes external code; the
+  *structured-for-facts-prose-for-stances* principle now governs
+  biography's mixed shape explicitly.
+
+Note: this hardening is *lighter* than ADRs 0040–0045 because
+0046 is structurally derivative — every architectural decision it
+could have gotten wrong was already settled by earlier ADRs.
+Hardening propagation, not new design.
+
+The immutability convention re-applies after this hardening pass
+completes. Future revisions land as new ADRs.
 
 ## References
 
@@ -565,21 +629,31 @@ None yet.
   — `serialize` separation, axe-core requirement.
 - [ADR 0030 — Audience + AI author model](./0030-audience-and-ai-author-model.md)
   — HITL mandate; biography is AI-scaffolding-friendly under
-  instructor review.
+  instructor review. Per the 2026-05-14 amendment, also documents
+  Sophie's commitment to AI-primary authoring as deliberate
+  design.
 - [ADR 0038 — Pedagogy-index pattern](./0038-pedagogy-index-pattern.md)
   — `PedagogyIndex.equations` is where biography is stored;
   children-mode extractor pattern.
 - [ADR 0042 — Pedagogy Contract + AI Contribution Ledger](./0042-pedagogy-contract-and-ai-contribution-ledger.md)
   — `math_and_units_standards.notation_registry` opt-in gates E8.
 - [ADR 0043 — Notation Registry + MultiRep + Alignment Audit](./0043-notation-registry-multirep-alignment-audit.md)
-  — `canonical_symbol`/`alias` lookup that E8 fires on; precedent
-  for children-mode + `concept_ref` shape.
+  — `canonical_symbol`/`alias` lookup that E8 fires on;
+  declared the *structured-for-facts, prose-for-stances* principle
+  this ADR exemplifies (Q5 lock).
 - [ADR 0044 — Misconception Graph + Intervention Library](./0044-misconception-graph-and-intervention-library.md)
   — misconception slugs that `<CommonMisuse misconception=…>`
   references; precedent for children-mode component cross-refs
   into a graph.
 - [ADR 0045 — Pedagogical Diff + Curriculum CI](./0045-pedagogical-diff-curriculum-ci.md)
-  — biography changes classify under the existing diff taxonomy.
+  — biography changes classify under the existing diff taxonomy;
+  TDR `affects_anchors` lists equation anchors at the equation
+  level (not sub-equation).
+- [ADR 0048 — Sophie LDS Content Plugin System](./0048-sophie-lds-content-plugin-system.md)
+  — future cross-course equation sharing (weaker case than for
+  concepts or misconceptions; equations are typically course-
+  specific in detail even when they share names). Forward-ref
+  only; per-course shape is forward-compatible.
 - [`vision/features/backlog.md`](../vision/features/backlog.md) —
   B1 entry surfaced this ADR; collapsed to one-line pointer in
   the 2026-05-14 promotion commit.
