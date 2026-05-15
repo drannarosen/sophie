@@ -7,6 +7,16 @@ tags: [strategy, papers, methods, joss, sophie]
 
 # Paper #1 — Methods / infrastructure
 
+:::{note} The committed paper
+Paper #1 is the **only committed paper** in Sophie's publication
+strategy. It implements
+[ADR 0047](../../decisions/0047-empirical-validation-plan.md)'s
+authoring-side empirical validation plan; target submission Q4 2026.
+Other research threads — structural-HITL conceptual, HSI outcomes,
+predict-then-run calibration — are documented as brainstorming at
+[Future contributions](future-contributions.md), not committed papers.
+:::
+
 ## Working title
 
 > **Pedagogy-aware authoring: schema-driven design for AI-coauthored
@@ -50,7 +60,7 @@ already done**:
 
 - Sophie's [architecture explanation](../../explanation/architecture.md)
   is written.
-- [40+ ADRs](../../decisions/template.md) document every load-bearing
+- [50+ ADRs](../../decisions/template.md) document every load-bearing
   design decision.
 - Phase 0 and v1 launches demonstrate the architecture working.
 
@@ -121,6 +131,8 @@ with deeper pedagogy motivation and a stronger related-work section.
 
 ## See also
 
-- [Papers overview](index.md) — full publication pipeline
+- [Papers overview](index.md) — publication strategy
+- [Future contributions](future-contributions.md) — uncommitted research threads
+- [ADR 0047 — Empirical Validation Plan](../../decisions/0047-empirical-validation-plan.md) — what this paper implements
 - [Architecture explanation](../../explanation/architecture.md) — what this paper distills
 - [JOSS submission guide](https://joss.readthedocs.io/en/latest/submitting.html)

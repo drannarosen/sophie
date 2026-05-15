@@ -189,9 +189,7 @@ project:
           children:
             - file: strategy/papers/index.md
             - file: strategy/papers/paper-1-methods.md
-            - file: strategy/papers/paper-2-hitl.md
-            - file: strategy/papers/paper-3-outcomes.md
-            - file: strategy/papers/paper-4-predict.md
+            - file: strategy/papers/future-contributions.md
     - title: Contributing
       children:
         - file: contributing/setup.md

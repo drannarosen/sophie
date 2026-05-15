@@ -351,9 +351,10 @@ B9 telemetry are the load-bearing outcome signals?
 
 References:
 
-- ADR 0047 Empirical Validation Plan (Paper #2 of the SoTL
-  strategy is the outcome-side paper this backlog entry serves;
-  see `strategy/papers/paper-2-hitl.md`).
+- ADR 0047 Empirical Validation Plan — Paper #2 of the SoTL
+  strategy is the outcome-side paper this backlog entry serves.
+  Outcome-side threads are currently uncommitted; see
+  `strategy/papers/future-contributions.md` (Threads B and C).
 
 ---
 
