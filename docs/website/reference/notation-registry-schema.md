@@ -268,8 +268,10 @@ changes. The TDR provides the audit trail.
 The [Representation Alignment Audit](../decisions/0043-notation-registry-multirep-alignment-audit.md#artifact-3-representation-alignment-audit-v1-8-invariants)
 uses the registry to check:
 
-- **NR1** — every `<KeyEquation>`'s primary symbol matches a
-  registered concept's `canonical_symbol`.
+- **NR1** — every symbol declared in a `<KeyEquation>`'s `symbols`
+  metadata appears in the registry as some concept's
+  `canonical_symbol` (or is explicitly marked `transient: true`,
+  e.g. for generic placeholder variables in a derivation).
 - **NR2** — every registered concept is referenced by at least
   one chapter (or marked forward-looking).
 - **NR3** — no symbol collisions across registered concepts.

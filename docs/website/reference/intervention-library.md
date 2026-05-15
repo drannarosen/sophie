@@ -37,7 +37,7 @@ parallel to [PR-C4's LearningObjectives refactor](../decisions/0038-pedagogy-ind
 ```
 
 The `type` prop references this library's canonical names. The
-audit (invariant **M7**) verifies the reference resolves.
+audit (invariant **I2**) verifies the reference resolves.
 
 ## `<Intervention>` component props
 
@@ -142,9 +142,7 @@ physics. *Journal of Research in Science Teaching*, 30(10),
 
 Identify a domain where the student already has correct intuition,
 then map the structure across to the target concept. **Declare the
-analogy's limits explicitly** — where it breaks down. Audit
-invariant **M8** flags `bridging-analogy` interventions without
-declared limits.
+analogy's limits explicitly** — where it breaks down.
 
 **Authoring example:**
 
@@ -160,6 +158,10 @@ declared limits.
   </Limits>
 </Intervention>
 ```
+
+Audit invariant **I3** flags `bridging-analogy` interventions
+without declared `<Limits>` as INFO (Clement 1993 recommends
+explicit-limits authoring).
 
 ### `anchoring-intuition`
 

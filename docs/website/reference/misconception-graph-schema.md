@@ -71,10 +71,11 @@ as a DAG.
 
 Audit invariants:
 
-- **M5** (ERROR): cycle detected in the prerequisite graph (DAG
+- **MG1** (ERROR): cycle detected in the prerequisite graph (DAG
   violation).
-- **M6** (ERROR): a prerequisite references a misconception not
-  introduced in any earlier chapter (by `introduced_in` ordering).
+- **MG2** (ERROR): a prerequisite references a misconception not
+  introduced in any earlier chapter (by the consumer-repo's
+  declared chapter ordering).
 
 Empty list (`[]`) is meaningful — it explicitly declares "this
 misconception has no prerequisites" (a *root* in the DAG).
@@ -287,20 +288,31 @@ when that lands) plus a tabular fallback.
 The [Representation Alignment Audit's misconception family](../decisions/0044-misconception-graph-and-intervention-library.md#artifact-4-six-new-audit-invariants)
 checks:
 
-- **M1** (from PR-C4) — orphan misconception in registry without
-  chapter usage.
-- **M2** (from PR-C4) — misconception name collision across chapters.
-- **M3** (new) — misconception declared but no `<Intervention>`
-  paired with it.
-- **M4** (new) — `<Intervention>` used with `addresses` referencing
-  no known misconception.
-- **M5** (new, ERROR) — cycle detected in `prerequisite_misconceptions`.
-- **M6** (new, ERROR) — prerequisite references a misconception not
-  introduced in any earlier chapter (by chapter ordering).
-- **M7** (new, ERROR) — `<Intervention type>` references a name not
-  in `intervention-index.ts`.
-- **M8** (new, INFO) — `<Intervention type="bridging-analogy">`
-  doesn't declare `<Limits>`.
+Pre-existing (shipped or deferred in
+[`pedagogy-audit.ts`](https://github.com/drannarosen/sophie/blob/main/packages/astro/src/lib/pedagogy-audit.ts)):
+
+- **M1, M2** (extractor-thrown) — title / id-derivation mechanics;
+  throw during MDX parse before the audit runs.
+- **M3** (deferred to v2) — orphan-misconception heuristic
+  "deferred until we have a usable signal beyond 'no source-of-
+  truth title.'" The Intervention Library provides that signal;
+  see MG3.
+
+New in this ADR:
+
+- **MG1** (new, ERROR) — cycle detected in `prerequisite_misconceptions`.
+- **MG2** (new, ERROR) — prerequisite references a misconception
+  not introduced in any earlier chapter (by the consumer-repo's
+  declared chapter ordering).
+- **MG3** (new, WARNING) — misconception declared but no
+  `<Intervention>` paired with it across the course; operationalizes
+  the deferred M3 with the intervention-pairing signal.
+- **I1** (new, WARNING) — `<Intervention>` used with `addresses`
+  referencing no known misconception.
+- **I2** (new, ERROR) — `<Intervention type>` references a name not
+  in `intervention-index.ts` (and `type !== "custom"`).
+- **I3** (new, INFO) — `<Intervention type="bridging-analogy">`
+  doesn't declare `<Limits>` (Clement 1993).
 
 ## Authoring guidelines
 

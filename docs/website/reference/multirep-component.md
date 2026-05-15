@@ -270,10 +270,13 @@ TBD in the follow-up code PR but parallels the existing
 
 ### Cosmic Playground demos (per [ADR 0008](../decisions/0008-cosmic-playground-protocol.md))
 
-A `<RepCode refName="…">` may reference a Cosmic Playground demo
-slug. The binding tells students "this demo *is* the code
-representation of this concept" — the demo's runtime state
-becomes the concept's interactive surface.
+*Speculative; pending Phase 4 design.* `<RepCode>` at v1
+references `<CodeCell>` entries (ADR 0018). A future extension
+could allow `<RepCode>` to also reference a Cosmic Playground
+demo slug — making the demo's runtime state the concept's
+interactive representation — but this requires manifest-schema
+work on Cosmic Playground's side and is **not** committed by
+ADR 0043.
 
 ## Authoring tips
 

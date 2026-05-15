@@ -173,7 +173,7 @@ with two new invariant families:
 
 | ID | Severity | Check |
 |---|---|---|
-| **NR1** | WARNING | `<KeyEquation>` uses a primary symbol not declared in `notation-registry.yaml` |
+| **NR1** | WARNING | `<KeyEquation>` declares one or more symbols in its `symbols` metadata (see ADR 0038 §extractors) that are not present in `notation-registry.yaml`. "Primary" status is *not* assumed — every declared symbol on the equation is checked independently. Equations whose symbols are inherently per-derivation (e.g., generic *x*, *y* placeholders) opt out by marking them `transient: true` in the equation metadata. |
 | **NR2** | INFO | Notation Registry declares a concept but no chapter references it (orphan declaration) |
 | **NR3** | ERROR | Same symbol bound to different `concept.id`s across the registry (declaration collision) |
 | **NR4** | WARNING | Symbol declared in registry with explicit units; `<KeyEquation>` uses it without unit context in prose |
@@ -183,7 +183,7 @@ with two new invariant families:
 | ID | Severity | Check |
 |---|---|---|
 | **MR1** | ERROR | `<MultiRep>` references a `concept` not present in `notation-registry.yaml` |
-| **MR2** | WARNING | `<MultiRep><RepEquation refKey=…>` — the referenced equation's primary symbol doesn't match the concept's `canonical_symbol` (after declared aliases) |
+| **MR2** | WARNING | `<MultiRep><RepEquation refKey=… symbol=…>` — the explicitly-declared binding `symbol` doesn't appear among the referenced equation's declared symbols, *or* doesn't match the concept's `canonical_symbol` (or a declared alias) |
 | **MR3** | WARNING | `<MultiRep><RepCode refName=…>` — the referenced code's variable name doesn't match the concept's `code_alias` |
 | **MR4** | INFO | `<MultiRep><RepFigure refName=…>` — the referenced figure's `alt` text doesn't mention the concept's `verbal_label` or `canonical_symbol` |
 
@@ -440,12 +440,14 @@ introducing a parallel structure.
 
 ### For Cosmic Playground demos (per [ADR 0008](./0008-cosmic-playground-protocol.md))
 
-A demo declares which Notation Registry concepts it visualizes
-via the `<MultiRep>` binding. The Cosmic Playground manifest
-extension is deferred to a Phase 4+ code PR but the binding
-surface is established here: a `<RepCode refName="orbit-demo">`
-inside a `<MultiRep concept="orbital-radius">` declares the demo
-as that concept's code representation.
+*Speculative pending Phase 4 design.* `<RepCode>` currently
+references `<CodeCell>` (ADR 0018) entries by `name`. A future
+extension could allow `<RepCode>` to reference a Cosmic Playground
+demo slug — binding the demo as the concept's interactive
+representation — but this requires manifest-schema work on Cosmic
+Playground's side (ADR 0008's manifest doesn't yet expose
+per-demo concept-bindings) and is *not* committed by this ADR.
+Listed here only to flag the surface for future design.
 
 ## Alternatives considered
 
@@ -533,7 +535,9 @@ change + reason.
 - [ADR 0004 — component contract revisions](./0004-component-contract-revisions.md)
   — `serialize` separation + a11y testing applies to all six new components.
 - [ADR 0008 — Cosmic Playground protocol](./0008-cosmic-playground-protocol.md)
-  — `<RepCode>` may reference Cosmic Playground demos.
+  — speculative future extension; a `<RepDemo>` child element could
+  bind Cosmic Playground demos as the interactive representation of
+  a concept, but not committed by this ADR (see Consequences).
 - [`vision/features/accepted.md`](../vision/features/accepted.md) A4
   — the staging-area entry this ADR graduates.
 - [`vision/features/backlog.md`](../vision/features/backlog.md) B1

@@ -59,9 +59,15 @@ in a centralized TypeScript map mirroring ADR 0041's
 `move-index.ts`); and a **`<Intervention>` component** nested inside
 misconception Asides via the children-mode source pattern.
 
-### Artifact 1: Extended `<Aside kind="misconception">` schema
+### Artifact 1: Extended misconception schema (both source types)
 
-The PR-C4 misconception Aside schema gains four new optional fields:
+Per [ADR 0038](./0038-pedagogy-index-pattern.md)'s role-aggregation
+principle, misconceptions surface via **two source types**:
+`<Aside kind="misconception">` (short, marginal-flag form) and
+`<Callout variant="misconception">` (long, multi-paragraph contrast).
+Both feed `pedagogyIndex.misconceptions` with a `length:
+"short" | "long"` discriminator. Both gain the same four new
+optional fields:
 
 | Field | Type | Required | Purpose |
 |---|---|---|---|
@@ -186,19 +192,34 @@ Full reference at
 ### Artifact 4: Six new audit invariants
 
 The audit extends [PR-C4's `pedagogy-audit.ts`](./0038-pedagogy-index-pattern.md)
-with six new invariants:
+with six new invariants split across two prefix families:
+**MG-prefix** for misconception-graph integrity, **I-prefix** for
+intervention checks.
 
 | ID | Severity | Check |
 |---|---|---|
-| **M3** | WARNING | Misconception declared but no chapter pairs an `<Intervention>` with it |
-| **M4** | WARNING | `<Intervention>` used but `addresses` references no known misconception (or `"this"` outside an Aside) |
-| **M5** | ERROR | `prerequisite_misconceptions` cycle detected (DAG integrity) |
-| **M6** | ERROR | `prerequisite_misconceptions` references a misconception not introduced in any earlier chapter (by `introduced_in` ordering) |
-| **M7** | ERROR | `<Intervention type="…">` references a named intervention not in `intervention-index.ts` (and not `"custom"`) |
-| **M8** | INFO | `<Intervention type="bridging-analogy">` doesn't declare `limits` |
+| **MG1** | ERROR | `prerequisite_misconceptions` cycle detected (DAG integrity) |
+| **MG2** | ERROR | `prerequisite_misconceptions` references a misconception not introduced in any earlier chapter (by the consumer-repo's declared chapter ordering — typically `chapters.json` order or alphabetical `module-NN/lecture-MM` sort) |
+| **MG3** | WARNING | Misconception declared but no `<Intervention>` paired with it across the course (subsumes and specializes the existing deferred `M3` — see below) |
+| **I1** | WARNING | `<Intervention addresses="…">` references no known misconception (or `"this"` outside an enclosing misconception Aside/Callout) |
+| **I2** | ERROR | `<Intervention type="…">` references a name not in `intervention-index.ts` (and `type !== "custom"`) |
+| **I3** | INFO | `<Intervention type="bridging-analogy">` doesn't declare `limits` (Clement 1993 recommends explicit-limits authoring) |
 
-The PR-C4 invariants M1 (orphan misconception in registry without
-chapter usage) + M2 (name collision) stay.
+**Relationship to existing M-prefix invariants in the shipped audit.**
+The shipped audit ([`pedagogy-audit.ts`](https://github.com/drannarosen/sophie/blob/main/packages/astro/src/lib/pedagogy-audit.ts))
+already reserves **M1, M2** as **extractor-thrown** errors (about
+title / id-derivation mechanics that throw during MDX parse before
+the audit pass runs) and **M3** as a deferred orphan-misconception
+heuristic that "deferred until we have a usable signal beyond
+'no source-of-truth title.'" The Intervention Library *provides
+that signal*: a misconception is meaningfully orphan when no
+chapter pairs an `<Intervention>` with it (regardless of whether a
+title is auto-generated). MG3 therefore **operationalizes the
+deferred M3**, but uses the MG-prefix to flag that it's a *new
+semantic check*, not the original title-heuristic that M3 was
+originally framed as. The follow-up code PR may either implement
+MG3 alone and retire the M3 stub, or keep both code paths if the
+title-heuristic still adds value as a separate INFO check.
 
 Severity rationale matches ADR 0043 §Artifact-3:
 
@@ -271,7 +292,7 @@ inline-tagged (flexible). The hybrid wins on the same grounds as ADR
   `name` props let chapters declare these without forcing premature
   abstraction.
 
-Audit invariant M7 verifies named references resolve; custom
+Audit invariant **I2** verifies named references resolve; custom
 interventions pass through.
 
 ### One ADR over two smaller ADRs
@@ -329,13 +350,14 @@ Course-level interventions outside an Aside are *allowed* (when an
 intervention spans multiple chapters or is declared at chapter
 start) but the *default* form is nested.
 
-### v1 invariant list: 6 new invariants (M3–M8) is the floor
+### v1 invariant list: 6 new invariants (MG1–MG3 + I1–I3) is the floor
 
-M3 + M4 + M5 + M6 cover the load-bearing semantic checks
-(pairing, DAG integrity, prerequisite ordering). M7 + M8 cover
-reference resolution + authoring suggestions. Fewer invariants would
-leave the graph + library underdefended; more would speculate ahead
-of authoring experience.
+MG1 + MG2 + MG3 cover graph-integrity + pairing semantics (cycles,
+prerequisite ordering, orphan-with-no-intervention). I1 + I2 + I3
+cover reference resolution + authoring suggestions
+(unknown-address, unknown-type, missing-limits-on-bridging).
+Fewer invariants would leave the graph + library underdefended;
+more would speculate ahead of authoring experience.
 
 ### Universal scope (not STEM-only)
 
@@ -373,7 +395,7 @@ A subsequent code PR ships:
    12 canonical interventions at v1.
 4. `packages/components/src/pedagogy/misconception-graph.ts` —
    graph constructor + cycle detection.
-5. Six new audit invariants (M3–M8).
+5. Six new audit invariants (MG1–MG3 + I1–I3).
 6. A `<MisconceptionGraphPage>` route at
    `/about-this-course/misconception-graph/` rendering the assembled
    graph.

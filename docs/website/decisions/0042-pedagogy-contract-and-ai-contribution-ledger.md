@@ -68,7 +68,7 @@ Contract + AI Contribution Ledger (the accountability layer).
 Sophie ships two paired schemas plus a public-facing rendering
 contract.
 
-### Artifact 1: `pedagogy_contract.yaml` at consumer repo root
+### Artifact 1: `pedagogy-contract.yaml` at consumer repo root
 
 Each consumer course repo maintains a single top-level YAML file at
 the repository root:
@@ -171,7 +171,7 @@ Each Sophie-LDS-compliant course site renders three surfaces:
    `ai_contribution.transparency_note`, the prose renders at the
    bottom of the chapter. Single, visible, in-context.
 2. **`/about-this-course/pedagogy-contract` route** — the
-   `pedagogy_contract.yaml` rendered as a readable page (`.astro`
+   `pedagogy-contract.yaml` rendered as a readable page (`.astro`
    page reads the YAML, displays it with proper sections + headings).
 3. **`/about-this-course/ai-ledger` route** — aggregated
    `ai_contribution` data across all chapters. Each chapter's
@@ -198,7 +198,7 @@ schema *enforcement code* lands in a follow-up PR:
 - `packages/astro/src/components/ChapterFooter.astro` — extended
   with the `transparency_note` rendering.
 - New audit invariants in `packages/astro/src/lib/pedagogy-audit.ts`:
-  - **PC1**: consumer repo with chapters but no `pedagogy_contract.yaml`
+  - **PC1**: consumer repo with chapters but no `pedagogy-contract.yaml`
     (WARNING — non-conformance with Sophie-LDS, not a build failure)
   - **AC1**: chapter declares `ai_contribution.instructor_reviewed: false`
     while published (WARNING — flagging unreviewed AI content)
