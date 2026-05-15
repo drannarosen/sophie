@@ -233,6 +233,50 @@ Tasks below already reflect them.
    change to Tasks 1 + 2 + 6 + 7 (those are `@sophie/astro` and use
    `test` correctly; no Radix or KaTeX involvement).
 
+9. **Converters strip HTML from entity bodies before indexing.**
+   Plan §Task 6 (converter implementations) originally embedded
+   `entity.body` directly in `PagefindCustomRecord.content`. That
+   contradicts design doc §1 (line 83: `content: stripHtml(entity.body)`)
+   and §6.1 (line 509: "content is a flat string (HTML stripped if
+   source was HTML)"). Five entity types have HTML bodies per the
+   canonical schema docstrings (`DefinitionEntry.body` line 43,
+   `EquationEntry.body` line 66, `KeyInsightEntry.body` line 82,
+   `MisconceptionEntry.body` per convention, `ObjectiveEntry.body`
+   line 211 in `packages/core/src/schema/pedagogy-index.ts`).
+
+   Pagefind's `addCustomRecord` tokenizes `content` as-is — unlike
+   the default HTML crawl (`index.addDirectory`), there is no
+   implicit HTML-aware extraction stage. Sending raw HTML pollutes
+   the index with tag-name and class-name tokens (KaTeX nested
+   spans alone produce dozens per equation) and degrades BM25
+   ranking precision. The user-visible cards are unaffected
+   (they render `meta.title`, which is plain text), but search
+   relevance suffers.
+
+   Caught by the Task 6 code review of commit `d0c7965`. Fixed in
+   commit `45a2dcc` on the feature worktree:
+   - New helper `packages/astro/src/lib/pagefind-converters/strip-html.ts`
+     — simple-regex `replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()`.
+     Doesn't decode HTML entities; entities in chapter prose are rare.
+   - 5 converter source files (`definitions.ts`, `equations.ts`,
+     `key-insights.ts`, `misconceptions.ts`, `objectives.ts`) updated
+     to wrap `entity.body` in `stripHtml(...)` at every search-token
+     consumption point. Title derivations in `key-insights.ts`
+     (80-char truncation) and `objectives.ts` (`${verb} ${body}`)
+     also run through `stripHtml` so `meta.title` stays clean text.
+   - 5 new converter tests pin "no `<` or `>` in `record.content`"
+     against a fixture body containing `<p>` + nested `<span class="katex">`.
+   - 1 new test file `strip-html.test.ts` pins helper behavior
+     (5 tests: plain text, paragraphs, KaTeX spans, whitespace
+     collapse, trim).
+   - `figure-usages.ts` unchanged — uses plain-text `registry.alt`
+     + `caption` per schema lines 105/107.
+
+   Plan §Task 6 source-file code snippets (§6.1, §6.2, §6.3, §6.5,
+   §6.6) should be read as if each contains a `stripHtml(entity.body)`
+   wrap. Future "consume pedagogy-index" features must apply the
+   same discipline; the helper is the canonical seam.
+
 ---
 
 ## Pre-task: Worktree setup
