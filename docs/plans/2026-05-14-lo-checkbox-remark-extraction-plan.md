@@ -48,7 +48,23 @@ instead of the original plan text where they conflict.
    the plugin pipeline directly. Don't import `remark` or `remark-mdx`
    in tests.
 
-Task 1's commit reflects these corrections.
+5. **Selector correction (Task 3 + design doc §4 Layer 2):** The
+   `<LearningObjectives>` component puts `aria-labelledby="lo-heading"`
+   on its **`<section>`** wrapper, not on the `<ul>`. The `<ul>`
+   carries `aria-busy`. Correct selector chain for Playwright:
+   `section[aria-labelledby="lo-heading"] ul input[type="checkbox"]`.
+   The design doc has been corrected; Task 3's commit reflects the
+   right shape.
+
+6. **Task 2's snapshot is gated behind the transform-fired predicate.**
+   Vitest auto-writes a `.snap` file on first run. To keep the RED
+   phase from leaving a stale baseline of the un-transformed tree on
+   disk (which a developer could accidentally `git add`), wrap the
+   `toMatchSnapshot()` assertion in `if (loNode.children.length === 0)`.
+   The gate opens once Task 6 wires the transform; from then on the
+   snapshot generates correctly and becomes the legitimate baseline.
+
+Tasks 1, 2, and 3 reflect these corrections in their committed code.
 
 ---
 

@@ -557,7 +557,7 @@ test.describe("Learning Objectives checkbox interactivity", () => {
   test("renders a checkbox for each Objective in a chapter", async ({ page }) => {
     await page.goto("/chapters/measuring-the-sky/");
     const checkboxes = page.locator(
-      'ul[aria-labelledby="lo-heading"] input[type="checkbox"]'
+      'section[aria-labelledby="lo-heading"] ul input[type="checkbox"]'
     );
     await expect(checkboxes).toHaveCount(1);  // smoke chapter has 1 stub objective
   });
@@ -567,11 +567,11 @@ test.describe("Learning Objectives checkbox interactivity", () => {
       await page.goto("/chapters/measuring-the-sky/");
       // Wait for aria-busy="false" before clicking (condition-based-waiting
       // discipline; don't use { timeout: N } knobs).
-      const ul = page.locator('ul[aria-labelledby="lo-heading"]');
+      const ul = page.locator('section[aria-labelledby="lo-heading"] ul');
       await expect(ul).toHaveAttribute("aria-busy", "false");
 
       const checkbox = page.locator(
-        'ul[aria-labelledby="lo-heading"] input[type="checkbox"]'
+        'section[aria-labelledby="lo-heading"] ul input[type="checkbox"]'
       ).first();
       await checkbox.check();
       await expect(checkbox).toBeChecked();
@@ -579,7 +579,7 @@ test.describe("Learning Objectives checkbox interactivity", () => {
       await page.reload();
       await expect(ul).toHaveAttribute("aria-busy", "false");
       await expect(
-        page.locator('ul[aria-labelledby="lo-heading"] input[type="checkbox"]')
+        page.locator('section[aria-labelledby="lo-heading"] ul input[type="checkbox"]')
           .first()
       ).toBeChecked();
     });
