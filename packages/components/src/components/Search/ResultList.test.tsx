@@ -1,10 +1,11 @@
+import type { EntityType } from "@sophie/core/schema";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { axe } from "jest-axe";
 import { describe, expect, it, vi } from "vitest";
 import { ResultList } from "./ResultList.tsx";
 import type { SearchResult } from "./types.ts";
 
-const r = (n: number, type: string): SearchResult => ({
+const r = (n: number, type: EntityType): SearchResult => ({
   url: `/chapters/c#a-${n}`,
   meta: { title: `result ${n}`, locator: "Ch · Mod" },
   excerpt: `excerpt ${n}`,

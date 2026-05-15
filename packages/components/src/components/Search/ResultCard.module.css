@@ -1,0 +1,64 @@
+.card {
+  list-style: none;
+  padding: var(--sophie-space-3);
+  border-radius: var(--sophie-radius-md);
+  cursor: pointer;
+}
+
+.card.highlighted {
+  background: var(--sophie-color-surface-2);
+}
+
+.header {
+  display: flex;
+  gap: var(--sophie-space-2);
+  align-items: baseline;
+}
+
+.icon {
+  font-size: 1.1em;
+}
+
+.typeLabel {
+  font-size: 0.75em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--sophie-color-text-muted);
+}
+
+.title {
+  font-weight: 600;
+}
+
+.lengthBadge {
+  margin-left: auto;
+  padding: 0 var(--sophie-space-2);
+  border-radius: var(--sophie-radius-full);
+  font-size: 0.75em;
+}
+
+.lengthShort {
+  background: var(--sophie-color-surface-3);
+  color: var(--sophie-color-text);
+}
+
+.lengthLong {
+  background: var(--sophie-color-surface-2);
+  color: var(--sophie-color-text);
+}
+
+.excerpt {
+  margin: var(--sophie-space-2) 0 0;
+  color: var(--sophie-color-text-muted);
+}
+
+.richTail {
+  display: block;
+  margin: var(--sophie-space-2) 0;
+}
+
+.locator {
+  margin-top: var(--sophie-space-2);
+  font-size: 0.85em;
+  color: var(--sophie-color-text-muted);
+}

@@ -65,8 +65,17 @@ describe("<ResultCard>", () => {
   });
 
   it("axe-core: zero a11y violations", async () => {
+    // <ResultCard> renders <li role="option">; axe-core's
+    // aria-required-parent rule mandates a listbox/group ancestor.
+    // Wrap to mirror the production composition (<ResultList> owns
+    // the role="listbox" container).
+    // The <div role="listbox"> wrapper mirrors what <ResultList>
+    // owns in production; testing <ResultCard> in isolation requires
+    // it so axe-core's aria-required-parent rule is satisfied.
     const { container } = render(
-      <ResultCard result={baseFixture as SearchResult} />
+      <div role='listbox' aria-label='Search results' tabIndex={0}>
+        <ResultCard result={baseFixture as SearchResult} />
+      </div>
     );
     const results = await axe(container);
     expect(results).toHaveNoViolations();

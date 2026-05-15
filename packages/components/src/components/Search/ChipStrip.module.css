@@ -1,0 +1,21 @@
+.strip {
+  display: flex;
+  gap: var(--sophie-space-2);
+  overflow-x: auto;
+  padding: var(--sophie-space-2);
+}
+
+.chip {
+  border: 1px solid var(--sophie-color-border);
+  background: transparent;
+  border-radius: var(--sophie-radius-full);
+  padding: var(--sophie-space-1) var(--sophie-space-3);
+  cursor: pointer;
+  font-size: 0.85em;
+}
+
+.chip.active {
+  background: var(--sophie-color-accent);
+  color: var(--sophie-color-on-accent);
+  border-color: var(--sophie-color-accent);
+}
