@@ -13,7 +13,21 @@ This is a living document. Calendar dates are projections, not
 commitments. Phase boundaries are decision points where we pause to
 reassess before continuing.
 
-## Current status (2026-05-14)
+## Current status (2026-05-15)
+
+**Bucket B — chrome + foundation — is 10/10 done.**
+
+| Bucket / PR | Status | Description |
+|---|---|---|
+| PR 1–6 | ✓ merged | Layout shell, theme toggle, view modes, aside, module-nav, in-page-ToC |
+| PR 7 (#41) | ✓ merged 2026-05-15 | Pagefind faceted search consuming the pedagogy-index (7 entity types as facets; Cmd/Ctrl+K Radix Dialog modal; converter-registry seam for future LDS facets) |
+| PR 10 (#42) | ✓ merged 2026-05-15 | Chapter-print polish — @media print chrome reset + view-mode-Wide override + forced-light tokens + page-break protection + interactive-to-static expansion + first-use `<GlossaryTerm>` inline footnotes via remark-plugin extension |
+
+PR 7 left the converter registry seam open for Phase 3 LDS-conformance
+work (notation registry, misconception graph, intervention library
+as future facets); nothing shipped that needs a downstream callsite.
+PR 10's `@sophie/theme/css` now emits forced-light print tokens that
+future slide-deck print mode (ADR 0006) inherits for free.
 
 **Bucket C — pedagogy-index infrastructure — is 4/4 done.**
 
@@ -28,9 +42,9 @@ reassess before continuing.
 The pedagogy-index pattern ([ADR 0038](../decisions/0038-pedagogy-index-pattern.md))
 is now load-bearing infrastructure for both:
 
-- **Bucket B remaining work**: PR 7 (faceted search consuming the
-  pedagogy index) and PR 10 (print polish). Six original PRs collapsed
-  to two.
+- **Bucket B closeout** (2026-05-15): PR 7 and PR 10 shipped; see the
+  Bucket B table above. Six original PRs collapsed to two; the
+  pedagogy-index pattern was load-bearing for both.
 - **Phase 3 audit work** (below): `runPedagogyAudit(index)` already
   ships ten invariants (D4/D5, E1/E4/E6, F1/F2/F4, C1, O1/O2, K1). The
   audit shell is in place; remaining audit work (Tier 1 + Tier 2
