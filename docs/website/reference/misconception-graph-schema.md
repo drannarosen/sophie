@@ -298,21 +298,62 @@ Pre-existing (shipped or deferred in
   truth title.'" The Intervention Library provides that signal;
   see MG3.
 
-New in this ADR:
+New in this ADR (hardened 2026-05-14 — MG4 + I4 added):
 
-- **MG1** (new, ERROR) — cycle detected in `prerequisite_misconceptions`.
-- **MG2** (new, ERROR) — prerequisite references a misconception
+- **MG1** (ERROR) — cycle detected in `prerequisite_misconceptions`.
+- **MG2** (ERROR) — prerequisite references a misconception
   not introduced in any earlier chapter (by the consumer-repo's
   declared chapter ordering).
-- **MG3** (new, WARNING) — misconception declared but no
+- **MG3** (WARNING) — misconception declared but no
   `<Intervention>` paired with it across the course; operationalizes
   the deferred M3 with the intervention-pairing signal.
-- **I1** (new, WARNING) — `<Intervention>` used with `addresses`
+- **MG4** (INFO, new 2026-05-14) — course-level summary of
+  intervention-depth coverage. Emits a derived statistic in
+  `sophie audit --summary` listing how many misconceptions have ≥1
+  `<Intervention depth="substantial">` vs how many have only
+  `light` interventions. Not gated.
+- **I1** (WARNING) — `<Intervention>` used with `addresses`
   referencing no known misconception.
-- **I2** (new, ERROR) — `<Intervention type>` references a name not
+- **I2** (ERROR) — `<Intervention type>` references a name not
   in `intervention-index.ts` (and `type !== "custom"`).
-- **I3** (new, INFO) — `<Intervention type="bridging-analogy">`
+- **I3** (INFO) — `<Intervention type="bridging-analogy">`
   doesn't declare `<Limits>` (Clement 1993).
+- **I4** (WARNING, new 2026-05-14, cross-ADR with ADR 0041) —
+  every canonical intervention's `move:` field (declared in
+  `intervention-index.ts` per ADR 0041 hardening) must resolve to a
+  real move in `move-index.ts`. Couples the Intervention Library
+  and Teaching Move Library structurally.
+
+### `<Intervention depth>` field (hardened 2026-05-14)
+
+The `<Intervention>` component (per
+[ADR 0044 Artifact 3](../decisions/0044-misconception-graph-and-intervention-library.md))
+gains an optional `depth: light | substantial` field. Use:
+
+```mdx
+<Aside kind="misconception" name="redshift-is-ordinary-doppler">
+  Many students model cosmological redshift as the standard
+  Doppler effect...
+
+  <Intervention type="contrasting-cases" depth="substantial">
+    [Worked example: predict observation in two scenarios, compare
+    to actual; reflection prompt on which applies to cosmology;
+    practice problem.]
+  </Intervention>
+</Aside>
+```
+
+- `depth: light` (default) — one paragraph or less, named
+  confrontation without worked example or practice. Appropriate
+  for minor misconceptions or quick clarifications.
+- `depth: substantial` — worked example or practice + reflection
+  prompt; an authored *engagement* with the misconception rather
+  than just a *mention*.
+
+MG3 stays unchanged: any intervention satisfies the floor
+("misconception is addressed"). MG4 adds the *depth-quality*
+summary so the author sees coverage breadth and coverage depth
+without being gated on either.
 
 ## Authoring guidelines
 

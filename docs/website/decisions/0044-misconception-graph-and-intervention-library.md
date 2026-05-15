@@ -164,7 +164,7 @@ established by [PR-C4's LearningObjectives refactor](./0038-pedagogy-index-patte
 </Aside>
 ```
 
-`<Intervention>` props:
+`<Intervention>` props (hardened 2026-05-14):
 
 | Prop | Required | Type | Purpose |
 |---|---|---|---|
@@ -172,6 +172,17 @@ established by [PR-C4's LearningObjectives refactor](./0038-pedagogy-index-patte
 | `addresses` | optional | misconception `name` \| `"this"` | Which misconception this intervention addresses; `"this"` = the enclosing Aside |
 | `name` | optional | string | Required when `type="custom"`; the bespoke intervention name |
 | `limits` | optional | inline markdown | Where the intervention breaks down (especially for bridging analogies) |
+| `depth` | optional, default `light` | `light` \| `substantial` | **NEW (2026-05-14 hardening)**: two-tier quality signal. `light` — quick mention/clarification, one paragraph or less. `substantial` — worked example or practice opportunity + reflection prompt. Feeds the MG4 audit summary; not gated. |
+
+**On `depth`** (hardened 2026-05-14). MG3 by itself is gameable
+(an author can satisfy it with a perfunctory
+`<Intervention type="custom">brief mention</Intervention>`). The
+`depth` field adds the missing quality signal without strengthening
+MG3 — `light` is the safer default since interventions exist and
+sometimes appropriately brief (a one-sentence flag is genuinely a
+light-touch intervention for a minor misconception). The MG4 audit
+surfaces depth statistics so the instructor sees coverage breadth
+*and* coverage depth without being gated on either.
 
 A `<Intervention>` can also be authored **outside** a misconception
 Aside when the intervention is course-level rather than
@@ -189,21 +200,24 @@ chapter-bound:
 Full reference at
 [`reference/intervention-library.md`](../reference/intervention-library.md).
 
-### Artifact 4: Six new audit invariants
+### Artifact 4: Eight new audit invariants (hardened 2026-05-14 — MG4 + I4 added)
 
 The audit extends [PR-C4's `pedagogy-audit.ts`](./0038-pedagogy-index-pattern.md)
-with six new invariants split across two prefix families:
-**MG-prefix** for misconception-graph integrity, **I-prefix** for
-intervention checks.
+with eight new invariants (originally six; MG4 + I4 added in
+the 2026-05-14 hardening pass) split across two prefix families:
+**MG-prefix** for misconception-graph integrity + depth, **I-prefix**
+for intervention checks + parent-move resolution.
 
 | ID | Severity | Check |
 |---|---|---|
 | **MG1** | ERROR | `prerequisite_misconceptions` cycle detected (DAG integrity) |
 | **MG2** | ERROR | `prerequisite_misconceptions` references a misconception not introduced in any earlier chapter (by the consumer-repo's declared chapter ordering — typically `chapters.json` order or alphabetical `module-NN/lecture-MM` sort) |
 | **MG3** | WARNING | Misconception declared but no `<Intervention>` paired with it across the course (subsumes and specializes the existing deferred `M3` — see below) |
+| **MG4** (new, 2026-05-14) | INFO | Course-level summary of intervention-depth coverage. Emits a derived statistic in `sophie audit --summary` listing how many misconceptions have ≥1 `substantial` intervention vs how many have only `light` interventions; surfaces depth gaps without forcing thresholds. |
 | **I1** | WARNING | `<Intervention addresses="…">` references no known misconception (or `"this"` outside an enclosing misconception Aside/Callout) |
 | **I2** | ERROR | `<Intervention type="…">` references a name not in `intervention-index.ts` (and `type !== "custom"`) |
 | **I3** | INFO | `<Intervention type="bridging-analogy">` doesn't declare `limits` (Clement 1993 recommends explicit-limits authoring) |
+| **I4** (new, 2026-05-14, cross-ADR with ADR 0041) | WARNING | Every canonical intervention's `move:` field (declared in `intervention-index.ts` per ADR 0041 hardening) resolves to a real move in `move-index.ts`. Custom interventions (`type="custom"`) can declare `move=` too; if they do, I4 applies. Couples the Intervention Library and Teaching Move Library structurally — no intervention whose parent move doesn't exist can ship. |
 
 **Relationship to existing M-prefix invariants in the shipped audit.**
 The shipped audit ([`pedagogy-audit.ts`](https://github.com/drannarosen/sophie/blob/main/packages/astro/src/lib/pedagogy-audit.ts))
@@ -350,14 +364,25 @@ Course-level interventions outside an Aside are *allowed* (when an
 intervention spans multiple chapters or is declared at chapter
 start) but the *default* form is nested.
 
-### v1 invariant list: 6 new invariants (MG1–MG3 + I1–I3) is the floor
+### v1 invariant list: 8 new invariants (MG1–MG4 + I1–I4)
+
+Originally framed as 6 invariants; expanded to 8 in the 2026-05-14
+hardening pass with MG4 (intervention-depth coverage summary) +
+I4 (cross-ADR parent-move resolution per ADR 0041).
 
 MG1 + MG2 + MG3 cover graph-integrity + pairing semantics (cycles,
-prerequisite ordering, orphan-with-no-intervention). I1 + I2 + I3
-cover reference resolution + authoring suggestions
-(unknown-address, unknown-type, missing-limits-on-bridging).
+prerequisite ordering, orphan-with-no-intervention). MG4 adds the
+depth-coverage summary — a quality signal that nudges authors
+toward substantial interventions without gating the existing MG3
+on depth. I1 + I2 + I3 cover reference resolution + authoring
+suggestions (unknown-address, unknown-type, missing-limits-on-
+bridging). I4 couples the Intervention Library to the Teaching
+Move Library structurally — no canonical intervention can ship
+without a real parent move.
+
 Fewer invariants would leave the graph + library underdefended;
-more would speculate ahead of authoring experience.
+more would speculate ahead of authoring experience. The eight v1
+invariants are the *floor*, not the ceiling.
 
 ### Universal scope (not STEM-only)
 
@@ -395,7 +420,11 @@ A subsequent code PR ships:
    12 canonical interventions at v1.
 4. `packages/components/src/pedagogy/misconception-graph.ts` —
    graph constructor + cycle detection.
-5. Six new audit invariants (MG1–MG3 + I1–I3).
+5. Eight new audit invariants (MG1–MG4 + I1–I4; MG4 + I4 added in
+   the 2026-05-14 hardening). The `depth` field on `<Intervention>`
+   feeds MG4's summary statistic; the `move:` field on
+   `intervention-index.ts` entries (per ADR 0041 hardening) is
+   gated by I4.
 6. A `<MisconceptionGraphPage>` route at
    `/about-this-course/misconception-graph/` rendering the assembled
    graph.
@@ -552,7 +581,49 @@ Sophie LDS keeps the universal scope.
 
 ## Revisions
 
-*None yet.* Revisions to the graph schema, intervention library, or
+**§1 — 2026-05-14 Hardening pass.** Per
+[the foundation review](/Users/anna/Teaching/sophie/docs/reviews/2026-05-14-adrs-0040-0045-foundation-review.md),
+this ADR was edited in place (under Anna's explicit mutability
+override for the first hardening pass) to add:
+
+- **`depth: light | substantial`** field on `<Intervention>`
+  (optional, default `light`). Two-tier quality signal addressing
+  the review's "MG3 is gameable" critique — `light` is fine for
+  minor misconceptions; `substantial` (worked example + practice +
+  reflection) is the bar for high-leverage interventions. Not
+  gated.
+- **MG4** (INFO, new): course-level intervention-depth coverage
+  summary in `sophie audit --summary`. Derived statistic; nudges
+  authors toward depth without forcing thresholds.
+- **I4** (WARNING, new, cross-ADR with ADR 0041): every canonical
+  intervention's `move:` field (declared in `intervention-index.ts`
+  per ADR 0041 hardening) must resolve to a real move in
+  `move-index.ts`. Couples the Intervention Library to the
+  Teaching Move Library structurally.
+- Total v1 invariants: 6 → 8.
+- **Scope decision (no schema change)**: Intervention Library
+  stays misconception-paired only (not extended with a fifth
+  "Scaffolding" family). Scaffolding moves live in the Teaching
+  Move Library per ADR 0041 — the Move/Intervention distinction
+  established in ADR 0041 hardening (interventions are concrete
+  instantiations of moves paired with misconceptions) is the load-
+  bearing semantic; adding scaffolding interventions would break
+  it.
+- **Forward-ref to Sophie LDS Commons (ADR 0048)** — future
+  cross-course misconception inheritance via
+  `core-misconceptions.yaml` in `@sophie/commons-universal` and
+  discipline-specific plugins. v1 ships per-course misconception
+  declarations only; the per-course shape is forward-compatible
+  with Commons inheritance.
+- **Forward-ref to `sophie refactor misconception` ADR (0049)** —
+  refactoring CLI tooling for atomic rename / split / merge /
+  delete across the misconception graph's cross-references.
+  Addresses the graph-maintenance burden surfaced by the review.
+
+The immutability convention re-applies after this hardening pass
+completes. Future revisions land as new ADRs.
+
+Further revisions to the graph schema, intervention library, or
 invariant list follow the pattern established by
 [ADR 0038 §1, §2](./0038-pedagogy-index-pattern.md).
 
@@ -562,20 +633,38 @@ invariant list follow the pattern established by
   — extended Aside schema spec + ASTR 201 graph example.
 - [`reference/intervention-library.md`](../reference/intervention-library.md)
   — 12 canonical interventions with citations + `<Intervention>`
-  component reference.
+  component reference + Move/Intervention linkage per ADR 0041
+  hardening.
 - [ADR 0038 — pedagogy index pattern](./0038-pedagogy-index-pattern.md)
   — PR-C4's `<Aside kind="misconception">` schema + audit
   infrastructure this ADR extends.
 - [ADR 0040 — Teaching Decision Records](./0040-teaching-decision-records.md)
-  — TDRs may cite graph relationships.
+  — TDRs may cite graph relationships; TDR `affects_anchors` may
+  list misconception slugs to feed `sophie diff` intentional-
+  change demotion (ADR 0045).
 - [ADR 0041 — Teaching Move Library](./0041-teaching-move-library.md)
-  — Interventions bind to Teaching Moves; canonical-library
-  precedent.
+  — interventions bind to Teaching Moves via `move:` field
+  (hardened 2026-05-14); audit invariant I4 lives in *this* ADR's
+  I-family but its target is ADR 0041's catalog.
 - [ADR 0042 — Pedagogy Contract + AI Contribution Ledger](./0042-pedagogy-contract-and-ai-contribution-ledger.md)
   — `misconception_policy` extension lives here.
 - [ADR 0043 — Notation Registry + MultiRep + Alignment Audit](./0043-notation-registry-multirep-alignment-audit.md)
   — `concept_refs` links misconceptions to registered concepts;
-  hybrid relationship-modeling precedent.
+  hybrid relationship-modeling precedent; *structured-for-facts,
+  prose-for-stances* principle.
+- [ADR 0045 — Pedagogical Diff + Curriculum CI](./0045-pedagogical-diff-curriculum-ci.md)
+  — misconception-graph changes classified by the diff taxonomy;
+  prerequisite-cycle introduction is a `breaking` item; TDR
+  `affects_anchors` may demote misconception-related diff items.
+- [ADR 0048 — Sophie LDS Content Plugin System](./0048-sophie-lds-content-plugin-system.md)
+  — future cross-course misconception inheritance via Commons
+  catalogs. v1 ships per-course misconceptions only; the per-
+  course shape is forward-compatible.
+- [ADR 0049 — `sophie refactor` CLI Family](./0049-sophie-refactor-cli-family.md)
+  — `sophie refactor misconception rename | split | merge | delete`
+  for atomic operations across the graph's cross-references.
+  Addresses the graph-maintenance burden as the misconception count
+  grows.
 - [ADR 0004 — component contract revisions](./0004-component-contract-revisions.md)
   — `<Intervention>` component contract.
 - [`vision/features/accepted.md`](../vision/features/accepted.md) A5
