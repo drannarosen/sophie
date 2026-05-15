@@ -7,6 +7,7 @@ const hydrostaticEquilibrium: ChapterEntry = {
   module: "stellar-structure",
   order: 1,
   description: "How a star's pressure gradient balances gravity.",
+  status: "stable",
 };
 
 const radiativeTransfer: ChapterEntry = {
@@ -14,6 +15,7 @@ const radiativeTransfer: ChapterEntry = {
   title: "Radiative Transfer",
   module: "stellar-structure",
   order: 2,
+  status: "stable",
 };
 
 const stellarStructure: ModuleEntry = {

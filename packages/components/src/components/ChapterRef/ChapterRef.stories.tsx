@@ -14,12 +14,14 @@ const chapterFixture = [
     order: 1,
     description:
       "How a star's pressure gradient balances gravity from core to photosphere.",
+    status: "stable" as const,
   },
   {
     slug: "radiative-transfer",
     title: "Radiative Transfer",
     module: "stellar-structure",
     order: 2,
+    status: "stable" as const,
     // No description — exercises the popover's skip-when-absent branch.
   },
 ];

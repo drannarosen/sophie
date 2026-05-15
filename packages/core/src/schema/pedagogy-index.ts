@@ -190,6 +190,13 @@ export const ChapterEntrySchema = z.object({
   order: z.number().int().nonnegative().optional(),
   /** Optional single-paragraph chapter description for hover-preview + roll-up cards. */
   description: z.string().optional(),
+  /**
+   * Chapter maturity (ADR 0051). Mirrors `ChapterSchema.status`.
+   * Required so the audit's CS2 INFO finding (draft chapters present)
+   * has a signal to read; routing-level draft-exclusion lives in
+   * `@sophie/astro/lib/get-student-chapters.ts`.
+   */
+  status: z.enum(["draft", "review", "stable"]),
 });
 export type ChapterEntry = z.infer<typeof ChapterEntrySchema>;
 

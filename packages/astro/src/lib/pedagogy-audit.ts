@@ -31,6 +31,11 @@ import { slugify } from "@sophie/core/schema";
  *                introduced in any earlier chapter (by the consumer-repo's
  *                declared chapter ordering — `ChapterEntry.order` when present,
  *                stable insertion order otherwise; ADR 0044)
+ *   CS1 (schema) Chapter MDX lacks required `status:` frontmatter (enforced
+ *                upstream at the `ChapterSchema` Zod layer — the audit never
+ *                fires this code because the build fails earlier; ADR 0051).
+ *   CS2 INFO     Chapter has `status: draft` — surfaces in audit so author
+ *                knows what's excluded from the student build (ADR 0051).
  *
  * Not implemented in v1 (extractor-level defense-in-depth is sufficient
  * or the upstream component doesn't exist yet — see TODO markers):
@@ -63,10 +68,28 @@ export interface AuditReport {
 }
 
 /**
+ * Optional inputs for the audit beyond the in-memory pedagogy index.
+ * Threaded through TextbookLayout's audit call so the audit can surface
+ * signals that aren't reachable from the (already-filtered) index — in
+ * particular CS2 INFO, which reports `status: draft` chapters that
+ * `getStudentChapters` excluded from the student build.
+ */
+export interface AuditExtras {
+  /**
+   * Slugs of chapters with `status: draft` (ADR 0051). The audit emits
+   * one CS2 INFO finding per slug. Empty / undefined => no CS2 output.
+   */
+  draftChapterSlugs?: ReadonlyArray<string>;
+}
+
+/**
  * Run the audit pass against a snapshotted PedagogyIndex. Pure
  * function — never mutates the input.
  */
-export function runPedagogyAudit(index: PedagogyIndex): AuditReport {
+export function runPedagogyAudit(
+  index: PedagogyIndex,
+  extras: AuditExtras = {}
+): AuditReport {
   const errors: AuditFinding[] = [];
   const warnings: AuditFinding[] = [];
   const info: AuditFinding[] = [];
@@ -459,6 +482,24 @@ export function runPedagogyAudit(index: PedagogyIndex): AuditReport {
         }
       }
     }
+  }
+
+  // ---------------------------------------------------------------------
+  // CS2 — `status: draft` chapters (ADR 0051). INFO-level: drafts are a
+  // healthy authoring state, but surfacing them in the audit lets the
+  // author see exactly which chapters are excluded from the student
+  // build. The slug list is threaded through `extras` (TextbookLayout
+  // filters drafts BEFORE setChapters; the audit's `index.chapters` is
+  // the student-visible subset, so the unfiltered slugs come from
+  // outside the index).
+  // ---------------------------------------------------------------------
+  for (const slug of extras.draftChapterSlugs ?? []) {
+    info.push({
+      severity: "INFO",
+      code: "CS2",
+      message: `CS2: chapter "${slug}" has status: draft — excluded from the student build per ADR 0051.`,
+      location: { chapter: slug },
+    });
   }
 
   return { errors, warnings, info };

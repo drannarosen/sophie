@@ -29,6 +29,7 @@ const hydrostaticEquilibrium = {
   module: "stellar-structure",
   order: 1,
   description: "How a star's pressure gradient balances gravity.",
+  status: "stable" as const,
 };
 
 const radiativeTransfer = {
@@ -36,6 +37,7 @@ const radiativeTransfer = {
   title: "Radiative Transfer",
   module: "stellar-structure",
   order: 2,
+  status: "stable" as const,
   // No description — exercises U4 (popover skips description line).
 };
 

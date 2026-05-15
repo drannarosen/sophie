@@ -1,4 +1,4 @@
-export { type Chapter, ChapterSchema } from "./chapter.js";
+export { type Chapter, ChapterSchema, ChapterStatus } from "./chapter.js";
 export { type Figure, FigureSchema } from "./figure.js";
 export { type Module, ModuleSchema } from "./module.js";
 export { chaptersForModule } from "./module-nav.js";

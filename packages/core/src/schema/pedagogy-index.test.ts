@@ -370,6 +370,7 @@ describe("ChapterEntrySchema", () => {
     module: "stellar-structure",
     order: 2,
     description: "Pressure balance in a self-gravitating fluid.",
+    status: "stable" as const,
   };
 
   // PR-C4 T(N)
@@ -383,6 +384,7 @@ describe("ChapterEntrySchema", () => {
         slug: validChapter.slug,
         title: validChapter.title,
         module: validChapter.module,
+        status: "stable",
       }).success
     ).toBe(true);
   });
@@ -408,6 +410,30 @@ describe("ChapterEntrySchema", () => {
   test("rejects an entry with negative order", () => {
     expect(
       ChapterEntrySchema.safeParse({ ...validChapter, order: -1 }).success
+    ).toBe(false);
+  });
+
+  // ADR 0051: `status` is a required ChapterEntry field. The schema-
+  // layer requirement makes the audit's CS1 "missing status" invariant
+  // unreachable from below; the enum constraint upper-bounds the value
+  // space so audit code can `switch` exhaustively.
+  test("accepts each of draft, review, stable", () => {
+    for (const status of ["draft", "review", "stable"] as const) {
+      expect(
+        ChapterEntrySchema.safeParse({ ...validChapter, status }).success
+      ).toBe(true);
+    }
+  });
+
+  test("rejects an entry without a status field (CS1)", () => {
+    const { status: _status, ...withoutStatus } = validChapter;
+    expect(ChapterEntrySchema.safeParse(withoutStatus).success).toBe(false);
+  });
+
+  test("rejects an entry with an unknown status value", () => {
+    expect(
+      ChapterEntrySchema.safeParse({ ...validChapter, status: "published" })
+        .success
     ).toBe(false);
   });
 });

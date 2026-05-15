@@ -1,5 +1,5 @@
 ---
-import { makeStaticComponents } from "@sophie/astro";
+import { getStudentChapters, makeStaticComponents } from "@sophie/astro";
 import { getCollection, render } from "astro:content";
 import { figures } from "../../content/figures";
 import ChapterLayout from "../../layouts/ChapterLayout.astro";
@@ -10,7 +10,10 @@ import ChapterLayout from "../../layouts/ChapterLayout.astro";
 const components = makeStaticComponents({ figures });
 
 export async function getStaticPaths() {
-  const chapters = await getCollection("chapters");
+  // Per ADR 0051: drafts are EXCLUDED entirely from the student build.
+  // `getStudentChapters` is the single source of truth for the filter
+  // (also consumed by TextbookLayout for the components store).
+  const chapters = getStudentChapters(await getCollection("chapters"));
   return chapters.map((chapter) => ({
     params: { slug: chapter.id },
     props: { chapter },
