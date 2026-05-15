@@ -27,6 +27,26 @@ export const tokens = {
       success: v("status-success"),
       warning: v("status-warning"),
       danger: v("status-danger"),
+      info: v("status-info"),
+      neutral: v("status-neutral"),
+    },
+    validation: {
+      unvalidated: {
+        stripe: v("validation-unvalidated-stripe"),
+        bg: v("validation-unvalidated-bg"),
+      },
+      inProgress: {
+        stripe: v("validation-in-progress-stripe"),
+        bg: v("validation-in-progress-bg"),
+      },
+      validated: {
+        stripe: v("validation-validated-stripe"),
+        bg: v("validation-validated-bg"),
+      },
+      reValidationNeeded: {
+        stripe: v("validation-re-validation-needed-stripe"),
+        bg: v("validation-re-validation-needed-bg"),
+      },
     },
     link: { default: v("link"), hover: v("link-hover") },
     accent: v("accent"),

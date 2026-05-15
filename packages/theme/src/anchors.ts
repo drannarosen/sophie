@@ -13,6 +13,12 @@ export const status = {
   success: "#34d399",
   warning: "#fbbf24",
   danger: "#fb7185",
+  // `info` reuses the brand teal hue so the semantic palette stays
+  // coordinated. `neutral` keys off the body text color via color-mix
+  // in generate-css.ts (mode-aware) — see ADR 0056 + the validation
+  // status palette.
+  info: "#2f8c8d",
+  neutral: "#6b7280",
 } as const;
 
 export const fontStacks = {

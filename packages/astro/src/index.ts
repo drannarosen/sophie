@@ -16,3 +16,10 @@ export {
   PEDAGOGY_INDEX_VIRTUAL_ID,
   pedagogyIndexVirtualModule,
 } from "./lib/pedagogy-index-virtual-module.ts";
+export {
+  buildValidationAdmonitionNode,
+  extractLastRevisedDate,
+  isContractFile,
+  type MystAdmonitionNode,
+  renderValidationAdmonition,
+} from "./lib/validation-admonition-plugin.ts";
