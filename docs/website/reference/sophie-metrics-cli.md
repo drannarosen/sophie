@@ -54,15 +54,9 @@ Override via `--output=<path>`.
     "M1_misconception_coverage": 0.83,
     "M2_tdr_provenance_rate": 0.71,
     "M3_audit_findings": {
-      "errors": 0,
-      "warnings": 12,
-      "info": 47,
-      "by_family": {
-        "MG": {"errors": 0, "warnings": 2, "info": 5},
-        "NR": {"errors": 0, "warnings": 1, "info": 8},
-        "PC": {"errors": 0, "warnings": 0, "info": 1},
-        "...": {}
-      }
+      "MG": {"errors": 0, "warnings": 2, "info": 5},
+      "NR": {"errors": 0, "warnings": 1, "info": 8},
+      "PC": {"errors": 0, "warnings": 0, "info": 1}
     },
     "M4_nr_coverage": 0.94,
     "M5_ai_contribution_depth": {
@@ -79,7 +73,7 @@ Override via `--output=<path>`.
     "flux-luminosity-distance": {
       "M1_misconception_coverage": 1.0,
       "M2_tdr_provenance_rate": 1.0,
-      "M3_audit_findings": {"errors": 0, "warnings": 2, "info": 4},
+      "M3_audit_findings": {"E": {"errors": 0, "warnings": 1, "info": 2}, "MG": {"errors": 0, "warnings": 1, "info": 2}},
       "M4_nr_coverage": 1.0,
       "M5_ai_contribution_depth": "moderate",
       "M6_cross_chapter_graph_density": 11,
@@ -110,26 +104,50 @@ threshold for paper #1.
 #### M2 — TDR provenance rate
 
 ```text
-M2 = |{c ∈ commits-touching-chapters : c has TDR-NNN reference}|
-     / |commits-touching-chapters|
+M2 = |{c ∈ commits-touching-chapters : c.trailer is "TDR: <N>" for some N}|
+     / |{c ∈ commits-touching-chapters : c.trailer is set}|
 ```
 
 Commits "touch chapters" if they modify any path under
-`src/content/textbook/` or `content/chapters/`. TDR references
-recognized in:
+`src/content/textbook/` or `content/chapters/`, excluding paths
+listed in `pedagogy-contract.yaml.tdr_traceability.excluded_paths`
+(per [ADR 0042](../decisions/0042-pedagogy-contract-and-ai-contribution-ledger.md)).
 
-- Commit message body (e.g., `Refs: TDR-14`).
-- Commit trailer (`TDR: 14`).
-- PR body annotation (per ADR 0045's intentional-change tagging).
+The substrate is the `TDR:` commit trailer convention from
+[ADR 0045 §Bidirectional TDR ↔ commit traceability](../decisions/0045-pedagogical-diff-curriculum-ci.md).
+Three trailer values:
+
+- `TDR: <N>` — counted as "provenance present" in the M2 numerator.
+- `TDR: none` — counted in the denominator (commit explicitly
+  carries no pedagogical intent) but NOT in the numerator.
+- `TDR: pending-seed-<slug>` — **excluded** from both numerator
+  and denominator. Pending seeds are transitional; counting them
+  would conflate "haven't decided yet" with "decided no."
+
+Commits without any `TDR:` trailer are also excluded from the
+denominator — M2 measures the *resolution rate* among commits that
+participated in the convention. A separate diagnostic (not a
+headline metric) tracks bare-trailer rate; if `tdr_traceability.enforce_commit_trailers: true`,
+absence is caught at CI time, not by M2.
 
 Range: 0.0 – 1.0. No threshold attached in v1.
 
 #### M3 — Audit findings
 
-The current `sophie audit` finding counts by severity. The metric
-artifact carries the full breakdown by invariant family (per the
-families listed in `audit-and-ai-authoring.md` §1). No formula —
-it's the audit summary.
+The current `sophie audit` finding counts. The metric artifact is
+**not** a flat severity count; it carries the per-invariant-family
+breakdown (per the families listed in `audit-and-ai-authoring.md`
+§1), with each family reporting its own `errors`/`warnings`/`info`
+counts. Course-level totals are computed downstream by summing
+the per-family values; the artifact does not emit redundant
+top-level totals.
+
+The `by_chapter` view emits per-chapter family counts in the same
+shape; consumers downstream sum per-family to a per-chapter total
+when needed.
+
+No formula — it's a structured summary of `sophie audit`'s
+existing report.
 
 #### M4 — Notation Registry coverage
 
@@ -149,16 +167,27 @@ zero).
 
 #### M5 — AI contribution depth distribution
 
-A histogram (not a scalar). Counts of chapters by
+A histogram (not a ratio). Counts of chapters by
 `ai_contribution.ai_workflow.edit_intensity` value:
 
 ```text
-{ "light": N_l, "moderate": N_m, "heavy": N_h, "rewrite": N_r }
+{ "light": N_l, "moderate": N_m, "heavy": N_h, "rewrite": N_r,
+  "unset": N_u }
 ```
 
-Per ADR 0042. Chapters lacking `ai_workflow` (older chapters
-pre-hardening; non-AI-authored chapters) are excluded from the
-denominator — the histogram represents AI-touched chapters only.
+Per ADR 0042. Each bucket carries a count; histograms have counts,
+not denominators. The `"unset"` bucket counts chapters where
+`ai_workflow` exists but `edit_intensity` is not set (per ADR
+0042, the field is optional). Chapters with no `ai_contribution`
+frontmatter entry at all do not appear in the histogram — M5
+describes AI-touched chapters; non-AI-authored chapters are
+out of scope.
+
+For a per-chapter value (in `by_chapter`), M5 collapses to a
+single string — the chapter's own `edit_intensity` value, or
+`"unset"` if `ai_workflow` is present but the field is not.
+Chapters lacking `ai_contribution` are reported as `null` in
+the per-chapter view.
 
 #### M6 — Cross-chapter graph density
 

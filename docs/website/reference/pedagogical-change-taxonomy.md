@@ -46,7 +46,8 @@ with rationale.
 | `conformance` | `audit_warning_cleared` | `substantive` | clearing a warning is curriculum improvement |
 | `conformance` | `audit_warning_level_changed` | `substantive` | escalation/de-escalation visible |
 | `conformance` | `contract_field_changed` | `requires-judgment` | pedagogy-contract changes are instructor-judgment-load-bearing |
-| (any) | (anchor in HEAD TDR `affects_anchors`) | **one-level demotion** | per ADR 0045 hardening: `breaking` → `substantive`; `substantive` → `routine`; `requires-judgment` → `routine`. Item tagged with source TDR-id. |
+| (any) | (anchor in HEAD TDR `affects_anchors`) | **one-level demotion** | per ADR 0045: `breaking` → `substantive`; `substantive` → `routine`; `requires-judgment` → `routine`. Item tagged with source TDR-id. |
+| (any) | (commit carries `TDR: <N>` trailer per ADR 0045 bidirectional traceability) | `commit_provenance` field surfaced | trailer presence does NOT demote severity (`affects_anchors:` is the demotion mechanism); trailer surfaces in the diff item's JSON metadata for M2 attribution + downstream analytics |
 | `requires-judgment` trigger | (anchor is `lo-*` LO body) | `requires-judgment` | learning-objective bodies are instructor-judgment surfaces |
 | `requires-judgment` trigger | (anchor is `def-*` definition body) | `requires-judgment` | definitions are foundational claims |
 | `requires-judgment` trigger | (anchor is `ai_policy` in contract) | `requires-judgment` | course-wide AI-use policy |

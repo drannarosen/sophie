@@ -355,6 +355,29 @@ TDRs (per [ADR 0040](../decisions/0040-teaching-decision-records.md))
 benefit from concrete change sets attached as evidence of *what
 specifically* was revised.
 
+### TDR ↔ commit traceability
+
+`sophie diff` integrates with the **bidirectional TDR ↔ commit
+traceability** convention (per
+[ADR 0045 §Bidirectional TDR ↔ commit traceability](../decisions/0045-pedagogical-diff-curriculum-ci.md)).
+Two distinct mechanisms feed intentional-change handling:
+
+| Mechanism | Source | Effect on diff |
+|---|---|---|
+| TDR `affects_anchors:` | The TDR file | Severity demotion + TDR-id annotation on items whose anchor matches |
+| `TDR:` commit trailer | The commit's message | Surfaces in the JSON `commit_provenance` field per diff item; consumed by M2 metric (ADR 0047) |
+
+The two are dual: `affects_anchors:` answers "what does TDR-14
+change?"; the `TDR:` trailer answers "which TDR does commit
+`a1b2c3d` implement?"
+
+`sophie diff` does not require trailer presence — diff is read-
+only over the index, not a CI gate. The `tdr_traceability.enforce_commit_trailers`
+block in `pedagogy-contract.yaml` (per
+[ADR 0042](../decisions/0042-pedagogy-contract-and-ai-contribution-ledger.md))
+controls whether trailers are CI-enforced; diff simply surfaces
+them when present.
+
 ## Performance notes
 
 The worktree build is the dominant cost. For Sophie-sized

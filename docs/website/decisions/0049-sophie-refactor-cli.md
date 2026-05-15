@@ -145,12 +145,33 @@ When `--apply` is passed:
      - 4 <Intervention addresses=...> updates
 
    TDR seed: .sophie/refactor-seeds/2026-05-15-rename-misconception.md
-   Author: complete the TDR before merging.
+   Author: complete the TDR before merging, then amend
+   `TDR: pending-seed-...` below to the resolved trailer.
 
+   TDR: pending-seed-rename-misconception
    Co-authored-by: sophie-refactor <noreply@sophie.cli>
    ```
 5. CLI emits the path to the auto-generated TDR-seed stub and
    exits with status 0.
+
+The `TDR:` trailer follows ADR 0045's bidirectional traceability
+convention. `pending-seed-<slug>` is a placeholder; the author
+amends it to `TDR: <N>` (substantive — seed promoted to a real
+TDR) or `TDR: none` (mechanical — seed deleted).
+
+#### `--mechanical` flag
+
+`sophie refactor <entity> <op> [args] --apply --mechanical` skips
+seed generation entirely and emits `TDR: none` in the commit
+trailer directly. Use for refactors the author already knows are
+mechanical: typo fixes, slug spelling corrections, name-only
+churn that doesn't reflect a pedagogical position change.
+
+Default off. The expected flow for substantive refactors is to
+let the CLI generate a seed (and `TDR: pending-seed-<slug>`
+placeholder) and resolve it post-hoc. `--mechanical` is an
+ergonomic shortcut for batch operations where the author already
+knows seed generation would just produce delete-this-stub work.
 
 ### Atomicity guarantee
 

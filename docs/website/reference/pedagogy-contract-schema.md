@@ -35,6 +35,7 @@ Top-level keys (all required at v1 unless marked optional):
 | **`ai_training_provenance`** | object | **NEW (2026-05-14 hardening, required)**: course's public stance on AI training data |
 | **`ai_ledger`** | object | **NEW (2026-05-14 hardening, conditional)**: framing preamble for the public AI Ledger; required only when any chapter has `visibility: public` |
 | **`tdr_coverage`** | object (optional) | **NEW (2026-05-14 hardening)**: gates TDR-1 audit invariant from ADR 0040; sets minimum TDR-coverage ratio |
+| **`tdr_traceability`** | object (optional) | **NEW (2026-05-15)**: configures the optional CI enforcement of ADR 0045's `TDR:` commit-trailer convention |
 
 ## Hardening 2026-05-14 — three new top-level fields
 
@@ -109,8 +110,48 @@ tdr_coverage:
 Load-bearing entities counted: `<KeyEquation>` instances,
 `<Aside kind="misconception">` instances, `<LearningObjectives>`
 items. If `tdr_coverage` is omitted entirely, defaults to
-`{min_ratio: 0.1}`. Anna can tune up or down based on course-
-authoring practice.
+`{min_ratio: 0.1}`. Tune up or down based on course-authoring
+practice.
+
+### `tdr_traceability` (optional, added 2026-05-15)
+
+Configures the optional CI enforcement of the **bidirectional
+TDR ↔ commit traceability** convention from
+[ADR 0045](../decisions/0045-pedagogical-diff-curriculum-ci.md).
+The convention itself (commits carry `TDR: <N>`, `TDR: none`, or
+`TDR: pending-seed-<slug>` trailers) is always available; this
+block controls whether absence is *enforced* at CI time.
+
+```yaml
+tdr_traceability:
+  enforce_commit_trailers: false       # default; opt in when authoring
+                                       # discipline is ready
+  trailer_severity: warning            # warning | error
+  excluded_paths:
+    - "*.css"
+    - "*.scss"
+    - "package.json"
+    - "pnpm-lock.yaml"
+```
+
+- `enforce_commit_trailers` (default `false`) — when `true`, the
+  audit (or a pre-receive hook / GitHub Action) checks every
+  chapter-touching commit on `main` for a `TDR:` trailer and
+  trips the configured severity on bare commits.
+- `trailer_severity` (default `warning`) — `warning` surfaces
+  bare-trailer commits in the audit report; `error` blocks CI on
+  them. Most courses opt for `warning` initially and tighten to
+  `error` once authoring discipline is steady.
+- `excluded_paths` (default empty list; commonly populated as
+  shown above) — glob patterns for paths that don't need
+  trailers even when enforcement is on. Use for CSS/lockfile/
+  build-config changes that aren't pedagogical.
+
+If `tdr_traceability` is omitted entirely, defaults to
+`{enforce_commit_trailers: false, trailer_severity: warning,
+excluded_paths: []}` — i.e., the trailer convention is available
+but not enforced. The block is forward-compatible with future
+fields (e.g., per-author exemptions) that ADR 0045 may add.
 
 ## Field specifications
 

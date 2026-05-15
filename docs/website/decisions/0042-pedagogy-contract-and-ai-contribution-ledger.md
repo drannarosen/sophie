@@ -133,6 +133,15 @@ ai_ledger:                         # required only if any chapter is visibility:
 
 tdr_coverage:                       # optional; gates ADR 0040 TDR-1 invariant
   min_ratio: 0.1                    # 1 TDR per 10 load-bearing entities
+
+tdr_traceability:                   # optional; gates ADR 0045's commit-trailer convention
+  enforce_commit_trailers: false    # default; opt in when authoring discipline is ready
+  trailer_severity: warning         # warning | error
+  excluded_paths:                   # paths that don't need `TDR:` trailers even when enforced
+    - "*.css"
+    - "*.scss"
+    - "package.json"
+    - "pnpm-lock.yaml"
 ```
 
 **Source of truth**: the YAML file. All downstream surfaces (rendered
@@ -151,9 +160,20 @@ of the `/about-this-course/ai-ledger` route. Required only if any
 chapter has `visibility: public` (PC2-B). Anchored on the
 **structural-labor argument** — AI-primary authoring relocates
 instructor labor from prose-drafting to pedagogical decision-making +
-verification, not a workaround but a structural enabler per ADR 0030's
-2026-05-14 amendment. Without the preamble, the public view would
-be naked data critics could read uncharitably.
+verification, not a workaround but a structural enabler per
+ADR 0030's *AI-primary is structural, not optional* Rationale.
+Without the preamble, the public view would be naked data critics
+could read uncharitably.
+
+**`tdr_traceability`** controls optional CI enforcement of the
+commit-trailer convention introduced in
+[ADR 0045](./0045-pedagogical-diff-curriculum-ci.md)'s bidirectional
+traceability section. When `enforce_commit_trailers: true`, every
+chapter-touching commit on `main` must carry a `TDR:` trailer
+(`TDR: <N>`, `TDR: none`, or `TDR: pending-seed-<slug>`); commits
+without one trip the configured severity. Default off — courses opt
+in when they're ready. The trailer convention itself is always
+available; enforcement is the opt-in piece.
 
 ### Artifact 2: per-chapter `ai_contribution` frontmatter (hardened 2026-05-14)
 

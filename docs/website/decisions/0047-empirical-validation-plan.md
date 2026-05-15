@@ -73,11 +73,17 @@ boundary, so instructor skill is held approximately constant.
    ≥0.8 for a course Sophie considers "well-conformed." Derives
    from MG3 audit data; no new collection.
 
-2. **M2 — TDR provenance rate.** Fraction of merged PRs that
-   touch a chapter and have a `TDR-NNN` reference (via commit
-   trailer or PR body annotation, per ADR 0045's intentional-
-   change tagging). High rate signals that pedagogical changes
-   carry documented intent rather than drifting silently.
+2. **M2 — TDR provenance rate.** Fraction of chapter-modifying
+   commits whose `TDR:` trailer (per
+   [ADR 0045](./0045-pedagogical-diff-curriculum-ci.md)'s
+   bidirectional traceability convention) is a real TDR reference
+   — i.e., `TDR: <N>` for some N — rather than `TDR: none` or
+   absent. High rate signals that pedagogical changes carry
+   documented intent rather than drifting silently. M2 is the
+   "did this change cite a decision?" metric; ADR 0040's TDR
+   `affects_anchors:` is its complement ("does the decision say
+   it changes this?"). Their intersection is the well-explained
+   subset of the course's authoring activity.
 
 3. **M3 — Audit-finding burn-down.** Time series of ERROR +
    WARNING counts per chapter across a semester. A migration's
@@ -236,18 +242,18 @@ different foundation ADR (0044, 0040, the audit surface itself,
 foundation. M5–M8 are available for sub-sections or future papers
 without forcing the v1 ADR to pre-commit which paper they land in.
 
-### No deadlines per Anna's directive
+### No deadlines
 
-The 2026-05-14 brainstorm explicitly rejected deadline-anchoring
-("paper #1 by 2027 Q1," etc.). Two reasons:
+This ADR commits to a methodology, not a schedule. Two reasons:
 
-1. **Research bandwidth is variable.** Pre-tenure year-3 with a
-   double-sprint grant cycle (Cottrell + CAREER) does not have
-   stable paper-writing slots.
+1. **Research bandwidth is variable.** Paper-writing slots
+   depend on teaching load, grant cycles, and other
+   commitments; calendar-anchoring would force a fictional
+   commitment.
 2. **Honest claim-building requires honest data.** A paper #1
-   draft in late 2026 may have only one semester of ASTR 201
-   conformance data; that's not enough for the intra-author
-   comparison claim. The paper ships when the data supports it.
+   draft after only one semester of ASTR 201 conformance data
+   is not enough for the intra-author comparison claim; the
+   paper ships when the data supports it.
 
 The ADR commits to *the plan*, not *the schedule*.
 
@@ -362,13 +368,15 @@ gates and quality measurements stay separate surfaces.
 
 ### Deadline-anchored publication
 
-*Rejected.* Per Anna's directive. Research bandwidth is variable;
-data quality matters more than calendar.
+*Rejected.* Research bandwidth is variable; data quality matters
+more than calendar.
 
 ## References
 
 - [ADR 0040 — Teaching Decision Records](./0040-teaching-decision-records.md)
-  — `affects_anchors` + `evidence_type` are the M2 substrate.
+  — TDR catalog is the target of M2's `TDR:` trailer references;
+  `affects_anchors` + `evidence_type` are the per-TDR structure
+  that paper #1's per-decision drill-downs consume.
 - [ADR 0042 — Pedagogy Contract + AI Contribution Ledger](./0042-pedagogy-contract-and-ai-contribution-ledger.md)
   — `ai_workflow` + `instructor_reviewed` are the M5 substrate.
 - [ADR 0043 — Notation Registry + MultiRep + Alignment Audit](./0043-notation-registry-multirep-alignment-audit.md)
@@ -376,16 +384,17 @@ data quality matters more than calendar.
 - [ADR 0044 — Misconception Graph + Intervention Library](./0044-misconception-graph-and-intervention-library.md)
   — MG3 is the M1 substrate.
 - [ADR 0045 — Pedagogical Diff + Curriculum CI](./0045-pedagogical-diff-curriculum-ci.md)
-  — `intentional: TDR-NNN` tagging is the M2 substrate; diff
-  churn is the M7 substrate.
+  — bidirectional TDR ↔ commit traceability provides M2's
+  substrate (`TDR:` commit trailer); diff churn is the M7
+  substrate.
 - [ADR 0046 — Equation Biography](./0046-equation-biography.md)
   — biography children are the M8 substrate.
 - [ADR 0007 — IndexedDB + ResponseStore](./0007-persistence-indexeddb.md)
   — persistence schema that B9 will extend additively per the
   preservation commitment in this ADR.
 - [ADR 0030 — Audience + AI author model](./0030-audience-and-ai-author-model.md)
-  — *AI-Primary by Design* framing; paper #1's intra-author
-  comparison rests on this workflow stability.
+  — AI-primary authoring is the workflow stability that paper #1's
+  intra-author comparison rests on.
 - [audit-and-ai-authoring.md](../explanation/audit-and-ai-authoring.md)
   — audit-as-presence framing that this ADR honors by keeping
   metrics out of the gate.

@@ -21,7 +21,7 @@ TDR-seed stubs.
 ## Synopsis
 
 ```text
-sophie refactor <entity-type> <operation> [args...] [--apply] [options]
+sophie refactor <entity-type> <operation> [args...] [--apply] [--mechanical] [options]
 ```
 
 ### Entity types (v1)
@@ -125,14 +125,48 @@ Mechanical changes:
   ...
 
 TDR seed: .sophie/refactor-seeds/<date>-<slug>.md
-Author: complete the TDR before merging.
+Author: resolve the seed then amend the TDR: trailer below.
 
+TDR: pending-seed-<slug>
 Co-authored-by: sophie-refactor <noreply@sophie.cli>
 ```
 
+The `TDR:` trailer follows
+[ADR 0045 §Bidirectional TDR ↔ commit traceability](../decisions/0045-pedagogical-diff-curriculum-ci.md).
+The `pending-seed-<slug>` placeholder is the unresolved state;
+the author amends it to either `TDR: <N>` (substantive — seed
+promoted to a real TDR-N) or `TDR: none` (mechanical — seed
+deleted).
+
 The commit is created on the current branch; the author still
-owns the commit and can amend, edit the TDR seed, or split the
-commit before pushing.
+owns the commit and can amend, edit the TDR seed, resolve the
+trailer, or split the commit before pushing.
+
+### `--mechanical` flag (skip seed; emit `TDR: none` directly)
+
+For refactors the author already knows are mechanical (typo
+fixes, slug spelling corrections, name-only churn that doesn't
+reflect a pedagogical position change), pass `--mechanical`:
+
+```bash
+sophie refactor misconception rename old-slug-typoo old-slug-typo --apply --mechanical
+```
+
+Behavior change vs. default `--apply`:
+
+- **No TDR seed generated.** Nothing written to
+  `.sophie/refactor-seeds/`.
+- **Commit trailer is `TDR: none` directly** (not
+  `pending-seed-<slug>`). No author follow-up needed for the
+  trailer.
+- Commit message body still surfaces the mechanical-changes
+  list; only the trailer + seed path differ.
+
+The flag is off by default. The expected substantive flow is to
+let the CLI generate a seed and resolve it post-hoc; `--mechanical`
+is the ergonomic escape hatch for batch operations where the
+author already knows the seed would just be delete-this-stub
+work.
 
 ## Atomicity guarantee
 
