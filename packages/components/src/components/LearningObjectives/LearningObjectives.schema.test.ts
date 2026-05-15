@@ -6,7 +6,7 @@ describe("LearningObjectivesPropsSchema", () => {
     course: "test",
     chapter: "test",
     id: "lo",
-    children: null,
+    objectives: [{ id: "o1", verb: "State", body: "the thesis." }],
   };
 
   it("accepts the minimal valid shape", () => {
@@ -35,5 +35,33 @@ describe("LearningObjectivesPropsSchema", () => {
           .success
       ).toBe(false);
     }
+  });
+
+  it("accepts an empty objectives array (zero-objective chapter)", () => {
+    expect(
+      LearningObjectivesPropsSchema.safeParse({ ...valid, objectives: [] })
+        .success
+    ).toBe(true);
+  });
+
+  it("rejects an objective missing id / verb / body", () => {
+    expect(
+      LearningObjectivesPropsSchema.safeParse({
+        ...valid,
+        objectives: [{ verb: "State", body: "x" }],
+      }).success
+    ).toBe(false);
+    expect(
+      LearningObjectivesPropsSchema.safeParse({
+        ...valid,
+        objectives: [{ id: "o1", body: "x" }],
+      }).success
+    ).toBe(false);
+    expect(
+      LearningObjectivesPropsSchema.safeParse({
+        ...valid,
+        objectives: [{ id: "o1", verb: "State" }],
+      }).success
+    ).toBe(false);
   });
 });

@@ -30,12 +30,11 @@ export const PureDisplay: Story = {
 /**
  * Inside `<LearningObjectives>` — the canonical chapter usage.
  *
- * In production, the remark transform harvests `<Objective>` MDX nodes
- * into the parent's `objectives` prop before React sees the island. In
- * Storybook (no remark pass), `<LearningObjectives>` will be rewired in
- * Task 5 to consume an `objectives` array directly; this story will be
- * updated then. For now, it still uses the legacy child-element shape
- * that Task 5 removes.
+ * In production, authors write `<Objective>` JSX children in MDX; the
+ * remark transform harvests them into the parent's `objectives` prop
+ * before the React island runs. Storybook has no remark pass, so this
+ * story passes the same `objectives` array directly — mirroring the
+ * post-extraction runtime shape that `<LearningObjectives>` consumes.
  */
 export const InsideLearningObjectives: Story = {
   args: {
@@ -45,23 +44,28 @@ export const InsideLearningObjectives: Story = {
   },
   render: () => (
     <ProfileProvider profile='student'>
-      <LearningObjectives course='storybook' chapter='objective' id='inside-lo'>
-        <Objective
-          id='inside-1'
-          verb='Recognize'
-          body='the role of parallax in distance measurement.'
-        />
-        <Objective
-          id='inside-2'
-          verb='Apply'
-          body="Wien's displacement law to estimate a star's temperature."
-        />
-        <Objective
-          id='inside-3'
-          verb='Derive'
-          body='the Stefan–Boltzmann relation from blackbody principles.'
-        />
-      </LearningObjectives>
+      <LearningObjectives
+        course='storybook'
+        chapter='objective'
+        id='inside-lo'
+        objectives={[
+          {
+            id: "inside-1",
+            verb: "Recognize",
+            body: "the role of parallax in distance measurement.",
+          },
+          {
+            id: "inside-2",
+            verb: "Apply",
+            body: "Wien's displacement law to estimate a star's temperature.",
+          },
+          {
+            id: "inside-3",
+            verb: "Derive",
+            body: "the Stefan–Boltzmann relation from blackbody principles.",
+          },
+        ]}
+      />
     </ProfileProvider>
   ),
 };
