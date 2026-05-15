@@ -4,7 +4,7 @@
 **Scope:** Critical re-read of the eight new ADRs + four reference docs + three cross-cutting amendments shipped in the 12-commit hardening pass (commits e2bad73 → 0083dc7).
 **Commits reviewed:** e2bad73, 3735e32, 6770c14, c8e1e9d, 0083dc7
 **Trigger:** Anna asked "should we make any improvements or fixes?" after the implementation phase completed.
-**Status:** Open — eight BLOCKING and ~22 IMPORTANT issues surfaced; fix-up commits recommended before exposing the foundation to ASTR 201 Module 1 migration.
+**Status:** Closed — fix-up pass landed in commits `7737d58`, `ee74aa6`, `8353f95`, `f17702d`, `1c565ef`. All 8 BLOCKING items resolved; P2 IMPORTANT items addressed alongside (~17 of 22 closed inline; remaining items either rolled into the P1 fixes or deferred as polish). All 8 brainstorm-locked judgment calls (Q1–Q8) implemented; one meta-decision (loosened ADR editing rules) codified in `contributing/adr-process.md`. The fix-up pass also added a canonical severity philosophy section to `audit-and-ai-authoring.md`, B10 backlog entry (recurring schedule events with DST-aware rules), and reintroduced the bidirectional TDR ↔ commit traceability convention. ADRs 0040–0046's Revisions sections folded back into the bodies per the new pre-implementation editing rule.
 
 ---
 
