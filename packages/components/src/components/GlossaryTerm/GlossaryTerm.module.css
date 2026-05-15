@@ -72,3 +72,11 @@
   stroke: var(--sophie-border-subtle);
   stroke-width: 1px;
 }
+
+/* First-use inline footnote span (PR 10). Hidden by default in
+   screen mode; the @media print rule in textbook-layout.css
+   reveals .sophie-glossary-footnote (the paired global class on
+   the same element) under print. */
+.glossaryFootnote {
+  display: none;
+}

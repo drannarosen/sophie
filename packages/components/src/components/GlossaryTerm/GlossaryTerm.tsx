@@ -7,6 +7,18 @@ import styles from "./GlossaryTerm.module.css.js";
 import type { GlossaryTermProps } from "./GlossaryTerm.schema.ts";
 
 /**
+ * Component-local props extension: the build-time
+ * `markFirstUseGlossaryTerms` remark pass (PR 10) annotates the
+ * first `<GlossaryTerm>` per slug per chapter with
+ * `data-first-use="true"`. React 19 passes `data-*` attributes
+ * through to the DOM without warnings; we read it here to drive
+ * the inline footnote render consumed under @media print.
+ */
+type GlossaryTermRuntimeProps = GlossaryTermProps & {
+  "data-first-use"?: string;
+};
+
+/**
  * `<GlossaryTerm name="...">term</GlossaryTerm>` — first PR-C1
  * pedagogy-side consumer of the build-time pedagogy index (ADR
  * 0038) and of the `lucide-react` adapter (ADR 0039). Renders as
@@ -25,7 +37,11 @@ import type { GlossaryTermProps } from "./GlossaryTerm.schema.ts";
  *   - Trigger carries a presentational Lucide `BookOpen` icon
  *     (`aria-hidden`); the anchor text is the accessible name.
  */
-export function GlossaryTerm({ name, children }: GlossaryTermProps) {
+export function GlossaryTerm({
+  name,
+  children,
+  "data-first-use": dataFirstUse,
+}: GlossaryTermRuntimeProps) {
   const slug = slugify(name);
   const entry = lookupDefinition(slug);
   // E2E hydration signal (followup #10): flips to "true" after
@@ -53,38 +69,48 @@ export function GlossaryTerm({ name, children }: GlossaryTermProps) {
   const href = `/chapters/${entry.chapter}#${entry.anchor}`;
 
   return (
-    <HoverCard.Root openDelay={150} closeDelay={120}>
-      <HoverCard.Trigger asChild>
-        <a
-          className={styles.trigger}
-          data-react-hydrated={hydrated ? "true" : undefined}
-          href={href}
-        >
-          {children}
-          <BookOpen
-            aria-hidden
-            className={styles.icon}
-            focusable={false}
-            size={12}
-          />
-        </a>
-      </HoverCard.Trigger>
-      <HoverCard.Portal>
-        <HoverCard.Content
-          className={styles.popover}
-          collisionPadding={8}
-          data-sophie-glossary-popover=''
-          sideOffset={6}
-        >
-          <strong className={styles.term}>{entry.term}</strong>
-          <div
-            className={styles.body}
-            // biome-ignore lint/security/noDangerouslySetInnerHtml: body is pre-rendered HTML produced by our remark plugin (mdast → hast → html), not user-supplied content. ADR 0038 decision #11.
-            dangerouslySetInnerHTML={{ __html: entry.body }}
-          />
-          <HoverCard.Arrow className={styles.arrow} />
-        </HoverCard.Content>
-      </HoverCard.Portal>
-    </HoverCard.Root>
+    <>
+      <HoverCard.Root openDelay={150} closeDelay={120}>
+        <HoverCard.Trigger asChild>
+          <a
+            className={styles.trigger}
+            data-react-hydrated={hydrated ? "true" : undefined}
+            href={href}
+          >
+            {children}
+            <BookOpen
+              aria-hidden
+              className={styles.icon}
+              focusable={false}
+              size={12}
+            />
+          </a>
+        </HoverCard.Trigger>
+        <HoverCard.Portal>
+          <HoverCard.Content
+            className={styles.popover}
+            collisionPadding={8}
+            data-sophie-glossary-popover=''
+            sideOffset={6}
+          >
+            <strong className={styles.term}>{entry.term}</strong>
+            <div
+              className={styles.body}
+              // biome-ignore lint/security/noDangerouslySetInnerHtml: body is pre-rendered HTML produced by our remark plugin (mdast → hast → html), not user-supplied content. ADR 0038 decision #11.
+              dangerouslySetInnerHTML={{ __html: entry.body }}
+            />
+            <HoverCard.Arrow className={styles.arrow} />
+          </HoverCard.Content>
+        </HoverCard.Portal>
+      </HoverCard.Root>
+      {dataFirstUse === "true" ? (
+        <span
+          className={`${styles.glossaryFootnote} sophie-glossary-footnote`}
+          data-testid='glossary-footnote'
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: body is pre-rendered HTML produced by our remark plugin (mdast → hast → html), not user-supplied content. ADR 0038 decision #11.
+          dangerouslySetInnerHTML={{ __html: entry.body }}
+        />
+      ) : null}
+    </>
   );
 }
