@@ -144,15 +144,30 @@ a fresh TDR created alongside the override commit. Per ADR 0049,
 `sophie refactor` can auto-generate TDR seeds; manual overrides
 require the author to draft the TDR.
 
-### Five CF audit invariants
+### CF1–CF3: audit invariants
 
 | ID | Level | Fires when |
 |---|---|---|
 | **CF1** | INFO | Chapter has `audit_overrides:` entries. Surfaces in audit report so review can see which exceptions are in effect. |
 | **CF2** | ERROR | `audit_overrides` entry lacks `tdr:` field. Provenance is mandatory. |
 | **CF3** | WARNING | `audit_overrides` entry references an `(invariant, anchor)` pair that does not match any current finding. The exception is stale and should be removed or updated. |
-| **CF4** | (build error, not audit) | Audit tooling itself fails (CLI exit code 2+ from internal errors, malformed YAML in pedagogy-contract, schema validation errors before invariants run). |
-| **CF5** | (runtime, not audit) | IndexedDB unavailable or BroadcastChannel unavailable at runtime. |
+
+### CF4–CF5: not audit invariants
+
+CF4 and CF5 are part of the conformance-failure taxonomy but are
+**not** audit invariants in the CF1–CF3 sense — they describe
+failure modes at different surfaces.
+
+| ID | Surface | Behavior |
+|---|---|---|
+| **CF4** | Build pipeline | Audit tooling itself fails (CLI exit code 2+ from internal errors, malformed YAML in pedagogy-contract, schema validation errors before invariants run). Pipeline fails explicitly; no silent degradation. |
+| **CF5** | Component runtime | IndexedDB or BroadcastChannel unavailable in the student's browser. Per ADR 0007, `ResponseStore` swaps in `MemoryResponseStore` (session-scoped fallback); BroadcastChannel degrades silently. |
+
+CF4's home is the build pipeline (see *CF4 — Audit-tooling
+failure* below); CF5's home is the persistence-layer runtime
+(see *CF5 — Runtime fallback* below + ADR 0007). They appear in
+the table above for taxonomic completeness, but
+`runPedagogyAudit(index)` does not emit CF4 or CF5 findings.
 
 CF1 is INFO because overrides are legitimate (with TDR
 provenance); the audit surfaces them but does not warn.
@@ -161,8 +176,49 @@ CF2 is ERROR because an override without provenance is
 indistinguishable from a "make my CI green" hack — the very
 behavior the audit-trail discipline is designed to prevent.
 
+**What CF2 does NOT detect** (the manufactured-TDR pattern):
+an author can — in principle — run `sophie refactor`, get an
+auto-generated TDR seed, fill it minimally to satisfy the
+schema, promote it to a real TDR, and then write
+`audit_overrides:` referencing that just-created TDR. The
+override technically has a TDR-ref; CF2 passes; but the TDR
+was manufactured to silence the audit. This is **gameable by
+design** — Sophie's audit-as-presence framing (per
+`audit-and-ai-authoring.md`) explicitly accepts that quality
+lives outside the structural audit. The friction-chain that
+makes the loophole expensive — visible `TDR:` trailer in the
+commit, empty `evidence_type` field plus guidance block in the
+seed forcing author engagement, deliberate fabrication of
+evidence-type and rationale prose, PR diff visibility of all
+the above — does most of the heavy lifting, but the
+structural floor cannot catch the pattern. Only PR-review can.
+
+The mitigation is human review of suspect patterns: a PR
+adding both a new TDR *and* an `audit_overrides:` entry
+referencing that same TDR is a reviewable signal.
+
 CF3 is WARNING because stale overrides accumulate technical
 debt but don't break correctness.
+
+**CF3 detection mechanic.** Detecting "no longer fires" requires
+the audit to evaluate every invariant *as if no overrides were
+present*, then compare against the override-applied result. The
+implementation:
+
+1. `runPedagogyAudit(index)` runs first with `audit_overrides: []`
+   substituted into every chapter frontmatter, producing the
+   *raw finding set*.
+2. The same audit runs with the real `audit_overrides:`,
+   producing the *suppressed finding set*.
+3. CF3 fires for each entry in `audit_overrides:` whose
+   `(invariant, anchor)` does not appear in the raw finding set.
+
+The double-evaluation cost is bounded — the audit is purely
+read-only over the PedagogyIndex, so the marginal cost is
+linear in the number of override entries (typically <20 per
+course). Performance budget: the override-free pass amortizes
+across all CF3 evaluations; cached if the working tree is
+unchanged between two `sophie audit` runs.
 
 ### CF4 — Audit-tooling failure: explicit build failure, no silent degradation
 

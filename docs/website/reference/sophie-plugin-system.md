@@ -56,9 +56,13 @@ export default myPlugin;
 - **`name`** — fully-qualified package name; must match
   `package.json`.
 - **`version`** — semver string; must match `package.json`.
-- **`contributes`** — the content block. All sub-arrays optional,
-  but at least one must be non-empty (a plugin contributing
-  nothing is rejected with a CLI warning).
+- **`contributes`** — the content block. All sub-arrays optional;
+  v1 of [ADR 0048](../decisions/0048-sophie-lds-content-plugins.md)
+  ships `@sophie/commons-universal` and
+  `@sophie/discipline-astrophysics` with empty `contributes`
+  blocks intentionally (the content lands in successor ADRs).
+  Production content-bearing plugins should have at least one
+  non-empty sub-array, but empty-sentinel packages are valid.
 
 ### Optional fields
 
@@ -178,10 +182,11 @@ Plugin order matters: later plugins override earlier ones on
 entry-slug collision (last-write-wins). Conventional ordering:
 **universal core first, then discipline-specific.**
 
-## Per-entry override
+## Per-field overrides and per-entry excludes
 
-A consumer course can override any single plugin entry via
-`pedagogy-contract.yaml`:
+A consumer course can modify individual *fields* of any plugin
+entry while inheriting the rest, or drop plugin entries entirely.
+Both surfaces live in `pedagogy-contract.yaml`:
 
 ```yaml
 # courses/astr201-fa26/pedagogy-contract.yaml
@@ -196,26 +201,43 @@ plugins:
         # Other fields unchanged from plugin default.
     concepts:
       inverse-square-law:
-        aliases_add: ["irradiance"]
+        aliases_add: ["irradiance"]              # extend array
+        aliases_remove: ["legacy-irradiance"]    # trim array
         # Other fields unchanged.
     interventions:
       flux-distance-contrasting-cases:
         body_template: |
           Override body specific to ASTR 201 ordering.
+  excludes:
+    misconceptions:
+      - unwanted-plugin-slug   # drop entry entirely (rare)
 ```
 
-### Override semantics
+### Override operators
 
-- **`<field>:`** — replace the plugin's value entirely.
-- **`<field>_add:`** — for array fields (`aliases`, `references`,
-  `prerequisite_misconceptions`), append to the plugin's array
-  rather than replacing.
+Three operators on individual fields, plus a separate `excludes:`
+block for whole-entry removal:
+
+- **`<field>:`** — replace the plugin's value for this scalar
+  field entirely. Other fields inherit from the plugin.
+- **`<field>_add:`** — for array fields (`aliases`,
+  `references`, `prerequisite_misconceptions`, etc.), append to
+  the plugin's array rather than replacing.
 - **`<field>_remove:`** — for array fields, remove specific
   entries from the plugin's array.
+- **`excludes:`** block — drop a plugin entry entirely. Use
+  sparingly; the more common case is overriding individual
+  fields.
 
 Override granularity is **per-entry, per-field**. A consumer
 course can keep 19 of 20 plugin-contributed misconceptions and
-override one without affecting the other 19.
+modify one field of one entry without affecting the other 19.
+
+**Nested-field overrides are not supported in v1.** To modify
+one element of an array-of-objects field (e.g., one assumption
+within an `assumptions[]` array), replace the entire field
+using the plain `<field>:` operator. A future ADR may extend
+the grammar if real authoring data shows the need.
 
 ## Autonomy guarantees (per ADR 0048)
 
