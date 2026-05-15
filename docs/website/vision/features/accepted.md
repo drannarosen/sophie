@@ -207,120 +207,54 @@ and diff polices changes across revisions.
 ---
 
 (a7-equation-biography)=
-## A7. Equation Biography
+## A7. Equation Biography — graduated 2026-05-14
 
-**Motivating use case.** STEM equations are not just rendered
-math — they have stories: what they observe, what assumptions
-they encode, what units they require, where they break, what
-students commonly misuse. ASTR 201's Wien's law has all of these
-(`λ_peak = b/T`, valid for blackbody only, implies Planck-
-distribution, students misuse for non-thermal emission). Sophie's
-`<KeyEquation>` currently captures the equation and a title; the
-rest lives in surrounding prose if anywhere. A7 makes the
-biography first-class: declared at the equation, surfaced in
-hover previews + chapter-end + `/equations` route, audited where
-correctness is gateable.
+**Graduated** → [ADR 0046 — Equation Biography](../../decisions/0046-equation-biography.md)
++ [Equation Biography schema](../../reference/equation-biography-schema.md).
 
-**Design sketch (refined from 2026-05-14 brainstorm).** One paired
-artifact: an extended `<KeyEquation>` component using the
-children-mode source pattern, with six new biography children.
-Three new E-prefix audit invariants.
+The ADR resolved six brainstorm open questions: (Q1) children-
+mode siblings of the `<KeyEquation>` math body, mirroring the
+PR-C4 LearningObjectives / ADR 0043 MultiRep / ADR 0044
+Intervention SoTA pattern — over prop-extension (array-prop
+authoring in MDX is awkward) and over wrapper-component (extra
+nesting for no benefit). (Q2) Free-form prose body + optional
+`type=` slot on `<Assumption>`; no v1 platform catalog —
+physics assumptions partly recur but lack citation-grade
+per-type literature, and cross-discipline overlap (astrophysics
+vs scientific-computing) makes a single platform catalog
+premature; v2 can promote if authoring data shows the need.
+(Q3) All three existing rendering surfaces detail-tuned —
+`<EqRef>` hover compact summary, `<ChapterEquations>` + `/equations`
+full biography with `<details>` disclosure for `<CommonMisuse>`
+lists; dedicated `/equations/<slug>` page deferred to future
+"Equation Pages" ADR. (Q4) Three new E-prefix audit invariants
+(E7 INFO, E8 WARNING, E9 INFO) — extending PR-C2's E-prefix
+family rather than carving a new EB-prefix; new prefixes earn
+their keep when governing new surfaces (NR/MR/MG/I), not when
+extending an existing one with new fields. (Q5) Prose-only for
+non-`<Units>` biography children — `<Observable>`/`<Assumption>`/
+`<CommonMisuse>`/`<BreaksWhen>` are prose; the meaning is the
+body; mixing tag-slots with prose-bodies is awkward. (Q6)
+Universal scope; per-equation opt-in by virtue of authoring
+biography children — no new Pedagogy Contract gate, and all
+three new audit invariants only fire when biography children
+are present so non-biography-using courses see no audit noise.
 
-1. **Children-mode `<KeyEquation>` extension** — the existing
-   `<KeyEquation id title>` shell now accepts optional sibling
-   children alongside its `$$...$$` math body: `<Observable>`
-   (prose: what real-world quantity does this equation describe),
-   `<Assumption>` (prose body; optional `type=` slot, no v1
-   platform catalog), `<BreaksWhen>` (prose: regime where the
-   equation no longer applies), `<CommonMisuse>` (prose; optional
-   `misconception="<slug>"` cross-ref to the A5 graph), and
-   `<Units symbol="X" unit="Y">` (one or more; declares the unit
-   of each symbol). Mirrors the LearningObjectives / MultiRep /
-   Intervention children-mode SoTA pattern (PR-C4 + ADR 0043 +
-   ADR 0044).
-
-2. **Three rendering surfaces** — all three already exist for
-   plain `<KeyEquation>` (per ADR 0038 / PR-C2 / PR-C4); biography
-   surfaces render at context-appropriate detail levels:
-   - `<EqRef>` hover: compact summary line ("2 assumptions · 1
-     misuse · valid in thermal equilibrium").
-   - `<ChapterEquations>` chapter-end roll-up: full biography
-     with collapsible `<details>` for bulky fields.
-   - `<CourseEquations>` at `/equations`: same as chapter-end.
-   - Deferred to future ADR: dedicated `/equations/<slug>` page
-     (mirroring A5's MisconceptionGraphPage) with reverse-lookups
-     (which chapters cite this, which misconceptions pair with
-     it).
-
-3. **Three new E-prefix audit invariants** — extend the existing
-   PR-C2 equations family rather than carve a new EB-prefix
-   (B1 is a schema extension, not a new contract surface).
-   - **E7 (INFO):** `<KeyEquation>` declares biography children
-     (any of `<Observable>`/`<Assumption>`/etc.) but lacks
-     `<Observable>` — chapter-author nudge toward complete
-     biographies.
-   - **E8 (WARNING):** `<Units symbol="X">` doesn't match the
-     Notation Registry's `canonical_symbol`/`alias` for the
-     equation's concept. Fires only when NR is opted-in via
-     Pedagogy Contract (per ADR 0042 +
-     `math_and_units_standards.notation_registry`).
-   - **E9 (INFO):** `<CommonMisuse>` lacks a
-     `misconception="<slug>"` cross-ref to the A5 graph. Soft
-     suggestion toward curriculum coherence.
-
-**Scope (v1).** Universal. No new Pedagogy Contract gate; opt-in
-is per-equation by virtue of authoring biography children.
-Courses that don't author biography see no E7/E8/E9 audit noise
-(all three invariants only fire when biography children are
-present).
-
-**Notation Registry integration.** `<Units>` is the only NR-
-cross-referenced biography child. Other biography children
-(`<Observable>`, `<Assumption>`, `<CommonMisuse>`, `<BreaksWhen>`)
-are prose; authors cross-reference NR concepts inline in prose if
-they wish. v2 may promote to typed `concept_ref` slots once
-authoring data shows the need.
-
-**Estimated cost.** ~2–3 days for the doc-only ADR + paired
-schema reference. ~1 week for the follow-up code PR
-(Zod schema extension, six new components with `serialize`
-separation per ADR 0004, render-surface updates to `<EqRef>`
-hover + `<ChapterEquations>` + `<CourseEquations>`, three new
-E-prefix invariants, axe-core tests).
-
-**Defended priority claim.** The v1 LDS-conformance-and-revision-
-discipline tranche (A1–A6) ships contracts, audit invariants, and
-the diff tool. A7 is the **first feature-tier graduation** post-
-foundation — it extends an existing platform primitive
-(`<KeyEquation>`) with a richer schema. Promoting A7 ahead of B4
-(Course Brain), B5 (Human Expertise Required), or B6 (Multi-modal
-generation) because:
-
-- A7 directly serves Anna's first migrating course (ASTR 201
-  Module 1 has Wien's law, Hubble–Lemaître, inverse-square law —
-  all are biography candidates).
-- A7's dependencies are already graduated (NR via A4 ships the
-  `canonical_symbol`/`alias` lookup that E8 fires on; A5 ships
-  the misconception slugs that `<CommonMisuse misconception=…>`
-  references).
-- A7's authoring cost is low (per-equation, per-field optional);
-  uptake can be incremental.
-- B4 and B5 depend on the foundation being *exercised* before
-  their priority claims sharpen; B6 is multi-sprint scope.
-
-**Framed ADR question.** *How does Equation Biography hang off
-`<KeyEquation>`, and where does it surface?* Brainstorm resolved
-six sub-questions: (Q1) children-mode siblings; (Q2) free-form
-prose body + optional `type=` slot on `<Assumption>`, no v1
-catalog; (Q3) all three existing surfaces detail-tuned, dedicated
-per-equation page deferred; (Q4) three new E-prefix invariants
-(E7 INFO, E8 WARNING, E9 INFO); (Q5) prose-only for non-`<Units>`
-biography children; (Q6) universal with per-equation opt-in.
+A7 is the **seventh graduation** and the **first feature-tier
+ADR post-foundation**. Unlike A3/A4/A5 (which added new content
+contracts) or A6 (which added a tool over those contracts), A7
+extends an existing platform primitive (`<KeyEquation>`) with a
+richer schema. The children-mode pattern reuses every piece of
+existing infrastructure: the same extractor walks the same
+PedagogyIndex; the same render surfaces consume it; the same
+diff taxonomy classifies its changes; the only net-new code is
+the six child components + three audit invariants.
 
 **Status.**
 - 2026-05-14 — surfaced (speculative) as B1 in [backlog.md](backlog.md)
 - 2026-05-14 — brainstorm resolved 6 open questions; promoted
   to accepted-pending-ADR with defended priority claim
+- 2026-05-14 — graduated → [ADR 0046](../../decisions/0046-equation-biography.md)
 
 ---
 
@@ -348,3 +282,5 @@ is no longer load-bearing for ongoing work.
 - **A6 — Pedagogical Diff / Curriculum CI** → [ADR 0045](../../decisions/0045-pedagogical-diff-curriculum-ci.md)
   + [`sophie diff` CLI reference](../../reference/sophie-diff-cli.md)
   + [Pedagogical change taxonomy](../../reference/pedagogical-change-taxonomy.md). Graduated 2026-05-14.
+- **A7 — Equation Biography** → [ADR 0046](../../decisions/0046-equation-biography.md)
+  + [Equation Biography schema](../../reference/equation-biography-schema.md). Graduated 2026-05-14.

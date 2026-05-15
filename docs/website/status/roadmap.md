@@ -52,22 +52,30 @@ flow (`vision/features/accepted.md` → ADR) on the same day.
 | **A5** | [0044](../decisions/0044-misconception-graph-and-intervention-library.md) | [misconception-graph-schema](../reference/misconception-graph-schema.md), [intervention-library](../reference/intervention-library.md) | Misconception Graph + Intervention Library + `<Intervention>` — extends PR-C4 misconception schema with graph fields (`prerequisite_misconceptions`, `related_misconceptions`, `concept_refs`); 12 canonical interventions (4 families) in `intervention-index.ts`. Invariants **MG1–MG3** + **I1–I3**. Universal scope. |
 | **A6** | [0045](../decisions/0045-pedagogical-diff-curriculum-ci.md) | [sophie-diff-cli](../reference/sophie-diff-cli.md), [pedagogical-change-taxonomy](../reference/pedagogical-change-taxonomy.md) | Pedagogical Diff + Curriculum CI — `sophie diff <ref>` CLI command + persisted `dist/.sophie/pedagogy-index.json` build artifact + two-axis pedagogical-change taxonomy (granularity × severity) + three formatters (text/JSON/markdown). No new audit-invariant family — *tool over* the foundation contracts; consumes NR/MR/MG/I/PC/AC/D/E/F/C/O/K via the `conformance` axis. |
 
-The six ADRs ship **docs only**; schema enforcement, components,
-audit-invariant code, route emitters, and the `sophie diff`
-implementation follow in code PRs (Phase 3). With A6 graduated,
-the **v1 LDS-conformance-and-revision-discipline tranche is
-complete**: A1+A2 declare convention/vocabulary; A3+A4+A5 declare
-content contracts with single-snapshot audit invariants; A6 makes
-those invariants observable across revisions.
+The six foundation ADRs above ship **docs only**; schema
+enforcement, components, audit-invariant code, route emitters,
+and the `sophie diff` implementation follow in code PRs (Phase 3).
+With A6 graduated, the **v1 LDS-conformance-and-revision-
+discipline tranche is complete**: A1+A2 declare convention/
+vocabulary; A3+A4+A5 declare content contracts with single-snapshot
+audit invariants; A6 makes those invariants observable across
+revisions.
+
+### Feature graduations post-foundation
+
+| A-label | ADR | Reference doc(s) | Description |
+|---|---|---|---|
+| **A7** | [0046](../decisions/0046-equation-biography.md) | [equation-biography-schema](../reference/equation-biography-schema.md) | Equation Biography — children-mode extension to `<KeyEquation>` with six biography children (`<Observable>`, `<Assumption>` with optional `type=` slot, `<Units symbol unit>`, `<BreaksWhen>`, `<CommonMisuse>` with optional `misconception=` cross-ref). Three rendering surfaces detail-tuned (compact hover, full chapter-end, full /equations route). Three new E-prefix audit invariants (E7 INFO, E8 WARNING — fires only when NR is opted-in, E9 INFO). Universal scope; per-equation opt-in. |
 
 **Next up:** future ADRs promote from
 [backlog](../vision/features/backlog.md) as authoring volume
 surfaces real friction. Highest-leverage near-term candidates:
-B1 (Equation Biography — extends `<KeyEquation>` with assumptions,
-units, common misuses; ASTR 201 Module 1 will exercise it),
-B4 (Course Brain — serialized pedagogy index for AI consumption),
-B5 (Human Expertise Required gates — operationalizes A6's
-`requires-judgment` severity as CI gates).
+B2 (Approximation Honesty — `<Approximation>` primitive paired
+with prose-style `≈`/`∼`/"roughly" detection; complements A7's
+biography of *exact* equations with first-class handling of
+*approximate* ones); B4 (Course Brain — serialized pedagogy
+index for AI consumption); B5 (Human Expertise Required gates —
+operationalizes A6's `requires-judgment` severity as CI gates).
 
 This page covers:
 
