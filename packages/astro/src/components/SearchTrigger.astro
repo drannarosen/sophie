@@ -23,8 +23,10 @@ import { SearchModal } from "@sophie/components";
  * `aria-keyshortcuts` advertises the Cmd/Ctrl+K binding to assistive
  * tech that exposes keyboard shortcut hints.
  *
- * @media print hides the trigger (design doc §11 print-hide
- * follow-up; PR 10 covers full print polish).
+ * Styles live in `packages/astro/src/styles/textbook-layout.css`
+ * alongside other chrome (TopBar, Sidebar, RightColumn) so the
+ * cascading `@media print` chrome-reset rule applies without
+ * specificity fights from a per-component scoped style block.
  */
 ---
 
@@ -41,33 +43,3 @@ import { SearchModal } from "@sophie/components";
 </button>
 
 <SearchModal client:idle />
-
-<style>
-  .sophie-search-trigger {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--sophie-space-2);
-    padding: var(--sophie-space-1) var(--sophie-space-3);
-    border: 1px solid var(--sophie-color-border);
-    border-radius: var(--sophie-radius-md);
-    background: transparent;
-    color: var(--sophie-color-text-muted);
-    cursor: pointer;
-    font-size: 0.9em;
-  }
-  .sophie-search-trigger:hover {
-    background: var(--sophie-color-surface-2);
-  }
-  .sophie-search-trigger__kbd {
-    font-size: 0.8em;
-    padding: 0 var(--sophie-space-1);
-    border: 1px solid var(--sophie-color-border);
-    border-radius: var(--sophie-radius-sm);
-    background: var(--sophie-color-surface-0);
-  }
-  @media print {
-    .sophie-search-trigger {
-      display: none;
-    }
-  }
-</style>

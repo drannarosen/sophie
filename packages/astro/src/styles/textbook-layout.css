@@ -565,6 +565,34 @@
   }
 }
 
+/* SearchTrigger base styles — co-located with other chrome (TopBar,
+   Sidebar, RightColumn) so the @media print chrome-reset rule below
+   cascades cleanly. Previously scoped inside SearchTrigger.astro,
+   which gave per-component specificity that fought the global reset
+   (PR 10 Task 4). */
+.sophie-search-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sophie-space-2);
+  padding: var(--sophie-space-1) var(--sophie-space-3);
+  border: 1px solid var(--sophie-color-border);
+  border-radius: var(--sophie-radius-md);
+  background: transparent;
+  color: var(--sophie-color-text-muted);
+  cursor: pointer;
+  font-size: 0.9em;
+}
+.sophie-search-trigger:hover {
+  background: var(--sophie-color-surface-2);
+}
+.sophie-search-trigger__kbd {
+  font-size: 0.8em;
+  padding: 0 var(--sophie-space-1);
+  border: 1px solid var(--sophie-color-border);
+  border-radius: var(--sophie-radius-sm);
+  background: var(--sophie-color-surface-0);
+}
+
 /* ============================================================
    PR 10 — chapter-print polish (@media print).
    Design doc: docs/plans/2026-05-15-pr-10-print-polish-design.md
@@ -596,4 +624,62 @@
     margin: 0;
     padding: 0;
   }
+
+  /* (3) Page-break-inside protection — moderate contract */
+  figure,
+  .sophie-key-equation,
+  .sophie-key-insight,
+  .sophie-aside,
+  .sophie-objective-item,
+  .sophie-glossary-footnote,
+  .sophie-rollup-entry {
+    break-inside: avoid;
+  }
+
+  /* (4) Interactive components → static pedagogy-preserving form */
+
+  /* CollapsibleCard: force-expanded body, hide chevron */
+  .sophie-collapsible-card [data-state="closed"] {
+    display: block;
+  }
+  .sophie-collapsible-card-chevron {
+    display: none;
+  }
+
+  /* InteractiveCheckbox: render as static empty glyph */
+  .sophie-interactive-checkbox input[type="checkbox"] {
+    appearance: auto;
+    pointer-events: none;
+  }
+
+  /* Predict: hide reveal button, draw blank answer-space */
+  .sophie-predict[data-revealed="false"] .sophie-predict-reveal-button {
+    display: none;
+  }
+  .sophie-predict::after {
+    content: "";
+    display: block;
+    min-height: 4em;
+    border-bottom: 1px solid var(--sophie-border);
+  }
+
+  /* SelfAssessment: hide reveal button, show answer */
+  .sophie-self-assessment-answer {
+    display: block;
+  }
+  .sophie-self-assessment-reveal-button {
+    display: none;
+  }
+
+  /* GlossaryTerm first-use footnote: reveal */
+  .sophie-glossary-term[data-first-use="true"] .sophie-glossary-footnote {
+    display: inline;
+  }
+}
+
+/* Default (non-print) state: glossary footnote spans are hidden.
+   Outside the @media print block so it applies to both screen and print
+   when no [data-first-use="true"] match. */
+.sophie-glossary-footnote {
+  display: none;
 }
