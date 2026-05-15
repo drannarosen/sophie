@@ -139,5 +139,14 @@ export function generateCSS(): string {
     ${colorBlock(dark)}
   }
 }
+
+@media print {
+  :root,
+  html[data-theme="dark"] {
+    /* Color — light (forced for print regardless of active theme) */
+    ${colorBlock(light)}
+    color-scheme: light;
+  }
+}
 `;
 }
