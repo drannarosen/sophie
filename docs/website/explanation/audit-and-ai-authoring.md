@@ -31,7 +31,7 @@ flowchart TB
         S1[Schema validation]
         S2[Reference resolution]
         S3[Asset freshness]
-        S4[Pedagogy contract checks<br/>cadence, pairing]
+        S4[Pedagogy contract 0042<br/>+ NR/MR 0043<br/>+ MG/I 0044]
         S5[Cross-component graph verification]
         S6[Emits Tier-3 prompt files<br/>does not run them]
     end
@@ -62,6 +62,28 @@ interface is structured prompt files in a known format.
   content. The AI primary-authors; the instructor reviews and decides
   at every handoff. HITL is structural, not advisory
   ([ADR 0030](../decisions/0030-audience-and-ai-author-model.md)).
+
+### The audit invariant families (v1)
+
+Sophie's audit surface is organized into named invariant families,
+each owned by an ADR. Every invariant is **deterministic** — it
+runs in `sophie audit` without an AI call — and is keyed to a
+specific schema or component contract. Families introduced through
+the 2026-05-14 LDS conformance foundation tranche:
+
+| Family | Source ADR | Reference | Scope |
+|---|---|---|---|
+| **D / E / F / C / O / K** | [0038](../decisions/0038-pedagogy-index-pattern.md) (Bucket C) | [chapter-components](../reference/chapter-components.md) | Pedagogy-index integrity: dangling `<EqRef>`/`<FigureRef>`/`<GlossaryTerm>`/`<ChapterRef>` (D4/D5, E4, F2, C1), required titles (E1/F1, K1), unused anchors (E6, F4, O1/O2). 10 invariants. |
+| **PC / AC** | [0042](../decisions/0042-pedagogy-contract-and-ai-contribution-ledger.md) | [pedagogy-contract-schema](../reference/pedagogy-contract-schema.md), [ai-contribution-schema](../reference/ai-contribution-schema.md) | Course has a valid `pedagogy-contract.yaml` (PC1); every chapter declares `ai_contribution` with required fields (AC1); `last_review_date` is not stale beyond the contract's threshold (AC2). |
+| **NR / MR** | [0043](../decisions/0043-notation-registry-multirep-alignment-audit.md) | [notation-registry-schema](../reference/notation-registry-schema.md), [multirep-component](../reference/multirep-component.md) | Notation Registry / `<MultiRep>` alignment. NR1 — every declared concept symbol resolves in `<KeyEquation>` math (modulo `transient: true`); NR2–NR4 — alias coverage, unit consistency, registry completeness. MR1–MR4 — `<MultiRep>` children's `refKey`/`refName`/`symbol` props match registry. |
+| **MG / I** | [0044](../decisions/0044-misconception-graph-and-intervention-library.md) | [misconception-graph-schema](../reference/misconception-graph-schema.md), [intervention-library](../reference/intervention-library.md) | Misconception graph + Intervention pairings. MG1 — no dangling `prerequisite_misconceptions` slugs; MG2 — prerequisites declared earlier than dependents per consumer chapter ordering; MG3 — every misconception is addressed by at least one `<Intervention>` somewhere in the course. I1 — `<Intervention addresses="…">` resolves; I2 — `type` is in `intervention-index.ts` (unless `type="custom"`); I3 — `bridging-analogy` declares `<Limits>`. |
+
+Operationally: invariants run inside `runPedagogyAudit(index)`
+against the populated PedagogyIndex (per
+[ADR 0038](../decisions/0038-pedagogy-index-pattern.md)); each
+emits an `INFO` / `WARNING` / `ERROR` row. CI fails on `ERROR`;
+`WARNING` is surfaced and reviewable. Future ADR families append
+to this list rather than replacing it.
 
 ## 2. The Sophie CLI surface
 

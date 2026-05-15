@@ -328,9 +328,9 @@ visible against variation. Especially powerful for distinguishing
 confusable concepts (e.g., flux vs. luminosity, velocity vs.
 acceleration).
 
-**Sophie components**: `<MultiRep>` (component forthcoming via
-[vision/features/accepted.md](../vision/features/accepted.md) A4) +
-paired `<Figure>` blocks + paired `<KeyEquation>` blocks. The
+**Sophie components**: [`<MultiRep>`](multirep-component.md) (per
+[ADR 0043](../decisions/0043-notation-registry-multirep-alignment-audit.md))
++ paired `<Figure>` blocks + paired `<KeyEquation>` blocks. The
 juxtaposition is the move.
 
 **Don't confuse with**: `bridging-analogy` (which connects an
@@ -357,11 +357,13 @@ understanding shows up as *fluent translation* between
 representations. Most STEM learning fails when students learn one
 representation in isolation and can't translate.
 
-**Sophie components**: `<MultiRep>` (component forthcoming via A4).
+**Sophie components**: [`<MultiRep>`](multirep-component.md) (per
+[ADR 0043](../decisions/0043-notation-registry-multirep-alignment-audit.md)).
 Composes existing primitives — `<Figure>`, `<KeyEquation>`,
 `<CodeCell>` (forthcoming), prose — with explicit binding
-metadata. The future Representation Alignment Audit (A4)
-verifies notation consistency across the bound representations.
+metadata. The Representation Alignment Audit
+(ADR 0043, invariants **NR1–NR4** + **MR1–MR4**) verifies notation
+consistency across the bound representations.
 
 **Don't confuse with**: `comparison-cases` (which compares
 *different concepts*); MRB binds *one concept* across modes.

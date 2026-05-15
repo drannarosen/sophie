@@ -130,8 +130,9 @@ mirroring `move-index.ts`; `type="custom"` for course-specific
 bespoke), the distributive declaration shape (graph fields on the
 existing PR-C4 `<Aside kind="misconception">` schema; no central
 YAML), the nested children-mode `<Intervention>` component, and 6
-new audit invariants (M3–M8) extending PR-C4's M1–M2. Universal
-scope across Sophie LDS courses.
+new audit invariants (**MG1–MG3** for graph integrity + **I1–I3**
+for intervention checks) extending PR-C4's M1–M2. Universal scope
+across Sophie LDS courses.
 
 The first-triage cohort is now fully graduated. Subsequent
 graduations promote from the [backlog](backlog.md).

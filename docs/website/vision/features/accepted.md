@@ -138,7 +138,9 @@ relations are new fields on the existing PR-C4 `<Aside
 kind="misconception">` schema; the audit walks the existing
 pedagogy index and reassembles the graph. `<Intervention>` nests
 inside misconception Asides (children-mode source pattern). The
-audit adds 6 new invariants (M3–M8) extending PR-C4's M1–M2.
+audit adds 6 new invariants (**MG1–MG3** for misconception-graph
+integrity + **I1–I3** for intervention checks) extending PR-C4's
+M1–M2.
 
 All five originally-accepted entries now graduated. The
 `accepted.md` section becomes a list of graduated pointers;
@@ -153,8 +155,22 @@ subsequent accepted entries promote from the backlog.
 
 ## Graduated entries (links only)
 
-Once an entry's ADR ships, the full content moves into the ADR; the
-vision/features/ entry collapses to a one-line pointer.
+Once an entry's ADR ships, this tail section keeps a complete
+pointer-only index. The full A1–A5 entries above are retained
+above as trace records of the open questions each ADR resolved; a
+future tranche may collapse them to one-liners once the rationale
+is no longer load-bearing for ongoing work.
 
 - **A1 — Teaching Decision Records (TDRs)** → [ADR 0040 — Teaching Decision Records](../../decisions/0040-teaching-decision-records.md)
   + [TDR template](../../reference/tdr-template.md). Graduated 2026-05-14.
+- **A2 — Teaching Move Library** → [ADR 0041 — Teaching Move Library](../../decisions/0041-teaching-move-library.md)
+  + [Teaching Move Library reference](../../reference/teaching-moves.md). Graduated 2026-05-14.
+- **A3 — Pedagogy Contract + AI Contribution Ledger** → [ADR 0042](../../decisions/0042-pedagogy-contract-and-ai-contribution-ledger.md)
+  + [Pedagogy Contract schema](../../reference/pedagogy-contract-schema.md)
+  + [AI Contribution schema](../../reference/ai-contribution-schema.md). Graduated 2026-05-14.
+- **A4 — Notation Registry + MultiRep + Representation Alignment Audit** → [ADR 0043](../../decisions/0043-notation-registry-multirep-alignment-audit.md)
+  + [Notation Registry schema](../../reference/notation-registry-schema.md)
+  + [MultiRep component reference](../../reference/multirep-component.md). Graduated 2026-05-14.
+- **A5 — Misconception Graph + Intervention Library** → [ADR 0044](../../decisions/0044-misconception-graph-and-intervention-library.md)
+  + [Misconception graph schema](../../reference/misconception-graph-schema.md)
+  + [Intervention Library reference](../../reference/intervention-library.md). Graduated 2026-05-14.

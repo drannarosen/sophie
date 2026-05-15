@@ -60,6 +60,9 @@ This page is the chapter author's quick reference.
 | `<Figure>` | Source for `PedagogyIndex.figureUsages` (per-chapter record of where each registry figure appears). Resolves `name` against the consumer-supplied `figureRegistry`. |
 | `<KeyEquation>` | Source for `PedagogyIndex.equations`. Requires `id` (canonical anchor) and `title`; body must contain exactly one `$$...$$` block (KaTeX-rendered). |
 | `<Objective>` | Pure-display primitive. Only meaningful as a child of `<LearningObjectives>`; the remark extractor walks it during MDX parse to populate `PedagogyIndex.objectives`. |
+| `<MultiRep>` | Children-mode source for `PedagogyIndex.multiRepBindings` (per [ADR 0043](../decisions/0043-notation-registry-multirep-alignment-audit.md)). Wraps `<RepVerbal>`, `<RepEquation refKey symbol>`, `<RepFigure refName symbolLabel>`, `<RepCode refName symbol>`, `<RepIntuition>` children — one concept across multiple representational modes. Feeds the **MR1–MR4** Representation Alignment Audit invariants. |
+| `<RepVerbal>` / `<RepEquation>` / `<RepFigure>` / `<RepCode>` / `<RepIntuition>` | Pure-display primitives. Only meaningful as children of `<MultiRep>`; the extractor walks them during MDX parse to populate `multiRepBindings`. `<RepEquation>` / `<RepFigure>` / `<RepCode>` carry refs that resolve against `equations` / `figureRegistry` / `<CodeCell>` names respectively. |
+| `<Intervention>` | Children-mode source for `PedagogyIndex.interventions` (per [ADR 0044](../decisions/0044-misconception-graph-and-intervention-library.md)). Nests inside a misconception `<Aside>` or `<Callout variant="misconception">` (`addresses="this"`) — or stands outside with an explicit `addresses="<misc-slug>"`. `type` references the 12 canonical interventions in `intervention-index.ts` or `"custom"`. Feeds the **MG3** + **I1–I3** audit invariants. |
 
 ### Interactive React island
 
@@ -302,6 +305,8 @@ errors at build time, not at runtime.
 | Inline reference to a figure | `<FigureRef name="X" />` |
 | Inline reference to another chapter | `<ChapterRef slug="X" />` |
 | The chapter-opening "you will be able to..." list | `<LearningObjectives>` with `<Objective>` children |
+| One concept presented across multiple representational modes (prose + equation + figure + code + intuition) with explicit cross-bindings | `<MultiRep>` with `<RepVerbal>` / `<RepEquation>` / `<RepFigure>` / `<RepCode>` / `<RepIntuition>` children |
+| A pedagogical intervention paired with a misconception (worked example, contrasting cases, bridging analogy, etc.) | `<Intervention type="..." addresses="this">` nested inside a misconception `<Aside>` or `<Callout>` |
 | A single checkbox for a tracked item | `<InteractiveCheckbox>` |
 | A "predict before the answer" prompt | `<Predict>` |
 | A confidence rating (1–5 or 1–7) | `<ConfidenceCheck>` |
@@ -344,5 +349,8 @@ JSDoc:
 - [ADR 0007](../decisions/0007-persistence-indexeddb.md) — IndexedDB + ResponseStore + BroadcastChannel.
 - [ADR 0027](../decisions/0027-mdx-render-boundary-prop-threading.md) — static vs persistence-bearing render boundary.
 - [ADR 0038](../decisions/0038-pedagogy-index-pattern.md) — pedagogy-index pattern (the architectural basis for the cross-reference and aggregator categories).
+- [ADR 0042](../decisions/0042-pedagogy-contract-and-ai-contribution-ledger.md) — Pedagogy Contract + AI Contribution Ledger (course-level YAML + per-chapter frontmatter; gates the Notation Registry opt-in).
+- [ADR 0043](../decisions/0043-notation-registry-multirep-alignment-audit.md) — Notation Registry + `<MultiRep>` + Representation Alignment Audit (NR1–NR4 + MR1–MR4 invariants).
+- [ADR 0044](../decisions/0044-misconception-graph-and-intervention-library.md) — Misconception Graph + Intervention Library + `<Intervention>` (MG1–MG3 + I1–I3 invariants).
 - [Component contract](component-contract.md) — the TypeScript interface every component implements.
 - [Add a custom component](../how-to/add-a-custom-component.md) — recipe for new components.

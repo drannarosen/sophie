@@ -36,6 +36,30 @@ is now load-bearing infrastructure for both:
   audit shell is in place; remaining audit work (Tier 1 + Tier 2
   per Phase 3) layers on top.
 
+### LDS conformance foundation graduated 2026-05-14
+
+The Sophie Learning Design System (LDS) conformance foundation —
+five paired schemas + audit-invariant families — graduated as a
+single tranche on 2026-05-14. Each item moved through the staging
+flow (`vision/features/accepted.md` → ADR) on the same day.
+
+| A-label | ADR | Reference doc(s) | Description |
+|---|---|---|---|
+| **A1** | [0040](../decisions/0040-teaching-decision-records.md) | [tdr-template](../reference/tdr-template.md) | Teaching Decision Records — ADR-shaped per-chapter teaching log, folder-scoped 3-digit numbering; lives in *consumer* repos. |
+| **A2** | [0041](../decisions/0041-teaching-move-library.md) | [teaching-moves](../reference/teaching-moves.md) | Teaching Move Library — 18 named moves across 7 families (eliciting prior knowledge, confronting misconceptions, worked examples + fading, representations + comparison, metacognition + retrieval, diagnostics, Sophie-native). Centralized `move-index.ts`. |
+| **A3** | [0042](../decisions/0042-pedagogy-contract-and-ai-contribution-ledger.md) | [pedagogy-contract-schema](../reference/pedagogy-contract-schema.md), [ai-contribution-schema](../reference/ai-contribution-schema.md) | Pedagogy Contract + AI Contribution Ledger — course-level `pedagogy-contract.yaml` + per-chapter `ai_contribution` frontmatter. Public-facing accountability layer. Invariants **PC1**, **AC1**, **AC2**. |
+| **A4** | [0043](../decisions/0043-notation-registry-multirep-alignment-audit.md) | [notation-registry-schema](../reference/notation-registry-schema.md), [multirep-component](../reference/multirep-component.md) | Notation Registry + `<MultiRep>` + Representation Alignment Audit — `notation-registry.yaml` declares canonical symbols/units/aliases per concept; `<MultiRep>` binds one concept across modes (verbal/equation/figure/code/intuition). Invariants **NR1–NR4** + **MR1–MR4**. Opt-in via Pedagogy Contract. |
+| **A5** | [0044](../decisions/0044-misconception-graph-and-intervention-library.md) | [misconception-graph-schema](../reference/misconception-graph-schema.md), [intervention-library](../reference/intervention-library.md) | Misconception Graph + Intervention Library + `<Intervention>` — extends PR-C4 misconception schema with graph fields (`prerequisite_misconceptions`, `related_misconceptions`, `concept_refs`); 12 canonical interventions (4 families) in `intervention-index.ts`. Invariants **MG1–MG3** + **I1–I3**. Universal scope. |
+
+The five ADRs ship **docs only**; schema enforcement, components,
+audit-invariant code, and route emitters follow in code PRs (Phase 3).
+
+**Next up: A6 — Pedagogical Diff / Curriculum CI** (promoting from
+backlog [B3](../vision/features/backlog.md)). Operationalizes the
+A3+A4+A5 invariant families across revisions — `sophie diff` compares
+two `PedagogyIndex` snapshots and emits a structured pedagogical-
+change set. Targets Phase 3 audit work.
+
 This page covers:
 
 1. Goals and success criteria

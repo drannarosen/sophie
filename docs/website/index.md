@@ -103,6 +103,21 @@ And one collaborator-oriented section: **[Contributing](contributing/setup.md)**
   [ADR 0008](decisions/0008-cosmic-playground-protocol.md).
 - **AI surface: deterministic CLI emits prompt files; AI tools (Claude
   Code, Codex, ...) consume them.** No API keys in the platform.
+- **Sophie LDS conformance foundation (graduated 2026-05-14):** five
+  contracts that together make a course Sophie-LDS-compliant —
+  - **Teaching Decision Records** (consumer-repo curriculum audit
+    trail; ADR-shaped) — see [ADR 0040](decisions/0040-teaching-decision-records.md).
+  - **Teaching Move Library** (18 named moves across 7 families;
+    centralized `move-index.ts`) — see [ADR 0041](decisions/0041-teaching-move-library.md).
+  - **Pedagogy Contract + AI Contribution Ledger** (course-level
+    YAML + per-chapter frontmatter; public-facing accountability) —
+    see [ADR 0042](decisions/0042-pedagogy-contract-and-ai-contribution-ledger.md).
+  - **Notation Registry + `<MultiRep>` + Alignment Audit** (opt-in
+    symbol source-of-truth, audited across representations) — see
+    [ADR 0043](decisions/0043-notation-registry-multirep-alignment-audit.md).
+  - **Misconception Graph + Intervention Library + `<Intervention>`**
+    (extended misconception schema with graph + 12 canonical
+    interventions) — see [ADR 0044](decisions/0044-misconception-graph-and-intervention-library.md).
 
 ## License
 
