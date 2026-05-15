@@ -38,9 +38,15 @@ stateDiagram-v2
     Superseded --> [*]
 ```
 
-ADRs are **immutable once accepted**. Edits to typos or formatting are
-fine; substantive changes mean writing a new ADR that supersedes the
-old one. The old one stays in the tree with `status: superseded`.
+ADR editing rules are **state-dependent**. Pre-implementation ADRs
+(no `implemented_in:` field) are freely editable in place — substantive
+refinements land directly in the Decision / Rationale / Alternatives /
+Consequences sections, with git history as the audit trail. Post-
+implementation ADRs (with `implemented_in:` populated) land substantive
+changes as Revisions sections at the end of the ADR. Hard renames or
+breaking shifts still mean a new ADR that supersedes the old one
+(which stays in the tree with `status: superseded`). See
+[ADR process](../contributing/adr-process.md) for the full rule.
 
 ## Metadata fields
 
