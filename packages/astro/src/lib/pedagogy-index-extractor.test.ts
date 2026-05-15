@@ -2310,7 +2310,7 @@ describe("indexAccumulator inlineRefUsages (cross-chapter)", () => {
 describe("asPedagogyIndex (PR-C4 collections)", () => {
   test("returns all four new collections populated", () => {
     indexAccumulator.setChapters([
-      { slug: "ch-x", title: "X", module: "mod-1" },
+      { slug: "ch-x", title: "X", module: "mod-1", status: "stable" },
     ]);
     indexAccumulator.setModules([
       { slug: "mod-1", title: "Module 1", order: 0 },

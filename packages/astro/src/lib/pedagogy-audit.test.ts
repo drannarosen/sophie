@@ -537,6 +537,7 @@ describe("O1 — duplicate objective id within a chapter (defense-in-depth)", ()
           slug: "measuring-the-sky",
           title: "Measuring",
           module: "core",
+          status: "stable",
         },
       ],
     };
