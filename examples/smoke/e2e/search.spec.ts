@@ -104,9 +104,13 @@ test.describe("Pagefind search modal (Layer 2)", () => {
 
   test("Esc closes the modal", async ({ page }) => {
     await page.goto("/chapters/measuring-the-sky/");
-    // Same trigger-visible precondition as test 1 + test 2: wait for
-    // SearchModal hydration before invoking the Cmd+K shortcut.
+    // Same trigger-visible + networkidle precondition as tests 1 + 2:
+    // SearchModal mounts client:idle so its document keydown listener
+    // isn't installed until after `requestIdleCallback` (post-networkidle
+    // in practice). Without the wait, Meta+K fires into a void and the
+    // dialog never opens. Deterministic-fail-under-load, not flake.
     await expect(page.getByRole("button", { name: /search/i })).toBeVisible();
+    await page.waitForLoadState("networkidle");
     await page.keyboard.press("Meta+k");
     await expect(page.getByRole("dialog")).toBeVisible();
     await page.keyboard.press("Escape");

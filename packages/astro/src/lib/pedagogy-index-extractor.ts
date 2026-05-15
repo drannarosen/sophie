@@ -847,6 +847,57 @@ export function extractInlineRefUsages(
 }
 
 /**
+ * Walks an mdast tree and marks the first `<GlossaryTerm name="...">`
+ * per slug per chapter with `data-first-use="true"`. Mutates the tree
+ * in place; idempotent (re-running yields the same shape).
+ *
+ * The slug is derived via the same `slugify(name)` helper used by
+ * `lookupDefinition()` in the runtime store, so build-time marks and
+ * runtime lookups stay consistent. Different-cased name props
+ * (`"Luminosity"`, `"luminosity"`, `"LUMINOSITY"`) collapse to one
+ * dedup key.
+ *
+ * Consumed by `GlossaryTerm.tsx`, which renders an inline footnote
+ * span when `data-first-use="true"` is present on its element. CSS in
+ * `textbook-layout.css` reveals the span under `@media print`.
+ */
+export function markFirstUseGlossaryTerms(
+  tree: Root,
+  _chapterSlug: string
+): void {
+  const seenSlugs = new Set<string>();
+
+  const visitor = (node: unknown) => {
+    const el = node as {
+      name?: string | null;
+      attributes?: Array<{
+        type: string;
+        name: string;
+        value: unknown;
+      }>;
+    };
+    if (el.name !== "GlossaryTerm") return;
+    const name = readStringAttr(el, "name");
+    if (!name) return;
+    const slug = slugify(name);
+    if (seenSlugs.has(slug)) return;
+    seenSlugs.add(slug);
+
+    const attrs = el.attributes ?? [];
+    if (attrs.some((a) => a.name === "data-first-use")) return;
+    attrs.push({
+      type: "mdxJsxAttribute",
+      name: "data-first-use",
+      value: "true",
+    });
+    el.attributes = attrs;
+  };
+
+  visit(tree, "mdxJsxFlowElement", visitor);
+  visit(tree, "mdxJsxTextElement", visitor);
+}
+
+/**
  * Cross-chapter accumulator — state lives on `globalThis` so it
  * survives across Vite environments within a single Astro build.
  *
@@ -1321,6 +1372,12 @@ export function pedagogyIndexRemarkPlugin(
     indexAccumulator.addInlineRefUsages(
       extractInlineRefUsages(tree, chapterSlug)
     );
+
+    // PR 10 print-polish: mark the first <GlossaryTerm> per slug per
+    // chapter with `data-first-use="true"`. Downstream GlossaryTerm.tsx
+    // reads the prop and renders an inline footnote span; the @media
+    // print rules in textbook-layout.css reveal the span in print.
+    markFirstUseGlossaryTerms(tree, chapterSlug);
 
     // Rewrite <LearningObjectives> AST shape so the React island
     // receives a props-driven `objectives` array instead of JSX
