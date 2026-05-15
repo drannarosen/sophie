@@ -65,8 +65,10 @@ stateDiagram-v2
 
 - Pick the next available ADR number (zero-padded, four digits).
 - Copy `decisions/template.md` to `decisions/NNNN-short-title.md`.
-- Fill in frontmatter: `status: proposed`, `date`, `deciders`,
-  `tags`.
+- Fill in frontmatter: `date`, `tags`, and the default `validation:`
+  block (per [ADR 0056](../decisions/0056-validation-tracker.md);
+  new ADRs default to `status: unvalidated`).
+- Fill in body admonition: `Status: proposed`, `Deciders`.
 - Write the body following the template's section structure.
 - Add the new file to `myst.yml` toc under Decisions.
 

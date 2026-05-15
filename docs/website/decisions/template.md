@@ -63,6 +63,7 @@ Two places to record ADR metadata:
 |---|---|---|---|
 | `date` | yes | frontmatter | ISO 8601 (`YYYY-MM-DD`) — date of acceptance |
 | `tags` | recommended | frontmatter | Discoverability via tag search |
+| `validation` | yes | frontmatter | Validation tracker block per [ADR 0056](0056-validation-tracker.md); new ADRs default to `status: unvalidated` |
 | `Status` | yes | admonition | `proposed`, `accepted`, `deprecated`, `superseded`, `rejected` |
 | `Deciders` | yes | admonition | Decision-makers (comma-joined) |
 | `Supersedes` | optional | admonition | ADR id this replaces (e.g. `0003`) |
@@ -75,6 +76,10 @@ Two places to record ADR metadata:
 ---
 date: 2026-MM-DD
 tags: [foundation]
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
 ---
 
 # ADR NNNN: <Concise decision title>
