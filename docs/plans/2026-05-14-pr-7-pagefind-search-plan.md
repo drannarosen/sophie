@@ -122,6 +122,21 @@ Tasks below already reflect them.
    Tasks 1, 2, 6, 7, 8 in this file reflect these corrections in
    their prescribed code.
 
+7. **`indexAccumulator` API: `setChapters` / `setModules`, not
+   `addChapter` / `addModule`.** The Task 2 §2.1 fixture originally
+   populated chapters and modules via `addChapter({...})` and
+   `addModule({...})` (singular, single-object). Those methods don't
+   exist. The actual API on `IndexAccumulator` is `setChapters(entries[])`
+   and `setModules(entries[])` (plural, array-typed; last-write-wins).
+   The shape difference is by design: chapters + modules are
+   consumer-app-supplied at SSR merge time via `getCollection(...)`,
+   not extractor-appended per-MDX-parse like the six entity sources
+   (definitions / equations / keyInsights / figureUsages /
+   misconceptions / objectives, all of which use `add<Plural>(entries[])`).
+   Caught by the Task 2 subagent's API-divergence check before the
+   bad fixture landed. Plan §Task 2 §2.1 corrected; tests now call
+   `setModules([{...}])` and `setChapters([{...}])`.
+
 ---
 
 ## Pre-task: Worktree setup
@@ -639,17 +654,10 @@ describe("buildPagefindIndex (Layer 1.6)", () => {
       "./pedagogy-index-extractor.ts"
     );
     resetIndexAccumulator();
-    indexAccumulator.addModule({
-      slug: "m",
-      title: "M",
-      order: 1,
-    });
-    indexAccumulator.addChapter({
-      slug: "ch",
-      title: "Test chapter",
-      module: "m",
-      order: 1,
-    });
+    indexAccumulator.setModules([{ slug: "m", title: "M", order: 1 }]);
+    indexAccumulator.setChapters([
+      { slug: "ch", title: "Test chapter", module: "m", order: 1 },
+    ]);
     indexAccumulator.addDefinitions([
       {
         term: "luminosity",
