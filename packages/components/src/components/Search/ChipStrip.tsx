@@ -32,7 +32,7 @@ export function ChipStrip({ active, onChange }: ChipStripProps): ReactNode {
           key={c.key}
           type='button'
           role='tab'
-          aria-selected={active === c.key ? "true" : "false"}
+          aria-selected={active === c.key}
           className={`${styles.chip} ${active === c.key ? styles.active : ""}`}
           onClick={() => onChange(c.key)}
         >

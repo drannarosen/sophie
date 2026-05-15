@@ -4,11 +4,14 @@ import { toHaveNoViolations } from "jest-axe";
 import { afterEach, beforeEach, expect } from "vitest";
 import { __resetRuntimeCaches } from "./src/runtime/useInteractive.ts";
 
-// jest-axe ships its own `expect.extend({ toHaveNoViolations })` in
-// CommonJS only; the matcher must be wired explicitly when used from
-// vitest. Once registered here, both `.toHaveNoViolations()` and the
-// alternative `.violations.toEqual([])` assertion style work across
-// the test suite. See https://github.com/nickcolley/jest-axe#vitest.
+// jest-axe exports `toHaveNoViolations` as a matcher-collection
+// object (`{ toHaveNoViolations(results) { ... } }`) — already the
+// exact shape `expect.extend` consumes. The library's own
+// `extend-expect.js` shim does the same call but isn't auto-loaded
+// under vitest, so we register it explicitly here. Once registered,
+// both `.toHaveNoViolations()` and the alternative
+// `.violations.toEqual([])` assertion style work across the suite.
+// See https://github.com/nickcolley/jest-axe#vitest.
 expect.extend(toHaveNoViolations);
 
 // Radix UI primitives (Popover used by <GlossaryTerm> in PR-C1)
