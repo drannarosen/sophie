@@ -31,6 +31,8 @@
     "storybook": "storybook dev --port 6006 --no-open",
     "test:storybook": "test-storybook --url http://127.0.0.1:6006",
     "test:unit": "vitest run --coverage",
+    "test:vr": "test-storybook --browsers chromium",
+    "test:vr:update": "test-storybook --browsers chromium --updateSnapshot",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist .turbo storybook-static"
