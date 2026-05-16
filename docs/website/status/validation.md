@@ -23,8 +23,8 @@ block (ADR 0056). Regenerated on every build; suppressed when
 
 | Status | Count |
 |---|---|
-| Validated | 13 |
-| In progress | 9 |
+| Validated | 14 |
+| In progress | 8 |
 | Unvalidated | 58 |
 | Re-validation needed | 0 |
 | Missing block | 0 |
@@ -37,7 +37,7 @@ block (ADR 0056). Regenerated on every build; suppressed when
 | test | 26 |
 | chapter | 4 |
 | review | 16 |
-| deployment | 11 |
+| deployment | 12 |
 | audit | 5 |
 | manual | 20 |
 
@@ -104,7 +104,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0052-scheduled-publication-visibility.md](/scheduled-publication-visibility/) | unvalidated | — | — |  |
 | [docs/website/decisions/0053-conformance-failure-modes.md](/conformance-failure-modes/) | unvalidated | — | — |  |
 | [docs/website/decisions/0054-course-schedule-calendar.md](/course-schedule-calendar/) | unvalidated | — | — |  |
-| [docs/website/decisions/0055-squash-merge-for-code-prs.md](/squash-merge-for-code-prs/) | in progress | 2026-05-16 | deployment, manual | Status downgraded from validated → in-progress 2026-05-16 per PR #54 review I3 + comprehensive review architectural question 4. Convention is empirically holding on every code PR (#43, #44, #49, #50, #51, #52, #54, #59 — all squash-merged), but the only evidence is self-citation of the ADR plus a null deployment row. No automated audit currently enforces squash-discipline; promote back to validated once an audit invariant or a GitHub Actions check verifies it on every merge. |
+| [docs/website/decisions/0055-squash-merge-for-code-prs.md](/squash-merge-for-code-prs/) | validated | 2026-05-16 | deployment, manual | Status promoted from in-progress → validated on 2026-05-16 after the squash-merge-guard CI workflow + repo-settings change both landed. Two layers are required: settings prevent UI accidents (the \`Create a merge commit\` and \`Rebase and merge\` buttons are gone); the CI workflow catches API-level bypass of the merge-commit shape. Together they cover all three GitHub merge strategies. |
 | [docs/website/decisions/0056-validation-tracker.md](/validation-tracker/) | validated | 2026-05-16 | audit, deployment, manual, review, test | All six PRs (#43 schema, #44 bulk migration, #50 admonition, #51 audit, #52 index, this PR curated-pass + reference doc + V1/V2 promotion) shipped. Self-referential validation complete; tracker is the source of truth for every ADR + reference doc's validation state as of 2026-05-16. |
 | [docs/website/decisions/0057-visual-regression-baseline.md](/visual-regression-baseline/) | unvalidated | — | — |  |
 

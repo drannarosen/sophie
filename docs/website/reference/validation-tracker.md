@@ -395,6 +395,51 @@ column is the honest middle ground.
 4. Commit both the contract edit and the regenerated dashboard
    in the same commit (or PR).
 
+## Known limitations
+
+Two architectural questions surfaced during the PR #59
+comprehensive review were locked as deferrals rather than
+implemented. Future work — particularly SoTL Paper #1 aggregation
+— may revisit them; this section preserves the deferral context so
+future readers find the rationale before re-litigating.
+
+### V5 vs V9 escape-path split (deferred)
+
+V5 currently fires ERROR when an evidence `ref` does not resolve on
+disk, including for refs that are not repo-root-relative (the most
+common author error). The reviewer's V9 split would carve the
+"not-repo-root-relative" case into its own code with a distinct
+message; the cleaner taxonomy would help SoTL Paper #1 aggregate
+"author-confusion-about-ref-shape" separately from
+"ref-pointing-at-deleted-file".
+
+**Why deferred**: until Paper #1 actually aggregates V-series
+findings, the V5 escape-path message ("must be repo-root-relative")
+already disambiguates at the human-reader level. Promoting to V9 is
+mechanical work whose value is unlocked only by the aggregation.
+
+**Revisit**: when Paper #1 begins consuming the
+`extractorFindings` + audit-findings stream.
+
+### Dashboard evidence-kinds count semantics (deferred)
+
+The dashboard's evidence-kinds cross-tab currently counts rows
+including deferred-null-ref evidence (the "ASTR 201 fa26 pending"
+sentinels — null `ref` + null `date` + prose notes). This inflates
+the `deployment` count relative to actual shipped deployments. The
+reviewer's split would annotate each kind as
+`N total (M with deferred null-ref)` so the dashboard distinguishes
+"intent-to-validate" from "validated".
+
+**Why deferred**: the dashboard's current consumer is Anna; the
+inflation is legible because she authored the sentinels. When Paper
+#1 begins reading the dashboard, the annotation becomes
+load-bearing.
+
+**Revisit**: when Paper #1's authoring-conformance metrics begin
+consuming the cross-tab — split annotation at that point, alongside
+the V9 split above (both are Paper-#1-triggered).
+
 ## References
 
 - [ADR 0056](../decisions/0056-validation-tracker.md) — the

@@ -5,7 +5,7 @@ tags:
   - contributing
   - git
 validation:
-  status: in-progress
+  status: validated
   last_validated_date: "2026-05-16"
   evidence:
     - kind: manual
@@ -13,10 +13,14 @@ validation:
       date: "2026-05-15"
       notes: "ADR 0055 itself is the contract; squash-merge has been the default for every code PR since adoption (visible in `git log --oneline` — each feature PR appears as a single commit on main)."
     - kind: deployment
+      ref: .github/workflows/squash-merge-guard.yml
+      date: "2026-05-16"
+      notes: "Post-push workflow on main asserts HEAD is not a merge commit (parent count > 1). Catches `Allow merge commits` bypass at the CI layer. Landed in PR #60; first run on the merge commit (3599fc0) passed in 7s."
+    - kind: deployment
       ref: null
-      date: null
-      notes: "Multi-PR squash discipline is enforced by convention + GitHub repo settings; no automated audit."
-  notes: "Status downgraded from validated → in-progress 2026-05-16 per PR #54 review I3 + comprehensive review architectural question 4. Convention is empirically holding on every code PR (#43, #44, #49, #50, #51, #52, #54, #59 — all squash-merged), but the only evidence is self-citation of the ADR plus a null deployment row. No automated audit currently enforces squash-discipline; promote back to validated once an audit invariant or a GitHub Actions check verifies it on every merge."
+      date: "2026-05-16"
+      notes: "GitHub repo settings: allow_merge_commit=false, allow_rebase_merge=false, allow_squash_merge=true. Verified via `gh api /repos/drannarosen/sophie` post-flip on 2026-05-16. Settings-state lives outside the repo so ref is null; the squash-merge button is now the only one available in the GitHub PR UI."
+  notes: "Status promoted from in-progress → validated on 2026-05-16 after the squash-merge-guard CI workflow + repo-settings change both landed. Two layers are required: settings prevent UI accidents (the `Create a merge commit` and `Rebase and merge` buttons are gone); the CI workflow catches API-level bypass of the merge-commit shape. Together they cover all three GitHub merge strategies."
 ---
 
 # ADR 0055: Squash-merge for code PRs
