@@ -1,22 +1,35 @@
-/*
- * KeyEquation styles — new design (no SCSS source to port).
+/* KeyEquation — Tier-1 (card-strong) chrome per visual-polish-target.md.
  *
- * Visual coding: violet accent + serif title cues "named mathematical
- * object" — distinct from Callout's teal info-tone and Predict's rose
- * elicitation-tone. Cross-references via `#hash-anchor` get a `:target`
- * outline pulse to make the navigation feel responsive.
+ * Mirrors Callout's anatomy (MyST-derived, bound to Sophie tokens) but
+ * differentiated by the Tier-1 contract:
+ *   - 4px left rule via --sophie-card-rule-strong (vs 3px Tier-2)
+ *   - Drop shadow via --sophie-shadow-card (vs no shadow Tier-2)
+ *   - 20px icon (vs 18px Tier-2)
+ *
+ * Brand-violet accent reinforces "named mathematical object" — distinct
+ * from Callout's per-variant status/brand color split.
+ *
+ * Per ADR 0005, no hex/rgb literals — all colors flow through
+ * @sophie/theme tokens. The title-bar tint is derived inline via
+ * color-mix() against the same surface-1 the card body uses (the
+ * same derivation pattern as the per-variant Callout title-bg tokens;
+ * inline here since KeyEquation has a single accent — extract to a
+ * shared token when a second Tier-1 component wants the same tint).
  */
 
 .section {
-  margin-block: var(--space-ke-block, 1.5rem);
-  padding: var(--space-ke-pad-y, 1rem) var(--space-ke-pad-x, 1.25rem);
-  border-inline-start: 4px solid
-    var(--color-ke-accent, var(--sophie-brand-violet));
-  border-radius: var(--sophie-radius-md);
-  background: var(--color-ke-bg, var(--sophie-surface-1));
+  margin-block: var(--sophie-space-5);
+  background: var(--sophie-surface-1);
+  border: 1px solid var(--sophie-border);
+  border-left: var(--sophie-card-rule-strong) solid var(--sophie-brand-violet);
+  border-radius: var(--sophie-radius-sm);
   box-shadow: var(--sophie-shadow-card);
+  color: var(--sophie-text);
+  font-family: var(--sophie-font-sans);
+  line-height: var(--sophie-leading-prose);
+  overflow: hidden;
   /* :target highlights when navigated to via #hash-anchor */
-  scroll-margin-block-start: var(--sophie-space-4, 1rem);
+  scroll-margin-block-start: var(--sophie-space-4);
 }
 
 .section:target {
@@ -24,23 +37,47 @@
   outline-offset: 4px;
 }
 
-.title {
-  margin: 0 0 var(--sophie-space-3, 0.75rem);
-  font-family: var(--sophie-font-serif);
-  font-size: var(--sophie-text-lg);
+.titleBar {
+  display: flex;
+  align-items: center;
+  gap: var(--sophie-space-2);
+  padding: var(--sophie-space-2) var(--sophie-space-4);
+  background: color-mix(
+    in oklch,
+    var(--sophie-brand-violet) 8%,
+    var(--sophie-surface-1)
+  );
+  border-bottom: 1px solid var(--sophie-border);
+  color: var(--sophie-brand-violet-text);
   font-weight: var(--sophie-weight-semibold);
-  color: var(--color-ke-title, var(--sophie-brand-violet-text));
-  letter-spacing: 0.01em;
+  font-size: var(--sophie-text-sm);
+}
+
+.icon {
+  flex-shrink: 0;
+}
+
+.title {
+  margin: 0;
 }
 
 .body {
-  font-size: var(--sophie-text-base);
+  padding: var(--sophie-space-3) var(--sophie-space-4);
+  font-size: var(--sophie-text-body);
   line-height: var(--sophie-leading-prose);
   color: var(--sophie-text);
 }
 
 .body :is(p, ul, ol) {
-  margin-block: var(--sophie-space-2, 0.5rem);
+  margin-block: var(--sophie-space-2);
+}
+
+.body > :first-child {
+  margin-block-start: 0;
+}
+
+.body > :last-child {
+  margin-block-end: 0;
 }
 
 /*
@@ -49,8 +86,8 @@
  * overflow scroll for wide equations on narrow viewports.
  */
 .body :global(.katex-display) {
-  margin-block: var(--sophie-space-4, 1rem);
-  padding-block: var(--sophie-space-2, 0.5rem);
+  margin-block: var(--sophie-space-4);
+  padding-block: var(--sophie-space-2);
   overflow-x: auto;
 }
 
