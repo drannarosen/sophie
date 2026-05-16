@@ -6,9 +6,17 @@ tags:
   - concurrency
   - hardening
 validation:
-  status: unvalidated
-  last_validated_date: null
-  evidence: []
+  status: validated
+  last_validated_date: 2026-05-16
+  evidence:
+    - kind: test
+      ref: packages/components/src/runtime/useInteractive.test.tsx
+      date: 2026-05-12
+      notes: "Covers BroadcastChannel LWW with per-write Date.now() timestamps; useInteractive ignores stale incoming writes."
+    - kind: review
+      ref: docs/reviews/2026-05-15-bucket-b-c-architecture-audit.md
+      date: 2026-05-15
+  notes: "ADR 0007 refinement; LWW timestamping confirmed via the useInteractive test suite. No cross-tab production cohort data yet (deferred to fa26)."
 ---
 
 # ADR 0029: BroadcastChannel last-write-wins via per-write timestamps

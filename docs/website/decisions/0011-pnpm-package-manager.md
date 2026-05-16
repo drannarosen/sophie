@@ -6,9 +6,22 @@ tags:
   - monorepo
   - foundation
 validation:
-  status: unvalidated
-  last_validated_date: null
-  evidence: []
+  status: validated
+  last_validated_date: 2026-05-16
+  evidence:
+    - kind: manual
+      ref: pnpm-lock.yaml
+      date: 2026-05-16
+      notes: "pnpm workspace + lockfile in active use across all packages and the smoke example."
+    - kind: manual
+      ref: pnpm-workspace.yaml
+      date: 2026-05-16
+      notes: "Workspace file declares packages/* + examples/* + docs/website; pnpm install --frozen-lockfile is the canonical install path."
+    - kind: review
+      ref: docs/reviews/2026-05-13-peerdep-lockfile-sweep.md
+      date: 2026-05-13
+      notes: "Peer-dep + lockfile sweep audit — pnpm workspace shape confirmed under cross-package install flow."
+  notes: "pnpm is the only sanctioned JS package manager (per CLAUDE.md); enforcement is by convention + CI lockfile-frozen install."
 ---
 
 # ADR 0011: pnpm as the JavaScript package manager

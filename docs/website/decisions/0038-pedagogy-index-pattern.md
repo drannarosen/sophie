@@ -8,9 +8,33 @@ tags:
   - indexing
   - schema-driven
 validation:
-  status: unvalidated
-  last_validated_date: null
-  evidence: []
+  status: validated
+  last_validated_date: 2026-05-16
+  evidence:
+    - kind: test
+      ref: packages/astro/src/lib/pedagogy-index-extractor.test.ts
+      date: 2026-05-13
+      notes: "Extractor coverage: definitions, equations, key insights, misconceptions, objectives, inline-refs, figures."
+    - kind: test
+      ref: packages/astro/src/lib/pedagogy-audit.test.ts
+      date: 2026-05-15
+      notes: "Audit coverage: D4/D5/E4/F1/F2/F4/C1/O1/O2/K1/MG1/MG2/CS2/V0–V8 (~80 test cases)."
+    - kind: test
+      ref: packages/core/src/schema/pedagogy-index.test.ts
+      date: 2026-05-12
+      notes: "Schema-level shape guarantees for the index."
+    - kind: chapter
+      ref: examples/smoke/src/content/chapters/01-foundations/measuring-the-sky.mdx
+      date: 2026-05-14
+      notes: "Real chapter populates the pedagogy index end-to-end via the smoke build."
+    - kind: audit
+      ref: packages/astro/src/lib/pedagogy-audit.ts
+      date: 2026-05-15
+      notes: "Audit invariants V0–V8 (this ADR's pattern extended for ADR 0056)."
+    - kind: review
+      ref: docs/reviews/2026-05-15-bucket-b-c-architecture-audit.md
+      date: 2026-05-15
+  notes: "The pedagogy-index pattern is the load-bearing reference architecture for ADRs 0042/0043/0044/0045/0056; pattern itself is validated, downstream consumers ship in tranches (see 0044/0045/0046 in-progress)."
 ---
 
 # ADR 0038: Pedagogy index pattern + role-aggregation principle

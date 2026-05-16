@@ -7,9 +7,18 @@ tags:
   - biome
   - dx
 validation:
-  status: unvalidated
-  last_validated_date: null
-  evidence: []
+  status: validated
+  last_validated_date: 2026-05-16
+  evidence:
+    - kind: manual
+      ref: biome.json
+      date: 2026-05-16
+      notes: "Biome config governs the entire repo (packages/, examples/, scripts/, docs/website/scripts/)."
+    - kind: review
+      ref: docs/reviews/2026-05-15-bucket-b-c-architecture-audit.md
+      date: 2026-05-15
+      notes: "Zero biome errors AND zero warnings across the bucket B+C work; the CLAUDE.md 0/0 discipline holds."
+  notes: "Biome replaces ESLint + Prettier; 0-error/0-warning discipline enforced per PR (CLAUDE.md conventions)."
 ---
 
 # ADR 0013: Biome for lint and format
