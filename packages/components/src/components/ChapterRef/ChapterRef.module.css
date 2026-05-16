@@ -27,7 +27,7 @@
 }
 
 .trigger:focus-visible {
-  outline: 2px solid var(--sophie-focus-ring);
+  outline: var(--sophie-focus-width) solid var(--sophie-focus-color);
   outline-offset: 2px;
   border-radius: var(--sophie-radius-sm);
 }

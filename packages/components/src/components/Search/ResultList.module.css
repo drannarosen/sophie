@@ -7,7 +7,7 @@
 .empty {
   padding: var(--sophie-space-4);
   text-align: center;
-  color: var(--sophie-color-text-muted);
+  color: var(--sophie-text-muted);
 }
 
 .srOnly {

@@ -6,7 +6,7 @@
 }
 
 .card.highlighted {
-  background: var(--sophie-color-surface-2);
+  background: var(--sophie-surface-2);
 }
 
 .header {
@@ -23,7 +23,7 @@
   font-size: 0.75em;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--sophie-color-text-muted);
+  color: var(--sophie-text-muted);
 }
 
 .title {
@@ -38,18 +38,18 @@
 }
 
 .lengthShort {
-  background: var(--sophie-color-surface-3);
-  color: var(--sophie-color-text);
+  background: var(--sophie-surface-3);
+  color: var(--sophie-text);
 }
 
 .lengthLong {
-  background: var(--sophie-color-surface-2);
-  color: var(--sophie-color-text);
+  background: var(--sophie-surface-2);
+  color: var(--sophie-text);
 }
 
 .excerpt {
   margin: var(--sophie-space-2) 0 0;
-  color: var(--sophie-color-text-muted);
+  color: var(--sophie-text-muted);
 }
 
 .richTail {
@@ -60,5 +60,5 @@
 .locator {
   margin-top: var(--sophie-space-2);
   font-size: 0.85em;
-  color: var(--sophie-color-text-muted);
+  color: var(--sophie-text-muted);
 }

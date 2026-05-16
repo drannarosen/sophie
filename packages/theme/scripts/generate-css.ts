@@ -5,35 +5,68 @@ import {
   fontStacks,
   layout,
   leadings,
+  lightSurfaces,
   radii,
   sizes,
   spacings,
   status,
+  textOnAccent,
   weights,
 } from "../src/anchors.ts";
 
 interface ColorMode {
   bg: string;
   fg: string;
+  scheme: "light" | "dark";
 }
 
-const light: ColorMode = { bg: anchors.paper, fg: anchors.ink };
-const dark: ColorMode = { bg: anchors.ink, fg: anchors.paper };
+const light: ColorMode = {
+  bg: anchors.paper,
+  fg: anchors.ink,
+  scheme: "light",
+};
+const dark: ColorMode = {
+  bg: anchors.ink,
+  fg: anchors.paper,
+  scheme: "dark",
+};
 
 function colorBlock(mode: ColorMode): string {
-  const { bg, fg } = mode;
+  const { bg, fg, scheme } = mode;
+  // Light mode uses the hardcoded cool-neutral surface stack (gray-50
+  // page, pure-white cards, gray-200 borders) per visual-polish-target.md.
+  // Dark mode keeps the symmetric color-mix derivation against the cool
+  // paper anchor; a dedicated dark-mode tuning sweep ships later (audit
+  // § Section 5).
+  const surfaces =
+    scheme === "light"
+      ? [
+          `--sophie-surface-1: ${lightSurfaces.surface1};`,
+          `--sophie-surface-2: ${lightSurfaces.surface2};`,
+          `--sophie-surface-3: ${lightSurfaces.surface3};`,
+          `--sophie-border: ${lightSurfaces.border};`,
+          `--sophie-border-subtle: ${lightSurfaces.borderSubtle};`,
+        ]
+      : [
+          `--sophie-surface-1: color-mix(in oklch, ${bg} 92%, ${fg});`,
+          `--sophie-surface-2: color-mix(in oklch, ${bg} 86%, ${fg});`,
+          `--sophie-surface-3: color-mix(in oklch, ${bg} 80%, ${fg});`,
+          `--sophie-border: color-mix(in oklch, ${fg} 8%, transparent);`,
+          `--sophie-border-subtle: color-mix(in oklch, ${fg} 5%, transparent);`,
+        ];
   return [
     `--sophie-bg: ${bg};`,
-    `--sophie-surface-1: color-mix(in oklch, ${bg} 92%, ${fg});`,
-    `--sophie-surface-2: color-mix(in oklch, ${bg} 86%, ${fg});`,
-    `--sophie-surface-3: color-mix(in oklch, ${bg} 80%, ${fg});`,
+    ...surfaces,
     `--sophie-text: color-mix(in oklch, ${fg} 88%, ${bg});`,
     `--sophie-text-2: color-mix(in oklch, ${fg} 64%, ${bg});`,
     `--sophie-text-muted: color-mix(in oklch, ${fg} 46%, ${bg});`,
     `--sophie-text-faint: color-mix(in oklch, ${fg} 32%, ${bg});`,
-    `--sophie-border: color-mix(in oklch, ${fg} 8%, transparent);`,
-    `--sophie-border-subtle: color-mix(in oklch, ${fg} 5%, transparent);`,
     `--sophie-link: color-mix(in oklch, var(--sophie-accent) 70%, var(--sophie-text));`,
+    // Modal backdrop. Derived from ${fg} so it stays visible against the
+    // scheme-appropriate surface — ink-tinted overlay in light mode,
+    // paper-tinted in dark mode. 50% concentration gives a clear
+    // "behind-modal" darkening without going opaque.
+    `--sophie-overlay-bg: color-mix(in oklch, ${fg} 50%, transparent);`,
     // Scheme-aware card shadow. Derived from ${fg} (=ink in light mode,
     // paper in dark mode) so the shadow color adapts to scheme instead
     // of being invisible in dark mode like a hardcoded #0f1115 would be.
@@ -61,6 +94,12 @@ function modeInvariantBlock(): string {
     `--sophie-status-neutral: ${status.neutral};`,
     "--sophie-accent: var(--sophie-brand-teal);",
     "--sophie-link-hover: var(--sophie-accent);",
+    // Text color used on saturated brand/status accent backgrounds
+    // (e.g., active chips, primary buttons). Mode-invariant white reads
+    // AA-clear on all current accent fills (brand-teal/rose/violet,
+    // status-info/warning/danger). A scheme-aware variant can ship if
+    // we add a light-on-dark accent (e.g., pastel buttons in dark mode).
+    `--sophie-text-on-accent: ${textOnAccent};`,
     // Validation tracker palette (ADR 0056). Stripes reuse the
     // semantic status palette directly; backgrounds derive 6%-tint
     // surfaces via color-mix so admonitions read as subtle wash
