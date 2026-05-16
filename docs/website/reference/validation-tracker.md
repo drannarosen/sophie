@@ -13,9 +13,22 @@ tags:
   - audit
   - lds
 validation:
-  status: unvalidated
-  last_validated_date: null
-  evidence: []
+  status: validated
+  last_validated_date: 2026-05-16
+  evidence:
+    - kind: manual
+      ref: docs/website/decisions/0056-validation-tracker.md
+      date: 2026-05-16
+      notes: "ADR 0056 is the contract this reference doc specs; ADR 0056 itself is validated in PR 6 Workstream D."
+    - kind: audit
+      ref: packages/astro/src/lib/pedagogy-audit.ts
+      date: 2026-05-16
+      notes: "All nine audit invariants V0–V8 specified in this doc are live and tested."
+    - kind: test
+      ref: packages/astro/src/lib/validation-index-generator.integration.test.ts
+      date: 2026-05-16
+      notes: "Dashboard-pin integration test enforces the regen workflow this doc specifies."
+  notes: "Reference doc shipped in PR 6 Workstream A; specifies the schema + admonition contract + audit invariants + dashboard workflow. Graduated to validated alongside ADR 0056 itself after the curated-pass + V1/V2 promotion landed in the same PR."
 ---
 
 # Validation tracker schema
