@@ -221,7 +221,11 @@ describe("extractLastRevisedDate", () => {
   });
 
   it("ignores §-headers that lack an ISO date", () => {
+    // I4 fix: `**§N — date —**` regex only runs inside `## Revisions`.
+    // Without the section heading, no §-header would match either way.
     const source = [
+      "## Revisions",
+      "",
       "**§1 — TBD — placeholder**",
       "**§2 — 2026-05-12 — real revision**",
     ].join("\n");
@@ -259,6 +263,45 @@ describe("extractLastRevisedDate", () => {
       "**§2 — 2026-05-15 — third revision**",
     ].join("\n");
     expect(extractLastRevisedDate(source)).toBe("2026-05-15");
+  });
+
+  it("IGNORES **§N — date —** patterns outside the Revisions section (I4 fix)", () => {
+    // A code-fenced example of the Revisions shape, or a paragraph
+    // quoting a historical revision, must NOT trip the staleness
+    // detector. Only `**§N — date —**` inside the `## Revisions`
+    // section is a real Revisions entry.
+    const source = [
+      "# ADR 0099: example",
+      "",
+      "## Context",
+      "",
+      "Some earlier version contained `**§1 — 2099-01-01 — first**`",
+      "but it was removed in a refactor.",
+      "",
+      "```markdown",
+      "**§7 — 2099-12-31 — example in a code fence**",
+      "```",
+      "",
+      "Body text without a Revisions section.",
+    ].join("\n");
+    // No Revisions section → no §N matches counted. Returns null.
+    expect(extractLastRevisedDate(source)).toBeNull();
+  });
+
+  it("respects Revisions section bounds — stops at next ## heading", () => {
+    const source = [
+      "# ADR 0099: example",
+      "",
+      "## Revisions",
+      "",
+      "**§1 — 2026-05-10 — first**",
+      "",
+      "## Aftermath",
+      "",
+      "**§99 — 2099-12-31 — fake historical reference in next section**",
+    ].join("\n");
+    // Only §1 counts; §99 is outside the Revisions section.
+    expect(extractLastRevisedDate(source)).toBe("2026-05-10");
   });
 });
 

@@ -606,7 +606,7 @@ export function runPedagogyAudit(
         severity: "ERROR",
         code: "V1",
         message: `V1: ADR is missing a validation block: ${entry.path}`,
-        location: { chapter: entry.path },
+        location: { path: entry.path },
       });
     }
 
@@ -615,7 +615,7 @@ export function runPedagogyAudit(
         severity: "ERROR",
         code: "V2",
         message: `V2: reference doc is missing a validation block: ${entry.path}`,
-        location: { chapter: entry.path },
+        location: { path: entry.path },
       });
     }
 
@@ -631,7 +631,7 @@ export function runPedagogyAudit(
         severity: "ERROR",
         code: "V3",
         message: `V3: ${entry.path}: status is "${v.status}" but last_validated_date is null.`,
-        location: { chapter: entry.path },
+        location: { path: entry.path },
       });
     }
 
@@ -643,7 +643,7 @@ export function runPedagogyAudit(
         severity: "ERROR",
         code: "V4",
         message: `V4: ${entry.path}: status is "unvalidated" but evidence or last_validated_date is non-empty.`,
-        location: { chapter: entry.path },
+        location: { path: entry.path },
       });
     }
 
@@ -668,14 +668,14 @@ export function runPedagogyAudit(
             severity: "ERROR",
             code: "V5",
             message: `V5: ${entry.path}: evidence ref must be repo-root-relative (got an absolute or escaping path): ${ev.ref}`,
-            location: { chapter: entry.path },
+            location: { path: entry.path },
           });
         } else if (!existsSync(resolved)) {
           errors.push({
             severity: "ERROR",
             code: "V5",
             message: `V5: ${entry.path}: evidence ref does not exist on disk: ${ev.ref}`,
-            location: { chapter: entry.path },
+            location: { path: entry.path },
           });
         }
       }
@@ -687,7 +687,7 @@ export function runPedagogyAudit(
           severity: "ERROR",
           code: "V6",
           message: `V6: ${entry.path}: evidence date is not a valid ISO YYYY-MM-DD: ${ev.date}`,
-          location: { chapter: entry.path },
+          location: { path: entry.path },
         });
       }
     }
@@ -699,7 +699,7 @@ export function runPedagogyAudit(
         severity: "WARNING",
         code: "V7",
         message: `V7: ${entry.path}: last_validated_date is in the future: ${v.last_validated_date}`,
-        location: { chapter: entry.path },
+        location: { path: entry.path },
       });
     }
   }
@@ -734,6 +734,11 @@ function pluralize(n: number, singular: string): string {
  */
 function formatFinding(f: AuditFinding): string {
   const locParts: string[] = [];
+  // `path` (V0–V8 contract findings) and `chapter` (D4/D5/E4/F1/F2/C1/O1/
+  // O2/K1/MG1/MG2/CS2) are mutually exclusive in practice; render whichever
+  // is present. `path` first since it carries the more specific
+  // file-system identity when both somehow appear together.
+  if (f.location?.path) locParts.push(`path: ${f.location.path}`);
   if (f.location?.chapter) locParts.push(`chapter: ${f.location.chapter}`);
   if (f.location?.anchor) locParts.push(`anchor: ${f.location.anchor}`);
   const loc = locParts.length > 0 ? ` (${locParts.join(", ")})` : "";

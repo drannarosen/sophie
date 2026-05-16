@@ -18,9 +18,14 @@
  *     `{ entries, findings }` pair the test wraps in a one-off
  *     `PedagogyIndex` shape without going through `indexAccumulator`.
  *
- * Skip condition: the suite is skipped when the dashboard file or the
- * decisions/reference directories don't exist (running tests outside
- * a repo checkout, etc.).
+ * Fail-loud preconditions (PR 6 review I7 → comprehensive-review I7 fix):
+ * the test asserts the dashboard and contract directories exist before
+ * doing anything else. Earlier versions wrapped the assertion in
+ * `it.runIf(existsSync(...))` which **silently skipped** the entire I3
+ * test in CI if either path was missing — defeating the test's purpose
+ * (CI is exactly where we need this gate to fire). If either precondition
+ * fails, the test fails with a specific message naming the missing path
+ * rather than producing a confusing zero-test pass.
  */
 
 import { existsSync, readFileSync } from "node:fs";
@@ -57,21 +62,32 @@ function emptyIndexShape(): PedagogyIndex {
 }
 
 describe("validation-index-generator integration (I3)", () => {
-  it.runIf(existsSync(DASHBOARD) && existsSync(DECISIONS_DIR))(
-    "committed docs/website/status/validation.md matches generator output",
-    async () => {
-      const { entries, findings } = await extractContractValidations(REPO_ROOT);
-      const index: PedagogyIndex = {
-        ...emptyIndexShape(),
-        contractValidations: entries,
-        extractorFindings: findings,
-      };
-      const expected = generateValidationIndex(index);
-      const actual = readFileSync(DASHBOARD, "utf8");
-      // Normalize trailing whitespace differences between
-      // writer-produced output and any reader's editor auto-trim.
-      const norm = (s: string): string => s.replace(/\s+$/g, "").concat("\n");
-      expect(norm(actual), REGEN_HINT).toBe(norm(expected));
-    }
-  );
+  it("fails loudly when the dashboard or decisions directory is missing", () => {
+    // Fail-loud guard: if the test fixture is wrong (sparse checkout,
+    // moved file, etc.), surface a specific error rather than letting
+    // the actual pin assertion below get silently skipped.
+    expect(
+      existsSync(DASHBOARD),
+      `Expected ${DASHBOARD} to exist; if you moved or deleted the dashboard, update DASHBOARD in this test.`
+    ).toBe(true);
+    expect(
+      existsSync(DECISIONS_DIR),
+      `Expected ${DECISIONS_DIR} to exist; if the decisions directory moved, update DECISIONS_DIR in this test.`
+    ).toBe(true);
+  });
+
+  it("committed docs/website/status/validation.md matches generator output", async () => {
+    const { entries, findings } = await extractContractValidations(REPO_ROOT);
+    const index: PedagogyIndex = {
+      ...emptyIndexShape(),
+      contractValidations: entries,
+      extractorFindings: findings,
+    };
+    const expected = generateValidationIndex(index);
+    const actual = readFileSync(DASHBOARD, "utf8");
+    // Normalize trailing whitespace differences between
+    // writer-produced output and any reader's editor auto-trim.
+    const norm = (s: string): string => s.replace(/\s+$/g, "").concat("\n");
+    expect(norm(actual), REGEN_HINT).toBe(norm(expected));
+  });
 });

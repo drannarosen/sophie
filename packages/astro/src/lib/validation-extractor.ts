@@ -137,7 +137,7 @@ export async function extractContractValidations(
             severity: "ERROR",
             code: "V0",
             message: `V0: ${relPath}: validation block failed schema parse: ${issueText}`,
-            location: { chapter: relPath },
+            location: { path: relPath },
           });
           validation = undefined;
         }
@@ -165,7 +165,7 @@ export async function extractContractValidations(
               severity: "INFO",
               code: "V8",
               message: `V8: ${relPath}: validation block has unknown key '${key}' (known keys: status, last_validated_date, evidence, notes).`,
-              location: { chapter: relPath },
+              location: { path: relPath },
             });
           }
         }

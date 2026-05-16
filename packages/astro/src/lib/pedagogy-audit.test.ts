@@ -1144,6 +1144,35 @@ describe("formatAuditReport", () => {
     expect(out).toContain("F4");
     expect(out).toContain("1 error");
     expect(out).toContain("1 warning");
+    // Chapter-scoped findings still render the chapter slug.
+    expect(out).toContain("chapter: spoiler-alerts");
+  });
+
+  it("renders V0–V8 findings with the new location.path (not chapter)", () => {
+    const out = formatAuditReport({
+      errors: [
+        {
+          severity: "ERROR",
+          code: "V1",
+          message: "V1: ADR is missing a validation block",
+          location: { path: "docs/website/decisions/0099-fake.md" },
+        },
+      ],
+      warnings: [],
+      info: [
+        {
+          severity: "INFO",
+          code: "V8",
+          message:
+            "V8: validation block has unknown key 'last_validation_date'",
+          location: { path: "docs/website/decisions/0099-typo.md" },
+        },
+      ],
+    });
+    // Contract-scoped findings use `path:` not `chapter:`
+    expect(out).toContain("path: docs/website/decisions/0099-fake.md");
+    expect(out).toContain("path: docs/website/decisions/0099-typo.md");
+    expect(out).not.toContain("chapter: docs/website/");
   });
 });
 
@@ -1630,14 +1659,14 @@ describe("validation audit — extractorFindings merge", () => {
       code: "V0",
       message:
         "docs/website/decisions/0099-broken.md: validation block failed schema parse",
-      location: { chapter: "docs/website/decisions/0099-broken.md" },
+      location: { path: "docs/website/decisions/0099-broken.md" },
     };
     const v8Finding: AuditFinding = {
       severity: "INFO",
       code: "V8",
       message:
         "docs/website/decisions/0099-typo.md: validation block has unknown key 'last_validation_date'",
-      location: { chapter: "docs/website/decisions/0099-typo.md" },
+      location: { path: "docs/website/decisions/0099-typo.md" },
     };
     const index: PedagogyIndex = {
       ...emptyIndex(),
