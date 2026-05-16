@@ -16,3 +16,4 @@ declare module "katex/dist/katex.min.css";
 // preview.tsx to wire fonts + tokens into the iframe.
 declare module "@sophie/theme/css";
 declare module "@sophie/theme/fonts";
+declare module "@sophie/theme/math";

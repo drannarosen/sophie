@@ -2,6 +2,11 @@ import "@sophie/theme/fonts";
 import "@sophie/theme/css";
 import "@sophie/components/styles.css";
 import "katex/dist/katex.min.css";
+// PR-3: KaTeX inline-math sizing override (1.05× vs default 1.21×).
+// Must load AFTER katex.min.css so the override cascades over KaTeX's
+// own `.katex { font-size: 1.21em }` baseline. Display math is reset
+// back to 1.21em inside `.katex-display`.
+import "@sophie/theme/math";
 
 import type { ReactNode } from "react";
 

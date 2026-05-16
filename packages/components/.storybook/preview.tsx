@@ -14,6 +14,11 @@ import "@sophie/theme/fonts";
 // Tailwind processing step, and the variables come from theme.css
 // regardless.
 import "@sophie/theme/css";
+// PR-3: KaTeX inline-math sizing override. Must load AFTER any
+// katex.min.css that EqRef/KeyEquation stories import, but loading at
+// the preview level is fine because CSS specificity (not order) wins
+// for `.katex` overrides — the rule is selector-equivalent + later.
+import "@sophie/theme/math";
 // Apply --sophie-bg + --sophie-text to the preview body so muted text
 // tokens (designed for cream bg) hit AA contrast on every platform.
 import "./preview.css";
