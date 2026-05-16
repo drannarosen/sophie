@@ -180,8 +180,30 @@ function formatDateCell(entry: ContractValidationEntry): string {
 function formatNotesCell(entry: ContractValidationEntry): string {
   if (entry.validation === undefined) return "no validation block";
   const notes = entry.validation.notes ?? "";
-  // Escape pipes so they don't break the Markdown table; collapse newlines.
-  return notes.replaceAll("\n", " ").replaceAll("|", "\\|");
+  // Escape Markdown characters that would otherwise leak into the
+  // rendered table cell (I1 from comprehensive review):
+  //   - `\` first (so subsequent escapes don't double up).
+  //   - `|`        — table-column separator.
+  //   - `` ` ``     — inline code spans.
+  //   - `*` `_`    — bold / emphasis.
+  //   - `[`        — link / image syntax start.
+  //
+  // Skipped on purpose (these don't break Markdown tables and would
+  // clutter author-written notes that legitimately use them):
+  //   - `(` `)`    — common in prose; only meaningful AFTER `[`.
+  //   - `<` `>`    — MyST handles these inside cell text already.
+  //   - leading `#` `-` `*` — table cells don't process line-start
+  //                          syntax; safe inside `|...|`.
+  //
+  // Collapse newlines to single spaces last — escape sequences intact.
+  return notes
+    .replaceAll("\\", "\\\\")
+    .replaceAll("|", "\\|")
+    .replaceAll("`", "\\`")
+    .replaceAll("*", "\\*")
+    .replaceAll("_", "\\_")
+    .replaceAll("[", "\\[")
+    .replaceAll("\n", " ");
 }
 
 function renderContractsTable(
@@ -196,13 +218,8 @@ function renderContractsTable(
     "|---|---|---|---|---|",
   ];
   for (const entry of sorted) {
-    // MyST serves docs/website/ as the project root, so a contract at
-    // `docs/website/decisions/0001-foo.md` is reachable at `/decisions/0001-foo/`.
-    // Strip the docs/website/ prefix for the href but keep the full path
-    // as the visible link text (useful diagnostic identifier).
-    const href = `/${entry.path.replace(/^docs\/website\//, "").replace(/\.md$/, "/")}`;
     rows.push(
-      `| [${entry.path}](${href}) ` +
+      `| [${entry.path}](${contractHref(entry.path)}) ` +
         `| ${formatStatusCell(entry)} ` +
         `| ${formatDateCell(entry)} ` +
         `| ${formatEvidenceCell(entry)} ` +
@@ -210,6 +227,34 @@ function renderContractsTable(
     );
   }
   return rows.join("\n");
+}
+
+/**
+ * Map a contract source path to its MyST-rendered URL.
+ *
+ * MyST flattens routes: the rendered URL is `/<slug>/` where `<slug>` is
+ * the filename's basename with `.md` stripped and any leading `NNNN-`
+ * numeric prefix removed. The source directory (decisions/ vs reference/)
+ * does NOT appear in the URL. Verified against the rendered HTML build:
+ *
+ *   - `docs/website/decisions/0001-platform-not-monorepo.md`
+ *       → `/platform-not-monorepo/`
+ *   - `docs/website/decisions/0007-persistence-indexeddb.md`
+ *       → `/persistence-indexeddb/`
+ *   - `docs/website/reference/validation-tracker.md`
+ *       → `/validation-tracker/`
+ *
+ * Prior incarnation (`/decisions/0001-…/`) was based on a wrong
+ * assumption about MyST routing and every contract link 404'd; the I5
+ * integration test in `validation-index-generator.integration.test.ts`
+ * exists to lock this contract by resolving links against the rendered
+ * HTML build artifacts.
+ */
+export function contractHref(sourcePath: string): string {
+  const filename = sourcePath.replace(/^.*\//, "");
+  const stem = filename.replace(/\.md$/, "");
+  const slug = stem.replace(/^\d{4}-/, "");
+  return `/${slug}/`;
 }
 
 function renderContractsSection(

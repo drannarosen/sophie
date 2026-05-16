@@ -91,3 +91,75 @@ describe("validation-index-generator integration (I3)", () => {
     expect(norm(actual), REGEN_HINT).toBe(norm(expected));
   });
 });
+
+/**
+ * I5 — Dashboard hrefs must resolve to actual MyST build artifacts.
+ *
+ * The dashboard's per-contract table emits links like
+ * `/platform-not-monorepo/`. MyST's URL convention strips the directory
+ * prefix + leading `NNNN-` from the filename, so the rendered HTML lives
+ * at `<build-root>/<slug>/index.html`. If `contractHref()` ever diverges
+ * from MyST's actual routing (the original PR #52 C1 fix mistakenly
+ * emitted `/decisions/0001-…/` and every link 404'd), this test catches
+ * it before a reader hits a broken link.
+ *
+ * The test is gated on the MyST HTML build existing (it's not free —
+ * `mystmd build --html` takes minutes). Running locally:
+ *   `cd docs/website && npx mystmd build --html`
+ * before the test, OR add the build as a turbo dependency in CI.
+ *
+ * Until that wiring lands, the test fails loudly (per I7) with a clear
+ * "run `mystmd build` first" hint instead of silently skipping.
+ */
+const HTML_BUILD = resolve(REPO_ROOT, "docs/website/_build/html");
+
+describe("validation-index-generator integration (I5 — href resolution)", () => {
+  it("sampled dashboard hrefs resolve to rendered HTML artifacts", async () => {
+    if (!existsSync(HTML_BUILD)) {
+      // Skip with a loud message in dev; CI must wire the MyST build
+      // before this test runs (turbo dependsOn or explicit step).
+      // Fail rather than silently pass when CI is the runner.
+      const isCi = process.env.CI === "true";
+      expect(
+        isCi,
+        `${HTML_BUILD} not found. Run \`cd docs/website && npx mystmd build --html\` ` +
+          "before this test, or wire the build as a CI step."
+      ).toBe(false);
+      return;
+    }
+
+    const { entries, findings } = await extractContractValidations(REPO_ROOT);
+    const index: PedagogyIndex = {
+      ...emptyIndexShape(),
+      contractValidations: entries,
+      extractorFindings: findings,
+    };
+    const markdown = generateValidationIndex(index);
+
+    // Extract all dashboard hrefs from the generator output.
+    // Pattern: `](/some-slug/)`. Filter to contract links (skip
+    // anchor links + relative refs the dashboard might add later).
+    const hrefs = new Set<string>();
+    const hrefRe = /\]\((\/[^\s)]+\/)\)/g;
+    for (const match of markdown.matchAll(hrefRe)) {
+      if (match[1] !== undefined) hrefs.add(match[1]);
+    }
+    expect(hrefs.size).toBeGreaterThanOrEqual(10);
+
+    // Resolve each href against the MyST HTML build.
+    const unresolved: string[] = [];
+    for (const href of hrefs) {
+      // href is `/<slug>/`; rendered HTML lives at HTML_BUILD/<slug>/index.html.
+      const slug = href.replace(/^\//, "").replace(/\/$/, "");
+      const renderedPath = resolve(HTML_BUILD, slug, "index.html");
+      if (!existsSync(renderedPath)) {
+        unresolved.push(`${href} → ${renderedPath}`);
+      }
+    }
+    expect(
+      unresolved,
+      `Dashboard hrefs that don't resolve to a MyST-rendered HTML artifact:\n` +
+        unresolved.join("\n")
+    ).toEqual([]);
+  });
+});

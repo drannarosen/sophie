@@ -15,8 +15,8 @@ import { getStudentChapters } from "../lib/get-student-chapters";
 import {
   auditExitCode,
   formatAuditReport,
-  runPedagogyAudit,
-} from "../lib/pedagogy-audit";
+  runAuditOncePerProcess,
+} from "../lib/audit-cache";
 import { indexAccumulator } from "../lib/pedagogy-index-extractor";
 import { extractContractValidations } from "../lib/validation-extractor";
 import ContentColumn from "./ContentColumn.astro";
@@ -119,44 +119,40 @@ const pedagogy = indexAccumulator.asPedagogyIndex();
 // + info print but allow the build to continue. See
 // packages/astro/src/lib/pedagogy-audit.ts for the invariant list.
 //
-// Cache once in production builds (one-shot Node process producing N
-// static pages — audit input is identical across renders). In dev the
-// long-running Node process caches state across HMR reloads, so we
-// re-run every render to keep audit feedback fresh on content edits.
-const auditCache = globalThis as unknown as {
-  __sophiePedagogyAuditDone?: boolean;
-};
-if (!import.meta.env.PROD || !auditCache.__sophiePedagogyAuditDone) {
-  // ADR 0051 CS2: drafts were filtered out of `chapters` (and therefore
-  // out of `pedagogy.chapters`) by `getStudentChapters`. Compute the
-  // draft slug list from the unfiltered `allChapters` so the audit can
-  // emit CS2 INFO for each excluded chapter.
-  const draftChapterSlugs = allChapters
-    .filter((c) => c.data.status === "draft")
-    .map((c) => c.data.slug);
+// The cache decision (run once in prod, every render in dev) lives in
+// `runAuditOncePerProcess` (lib/audit-cache.ts). This caller only does
+// the steps that depend on the .astro frontmatter: collecting
+// `draftChapterSlugs` from `allChapters`, populating the accumulator
+// with contract validations, and reporting the audit's verdict.
+//
+// ADR 0051 CS2: drafts were filtered out of `chapters` (and therefore
+// out of `pedagogy.chapters`) by `getStudentChapters`. Compute the
+// draft slug list from the unfiltered `allChapters` so the audit can
+// emit CS2 INFO for each excluded chapter.
+const draftChapterSlugs = allChapters
+  .filter((c) => c.data.status === "draft")
+  .map((c) => c.data.slug);
 
-  // ADR 0056 PR 3: walk docs/website/{decisions,reference}/ to collect
-  // contract validations (V0+V8 surfaced as extractor findings; V1–V7
-  // run in the audit). `process.cwd()` is the consumer-app dir at build
-  // time, which IS the repo root for the smoke fixture and for the
-  // canonical Sophie repo layout. Evidence refs are repo-root-relative
-  // and resolve via the same `repoRoot` passed to `runPedagogyAudit`.
-  const repoRoot = process.cwd();
-  const { entries: contractValidations, findings: extractorFindings } =
-    await extractContractValidations(repoRoot);
-  indexAccumulator.setContractValidations(
-    contractValidations,
-    extractorFindings
-  );
+// ADR 0056 PR 3: walk docs/website/{decisions,reference}/ to collect
+// contract validations (V0+V8 surfaced as extractor findings; V1–V7
+// run in the audit). `process.cwd()` is the consumer-app dir at build
+// time, which IS the repo root for the smoke fixture and for the
+// canonical Sophie repo layout. Evidence refs are repo-root-relative
+// and resolve via the same `repoRoot` passed to `runPedagogyAudit`.
+const repoRoot = process.cwd();
+const { entries: contractValidations, findings: extractorFindings } =
+  await extractContractValidations(repoRoot);
+indexAccumulator.setContractValidations(contractValidations, extractorFindings);
 
-  // Re-snapshot AFTER the validation extractor populates the accumulator
-  // so `runPedagogyAudit` sees the contract validations + extractor
-  // findings.
-  const pedagogyWithContracts = indexAccumulator.asPedagogyIndex();
-  const auditReport = runPedagogyAudit(pedagogyWithContracts, {
-    draftChapterSlugs,
-    repoRoot,
-  });
+// Re-snapshot AFTER the validation extractor populates the accumulator
+// so `runPedagogyAudit` sees the contract validations + extractor findings.
+const pedagogyWithContracts = indexAccumulator.asPedagogyIndex();
+const auditReport = runAuditOncePerProcess(
+  pedagogyWithContracts,
+  { draftChapterSlugs, repoRoot },
+  import.meta.env.PROD,
+);
+if (auditReport !== null) {
   console.log(formatAuditReport(auditReport));
   if (auditExitCode(auditReport) !== 0) {
     // Astro's build pipeline surfaces thrown errors as build failures
@@ -167,7 +163,6 @@ if (!import.meta.env.PROD || !auditCache.__sophiePedagogyAuditDone) {
       "Pedagogy audit found errors. See preceding output for details."
     );
   }
-  auditCache.__sophiePedagogyAuditDone = true;
 }
 // All four setters follow the same pattern (ADR 0038 Revisions
 // section): the chrome layer reads the accumulator directly, then
