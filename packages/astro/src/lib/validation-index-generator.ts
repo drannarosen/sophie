@@ -53,8 +53,10 @@ const GENERATED_BANNER = [
   "<!-- GENERATED FILE — DO NOT EDIT BY HAND.",
   "     Produced by @sophie/astro's pagefind-postbuild hook",
   "     (packages/astro/src/lib/validation-index-generator.ts).",
-  "     Re-run `pnpm turbo run build --filter=@sophie/astro --filter=smoke`",
-  "     to regenerate. Suppressed when SOPHIE_DOCS_INCLUDE_VALIDATION=0. -->",
+  "     Re-run `pnpm tsx scripts/regenerate-validation-index.mts` from the",
+  "     repo root to regenerate. Suppressed when SOPHIE_DOCS_INCLUDE_VALIDATION=0.",
+  "     (The smoke build's cwd has no docs/website/, so its pagefind-postbuild",
+  "     pass is a no-op; the explicit script is the canonical regeneration path.) -->",
 ].join("\n");
 
 const FRONTMATTER = [
@@ -194,8 +196,13 @@ function renderContractsTable(
     "|---|---|---|---|---|",
   ];
   for (const entry of sorted) {
+    // MyST serves docs/website/ as the project root, so a contract at
+    // `docs/website/decisions/0001-foo.md` is reachable at `/decisions/0001-foo/`.
+    // Strip the docs/website/ prefix for the href but keep the full path
+    // as the visible link text (useful diagnostic identifier).
+    const href = `/${entry.path.replace(/^docs\/website\//, "").replace(/\.md$/, "/")}`;
     rows.push(
-      `| [${entry.path}](/${entry.path.replace(/\.md$/, "/")}) ` +
+      `| [${entry.path}](${href}) ` +
         `| ${formatStatusCell(entry)} ` +
         `| ${formatDateCell(entry)} ` +
         `| ${formatEvidenceCell(entry)} ` +

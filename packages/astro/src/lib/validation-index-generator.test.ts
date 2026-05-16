@@ -235,6 +235,12 @@ describe("generateValidationIndex", () => {
     expect(md).toContain("2026-05-15");
     // Missing-block entry has a recognizable placeholder
     expect(md).toMatch(/missing|—|no validation block/i);
+    // Contract links must strip the docs/website/ prefix so MyST (which
+    // serves docs/website/ as the project root) resolves them correctly.
+    // Without the strip, every link in the rendered dashboard 404s.
+    expect(md).toContain("](/decisions/0001-platform-not-monorepo/)");
+    expect(md).toContain("](/reference/cli/)");
+    expect(md).not.toContain("](/docs/website/");
   });
 
   test("groups ADRs and reference docs separately", () => {
