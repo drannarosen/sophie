@@ -35,11 +35,11 @@ block (ADR 0056). Regenerated on every build; suppressed when
 | Kind | Count |
 |---|---|
 | test | 26 |
-| chapter | 5 |
+| chapter | 4 |
 | review | 16 |
 | deployment | 11 |
 | audit | 5 |
-| manual | 19 |
+| manual | 20 |
 
 ## Extractor findings
 
@@ -52,7 +52,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | Contract | Status | Last validated | Evidence | Notes |
 |---|---|---|---|---|
 | [docs/website/decisions/0001-platform-not-monorepo.md](/decisions/0001-platform-not-monorepo/) | validated | 2026-05-16 | manual, review | Repo-shape contract is structurally enforced: any course importing @sophie/* is by definition a separate consumer. The smoke example exercises that consumer relationship in-repo. |
-| [docs/website/decisions/0002-renderer-astro-mdx.md](/decisions/0002-renderer-astro-mdx/) | validated | 2026-05-16 | chapter, review, test | Astro 6 + MDX confirmed across the bucket B+C smoke build; the renderer-choice contract held under three real chapters and the components matrix. |
+| [docs/website/decisions/0002-renderer-astro-mdx.md](/decisions/0002-renderer-astro-mdx/) | validated | 2026-05-16 | chapter, review, test | Astro 6 + MDX confirmed across the bucket B+C smoke build; the renderer-choice contract held under the smoke chapters and the components matrix. |
 | [docs/website/decisions/0003-zod-as-source-of-truth.md](/decisions/0003-zod-as-source-of-truth/) | validated | 2026-05-16 | review, test | Every load-bearing data shape in @sophie/core is a Zod schema; downstream packages type-infer via z.infer. No drift detected in the audit. |
 | [docs/website/decisions/0004-component-contract-revisions.md](/decisions/0004-component-contract-revisions/) | validated | 2026-05-16 | chapter, review, test | Component contract (serialize separate from render, axe-core mandatory, useInteractive for persistence, composition rules) confirmed across every shipped component as of the bucket B+C audit. |
 | [docs/website/decisions/0005-theming-three-layers.md](/decisions/0005-theming-three-layers/) | unvalidated | — | — |  |
@@ -105,7 +105,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0053-conformance-failure-modes.md](/decisions/0053-conformance-failure-modes/) | unvalidated | — | — |  |
 | [docs/website/decisions/0054-course-schedule-calendar.md](/decisions/0054-course-schedule-calendar/) | unvalidated | — | — |  |
 | [docs/website/decisions/0055-squash-merge-for-code-prs.md](/decisions/0055-squash-merge-for-code-prs/) | validated | 2026-05-16 | deployment, manual | Process contract; validated by observed behavior on every code PR (#43, #44, #49, #50, #51, #52). No automated enforcement, but no violations observed. |
-| [docs/website/decisions/0056-validation-tracker.md](/decisions/0056-validation-tracker/) | validated | 2026-05-16 | audit, chapter, deployment, manual, review, test | All six PRs (#43 schema, #44 bulk migration, #50 admonition, #51 audit, #52 index, this PR curated-pass + reference doc + V1/V2 promotion) shipped. Self-referential validation complete; tracker is the source of truth for every ADR + reference doc's validation state as of 2026-05-16. |
+| [docs/website/decisions/0056-validation-tracker.md](/decisions/0056-validation-tracker/) | validated | 2026-05-16 | audit, deployment, manual, review, test | All six PRs (#43 schema, #44 bulk migration, #50 admonition, #51 audit, #52 index, this PR curated-pass + reference doc + V1/V2 promotion) shipped. Self-referential validation complete; tracker is the source of truth for every ADR + reference doc's validation state as of 2026-05-16. |
 | [docs/website/decisions/0057-visual-regression-baseline.md](/decisions/0057-visual-regression-baseline/) | unvalidated | — | — |  |
 
 ### Reference docs

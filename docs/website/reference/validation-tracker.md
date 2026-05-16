@@ -99,9 +99,9 @@ validation:
       date: "2026-05-12"
       notes: "Covers IndexedDB write/read cycle + MemoryResponseStore fallback + BroadcastChannel LWW"
     - kind: chapter
-      ref: examples/smoke/src/content/modules/m1/c1-measuring-the-sky.mdx
+      ref: examples/smoke/src/content/chapters/01-foundations/spoiler-alerts.mdx
       date: "2026-05-14"
-      notes: "1198-line real chapter; exercises Predict + Reflection + ComprehensionGate persistence"
+      notes: "1347-line real chapter; exercises Predict + Reflection + ComprehensionGate persistence"
     - kind: review
       ref: docs/reviews/2026-05-15-bucket-b-c-architecture-audit.md
       date: "2026-05-15"
@@ -385,8 +385,9 @@ column is the honest middle ground.
 
 - [ADR 0056](../decisions/0056-validation-tracker.md) — the
   contract this reference doc specs.
-- [`docs/plans/2026-05-15-validation-tracker-design.md`](file:///Users/anna/Teaching/sophie/docs/plans/2026-05-15-validation-tracker-design.md) —
-  full design with the seven-question Q&A trace.
+- `docs/plans/2026-05-15-validation-tracker-design.md` —
+  full design with the seven-question Q&A trace (in-repo only,
+  not part of the published docs site).
 - [ADR 0038](../decisions/0038-pedagogy-index-pattern.md) — the
   pedagogy-index pattern this design follows.
 - [ADR 0047](../decisions/0047-empirical-validation-plan.md) —

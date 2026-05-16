@@ -24,9 +24,9 @@ validation:
       date: "2026-05-12"
       notes: "Schema-level shape guarantees for the index."
     - kind: chapter
-      ref: examples/smoke/src/content/chapters/01-foundations/measuring-the-sky.mdx
+      ref: examples/smoke/src/content/chapters/01-foundations/spoiler-alerts.mdx
       date: "2026-05-14"
-      notes: "Real chapter populates the pedagogy index end-to-end via the smoke build."
+      notes: "1347-line real chapter populates the pedagogy index end-to-end (definitions + equations + key insights + objectives + inline-refs) via the smoke build."
     - kind: audit
       ref: packages/astro/src/lib/pedagogy-audit.ts
       date: "2026-05-15"

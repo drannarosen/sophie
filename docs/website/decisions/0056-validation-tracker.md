@@ -50,10 +50,10 @@ validation:
       ref: packages/astro/src/lib/pedagogy-audit.ts
       date: "2026-05-16"
       notes: "Audit invariants V0–V8 live; V1+V2 ERROR-grade post PR 6."
-    - kind: chapter
+    - kind: manual
       ref: docs/website/status/validation.md
       date: "2026-05-16"
-      notes: "Build-generated dashboard reports 78 contracts: 12 validated, 14 in-progress, 52 unvalidated."
+      notes: "Build-generated dashboard. Counts are live and reported by the dashboard itself; not duplicated here so the two don't drift."
     - kind: manual
       ref: docs/website/reference/validation-tracker.md
       date: "2026-05-16"

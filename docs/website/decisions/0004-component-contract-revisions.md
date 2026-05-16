@@ -18,9 +18,9 @@ validation:
       date: "2026-05-12"
       notes: "Contract suite covering serialize/render split + axe-core a11y."
     - kind: chapter
-      ref: examples/smoke/src/content/chapters/01-foundations/measuring-the-sky.mdx
+      ref: examples/smoke/src/content/chapters/01-foundations/spoiler-alerts.mdx
       date: "2026-05-14"
-      notes: "Real chapter exercises Predict + Reflection + ComprehensionGate per the component-contract revisions."
+      notes: "1347-line real chapter exercises Predict + Reflection + ComprehensionGate per the component-contract revisions."
     - kind: review
       ref: docs/reviews/2026-05-15-bucket-b-c-architecture-audit.md
       date: "2026-05-15"

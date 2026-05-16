@@ -14,13 +14,13 @@ validation:
       date: "2026-05-13"
       notes: "MDX compile + AST-transform pipeline tested end-to-end."
     - kind: chapter
-      ref: examples/smoke/src/content/chapters/01-foundations/measuring-the-sky.mdx
+      ref: examples/smoke/src/content/chapters/01-foundations/spoiler-alerts.mdx
       date: "2026-05-14"
-      notes: "Real chapter renders via @sophie/astro's TextbookLayout."
+      notes: "1347-line real chapter renders via @sophie/astro's TextbookLayout."
     - kind: review
       ref: docs/reviews/2026-05-15-bucket-b-c-architecture-audit.md
       date: "2026-05-15"
-  notes: "Astro 6 + MDX confirmed across the bucket B+C smoke build; the renderer-choice contract held under three real chapters and the components matrix."
+  notes: "Astro 6 + MDX confirmed across the bucket B+C smoke build; the renderer-choice contract held under the smoke chapters and the components matrix."
 ---
 
 # ADR 0002: Astro + MDX as the renderer

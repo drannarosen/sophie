@@ -14,9 +14,9 @@ validation:
       date: "2026-05-12"
       notes: "Covers IndexedDB write/read cycle, MemoryResponseStore fallback, BroadcastChannel LWW (per ADR 0029 refinement)."
     - kind: chapter
-      ref: examples/smoke/src/content/chapters/01-foundations/measuring-the-sky.mdx
+      ref: examples/smoke/src/content/chapters/01-foundations/spoiler-alerts.mdx
       date: "2026-05-14"
-      notes: "Real chapter exercises Predict + Reflection + ComprehensionGate persistence end-to-end."
+      notes: "1347-line real chapter exercises Predict + Reflection + ComprehensionGate persistence end-to-end."
     - kind: review
       ref: docs/reviews/2026-05-15-bucket-b-c-architecture-audit.md
       date: "2026-05-15"
