@@ -1,4 +1,31 @@
-import type { Validation, ValidationEvidence } from "@sophie/core/schema";
+import {
+  type Validation,
+  type ValidationEvidence,
+  ValidationSchema,
+} from "@sophie/core/schema";
+
+/**
+ * Parse a raw frontmatter `validation:` block via `ValidationSchema.safeParse`,
+ * returning the typed shape on success or `undefined` on failure. The MyST
+ * plugin entry point calls this on every contract page so the admonition
+ * renderer always sees a fully validated + date-coerced `Validation` (or
+ * the missing-block fallback). Without this gate, raw frontmatter — with
+ * `Date` objects for unquoted dates, or with typo'd `status` values — leaks
+ * straight into `buildValidationAdmonitionNode` and produces ugly toString
+ * output / silently broken CSS classes.
+ *
+ * Findings are NOT surfaced from this code path; that's the extractor's
+ * job (V0 in `validation-extractor.ts`). When parse fails here, the
+ * renderer emits the unvalidated-fallback admonition — matching the V1
+ * "missing block" UI so authors get a visible signal something is wrong.
+ */
+export function parseValidationFrontmatter(
+  raw: unknown
+): Validation | undefined {
+  if (raw === undefined || raw === null) return undefined;
+  const parsed = ValidationSchema.safeParse(raw);
+  return parsed.success ? parsed.data : undefined;
+}
 
 /**
  * Validation tracker — per-contract admonition renderer (ADR 0056).
@@ -99,25 +126,13 @@ export function renderValidationAdmonition({
  *
  * Both patterns are matched; the most recent ISO date across all
  * matches wins. Returns `null` when no Revisions signal is present.
+ *
+ * Re-exported here for backward-compat with consumers that import
+ * `extractLastRevisedDate` from this module; the canonical home is
+ * `./last-revised-date.ts` so the validation-extractor doesn't have to
+ * pull in this whole admonition-plugin module.
  */
-export function extractLastRevisedDate(source: string): string | null {
-  const dates: string[] = [];
-  // Shape 1: **§N — YYYY-MM-DD —**
-  for (const match of source.matchAll(
-    /\*\*§\d+\s*[—-]\s*(\d{4}-\d{2}-\d{2})\s*[—-]/g
-  )) {
-    if (match[1] !== undefined) dates.push(match[1]);
-  }
-  // Shape 2: ## Revisions (YYYY-MM-DD …)
-  for (const match of source.matchAll(
-    /^#{1,6}\s+Revisions[^\n]*\((\d{4}-\d{2}-\d{2})/gm
-  )) {
-    if (match[1] !== undefined) dates.push(match[1]);
-  }
-  if (dates.length === 0) return null;
-  dates.sort();
-  return dates[dates.length - 1] ?? null;
-}
+export { extractLastRevisedDate } from "./last-revised-date.ts";
 
 function computeRenderedStatus(
   validation: Validation,

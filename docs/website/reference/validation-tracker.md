@@ -290,8 +290,22 @@ which point the default flips.
 
 The `/status/validation/` page is a build-generated artifact at
 `docs/website/status/validation.md`. It carries a
-`tags: [private]` frontmatter block so MyST's `excludeTagged`
-filter hides it from public builds.
+`tags: [private]` frontmatter block — **note that MyST 1.x has no
+`excludeTagged` mechanism today**; the tag is forward-compat for
+when a public docs deployment ships. The actual privacy gates
+right now are:
+
+1. `SOPHIE_DOCS_INCLUDE_VALIDATION=0` — suppresses both the
+   per-page admonition AND the dashboard regeneration, so the
+   committed `status/validation.md` is the stale-but-safe snapshot
+   when the flag is off.
+2. The Sophie docs site being dev-only pre-launch — no public
+   deployment exists yet to leak the dashboard.
+
+When a public docs deployment is wired up, add
+`status/validation.md` to `project.exclude:` in a separate
+`myst.public.yml` or via a build wrapper script. Tracked as a
+follow-up issue.
 
 ### Sections
 

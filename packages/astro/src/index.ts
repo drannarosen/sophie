@@ -25,5 +25,6 @@ export {
   extractLastRevisedDate,
   isContractFile,
   type MystAdmonitionNode,
+  parseValidationFrontmatter,
   renderValidationAdmonition,
 } from "./lib/validation-admonition-plugin.ts";

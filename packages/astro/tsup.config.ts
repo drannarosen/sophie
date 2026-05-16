@@ -51,6 +51,12 @@ export default defineConfig({
     // dist/lib/validation-extractor.js to resolve from the copied-verbatim
     // .astro files in dist/components/.
     "lib/validation-extractor": "src/lib/validation-extractor.ts",
+    // `lib/audit-cache` wraps runPedagogyAudit with a one-shot
+    // per-process cache (run once in prod builds, every call in dev).
+    // Imported by TextbookLayout to gate audit re-runs across page
+    // renders. Must exist at dist/lib/audit-cache.js to resolve from
+    // the copied-verbatim .astro files in dist/components/.
+    "lib/audit-cache": "src/lib/audit-cache.ts",
     // `lib/pedagogy-index-virtual-module` is the optional Vite plugin
     // exposing `virtual:sophie/pedagogy-index`. Not used by the
     // chrome critical path (Vite caches load() before chapter parse);

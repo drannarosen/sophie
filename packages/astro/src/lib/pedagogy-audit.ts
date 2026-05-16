@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { resolve as resolvePath } from "node:path";
+import { relative as relativePath, resolve as resolvePath } from "node:path";
 import type { AuditFinding, PedagogyIndex } from "@sophie/core/schema";
 import { slugify } from "@sophie/core/schema";
 
@@ -606,7 +606,7 @@ export function runPedagogyAudit(
         severity: "ERROR",
         code: "V1",
         message: `V1: ADR is missing a validation block: ${entry.path}`,
-        location: { chapter: entry.path },
+        location: { path: entry.path },
       });
     }
 
@@ -615,7 +615,7 @@ export function runPedagogyAudit(
         severity: "ERROR",
         code: "V2",
         message: `V2: reference doc is missing a validation block: ${entry.path}`,
-        location: { chapter: entry.path },
+        location: { path: entry.path },
       });
     }
 
@@ -631,7 +631,7 @@ export function runPedagogyAudit(
         severity: "ERROR",
         code: "V3",
         message: `V3: ${entry.path}: status is "${v.status}" but last_validated_date is null.`,
-        location: { chapter: entry.path },
+        location: { path: entry.path },
       });
     }
 
@@ -643,20 +643,41 @@ export function runPedagogyAudit(
         severity: "ERROR",
         code: "V4",
         message: `V4: ${entry.path}: status is "unvalidated" but evidence or last_validated_date is non-empty.`,
-        location: { chapter: entry.path },
+        location: { path: entry.path },
       });
     }
 
     for (const ev of v.evidence) {
       // V5 — null refs are deferred-evidence sentinels (intentional,
       // schema-permitted); only non-null refs are existence-checked.
-      if (ev.ref !== null && !existsSync(resolvePath(repoRoot, ev.ref))) {
-        errors.push({
-          severity: "ERROR",
-          code: "V5",
-          message: `V5: ${entry.path}: evidence ref does not exist on disk: ${ev.ref}`,
-          location: { chapter: entry.path },
-        });
+      //
+      // Path-escape guard: `path.resolve(repoRoot, ref)` discards
+      // `repoRoot` when `ref` is absolute, and follows `..` segments
+      // unbounded. Without this guard, `ref: "/etc/hosts"` or
+      // `ref: "../../../etc/hosts"` would pass V5 silently against any
+      // host with that file present — a correctness bug, even if not a
+      // security risk under Sophie's trust model (refs are author-
+      // controlled by maintainers, not untrusted contributors).
+      if (ev.ref !== null) {
+        const resolved = resolvePath(repoRoot, ev.ref);
+        const rel = relativePath(repoRoot, resolved);
+        const escapes =
+          rel.startsWith("..") || rel === "" || resolvePath(rel) === resolved;
+        if (escapes) {
+          errors.push({
+            severity: "ERROR",
+            code: "V5",
+            message: `V5: ${entry.path}: evidence ref must be repo-root-relative (got an absolute or escaping path): ${ev.ref}`,
+            location: { path: entry.path },
+          });
+        } else if (!existsSync(resolved)) {
+          errors.push({
+            severity: "ERROR",
+            code: "V5",
+            message: `V5: ${entry.path}: evidence ref does not exist on disk: ${ev.ref}`,
+            location: { path: entry.path },
+          });
+        }
       }
 
       // V6 — null dates are permitted (deferred evidence); only non-null
@@ -666,7 +687,7 @@ export function runPedagogyAudit(
           severity: "ERROR",
           code: "V6",
           message: `V6: ${entry.path}: evidence date is not a valid ISO YYYY-MM-DD: ${ev.date}`,
-          location: { chapter: entry.path },
+          location: { path: entry.path },
         });
       }
     }
@@ -678,7 +699,7 @@ export function runPedagogyAudit(
         severity: "WARNING",
         code: "V7",
         message: `V7: ${entry.path}: last_validated_date is in the future: ${v.last_validated_date}`,
-        location: { chapter: entry.path },
+        location: { path: entry.path },
       });
     }
   }
@@ -713,6 +734,11 @@ function pluralize(n: number, singular: string): string {
  */
 function formatFinding(f: AuditFinding): string {
   const locParts: string[] = [];
+  // `path` (V0–V8 contract findings) and `chapter` (D4/D5/E4/F1/F2/C1/O1/
+  // O2/K1/MG1/MG2/CS2) are mutually exclusive in practice; render whichever
+  // is present. `path` first since it carries the more specific
+  // file-system identity when both somehow appear together.
+  if (f.location?.path) locParts.push(`path: ${f.location.path}`);
   if (f.location?.chapter) locParts.push(`chapter: ${f.location.chapter}`);
   if (f.location?.anchor) locParts.push(`anchor: ${f.location.anchor}`);
   const loc = locParts.length > 0 ? ` (${locParts.join(", ")})` : "";

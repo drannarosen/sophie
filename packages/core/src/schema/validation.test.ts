@@ -133,3 +133,53 @@ describe("ValidationSchema cross-field refinement", () => {
     ).not.toThrow();
   });
 });
+
+describe("ValidationSchema date coercion (gray-matter Date workaround)", () => {
+  // gray-matter (via js-yaml) auto-parses bare `YYYY-MM-DD` strings in
+  // frontmatter into Date objects. Without preprocessing, every author
+  // who writes `last_validated_date: 2026-05-16` (unquoted) hits a
+  // silent V0 error because `z.string()` rejects Date. The schema
+  // coerces Date → ISO date-string (YYYY-MM-DD) so both shapes work.
+  it("coerces a Date in last_validated_date to its ISO date string", () => {
+    const parsed = ValidationSchema.parse({
+      status: "validated",
+      last_validated_date: new Date("2026-05-14"),
+      evidence: [],
+    });
+    expect(parsed.last_validated_date).toBe("2026-05-14");
+  });
+
+  it("coerces a Date in evidence[].date to its ISO date string", () => {
+    const parsed = ValidationSchema.parse({
+      status: "validated",
+      last_validated_date: "2026-05-14",
+      evidence: [
+        {
+          kind: "test",
+          ref: "x.test.ts",
+          date: new Date("2026-05-12"),
+        },
+      ],
+    });
+    expect(parsed.evidence[0]?.date).toBe("2026-05-12");
+  });
+
+  it("still rejects non-Date non-string values for last_validated_date", () => {
+    expect(() =>
+      ValidationSchema.parse({
+        status: "validated",
+        last_validated_date: 12345,
+        evidence: [],
+      })
+    ).toThrow();
+  });
+
+  it("preserves quoted-string dates unchanged (no coercion side-effect)", () => {
+    const parsed = ValidationSchema.parse({
+      status: "validated",
+      last_validated_date: "2026-05-14",
+      evidence: [],
+    });
+    expect(parsed.last_validated_date).toBe("2026-05-14");
+  });
+});

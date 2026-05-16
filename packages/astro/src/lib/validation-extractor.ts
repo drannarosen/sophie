@@ -6,7 +6,7 @@ import type {
 } from "@sophie/core/schema";
 import { ValidationSchema } from "@sophie/core/schema";
 import matter from "gray-matter";
-import { extractLastRevisedDate } from "./validation-admonition-plugin.ts";
+import { extractLastRevisedDate } from "./last-revised-date.ts";
 
 /**
  * Contract-validations extractor (ADR 0056 PR 3) — the build-time
@@ -137,7 +137,7 @@ export async function extractContractValidations(
             severity: "ERROR",
             code: "V0",
             message: `V0: ${relPath}: validation block failed schema parse: ${issueText}`,
-            location: { chapter: relPath },
+            location: { path: relPath },
           });
           validation = undefined;
         }
@@ -146,16 +146,28 @@ export async function extractContractValidations(
         // which silently drops them, so the schema parse alone cannot
         // see them. We diff against KNOWN_VALIDATION_KEYS and emit one
         // INFO finding per stray key. Sorted for stable output.
-        const unknownKeys = Object.keys(rawBlock)
-          .filter((k) => !KNOWN_VALIDATION_KEYS.has(k))
-          .sort();
-        for (const key of unknownKeys) {
-          findings.push({
-            severity: "INFO",
-            code: "V8",
-            message: `V8: ${relPath}: validation block has unknown key '${key}' (known keys: status, last_validated_date, evidence, notes).`,
-            location: { chapter: relPath },
-          });
+        //
+        // Guard: V8 only runs on real object shapes. If `rawBlock` is a
+        // string / array / scalar (already caught by V0's schema parse
+        // failure), `Object.keys` would synthesize integer-string keys
+        // ["0", "1", …] for strings/arrays — meaningless V8 noise that
+        // duplicates V0's message. Skip the diff in those cases.
+        const isPlainObject =
+          typeof rawBlock === "object" &&
+          rawBlock !== null &&
+          !Array.isArray(rawBlock);
+        if (isPlainObject) {
+          const unknownKeys = Object.keys(rawBlock)
+            .filter((k) => !KNOWN_VALIDATION_KEYS.has(k))
+            .sort();
+          for (const key of unknownKeys) {
+            findings.push({
+              severity: "INFO",
+              code: "V8",
+              message: `V8: ${relPath}: validation block has unknown key '${key}' (known keys: status, last_validated_date, evidence, notes).`,
+              location: { path: relPath },
+            });
+          }
         }
       }
 

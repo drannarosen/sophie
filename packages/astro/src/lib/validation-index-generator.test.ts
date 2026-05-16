@@ -235,12 +235,15 @@ describe("generateValidationIndex", () => {
     expect(md).toContain("2026-05-15");
     // Missing-block entry has a recognizable placeholder
     expect(md).toMatch(/missing|—|no validation block/i);
-    // Contract links must strip the docs/website/ prefix so MyST (which
-    // serves docs/website/ as the project root) resolves them correctly.
-    // Without the strip, every link in the rendered dashboard 404s.
-    expect(md).toContain("](/decisions/0001-platform-not-monorepo/)");
-    expect(md).toContain("](/reference/cli/)");
+    // Contract links must match MyST's actual URL convention:
+    // strip the directory + the leading NNNN- prefix from the filename.
+    // Prior version emitted /decisions/0001-platform-not-monorepo/ which
+    // 404'd against the rendered HTML — see contractHref() for the fix.
+    expect(md).toContain("](/platform-not-monorepo/)");
+    expect(md).toContain("](/cli/)");
     expect(md).not.toContain("](/docs/website/");
+    expect(md).not.toContain("](/decisions/");
+    expect(md).not.toContain("](/reference/");
   });
 
   test("groups ADRs and reference docs separately", () => {
@@ -284,5 +287,55 @@ describe("generateValidationIndex", () => {
       ],
     });
     expect(generateValidationIndex(index)).toBe(generateValidationIndex(index));
+  });
+
+  test("escapes Markdown special chars in notes-cell (I1 from comprehensive review)", () => {
+    const md = generateValidationIndex(
+      makeIndex({
+        contractValidations: [
+          {
+            path: "docs/website/decisions/0099-fake.md",
+            validation: {
+              status: "validated",
+              last_validated_date: "2026-05-14",
+              evidence: [],
+              notes:
+                "Has **bold**, _emphasis_, `code`, [link](url), and a literal | pipe.",
+            },
+            lastRevisedDate: null,
+          },
+        ],
+      })
+    );
+    // Each special char gets a leading backslash so MyST renders them
+    // as literal cell text, not active Markdown.
+    expect(md).toContain("\\*\\*bold\\*\\*");
+    expect(md).toContain("\\_emphasis\\_");
+    expect(md).toContain("\\`code\\`");
+    expect(md).toContain("\\[link");
+    expect(md).toContain("\\| pipe");
+    // Parens / chars NOT in the escape list pass through.
+    expect(md).toContain("(url)");
+  });
+
+  test("collapses newlines in notes to single spaces", () => {
+    const md = generateValidationIndex(
+      makeIndex({
+        contractValidations: [
+          {
+            path: "docs/website/decisions/0099-fake.md",
+            validation: {
+              status: "validated",
+              last_validated_date: "2026-05-14",
+              evidence: [],
+              notes: "First line.\nSecond line.\nThird line.",
+            },
+            lastRevisedDate: null,
+          },
+        ],
+      })
+    );
+    expect(md).toContain("First line. Second line. Third line.");
+    expect(md).not.toContain("First line.\nSecond");
   });
 });

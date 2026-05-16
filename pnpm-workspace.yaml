@@ -1,6 +1,13 @@
 packages:
   - 'packages/*'
   - 'examples/*'
+  # docs/website is the MyST design-docs site. Promoted to a workspace
+  # package (comprehensive-review I8) so the MyST plugin at
+  # docs/website/scripts/validation-admonition-plugin.mjs can import
+  # @sophie/astro through pnpm symlinks instead of via a brittle
+  # relative path to packages/astro/dist/. Turbo's build-order graph
+  # then guarantees @sophie/astro:build runs before @sophie/docs:build.
+  - 'docs/website'
 allowBuilds:
   '@swc/core': true
   esbuild: true

@@ -15,18 +15,18 @@
  */
 
 import { readFileSync } from "node:fs";
-// Relative path import: docs/website is not a pnpm workspace package
-// (and doesn't carry a package.json), so it can't resolve "@sophie/astro"
-// from node_modules. The compiled bundle lives at a stable workspace
-// path; the docs build runs after @sophie/astro:build per the
-// turbo dependency graph, so dist/ is always populated by build time.
-// When docs/website graduates to a workspace package, switch back to
-// the bare "@sophie/astro" import.
+// Bare import resolves through the pnpm workspace symlink because
+// docs/website is a workspace package (`@sophie/docs`) that declares
+// `@sophie/astro` as a workspace dependency (comprehensive-review I8).
+// Turbo's `dependsOn: ["^build"]` rule on the `build` task guarantees
+// @sophie/astro:build runs before @sophie/docs:build, so the compiled
+// bundle is always populated by the time MyST loads this plugin.
 import {
   buildValidationAdmonitionNode,
   extractLastRevisedDate,
   isContractFile,
-} from "../../../packages/astro/dist/index.js";
+  parseValidationFrontmatter,
+} from "@sophie/astro";
 
 const validationAdmonitionTransform = {
   name: "sophie:validation-admonition",
@@ -36,7 +36,13 @@ const validationAdmonitionTransform = {
     if (!isContractFile(filePath)) return;
 
     const frontmatter = vfile?.data?.frontmatter ?? {};
-    const validation = frontmatter.validation;
+    // Run the raw frontmatter through ValidationSchema.safeParse so
+    // Date objects (from gray-matter's auto-parse of unquoted ISO dates),
+    // unknown status values, and other malformed shapes never reach the
+    // renderer. On parse failure, fall back to the unvalidated UI so
+    // authors see a clear "something is off" signal — V0 surfaces the
+    // exact parse error via the extractor's audit pipeline.
+    const validation = parseValidationFrontmatter(frontmatter.validation);
 
     // Re-read the source from disk to extract the Revisions-section
     // date. MyST does not preserve the original markdown on the vfile

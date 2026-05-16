@@ -1,1 +1,1 @@
-export { type AuditFinding, auditFile } from "./stub.js";
+export { auditFile, type ChapterFrontmatterFinding } from "./stub.js";

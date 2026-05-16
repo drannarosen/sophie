@@ -3,6 +3,7 @@ import {
   buildValidationAdmonitionNode,
   extractLastRevisedDate,
   isContractFile,
+  parseValidationFrontmatter,
   renderValidationAdmonition,
 } from "./validation-admonition-plugin";
 
@@ -220,7 +221,11 @@ describe("extractLastRevisedDate", () => {
   });
 
   it("ignores §-headers that lack an ISO date", () => {
+    // I4 fix: `**§N — date —**` regex only runs inside `## Revisions`.
+    // Without the section heading, no §-header would match either way.
     const source = [
+      "## Revisions",
+      "",
       "**§1 — TBD — placeholder**",
       "**§2 — 2026-05-12 — real revision**",
     ].join("\n");
@@ -258,6 +263,45 @@ describe("extractLastRevisedDate", () => {
       "**§2 — 2026-05-15 — third revision**",
     ].join("\n");
     expect(extractLastRevisedDate(source)).toBe("2026-05-15");
+  });
+
+  it("IGNORES **§N — date —** patterns outside the Revisions section (I4 fix)", () => {
+    // A code-fenced example of the Revisions shape, or a paragraph
+    // quoting a historical revision, must NOT trip the staleness
+    // detector. Only `**§N — date —**` inside the `## Revisions`
+    // section is a real Revisions entry.
+    const source = [
+      "# ADR 0099: example",
+      "",
+      "## Context",
+      "",
+      "Some earlier version contained `**§1 — 2099-01-01 — first**`",
+      "but it was removed in a refactor.",
+      "",
+      "```markdown",
+      "**§7 — 2099-12-31 — example in a code fence**",
+      "```",
+      "",
+      "Body text without a Revisions section.",
+    ].join("\n");
+    // No Revisions section → no §N matches counted. Returns null.
+    expect(extractLastRevisedDate(source)).toBeNull();
+  });
+
+  it("respects Revisions section bounds — stops at next ## heading", () => {
+    const source = [
+      "# ADR 0099: example",
+      "",
+      "## Revisions",
+      "",
+      "**§1 — 2026-05-10 — first**",
+      "",
+      "## Aftermath",
+      "",
+      "**§99 — 2099-12-31 — fake historical reference in next section**",
+    ].join("\n");
+    // Only §1 counts; §99 is outside the Revisions section.
+    expect(extractLastRevisedDate(source)).toBe("2026-05-10");
   });
 });
 
@@ -353,5 +397,52 @@ describe("isContractFile", () => {
     // contracts. A future docs/decisions/draft/foo.md should not pick
     // up an admonition automatically.
     expect(isContractFile("docs/website/decisions/draft/foo.md")).toBe(false);
+  });
+});
+
+describe("parseValidationFrontmatter (C1 fix — MyST plugin schema gate)", () => {
+  it("returns the parsed Validation for a well-formed block", () => {
+    const parsed = parseValidationFrontmatter({
+      status: "validated",
+      last_validated_date: "2026-05-14",
+      evidence: [{ kind: "test", ref: "x.test.ts", date: "2026-05-12" }],
+    });
+    expect(parsed).toMatchObject({
+      status: "validated",
+      last_validated_date: "2026-05-14",
+    });
+  });
+
+  it("coerces a Date object on last_validated_date to ISO string", () => {
+    // gray-matter parses unquoted YYYY-MM-DD frontmatter values into
+    // Date objects. The schema preprocess normalizes; this helper
+    // surfaces that benefit at the MyST plugin layer.
+    const parsed = parseValidationFrontmatter({
+      status: "validated",
+      last_validated_date: new Date("2026-05-14"),
+      evidence: [],
+    });
+    expect(parsed?.last_validated_date).toBe("2026-05-14");
+  });
+
+  it("returns undefined for undefined / null input (missing block)", () => {
+    expect(parseValidationFrontmatter(undefined)).toBeUndefined();
+    expect(parseValidationFrontmatter(null)).toBeUndefined();
+  });
+
+  it("returns undefined on parse failure (unknown status)", () => {
+    expect(
+      parseValidationFrontmatter({
+        status: "validatd", // typo
+        last_validated_date: "2026-05-14",
+        evidence: [],
+      })
+    ).toBeUndefined();
+  });
+
+  it("returns undefined on parse failure (non-object input)", () => {
+    expect(parseValidationFrontmatter("hello")).toBeUndefined();
+    expect(parseValidationFrontmatter(["a", "b"])).toBeUndefined();
+    expect(parseValidationFrontmatter(42)).toBeUndefined();
   });
 });
