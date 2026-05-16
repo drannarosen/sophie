@@ -1,38 +1,74 @@
+/* LearningObjectives — Tier-1 (card-strong) chrome per visual-polish-target.md.
+ *
+ * Brand-teal accent — Sophie's primary brand color. Tier-1 anatomy:
+ * 4px teal left rule, drop shadow, 5px radius, pale-teal title bar
+ * with Target icon (goal-setting glyph), white body holding the
+ * objective checklist.
+ *
+ * Per ADR 0005, no hex/rgb literals — all colors flow through
+ * @sophie/theme tokens.
+ */
+
 .section {
-  margin-block: var(--space-lo-block, 1.5rem);
-  padding: var(--space-lo-pad, 1.25rem 1.5rem);
-  border-inline-start: 4px solid var(--color-lo-accent, var(--sophie-accent));
-  background: var(--color-lo-bg, var(--sophie-surface-2));
-  border-radius: var(--radius-lo, 0.375rem);
+  margin-block: var(--sophie-space-5);
+  background: var(--sophie-surface-1);
+  border: 1px solid var(--sophie-border);
+  border-left: var(--sophie-card-rule-strong) solid var(--sophie-brand-teal);
+  border-radius: var(--sophie-radius-sm);
+  box-shadow: var(--sophie-shadow-card);
+  color: var(--sophie-text);
+  font-family: var(--sophie-font-sans);
+  overflow: hidden;
+}
+
+.titleBar {
+  display: flex;
+  align-items: center;
+  gap: var(--sophie-space-2);
+  padding: var(--sophie-space-2) var(--sophie-space-4);
+  background: color-mix(
+    in oklch,
+    var(--sophie-brand-teal) 8%,
+    var(--sophie-surface-1)
+  );
+  border-bottom: 1px solid var(--sophie-border);
+  color: var(--sophie-brand-teal-text);
+  font-weight: var(--sophie-weight-semibold);
+}
+
+.icon {
+  flex-shrink: 0;
 }
 
 .heading {
-  margin: 0 0 var(--space-lo-heading-gap, 0.75rem);
-  font-size: var(--font-size-lo-heading, 1.125rem);
-  font-weight: 600;
-  color: var(--color-lo-heading, var(--sophie-text));
+  margin: 0;
+  font-size: var(--sophie-text-base);
+  font-weight: var(--sophie-weight-semibold);
+  color: inherit;
 }
 
 .list {
   margin: 0;
-  padding: 0;
+  padding: var(--sophie-space-3) var(--sophie-space-4);
   list-style: none;
   display: grid;
-  gap: var(--space-lo-row-gap, 0.5rem);
+  gap: var(--sophie-space-2);
+  font-size: var(--sophie-text-body);
 }
 
 .row {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: var(--space-lo-row-inline-gap, 0.625rem);
+  gap: 0.625rem;
   align-items: baseline;
 }
 
 .checkbox {
   margin: 0;
-  inline-size: var(--size-lo-checkbox, 1rem);
-  block-size: var(--size-lo-checkbox, 1rem);
+  inline-size: 1rem;
+  block-size: 1rem;
   cursor: pointer;
+  accent-color: var(--sophie-brand-teal);
 }
 
 .checkbox:disabled {
@@ -42,7 +78,7 @@
 
 .label {
   cursor: pointer;
-  line-height: 1.5;
+  line-height: var(--sophie-leading-prose);
 }
 
 .label:has(+ .checkbox:disabled),
@@ -51,8 +87,8 @@
 }
 
 .checkbox:checked + .label {
-  color: var(--color-lo-checked, var(--sophie-text-muted));
-  text-decoration: line-through var(--color-lo-checked-strike, currentColor) 1px;
+  color: var(--sophie-text-muted);
+  text-decoration: line-through currentColor 1px;
   text-decoration-skip-ink: auto;
 }
 
@@ -62,7 +98,7 @@
 }
 
 .verb {
-  font-weight: 600;
+  font-weight: var(--sophie-weight-semibold);
 }
 
 @media (prefers-reduced-motion: no-preference) {

@@ -1,3 +1,4 @@
+import { Target } from "lucide-react";
 import { useInteractive } from "../../runtime/useInteractive.ts";
 import { Objective } from "../Objective/Objective.tsx";
 import styles from "./LearningObjectives.module.css.js";
@@ -61,9 +62,12 @@ export function LearningObjectives({
 
   return (
     <section className={styles.section} aria-labelledby={`${id}-heading`}>
-      <h2 id={`${id}-heading`} className={styles.heading}>
-        {heading}
-      </h2>
+      <header className={styles.titleBar}>
+        <Target className={styles.icon} size={20} aria-hidden />
+        <h2 id={`${id}-heading`} className={styles.heading}>
+          {heading}
+        </h2>
+      </header>
       <ul
         className={styles.list}
         aria-busy={controlProps["aria-busy"]}
