@@ -44,6 +44,13 @@ export default defineConfig({
     // usages, etc.). Must exist at dist/lib/pedagogy-audit.js to
     // resolve from the copied-verbatim .astro files in dist/components/.
     "lib/pedagogy-audit": "src/lib/pedagogy-audit.ts",
+    // `lib/validation-extractor` walks docs/website/{decisions,reference}/
+    // at build time and emits ContractValidationEntry[] + V0/V8 findings
+    // for the ADR 0056 validation tracker. Imported by TextbookLayout
+    // (orchestrates the accumulator population). Must exist at
+    // dist/lib/validation-extractor.js to resolve from the copied-verbatim
+    // .astro files in dist/components/.
+    "lib/validation-extractor": "src/lib/validation-extractor.ts",
     // `lib/pedagogy-index-virtual-module` is the optional Vite plugin
     // exposing `virtual:sophie/pedagogy-index`. Not used by the
     // chrome critical path (Vite caches load() before chapter parse);
