@@ -1,0 +1,18 @@
+{
+  "name": "@sophie/docs",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Sophie design documentation (MyST site at docs/website/). Workspace-promoted so the MyST plugin's runtime import of @sophie/astro resolves through pnpm symlinks + turbo's build-order graph.",
+  "type": "module",
+  "scripts": {
+    "build": "myst build --html",
+    "start": "myst start",
+    "clean": "rm -rf _build"
+  },
+  "dependencies": {
+    "@sophie/astro": "workspace:*"
+  },
+  "devDependencies": {
+    "mystmd": "^1.9.0"
+  }
+}

@@ -30,6 +30,16 @@ importers:
         specifier: 6.0.3
         version: 6.0.3
 
+  docs/website:
+    dependencies:
+      '@sophie/astro':
+        specifier: workspace:*
+        version: link:../../packages/astro
+    devDependencies:
+      mystmd:
+        specifier: ^1.9.0
+        version: 1.9.0
+
   examples/smoke:
     dependencies:
       '@astrojs/mdx':
@@ -4421,6 +4431,10 @@ packages:
 
   mustache@4.2.0:
     resolution: {integrity: sha512-71ippSywq5Yb7/tVYyGbkBggbU8H3u5Rz56fH60jGFgr8uHwxs+aSKeqmluIVzM0m0kB7xQjKS6qPfd0b2ZoqQ==}
+    hasBin: true
+
+  mystmd@1.9.0:
+    resolution: {integrity: sha512-8vqtwB0ydxdmAwPmXTyzEXIAF1xdxo6/rCdP9sKytHtJ2whRKpeJGSjk/awYja065GEpoeNJa30zgS/pPjYh0A==}
     hasBin: true
 
   mz@2.7.0:
@@ -10566,6 +10580,8 @@ snapshots:
   muggle-string@0.4.1: {}
 
   mustache@4.2.0: {}
+
+  mystmd@1.9.0: {}
 
   mz@2.7.0:
     dependencies:

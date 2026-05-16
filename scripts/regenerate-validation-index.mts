@@ -17,18 +17,41 @@
  *
  * Honors SOPHIE_DOCS_INCLUDE_VALIDATION=0 (returns early without
  * writing) for symmetry with the runtime build path.
+ *
+ * Builds the PedagogyIndex inline (I9 from comprehensive review) —
+ * no longer goes through the global `indexAccumulator` singleton. The
+ * regen script's snapshot is dependency-free: it constructs the
+ * `PedagogyIndex` shape directly from the extractor's output and
+ * empty placeholders for collections this script doesn't populate.
+ * Removes a singleton-state coupling that wasn't load-bearing.
  */
 
 import { resolve } from "node:path";
-import { indexAccumulator } from "../packages/astro/src/lib/pedagogy-index-extractor.ts";
+import type { PedagogyIndex } from "@sophie/core/schema";
 import { extractContractValidations } from "../packages/astro/src/lib/validation-extractor.ts";
 import { writeValidationIndexMarkdown } from "../packages/astro/src/lib/validation-index-writer.ts";
 
 const repoRoot = resolve(import.meta.dirname, "..");
 
 const { entries, findings } = await extractContractValidations(repoRoot);
-indexAccumulator.setContractValidations(entries, findings);
-const snapshot = indexAccumulator.asPedagogyIndex();
+
+// Build a one-shot PedagogyIndex with the contract data the dashboard
+// generator needs; everything else stays empty since the dashboard
+// doesn't surface non-contract collections.
+const snapshot: PedagogyIndex = {
+  definitions: [],
+  equations: [],
+  keyInsights: [],
+  figureRegistry: [],
+  figureUsages: [],
+  misconceptions: [],
+  chapters: [],
+  modules: [],
+  objectives: [],
+  inlineRefUsages: [],
+  contractValidations: entries,
+  extractorFindings: findings,
+};
 
 await writeValidationIndexMarkdown(snapshot, repoRoot);
 
