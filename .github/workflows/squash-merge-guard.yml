@@ -1,0 +1,40 @@
+# Enforces ADR 0055 (squash-merge for code PRs) at the CI layer.
+#
+# Coverage:
+#   - Catches "Allow merge commits" bypass: a merge commit has parent
+#     count > 1; squash-merge produces a single-parent commit.
+#   - Does NOT catch rebase-merge bypass: rebase produces N single-
+#     parent commits indistinguishable from N direct-to-main commits
+#     by the parent-count test alone. That bypass is prevented by the
+#     GitHub repo-settings layer (allow_rebase_merge=false).
+#
+# This workflow is evidence cited in the ADR 0055 validation block
+# (kind: deployment). See docs/website/decisions/0055-squash-merge-for-code-prs.md.
+
+name: Squash-merge guard
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  guard:
+    name: assert squash-merge
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Only the new commit + its parent are needed for the
+          # parent-count check; deeper history would be wasted I/O.
+          fetch-depth: 2
+      - name: Fail if HEAD is a merge commit
+        run: |
+          parents=$(git log -1 --pretty=%P HEAD)
+          count=$(echo "$parents" | wc -w | tr -d ' ')
+          short=$(git rev-parse --short HEAD)
+          if [ "$count" -gt 1 ]; then
+            echo "::error::HEAD ($short) is a merge commit ($count parents)."
+            echo "ADR 0055 requires squash-merge for code PRs. Revert this commit and re-merge as squash."
+            exit 1
+          fi
+          echo "OK: HEAD ($short) has $count parent (squash-merge or direct-to-main)."
