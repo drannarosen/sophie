@@ -1,3 +1,4 @@
+import { Telescope } from "lucide-react";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { HydrationAnnouncer } from "../../runtime/HydrationAnnouncer.tsx";
 import { useInteractive } from "../../runtime/useInteractive.ts";
@@ -44,31 +45,36 @@ export function Predict({
 
   return (
     <section className={styles.section}>
-      <h2 className={styles.heading}>{heading}</h2>
-      {description !== undefined && (
-        <p className={styles.description}>{description}</p>
-      )}
-      {prompts.map((p) => (
-        <PromptRow
-          key={p.id}
-          course={course}
-          chapter={chapter}
-          componentId={id}
-          prompt={p}
-          onValue={updateValue}
-        />
-      ))}
-      {closing !== undefined && <p className={styles.closing}>{closing}</p>}
-      {children !== undefined && (
-        <RevealGate
-          course={course}
-          chapter={chapter}
-          componentId={id}
-          enabled={allFilled}
-        >
-          {children}
-        </RevealGate>
-      )}
+      <header className={styles.titleBar}>
+        <Telescope className={styles.icon} size={20} aria-hidden />
+        <h2 className={styles.heading}>{heading}</h2>
+      </header>
+      <div className={styles.body}>
+        {description !== undefined && (
+          <p className={styles.description}>{description}</p>
+        )}
+        {prompts.map((p) => (
+          <PromptRow
+            key={p.id}
+            course={course}
+            chapter={chapter}
+            componentId={id}
+            prompt={p}
+            onValue={updateValue}
+          />
+        ))}
+        {closing !== undefined && <p className={styles.closing}>{closing}</p>}
+        {children !== undefined && (
+          <RevealGate
+            course={course}
+            chapter={chapter}
+            componentId={id}
+            enabled={allFilled}
+          >
+            {children}
+          </RevealGate>
+        )}
+      </div>
     </section>
   );
 }
