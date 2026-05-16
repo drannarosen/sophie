@@ -101,6 +101,7 @@ project:
         - file: vision/index.md
         - file: vision/pedagogy/index.md
         - file: vision/design/index.md
+        - file: vision/design/visual-polish-target.md
         - file: vision/features/index.md
         - file: vision/features/accepted.md
         - file: vision/features/backlog.md
