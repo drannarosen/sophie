@@ -11,12 +11,16 @@ Sophie's aspirational substrate — the *why* behind the *what* in
 [Decisions](../decisions/), and the *where we're going* behind the
 *where we are* in [Status](../status/).
 
-This section captures three layers of forward-looking thinking:
+This section captures four layers of forward-looking thinking:
 
 - **[Pedagogy](pedagogy/index.md)** — the teaching principles Sophie
   encodes. *What kind of learning does Sophie want to make easier?*
 - **[Design](design/index.md)** — the design principles Sophie
   follows. *What does Sophie feel like at its best?*
+- **[Reasoning OS](reasoning-os/index.md)** — Sophie's STEM
+  vertical specialization: how the platform encodes the epistemic
+  structure of scientific reasoning. *What kind of platform does
+  Sophie become when an LDS is optimized for science?*
 - **[Features](features/index.md)** — the feature aspirations Sophie
   may grow into, tracked on a staging-area model. *What's coming, what
   might come, what we're still unsure about.*
@@ -39,6 +43,25 @@ Three claims, each load-bearing:
 > **Sophie encodes the design choices that distinguish merely-functional
 > curriculum from rigorous, misconception-aware, multimodal teaching —
 > and makes those choices reviewable, transferable, and improvable.**
+
+## Sophie as a Scientific Reasoning OS
+
+Stacked on the LDS positioning below is a vertical specialization:
+**Sophie is a Scientific Reasoning OS** — a platform whose component
+contract, schema, and authoring model encode the epistemic structure
+of scientific reasoning (Observable / Model / Inference / Assumption
+/ Approximation / Uncertainty / Numerical / Misconception). The
+eight-role taxonomy is locked by
+[ADR 0058](../decisions/0058-epistemic-component-contract.md);
+the [Reasoning-OS section](reasoning-os/index.md) walks the thesis
+and its substrate (ADRs 0030, 0040–0046, 0058 — i.e., the foundation
+tranche read as one general pattern rather than several pedagogy
+features).
+
+LDS is the *horizontal* claim (what Sophie does for any discipline);
+Reasoning OS is the *vertical* claim (what an LDS becomes when
+STEM-optimized). They layer rather than compete: the LDS positioning
+below is unchanged.
 
 ## Sophie as a Learning Design System (LDS)
 
