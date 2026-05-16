@@ -1,61 +1,96 @@
+/* Predict — Tier-1 (card-strong) chrome per visual-polish-target.md.
+ *
+ * Brand-rose accent — elicitation/self-disclosure family (pairs with
+ * Reflection). Tier-1 anatomy: 4px rose left rule, drop shadow, 5px
+ * radius, pale-rose title bar with Telescope icon ("predict + observe"
+ * verb, fits Sophie Astro sub-brand identity).
+ *
+ * Per ADR 0005, no hex/rgb literals — all colors flow through
+ * @sophie/theme tokens.
+ */
+
 .section {
-  margin-block: var(--space-predict-block, 1.5rem);
-  padding: var(--space-predict-pad, 1.25rem 1.5rem);
-  border-inline-start: 4px solid
-    var(--color-predict-accent, var(--sophie-brand-rose));
-  background: var(--color-predict-bg, var(--sophie-surface-1));
-  border-radius: var(--radius-predict, 0.375rem);
+  margin-block: var(--sophie-space-5);
+  background: var(--sophie-surface-1);
+  border: 1px solid var(--sophie-border);
+  border-left: var(--sophie-card-rule-strong) solid var(--sophie-brand-rose);
+  border-radius: var(--sophie-radius-sm);
+  box-shadow: var(--sophie-shadow-card);
+  color: var(--sophie-text);
+  font-family: var(--sophie-font-sans);
+  overflow: hidden;
+}
+
+.titleBar {
+  display: flex;
+  align-items: center;
+  gap: var(--sophie-space-2);
+  padding: var(--sophie-space-2) var(--sophie-space-4);
+  background: color-mix(
+    in oklch,
+    var(--sophie-brand-rose) 8%,
+    var(--sophie-surface-1)
+  );
+  border-bottom: 1px solid var(--sophie-border);
+  color: var(--sophie-brand-rose-text);
+  font-weight: var(--sophie-weight-semibold);
+}
+
+.icon {
+  flex-shrink: 0;
 }
 
 .heading {
-  margin: 0 0 var(--space-predict-heading-gap, 0.75rem);
-  font-size: var(--font-size-predict-heading, 1.125rem);
-  font-weight: 600;
-  color: var(--color-predict-heading, var(--sophie-brand-rose-text, inherit));
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  margin: 0;
+  font-size: var(--sophie-text-base);
+  font-weight: var(--sophie-weight-semibold);
+  color: inherit;
+  /* No uppercase tracking — title-case in the rendered text itself. */
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.body {
+  padding: var(--sophie-space-3) var(--sophie-space-4);
+  font-size: var(--sophie-text-body);
+  line-height: var(--sophie-leading-prose);
 }
 
 .description,
 .closing {
-  margin: var(--space-predict-prose-gap, 0.5rem) 0;
-  line-height: 1.5;
+  margin: var(--sophie-space-2) 0;
 }
 
 .closing {
   font-style: italic;
-  color: var(--color-predict-closing, var(--sophie-text-muted, inherit));
+  color: var(--sophie-text-muted);
 }
 
 .prompt {
   display: grid;
-  gap: var(--space-predict-prompt-gap, 0.375rem);
-  margin: var(--space-predict-prompt-block, 0.75rem) 0;
+  gap: 0.375rem;
+  margin-block: var(--sophie-space-3);
 }
 
 .label {
-  font-weight: 500;
-  line-height: 1.5;
+  font-weight: var(--sophie-weight-medium);
+  line-height: var(--sophie-leading-prose);
 }
 
 .textarea {
-  min-block-size: var(--size-predict-textarea, 4.5rem);
-  padding: var(--space-predict-textarea-pad, 0.5rem 0.625rem);
-  border: 1px solid
-    var(
-      --color-predict-textarea-border,
-      var(--sophie-border-subtle, currentColor)
-    );
-  border-radius: var(--radius-predict-textarea, 0.25rem);
+  min-block-size: 4.5rem;
+  padding: 0.5rem 0.625rem;
+  border: 1px solid var(--sophie-border-subtle);
+  border-radius: var(--sophie-radius-sm);
   font: inherit;
+  font-size: var(--sophie-text-body);
   resize: vertical;
-  background: var(--color-predict-textarea-bg, var(--sophie-surface-1, white));
-  color: inherit;
+  background: var(--sophie-surface-1);
+  color: var(--sophie-text);
 }
 
 .textarea:focus-visible {
-  outline: var(--sophie-focus-width, 2px) solid
-    var(--sophie-focus-color, currentColor);
+  outline: var(--sophie-focus-width) solid var(--sophie-focus-color);
   outline-offset: 1px;
 }
 
@@ -66,20 +101,19 @@
 
 .revealGate {
   display: grid;
-  gap: var(--space-predict-reveal-gap, 0.625rem);
-  margin-block-start: var(--space-predict-reveal-block, 1rem);
+  gap: 0.625rem;
+  margin-block-start: var(--sophie-space-3);
 }
 
 .revealButton {
   justify-self: start;
-  padding: var(--space-predict-button-pad, 0.5rem 1rem);
-  border: 1px solid
-    var(--color-predict-button-border, var(--sophie-brand-rose, currentColor));
-  border-radius: var(--radius-predict-button, 0.25rem);
-  background: var(--color-predict-button-bg, transparent);
-  color: var(--color-predict-button-fg, var(--sophie-brand-rose-text, inherit));
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--sophie-brand-rose);
+  border-radius: var(--sophie-radius-sm);
+  background: transparent;
+  color: var(--sophie-brand-rose-text);
   font: inherit;
-  font-weight: 600;
+  font-weight: var(--sophie-weight-semibold);
   cursor: pointer;
 }
 
@@ -89,14 +123,19 @@
 }
 
 .revealButton:not(:disabled):hover {
-  background: var(
-    --color-predict-button-hover-bg,
-    var(--sophie-surface-2, currentColor)
+  background: color-mix(
+    in oklch,
+    var(--sophie-brand-rose) 8%,
+    var(--sophie-surface-1)
   );
 }
 
+.revealButton:focus-visible {
+  outline: var(--sophie-focus-width) solid var(--sophie-focus-color);
+  outline-offset: 2px;
+}
+
 .revealContent {
-  padding-inline-start: var(--space-predict-reveal-indent, 0.75rem);
-  border-inline-start: 2px solid
-    var(--color-predict-reveal-border, var(--sophie-brand-rose, currentColor));
+  padding-inline-start: var(--sophie-space-3);
+  border-inline-start: 2px solid var(--sophie-brand-rose);
 }
