@@ -1333,9 +1333,11 @@ describe("validation audit invariants — V4 (unvalidated must be clean)", () =>
         status: "unvalidated",
         last_validated_date: null,
         evidence: [
+          // V4 is about "has evidence" — null ref keeps this focused
+          // on V4 without dragging the V5 disk-resolution path in.
           {
             kind: "test",
-            ref: "some/path.test.ts",
+            ref: null,
             date: "2026-05-14",
           },
         ],

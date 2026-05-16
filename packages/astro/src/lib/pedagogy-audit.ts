@@ -104,8 +104,11 @@ export interface AuditExtras {
    * are resolved (V5 — ADR 0056). Defaults to `process.cwd()` when
    * omitted, which is correct for the production caller
    * (`TextbookLayout.astro` runs at the consumer-app cwd, which IS the
-   * repo root). Tests that exercise V5 should pass an explicit tmp
-   * directory so existence checks are deterministic.
+   * repo root). Tests that exercise V5 (i.e. construct fixtures with
+   * non-null `evidence[].ref`) MUST pass an explicit `repoRoot` — the
+   * V5 loop throws if it would otherwise fall through to `process.cwd()`
+   * with non-null refs, since that would silently existence-check
+   * against the wrong filesystem.
    */
   repoRoot?: string;
 }
@@ -571,6 +574,23 @@ export function runPedagogyAudit(
   //   V7  WARNING  last_validated_date is in the future (date-only ISO
   //                compare — TZ-stable).
   // ---------------------------------------------------------------------
+  // V5 safety: if any contract has non-null evidence refs and the caller
+  // didn't pass `repoRoot` explicitly, fail loudly rather than silently
+  // existence-check against `process.cwd()` (which would be the harness's
+  // cwd in tests — wrong filesystem). The production caller in
+  // TextbookLayout.astro always passes `repoRoot`, so this only fires
+  // for test fixtures that exercise V5 without setting it up.
+  if (extras.repoRoot === undefined) {
+    const v5Hit = index.contractValidations.find(
+      (entry) =>
+        entry.validation?.evidence.some((ev) => ev.ref !== null) ?? false
+    );
+    if (v5Hit !== undefined) {
+      throw new Error(
+        `runPedagogyAudit: contractValidations contain non-null evidence refs (first hit: ${v5Hit.path}) but no repoRoot was passed in AuditExtras. Refs are repo-root-relative and cannot be existence-checked deterministically without it. Pass extras.repoRoot explicitly.`
+      );
+    }
+  }
   const repoRoot = extras.repoRoot ?? process.cwd();
   const today = todayIsoDate();
   for (const entry of index.contractValidations) {
