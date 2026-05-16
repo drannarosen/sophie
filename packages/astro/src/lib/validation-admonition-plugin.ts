@@ -1,4 +1,31 @@
-import type { Validation, ValidationEvidence } from "@sophie/core/schema";
+import {
+  type Validation,
+  type ValidationEvidence,
+  ValidationSchema,
+} from "@sophie/core/schema";
+
+/**
+ * Parse a raw frontmatter `validation:` block via `ValidationSchema.safeParse`,
+ * returning the typed shape on success or `undefined` on failure. The MyST
+ * plugin entry point calls this on every contract page so the admonition
+ * renderer always sees a fully validated + date-coerced `Validation` (or
+ * the missing-block fallback). Without this gate, raw frontmatter — with
+ * `Date` objects for unquoted dates, or with typo'd `status` values — leaks
+ * straight into `buildValidationAdmonitionNode` and produces ugly toString
+ * output / silently broken CSS classes.
+ *
+ * Findings are NOT surfaced from this code path; that's the extractor's
+ * job (V0 in `validation-extractor.ts`). When parse fails here, the
+ * renderer emits the unvalidated-fallback admonition — matching the V1
+ * "missing block" UI so authors get a visible signal something is wrong.
+ */
+export function parseValidationFrontmatter(
+  raw: unknown
+): Validation | undefined {
+  if (raw === undefined || raw === null) return undefined;
+  const parsed = ValidationSchema.safeParse(raw);
+  return parsed.success ? parsed.data : undefined;
+}
 
 /**
  * Validation tracker — per-contract admonition renderer (ADR 0056).

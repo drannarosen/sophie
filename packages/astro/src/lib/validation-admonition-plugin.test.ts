@@ -3,6 +3,7 @@ import {
   buildValidationAdmonitionNode,
   extractLastRevisedDate,
   isContractFile,
+  parseValidationFrontmatter,
   renderValidationAdmonition,
 } from "./validation-admonition-plugin";
 
@@ -353,5 +354,52 @@ describe("isContractFile", () => {
     // contracts. A future docs/decisions/draft/foo.md should not pick
     // up an admonition automatically.
     expect(isContractFile("docs/website/decisions/draft/foo.md")).toBe(false);
+  });
+});
+
+describe("parseValidationFrontmatter (C1 fix — MyST plugin schema gate)", () => {
+  it("returns the parsed Validation for a well-formed block", () => {
+    const parsed = parseValidationFrontmatter({
+      status: "validated",
+      last_validated_date: "2026-05-14",
+      evidence: [{ kind: "test", ref: "x.test.ts", date: "2026-05-12" }],
+    });
+    expect(parsed).toMatchObject({
+      status: "validated",
+      last_validated_date: "2026-05-14",
+    });
+  });
+
+  it("coerces a Date object on last_validated_date to ISO string", () => {
+    // gray-matter parses unquoted YYYY-MM-DD frontmatter values into
+    // Date objects. The schema preprocess normalizes; this helper
+    // surfaces that benefit at the MyST plugin layer.
+    const parsed = parseValidationFrontmatter({
+      status: "validated",
+      last_validated_date: new Date("2026-05-14"),
+      evidence: [],
+    });
+    expect(parsed?.last_validated_date).toBe("2026-05-14");
+  });
+
+  it("returns undefined for undefined / null input (missing block)", () => {
+    expect(parseValidationFrontmatter(undefined)).toBeUndefined();
+    expect(parseValidationFrontmatter(null)).toBeUndefined();
+  });
+
+  it("returns undefined on parse failure (unknown status)", () => {
+    expect(
+      parseValidationFrontmatter({
+        status: "validatd", // typo
+        last_validated_date: "2026-05-14",
+        evidence: [],
+      })
+    ).toBeUndefined();
+  });
+
+  it("returns undefined on parse failure (non-object input)", () => {
+    expect(parseValidationFrontmatter("hello")).toBeUndefined();
+    expect(parseValidationFrontmatter(["a", "b"])).toBeUndefined();
+    expect(parseValidationFrontmatter(42)).toBeUndefined();
   });
 });

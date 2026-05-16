@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { resolve as resolvePath } from "node:path";
+import { relative as relativePath, resolve as resolvePath } from "node:path";
 import type { AuditFinding, PedagogyIndex } from "@sophie/core/schema";
 import { slugify } from "@sophie/core/schema";
 
@@ -650,13 +650,34 @@ export function runPedagogyAudit(
     for (const ev of v.evidence) {
       // V5 — null refs are deferred-evidence sentinels (intentional,
       // schema-permitted); only non-null refs are existence-checked.
-      if (ev.ref !== null && !existsSync(resolvePath(repoRoot, ev.ref))) {
-        errors.push({
-          severity: "ERROR",
-          code: "V5",
-          message: `V5: ${entry.path}: evidence ref does not exist on disk: ${ev.ref}`,
-          location: { chapter: entry.path },
-        });
+      //
+      // Path-escape guard: `path.resolve(repoRoot, ref)` discards
+      // `repoRoot` when `ref` is absolute, and follows `..` segments
+      // unbounded. Without this guard, `ref: "/etc/hosts"` or
+      // `ref: "../../../etc/hosts"` would pass V5 silently against any
+      // host with that file present — a correctness bug, even if not a
+      // security risk under Sophie's trust model (refs are author-
+      // controlled by maintainers, not untrusted contributors).
+      if (ev.ref !== null) {
+        const resolved = resolvePath(repoRoot, ev.ref);
+        const rel = relativePath(repoRoot, resolved);
+        const escapes =
+          rel.startsWith("..") || rel === "" || resolvePath(rel) === resolved;
+        if (escapes) {
+          errors.push({
+            severity: "ERROR",
+            code: "V5",
+            message: `V5: ${entry.path}: evidence ref must be repo-root-relative (got an absolute or escaping path): ${ev.ref}`,
+            location: { chapter: entry.path },
+          });
+        } else if (!existsSync(resolved)) {
+          errors.push({
+            severity: "ERROR",
+            code: "V5",
+            message: `V5: ${entry.path}: evidence ref does not exist on disk: ${ev.ref}`,
+            location: { chapter: entry.path },
+          });
+        }
       }
 
       // V6 — null dates are permitted (deferred evidence); only non-null

@@ -26,6 +26,7 @@ import {
   buildValidationAdmonitionNode,
   extractLastRevisedDate,
   isContractFile,
+  parseValidationFrontmatter,
 } from "../../../packages/astro/dist/index.js";
 
 const validationAdmonitionTransform = {
@@ -36,7 +37,13 @@ const validationAdmonitionTransform = {
     if (!isContractFile(filePath)) return;
 
     const frontmatter = vfile?.data?.frontmatter ?? {};
-    const validation = frontmatter.validation;
+    // Run the raw frontmatter through ValidationSchema.safeParse so
+    // Date objects (from gray-matter's auto-parse of unquoted ISO dates),
+    // unknown status values, and other malformed shapes never reach the
+    // renderer. On parse failure, fall back to the unvalidated UI so
+    // authors see a clear "something is off" signal — V0 surfaces the
+    // exact parse error via the extractor's audit pipeline.
+    const validation = parseValidationFrontmatter(frontmatter.validation);
 
     // Re-read the source from disk to extract the Revisions-section
     // date. MyST does not preserve the original markdown on the vfile

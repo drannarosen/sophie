@@ -1471,6 +1471,57 @@ describe("validation audit invariants — V5 (evidence ref must resolve)", () =>
     expect(report.errors.some((e) => e.code === "V5")).toBe(false);
   });
 
+  it("fires V5 when the evidence ref is an absolute path (escape guard)", () => {
+    // path.resolve(repoRoot, "/etc/hosts") returns "/etc/hosts" — the
+    // absolute path overrides repoRoot. Without the escape guard, V5
+    // would existence-check against the host system instead of the repo.
+    const entry: ContractValidationEntry = {
+      path: "docs/website/decisions/0042-fake.md",
+      validation: {
+        status: "validated",
+        last_validated_date: "2026-05-14",
+        evidence: [{ kind: "test", ref: "/etc/hosts", date: "2026-05-14" }],
+      },
+      lastRevisedDate: null,
+    };
+    const index: PedagogyIndex = {
+      ...emptyIndex(),
+      contractValidations: [entry],
+    };
+    const report = runPedagogyAudit(index, { repoRoot: tmpRoot });
+    const v5 = report.errors.find((e) => e.code === "V5");
+    expect(v5).toBeDefined();
+    expect(v5?.message).toContain("repo-root-relative");
+  });
+
+  it("fires V5 when the evidence ref escapes via ../", () => {
+    // ../../../etc/passwd resolves outside tmpRoot. The relative path
+    // would start with "..", triggering the escape guard.
+    const entry: ContractValidationEntry = {
+      path: "docs/website/decisions/0042-fake.md",
+      validation: {
+        status: "validated",
+        last_validated_date: "2026-05-14",
+        evidence: [
+          {
+            kind: "test",
+            ref: "../../../etc/passwd",
+            date: "2026-05-14",
+          },
+        ],
+      },
+      lastRevisedDate: null,
+    };
+    const index: PedagogyIndex = {
+      ...emptyIndex(),
+      contractValidations: [entry],
+    };
+    const report = runPedagogyAudit(index, { repoRoot: tmpRoot });
+    const v5 = report.errors.find((e) => e.code === "V5");
+    expect(v5).toBeDefined();
+    expect(v5?.message).toContain("repo-root-relative");
+  });
+
   afterAll(async () => {
     // tmp dirs from os.tmpdir() are reaped by the OS; no explicit cleanup
     // needed. Variable kept for symmetry with beforeAll's binding.
