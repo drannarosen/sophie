@@ -12,6 +12,7 @@
     },
     "./css": "./dist/theme.css",
     "./fonts": "./dist/fonts.css",
+    "./math": "./dist/math.css",
     "./tailwind": "./dist/tailwind.css"
   },
   "files": [

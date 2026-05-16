@@ -109,3 +109,16 @@ export const layout = {
 export const focus = {
   width: "2px",
 } as const;
+
+// Asymmetric heading margins per visual-polish-target.md (MyST-restrained-
+// academic). Tight bottom-margins couple a heading to its following
+// paragraph ("the heading owns the next paragraph"); generous top-margins
+// signal section breaks. Values are em-relative so they scale with the
+// heading's own font-size. Per-component opt-in via the new
+// `--sophie-heading-{h1,h2,h3}-margin-{top,bottom}` tokens lands in step G
+// when component chrome rebuilds consume them; PR-3 emits only the slots.
+export const headings = {
+  h1: { marginTop: "0", marginBottom: "0.45em" },
+  h2: { marginTop: "1.75em", marginBottom: "0.4em" },
+  h3: { marginTop: "1.25em", marginBottom: "0.3em" },
+} as const;
