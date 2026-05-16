@@ -58,6 +58,7 @@ project:
         - file: how-to/integrate-cosmic-playground.md
         - file: how-to/cite-with-csl-json.md
         - file: how-to/add-a-custom-component.md
+        - file: how-to/run-visual-regression-locally.md
         - file: how-to/deploy-to-github-pages.md
     - title: Reference
       children:
@@ -84,6 +85,7 @@ project:
         - file: reference/sophie-publish-schedule-cli.md
         - file: reference/course-schedule.md
         - file: reference/validation-tracker.md
+        - file: reference/visual-regression.md
     - title: Explanation
       children:
         - file: explanation/architecture.md
