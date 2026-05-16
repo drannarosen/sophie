@@ -1,24 +1,64 @@
+/* Callout — Tier-2 (card-light) chrome per visual-polish-target.md.
+ *
+ * Anatomy (MyST-derived, bound to Sophie tokens):
+ *   .callout    — white card body, 1px gray-200 border, 3px accent left
+ *                 rule (--sophie-card-rule-light), 5px radius
+ *                 (--sophie-radius-sm). NO drop shadow — Tier-2 reads
+ *                 flat against the gray-50 page (vs Tier-1 which adds
+ *                 --sophie-shadow-card).
+ *   .titleBar   — pale tinted strip across the top using the variant's
+ *                 dedicated --sophie-callout-{variant}-title-bg token
+ *                 (color-mixed from the accent into surface-1). Houses
+ *                 the Lucide icon + the title text. Title-case label,
+ *                 no uppercase tracking.
+ *   .body       — pure white pane below the title bar; carries prose.
+ *
+ * Per-variant accent rebindings match the audit's § 3f brand-vs-status
+ * split. Each variant rule names the accent CSS var on the left rule;
+ * the matching titleBar rule consumes the per-variant tint token + sets
+ * the title text color.
+ */
+
 .callout {
   display: grid;
-  gap: var(--sophie-space-2);
-  padding: var(--sophie-space-4) var(--sophie-space-5);
   margin-block: var(--sophie-space-5);
   background: var(--sophie-surface-1);
-  border: 1px solid var(--sophie-border-subtle);
-  border-left: 3px solid var(--sophie-accent);
-  border-radius: var(--sophie-radius-md);
+  border: 1px solid var(--sophie-border);
+  border-left: var(--sophie-card-rule-light) solid var(--sophie-accent);
+  border-radius: var(--sophie-radius-sm);
   color: var(--sophie-text);
   font-family: var(--sophie-font-sans);
   line-height: var(--sophie-leading-prose);
+  overflow: hidden;
+}
+
+.titleBar {
+  display: flex;
+  align-items: center;
+  gap: var(--sophie-space-2);
+  padding: var(--sophie-space-2) var(--sophie-space-4);
+  border-bottom: 1px solid var(--sophie-border);
+  /* Default color (overridden per-variant below). */
+  color: var(--sophie-brand-teal-text);
+  font-weight: var(--sophie-weight-semibold);
+  font-size: var(--sophie-text-sm);
+  /* No uppercase tracking — title-case via the rendered text itself. */
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.icon {
+  flex-shrink: 0;
+  /* Icon color inherits the titleBar's `color` via currentColor on
+   * Lucide's stroke. */
 }
 
 .title {
   margin: 0;
-  font-size: var(--sophie-text-md);
-  font-weight: var(--sophie-weight-semibold);
-  color: var(--sophie-brand-teal-text);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+}
+
+.body {
+  padding: var(--sophie-space-3) var(--sophie-space-4);
 }
 
 .body > :first-child {
@@ -29,110 +69,92 @@
   margin-block-end: 0;
 }
 
+/* Per-variant left rule + title-bar tint + title color. All three
+ * derive from the variant token slots emitted by generate-css.ts
+ * (PR-4). Brand-vs-status semantic split per visual-polish-target.md. */
+
 .info {
-  border-left-color: var(--sophie-brand-teal);
+  border-left-color: var(--sophie-status-info);
 }
 
-.info .title {
-  color: var(--sophie-brand-teal-text);
+.info .titleBar {
+  background: var(--sophie-callout-info-title-bg);
+  color: var(--sophie-status-info);
+}
+
+.tip {
+  border-left-color: var(--sophie-status-success);
+}
+
+.tip .titleBar {
+  background: var(--sophie-callout-tip-title-bg);
+  color: var(--sophie-status-success);
 }
 
 .warning {
   border-left-color: var(--sophie-status-warning);
 }
 
-.warning .title {
+.warning .titleBar {
+  background: var(--sophie-callout-warning-title-bg);
   color: var(--sophie-status-warning);
-}
-
-.tip {
-  border-left-color: var(--sophie-brand-rose);
-}
-
-.tip .title {
-  color: var(--sophie-brand-rose-text);
 }
 
 .caution {
-  border-left-color: var(--sophie-brand-violet);
-}
-
-.caution .title {
-  color: var(--sophie-brand-violet-text);
-}
-
-/*
- * In-chapter section-marker variants (Trio 2 expansion, 2026-05-10).
- * Ported from astr101-sp26/assets/theme/callouts.scss (.callout-roadmap,
- * .callout-summary, .callout-key-insight). Color tokens map to existing
- * Sophie brand/status palette since the classroom uses an external
- * bootstrap-icons font for icon glyphs that we don't yet bring into
- * Sophie. Differentiation is via border + title color + the variant's
- * default title text.
- */
-
-.roadmap {
-  border-left-color: var(--sophie-text-muted);
-  background: color-mix(
-    in oklab,
-    var(--sophie-text-muted) 4%,
-    var(--sophie-surface-1)
-  );
-}
-
-.roadmap .title {
-  color: var(--sophie-text-muted);
-}
-
-.summary {
-  border-left-color: var(--sophie-status-success);
-  background: color-mix(
-    in oklab,
-    var(--sophie-status-success) 4%,
-    var(--sophie-surface-1)
-  );
-}
-
-.summary .title {
-  color: var(--sophie-status-success);
-}
-
-.key-insight {
   border-left-color: var(--sophie-status-warning);
-  background: color-mix(
-    in oklab,
-    var(--sophie-status-warning) 6%,
-    var(--sophie-surface-1)
-  );
 }
 
-.key-insight .title {
+.caution .titleBar {
+  background: var(--sophie-callout-caution-title-bg);
   color: var(--sophie-status-warning);
 }
 
-/* Ported from astr101-sp26 `.callout-misconception`; uses status-danger
-   because rose, violet, and warning are owned by sibling variants.
-   Mirrors `.key-insight` shape since misconception is its semantic pair. */
+.roadmap {
+  border-left-color: var(--sophie-status-neutral);
+}
+
+.roadmap .titleBar {
+  background: var(--sophie-callout-roadmap-title-bg);
+  color: var(--sophie-status-neutral);
+}
+
+.summary {
+  border-left-color: var(--sophie-status-neutral);
+}
+
+.summary .titleBar {
+  background: var(--sophie-callout-summary-title-bg);
+  color: var(--sophie-status-neutral);
+}
+
+.key-insight {
+  border-left-color: var(--sophie-brand-teal);
+}
+
+.key-insight .titleBar {
+  background: var(--sophie-callout-key-insight-title-bg);
+  color: var(--sophie-brand-teal-text);
+}
+
 .misconception {
-  border-left-color: var(--sophie-status-danger);
-  background: color-mix(
-    in oklab,
-    var(--sophie-status-danger) 6%,
-    var(--sophie-surface-1)
-  );
+  border-left-color: var(--sophie-brand-rose);
 }
 
-.misconception .title {
-  color: var(--sophie-status-danger);
+.misconception .titleBar {
+  background: var(--sophie-callout-misconception-title-bg);
+  color: var(--sophie-brand-rose-text);
 }
 
+/* Reviewed-row (InteractiveCallout only) — sits below the body, gets
+ * its own subtle top divider + slightly-elevated surface-2 background
+ * so it reads as "follow-up control" rather than "second header". */
 .reviewedRow {
   display: flex;
   gap: var(--sophie-space-2);
   align-items: center;
-  padding-block-start: var(--sophie-space-2);
-  border-block-start: 1px solid var(--sophie-border-subtle);
-  margin-block-start: var(--sophie-space-3);
+  padding: var(--sophie-space-2) var(--sophie-space-4);
+  border-top: 1px solid var(--sophie-border-subtle);
+  background: var(--sophie-surface-2);
   font-size: var(--sophie-text-sm);
   color: var(--sophie-text-muted);
 }

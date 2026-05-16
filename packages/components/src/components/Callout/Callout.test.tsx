@@ -64,6 +64,24 @@ describe("<Callout> (static)", () => {
     ).toBeInTheDocument();
   });
 
+  it("renders a visible title bar with the variant-default label when no title prop is provided (PR-5)", () => {
+    // Per visual-polish-target.md the title bar is core anatomy and
+    // renders on every callout. Variant-default fills the visible
+    // title bar (and the aria-label) when no `title` prop is set.
+    const { container } = render(<Callout variant='warning'>Body</Callout>);
+    const titleEl = container.querySelector(`.${styles.title}`);
+    expect(titleEl?.textContent).toBe("Warning");
+  });
+
+  it("renders a Lucide icon inside the title bar (PR-5)", () => {
+    // Each variant maps to a Lucide icon (per ADR 0039). The icon
+    // sits left of the title text inside <header class=titleBar>.
+    const { container } = render(<Callout variant='tip'>Body</Callout>);
+    const iconEl = container.querySelector(`.${styles.titleBar} svg`);
+    expect(iconEl).not.toBeNull();
+    expect(iconEl?.getAttribute("aria-hidden")).toBe("true");
+  });
+
   it("has zero axe violations", async () => {
     const { container } = render(
       <Callout variant='warning' title='Watch out'>
@@ -138,12 +156,13 @@ describe("<InteractiveCallout>", () => {
     expect(results.violations).toEqual([]);
   });
 
-  it("omits the visible title element when no title prop is provided (matches static Callout)", () => {
-    // Static Callout falls back to the variant default for aria-label
-    // only; no visible <p class=title> renders. InteractiveCallout
-    // should behave identically when title is omitted — the
-    // variant-default name lives in aria-label, not in the DOM as
-    // visible text.
+  it("renders a visible title bar with the variant-default label when no title prop is provided", () => {
+    // Per the visual-polish-target (Workstream 3 PR-5 rebuild): the
+    // title bar is core anatomy and renders for every callout. When no
+    // explicit `title` prop is passed, the variant-default name
+    // ("Note" for info, etc.) fills both the visible title bar AND the
+    // aria-label. Replaces the prior behavior where default-titled
+    // callouts had no visible title element.
     const { container } = render(
       withProfile(
         <InteractiveCallout
@@ -158,8 +177,9 @@ describe("<InteractiveCallout>", () => {
     );
     // aria-label still carries the variant-default name for screen readers.
     expect(screen.getByRole("note", { name: "Note" })).toBeInTheDocument();
-    // But no visible "Note" heading is rendered as a <p>.
-    expect(container.querySelector(`p.${styles.title}`)).toBeNull();
+    // The variant-default ("Note") is also visible in the title bar.
+    const titleEl = container.querySelector(`.${styles.title}`);
+    expect(titleEl?.textContent).toBe("Note");
   });
 
   it("renders the required `id` prop on the root <aside> (hash-anchor parity with static Callout)", () => {
@@ -179,7 +199,7 @@ describe("<InteractiveCallout>", () => {
     expect(root?.id).toBe("my-anchor");
   });
 
-  it("renders the visible title element when a title prop IS provided", () => {
+  it("renders the explicit title in the visible title bar when title prop IS provided", () => {
     const { container } = render(
       withProfile(
         <InteractiveCallout
@@ -193,7 +213,7 @@ describe("<InteractiveCallout>", () => {
         </InteractiveCallout>
       )
     );
-    const titleEl = container.querySelector(`p.${styles.title}`);
+    const titleEl = container.querySelector(`.${styles.title}`);
     expect(titleEl).not.toBeNull();
     expect(titleEl?.textContent).toBe("Important context");
   });
