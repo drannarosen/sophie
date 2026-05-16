@@ -4,21 +4,30 @@ import {
   waitForPageReady,
 } from "@storybook/test-runner";
 import { checkA11y, injectAxe } from "axe-playwright";
+import "./test-runner-setup.ts";
 
 /**
  * Storybook test-runner config.
  *
- * Phase-1-first-land scope: per-story axe-core check only.
+ * Two responsibilities composed in one `postVisit` hook:
  *
- * Visual regression (jest-image-snapshot) was scoped in ADR 0028 but
- * deferred during the first CI run because macOS-generated baselines
- * produce 1–5% sub-pixel differences against Ubuntu CI rendering. SSIM
- * comparison closed most of that gap but left UI-element-dense
- * components (LearningObjectives, Reflection) just above threshold.
- * Re-enabling visual regression requires Linux-native baseline
- * generation (Docker-based, matching CI's chromium exactly). See
- * ADR 0028 § Visual regression deferral.
+ * 1. **a11y gate** (axe-core via `axe-playwright`) — mandatory per
+ *    ADR 0004. `color-contrast` is excluded to match the project-wide
+ *    a11y posture (every smoke spec disables it; design-system review
+ *    handles contrast separately).
+ * 2. **visual-regression gate** (`jest-image-snapshot` via
+ *    `test-runner-setup.ts`) — per ADR 0057 (supersedes ADR 0028).
+ *    One PNG per story under `__snapshots__/chromium/`. CI's Linux
+ *    runner is the canonical baseline platform; local Mac runs will
+ *    diff against committed PNGs and fail — regenerate via the
+ *    `vr-update` workflow rather than locally.
+ *
+ * Both run on every story; failures in either block CI. The
+ * screenshot is captured AFTER `waitForPageReady` so fonts/images are
+ * settled, which also makes axe deterministic.
  */
+const customSnapshotsDir = `${process.cwd()}/__snapshots__/chromium`;
+
 const config: TestRunnerConfig = {
   async preVisit(page) {
     await injectAxe(page);
@@ -44,10 +53,22 @@ const config: TestRunnerConfig = {
       });
     }
 
-    // Wait for fonts/images/etc. — even though we don't snapshot, this
-    // makes the axe check more deterministic by ensuring the story has
-    // finished rendering before we re-assert.
+    // Wait for fonts/images/etc. — makes both the axe check above and
+    // the screenshot below deterministic.
     await waitForPageReady(page);
+
+    // Visual-regression snapshot. Naming: `<story-id>.png` where the
+    // story id is Storybook's CSF-derived slug (e.g. `aside--note`).
+    // First run on a fresh checkout creates the baseline; subsequent
+    // runs diff against it and write expected/actual/diff PNGs to
+    // `test-results/` on failure.
+    if (storyContext.parameters?.vr?.disable !== true) {
+      const image = await page.screenshot({ fullPage: true });
+      expect(image).toMatchImageSnapshot({
+        customSnapshotsDir,
+        customSnapshotIdentifier: context.id,
+      });
+    }
   },
 };
 
