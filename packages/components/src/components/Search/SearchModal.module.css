@@ -1,7 +1,7 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: var(--sophie-color-overlay);
+  background: var(--sophie-overlay-bg);
 }
 
 .content {
@@ -12,9 +12,9 @@
   width: min(640px, 92vw);
   max-height: 70vh;
   overflow-y: auto;
-  background: var(--sophie-color-surface-1);
+  background: var(--sophie-surface-1);
   border-radius: var(--sophie-radius-lg);
-  box-shadow: var(--sophie-shadow-modal);
+  box-shadow: var(--sophie-shadow-popover);
   padding: var(--sophie-space-3);
 }
 
@@ -22,10 +22,10 @@
   width: 100%;
   font-size: 1.1em;
   padding: var(--sophie-space-2);
-  border: 1px solid var(--sophie-color-border);
+  border: 1px solid var(--sophie-border);
   border-radius: var(--sophie-radius-md);
-  background: var(--sophie-color-surface-0);
-  color: var(--sophie-color-text);
+  background: var(--sophie-bg);
+  color: var(--sophie-text);
 }
 
 .srOnly {

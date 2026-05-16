@@ -1,7 +1,24 @@
 export const anchors = {
   ink: "#0f1115",
-  paper: "#fbfaf7",
+  paper: "#f9fafb",
 } as const;
+
+// Hardcoded light-mode surface stack. Overrides the symmetric color-mix
+// derivation in generate-css.ts so cards render as pure white on the
+// gray-50 page (per visual-polish-target.md). Dark-mode keeps the
+// symmetric derivation off the cool paper anchor — a dedicated
+// dark-mode surface stack ships in a later sweep (audit § Section 5).
+export const lightSurfaces = {
+  surface1: "#ffffff",
+  surface2: "#f3f4f6",
+  surface3: "#e5e7eb",
+  border: "#e5e7eb",
+  borderSubtle: "#f3f4f6",
+} as const;
+
+// Text color used on saturated brand/status accent backgrounds.
+// White reads AA-clear on all current accent fills.
+export const textOnAccent = "#ffffff" as const;
 
 export const brand = {
   teal: { fill: "#2f8c8d", text: "#1f6f70" },
@@ -13,11 +30,12 @@ export const status = {
   success: "#34d399",
   warning: "#fbbf24",
   danger: "#fb7185",
-  // `info` reuses the brand teal hue so the semantic palette stays
-  // coordinated. `neutral` keys off the body text color via color-mix
-  // in generate-css.ts (mode-aware) — see ADR 0056 + the validation
-  // status palette.
-  info: "#2f8c8d",
+  // True blue. Was `#2f8c8d` (a brand-teal duplicate). The visual-polish
+  // target's brand-vs-status split requires info to be visually distinct
+  // from brand-teal: brand reserved for durable pedagogical concepts,
+  // status for ephemeral signals. `neutral` continues to key off body
+  // text via color-mix in generate-css.ts.
+  info: "#2563eb",
   neutral: "#6b7280",
 } as const;
 
@@ -65,13 +83,14 @@ export const spacings = {
 } as const;
 
 export const radii = {
-  sm: "0.375rem",
+  sm: "0.3125rem",
   md: "0.625rem",
   lg: "0.875rem",
+  full: "9999px",
 } as const;
 
 export const layout = {
-  proseMaxWidth: "68ch",
+  proseMaxWidth: "66ch",
   contentPaddingInline: "clamp(1rem, 4vw, 1.5rem)",
 } as const;
 
