@@ -1178,7 +1178,7 @@ describe("auditExitCode", () => {
 // ---------------------------------------------------------------------
 
 describe("validation audit invariants — V1 (ADR missing validation block)", () => {
-  it("emits a WARNING for an ADR without a validation block", () => {
+  it("emits an ERROR for an ADR without a validation block (promoted in PR 6)", () => {
     const entry: ContractValidationEntry = {
       path: "docs/website/decisions/0001-platform-not-monorepo.md",
       validation: undefined,
@@ -1189,8 +1189,8 @@ describe("validation audit invariants — V1 (ADR missing validation block)", ()
       contractValidations: [entry],
     };
     const report = runPedagogyAudit(index);
-    expect(report.warnings.some((w) => w.code === "V1")).toBe(true);
-    expect(report.warnings.find((w) => w.code === "V1")?.message).toContain(
+    expect(report.errors.some((e) => e.code === "V1")).toBe(true);
+    expect(report.errors.find((e) => e.code === "V1")?.message).toContain(
       "docs/website/decisions/0001-platform-not-monorepo.md"
     );
   });
@@ -1210,7 +1210,7 @@ describe("validation audit invariants — V1 (ADR missing validation block)", ()
       contractValidations: [entry],
     };
     const report = runPedagogyAudit(index);
-    expect(report.warnings.some((w) => w.code === "V1")).toBe(false);
+    expect(report.errors.some((e) => e.code === "V1")).toBe(false);
   });
 
   it("does not fire V1 for the decisions template.md file", () => {
@@ -1224,12 +1224,12 @@ describe("validation audit invariants — V1 (ADR missing validation block)", ()
       contractValidations: [entry],
     };
     const report = runPedagogyAudit(index);
-    expect(report.warnings.some((w) => w.code === "V1")).toBe(false);
+    expect(report.errors.some((e) => e.code === "V1")).toBe(false);
   });
 });
 
 describe("validation audit invariants — V2 (reference doc missing block)", () => {
-  it("emits a WARNING for a reference doc without a validation block", () => {
+  it("emits an ERROR for a reference doc without a validation block (promoted in PR 6)", () => {
     const entry: ContractValidationEntry = {
       path: "docs/website/reference/content-schema.md",
       validation: undefined,
@@ -1240,8 +1240,8 @@ describe("validation audit invariants — V2 (reference doc missing block)", () 
       contractValidations: [entry],
     };
     const report = runPedagogyAudit(index);
-    expect(report.warnings.some((w) => w.code === "V2")).toBe(true);
-    expect(report.warnings.find((w) => w.code === "V2")?.message).toContain(
+    expect(report.errors.some((e) => e.code === "V2")).toBe(true);
+    expect(report.errors.find((e) => e.code === "V2")?.message).toContain(
       "docs/website/reference/content-schema.md"
     );
   });
@@ -1261,7 +1261,7 @@ describe("validation audit invariants — V2 (reference doc missing block)", () 
       contractValidations: [entry],
     };
     const report = runPedagogyAudit(index);
-    expect(report.warnings.some((w) => w.code === "V2")).toBe(false);
+    expect(report.errors.some((e) => e.code === "V2")).toBe(false);
   });
 });
 

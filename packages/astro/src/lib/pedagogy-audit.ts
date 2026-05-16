@@ -41,10 +41,11 @@ import { slugify } from "@sophie/core/schema";
  *   V0  ERROR    Validation block failed schema parse (extractor-layer;
  *                surfaced into the audit report via index.extractorFindings;
  *                ADR 0056 PR 3).
- *   V1  WARNING  ADR missing a validation block (ADR 0056 PR 3; PR 6
- *                promotes to ERROR after initial-pass coverage).
- *   V2  WARNING  Reference doc missing a validation block (ADR 0056 PR 3;
- *                PR 6 promotes to ERROR).
+ *   V1  ERROR    ADR missing a validation block (ADR 0056 PR 6 promotion;
+ *                was WARNING in PRs 3–5 during the bulk-migration grace
+ *                window).
+ *   V2  ERROR    Reference doc missing a validation block (ADR 0056 PR 6
+ *                promotion; was WARNING in PRs 3–5).
  *   V3  ERROR    status is "validated" or "re-validation-needed" but
  *                last_validated_date is null. Defense-in-depth: schema's
  *                refine() catches this at parse time, V0 surfaces parse
@@ -557,8 +558,10 @@ export function runPedagogyAudit(
   // `index.contractValidations` is one ADR or reference doc. Severity
   // assignments per ADR 0056 §"Invariant catalog":
   //
-  //   V1  WARNING  ADR missing a validation block. PR 6 promotes to ERROR.
-  //   V2  WARNING  Reference doc missing a validation block. PR 6 promotes.
+  //   V1  ERROR    ADR missing a validation block (promoted from WARNING in
+  //                PR 6 after the bulk migration in PR #44 guaranteed coverage).
+  //   V2  ERROR    Reference doc missing a validation block (promoted from
+  //                WARNING in PR 6).
   //   V3  ERROR    status=validated/re-validation-needed but
   //                last_validated_date is null. Defense-in-depth: the
   //                schema's V3 refinement (PR #43) catches this at parse
@@ -599,8 +602,8 @@ export function runPedagogyAudit(
       entry.path.startsWith("docs/website/decisions/") &&
       !entry.path.endsWith("/template.md")
     ) {
-      warnings.push({
-        severity: "WARNING",
+      errors.push({
+        severity: "ERROR",
         code: "V1",
         message: `V1: ADR is missing a validation block: ${entry.path}`,
         location: { chapter: entry.path },
@@ -608,8 +611,8 @@ export function runPedagogyAudit(
     }
 
     if (!entry.validation && entry.path.startsWith("docs/website/reference/")) {
-      warnings.push({
-        severity: "WARNING",
+      errors.push({
+        severity: "ERROR",
         code: "V2",
         message: `V2: reference doc is missing a validation block: ${entry.path}`,
         location: { chapter: entry.path },
