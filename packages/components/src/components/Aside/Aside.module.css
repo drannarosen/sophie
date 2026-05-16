@@ -1,13 +1,15 @@
-/* `<Aside>` — Tufte-style margin note (PR 6).
+/* `<Aside>` — Tier-3 typographic dissolution.
  *
- * This file handles VISUAL styling only — kind variant colors,
- * summary + body layout, typography. Chrome ORCHESTRATION
- * (when to dock into the right column, when to fall back to
- * inline, mode-driven display switching, absolute positioning)
- * lives in packages/astro/src/styles/textbook-layout.css under
- * the `[data-sophie-aside]` selector. Two-layer separation: this
- * file owns "how an aside looks", chrome owns "where an aside
- * goes".
+ * Workstream 3 PR-6 visual contract (per
+ * docs/website/vision/design/visual-polish-target.md §"Aside dissolution"):
+ * no card chrome (no border, no shadow, no radius, no background). A 3px
+ * gray left rule, 18px indent, italic body in Plex Sans. Variant signal
+ * lives in the small-caps kind label or bolded definition term — never
+ * in accent color. All variants share the same uniform muted left rule.
+ *
+ * Two-layer separation preserved: this file owns "how an aside looks";
+ * @sophie/astro/styles/textbook-layout.css owns "where an aside goes"
+ * (margin docking via [data-sophie-aside]).
  *
  * Per ADR 0005, no hex/rgb literals — all colors flow through
  * @sophie/theme tokens.
@@ -16,30 +18,26 @@
 .aside {
   display: block;
   margin-block: var(--sophie-space-4);
-  padding: var(--sophie-space-3) var(--sophie-space-4);
-  background: var(--sophie-surface-1);
-  border: 1px solid var(--sophie-border-subtle);
-  border-left: 3px solid var(--sophie-accent);
-  border-radius: var(--sophie-radius-md);
+  padding-inline-start: 18px;
+  border-inline-start: 3px solid var(--sophie-border-subtle);
+  background: none;
   color: var(--sophie-text);
   font-family: var(--sophie-font-sans);
-  font-size: var(--sophie-text-sm);
-  line-height: var(--sophie-leading-prose);
 }
 
 .summary {
   display: flex;
   align-items: baseline;
-  gap: var(--sophie-space-2);
+  flex-wrap: wrap;
+  gap: 0.4em;
   cursor: pointer;
   /* WCAG 2.1 Success Criterion 2.5.5 (Target Size, Level AAA):
-     min 44px touch target on mobile. Padding-block gives the
-     summary line enough vertical room when summary is the only
-     visible part of the aside (inline collapsed state). */
+     min 44px touch target on mobile when summary is the only visible
+     part of the aside (inline-collapsed state). */
   min-block-size: 44px;
-  padding-block: var(--sophie-space-2);
   list-style: none;
-  font-weight: var(--sophie-weight-medium);
+  font-size: var(--sophie-text-body);
+  line-height: var(--sophie-leading-prose);
 }
 
 .summary::-webkit-details-marker {
@@ -51,20 +49,30 @@
 }
 
 .marker {
-  font-size: var(--sophie-text-xs);
-  font-weight: var(--sophie-weight-semibold);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font-variant: all-small-caps;
+  letter-spacing: 0.04em;
+  font-weight: var(--sophie-weight-medium);
   color: var(--sophie-text-muted);
+}
+
+/* Em-dash separator follows the small-caps kind label, producing
+   visual lead-ins like "KEY INSIGHT — Why this matters". */
+.marker::after {
+  content: " \2014";
 }
 
 .title {
   font-weight: var(--sophie-weight-semibold);
+  font-style: normal;
   color: var(--sophie-text);
 }
 
 .body {
   margin-block-start: var(--sophie-space-2);
+  font-size: var(--sophie-text-body);
+  font-style: italic;
+  line-height: var(--sophie-leading-prose);
+  color: var(--sophie-text);
 }
 
 .body > :first-child {
@@ -73,48 +81,4 @@
 
 .body > :last-child {
   margin-block-end: 0;
-}
-
-/* Kind variants — change the accent (left-border + marker color). */
-
-.note {
-  border-left-color: var(--sophie-brand-teal);
-}
-
-.note .marker {
-  color: var(--sophie-brand-teal-text);
-}
-
-.definition {
-  border-left-color: var(--sophie-accent);
-}
-
-.definition .marker {
-  color: var(--sophie-brand-teal-text);
-}
-
-.digression {
-  border-left-color: var(--sophie-text-muted);
-}
-
-.digression .marker {
-  color: var(--sophie-text-muted);
-}
-
-.key-insight {
-  border-left-color: var(--sophie-warning, var(--sophie-accent));
-}
-
-.key-insight .marker {
-  color: var(--sophie-brand-teal-text);
-}
-
-/* Ported from astr101-sp26 `.callout-misconception`; uses status-danger
-   because rose, violet, and warning are owned by sibling variants. */
-.misconception {
-  border-left-color: var(--sophie-status-danger);
-}
-
-.misconception .marker {
-  color: var(--sophie-status-danger);
 }

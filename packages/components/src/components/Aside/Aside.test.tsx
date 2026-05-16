@@ -27,10 +27,18 @@ describe("<Aside>", () => {
     expect(screen.getByText("Note")).toBeInTheDocument();
   });
 
-  it.each(KINDS)("renders kind '%s' with its labeled marker", (kind) => {
-    const labelByKind: Record<AsideKind, string> = {
+  const KINDS_WITH_MARKER = [
+    "note",
+    "digression",
+    "key-insight",
+    "misconception",
+  ] as const;
+
+  it.each(
+    KINDS_WITH_MARKER
+  )("renders kind '%s' with its small-caps marker label", (kind) => {
+    const labelByKind: Record<(typeof KINDS_WITH_MARKER)[number], string> = {
       note: "Note",
-      definition: "Definition",
       digression: "Digression",
       "key-insight": "Key insight",
       misconception: "Misconception",
@@ -42,25 +50,59 @@ describe("<Aside>", () => {
     ).not.toBeNull();
   });
 
-  it("renders title alongside the kind marker when provided", () => {
+  it("renders the bolded title (not a 'Definition' marker) for kind='definition'", () => {
+    // Tier-3 dissolution: the defined term IS the variant label.
+    // No "DEFINITION" small-caps marker is rendered.
     render(
       <Aside kind='definition' title='Parallax'>
         body content
       </Aside>
     );
-    expect(screen.getByText("Definition")).toBeInTheDocument();
     expect(screen.getByText("Parallax")).toBeInTheDocument();
+    expect(screen.queryByText("Definition")).not.toBeInTheDocument();
   });
 
-  it("omits the title element when no title prop is provided", () => {
+  it("renders both small-caps marker and bolded title for non-definition kinds with a title", () => {
+    render(
+      <Aside kind='note' title='Why this matters'>
+        body content
+      </Aside>
+    );
+    expect(screen.getByText("Note")).toBeInTheDocument();
+    expect(screen.getByText("Why this matters")).toBeInTheDocument();
+  });
+
+  it("omits the title element when no title prop is provided (non-definition)", () => {
     const { container } = render(<Aside kind='note'>body</Aside>);
-    // The kind marker is always present; the title span specifically
-    // should not appear.
     const summary = container.querySelector("summary");
     expect(summary).not.toBeNull();
     // Only one direct child span (the marker), no title span.
     const spans = summary?.querySelectorAll("span");
     expect(spans?.length).toBe(1);
+  });
+
+  it("does not apply per-variant accent CSS classes (dissolution drops accent color)", () => {
+    // Tier-3 dissolution uses a uniform muted left rule across all
+    // variants; variant signal lives in the marker text alone. The
+    // pre-rebuild CSS used `.note`, `.definition`, etc. classes to
+    // override `border-left-color` per kind. This regression guard
+    // ensures those classes are not re-introduced on the root.
+    for (const kind of KINDS) {
+      const { container, unmount } = render(
+        <Aside kind={kind} title='T'>
+          body
+        </Aside>
+      );
+      const details = container.querySelector("details");
+      expect(details).not.toBeNull();
+      const classes = details ? Array.from(details.classList) : [];
+      // No class name should match any of the kind slugs verbatim
+      // (the CSS-modules hashed name takes the form `_kind_<hash>`).
+      for (const k of KINDS) {
+        expect(classes).not.toContain(k);
+      }
+      unmount();
+    }
   });
 
   it("applies the stable `sophie-aside` class for chrome CSS targeting", () => {
