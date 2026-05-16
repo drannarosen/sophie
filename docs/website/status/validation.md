@@ -25,10 +25,10 @@ block (ADR 0056). Regenerated on every build; suppressed when
 |---|---|
 | Validated | 14 |
 | In progress | 8 |
-| Unvalidated | 57 |
+| Unvalidated | 58 |
 | Re-validation needed | 0 |
 | Missing block | 0 |
-| Total | 79 |
+| Total | 80 |
 
 ## Evidence kinds
 
@@ -135,3 +135,4 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/reference/tdr-template.md](/reference/tdr-template/) | unvalidated | — | — |  |
 | [docs/website/reference/teaching-moves.md](/reference/teaching-moves/) | unvalidated | — | — |  |
 | [docs/website/reference/validation-tracker.md](/reference/validation-tracker/) | validated | 2026-05-16 | audit, manual, test | Reference doc shipped in PR 6 Workstream A; specifies the schema + admonition contract + audit invariants + dashboard workflow. Graduated to validated alongside ADR 0056 itself after the curated-pass + V1/V2 promotion landed in the same PR. |
+| [docs/website/reference/visual-regression.md](/reference/visual-regression/) | unvalidated | — | — |  |
