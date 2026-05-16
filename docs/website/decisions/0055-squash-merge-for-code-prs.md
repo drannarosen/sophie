@@ -5,7 +5,7 @@ tags:
   - contributing
   - git
 validation:
-  status: validated
+  status: in-progress
   last_validated_date: "2026-05-16"
   evidence:
     - kind: manual
@@ -16,7 +16,7 @@ validation:
       ref: null
       date: null
       notes: "Multi-PR squash discipline is enforced by convention + GitHub repo settings; no automated audit."
-  notes: "Process contract; validated by observed behavior on every code PR (#43, #44, #49, #50, #51, #52). No automated enforcement, but no violations observed."
+  notes: "Status downgraded from validated → in-progress 2026-05-16 per PR #54 review I3 + comprehensive review architectural question 4. Convention is empirically holding on every code PR (#43, #44, #49, #50, #51, #52, #54, #59 — all squash-merged), but the only evidence is self-citation of the ADR plus a null deployment row. No automated audit currently enforces squash-discipline; promote back to validated once an audit invariant or a GitHub Actions check verifies it on every merge."
 ---
 
 # ADR 0055: Squash-merge for code PRs
