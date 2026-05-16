@@ -118,7 +118,6 @@ function modeInvariantBlock(): string {
 function typographyBlock(): string {
   return [
     `--sophie-font-sans: ${fontStacks.sans};`,
-    `--sophie-font-serif: ${fontStacks.serif};`,
     `--sophie-font-mono: ${fontStacks.mono};`,
     ...Object.entries(sizes).map(([k, v]) => `--sophie-text-${k}: ${v};`),
     `--sophie-leading-tight: ${leadings.tight};`,

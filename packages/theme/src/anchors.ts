@@ -39,17 +39,29 @@ export const status = {
   neutral: "#6b7280",
 } as const;
 
+// Self-hosted IBM Plex family (per visual-polish-target.md). The
+// `Variable` suffix on the first sans candidate matches the
+// @fontsource-variable package's actual family name; the static
+// `"IBM Plex Sans"` fallback covers any consumer that opts into the
+// non-variable @fontsource package. Plex Serif is intentionally absent
+// — the v1 visual target commits to a sans body. KaTeX math keeps its
+// bundled Computer Modern fonts (separate stack, no dependency on
+// --sophie-font-*).
 export const fontStacks = {
-  sans: '"Source Sans 3", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-  serif:
-    '"Source Serif 4", "Newsreader", ui-serif, Georgia, "Times New Roman", serif',
-  mono: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+  sans: '"IBM Plex Sans Variable", "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+  mono: '"IBM Plex Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
 } as const;
 
+// `base` stays at 16px for UI chrome (small labels, meta strips, button
+// text). `body` is a distinct prose-reading slot at 17px per the
+// visual-polish-target's MyST-restrained-academic spacing. Two slots,
+// two roles — opt-in usage per component lands in step G (component
+// rebuilds), not here.
 export const sizes = {
   xs: "0.75rem",
   sm: "0.875rem",
   base: "1rem",
+  body: "1.0625rem",
   md: "1.125rem",
   lg: "1.25rem",
   xl: "1.5rem",
