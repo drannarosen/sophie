@@ -122,3 +122,34 @@ export const headings = {
   h2: { marginTop: "1.75em", marginBottom: "0.4em" },
   h3: { marginTop: "1.25em", marginBottom: "0.3em" },
 } as const;
+
+// Tier 1 (card-strong) vs Tier 2 (card-light) left-rule width per the
+// three-tier model. 4px Tier 1 reads as "elevated, durable, named
+// concept" (paired with the drop shadow); 3px Tier 2 reads as "signal,
+// ephemeral" (no shadow). Per-component opt-in lands in step G; PR-4
+// emits the slots so the rebuilds can consume them by name.
+export const cardRules = {
+  strong: "4px",
+  light: "3px",
+} as const;
+
+// Per-callout-variant title-bar background tints. Each entry names the
+// accent CSS variable (the `--sophie-*` slot, without the `var(...)`
+// wrapper) and the percent-tint to mix into surface-1 for the title-bar
+// background. Tints are tuned per variant — `caution` rides lighter
+// than `warning` (same amber accent, half the tint) so the two read as
+// distinct emphasis levels of the same signal family. `summary` and
+// `roadmap` use neutral because they're structural chrome, not
+// pedagogically rare moments.
+export const calloutTitleBg = {
+  info: { accent: "status-info", tintPct: 8 },
+  tip: { accent: "status-success", tintPct: 8 },
+  warning: { accent: "status-warning", tintPct: 8 },
+  caution: { accent: "status-warning", tintPct: 4 },
+  danger: { accent: "status-danger", tintPct: 8 },
+  "key-insight": { accent: "brand-teal", tintPct: 8 },
+  misconception: { accent: "brand-rose", tintPct: 8 },
+  definition: { accent: "brand-violet", tintPct: 8 },
+  summary: { accent: "status-neutral", tintPct: 8 },
+  roadmap: { accent: "status-neutral", tintPct: 8 },
+} as const;
