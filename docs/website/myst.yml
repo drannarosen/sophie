@@ -83,6 +83,7 @@ project:
         - file: reference/sophie-refactor-cli.md
         - file: reference/sophie-publish-schedule-cli.md
         - file: reference/course-schedule.md
+        - file: reference/validation-tracker.md
     - title: Explanation
       children:
         - file: explanation/architecture.md
