@@ -1,14 +1,14 @@
 .row {
   display: inline-grid;
   grid-template-columns: auto 1fr;
-  gap: var(--space-ic-gap, 0.5rem);
+  gap: var(--sophie-space-2);
   align-items: baseline;
 }
 
 .checkbox {
   margin: 0;
-  inline-size: var(--size-ic-checkbox, 1rem);
-  block-size: var(--size-ic-checkbox, 1rem);
+  inline-size: 1rem;
+  block-size: 1rem;
   cursor: pointer;
 }
 
@@ -19,7 +19,7 @@
 
 .label {
   cursor: pointer;
-  line-height: 1.5;
+  line-height: var(--sophie-leading-prose);
 }
 
 .checkbox:disabled + .label {
@@ -27,7 +27,7 @@
 }
 
 .checkbox:checked + .label {
-  color: var(--color-ic-checked, var(--sophie-text-muted));
+  color: var(--sophie-text-muted);
 }
 
 .checkbox:focus-visible {
