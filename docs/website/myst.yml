@@ -162,6 +162,7 @@ project:
         - file: decisions/0054-course-schedule-calendar.md
         - file: decisions/0055-squash-merge-for-code-prs.md
         - file: decisions/0056-validation-tracker.md
+        - file: decisions/0057-visual-regression-baseline.md
     - title: Status
       children:
         - file: status/roadmap.md

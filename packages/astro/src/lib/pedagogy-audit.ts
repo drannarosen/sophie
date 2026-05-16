@@ -1,4 +1,6 @@
-import type { PedagogyIndex } from "@sophie/core/schema";
+import { existsSync } from "node:fs";
+import { resolve as resolvePath } from "node:path";
+import type { AuditFinding, PedagogyIndex } from "@sophie/core/schema";
 import { slugify } from "@sophie/core/schema";
 
 /**
@@ -36,6 +38,28 @@ import { slugify } from "@sophie/core/schema";
  *                fires this code because the build fails earlier; ADR 0051).
  *   CS2 INFO     Chapter has `status: draft` — surfaces in audit so author
  *                knows what's excluded from the student build (ADR 0051).
+ *   V0  ERROR    Validation block failed schema parse (extractor-layer;
+ *                surfaced into the audit report via index.extractorFindings;
+ *                ADR 0056 PR 3).
+ *   V1  WARNING  ADR missing a validation block (ADR 0056 PR 3; PR 6
+ *                promotes to ERROR after initial-pass coverage).
+ *   V2  WARNING  Reference doc missing a validation block (ADR 0056 PR 3;
+ *                PR 6 promotes to ERROR).
+ *   V3  ERROR    status is "validated" or "re-validation-needed" but
+ *                last_validated_date is null. Defense-in-depth: schema's
+ *                refine() catches this at parse time, V0 surfaces parse
+ *                failures; V3 here covers bypassed-extractor inputs.
+ *   V4  ERROR    status is "unvalidated" but evidence or
+ *                last_validated_date is non-empty (ADR 0056 PR 3).
+ *   V5  ERROR    Evidence ref does not exist on disk. Refs are repo-root-
+ *                relative; resolved via AuditExtras.repoRoot (default:
+ *                process.cwd()).
+ *   V6  ERROR    Evidence date is not a valid ISO YYYY-MM-DD (ADR 0056 PR 3).
+ *   V7  WARNING  last_validated_date is in the future, date-only ISO
+ *                compare (ADR 0056 PR 3).
+ *   V8  INFO     Validation block has an unknown key (extractor-layer;
+ *                Zod 4 .strip() silently drops them, V8 surfaces typos
+ *                like `last_validation_date`; ADR 0056 PR 3).
  *
  * Not implemented in v1 (extractor-level defense-in-depth is sufficient
  * or the upstream component doesn't exist yet — see TODO markers):
@@ -49,17 +73,12 @@ import { slugify } from "@sophie/core/schema";
  * The audit is pure: it never mutates the input index.
  */
 
-export type Severity = "ERROR" | "WARNING" | "INFO";
-
-export interface AuditFinding {
-  severity: Severity;
-  /** Short invariant code (e.g. "D4", "F1", "C1"). Stable across versions. */
-  code: string;
-  /** Human-readable explanation. May reference identifiers from the index. */
-  message: string;
-  /** Optional origin pointer for the finding. */
-  location?: { chapter?: string; anchor?: string };
-}
+// `Severity` and `AuditFinding` moved to `@sophie/core/schema` (PR 3
+// of ADR 0056) so the `PedagogyIndexSchema.extractorFindings` slot can
+// reference the canonical shape. The runtime audit module keeps a
+// local alias for `Severity` for diff-minimal call-site compatibility.
+export type Severity = AuditFinding["severity"];
+export type { AuditFinding };
 
 export interface AuditReport {
   errors: AuditFinding[];
@@ -80,6 +99,18 @@ export interface AuditExtras {
    * one CS2 INFO finding per slug. Empty / undefined => no CS2 output.
    */
   draftChapterSlugs?: ReadonlyArray<string>;
+  /**
+   * Repo-root path against which evidence refs in `contractValidations`
+   * are resolved (V5 — ADR 0056). Defaults to `process.cwd()` when
+   * omitted, which is correct for the production caller
+   * (`TextbookLayout.astro` runs at the consumer-app cwd, which IS the
+   * repo root). Tests that exercise V5 (i.e. construct fixtures with
+   * non-null `evidence[].ref`) MUST pass an explicit `repoRoot` — the
+   * V5 loop throws if it would otherwise fall through to `process.cwd()`
+   * with non-null refs, since that would silently existence-check
+   * against the wrong filesystem.
+   */
+  repoRoot?: string;
 }
 
 /**
@@ -502,7 +533,170 @@ export function runPedagogyAudit(
     });
   }
 
+  // ---------------------------------------------------------------------
+  // V0 + V8 — extractor findings (ADR 0056 PR 3). The contract-
+  // validations extractor (validation-extractor.ts) reads each ADR /
+  // reference doc's raw frontmatter; it emits V0 (schema parse failure,
+  // ERROR) when ValidationSchema.safeParse fails, and V8 (unknown key,
+  // INFO) when a key falls outside KNOWN_VALIDATION_KEYS. Those findings
+  // ride on PedagogyIndex.extractorFindings and merge into the audit
+  // report here so all validation-tracker findings surface in one place.
+  // ---------------------------------------------------------------------
+  for (const finding of index.extractorFindings) {
+    if (finding.severity === "ERROR") {
+      errors.push(finding);
+    } else if (finding.severity === "WARNING") {
+      warnings.push(finding);
+    } else {
+      info.push(finding);
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // V1–V7 — validation audit invariants (ADR 0056 PR 3). Each entry on
+  // `index.contractValidations` is one ADR or reference doc. Severity
+  // assignments per ADR 0056 §"Invariant catalog":
+  //
+  //   V1  WARNING  ADR missing a validation block. PR 6 promotes to ERROR.
+  //   V2  WARNING  Reference doc missing a validation block. PR 6 promotes.
+  //   V3  ERROR    status=validated/re-validation-needed but
+  //                last_validated_date is null. Defense-in-depth: the
+  //                schema's V3 refinement (PR #43) catches this at parse
+  //                time, and extractor V0 surfaces parse failures. V3
+  //                here guards inputs that bypass both (direct
+  //                ContractValidationEntry construction in tests, future
+  //                synthesizers).
+  //   V4  ERROR    status=unvalidated but evidence or last_validated_date
+  //                is non-empty.
+  //   V5  ERROR    evidence ref does not resolve on disk. Refs are
+  //                repo-root-relative; resolved via extras.repoRoot.
+  //   V6  ERROR    evidence date is not a valid ISO YYYY-MM-DD.
+  //   V7  WARNING  last_validated_date is in the future (date-only ISO
+  //                compare — TZ-stable).
+  // ---------------------------------------------------------------------
+  // V5 safety: if any contract has non-null evidence refs and the caller
+  // didn't pass `repoRoot` explicitly, fail loudly rather than silently
+  // existence-check against `process.cwd()` (which would be the harness's
+  // cwd in tests — wrong filesystem). The production caller in
+  // TextbookLayout.astro always passes `repoRoot`, so this only fires
+  // for test fixtures that exercise V5 without setting it up.
+  if (extras.repoRoot === undefined) {
+    const v5Hit = index.contractValidations.find(
+      (entry) =>
+        entry.validation?.evidence.some((ev) => ev.ref !== null) ?? false
+    );
+    if (v5Hit !== undefined) {
+      throw new Error(
+        `runPedagogyAudit: contractValidations contain non-null evidence refs (first hit: ${v5Hit.path}) but no repoRoot was passed in AuditExtras. Refs are repo-root-relative and cannot be existence-checked deterministically without it. Pass extras.repoRoot explicitly.`
+      );
+    }
+  }
+  const repoRoot = extras.repoRoot ?? process.cwd();
+  const today = todayIsoDate();
+  for (const entry of index.contractValidations) {
+    if (
+      !entry.validation &&
+      entry.path.startsWith("docs/website/decisions/") &&
+      !entry.path.endsWith("/template.md")
+    ) {
+      warnings.push({
+        severity: "WARNING",
+        code: "V1",
+        message: `V1: ADR is missing a validation block: ${entry.path}`,
+        location: { chapter: entry.path },
+      });
+    }
+
+    if (!entry.validation && entry.path.startsWith("docs/website/reference/")) {
+      warnings.push({
+        severity: "WARNING",
+        code: "V2",
+        message: `V2: reference doc is missing a validation block: ${entry.path}`,
+        location: { chapter: entry.path },
+      });
+    }
+
+    if (!entry.validation) continue;
+    const v = entry.validation;
+
+    // V3 — defense-in-depth. See header comment above.
+    if (
+      (v.status === "validated" || v.status === "re-validation-needed") &&
+      v.last_validated_date === null
+    ) {
+      errors.push({
+        severity: "ERROR",
+        code: "V3",
+        message: `V3: ${entry.path}: status is "${v.status}" but last_validated_date is null.`,
+        location: { chapter: entry.path },
+      });
+    }
+
+    if (
+      v.status === "unvalidated" &&
+      (v.evidence.length > 0 || v.last_validated_date !== null)
+    ) {
+      errors.push({
+        severity: "ERROR",
+        code: "V4",
+        message: `V4: ${entry.path}: status is "unvalidated" but evidence or last_validated_date is non-empty.`,
+        location: { chapter: entry.path },
+      });
+    }
+
+    for (const ev of v.evidence) {
+      // V5 — null refs are deferred-evidence sentinels (intentional,
+      // schema-permitted); only non-null refs are existence-checked.
+      if (ev.ref !== null && !existsSync(resolvePath(repoRoot, ev.ref))) {
+        errors.push({
+          severity: "ERROR",
+          code: "V5",
+          message: `V5: ${entry.path}: evidence ref does not exist on disk: ${ev.ref}`,
+          location: { chapter: entry.path },
+        });
+      }
+
+      // V6 — null dates are permitted (deferred evidence); only non-null
+      // dates are format-checked.
+      if (ev.date !== null && !isValidIsoDate(ev.date)) {
+        errors.push({
+          severity: "ERROR",
+          code: "V6",
+          message: `V6: ${entry.path}: evidence date is not a valid ISO YYYY-MM-DD: ${ev.date}`,
+          location: { chapter: entry.path },
+        });
+      }
+    }
+
+    // V7 — date-only string compare against today's ISO date is
+    // timezone-stable (no Date.parse interpretation involved).
+    if (v.last_validated_date !== null && v.last_validated_date > today) {
+      warnings.push({
+        severity: "WARNING",
+        code: "V7",
+        message: `V7: ${entry.path}: last_validated_date is in the future: ${v.last_validated_date}`,
+        location: { chapter: entry.path },
+      });
+    }
+  }
+
   return { errors, warnings, info };
+}
+
+/** ISO YYYY-MM-DD validator. Rejects malformed strings like "May 14, 2026" or "2026-13-99". */
+function isValidIsoDate(s: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+  const t = Date.parse(`${s}T00:00:00Z`);
+  if (Number.isNaN(t)) return false;
+  // Round-trip check rejects things like 2026-02-31 that Date.parse
+  // tolerates by wrapping to March.
+  const round = new Date(t).toISOString().slice(0, 10);
+  return round === s;
+}
+
+/** Today's date in ISO YYYY-MM-DD (UTC). */
+function todayIsoDate(): string {
+  return new Date().toISOString().slice(0, 10);
 }
 
 /** Pluralize "error/errors", "warning/warnings", "info" finding count for the summary line. */

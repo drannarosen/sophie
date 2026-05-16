@@ -15,9 +15,18 @@ validation:
 # ADR 0028: Storybook setup — location, builder, and visual regression
 
 :::{admonition} ADR metadata
-- **Status**: accepted
+- **Status**: superseded
 - **Deciders**: anna
+- **Superseded by**: [0057](./0057-visual-regression-baseline.md)
 :::
+
+> **Superseded by [ADR 0057](./0057-visual-regression-baseline.md)
+> (2026-05-15).** This ADR's Storybook setup decisions (co-located
+> stories, Vite builder, Storybook 10, real IDB with per-story
+> namespacing) remain authoritative — only the § Visual regression
+> deferral section is superseded. ADR 0057 resolves the deferral by
+> accepting CI's Linux runner as the canonical baseline environment
+> and adding screenshot comparison to the existing test-runner.
 
 ## Context
 
