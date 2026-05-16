@@ -1,6 +1,23 @@
 import { z } from "zod";
 
 /**
+ * Date strings in `validation:` frontmatter must be ISO `YYYY-MM-DD`,
+ * but gray-matter (via js-yaml) auto-parses bare unquoted dates into
+ * JavaScript Date objects — so the field arrives at the schema as either
+ * `string` or `Date` depending on whether the author quoted it. PR 6
+ * caught this when 22 contracts' first regen produced V0 errors.
+ *
+ * `IsoDateString` accepts both shapes and normalizes to the ISO date
+ * string. Apply to any nullable date field. Non-string non-Date values
+ * pass through unchanged so the downstream `z.string().nullable()` (or
+ * sibling rule) emits the right rejection.
+ */
+const IsoDateString = z.preprocess(
+  (raw) => (raw instanceof Date ? raw.toISOString().slice(0, 10) : raw),
+  z.string().nullable()
+);
+
+/**
  * Validation block schema (ADR 0056). Powers the `validation:` frontmatter
  * key on every ADR and reference doc; the contract-validations extractor
  * (`@sophie/astro/lib/validation-extractor.ts`) parses each block through
@@ -46,7 +63,7 @@ export type ValidationStatus = z.infer<typeof ValidationStatusSchema>;
 export const ValidationEvidenceSchema = z.object({
   kind: ValidationKindSchema,
   ref: z.string().nullable(),
-  date: z.string().nullable(),
+  date: IsoDateString,
   notes: z.string().optional(),
 });
 export type ValidationEvidence = z.infer<typeof ValidationEvidenceSchema>;
@@ -54,7 +71,7 @@ export type ValidationEvidence = z.infer<typeof ValidationEvidenceSchema>;
 export const ValidationSchema = z
   .object({
     status: ValidationStatusSchema,
-    last_validated_date: z.string().nullable(),
+    last_validated_date: IsoDateString,
     evidence: z.array(ValidationEvidenceSchema).default([]),
     notes: z.string().optional(),
   })

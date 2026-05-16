@@ -6,7 +6,7 @@ import type {
 } from "@sophie/core/schema";
 import { ValidationSchema } from "@sophie/core/schema";
 import matter from "gray-matter";
-import { extractLastRevisedDate } from "./validation-admonition-plugin.ts";
+import { extractLastRevisedDate } from "./last-revised-date.ts";
 
 /**
  * Contract-validations extractor (ADR 0056 PR 3) — the build-time

@@ -99,25 +99,13 @@ export function renderValidationAdmonition({
  *
  * Both patterns are matched; the most recent ISO date across all
  * matches wins. Returns `null` when no Revisions signal is present.
+ *
+ * Re-exported here for backward-compat with consumers that import
+ * `extractLastRevisedDate` from this module; the canonical home is
+ * `./last-revised-date.ts` so the validation-extractor doesn't have to
+ * pull in this whole admonition-plugin module.
  */
-export function extractLastRevisedDate(source: string): string | null {
-  const dates: string[] = [];
-  // Shape 1: **§N — YYYY-MM-DD —**
-  for (const match of source.matchAll(
-    /\*\*§\d+\s*[—-]\s*(\d{4}-\d{2}-\d{2})\s*[—-]/g
-  )) {
-    if (match[1] !== undefined) dates.push(match[1]);
-  }
-  // Shape 2: ## Revisions (YYYY-MM-DD …)
-  for (const match of source.matchAll(
-    /^#{1,6}\s+Revisions[^\n]*\((\d{4}-\d{2}-\d{2})/gm
-  )) {
-    if (match[1] !== undefined) dates.push(match[1]);
-  }
-  if (dates.length === 0) return null;
-  dates.sort();
-  return dates[dates.length - 1] ?? null;
-}
+export { extractLastRevisedDate } from "./last-revised-date.ts";
 
 function computeRenderedStatus(
   validation: Validation,
