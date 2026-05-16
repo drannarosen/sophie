@@ -7,6 +7,7 @@ import {
   type PagefindCustomRecord,
 } from "./pagefind-converters/index.ts";
 import { indexAccumulator } from "./pedagogy-index-extractor.ts";
+import { writeValidationIndexMarkdown } from "./validation-index-writer.ts";
 
 /**
  * Emit the consumer's `PedagogyIndex` snapshot to
@@ -139,4 +140,14 @@ export async function buildPagefindIndex(distPath: string): Promise<void> {
   // `sophie diff` to consume across git refs. Independent of Pagefind;
   // emitted after Pagefind close so a Pagefind failure surfaces first.
   await writePedagogyIndexJson(distPath, pedagogyIndex);
+
+  // ADR 0056 PR 5: emit the validation-status index Markdown page.
+  // Consumes the same in-memory `pedagogyIndex` snapshot the JSON
+  // write just used — one extraction pass, two outputs. The writer
+  // is silent when `SOPHIE_DOCS_INCLUDE_VALIDATION=0` or when
+  // `docs/website/status/` is absent (e.g. the smoke fixture's
+  // build root). `process.cwd()` matches the `repoRoot` used by
+  // TextbookLayout's `extractContractValidations` call so the two
+  // sites resolve identically.
+  await writeValidationIndexMarkdown(pedagogyIndex, process.cwd());
 }
