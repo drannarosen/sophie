@@ -532,12 +532,18 @@ gh pr create --title "feat(docs): bulk default-unvalidated frontmatter migration
 
 **Status:** ⏳ Pending — next in queue.
 
-**Critical context** (not in original plan; folded in 2026-05-15 after PR 1 + PR 2 review + parallel-track merges):
+**Critical context** (not in original plan; folded in 2026-05-15 after PR 1 + PR 2 review + parallel-track merges; hardened 2026-05-15 evening after final pre-execution review):
 
-- **PR #48 modified `pedagogy-audit.ts`** to add MG (misconception graph) audit invariants. **Re-read `pedagogy-audit.ts` in its current post-#48 state** before adding V1–V7. The validation invariants must integrate cleanly with the MG family; don't clobber the existing `runMisconceptionGraphInvariants` (or equivalent) function.
+- **PR #48 modified `pedagogy-audit.ts`** to add MG (misconception graph) audit invariants. **Re-read `pedagogy-audit.ts` in its current post-#48 state** before adding V1–V7. The validation invariants must integrate cleanly with the MG family; don't clobber the existing `runMisconceptionGraphInvariants` (or equivalent) function. Sibling-function pattern: `runValidationInvariants(index, repoRoot) → AuditFinding[]`.
+- **Ship V0 — frontmatter parse failure (ERROR) — at the extractor layer.** When `ValidationSchema.safeParse(data.validation)` returns `success: false`, surface a `V0` finding with the Zod issue list. **Structurally necessary, not optional**: without V0, the original §3.4 extractor design silently turns invalid frontmatter into `validation: undefined`, which fires V1/V2 (missing block) instead of the real cause and renders V3/V5/V6 dead code at the audit layer. The extractor returns `ContractValidationEntry & { extractorFindings: AuditFinding[] }`; the audit merges those findings into its own report.
 - **Ship V4** at the audit layer: "if status is `unvalidated`, then evidence is empty AND last_validated_date is null." ERROR severity. Catches the stale-half-filled-block failure mode (PR 1 reviewer's deferred item).
-- **Ship V8 (or V4b)**: warn on unknown keys inside the `validation` frontmatter block. Schema strips unknown keys silently (Zod default `.strip()`); audit-layer check catches typos like `last_validation_date` (missing "ed") or `evidence_summary`. INFO severity. PR 1 reviewer suggested this.
-- **Optional header comment** in `packages/core/src/schema/validation.ts` documenting the V3-here / V4–V7-audit split for future readers (PR 1 reviewer suggested).
+- **Ship V5 with correct path resolution.** Evidence refs in frontmatter are repo-root-relative (e.g., `packages/components/src/Predict.test.tsx`). The audit must resolve them via `path.resolve(repoRoot, ev.ref)` before `existsSync`. Thread `repoRoot` through `runPedagogyAudit` (cleanest) or pre-resolve at extraction time and store both raw + resolved paths on the entry.
+- **Ship V8 (unknown-key warning) at the extractor.** Schema strips unknown keys silently (Zod 4 `z.object()` defaults to `.strip()`); audit-layer alone cannot see them. Pattern: at the extractor, after `gray-matter` returns the raw block as `Record<string, unknown>`, parse with the schema AND diff `Object.keys(rawBlock)` against `new Set(["status", "last_validated_date", "evidence", "notes"])`. Emit one INFO finding per unknown key. Catches typos like `last_validation_date` (missing "ed") or `evidence_summary`. **Severity:** INFO — must not break CI (verify `auditExitCode` ignores INFO before merging).
+- **Keep V3 at audit layer as defense-in-depth.** Once V0 lands, schema-rejected frontmatter never reaches the audit, so V3 becomes redundant for normal extraction. Keep it with a comment: `// Defense-in-depth: schema rejects this case at parse time (see V0); guard against future audit inputs that bypass the extractor (e.g., direct test fixtures).`
+- **Use `.readonly()` on `contractValidations`** in `PedagogyIndexSchema` for consistency with `definitions`, `equations`, `keyInsights`, etc.: `z.array(ContractValidationEntrySchema).readonly().default([])`.
+- **Mirror existing extractor I/O pattern.** Use `node:fs/promises` async walks as in `pedagogy-index-extractor.ts`, not `globSync` from `node:fs`. Keeps the codebase coherent.
+- **Eliminate all `as unknown as Validation` casts in tests.** Two clean alternatives: (a) construct test fixtures as `ContractValidationEntry` with `validation: unknown` so the audit/extractor accepts raw input gracefully; (b) make the extractor the unit-under-test for V0/V3/V8 fixtures (since that's where raw frontmatter actually enters), and reserve audit tests for invariants that probe already-typed `Validation` shapes (V4/V5/V6/V7).
+- **Optional header comment** in `packages/core/src/schema/validation.ts` documenting the V3-here / V0–V8-audit split for future readers (PR 1 reviewer suggested).
 
 **Branch:** `feat/validation-audit-invariants`
 **Files:**
@@ -567,11 +573,22 @@ export const ContractValidationEntrySchema = z.object({
 // Extend PedagogyIndexSchema:
 export const PedagogyIndexSchema = z.object({
   // ... existing fields (modules, chapters, definitions, equations, etc.)
-  contractValidations: z.array(ContractValidationEntrySchema).default([]),
+  contractValidations: z.array(ContractValidationEntrySchema).readonly().default([]),
+  // V0/V8 findings collected by the extractor (parse failures + unknown
+  // keys) — surfaced into the audit report alongside V1–V7. Sibling
+  // shape to `contractValidations` so the audit can merge in one pass.
+  extractorFindings: z.array(/* AuditFinding schema or InlineRefKind-style enum-tagged shape */).readonly().default([]),
 });
 ```
 
-### Task 3.2: Write failing audit tests for V1–V2
+### Task 3.2: Write failing audit + extractor tests, split by layer
+
+**Layer split (per 2026-05-15 hardening review):**
+
+- **Extractor-side tests** (`validation-extractor.test.ts`) cover invariants that consume *raw frontmatter*: **V0** (schema parse failure) and **V8** (unknown key inside the `validation` block). These need raw `Record<string, unknown>` input and would otherwise force `as unknown as Validation` casts at the audit layer.
+- **Audit-side tests** (`pedagogy-audit.test.ts`) cover invariants that consume *already-typed* `Validation`: **V1, V2** (missing-block on typed `validation: undefined`), and **V3–V7** (per-field invariants on a typed `Validation`). No casts needed.
+
+This split is the SoTA shape (extractor owns parse-error responsibility; audit owns invariant responsibility) and incidentally eliminates every `as unknown as Validation` cast.
 
 **File:** `packages/astro/src/lib/pedagogy-audit.test.ts`
 
@@ -585,7 +602,7 @@ describe("validation audit invariants", () => {
         { path: "docs/website/decisions/0001-platform-not-monorepo.md", validation: undefined, lastRevisedDate: null },
       ],
     });
-    const report = runPedagogyAudit(index);
+    const report = runPedagogyAudit(index, { repoRoot: REPO_ROOT });
     expect(report.warnings).toContainEqual(
       expect.objectContaining({ code: "V1" }),
     );
@@ -597,44 +614,102 @@ describe("validation audit invariants", () => {
         { path: "docs/website/reference/content-schema.md", validation: undefined, lastRevisedDate: null },
       ],
     });
-    const report = runPedagogyAudit(index);
+    const report = runPedagogyAudit(index, { repoRoot: REPO_ROOT });
     expect(report.warnings).toContainEqual(
       expect.objectContaining({ code: "V2" }),
     );
   });
 
-  it("V3: ERROR when status=validated but last_validated_date is null", () => {
-    // Note: schema-layer refinement (PR 1) catches this; audit-layer
-    // is defense-in-depth for hand-edited frontmatter that bypassed
-    // schema validation.
-    const index = makeIndex({
-      contractValidations: [{
-        path: "docs/website/decisions/0042-...md",
-        validation: { status: "validated", last_validated_date: null, evidence: [] } as unknown as Validation,
-        lastRevisedDate: null,
-      }],
-    });
-    const report = runPedagogyAudit(index);
+  it("V3: ERROR when status=validated but last_validated_date is null (defense-in-depth)", () => {
+    // Defense-in-depth: schema-layer refinement (PR 1) catches this
+    // before V3 ever sees it, and extractor V0 surfaces parse failures.
+    // V3 fires only on inputs that bypassed both — kept as a safety net.
+    //
+    // Test fixture constructs a ContractValidationEntry directly (not
+    // via the schema), bypassing V0 — i.e., simulating a future bug
+    // where the extractor pipeline lets a malformed entry through.
+    const entry: ContractValidationEntry = {
+      path: "docs/website/decisions/0042-fake.md",
+      validation: { status: "validated", last_validated_date: null, evidence: [], notes: undefined },
+      lastRevisedDate: null,
+    };
+    const index = makeIndex({ contractValidations: [entry] });
+    const report = runPedagogyAudit(index, { repoRoot: REPO_ROOT });
     expect(report.errors).toContainEqual(
       expect.objectContaining({ code: "V3" }),
     );
   });
 
-  // ... V4, V5, V6, V7 follow the same pattern
+  // ... V4, V5, V6, V7 follow the same pattern, all on typed Validation
+  //     fixtures. V5 fixtures construct refs relative to a tmp REPO_ROOT
+  //     so existsSync(path.resolve(REPO_ROOT, ev.ref)) can hit/miss
+  //     deterministically.
 });
 ```
 
-**Run:** `pnpm turbo run test --filter=@sophie/astro -- pedagogy-audit.test.ts`
-**Expected:** FAIL — V1–V7 audit checks not yet implemented.
+**File:** `packages/astro/src/lib/validation-extractor.test.ts` (new — covers V0 + V8)
 
-### Task 3.3: Implement audit invariants V1–V7
+```typescript
+describe("extractContractValidations", () => {
+  it("V0: surfaces ERROR finding when the validation block fails schema parse", async () => {
+    const tmpRoot = await makeTmpRepoWithContract({
+      path: "docs/website/decisions/0099-broken.md",
+      frontmatter: { validation: { status: "validated", last_validated_date: null, evidence: [] } },
+      // schema rejects: status=validated but last_validated_date=null
+    });
+    const { entries, findings } = await extractContractValidations(tmpRoot);
+    expect(entries[0].validation).toBeUndefined();
+    expect(findings).toContainEqual(
+      expect.objectContaining({ code: "V0", severity: "ERROR" }),
+    );
+  });
+
+  it("V8: surfaces INFO finding for unknown keys inside the validation block", async () => {
+    const tmpRoot = await makeTmpRepoWithContract({
+      path: "docs/website/decisions/0099-typo.md",
+      frontmatter: {
+        validation: {
+          status: "unvalidated",
+          last_validated_date: null,
+          evidence: [],
+          last_validation_date: "2026-05-14",  // typo: missing "ed"
+        },
+      },
+    });
+    const { findings } = await extractContractValidations(tmpRoot);
+    expect(findings).toContainEqual(
+      expect.objectContaining({ code: "V8", severity: "INFO", message: expect.stringContaining("last_validation_date") }),
+    );
+  });
+});
+```
+
+**Run:**
+
+```bash
+pnpm turbo run test --filter=@sophie/astro -- pedagogy-audit.test.ts validation-extractor.test.ts
+```
+
+**Expected:** FAIL — V0–V8 audit + extractor checks not yet implemented.
+
+### Task 3.3: Implement audit invariants V1–V7 (with V0 + V8 merging in from extractor)
 
 **File:** `packages/astro/src/lib/pedagogy-audit.ts`
 
-Add to the existing `runPedagogyAudit` function:
+Two changes to `runPedagogyAudit`:
+
+1. **Threading `repoRoot`** so V5 can resolve evidence refs (which are repo-root-relative). Extend the existing call signature with an options bag: `runPedagogyAudit(index, opts: { repoRoot: string })`. All existing callers pass `process.cwd()` or the consumer-app dir; verify call-site impact during execution.
+2. **Merging extractor findings** — the new `index.extractorFindings` (V0 + V8) flow straight into the merged report at the top of `runPedagogyAudit` before sibling `runValidationInvariants` runs.
 
 ```typescript
-function runValidationInvariants(index: PedagogyIndex): AuditFinding[] {
+import { existsSync } from "node:fs";
+import { resolve as resolvePath } from "node:path";
+
+interface RunOptions {
+  repoRoot: string;
+}
+
+function runValidationInvariants(index: PedagogyIndex, opts: RunOptions): AuditFinding[] {
   const findings: AuditFinding[] = [];
   for (const entry of index.contractValidations) {
     // V1: ADR missing validation block
@@ -644,7 +719,7 @@ function runValidationInvariants(index: PedagogyIndex): AuditFinding[] {
       !entry.path.endsWith("/template.md")
     ) {
       findings.push({
-        severity: "WARNING",
+        severity: "WARNING",  // PR 6 promotes to ERROR
         code: "V1",
         message: `ADR is missing a validation block: ${entry.path}`,
         location: { chapter: entry.path },
@@ -654,7 +729,7 @@ function runValidationInvariants(index: PedagogyIndex): AuditFinding[] {
     // V2: reference doc missing validation block
     if (!entry.validation && entry.path.startsWith("docs/website/reference/")) {
       findings.push({
-        severity: "WARNING",
+        severity: "WARNING",  // PR 6 promotes to ERROR
         code: "V2",
         message: `Reference doc is missing a validation block: ${entry.path}`,
         location: { chapter: entry.path },
@@ -664,7 +739,13 @@ function runValidationInvariants(index: PedagogyIndex): AuditFinding[] {
     if (!entry.validation) continue;
     const v = entry.validation;
 
-    // V3: validated/re-validation-needed must have a date
+    // V3: validated/re-validation-needed must have a date.
+    //
+    // Defense-in-depth: schema-layer refinement (PR 1) catches this at
+    // parse time, and extractor V0 surfaces parse failures explicitly.
+    // V3 fires only on inputs that bypassed both — kept as a safety net
+    // for direct ContractValidationEntry construction (tests, future
+    // synthesizers).
     if (
       (v.status === "validated" || v.status === "re-validation-needed") &&
       v.last_validated_date === null
@@ -690,9 +771,11 @@ function runValidationInvariants(index: PedagogyIndex): AuditFinding[] {
       });
     }
 
-    // V5: evidence refs must resolve (deferred null refs OK)
+    // V5: evidence refs must resolve. Refs are repo-root-relative;
+    // resolve against opts.repoRoot before existence-check. Deferred
+    // null refs are intentionally tolerated (PR 1 schema decision).
     for (const ev of v.evidence) {
-      if (ev.ref !== null && !existsSync(ev.ref)) {
+      if (ev.ref !== null && !existsSync(resolvePath(opts.repoRoot, ev.ref))) {
         findings.push({
           severity: "ERROR",
           code: "V5",
@@ -714,8 +797,9 @@ function runValidationInvariants(index: PedagogyIndex): AuditFinding[] {
       }
     }
 
-    // V7: last_validated_date must not be in the future
-    if (v.last_validated_date !== null && new Date(v.last_validated_date) > new Date()) {
+    // V7: last_validated_date must not be in the future. Date-only ISO
+    // string compares against today's date-only ISO — TZ-stable.
+    if (v.last_validated_date !== null && v.last_validated_date > todayIsoDate()) {
       findings.push({
         severity: "WARNING",
         code: "V7",
@@ -730,54 +814,129 @@ function runValidationInvariants(index: PedagogyIndex): AuditFinding[] {
 function isValidIsoDate(s: string): boolean {
   return /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(new Date(s).getTime());
 }
+
+function todayIsoDate(): string {
+  return new Date().toISOString().slice(0, 10);
+}
 ```
 
-Call `runValidationInvariants(index)` inside `runPedagogyAudit` and merge findings into the report.
+Inside `runPedagogyAudit`, near the existing invariant-runner calls:
+
+```typescript
+// V0 + V8 — surfaced by the extractor, flow straight into the report.
+report.findings.push(...index.extractorFindings);
+// V1–V7 — audit-layer invariants on typed contractValidations.
+report.findings.push(...runValidationInvariants(index, opts));
+```
 
 **Run:** `pnpm turbo run test --filter=@sophie/astro -- pedagogy-audit.test.ts`
 **Expected:** PASS — V1–V7 tests green.
 
-### Task 3.4: Add contract-validations extractor
+### Task 3.4: Add contract-validations extractor (with V0 + V8 surfacing)
+
+**Three responsibilities** (per the 2026-05-15 hardening review):
+
+1. Walk `decisions/*.md` + `reference/*.md` and build `ContractValidationEntry[]`.
+2. **V0 — surface schema-parse failures** as ERROR findings (don't silently swallow them into `validation: undefined`).
+3. **V8 — surface unknown keys** inside the `validation` block as INFO findings.
+
+Returns `{ entries: ContractValidationEntry[]; findings: AuditFinding[] }`. The `findings` array flows into `PedagogyIndex.extractorFindings`; the audit merges them into its report in §3.3.
 
 **File:** `packages/astro/src/lib/validation-extractor.ts` (new)
 
 ```typescript
-import { readFileSync } from "node:fs";
-import { globSync } from "node:fs";
+import { readdir, readFile } from "node:fs/promises";
+import { join, relative } from "node:path";
 import matter from "gray-matter";
 import { ValidationSchema } from "@sophie/core/schema";
-import type { ContractValidationEntry } from "@sophie/core/schema";
+import type {
+  AuditFinding,
+  ContractValidationEntry,
+} from "@sophie/core/schema";
 
-export function extractContractValidations(rootDir: string): ContractValidationEntry[] {
+const KNOWN_VALIDATION_KEYS = new Set([
+  "status",
+  "last_validated_date",
+  "evidence",
+  "notes",
+]);
+
+const CONTRACT_DIRS = [
+  "docs/website/decisions",
+  "docs/website/reference",
+] as const;
+
+export async function extractContractValidations(rootDir: string): Promise<{
+  entries: ContractValidationEntry[];
+  findings: AuditFinding[];
+}> {
   const entries: ContractValidationEntry[] = [];
-  const patterns = [
-    `${rootDir}/docs/website/decisions/*.md`,
-    `${rootDir}/docs/website/reference/*.md`,
-  ];
-  for (const pattern of patterns) {
-    for (const filepath of globSync(pattern)) {
-      if (filepath.endsWith("/template.md")) continue;
-      const source = readFileSync(filepath, "utf8");
+  const findings: AuditFinding[] = [];
+
+  for (const subdir of CONTRACT_DIRS) {
+    const absDir = join(rootDir, subdir);
+    const files = (await readdir(absDir)).filter((name) =>
+      name.endsWith(".md") && name !== "template.md",
+    );
+    for (const name of files) {
+      const filepath = join(absDir, name);
+      const source = await readFile(filepath, "utf8");
       const { data } = matter(source);
-      const validation = data.validation
-        ? ValidationSchema.safeParse(data.validation)
-        : null;
+      const relPath = relative(rootDir, filepath);
+
+      const rawBlock = data.validation as Record<string, unknown> | undefined;
+      let validation: ContractValidationEntry["validation"];
+      if (rawBlock) {
+        const parsed = ValidationSchema.safeParse(rawBlock);
+        if (parsed.success) {
+          validation = parsed.data;
+        } else {
+          // V0: surface schema-parse failures (don't silently swallow)
+          findings.push({
+            severity: "ERROR",
+            code: "V0",
+            message: `${relPath}: validation block failed schema parse: ${parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ")}`,
+            location: { chapter: relPath },
+          });
+          validation = undefined;
+        }
+
+        // V8: warn on unknown keys (Zod 4's z.object() defaults to
+        // .strip() — would otherwise silently drop them).
+        for (const key of Object.keys(rawBlock)) {
+          if (!KNOWN_VALIDATION_KEYS.has(key)) {
+            findings.push({
+              severity: "INFO",
+              code: "V8",
+              message: `${relPath}: validation block has unknown key '${key}' (did you mean one of: status, last_validated_date, evidence, notes?)`,
+              location: { chapter: relPath },
+            });
+          }
+        }
+      }
+
       entries.push({
-        path: filepath.replace(`${rootDir}/`, ""),
-        validation: validation?.success ? validation.data : undefined,
+        path: relPath,
+        validation,
         lastRevisedDate: extractLastRevisedDate(source),
       });
     }
   }
-  return entries;
+
+  return { entries, findings };
 }
 
 function extractLastRevisedDate(source: string): string | null {
   // Look for the most recent Revisions section header date.
-  // Pattern: `**§N — YYYY-MM-DD — <label>**` per ADR-process convention.
-  const matches = [...source.matchAll(/\*\*§\d+ — (\d{4}-\d{2}-\d{2}) —/g)];
-  if (matches.length === 0) return null;
-  const dates = matches.map((m) => m[1]);
+  // Two shapes (matching PR #50's staleness detector):
+  //   - canonical: `**§N — YYYY-MM-DD — <label>**`
+  //   - H2-inline: `## Revisions (YYYY-MM-DD — …)`
+  const pattern = /(?:\*\*§\d+ — (\d{4}-\d{2}-\d{2}) —|## Revisions \((\d{4}-\d{2}-\d{2}))/g;
+  const dates: string[] = [];
+  for (const match of source.matchAll(pattern)) {
+    dates.push(match[1] ?? match[2]);
+  }
+  if (dates.length === 0) return null;
   return dates.sort().pop() ?? null;
 }
 ```
@@ -1046,10 +1205,12 @@ gh pr create --title "feat(astro): MyST validation admonition plugin (ADR 0056 D
 
 **Status:** ⏳ Pending — runs after PR 3.
 
-**Critical context** (not in original plan; folded in 2026-05-15 after parallel-track merges):
+**Critical context** (not in original plan; folded in 2026-05-15 after parallel-track merges; hardened 2026-05-15 evening after final pre-execution review):
 
-- **PR #47 emits `dist/.sophie/pedagogy-index.json`** at build time. PR 5's Vite plugin should **consume that JSON artifact** rather than re-walking frontmatter — DRY with #47's extraction pipeline. If the JSON doesn't yet include `contractValidations`, extend #47's emitter (in `packages/astro/src/lib/pedagogy-index-*` or its sibling) to include it; that's PR 5's first task.
-- **Extend the integration test from PR 4 (I2)**: assert every ADR + reference doc artifact carries a `validation-*` class in the rendered output. Land this in PR 5 alongside the index-page rendering test, or in PR 6 with the curated-pass changes.
+- **Consume the in-memory snapshot, not the JSON file on disk.** PR #47 (`6821b11`) wires JSON emission inside `packages/astro/src/lib/pagefind-postbuild.ts` (the postbuild orchestrator) via `indexAccumulator.asPedagogyIndex()` + a new `writePedagogyIndexJson` helper. **PR 5 should hook into `pagefind-postbuild.ts` right next to that JSON write**, consuming the same in-memory snapshot directly and emitting `docs/website/status/validation.md` as a sibling postbuild output. No disk round-trip; one extractor pipeline produces both artifacts. This is more DRY than the original "re-read the JSON" framing and keeps PR 5 + #47 conceptually paired.
+- **Add `extractorFindings` to the JSON.** PR 3 introduced a sibling `index.extractorFindings` field for V0/V8. Verify #47's JSON serializer includes it (it should — `JSON.stringify` walks the full `PedagogyIndex`); spot-check the emitted JSON's keys during PR 5 implementation.
+- **Index page path: `/status/validation/`** as sibling to `/status/roadmap/`. Established convention in `docs/website/status/`.
+- **Extend the integration test from PR 4 (I2)**: assert every ADR + reference doc artifact carries a `validation-*` class in the rendered output. Land this in PR 5 alongside the index-page rendering test, or in PR 6 with the curated-pass changes — subagent decides based on scope; **must report the decision in the PR description**.
 
 **Branch:** `feat/validation-index-page`
 **Files:**
@@ -1091,11 +1252,24 @@ describe("generateValidationIndex", () => {
 
 ### Task 5.2: Implement the index generator
 
-Implementation follows the existing pagefind-postbuild.ts pattern. Walk the `contractValidations` field on the populated pedagogy index; aggregate counts; emit `docs/website/status/validation.md`.
+Pure function: `generateValidationIndex(index: PedagogyIndex): string` returns the Markdown body. Walk `index.contractValidations`; aggregate counts; surface `index.extractorFindings` summary (count of V0 + V8 findings); emit a Markdown body that becomes `docs/website/status/validation.md`.
 
-### Task 5.3: Wire into the Vite plugin pipeline
+### Task 5.3: Wire into `pagefind-postbuild.ts` next to the JSON write
 
-The plugin runs at build-end (after all extractors have populated the index); emits the generated `.md` file to the output directory.
+PR #47 (`6821b11`) wires the JSON emission inside `packages/astro/src/lib/pagefind-postbuild.ts` via `indexAccumulator.asPedagogyIndex()` + the new `writePedagogyIndexJson` helper. **PR 5 hooks in right there** — sibling helper `writeValidationIndexMarkdown(snapshot, outDir)` that consumes the same in-memory snapshot already used by the JSON write. No disk round-trip; both artifacts come from one extraction pass.
+
+Concrete shape (sketch):
+
+```typescript
+// packages/astro/src/lib/pagefind-postbuild.ts (extension)
+const snapshot = indexAccumulator.asPedagogyIndex();
+await writePedagogyIndexJson(snapshot, outDir);                  // PR #47
+if (process.env.SOPHIE_DOCS_INCLUDE_VALIDATION !== "0") {
+  await writeValidationIndexMarkdown(snapshot, sophieRoot);      // PR 5
+}
+```
+
+The validation Markdown lands at `docs/website/status/validation.md` (NOT in the build output; checked-in-but-private-tagged per Task 5.4). The `SOPHIE_DOCS_INCLUDE_VALIDATION=0` gate matches PR #50's admonition flag for symmetry.
 
 ### Task 5.4: Mark page private in myst.yml
 
@@ -1118,7 +1292,7 @@ Render the index page in local dev (with the flag on); verify summary table accu
 
 **Status:** ⏳ Pending — runs after PR 5.
 
-**Critical context** (not in original plan; folded in 2026-05-15 after parallel-track merges):
+**Critical context** (not in original plan; folded in 2026-05-15 after parallel-track merges; hardened 2026-05-15 evening after final pre-execution review):
 
 - **Expanded curated-initial-pass scope**: substantial contracts now include the newly-shipped Phase 3 ADRs Anna landed in parallel today. Suggested list for the initial pass — adjust per actual evidence:
   - **Foundation primitives** (high test + chapter coverage): ADRs 0001, 0002, 0003, 0004, 0007, 0011, 0013, 0014, 0029, 0038. Many ship `kind: test + chapter`.
@@ -1126,6 +1300,7 @@ Render the index page in local dev (with the flag on); verify summary table accu
   - **Validation tracker itself** (ADR 0056): self-referential. Set to `in-progress` until PR 6 closes; promote to `validated` once curated initial-pass + spot-check completes.
 - **ADR 0051 (chapter.status) ↔ ADR 0056 (validation status) distinction**: these are sibling status surfaces — chapter-level vs contract-level. The new reference doc `reference/validation-tracker.md` should note this in a "See also" or comparison block so future readers don't conflate them.
 - **Promote V1 + V2 WARNING → ERROR** after the bulk migration is verified clean (which it is — PR #44 covered all 77 contracts). Update `pedagogy-audit.ts` severity tables in this PR.
+- **Confirm V8 (INFO) is non-blocking in CI** before merging. Spot-check `auditExitCode(report)` in `pedagogy-audit.ts:558` — it must return 0 when only INFO findings are present, since V8 will fire frequently as authors typo or experiment with new keys and must not break the build. If it doesn't already, fix the severity table OR fix `auditExitCode`. (CLAUDE.md principle: warnings are signal, errors block.)
 
 **Branch:** `feat/validation-reference-doc-and-initial-pass`
 **Files:**
@@ -1142,7 +1317,17 @@ Render the index page in local dev (with the flag on); verify summary table accu
 
 ### Task 6.2: Curated initial-pass
 
-Work through ~20 substantial contracts; assign accurate initial status + evidence per the kind enum. Use AI authoring (`chapter-drafter` skill style) to draft entries; Anna reviews + approves each.
+Work through ~20 substantial contracts; assign accurate initial status + evidence per the kind enum.
+
+**Drafting workflow per contract** (replacing earlier mention of a `chapter-drafter` skill that is not in the available-skills list):
+
+1. Read the contract (ADR or reference doc) end-to-end.
+2. Identify shipped evidence via:
+   - `git log --oneline --all -- <ref-candidate>` to confirm test files / chapter files were authored.
+   - `grep -rn "<contract-key>"` for citations in code, tests, or smoke chapters.
+   - `docs/reviews/*.md` for review-kind evidence.
+3. Draft the validation block following the ADR 0007 example below; assign status conservatively (prefer `in-progress` over `validated` when in doubt).
+4. **HITL gate per CLAUDE.md mandate**: Anna reviews each block before commit — no batch-blind drafting. The curated initial-pass is the canonical assertion that contract claims match shipped reality; it should not be autonomously generated and merged.
 
 Example for ADR 0007:
 
