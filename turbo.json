@@ -6,6 +6,10 @@
       "dependsOn": ["^build"],
       "outputs": ["dist/**", ".astro/**"]
     },
+    "@sophie/docs#build": {
+      "dependsOn": ["^build"],
+      "outputs": ["_build/**"]
+    },
     "build-storybook": {
       "dependsOn": ["^build"],
       "inputs": [

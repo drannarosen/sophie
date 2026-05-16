@@ -103,34 +103,31 @@ describe("validation-index-generator integration (I3)", () => {
  * emitted `/decisions/0001-…/` and every link 404'd), this test catches
  * it before a reader hits a broken link.
  *
- * The test is gated on the MyST HTML build existing (it's not free —
- * `mystmd build --html` takes minutes). Running locally:
- *   `cd docs/website && npx mystmd build --html`
- * before the test, OR add the build as a turbo dependency in CI.
+ * CI wiring landed in the squash-guard + I5 PR: the `unit` job in
+ * `.github/workflows/ci.yml` now runs `pnpm exec turbo run build
+ * --filter=@sophie/docs` before vitest, so `docs/website/_build/html/`
+ * is always populated in CI. The soft-skip that previously hid this
+ * test in CI is gone — per I7 fail-loud, the missing build is now an
+ * ERROR, not a silent pass.
  *
- * Until that wiring lands, the test fails loudly (per I7) with a clear
- * "run `mystmd build` first" hint instead of silently skipping.
+ * Local development: run `pnpm exec turbo run build --filter=@sophie/docs`
+ * once (turbo caches subsequent runs to ~0s). Then I5 resolves hrefs
+ * against the rendered artifacts.
  */
 const HTML_BUILD = resolve(REPO_ROOT, "docs/website/_build/html");
 
 describe("validation-index-generator integration (I5 — href resolution)", () => {
   it("sampled dashboard hrefs resolve to rendered HTML artifacts", async () => {
-    if (!existsSync(HTML_BUILD)) {
-      // I5 needs the MyST HTML build to resolve hrefs against rendered
-      // artifacts. CI doesn't currently run `myst build --html` before
-      // vitest (~30s extra), so this test soft-skips on CI while still
-      // running locally when devs have a recent build. Wiring the MyST
-      // build into the CI test job is a follow-up — until then, the
-      // honest behavior is "log a clear note and skip" rather than
-      // failing CI on missing infrastructure that's outside this test's
-      // control.
-      console.warn(
-        `[I5] Skipping href-resolution test: ${HTML_BUILD} not found. ` +
-          "Run `pnpm turbo run build --filter=@sophie/docs` to enable the test locally; " +
-          "follow-up tracks wiring this as a CI step."
-      );
-      return;
-    }
+    // Fail-loud guard (I7): the MyST HTML build is a hard precondition.
+    // CI builds it in the `unit` job before vitest; local devs run
+    // `pnpm exec turbo run build --filter=@sophie/docs` once. Missing
+    // build = ERROR, not silent skip — matches the I3 fail-loud pattern
+    // above and matches every other fail-loud guard in the file.
+    expect(
+      existsSync(HTML_BUILD),
+      `Expected ${HTML_BUILD} to exist. Run \`pnpm exec turbo run build --filter=@sophie/docs\` first ` +
+        "(CI does this in the `unit` job before vitest)."
+    ).toBe(true);
 
     const { entries, findings } = await extractContractValidations(REPO_ROOT);
     const index: PedagogyIndex = {
