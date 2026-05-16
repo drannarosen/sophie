@@ -173,10 +173,24 @@ the spread are bugs.
   is reviewed at design-system level (`@sophie/theme`), not as a
   per-feature gate. Structural axe rules (labels, landmarks, ARIA,
   focus order) are enforced everywhere.
-- **Visual regression** is deferred to a separate PR. See
-  [ADR 0028 § Visual regression deferral](../decisions/0028-storybook-setup.md).
-  Until re-enabled, intentional UI changes are caught in PR review +
-  manual Storybook inspection (`pnpm storybook`).
+- **Visual regression** runs alongside axe-core in the same
+  `test-runner` config (`packages/components/.storybook/test-runner.ts`)
+  and is gated by the `vr` CI job in
+  [`ci.yml`](../../../.github/workflows/ci.yml). One PNG per story is
+  committed at `packages/components/__snapshots__/chromium/`; CI's
+  Linux runner is the canonical baseline environment per
+  [ADR 0057](../decisions/0057-visual-regression-baseline.md).
+  Mac-local generation diverges from CI (CoreText vs FreeType font
+  rasterization), so when a component change is intentional, push the
+  PR and let CI surface the diff, then trigger:
+
+  ```bash
+  gh workflow run vr-update --ref <branch> --field branch=<branch>
+  ```
+
+  CI regenerates baselines on Linux and commits them back to the
+  branch. See `packages/components/__snapshots__/README.md` for
+  operational details.
 
 Tests are not optional. A component without an axe-core test does
 not ship.
