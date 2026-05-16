@@ -23,6 +23,7 @@ import type {
 // passed. Per visual-polish-target.md the title bar is core anatomy —
 // every callout renders it (vs the prior behavior where the visible
 // title only appeared when an explicit `title` prop was set).
+// (PR-5 build-bust: turbo cache invalidation for VR Update workflow.)
 const variantTitles: Record<CalloutVariant, string> = {
   info: "Note",
   warning: "Warning",
