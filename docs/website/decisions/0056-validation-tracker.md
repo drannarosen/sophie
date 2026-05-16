@@ -8,59 +8,59 @@ tags:
   - sotl
 validation:
   status: validated
-  last_validated_date: 2026-05-16
+  last_validated_date: "2026-05-16"
   evidence:
     - kind: test
       ref: packages/core/src/schema/validation.test.ts
-      date: 2026-05-15
+      date: "2026-05-15"
       notes: "ValidationSchema + V3 refinement parse coverage (PR #43)."
     - kind: test
       ref: packages/astro/src/lib/validation-extractor.test.ts
-      date: 2026-05-15
+      date: "2026-05-15"
       notes: "Extractor + V0/V8 finding emission (PR #51)."
     - kind: test
       ref: packages/astro/src/lib/pedagogy-audit.test.ts
-      date: 2026-05-16
+      date: "2026-05-16"
       notes: "V1–V7 audit invariants tested; V1+V2 ERROR-grade (PR 6 Workstream C)."
     - kind: test
       ref: packages/astro/src/lib/validation-admonition-plugin.test.ts
-      date: 2026-05-15
+      date: "2026-05-15"
       notes: "Per-page admonition rendering tested (PR #50)."
     - kind: test
       ref: packages/astro/src/lib/validation-admonition-plugin.axe.test.ts
-      date: 2026-05-15
+      date: "2026-05-15"
       notes: "axe-core a11y coverage for the admonition (PR #50)."
     - kind: test
       ref: packages/astro/src/lib/validation-admonition-plugin.integration.test.ts
-      date: 2026-05-16
+      date: "2026-05-16"
       notes: "Every-contract integration test extended to walk all ADR + reference doc artifacts (PR 6 Workstream E)."
     - kind: test
       ref: packages/astro/src/lib/validation-index-generator.test.ts
-      date: 2026-05-15
+      date: "2026-05-15"
       notes: "Dashboard generator unit tests (PR #52)."
     - kind: test
       ref: packages/astro/src/lib/validation-index-generator.integration.test.ts
-      date: 2026-05-16
+      date: "2026-05-16"
       notes: "Committed dashboard pinned against generator output (PR 6 Workstream E)."
     - kind: test
       ref: packages/astro/src/lib/validation-index-writer.test.ts
-      date: 2026-05-15
+      date: "2026-05-15"
       notes: "Writer env-flag + I/O wrapper tests (PR #52)."
     - kind: audit
       ref: packages/astro/src/lib/pedagogy-audit.ts
-      date: 2026-05-16
+      date: "2026-05-16"
       notes: "Audit invariants V0–V8 live; V1+V2 ERROR-grade post PR 6."
     - kind: chapter
       ref: docs/website/status/validation.md
-      date: 2026-05-16
+      date: "2026-05-16"
       notes: "Build-generated dashboard reports 78 contracts: 12 validated, 14 in-progress, 52 unvalidated."
     - kind: manual
       ref: docs/website/reference/validation-tracker.md
-      date: 2026-05-16
+      date: "2026-05-16"
       notes: "Companion reference doc shipped (PR 6 Workstream A); itself graduated to validated in this same PR."
     - kind: review
       ref: docs/reviews/2026-05-15-bucket-b-c-architecture-audit.md
-      date: 2026-05-15
+      date: "2026-05-15"
       notes: "Architecture audit confirms the pedagogy-index pattern this tracker extends held under bucket B+C work."
     - kind: deployment
       ref: null

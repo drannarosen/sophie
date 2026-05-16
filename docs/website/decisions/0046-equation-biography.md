@@ -9,15 +9,15 @@ tags:
   - lds
 validation:
   status: in-progress
-  last_validated_date: 2026-05-16
+  last_validated_date: "2026-05-16"
   evidence:
     - kind: manual
       ref: docs/website/reference/equation-biography-schema.md
-      date: 2026-05-14
+      date: "2026-05-14"
       notes: "Reference doc shipped."
     - kind: test
       ref: packages/components/src/components/KeyEquation/KeyEquation.test.tsx
-      date: 2026-05-12
+      date: "2026-05-12"
       notes: "Underlying KeyEquation component tested; biography frontmatter not yet exercised."
     - kind: deployment
       ref: null

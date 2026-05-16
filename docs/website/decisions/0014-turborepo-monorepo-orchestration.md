@@ -8,15 +8,15 @@ tags:
   - turborepo
 validation:
   status: validated
-  last_validated_date: 2026-05-16
+  last_validated_date: "2026-05-16"
   evidence:
     - kind: manual
       ref: turbo.json
-      date: 2026-05-16
+      date: "2026-05-16"
       notes: "Turbo pipeline defines build/test/typecheck tasks with dependsOn graph; all CI verification runs `pnpm turbo run <task>`."
     - kind: review
       ref: docs/reviews/2026-05-15-bucket-b-c-architecture-audit.md
-      date: 2026-05-15
+      date: "2026-05-15"
       notes: "Turbo task graph + cache held under bucket B+C work."
   notes: "Turborepo orchestrates 5+ packages cleanly. Open follow-up (PR #50 review I1) tracks docs/website/ workspace-promotion + turbo dependsOn for the validation-admonition plugin's dist/ import."
 ---

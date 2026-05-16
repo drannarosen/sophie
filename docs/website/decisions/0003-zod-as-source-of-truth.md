@@ -6,23 +6,23 @@ tags:
   - types
 validation:
   status: validated
-  last_validated_date: 2026-05-16
+  last_validated_date: "2026-05-16"
   evidence:
     - kind: test
       ref: packages/core/src/schema/pedagogy-index.test.ts
-      date: 2026-05-12
+      date: "2026-05-12"
       notes: "PedagogyIndexSchema parse + refinement coverage."
     - kind: test
       ref: packages/core/src/schema/validation.test.ts
-      date: 2026-05-15
+      date: "2026-05-15"
       notes: "ValidationSchema parse + V3 refinement coverage (ADR 0056 PR #43)."
     - kind: test
       ref: packages/core/src/schema/chapter.test.ts
-      date: 2026-05-12
+      date: "2026-05-12"
       notes: "ChapterSchema parse with required status frontmatter (ADR 0051)."
     - kind: review
       ref: docs/reviews/2026-05-15-bucket-b-c-architecture-audit.md
-      date: 2026-05-15
+      date: "2026-05-15"
       notes: "D4 type safety = 20/20; Zod-as-SoT held across all packages."
   notes: "Every load-bearing data shape in @sophie/core is a Zod schema; downstream packages type-infer via z.infer. No drift detected in the audit."
 ---

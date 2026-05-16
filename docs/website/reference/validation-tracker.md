@@ -14,19 +14,19 @@ tags:
   - lds
 validation:
   status: validated
-  last_validated_date: 2026-05-16
+  last_validated_date: "2026-05-16"
   evidence:
     - kind: manual
       ref: docs/website/decisions/0056-validation-tracker.md
-      date: 2026-05-16
+      date: "2026-05-16"
       notes: "ADR 0056 is the contract this reference doc specs; ADR 0056 itself is validated in PR 6 Workstream D."
     - kind: audit
       ref: packages/astro/src/lib/pedagogy-audit.ts
-      date: 2026-05-16
+      date: "2026-05-16"
       notes: "All nine audit invariants V0–V8 specified in this doc are live and tested."
     - kind: test
       ref: packages/astro/src/lib/validation-index-generator.integration.test.ts
-      date: 2026-05-16
+      date: "2026-05-16"
       notes: "Dashboard-pin integration test enforces the regen workflow this doc specifies."
   notes: "Reference doc shipped in PR 6 Workstream A; specifies the schema + admonition contract + audit invariants + dashboard workflow. Graduated to validated alongside ADR 0056 itself after the curated-pass + V1/V2 promotion landed in the same PR."
 ---
@@ -92,19 +92,19 @@ A fully-filled block (the ADR 0007 example):
 ```yaml
 validation:
   status: validated
-  last_validated_date: 2026-05-14
+  last_validated_date: "2026-05-14"
   evidence:
     - kind: test
       ref: packages/components/src/runtime/useInteractive.test.ts
-      date: 2026-05-12
+      date: "2026-05-12"
       notes: "Covers IndexedDB write/read cycle + MemoryResponseStore fallback + BroadcastChannel LWW"
     - kind: chapter
       ref: examples/smoke/src/content/modules/m1/c1-measuring-the-sky.mdx
-      date: 2026-05-14
+      date: "2026-05-14"
       notes: "1198-line real chapter; exercises Predict + Reflection + ComprehensionGate persistence"
     - kind: review
       ref: docs/reviews/2026-05-15-bucket-b-c-architecture-audit.md
-      date: 2026-05-15
+      date: "2026-05-15"
       notes: "D1 boundary purity = 20/20; D4 type safety = 20/20"
   notes: "Build-time + smoke-environment validation complete; multi-cohort outcomes deferred to B9."
 ```

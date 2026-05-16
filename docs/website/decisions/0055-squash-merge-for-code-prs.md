@@ -6,11 +6,11 @@ tags:
   - git
 validation:
   status: validated
-  last_validated_date: 2026-05-16
+  last_validated_date: "2026-05-16"
   evidence:
     - kind: manual
       ref: docs/website/decisions/0055-squash-merge-for-code-prs.md
-      date: 2026-05-15
+      date: "2026-05-15"
       notes: "ADR 0055 itself is the contract; squash-merge has been the default for every code PR since adoption (visible in `git log --oneline` — each feature PR appears as a single commit on main)."
     - kind: deployment
       ref: null

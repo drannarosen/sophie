@@ -9,15 +9,15 @@ tags:
   - lds
 validation:
   status: in-progress
-  last_validated_date: 2026-05-16
+  last_validated_date: "2026-05-16"
   evidence:
     - kind: review
       ref: docs/reviews/2026-05-14-adrs-0040-0045-foundation-review.md
-      date: 2026-05-14
+      date: "2026-05-14"
       notes: "Reviewed in the ADRs 0040–0045 foundation pass."
     - kind: manual
       ref: docs/website/reference/teaching-moves.md
-      date: 2026-05-14
+      date: "2026-05-14"
       notes: "Reference doc shipped with taxonomy + ID conventions."
     - kind: deployment
       ref: null

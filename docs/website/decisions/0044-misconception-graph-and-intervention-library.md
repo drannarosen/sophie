@@ -10,23 +10,23 @@ tags:
   - lds
 validation:
   status: in-progress
-  last_validated_date: 2026-05-16
+  last_validated_date: "2026-05-16"
   evidence:
     - kind: test
       ref: packages/astro/src/lib/pedagogy-audit.test.ts
-      date: 2026-05-15
+      date: "2026-05-15"
       notes: "MG1 (cycle) + MG2 (dangling/earlier-chapter) audit invariants tested."
     - kind: audit
       ref: packages/astro/src/lib/pedagogy-audit.ts
-      date: 2026-05-15
+      date: "2026-05-15"
       notes: "MG1 + MG2 ERROR-grade audit invariants live; graph-extractor populates prerequisite_misconceptions."
     - kind: manual
       ref: docs/website/reference/misconception-graph-schema.md
-      date: 2026-05-14
+      date: "2026-05-14"
       notes: "Reference doc shipped with graph schema."
     - kind: manual
       ref: docs/website/reference/intervention-library.md
-      date: 2026-05-14
+      date: "2026-05-14"
     - kind: deployment
       ref: null
       date: null

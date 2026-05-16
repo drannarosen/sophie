@@ -10,18 +10,18 @@ tags:
   - lds
 validation:
   status: in-progress
-  last_validated_date: 2026-05-16
+  last_validated_date: "2026-05-16"
   evidence:
     - kind: review
       ref: docs/reviews/2026-05-14-adrs-0040-0045-foundation-review.md
-      date: 2026-05-14
+      date: "2026-05-14"
     - kind: manual
       ref: docs/website/reference/sophie-diff-cli.md
-      date: 2026-05-14
+      date: "2026-05-14"
       notes: "sophie diff CLI reference doc shipped."
     - kind: manual
       ref: docs/website/reference/pedagogical-change-taxonomy.md
-      date: 2026-05-14
+      date: "2026-05-14"
     - kind: deployment
       ref: null
       date: null

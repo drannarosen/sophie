@@ -7,19 +7,19 @@ tags:
   - mdx
 validation:
   status: validated
-  last_validated_date: 2026-05-16
+  last_validated_date: "2026-05-16"
   evidence:
     - kind: test
       ref: packages/astro/src/lib/transform-mdx-compile.test.ts
-      date: 2026-05-13
+      date: "2026-05-13"
       notes: "MDX compile + AST-transform pipeline tested end-to-end."
     - kind: chapter
       ref: examples/smoke/src/content/chapters/01-foundations/measuring-the-sky.mdx
-      date: 2026-05-14
+      date: "2026-05-14"
       notes: "Real chapter renders via @sophie/astro's TextbookLayout."
     - kind: review
       ref: docs/reviews/2026-05-15-bucket-b-c-architecture-audit.md
-      date: 2026-05-15
+      date: "2026-05-15"
   notes: "Astro 6 + MDX confirmed across the bucket B+C smoke build; the renderer-choice contract held under three real chapters and the components matrix."
 ---
 

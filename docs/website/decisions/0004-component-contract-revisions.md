@@ -7,23 +7,23 @@ tags:
   - persistence
 validation:
   status: validated
-  last_validated_date: 2026-05-16
+  last_validated_date: "2026-05-16"
   evidence:
     - kind: test
       ref: packages/components/src/components/Predict/Predict.contract.test.ts
-      date: 2026-05-12
+      date: "2026-05-12"
       notes: "Component-contract conformance tests on Predict; mirrored across LearningObjectives, Aside, Callout, etc."
     - kind: test
       ref: packages/components/src/components/LearningObjectives/LearningObjectives.contract.test.ts
-      date: 2026-05-12
+      date: "2026-05-12"
       notes: "Contract suite covering serialize/render split + axe-core a11y."
     - kind: chapter
       ref: examples/smoke/src/content/chapters/01-foundations/measuring-the-sky.mdx
-      date: 2026-05-14
+      date: "2026-05-14"
       notes: "Real chapter exercises Predict + Reflection + ComprehensionGate per the component-contract revisions."
     - kind: review
       ref: docs/reviews/2026-05-15-bucket-b-c-architecture-audit.md
-      date: 2026-05-15
+      date: "2026-05-15"
   notes: "Component contract (serialize separate from render, axe-core mandatory, useInteractive for persistence, composition rules) confirmed across every shipped component as of the bucket B+C audit."
 ---
 

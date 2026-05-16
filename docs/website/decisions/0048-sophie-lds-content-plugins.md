@@ -9,11 +9,11 @@ tags:
   - lds
 validation:
   status: in-progress
-  last_validated_date: 2026-05-16
+  last_validated_date: "2026-05-16"
   evidence:
     - kind: manual
       ref: docs/website/reference/sophie-plugin-system.md
-      date: 2026-05-14
+      date: "2026-05-14"
       notes: "Plugin-system reference doc shipped."
     - kind: deployment
       ref: null

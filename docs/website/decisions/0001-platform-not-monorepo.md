@@ -6,15 +6,15 @@ tags:
   - distribution
 validation:
   status: validated
-  last_validated_date: 2026-05-16
+  last_validated_date: "2026-05-16"
   evidence:
     - kind: review
       ref: docs/reviews/2026-05-15-bucket-b-c-architecture-audit.md
-      date: 2026-05-15
+      date: "2026-05-15"
       notes: "D1 boundary purity audit — confirms @sophie/* packages cleanly isolated from consumer-app code; the platform-not-monorepo shape held under the bucket B+C cross-cutting work."
     - kind: manual
       ref: pnpm-workspace.yaml
-      date: 2026-05-16
+      date: "2026-05-16"
       notes: "Repo shape: pnpm workspace + packages/* + examples/smoke as a single consumer; no per-course directories. Standalone-platform contract held."
   notes: "Repo-shape contract is structurally enforced: any course importing @sophie/* is by definition a separate consumer. The smoke example exercises that consumer relationship in-repo."
 ---

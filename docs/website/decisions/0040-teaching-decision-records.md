@@ -9,11 +9,11 @@ tags:
   - lds
 validation:
   status: in-progress
-  last_validated_date: 2026-05-16
+  last_validated_date: "2026-05-16"
   evidence:
     - kind: review
       ref: docs/reviews/2026-05-14-adrs-0040-0045-foundation-review.md
-      date: 2026-05-14
+      date: "2026-05-14"
       notes: "Foundation review confirming ADRs 0040–0045 are internally consistent."
     - kind: deployment
       ref: null

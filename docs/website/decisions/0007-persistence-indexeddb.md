@@ -7,19 +7,19 @@ tags:
   - ferpa
 validation:
   status: validated
-  last_validated_date: 2026-05-16
+  last_validated_date: "2026-05-16"
   evidence:
     - kind: test
       ref: packages/components/src/runtime/useInteractive.test.tsx
-      date: 2026-05-12
+      date: "2026-05-12"
       notes: "Covers IndexedDB write/read cycle, MemoryResponseStore fallback, BroadcastChannel LWW (per ADR 0029 refinement)."
     - kind: chapter
       ref: examples/smoke/src/content/chapters/01-foundations/measuring-the-sky.mdx
-      date: 2026-05-14
+      date: "2026-05-14"
       notes: "Real chapter exercises Predict + Reflection + ComprehensionGate persistence end-to-end."
     - kind: review
       ref: docs/reviews/2026-05-15-bucket-b-c-architecture-audit.md
-      date: 2026-05-15
+      date: "2026-05-15"
       notes: "Persistence contract held under the bucket B+C audit."
     - kind: deployment
       ref: null
