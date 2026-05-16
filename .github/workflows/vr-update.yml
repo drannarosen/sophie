@@ -1,0 +1,71 @@
+name: VR Update
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Branch to regenerate baselines on
+        required: true
+        type: string
+
+concurrency:
+  group: vr-update-${{ inputs.branch }}
+  cancel-in-progress: false
+
+jobs:
+  update:
+    name: regenerate-baselines
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Enable corepack
+        run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Restore Turborepo cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .turbo
+            **/.turbo
+          key: ${{ runner.os }}-turbo-vr-update-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-vr-update-
+            ${{ runner.os }}-turbo-vr-
+            ${{ runner.os }}-turbo-storybook-
+            ${{ runner.os }}-turbo-build-
+            ${{ runner.os }}-turbo-
+      - name: Build Storybook (and workspace deps)
+        run: pnpm exec turbo run build-storybook --filter=@sophie/components
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Serve Storybook + regenerate baselines
+        # Mirrors the vr job's serve pattern in ci.yml; swaps test:vr
+        # for test:vr:update so jest-image-snapshot rewrites baselines
+        # in place (see packages/components/package.json).
+        run: |
+          npx -y http-server packages/components/storybook-static -p 6006 --silent &
+          SERVER_PID=$!
+          npx -y wait-on tcp:127.0.0.1:6006 -t 60000
+          pnpm --filter @sophie/components test:vr:update
+          kill "$SERVER_PID" 2>/dev/null || true
+      - name: Commit regenerated baselines
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add packages/components/__snapshots__
+          if git diff --staged --quiet; then
+            echo "No baseline changes — VR is already in sync."
+          else
+            git commit -m "chore(vr): regenerate baselines via vr-update workflow"
+            git push origin HEAD:${{ inputs.branch }}
+          fi
