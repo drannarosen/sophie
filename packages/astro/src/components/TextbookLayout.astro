@@ -18,6 +18,7 @@ import {
   runPedagogyAudit,
 } from "../lib/pedagogy-audit";
 import { indexAccumulator } from "../lib/pedagogy-index-extractor";
+import { extractContractValidations } from "../lib/validation-extractor";
 import ContentColumn from "./ContentColumn.astro";
 import RightColumn from "./RightColumn.astro";
 import SearchTrigger from "./SearchTrigger.astro";
@@ -133,7 +134,29 @@ if (!import.meta.env.PROD || !auditCache.__sophiePedagogyAuditDone) {
   const draftChapterSlugs = allChapters
     .filter((c) => c.data.status === "draft")
     .map((c) => c.data.slug);
-  const auditReport = runPedagogyAudit(pedagogy, { draftChapterSlugs });
+
+  // ADR 0056 PR 3: walk docs/website/{decisions,reference}/ to collect
+  // contract validations (V0+V8 surfaced as extractor findings; V1–V7
+  // run in the audit). `process.cwd()` is the consumer-app dir at build
+  // time, which IS the repo root for the smoke fixture and for the
+  // canonical Sophie repo layout. Evidence refs are repo-root-relative
+  // and resolve via the same `repoRoot` passed to `runPedagogyAudit`.
+  const repoRoot = process.cwd();
+  const { entries: contractValidations, findings: extractorFindings } =
+    await extractContractValidations(repoRoot);
+  indexAccumulator.setContractValidations(
+    contractValidations,
+    extractorFindings
+  );
+
+  // Re-snapshot AFTER the validation extractor populates the accumulator
+  // so `runPedagogyAudit` sees the contract validations + extractor
+  // findings.
+  const pedagogyWithContracts = indexAccumulator.asPedagogyIndex();
+  const auditReport = runPedagogyAudit(pedagogyWithContracts, {
+    draftChapterSlugs,
+    repoRoot,
+  });
   console.log(formatAuditReport(auditReport));
   if (auditExitCode(auditReport) !== 0) {
     // Astro's build pipeline surfaces thrown errors as build failures

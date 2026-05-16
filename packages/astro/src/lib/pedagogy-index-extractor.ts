@@ -1,5 +1,7 @@
 import {
+  type AuditFinding,
   type ChapterEntry,
+  type ContractValidationEntry,
   type DefinitionEntry,
   type EquationEntry,
   type FigureRegistryEntry,
@@ -1076,6 +1078,22 @@ interface GlobalIndexState {
    * `clearChapter` filters out entries with the cleared chapter slug.
    */
   inlineRefUsages: InlineRefUsageEntry[];
+  /**
+   * Per-contract validation entries (ADR 0056 PR 3). Populated by
+   * `validation-extractor.ts` via `setContractValidations`. Last-write-
+   * wins, consumer-global, NOT touched by `clearChapter` (mirrors
+   * `figureRegistry` / `chapters` / `modules` — the contract files
+   * are external to chapter MDX so the per-chapter clear pass
+   * doesn't apply).
+   */
+  contractValidations: ReadonlyArray<ContractValidationEntry>;
+  /**
+   * Extractor-layer audit findings (V0 + V8; ADR 0056 PR 3).
+   * Populated together with `contractValidations`. Flows into
+   * `PedagogyIndex.extractorFindings` so `runPedagogyAudit` can
+   * merge them into the report at the same call.
+   */
+  extractorFindings: ReadonlyArray<AuditFinding>;
 }
 
 function getGlobalState(): GlobalIndexState {
@@ -1092,6 +1110,8 @@ function getGlobalState(): GlobalIndexState {
       chapters: [],
       modules: [],
       inlineRefUsages: [],
+      contractValidations: [],
+      extractorFindings: [],
     };
   }
   return g[GLOBAL_KEY];
@@ -1361,6 +1381,25 @@ class IndexAccumulator {
   }
 
   /**
+   * Push the contract-validations extraction result into the
+   * accumulator (ADR 0056 PR 3). Called from TextbookLayout's
+   * frontmatter once per build after `extractContractValidations`
+   * resolves. Mirrors `setFigureRegistry` / `setChapters` /
+   * `setModules` semantics: last-write-wins, consumer-global, NOT
+   * touched by `clearChapter` (contract files are external to chapter
+   * MDX). Both arrays are written atomically so the audit always sees
+   * a coherent {entries, findings} pair.
+   */
+  setContractValidations(
+    entries: ReadonlyArray<ContractValidationEntry>,
+    findings: ReadonlyArray<AuditFinding>
+  ): void {
+    const state = getGlobalState();
+    state.contractValidations = entries;
+    state.extractorFindings = findings;
+  }
+
+  /**
    * Snapshot the current accumulator state as a PedagogyIndex.
    * Equations populate from PR-C2 onward; keyInsights, figureUsages,
    * and misconceptions populate from PR-C3 onward. `figureRegistry`
@@ -1381,6 +1420,8 @@ class IndexAccumulator {
       modules: state.modules,
       objectives: Array.from(state.objectives.values()),
       inlineRefUsages: state.inlineRefUsages.slice(),
+      contractValidations: state.contractValidations,
+      extractorFindings: state.extractorFindings,
     };
   }
 }
@@ -1408,6 +1449,8 @@ export function resetIndexAccumulator(): void {
   state.chapters = [];
   state.modules = [];
   state.inlineRefUsages = [];
+  state.contractValidations = [];
+  state.extractorFindings = [];
 }
 
 /**

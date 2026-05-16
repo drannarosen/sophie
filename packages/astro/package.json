@@ -64,6 +64,7 @@
     "@sophie/core": "workspace:*",
     "@sophie/theme": "workspace:*",
     "estree-util-value-to-estree": "^3.5.0",
+    "gray-matter": "^4.0.3",
     "hast-util-to-html": "^9.0.5",
     "katex": "^0.16.45",
     "lucide-static": "^1.14.0",

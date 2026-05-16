@@ -1,3 +1,9 @@
+export {
+  type AuditFinding,
+  AuditFindingSchema,
+  type AuditSeverity,
+  AuditSeveritySchema,
+} from "./audit.js";
 export { type Chapter, ChapterSchema, ChapterStatus } from "./chapter.js";
 export { type Figure, FigureSchema } from "./figure.js";
 export { type Module, ModuleSchema } from "./module.js";
@@ -5,6 +11,8 @@ export { chaptersForModule } from "./module-nav.js";
 export {
   type ChapterEntry,
   ChapterEntrySchema,
+  type ContractValidationEntry,
+  ContractValidationEntrySchema,
   type DefinitionEntry,
   DefinitionEntrySchema,
   type EquationEntry,
