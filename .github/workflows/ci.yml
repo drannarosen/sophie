@@ -213,3 +213,64 @@ jobs:
           path: |
             packages/components/storybook-static/
           if-no-files-found: ignore
+
+  vr:
+    name: visual-regression
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Enable corepack
+        run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Restore Turborepo cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .turbo
+            **/.turbo
+          key: ${{ runner.os }}-turbo-vr-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-vr-
+            ${{ runner.os }}-turbo-storybook-${{ github.sha }}
+            ${{ runner.os }}-turbo-storybook-
+            ${{ runner.os }}-turbo-build-${{ github.sha }}
+            ${{ runner.os }}-turbo-build-
+            ${{ runner.os }}-turbo-
+      - name: Build Storybook (and workspace deps)
+        # Same shape as the storybook job: turbo follows the workspace
+        # dep graph and the cache restored above usually makes this a
+        # cache hit when both jobs run on the same SHA.
+        run: pnpm exec turbo run build-storybook --filter=@sophie/components
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Serve Storybook + run VR test-runner
+        # Mirror the storybook job's serve pattern. test:vr defaults to
+        # http://127.0.0.1:6006 (see packages/components/package.json),
+        # so no extra wiring is needed.
+        run: |
+          npx -y http-server packages/components/storybook-static -p 6006 --silent &
+          SERVER_PID=$!
+          npx -y wait-on tcp:127.0.0.1:6006 -t 60000
+          pnpm --filter @sophie/components test:vr
+          kill "$SERVER_PID" 2>/dev/null || true
+      - name: Upload VR diff artifacts on failure
+        # jest-image-snapshot writes diffs to __diff_output__ alongside
+        # the snapshot dir; test-storybook also drops a test-results
+        # tree. List both — actions/upload-artifact tolerates either
+        # being absent thanks to if-no-files-found: ignore.
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: vr-diffs
+          path: |
+            packages/components/__snapshots__/**/__diff_output__/
+            packages/components/__image_snapshots_diff__/
+            packages/components/test-results/
+          retention-days: 7
+          if-no-files-found: ignore
