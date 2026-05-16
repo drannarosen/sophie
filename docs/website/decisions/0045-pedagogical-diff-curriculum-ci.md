@@ -9,9 +9,24 @@ tags:
   - tooling
   - lds
 validation:
-  status: unvalidated
-  last_validated_date: null
-  evidence: []
+  status: in-progress
+  last_validated_date: 2026-05-16
+  evidence:
+    - kind: review
+      ref: docs/reviews/2026-05-14-adrs-0040-0045-foundation-review.md
+      date: 2026-05-14
+    - kind: manual
+      ref: docs/website/reference/sophie-diff-cli.md
+      date: 2026-05-14
+      notes: "sophie diff CLI reference doc shipped."
+    - kind: manual
+      ref: docs/website/reference/pedagogical-change-taxonomy.md
+      date: 2026-05-14
+    - kind: deployment
+      ref: null
+      date: null
+      notes: "@sophie/cli sophie diff command + commit-trailer enforcement hook not yet shipped; TDR ↔ commit traceability remains opt-in. See ADR 0045 follow-up issues."
+  notes: "Contract + taxonomy stable; CLI implementation + CI enforcement land in follow-up PRs."
 ---
 
 # ADR 0045: Pedagogical Diff + Curriculum CI

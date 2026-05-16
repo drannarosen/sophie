@@ -9,9 +9,26 @@ tags:
   - course-shell
   - lds
 validation:
-  status: unvalidated
-  last_validated_date: null
-  evidence: []
+  status: validated
+  last_validated_date: 2026-05-16
+  evidence:
+    - kind: test
+      ref: packages/core/src/schema/chapter.test.ts
+      date: 2026-05-12
+      notes: "ChapterSchema requires status: draft|review|stable; CS1 enforced upstream at the Zod layer."
+    - kind: test
+      ref: packages/astro/src/lib/get-student-chapters.test.ts
+      date: 2026-05-13
+      notes: "Draft-exclusion filter tested end-to-end (TextbookLayout pre-filters before setChapters)."
+    - kind: test
+      ref: packages/astro/src/lib/pedagogy-audit.test.ts
+      date: 2026-05-15
+      notes: "CS2 INFO finding tested (status: draft surfaces in audit even though excluded from build)."
+    - kind: audit
+      ref: packages/astro/src/lib/pedagogy-audit.ts
+      date: 2026-05-15
+      notes: "CS2 INFO live; chapter status surfaces in the audit report."
+  notes: "Chapter status shipped end-to-end (PR #49: feat(core,astro): chapter.status frontmatter + draft-exclusion). Sibling status surface to ADR 0056 validation status — see reference/validation-tracker.md `See also` block."
 ---
 
 # ADR 0051: Chapter Status + Course Versioning

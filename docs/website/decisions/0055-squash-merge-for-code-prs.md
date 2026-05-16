@@ -5,9 +5,18 @@ tags:
   - contributing
   - git
 validation:
-  status: unvalidated
-  last_validated_date: null
-  evidence: []
+  status: validated
+  last_validated_date: 2026-05-16
+  evidence:
+    - kind: manual
+      ref: docs/website/decisions/0055-squash-merge-for-code-prs.md
+      date: 2026-05-15
+      notes: "ADR 0055 itself is the contract; squash-merge has been the default for every code PR since adoption (visible in `git log --oneline` — each feature PR appears as a single commit on main)."
+    - kind: deployment
+      ref: null
+      date: null
+      notes: "Multi-PR squash discipline is enforced by convention + GitHub repo settings; no automated audit."
+  notes: "Process contract; validated by observed behavior on every code PR (#43, #44, #49, #50, #51, #52). No automated enforcement, but no violations observed."
 ---
 
 # ADR 0055: Squash-merge for code PRs

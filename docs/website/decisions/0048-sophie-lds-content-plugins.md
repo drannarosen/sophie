@@ -8,9 +8,18 @@ tags:
   - cross-course
   - lds
 validation:
-  status: unvalidated
-  last_validated_date: null
-  evidence: []
+  status: in-progress
+  last_validated_date: 2026-05-16
+  evidence:
+    - kind: manual
+      ref: docs/website/reference/sophie-plugin-system.md
+      date: 2026-05-14
+      notes: "Plugin-system reference doc shipped."
+    - kind: deployment
+      ref: null
+      date: null
+      notes: "Plugin extension points + first content-plugin shipped together pending; LDS-content-plugins remain spec-only."
+  notes: "Contract spec'd; runtime plugin system implementation deferred until first cross-course consumer surfaces a concrete need."
 ---
 
 # ADR 0048: Sophie LDS Content Plugin System

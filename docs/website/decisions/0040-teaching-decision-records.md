@@ -8,9 +8,18 @@ tags:
   - sotl
   - lds
 validation:
-  status: unvalidated
-  last_validated_date: null
-  evidence: []
+  status: in-progress
+  last_validated_date: 2026-05-16
+  evidence:
+    - kind: review
+      ref: docs/reviews/2026-05-14-adrs-0040-0045-foundation-review.md
+      date: 2026-05-14
+      notes: "Foundation review confirming ADRs 0040–0045 are internally consistent."
+    - kind: deployment
+      ref: null
+      date: null
+      notes: "TDR-1 audit invariant + first batch of TDRs in real course content deferred to ASTR 201 fa26 authoring pass."
+  notes: "Contract spec'd + cross-referenced; tooling + TDR-coverage audit invariant not yet wired. Code lands in a follow-up PR (separate from the validation tracker rollout)."
 ---
 
 # ADR 0040: Teaching Decision Records (TDRs)

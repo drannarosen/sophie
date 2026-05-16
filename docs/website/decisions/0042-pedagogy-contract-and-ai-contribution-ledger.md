@@ -9,9 +9,25 @@ tags:
   - sotl
   - lds
 validation:
-  status: unvalidated
-  last_validated_date: null
-  evidence: []
+  status: in-progress
+  last_validated_date: 2026-05-16
+  evidence:
+    - kind: review
+      ref: docs/reviews/2026-05-14-adrs-0040-0045-foundation-review.md
+      date: 2026-05-14
+    - kind: manual
+      ref: docs/website/reference/pedagogy-contract-schema.md
+      date: 2026-05-15
+      notes: "Reference doc shipped with full schema + ASTR 201 worked example + 2026-05-14/15 hardening fields."
+    - kind: manual
+      ref: docs/website/reference/ai-contribution-schema.md
+      date: 2026-05-14
+      notes: "AI Contribution Ledger schema reference shipped."
+    - kind: deployment
+      ref: null
+      date: null
+      notes: "Zod schema + PedagogyContractPage.astro renderer + tdr_traceability CI hook pending follow-up PRs."
+  notes: "Schema + reference docs are stable; runtime renderer + audit invariants land in follow-up work."
 ---
 
 # ADR 0042: Pedagogy Contract + AI Contribution Ledger

@@ -9,9 +9,29 @@ tags:
   - audit
   - lds
 validation:
-  status: unvalidated
-  last_validated_date: null
-  evidence: []
+  status: in-progress
+  last_validated_date: 2026-05-16
+  evidence:
+    - kind: test
+      ref: packages/astro/src/lib/pedagogy-audit.test.ts
+      date: 2026-05-15
+      notes: "MG1 (cycle) + MG2 (dangling/earlier-chapter) audit invariants tested."
+    - kind: audit
+      ref: packages/astro/src/lib/pedagogy-audit.ts
+      date: 2026-05-15
+      notes: "MG1 + MG2 ERROR-grade audit invariants live; graph-extractor populates prerequisite_misconceptions."
+    - kind: manual
+      ref: docs/website/reference/misconception-graph-schema.md
+      date: 2026-05-14
+      notes: "Reference doc shipped with graph schema."
+    - kind: manual
+      ref: docs/website/reference/intervention-library.md
+      date: 2026-05-14
+    - kind: deployment
+      ref: null
+      date: null
+      notes: "Intervention component + MG3/MG4/I1–I4 audit invariants pending; multi-chapter graph at scale deferred to ASTR 201 fa26."
+  notes: "Graph schema + first audit pair shipped; intervention runtime + remaining audit invariants land in follow-up PRs."
 ---
 
 # ADR 0044: Misconception Graph + Intervention Library

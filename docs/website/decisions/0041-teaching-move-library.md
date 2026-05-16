@@ -8,9 +8,22 @@ tags:
   - components
   - lds
 validation:
-  status: unvalidated
-  last_validated_date: null
-  evidence: []
+  status: in-progress
+  last_validated_date: 2026-05-16
+  evidence:
+    - kind: review
+      ref: docs/reviews/2026-05-14-adrs-0040-0045-foundation-review.md
+      date: 2026-05-14
+      notes: "Reviewed in the ADRs 0040–0045 foundation pass."
+    - kind: manual
+      ref: docs/website/reference/teaching-moves.md
+      date: 2026-05-14
+      notes: "Reference doc shipped with taxonomy + ID conventions."
+    - kind: deployment
+      ref: null
+      date: null
+      notes: "Cross-course move-library coverage + author-facing surface deferred to ASTR 201 fa26."
+  notes: "Taxonomy spec'd in reference doc; no automated audit of move IDs against pedagogy-contract.reasoning_style yet. Code follow-up tracked."
 ---
 
 # ADR 0041: Teaching Move Library

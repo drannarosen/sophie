@@ -10,9 +10,25 @@ tags:
   - stem
   - lds
 validation:
-  status: unvalidated
-  last_validated_date: null
-  evidence: []
+  status: in-progress
+  last_validated_date: 2026-05-16
+  evidence:
+    - kind: review
+      ref: docs/reviews/2026-05-14-adrs-0040-0045-foundation-review.md
+      date: 2026-05-14
+    - kind: manual
+      ref: docs/website/reference/notation-registry-schema.md
+      date: 2026-05-14
+      notes: "Reference doc shipped."
+    - kind: manual
+      ref: docs/website/reference/multirep-component.md
+      date: 2026-05-14
+      notes: "MultiRep component reference doc shipped."
+    - kind: deployment
+      ref: null
+      date: null
+      notes: "Notation-registry audit invariants + runtime alignment checker pending."
+  notes: "Schema + reference shape stable; audit + runtime alignment-checker code lands in follow-up PRs."
 ---
 
 # ADR 0043: Notation Registry + MultiRep + Representation Alignment Audit

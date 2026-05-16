@@ -8,9 +8,22 @@ tags:
   - audit
   - lds
 validation:
-  status: unvalidated
-  last_validated_date: null
-  evidence: []
+  status: in-progress
+  last_validated_date: 2026-05-16
+  evidence:
+    - kind: manual
+      ref: docs/website/reference/equation-biography-schema.md
+      date: 2026-05-14
+      notes: "Reference doc shipped."
+    - kind: test
+      ref: packages/components/src/components/KeyEquation/KeyEquation.test.tsx
+      date: 2026-05-12
+      notes: "Underlying KeyEquation component tested; biography frontmatter not yet exercised."
+    - kind: deployment
+      ref: null
+      date: null
+      notes: "Per-equation biography page rendering + provenance audit invariants pending."
+  notes: "Schema + reference doc stable; runtime biography surface + audit invariants not yet shipped."
 ---
 
 # ADR 0046: Equation Biography
