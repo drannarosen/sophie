@@ -68,7 +68,7 @@ work begins.
 | 14 remaining v1 components against the proven contract pattern | High — Phase 1 weeks 2–5 | Use ADR 0027's per-instance hydration pattern. Order by dependency: layout primitives first, persistence-bearing later. |
 | `drannarosen/astr201` consumer repo + first real chapter migration | High — Phase 1 week 1 (parallel) | Replaces `examples/smoke/` as the proving ground. Pick a well-bounded chapter (recommend `flux-luminosity-distance`). |
 | Storybook (around the third v1 component when isolation pays off) | ~~Medium — Phase 1 week 3+~~ **Done 2026-05-10** | Shipped between Trio 2.5 and Trio 3 with stories backfilled for all 9 components, axe-playwright per story in CI. See [§4.2](#42-storybook-activates-between-trio-25-and-trio-3-2026-05-10) and [ADR 0028](../decisions/0028-storybook-setup.md). |
-| Visual regression (Chromatic or Playwright screenshots) | Low — Phase 1 end (deferred 2026-05-10) | Scoped in ADR 0028 but deferred after CI surfaced macOS↔Ubuntu anti-aliasing gaps. Re-enable with Docker-based Linux baseline generation, per-platform baselines, or Chromatic. See [ADR 0028 § Visual regression deferral](../decisions/0028-storybook-setup.md). |
+| Visual regression (self-hosted Playwright via Storybook test-runner) | ~~Low — Phase 1 end (deferred 2026-05-10)~~ **Shipped 2026-05-16** | Re-enabled per [ADR 0057](../decisions/0057-visual-regression-baseline.md) (supersedes 0028's deferral). CI's Linux runner is the canonical baseline environment; 68 PNGs committed at `packages/components/__snapshots__/chromium/`. See the [Run visual regression locally](../how-to/run-visual-regression-locally.md) how-to and [Visual regression reference](../reference/visual-regression.md). |
 | `sophie audit` Tier 1 + Tier 2 deterministic checks | Phase 3 | Audit was scoped to the schema-validation hook in Phase 0. |
 | `<CodeCell>` (Pyodide + CodeMirror 6) | Phase 3 | Per [ADR 0018](../decisions/0018-codemirror-6-for-codecell.md). |
 | `@sophie/cosmic-playground` | Phase 1+ when the first `<Demo>` lands | iframe + manifest protocol per [ADR 0008](../decisions/0008-cosmic-playground-protocol.md). |
@@ -248,7 +248,7 @@ Full playbook in
   Until then, smoke is canonical.
 - **CLA setup** — triggered task; fires on first non-Anna PR per
   [§6.1](#61-cla-on-first-non-anna-pr).
-- **Visual regression** — Phase 1 end / Phase 2.
+- **Visual regression** — ~~Phase 1 end / Phase 2~~ shipped 2026-05-16 per [ADR 0057](../decisions/0057-visual-regression-baseline.md).
 - **`@sophie/cosmic-playground`** — when first `<Demo>` lands.
 
 (45-original-ordering-superseded-2026-05-10)=

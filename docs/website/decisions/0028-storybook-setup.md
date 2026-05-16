@@ -130,6 +130,19 @@ Storybook (axe-while-developing checks the disabled-busy state).
   darkened in `@sophie/theme`.
 ## Visual regression deferral
 
+:::{note} Deferral resolved 2026-05-15
+This section is **superseded by
+[ADR 0057](./0057-visual-regression-baseline.md)**. CI's Linux runner
+is now the canonical baseline environment; the test-runner runs
+screenshot comparison via `jest-image-snapshot` alongside axe. For
+the current workflow, see the
+[Run visual regression locally](../how-to/run-visual-regression-locally.md)
+how-to and the
+[Visual regression reference](../reference/visual-regression.md).
+The text below is preserved as historical record of the original
+deferral and the three resolution paths considered.
+:::
+
 ADR 0028's original plan included `@storybook/test-runner` +
 `jest-image-snapshot` for in-tree visual baselines. Three CI runs
 during this PR's iteration surfaced a fundamental architectural mismatch:

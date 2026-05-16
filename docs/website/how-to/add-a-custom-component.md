@@ -37,8 +37,12 @@ now, see:
 7. Write Storybook stories (one per render mode).
 8. Write Vitest unit tests.
 9. Write axe-core a11y tests.
-10. Add to chapter MDX, run `sophie audit`, fix any flags.
-11. Document in this docs site (extend the v1 component set table).
+10. VR baselines land automatically on first CI run via the
+    `vr-update` workflow. Subsequent intentional visual changes
+    follow the [Run visual regression locally](run-visual-regression-locally.md)
+    regen recipe. No manual baseline authoring.
+11. Add to chapter MDX, run `sophie audit`, fix any flags.
+12. Document in this docs site (extend the v1 component set table).
 
 ## Open questions for this how-to
 
