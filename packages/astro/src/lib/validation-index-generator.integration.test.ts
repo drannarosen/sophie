@@ -127,7 +127,7 @@ describe("validation-index-generator integration (I5 — href resolution)", () =
       console.warn(
         `[I5] Skipping href-resolution test: ${HTML_BUILD} not found. ` +
           "Run `pnpm turbo run build --filter=@sophie/docs` to enable the test locally; " +
-          "follow-up tracks wiring this as a CI step.",
+          "follow-up tracks wiring this as a CI step."
       );
       return;
     }
