@@ -4,31 +4,40 @@ import {
   waitForPageReady,
 } from "@storybook/test-runner";
 import { checkA11y, injectAxe } from "axe-playwright";
-import "./test-runner-setup.ts";
+import { toMatchImageSnapshot } from "jest-image-snapshot";
 
 /**
  * Storybook test-runner config.
  *
- * Two responsibilities composed in one `postVisit` hook:
+ * Three responsibilities composed across lifecycle hooks:
  *
- * 1. **a11y gate** (axe-core via `axe-playwright`) — mandatory per
+ * 1. **matcher registration** (`setup()`) — `expect.extend` for
+ *    `toMatchImageSnapshot`. Must happen inside the `setup()` hook
+ *    because Storybook's CLI process loads this file at config time
+ *    (where `expect` is NOT a global), whereas `setup()` runs inside
+ *    the Jest worker (where `expect` IS global). The TypeScript
+ *    augmentation lives alongside in `test-runner.d.ts`.
+ * 2. **a11y gate** (axe-core via `axe-playwright`) — mandatory per
  *    ADR 0004. `color-contrast` is excluded to match the project-wide
  *    a11y posture (every smoke spec disables it; design-system review
  *    handles contrast separately).
- * 2. **visual-regression gate** (`jest-image-snapshot` via
- *    `test-runner-setup.ts`) — per ADR 0057 (supersedes ADR 0028).
- *    One PNG per story under `__snapshots__/chromium/`. CI's Linux
- *    runner is the canonical baseline platform; local Mac runs will
- *    diff against committed PNGs and fail — regenerate via the
- *    `vr-update` workflow rather than locally.
+ * 3. **visual-regression gate** (`jest-image-snapshot`) — per ADR 0057
+ *    (supersedes ADR 0028). One PNG per story under
+ *    `__snapshots__/chromium/`. CI's Linux runner is the canonical
+ *    baseline platform; local Mac runs will diff against committed
+ *    PNGs and fail — regenerate via the `vr-update` workflow rather
+ *    than locally.
  *
- * Both run on every story; failures in either block CI. The
+ * Both gates run on every story; failures in either block CI. The
  * screenshot is captured AFTER `waitForPageReady` so fonts/images are
  * settled, which also makes axe deterministic.
  */
 const customSnapshotsDir = `${process.cwd()}/__snapshots__/chromium`;
 
 const config: TestRunnerConfig = {
+  setup() {
+    expect.extend({ toMatchImageSnapshot });
+  },
   async preVisit(page) {
     await injectAxe(page);
   },
