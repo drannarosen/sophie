@@ -28,11 +28,17 @@ import { toMatchImageSnapshot } from "jest-image-snapshot";
  *    PNGs and fail — regenerate via the `vr-update` workflow rather
  *    than locally.
  *
+ * Set `SKIP_VR=1` (env var) to disable the VR gate while keeping axe.
+ * The `test:storybook` script does this by default so local axe runs
+ * on Mac don't get blocked by CoreText/FreeType baseline divergence;
+ * the `test:vr` script omits it so the VR gate runs in CI.
+ *
  * Both gates run on every story; failures in either block CI. The
  * screenshot is captured AFTER `waitForPageReady` so fonts/images are
  * settled, which also makes axe deterministic.
  */
 const customSnapshotsDir = `${process.cwd()}/__snapshots__/chromium`;
+const skipVR = process.env.SKIP_VR === "1";
 
 const config: TestRunnerConfig = {
   setup() {
@@ -71,7 +77,7 @@ const config: TestRunnerConfig = {
     // First run on a fresh checkout creates the baseline; subsequent
     // runs diff against it and write expected/actual/diff PNGs to
     // `test-results/` on failure.
-    if (storyContext.parameters?.vr?.disable !== true) {
+    if (!skipVR && storyContext.parameters?.vr?.disable !== true) {
       const image = await page.screenshot({ fullPage: true });
       expect(image).toMatchImageSnapshot({
         customSnapshotsDir,
