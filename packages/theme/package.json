@@ -11,6 +11,7 @@
       "import": "./dist/tokens.js"
     },
     "./css": "./dist/theme.css",
+    "./fonts": "./dist/fonts.css",
     "./tailwind": "./dist/tailwind.css"
   },
   "files": [
@@ -28,5 +29,9 @@
     "tsup": "^8.5.1",
     "tsx": "^4.21.0",
     "typescript": "^6.0.3"
+  },
+  "dependencies": {
+    "@fontsource-variable/ibm-plex-sans": "^5.2.8",
+    "@fontsource/ibm-plex-mono": "^5.2.7"
   }
 }

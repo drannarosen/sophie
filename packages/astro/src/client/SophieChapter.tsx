@@ -1,3 +1,4 @@
+import "@sophie/theme/fonts";
 import "@sophie/theme/css";
 import "@sophie/components/styles.css";
 import "katex/dist/katex.min.css";
