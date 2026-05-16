@@ -1,3 +1,4 @@
+import { Compass } from "lucide-react";
 import { useId } from "react";
 import { HydrationAnnouncer } from "../../runtime/HydrationAnnouncer.tsx";
 import { useSelfAssessment } from "../../runtime/useSelfAssessment.ts";
@@ -13,6 +14,14 @@ const OPTIONS: ReadonlyArray<{ value: ComprehensionLevel; label: string }> = [
   { value: "stuck", label: "I'm stuck" },
 ];
 
+/**
+ * Workstream 3 PR-8: Tier-1 card-strong chrome per
+ * visual-polish-target.md. Compass Lucide icon left of the prompt in
+ * the pale-brand-teal title bar; radio pills below in the white body.
+ * Migrated from `<fieldset>/<legend>` to `<section role="radiogroup">`
+ * so the title bar can render as a normal flex header without the
+ * legend-in-fieldset positioning quirks.
+ */
 export function ComprehensionGate({
   course,
   chapter,
@@ -20,13 +29,19 @@ export function ComprehensionGate({
   prompt,
 }: ComprehensionGateProps) {
   const groupName = useId();
+  const labelId = useId();
   const { value, setValue, hydrated, controlProps } = useSelfAssessment<
     ComprehensionLevel | ""
   >(course, chapter, "comprehension", id, "");
 
   return (
-    <fieldset className={styles.section}>
-      <legend className={styles.legend}>{prompt}</legend>
+    <div role='radiogroup' aria-labelledby={labelId} className={styles.section}>
+      <header className={styles.titleBar}>
+        <Compass className={styles.icon} size={20} aria-hidden />
+        <span id={labelId} className={styles.title}>
+          {prompt}
+        </span>
+      </header>
       <div className={styles.options}>
         {OPTIONS.map((opt) => (
           <label key={opt.value} className={styles.option}>
@@ -47,6 +62,6 @@ export function ComprehensionGate({
         hydrated={hydrated}
         label='Comprehension check ready'
       />
-    </fieldset>
+    </div>
   );
 }
