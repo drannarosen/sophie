@@ -34,6 +34,7 @@ export const tokens = {
       observable: v("role-observable"),
       model: v("role-model"),
       inference: v("role-inference"),
+      approximation: v("role-approximation"),
     },
     validation: {
       unvalidated: {

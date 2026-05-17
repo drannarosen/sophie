@@ -8,6 +8,7 @@ describe.each([
   ["observable", "48", "0.02", "60", "73"],
   ["model", "58", "0.13", "195", "78"],
   ["inference", "63", "0.16", "12", "83"],
+  ["approximation", "70", "0.04", "60", "85"],
 ])("role color: %s", (role, lLight, chroma, hue, lDark) => {
   test(`emits --sophie-role-${role} in :root with oklch(${lLight}% ${chroma} ${hue})`, () => {
     const escaped = chroma.replace(".", "\\.");

@@ -72,7 +72,7 @@ export const role = {
   observable: { light: "oklch(48% 0.02 60)", dark: "oklch(73% 0.02 60)" },
   model: { light: "oklch(58% 0.13 195)", dark: "oklch(78% 0.13 195)" },
   inference: { light: "oklch(63% 0.16 12)", dark: "oklch(83% 0.16 12)" },
-  // approximation added in Task 1.6
+  approximation: { light: "oklch(70% 0.04 60)", dark: "oklch(85% 0.04 60)" },
 } as const;
 
 export const status = {
