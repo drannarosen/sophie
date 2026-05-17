@@ -255,6 +255,33 @@ describe("extractInterventions (pure)", () => {
     expect(entries[0]?.addresses).toEqual(["this"]);
   });
 
+  test("slugifies the enclosing misconception's `name` before rewriting 'this' (aligns with misconception extractor's slugify(name) anchor)", () => {
+    // PR-δ alignment fix: the misconception extractor stores
+    // `slugify(name)` as the MisconceptionEntry.anchor. Without
+    // matching slugify here, an author writing `name="Universe
+    // With A Center"` would produce a misconception anchor of
+    // `universe-with-a-center` but an Intervention
+    // `addresses="this"` resolution of `Universe With A Center`
+    // (raw). The audit's I1 + MG3 would then fire false-positive
+    // pairs on every nested intervention. This test locks the
+    // slugify alignment.
+    const tree = root([
+      mdxFlow(
+        "Aside",
+        { kind: "misconception", name: "Universe With A Center" },
+        [
+          intervention(
+            { type: "contrasting-cases", addresses: "this" },
+            "Body."
+          ),
+        ]
+      ),
+    ]) as unknown as import("mdast").Root;
+
+    const entries = extractInterventions(tree, "ch/1");
+    expect(entries[0]?.addresses).toEqual(["universe-with-a-center"]);
+  });
+
   test("REJECTS author-supplied explicit `id` (extractor is the SOLE source of anchors per I1 review)", () => {
     // The component schema `InterventionPropsSchema.id` field is
     // extractor-derived, not authorable — the contract is that the

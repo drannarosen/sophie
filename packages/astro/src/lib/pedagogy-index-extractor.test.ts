@@ -1494,6 +1494,59 @@ describe("extractMisconceptions (pure)", () => {
     expect(entries[0]?.label).toBe("Some title");
   });
 
+  test("Intervention PR-δ — `name` becomes the anchor when no explicit `id` is supplied (precedence: id > name > slug(title) > misc-counter)", () => {
+    // ADR 0044's misconception-graph identifier convention puts
+    // `name` ABOVE slug(title) in the anchor-derivation chain so the
+    // Intervention extractor's `addresses="this"` resolution (which
+    // rewrites to the enclosing Aside's `name` attr) lands on the
+    // matching MisconceptionEntry.anchor at audit time. Without this
+    // promotion, the audit's I1 invariant would WARN on every
+    // intervention nested in a `name=`-bearing Aside.
+    const tree = root([
+      mdxAside(
+        {
+          kind: "misconception",
+          name: "universe-with-a-center",
+          title: "A title that should be IGNORED for anchor derivation",
+        },
+        [para("body")]
+      ),
+    ]);
+
+    const entries = extractMisconceptions(tree as never, "ch");
+    expect(entries[0]?.anchor).toBe("universe-with-a-center");
+    // Label still resolves from title (label and anchor are separate concerns).
+    expect(entries[0]?.label).toMatch(/A title that should be IGNORED/);
+  });
+
+  test("Intervention PR-δ — explicit `id` still wins over `name` (precedence order preserved)", () => {
+    const tree = root([
+      mdxAside(
+        {
+          kind: "misconception",
+          id: "explicit-id-wins",
+          name: "would-be-name-anchor",
+          title: "Some title",
+        },
+        [para("body")]
+      ),
+    ]);
+
+    const entries = extractMisconceptions(tree as never, "ch");
+    expect(entries[0]?.anchor).toBe("explicit-id-wins");
+  });
+
+  test("Intervention PR-δ — `name` falls through to slug(title) when `name` is absent (back-compat)", () => {
+    const tree = root([
+      mdxAside({ kind: "misconception", title: "Brighter equals closer" }, [
+        para("body"),
+      ]),
+    ]);
+
+    const entries = extractMisconceptions(tree as never, "ch");
+    expect(entries[0]?.anchor).toBe("brighter-equals-closer");
+  });
+
   test("M1 — throws on intra-chapter anchor collision (two Asides with same explicit id)", () => {
     const tree = root([
       mdxAside({ kind: "misconception", id: "shared" }, [para("first")]),

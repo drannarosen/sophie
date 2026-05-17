@@ -75,6 +75,16 @@ interface AsideAttributes extends MisconceptionGraphFields {
   kind?: string;
   title?: string;
   id?: string;
+  /**
+   * `<Aside kind="misconception" name="…">` — the canonical
+   * misconception-graph identifier per ADR 0044 (used in
+   * `prerequisite_misconceptions` / `related_misconceptions` /
+   * `<Intervention addresses="…">` references). The misconception
+   * extractor uses `name` as a higher-precedence anchor source than
+   * `slug(title)` so `addresses="this"` resolution (Intervention PR-γ)
+   * lands on a matching `MisconceptionEntry.anchor`.
+   */
+  name?: string;
 }
 
 /**
@@ -163,6 +173,7 @@ function readAsideAttributes(node: MdxJsxFlowElement): AsideAttributes {
     if (attr.name === "kind") out.kind = attr.value;
     if (attr.name === "title") out.title = attr.value;
     if (attr.name === "id") out.id = attr.value;
+    if (attr.name === "name") out.name = attr.value;
   }
   Object.assign(out, readMisconceptionGraphFields(node));
   return out;
@@ -596,7 +607,11 @@ export function extractMisconceptions(
   visit(tree, "mdxJsxFlowElement", (node: unknown) => {
     const el = node as MdxJsxFlowElement;
     let length: "short" | "long";
-    let attrs: { title?: string; id?: string } & MisconceptionGraphFields;
+    let attrs: {
+      title?: string;
+      id?: string;
+      name?: string;
+    } & MisconceptionGraphFields;
 
     if (el.name === "Aside") {
       const a = readAsideAttributes(el);
@@ -605,6 +620,7 @@ export function extractMisconceptions(
       attrs = {
         title: a.title,
         id: a.id,
+        name: a.name,
         prerequisite_misconceptions: a.prerequisite_misconceptions,
         related_misconceptions: a.related_misconceptions,
         concept_refs: a.concept_refs,
@@ -617,6 +633,10 @@ export function extractMisconceptions(
       attrs = {
         title: c.title,
         id: c.id,
+        // Callout doesn't surface a `name` attr today; if a future
+        // Callout author adds one, the precedence chain below picks
+        // it up automatically (anchor falls through to title-slug
+        // when `name` is undefined).
         prerequisite_misconceptions: c.prerequisite_misconceptions,
         related_misconceptions: c.related_misconceptions,
         concept_refs: c.concept_refs,
@@ -629,7 +649,17 @@ export function extractMisconceptions(
     counter += 1;
     const titleSlug = attrs.title?.trim() ? slugify(attrs.title.trim()) : null;
     const explicitId = attrs.id?.trim() ? slugify(attrs.id.trim()) : null;
-    const anchor = explicitId ?? titleSlug ?? `misc-${counter}`;
+    // `name` is the canonical misconception-graph identifier per
+    // ADR 0044 (used in `prerequisite_misconceptions` /
+    // `related_misconceptions` / `<Intervention addresses="…">`).
+    // Anchor precedence places `name` ABOVE `slug(title)` so an
+    // Aside with both `name=` and `title=` resolves to the `name`,
+    // and the Intervention extractor's `addresses="this"`
+    // resolution lands cleanly on the matching `MisconceptionEntry.anchor`
+    // at audit time (closes the PR-γ → PR-δ coupling gap surfaced
+    // during PR-δ scoping).
+    const nameSlug = attrs.name?.trim() ? slugify(attrs.name.trim()) : null;
+    const anchor = explicitId ?? nameSlug ?? titleSlug ?? `misc-${counter}`;
 
     if (seenAnchors.has(anchor)) {
       throw new Error(
@@ -1235,7 +1265,17 @@ export function extractInterventions(
         // the misconception extractor handles its own naming, and any
         // nested Intervention's `"this"` will fall through to the
         // outer enclosing (or stay as "this" if none).
-        if (miscName) nextEnclosing = miscName;
+        //
+        // Slugify here to align with the misconception extractor's
+        // anchor derivation, which stores `slugify(name)` as the
+        // MisconceptionEntry.anchor (PR-δ extractor fix). Without
+        // this slugify, an author writing `name="Universe With A
+        // Center"` would produce a misconception anchor of
+        // `universe-with-a-center` but an Intervention
+        // `addresses="this"` resolution of `Universe With A Center`
+        // (raw), and the audit's I1 + MG3 would fire false-positive
+        // pairs on every nested intervention.
+        if (miscName) nextEnclosing = slugify(miscName);
       }
     }
 
