@@ -19,6 +19,23 @@ describe("<RepVerbal>", () => {
     ).toBeInTheDocument();
   });
 
+  it("renders HTML markup in `body` as live markup, not escaped text", () => {
+    // `body` comes from `renderChildrenToHtml` at build time — inline
+    // emphasis, links, and code spans are pre-serialized to HTML. The
+    // runtime injects via dangerouslySetInnerHTML so the markup
+    // survives. Plain string interpolation here would render literal
+    // `<em>m</em>` text — the smoke fixture exercises *m* italics
+    // through this path, so we lock the behavior with a regression test.
+    const { container } = render(
+      <RepVerbal body='<p>Apparent magnitude <em>m</em> is log-scale.</p>' />
+    );
+    expect(container.querySelector("em")?.textContent).toBe("m");
+    // The escaped form ("<em>m</em>" as literal text) would NOT match a
+    // live <em> element query — this query failing means we regressed.
+    expect(container.textContent).toContain("Apparent magnitude m is");
+    expect(container.textContent).not.toContain("<em>");
+  });
+
   it("prefers children over body when both are present (authoring wins)", () => {
     render(<RepVerbal body='extractor body'>author children</RepVerbal>);
     expect(screen.getByText("author children")).toBeInTheDocument();

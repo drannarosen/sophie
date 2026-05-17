@@ -1021,6 +1021,13 @@ export function extractMultiReps(
   chapterSlug: string
 ): MultiRepIndexEntry[] {
   const out: MultiRepIndexEntry[] = [];
+  // Detect within-chapter id collisions at extract-time (vs at the
+  // accumulator's `addMultiReps`, which only catches cross-batch
+  // collisions). Two `<MultiRep concept="x">` in one chapter both
+  // auto-derive `mr-x` and would silently clobber each other in the
+  // accumulator's Map; surfacing the collision here gives an error
+  // message with the JSX context.
+  const seenIds = new Set<string>();
 
   visit(tree, "mdxJsxFlowElement", (node: unknown) => {
     const parent = node as MdxJsxFlowElement;
@@ -1033,6 +1040,12 @@ export function extractMultiReps(
       );
     }
     const id = readStringAttr(parent, "id") ?? `mr-${concept}`;
+    if (seenIds.has(id)) {
+      throw new Error(
+        `<MultiRep> id collision in chapter "${chapterSlug}": two bindings share anchor "${id}" (latest concept: "${concept}"). Resolution: set explicit \`id\` props to disambiguate, or consolidate into one <MultiRep> block.`
+      );
+    }
+    seenIds.add(id);
     const layoutRaw = readStringAttr(parent, "layout");
     const layout =
       layoutRaw === "grid" || layoutRaw === "stack" ? layoutRaw : undefined;

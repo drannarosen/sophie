@@ -267,6 +267,46 @@ describe("extractMultiReps", () => {
       /unexpected child|Aside/i
     );
   });
+
+  test("throws on within-chapter auto-id collision (two <MultiRep concept='x'> in one chapter)", () => {
+    // Both auto-derive `mr-x`; the accumulator's Map keys collide. Surface
+    // the error at extract-time so the message can reference the JSX
+    // context (vs the accumulator only knowing the key string).
+    const tree = root([
+      mdxMultiRep({ concept: "x" }, [mdxRepVerbal("first binding")]),
+      mdxMultiRep({ concept: "x" }, [mdxRepVerbal("second binding")]),
+    ]);
+    expect(() => extractMultiReps(tree as never, "ch")).toThrow(
+      /id collision|anchor "mr-x"/i
+    );
+  });
+
+  test("throws on within-chapter explicit-id collision (two <MultiRep id='binding-1'>)", () => {
+    const tree = root([
+      mdxMultiRep({ concept: "x", id: "binding-1" }, [mdxRepVerbal("first")]),
+      mdxMultiRep({ concept: "y", id: "binding-1" }, [mdxRepVerbal("second")]),
+    ]);
+    expect(() => extractMultiReps(tree as never, "ch")).toThrow(
+      /id collision|anchor "binding-1"/i
+    );
+  });
+
+  test("allows two <MultiRep> blocks with different concepts (no collision)", () => {
+    const tree = root([
+      mdxMultiRep({ concept: "apparent-magnitude" }, [
+        mdxRepVerbal("apparent body"),
+      ]),
+      mdxMultiRep({ concept: "absolute-magnitude" }, [
+        mdxRepVerbal("absolute body"),
+      ]),
+    ]);
+    const entries = extractMultiReps(tree as never, "ch");
+    expect(entries).toHaveLength(2);
+    expect(entries.map((e) => e.id)).toEqual([
+      "mr-apparent-magnitude",
+      "mr-absolute-magnitude",
+    ]);
+  });
 });
 
 describe("transformMultiRep", () => {
