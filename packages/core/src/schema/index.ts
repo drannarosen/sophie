@@ -11,6 +11,16 @@ export {
   EpistemicRoleSchema,
 } from "./epistemic-role.js";
 export { type Figure, FigureSchema } from "./figure.js";
+export {
+  type InterventionDepth,
+  InterventionDepthSchema,
+  type InterventionEntry,
+  InterventionEntrySchema,
+  type InterventionFamily,
+  InterventionFamilySchema,
+  type InterventionLibraryEntry,
+  InterventionLibraryEntrySchema,
+} from "./intervention.js";
 export { type Module, ModuleSchema } from "./module.js";
 export { chaptersForModule } from "./module-nav.js";
 export {

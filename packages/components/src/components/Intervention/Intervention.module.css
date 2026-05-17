@@ -1,0 +1,152 @@
+/* Intervention — Tier-2 (card-light) chrome nested inside a
+ * misconception Aside.
+ *
+ * Per ADR 0044 + 2026-05-17 design §D4: distinct sub-card surface so
+ * the misconception → intervention pairing is structurally legible at
+ * a glance. Visual hierarchy:
+ *
+ *   Misconception Aside (warning callout, parent chrome)
+ *     └─ Intervention sub-card (resolution, this component)
+ *         └─ [type-pill] · citation
+ *             body prose
+ *             [optional Limits: ...]
+ *
+ * Standalone usage (outside Aside) renders the same sub-card with a
+ * leading "↗ Addresses: ..." cross-reference header so the pairing
+ * context that nesting normally provides is restored.
+ *
+ * Per ADR 0005, no hex/rgb literals — all colors flow through
+ * @sophie/theme tokens. The pill background is a brand-accent tint
+ * matching the existing rep-pill vocabulary used by MultiRep.
+ */
+
+.intervention {
+  --intervention-pill-bg: color-mix(
+    in oklch,
+    var(--sophie-accent) 12%,
+    var(--sophie-surface-1)
+  );
+  --intervention-pill-fg: var(--sophie-accent);
+
+  margin-block: var(--sophie-space-3);
+  background: var(--sophie-surface-1);
+  border: 1px solid var(--sophie-border);
+  border-left: 3px solid var(--sophie-accent);
+  border-radius: var(--sophie-radius-sm);
+  color: var(--sophie-text);
+  font-family: var(--sophie-font-sans);
+  line-height: var(--sophie-leading-prose);
+  overflow: hidden;
+  scroll-margin-block-start: var(--sophie-space-4);
+}
+
+.intervention:target {
+  outline: 2px solid var(--sophie-accent);
+  outline-offset: 4px;
+}
+
+/* Leading header surfaced ONLY for the standalone case (outside an
+ * enclosing misconception Aside). Renders as
+ * "↗ Addresses: <misc-slug>" so the pairing context that nesting
+ * normally provides is preserved. Authors can wrap a paragraph above
+ * the component for a richer cross-reference; the header is the
+ * minimum-viable structural signal. */
+.addressesHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--sophie-space-1);
+  padding: var(--sophie-space-2) var(--sophie-space-4);
+  background: color-mix(
+    in oklch,
+    var(--sophie-accent) 6%,
+    var(--sophie-surface-1)
+  );
+  border-bottom: 1px solid var(--sophie-border);
+  font-size: var(--sophie-text-sm);
+  font-weight: 500;
+  color: var(--sophie-text-muted);
+}
+
+.addressesArrow {
+  font-size: var(--sophie-text-xs);
+  color: var(--sophie-accent);
+}
+
+.addressesTargets {
+  color: var(--sophie-text);
+  font-family: var(--sophie-font-mono);
+}
+
+.titleBar {
+  display: flex;
+  align-items: center;
+  gap: var(--sophie-space-2);
+  padding: var(--sophie-space-2) var(--sophie-space-4);
+  background: var(--intervention-pill-bg);
+  border-bottom: 1px solid var(--sophie-border);
+  font-size: var(--sophie-text-sm);
+  flex-wrap: wrap;
+}
+
+.typePill {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--sophie-space-0-5) var(--sophie-space-2);
+  background: var(--sophie-surface-1);
+  border: 1px solid var(--intervention-pill-fg);
+  border-radius: var(--sophie-radius-pill);
+  color: var(--intervention-pill-fg);
+  font-family: var(--sophie-font-mono);
+  font-size: var(--sophie-text-xs);
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.customAnnotation {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--sophie-space-0-5) var(--sophie-space-2);
+  background: var(--sophie-surface-2);
+  border: 1px solid var(--sophie-border);
+  border-radius: var(--sophie-radius-pill);
+  color: var(--sophie-text-muted);
+  font-family: var(--sophie-font-mono);
+  font-size: var(--sophie-text-xs);
+  font-weight: 500;
+  line-height: 1;
+}
+
+.citation {
+  color: var(--sophie-text-muted);
+  font-size: var(--sophie-text-xs);
+  font-style: italic;
+}
+
+.body {
+  padding: var(--sophie-space-3) var(--sophie-space-4);
+}
+
+.body > :first-child {
+  margin-block-start: 0;
+}
+
+.body > :last-child {
+  margin-block-end: 0;
+}
+
+.limits {
+  margin-block-start: var(--sophie-space-3);
+  padding-block-start: var(--sophie-space-2);
+  border-top: 1px dashed var(--sophie-border);
+  color: var(--sophie-text-muted);
+  font-size: var(--sophie-text-sm);
+  font-style: italic;
+}
+
+.limitsLabel {
+  font-weight: 600;
+  font-style: normal;
+  color: var(--sophie-text);
+  margin-inline-end: var(--sophie-space-1);
+}
