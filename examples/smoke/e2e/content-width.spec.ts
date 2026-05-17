@@ -46,11 +46,11 @@ test.describe("PR 6: content-width responds to sidebar state", () => {
       "default"
     );
     const width = await getContentWidth(page);
-    // 66ch at the 17px body font measures ≈ 600px (1ch ≈ 9px). Range
-    // covers font + scrollbar variance while rejecting 75ch above
-    // (~675px) and 50ch below (~450px).
-    expect(width).toBeGreaterThan(450);
-    expect(width).toBeLessThan(680);
+    // 66ch at the 17px Plex Sans body font measures ≈ 756px on CI
+    // (1ch ≈ 11.4px). Range covers font + scrollbar variance while
+    // rejecting 75ch (~860px) above and 50ch (~570px) below.
+    expect(width).toBeGreaterThan(600);
+    expect(width).toBeLessThan(810);
   });
 
   test("Default mode + sidebar='closed': content widens to ~75ch", async ({
@@ -65,11 +65,11 @@ test.describe("PR 6: content-width responds to sidebar state", () => {
     );
 
     const width = await getContentWidth(page);
-    // 75ch at the body font measures ≈ 680px. Range covers font +
-    // system variance while rejecting 66ch (~600px) below and 95ch
-    // (~860px) above.
-    expect(width).toBeGreaterThan(620);
-    expect(width).toBeLessThan(800);
+    // 75ch at Plex Sans measures ≈ 846px on CI. Range covers font +
+    // system variance while rejecting 66ch (~756px) below and 95ch
+    // (~1080px) above.
+    expect(width).toBeGreaterThan(800);
+    expect(width).toBeLessThan(910);
   });
 
   test("Default mode: closing the sidebar makes content strictly wider", async ({
