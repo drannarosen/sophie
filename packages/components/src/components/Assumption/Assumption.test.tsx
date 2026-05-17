@@ -83,6 +83,11 @@ describe("<Assumption> — render", () => {
     ).not.toBeNull();
   });
 
+  it("does NOT emit data-assumption-type when `type` is absent (locked contract — React drops undefined props, but verify here so a refactor emitting '' slips loudly)", () => {
+    const { container } = render(<Assumption>Body</Assumption>);
+    expect(container.querySelector("[data-assumption-type]")).toBeNull();
+  });
+
   it("uses <aside role='note'> as the landmark", () => {
     render(<Assumption>Body</Assumption>);
     expect(screen.getByRole("note")).toBeInTheDocument();

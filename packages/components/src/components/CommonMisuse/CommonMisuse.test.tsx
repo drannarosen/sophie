@@ -77,6 +77,11 @@ describe("<CommonMisuse> — render", () => {
     ).not.toBeNull();
   });
 
+  it("does NOT emit data-misconception-ref when `misconception` is absent (locked contract — React drops undefined props, but verify here so a refactor emitting '' slips loudly)", () => {
+    const { container } = render(<CommonMisuse>Body</CommonMisuse>);
+    expect(container.querySelector("[data-misconception-ref]")).toBeNull();
+  });
+
   it("does NOT carry data-epistemic-role (the linked misconception node carries 'misconception' per ADR 0058)", () => {
     // The cross-ref entry inherits the role indirectly via the link;
     // duplicating it here would weaken the single-source-of-truth

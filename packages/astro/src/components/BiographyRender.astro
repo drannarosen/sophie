@@ -5,19 +5,29 @@ import type { Biography } from "@sophie/core/schema";
  * Shared biography render for `<ChapterEquations>` + `<CourseEquations>`
  * per ADR 0046 + 2026-05-17 design hardening §"Surface 2/3".
  *
- * Renders full biography sections in source-doc order:
+ * Renders full biography sections in a CANONICAL (not source-doc) order:
  * - Observable (singleton, prose body)
- * - Assumptions (list; typed slugs first, then untyped)
+ * - Assumptions (list)
  * - Units (inline "symbol [unit]" pairs, comma-separated)
  * - BreaksWhen (singleton, prose body)
  * - CommonMisuses (list, collapsed behind <details> disclosure per design §"Surface 2")
+ *
+ * Canonical order rather than source-doc order is the right design
+ * choice for cross-equation legibility: a reader scanning the
+ * `/equations` page sees Observable first across every equation,
+ * Units in the same slot, etc. The serialized index preserves
+ * the canonical shape via the schema fields' ordering (Observable
+ * singleton, Assumption array, Units array, BreaksWhen singleton,
+ * CommonMisuse array) — author source order inside <KeyEquation>
+ * is not load-bearing for the rendered surfaces.
  *
  * Renders nothing when biography is undefined OR fully empty
  * (per-equation opt-in per ADR 0046).
  *
  * `<details>` disclosure is keyboard-accessible by default (native
- * HTML widget); no Radix wrapper needed. axe-core verifies the
- * accessible-name requirement via the wrapping `<summary>`.
+ * HTML widget); no Radix wrapper needed. The wrapping `<summary>`
+ * carries discernible text "Common misuses (N)" to satisfy the
+ * axe-core summary-name requirement.
  */
 export interface Props {
   biography: Biography | undefined;
