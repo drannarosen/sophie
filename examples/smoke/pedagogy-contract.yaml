@@ -1,0 +1,20 @@
+# Minimal Pedagogy Contract for the smoke target.
+# See docs/website/decisions/0042-pedagogy-contract-and-ai-contribution-ledger.md
+# + docs/website/decisions/0043-notation-registry-multirep-alignment-audit.md.
+#
+# v1 scope: opts the smoke target into the Notation Registry +
+# Representation Alignment Audit (PR-δ). Other contract sections
+# (instructor stance, AI ledger framing, etc.) are deliberately
+# minimal — the smoke target exists to exercise platform contracts,
+# not to model a real course's editorial voice.
+
+course:
+  slug: "smoke"
+  title: "Sophie Smoke Target"
+  description: >-
+    Minimal consumer-repo fixture for testing platform-level contracts
+    end-to-end. Not a real course.
+
+math_and_units_standards:
+  notation_registry: "smoke"
+  require_units: false

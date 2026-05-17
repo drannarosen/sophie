@@ -625,6 +625,40 @@ describe("PedagogyIndexSchema", () => {
     expect(PedagogyIndexSchema.safeParse(withoutInline).success).toBe(false);
   });
 
+  // PR-γ (MultiRep extractor) — multiReps optional with default [].
+  test("multiReps defaults to [] when absent (forward-compat with pre-PR-γ indexes)", () => {
+    const result = PedagogyIndexSchema.safeParse(emptyIndex);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.multiReps).toEqual([]);
+    }
+  });
+
+  test("accepts a populated multiReps array", () => {
+    const result = PedagogyIndexSchema.safeParse({
+      ...emptyIndex,
+      multiReps: [
+        {
+          concept: "orbital-radius",
+          id: "mr-orbital-radius",
+          chapter: "module-02/lecture-04",
+          reps: [
+            {
+              kind: "verbal",
+              body: "The distance from the central mass.",
+            },
+            {
+              kind: "equation",
+              refKey: "kepler-3rd-law",
+              symbol: "r",
+            },
+          ],
+        },
+      ],
+    });
+    expect(result.success).toBe(true);
+  });
+
   test("accepts populated inlineRefUsages", () => {
     expect(
       PedagogyIndexSchema.safeParse({

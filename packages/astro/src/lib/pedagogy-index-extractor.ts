@@ -11,8 +11,10 @@ import {
   type KeyInsightEntry,
   type MisconceptionEntry,
   type ModuleEntry,
+  type MultiRepIndexEntry,
   type ObjectiveEntry,
   type PedagogyIndex,
+  type SerializedRep,
   slugify,
 } from "@sophie/core/schema";
 import { valueToEstree } from "estree-util-value-to-estree";
@@ -902,6 +904,245 @@ function isWhitespaceTextNode(node: unknown): boolean {
 }
 
 /**
+ * Walk one `<MultiRep>` parent's children and produce the
+ * `SerializedRep[]` payload that both `extractMultiReps` and
+ * `transformMultiRep` consume. Single source of truth for child-walk
+ * validation; throws on shape errors (the throws bubble up to the
+ * caller, which contextualizes them with the chapter slug and concept).
+ *
+ * Whitespace text nodes between JSX siblings are skipped (mdast emits
+ * them around `<Parent>\n  <Child>` source). Any other non-JSX child
+ * or any JSX child whose name isn't a registered Rep is a hard error.
+ *
+ * RepCode (`kind: "code"`) is deferred per the 2026-05-17 MultiRep
+ * design hardening §D1; encountering `<RepCode>` in source throws
+ * with a clear "deferred — pending <CodeCell>" message so authors
+ * don't silently lose the binding.
+ */
+function buildRepsFromMultiRepChildren(
+  parent: { children: ReadonlyArray<unknown> },
+  contextLabel: string
+): SerializedRep[] {
+  const reps: SerializedRep[] = [];
+
+  for (const child of parent.children) {
+    if (isWhitespaceTextNode(child)) continue;
+
+    const el = child as MdxJsxFlowElement;
+    if (!el || typeof el !== "object" || el.type !== "mdxJsxFlowElement") {
+      throw new Error(
+        `transform: ${contextLabel} contains a non-JSX child. Only <RepVerbal> / <RepEquation> / <RepFigure> JSX flow elements are allowed.`
+      );
+    }
+
+    if (el.name === "RepCode") {
+      throw new Error(
+        `transform: ${contextLabel} contains <RepCode>, which is deferred from v1 (pending <CodeCell> per ADR 0018). Remove it for now or upgrade to a v2 MultiRep that ships RepCode.`
+      );
+    }
+
+    if (el.name === "RepVerbal") {
+      const body = renderChildrenToHtml(el.children);
+      if (body.trim().length === 0) {
+        throw new Error(
+          `transform: <RepVerbal> in ${contextLabel} has an empty body. Resolution: add prose between the opening and closing tags.`
+        );
+      }
+      reps.push({ kind: "verbal", body });
+      continue;
+    }
+
+    if (el.name === "RepEquation") {
+      const refKey = readStringAttr(el, "refKey");
+      const symbol = readStringAttr(el, "symbol");
+      if (!refKey) {
+        throw new Error(
+          `transform: <RepEquation> in ${contextLabel} is missing a non-empty \`refKey\`.`
+        );
+      }
+      if (!symbol) {
+        throw new Error(
+          `transform: <RepEquation refKey="${refKey}"> in ${contextLabel} is missing a non-empty \`symbol\`.`
+        );
+      }
+      const equivalent_to = readStringAttr(el, "equivalent_to");
+      const via = readStringAttr(el, "via");
+      const rep: SerializedRep = {
+        kind: "equation",
+        refKey,
+        symbol,
+        ...(equivalent_to ? { equivalent_to } : {}),
+        ...(via ? { via } : {}),
+      };
+      reps.push(rep);
+      continue;
+    }
+
+    if (el.name === "RepFigure") {
+      const refName = readStringAttr(el, "refName");
+      if (!refName) {
+        throw new Error(
+          `transform: <RepFigure> in ${contextLabel} is missing a non-empty \`refName\`.`
+        );
+      }
+      const symbolLabel = readStringAttr(el, "symbolLabel");
+      const rep: SerializedRep = {
+        kind: "figure",
+        refName,
+        ...(symbolLabel ? { symbolLabel } : {}),
+      };
+      reps.push(rep);
+      continue;
+    }
+
+    throw new Error(
+      `transform: ${contextLabel} contains an unexpected child <${el.name}>. Only <RepVerbal> / <RepEquation> / <RepFigure> children are allowed at v1.`
+    );
+  }
+
+  return reps;
+}
+
+/**
+ * Pure extractor. Walks the mdast tree for `mdxJsxFlowElement` nodes
+ * named `MultiRep`. For each match, validates the `concept` attr and
+ * builds a `MultiRepIndexEntry` with the serialized rep payloads.
+ *
+ * Resolution of `refKey` / `refName` against the chapter's equation /
+ * figure indexes happens at audit-time (PR-δ), not here — keeps the
+ * extractor cycle-free and matches the LO precedent. Same applies to
+ * the registry concept lookup (audit invariant MR1).
+ *
+ * Auto-derived anchor: `mr-<concept>` if `id` is omitted (matches the
+ * runtime MultiRep component default).
+ */
+export function extractMultiReps(
+  tree: Root,
+  chapterSlug: string
+): MultiRepIndexEntry[] {
+  const out: MultiRepIndexEntry[] = [];
+
+  visit(tree, "mdxJsxFlowElement", (node: unknown) => {
+    const parent = node as MdxJsxFlowElement;
+    if (parent.name !== "MultiRep") return;
+
+    const concept = readStringAttr(parent, "concept");
+    if (!concept) {
+      throw new Error(
+        `<MultiRep> in chapter "${chapterSlug}" is missing a non-empty \`concept\` attr.`
+      );
+    }
+    const id = readStringAttr(parent, "id") ?? `mr-${concept}`;
+    const layoutRaw = readStringAttr(parent, "layout");
+    const layout =
+      layoutRaw === "grid" || layoutRaw === "stack" ? layoutRaw : undefined;
+
+    const reps = buildRepsFromMultiRepChildren(
+      parent,
+      `<MultiRep concept="${concept}"> in chapter "${chapterSlug}"`
+    );
+
+    if (reps.length === 0) {
+      throw new Error(
+        `<MultiRep concept="${concept}"> in chapter "${chapterSlug}" has no Rep children. An empty MultiRep is a content bug.`
+      );
+    }
+
+    const entry: MultiRepIndexEntry = {
+      concept,
+      id,
+      chapter: chapterSlug,
+      reps,
+      ...(layout ? { layout } : {}),
+    };
+    out.push(entry);
+  });
+
+  return out;
+}
+
+/**
+ * Walks `<MultiRep>` JSX flow elements in the mdast tree. For each,
+ * harvests `<RepVerbal>` / `<RepEquation>` / `<RepFigure>` children
+ * into a JS array, then mutates the parent node: clears children,
+ * appends a `reps` mdxJsxAttribute holding the serialized array.
+ *
+ * Runs AFTER `extractMultiReps` (the read-only pass). Uses the same
+ * `buildRepsFromMultiRepChildren` helper so both passes produce
+ * identical payloads — extractor + runtime agree on the shape.
+ *
+ * The ESTree-wrapped attribute value follows the
+ * `transformLearningObjectives` precedent: lowering passes
+ * (`hast-util-to-estree`) read `value.data.estree` and ignore the
+ * string `value`. Without the `data.estree` form the runtime prop
+ * compiles to `reps={}` (JSXEmptyExpression → undefined) and SSR
+ * crashes.
+ */
+export function transformMultiRep(tree: Root, chapterSlug: string): void {
+  visit(tree, "mdxJsxFlowElement", (node: unknown) => {
+    const parent = node as MdxJsxFlowElement & {
+      attributes: Array<{
+        type: string;
+        name: string;
+        value:
+          | string
+          | boolean
+          | null
+          | {
+              type: string;
+              value: string;
+              data?: { estree?: unknown };
+            };
+      }>;
+      children: Array<unknown>;
+    };
+    if (parent.name !== "MultiRep") return;
+
+    const concept = readStringAttr(parent, "concept");
+    if (!concept) {
+      throw new Error(
+        `transform: <MultiRep> in chapter "${chapterSlug}" is missing a non-empty \`concept\` attr.`
+      );
+    }
+
+    const reps = buildRepsFromMultiRepChildren(
+      parent,
+      `<MultiRep concept="${concept}"> in chapter "${chapterSlug}"`
+    );
+
+    if (reps.length === 0) {
+      throw new Error(
+        `transform: <MultiRep concept="${concept}"> in chapter "${chapterSlug}" has no Rep children. An empty MultiRep is a content bug.`
+      );
+    }
+
+    parent.children = [];
+
+    const estreeExpression = valueToEstree(reps);
+    parent.attributes.push({
+      type: "mdxJsxAttribute",
+      name: "reps",
+      value: {
+        type: "mdxJsxAttributeValueExpression",
+        value: JSON.stringify(reps),
+        data: {
+          estree: {
+            type: "Program",
+            sourceType: "module",
+            body: [
+              {
+                type: "ExpressionStatement",
+                expression: estreeExpression,
+              },
+            ],
+          },
+        },
+      },
+    });
+  });
+}
+
+/**
  * Map from JSX element name → (kind, lookup-prop-name) for the four
  * inline-ref components. Centralized so the extractor and any future
  * audit-config diagnostics share a single source of truth.
@@ -1094,6 +1335,14 @@ interface GlobalIndexState {
    * merge them into the report at the same call.
    */
   extractorFindings: ReadonlyArray<AuditFinding>;
+  /**
+   * Per-chapter `<MultiRep>` concept-binding entries (ADR 0043 +
+   * 2026-05-17 design hardening). Keyed by `${chapter}#${id}` so
+   * different chapters can reuse the auto-derived `mr-<concept>`
+   * anchor without collision. Populated by `extractMultiReps`;
+   * consumed by audit invariants MR1–MR4/MR6 in PR-δ.
+   */
+  multiReps: Map<string, MultiRepIndexEntry>;
 }
 
 function getGlobalState(): GlobalIndexState {
@@ -1112,6 +1361,7 @@ function getGlobalState(): GlobalIndexState {
       inlineRefUsages: [],
       contractValidations: [],
       extractorFindings: [],
+      multiReps: new Map(),
     };
   }
   return g[GLOBAL_KEY];
@@ -1161,6 +1411,11 @@ class IndexAccumulator {
     state.inlineRefUsages = state.inlineRefUsages.filter(
       (u) => u.chapter !== chapterSlug
     );
+    for (const [key, entry] of state.multiReps) {
+      if (entry.chapter === chapterSlug) {
+        state.multiReps.delete(key);
+      }
+    }
   }
 
   /**
@@ -1407,6 +1662,33 @@ class IndexAccumulator {
    * TextbookLayout at SSR merge time, PR-C3 decisions row 3 two-tier
    * model); empty until that setter fires.
    */
+  /**
+   * Add a chapter's extracted MultiRep bindings. Keyed by
+   * `${chapter}#${id}` so different chapters can reuse the auto-
+   * derived `mr-<concept>` anchor without collision. Within-chapter
+   * duplicate concept bindings (two `<MultiRep concept="x">` in one
+   * chapter sharing an auto-anchor) trip the key collision and throw.
+   * Cross-chapter same-concept bindings are valid by design (the
+   * audit-time MR6 invariant handles cross-chapter equivalent_to
+   * resolution; concept reuse across chapters is fine).
+   */
+  addMultiReps(entries: ReadonlyArray<MultiRepIndexEntry>): void {
+    const state = getGlobalState();
+    for (const entry of entries) {
+      const key = `${entry.chapter}#${entry.id}`;
+      const existing = state.multiReps.get(key);
+      if (existing) {
+        throw new Error(
+          `MultiRep id collision: chapter "${entry.chapter}" has two <MultiRep> bindings sharing anchor "${entry.id}" (concepts "${existing.concept}" and "${entry.concept}"). Resolution: change one of the \`id\` props.`
+        );
+      }
+    }
+    for (const entry of entries) {
+      const key = `${entry.chapter}#${entry.id}`;
+      state.multiReps.set(key, entry);
+    }
+  }
+
   asPedagogyIndex(): PedagogyIndex {
     const state = getGlobalState();
     return {
@@ -1422,6 +1704,7 @@ class IndexAccumulator {
       inlineRefUsages: state.inlineRefUsages.slice(),
       contractValidations: state.contractValidations,
       extractorFindings: state.extractorFindings,
+      multiReps: Array.from(state.multiReps.values()),
     };
   }
 }
@@ -1451,6 +1734,7 @@ export function resetIndexAccumulator(): void {
   state.inlineRefUsages = [];
   state.contractValidations = [];
   state.extractorFindings = [];
+  state.multiReps.clear();
 }
 
 /**
@@ -1533,6 +1817,7 @@ export function pedagogyIndexRemarkPlugin(
     indexAccumulator.addInlineRefUsages(
       extractInlineRefUsages(tree, chapterSlug)
     );
+    indexAccumulator.addMultiReps(extractMultiReps(tree, chapterSlug));
 
     // PR 10 print-polish: mark the first <GlossaryTerm> per slug per
     // chapter with `data-first-use="true"`. Downstream GlossaryTerm.tsx
@@ -1547,5 +1832,10 @@ export function pedagogyIndexRemarkPlugin(
     // read-only harvesters see the unmutated tree. See
     // docs/plans/2026-05-14-lo-checkbox-remark-extraction-design.md.
     transformLearningObjectives(tree, chapterSlug);
+    // Rewrite <MultiRep> AST shape on the same terminal pass — the
+    // runtime <MultiRep> dispatches over a `reps` prop populated from
+    // serialized child attrs, paralleling the LO pattern. Per the
+    // 2026-05-17 MultiRep design hardening §D5.
+    transformMultiRep(tree, chapterSlug);
   };
 }
