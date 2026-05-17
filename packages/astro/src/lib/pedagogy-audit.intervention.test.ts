@@ -87,8 +87,12 @@ describe("I2 ERROR — unknown intervention type", () => {
     ];
     index.misconceptions = [misc("misc-x")];
     const { errors } = runPedagogyAudit(index);
-    expect(errors.filter((e) => e.code === "I2")).toHaveLength(1);
-    expect(errors[0]?.message).toMatch(/made-up-intervention/);
+    // Filter-then-assert (rather than indexing `errors[0]`) so a
+    // future invariant emitting earlier in the audit's declared
+    // order doesn't silently shift the index this test inspects.
+    const i2 = errors.filter((e) => e.code === "I2");
+    expect(i2).toHaveLength(1);
+    expect(i2[0]?.message).toMatch(/made-up-intervention/);
   });
 
   it("passes for every canonical type in intervention-index.ts", () => {

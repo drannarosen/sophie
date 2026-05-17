@@ -1265,7 +1265,17 @@ export function extractInterventions(
         // the misconception extractor handles its own naming, and any
         // nested Intervention's `"this"` will fall through to the
         // outer enclosing (or stay as "this" if none).
-        if (miscName) nextEnclosing = miscName;
+        //
+        // Slugify here to align with the misconception extractor's
+        // anchor derivation, which stores `slugify(name)` as the
+        // MisconceptionEntry.anchor (PR-δ extractor fix). Without
+        // this slugify, an author writing `name="Universe With A
+        // Center"` would produce a misconception anchor of
+        // `universe-with-a-center` but an Intervention
+        // `addresses="this"` resolution of `Universe With A Center`
+        // (raw), and the audit's I1 + MG3 would fire false-positive
+        // pairs on every nested intervention.
+        if (miscName) nextEnclosing = slugify(miscName);
       }
     }
 
