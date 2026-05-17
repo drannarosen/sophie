@@ -1,132 +1,383 @@
+/* BlackbodyExplorer — Tier-1+ figure chrome per
+ * docs/website/vision/design/interactive-figure-target.md.
+ *
+ * Anatomy:
+ *   .root            outer card. 1px border, 4px left rule in --sophie-
+ *                    role-model, 5px radius, shadow, surface-1 fill.
+ *                    Tier-1+ differentiates from Tier-1 (Callout) via the
+ *                    heavier 4px left rule and the shadow.
+ *   .titleBar        Telescope icon + Plex Sans semibold title. Tinted via
+ *                    color-mix(in oklch, role-model 8%, surface-1) — the
+ *                    same pattern Callout uses, threaded through the
+ *                    figure's primary role color.
+ *   .sliderRow       Slider label + Radix slider + ghost Reset-to-Sun
+ *                    button. Padding-matched to titleBar; separated by a
+ *                    border-bottom.
+ *   .body            2:1 grid (plot column : readouts aside) on desktop;
+ *                    single-column stack on mobile (< 720px).
+ *   .readoutGroup    role-pill (Plex Mono uppercase, role color) ABOVE
+ *                    value (Plex Mono tabular-nums, role color, 1px
+ *                    underline). Replaces the WS3-precedent Material-
+ *                    Design colored-border aesthetic per Principle 2.
+ *   .approxToggles   Bottom-of-card row, 3px dashed left rule in
+ *                    role-approximation. Houses checkboxes + validity
+ *                    hints.
+ */
+
 .root {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: var(--sophie-space-4, 1rem);
-  border: 1px solid var(--sophie-border, #e5e5e5);
-  border-radius: var(--sophie-radius-md, 0.5rem);
-  padding: var(--sophie-space-4, 1rem);
-  background: var(--sophie-surface, #fafafa);
+  display: flex;
+  flex-direction: column;
+  background: var(--sophie-surface-1);
+  border: 1px solid var(--sophie-border);
+  border-left: 4px solid var(--sophie-role-model);
+  border-radius: var(--sophie-radius-sm);
+  box-shadow: var(--sophie-shadow-card);
+  color: var(--sophie-text);
+  font-family: var(--sophie-font-sans);
+  line-height: var(--sophie-leading-prose);
+  overflow: hidden;
 }
 
-@media (max-width: 720px) {
-  .root {
-    grid-template-columns: 1fr;
-  }
-}
+/* Title bar — tinted strip, Plex Sans semibold, Lucide Telescope. */
 
-.figureHeader {
-  grid-column: 1 / -1;
+.titleBar {
   display: flex;
   align-items: center;
-  gap: var(--sophie-space-3, 0.75rem);
+  gap: var(--sophie-space-2);
+  padding: var(--sophie-space-2) var(--sophie-space-4);
+  background: color-mix(
+    in oklch,
+    var(--sophie-role-model) 8%,
+    var(--sophie-surface-1)
+  );
+  border-bottom: 1px solid var(--sophie-border);
+}
+
+.titleBarIcon {
+  flex-shrink: 0;
+  color: var(--sophie-role-model);
+}
+
+.titleBarTitle {
+  margin: 0;
+  font-family: var(--sophie-font-sans);
+  font-size: var(--sophie-text-base);
+  font-weight: var(--sophie-weight-semibold);
+  color: var(--sophie-text);
+}
+
+/* Slider row — full-width strip between title bar and body. */
+
+.sliderRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sophie-space-3);
+  padding: var(--sophie-space-3) var(--sophie-space-4);
+  border-bottom: 1px solid var(--sophie-border);
   flex-wrap: wrap;
 }
 
-.sliderWrapper {
+.sliderRowSlider {
   flex: 1;
   min-width: 220px;
 }
 
-.colorSwatch {
-  display: inline-block;
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 9999px;
-  border: 1px solid var(--sophie-border, #ddd);
-  vertical-align: middle;
-  margin-right: var(--sophie-space-2, 0.5rem);
-  background-color: var(--swatch-color, #000);
-}
-
 .solarAnchor {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sophie-space-1);
   background: transparent;
-  border: 1px solid var(--sophie-border, #ccc);
-  border-radius: var(--sophie-radius-sm, 0.25rem);
-  padding: 0.25rem 0.625rem;
-  font-size: var(--sophie-text-sm, 0.875rem);
+  border: 1px solid var(--sophie-border);
+  border-radius: var(--sophie-radius-sm);
+  padding: var(--sophie-space-1) var(--sophie-space-2);
+  font-family: var(--sophie-font-sans);
+  font-size: var(--sophie-text-sm);
+  color: var(--sophie-text);
   cursor: pointer;
+  transition: background 100ms ease;
 }
 
 .solarAnchor:hover {
-  background: var(--sophie-surface-elevated, #fff);
+  background: var(--sophie-surface-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .solarAnchor {
+    transition: none;
+  }
+}
+
+.solarAnchor:focus-visible {
+  outline: var(--sophie-focus-width) solid var(--sophie-focus-color);
+  outline-offset: 2px;
+}
+
+.solarAnchorIcon {
+  flex-shrink: 0;
+}
+
+/* Body — desktop 2:1 plot:aside; mobile single-column stack. */
+
+.body {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--sophie-space-4);
+  padding: var(--sophie-space-4);
+}
+
+@media (max-width: 720px) {
+  .body {
+    grid-template-columns: 1fr;
+  }
 }
 
 .plotPanel {
   display: flex;
   flex-direction: column;
-  gap: var(--sophie-space-2, 0.5rem);
+  gap: var(--sophie-space-2);
 }
 
 .plotContainer {
+  position: relative;
   width: 100%;
   min-height: 280px;
-  background: var(--sophie-surface-elevated, #fff);
-  border-radius: var(--sophie-radius-sm, 0.25rem);
+}
+
+.plotSvgHost {
+  position: relative;
+  width: 100%;
+}
+
+/* Plot internals — Plex Sans in tick labels (per Section 2). Plot emits
+ * each tick label as <text> inside g[aria-label="x-axis tick label"] (or
+ * y-axis); the axis-domain baseline and tick marks are <line>/<path>
+ * elements inside g[aria-label*="-axis"]. We target both groups by
+ * attribute selector. */
+
+.plotContainer svg text {
+  font-family: var(--sophie-font-sans);
+  font-size: 11px;
+  fill: var(--sophie-text-muted);
+}
+
+.plotContainer svg [aria-label*="-axis"] line,
+.plotContainer svg [aria-label*="-axis"] path {
+  stroke: var(--sophie-border);
+  stroke-width: 0.5px;
+}
+
+/* HTML axis labels — KaTeX-rendered, positioned absolutely against the
+ * plot container. Y label rotated 90° in the left margin; X label
+ * centered horizontally below the plot area. Plot uses width=480,
+ * height=300, marginLeft=60, marginRight=20 (default), marginBottom=44,
+ * marginTop=20 (default). Plot-area center: x=260, y=138. */
+
+.axisLabelX {
+  position: absolute;
+  bottom: var(--sophie-space-1);
+  left: 260px;
+  transform: translateX(-50%);
+  font-family: var(--sophie-font-sans);
+  font-size: var(--sophie-text-sm);
+  color: var(--sophie-text);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.axisLabelY {
+  position: absolute;
+  top: 138px;
+  left: var(--sophie-space-1);
+  transform: rotate(-90deg) translateX(-50%);
+  transform-origin: left top;
+  font-family: var(--sophie-font-sans);
+  font-size: var(--sophie-text-sm);
+  color: var(--sophie-text);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* Spectral gradient strip — 6px-tall band at the top edge of the plot
+ * area, sitting along the visible-band wavelength range. 15 log-equal-
+ * spaced bins each filled to its oklch wavelength color (violet → red).
+ * Position derives from Plot's x-scale at runtime (left + width are set
+ * inline; height is fixed). Sits ABOVE the SVG so it occludes Plot's
+ * own visible-band base-wash rect at the very top edge. */
+
+.spectralStrip {
+  position: absolute;
+  top: 20px; /* Plot marginTop default */
+  height: 6px;
+  display: flex;
+  pointer-events: none;
+}
+
+.spectralStrip > span {
+  flex: 1;
+  display: block;
+}
+
+/* Wien-peak HTML overlay — 12px downward tick at plot top + KaTeX label
+ * sitting above it. Position lerps as T changes (Principle 4: motion is
+ * meaning). The `left` CSS var is set inline from Plot's x-scale.apply()
+ * since the pixel position depends on the figure's runtime geometry. */
+
+.wienPeakOverlay {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  transition: left 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wienPeakOverlay {
+    transition: none;
+  }
+}
+
+.wienPeakLabel {
+  font-family: var(--sophie-font-sans);
+  font-size: var(--sophie-text-xs);
+  color: var(--sophie-role-inference);
+  white-space: nowrap;
+  padding-bottom: 2px;
+}
+
+.wienPeakTick {
+  width: 1.5px;
+  height: 12px;
+  background: var(--sophie-role-inference);
 }
 
 .aside {
   display: flex;
   flex-direction: column;
-  gap: var(--sophie-space-3, 0.75rem);
+  gap: var(--sophie-space-4);
 }
+
+/* Readout group — role-pill above, value below with 1px underline in
+ * role color. No left border (replaces the Material-Design pattern). */
 
 .readoutGroup {
   display: flex;
   flex-direction: column;
-  gap: 0.125rem;
-  padding: var(--sophie-space-2, 0.5rem);
-  border-left: 3px solid transparent;
+  gap: var(--sophie-space-half);
 }
 
-.readoutGroup[data-epistemic-role="observable"] {
-  border-left-color: var(--sophie-role-observable, #94a3b8);
-}
-
-.readoutGroup[data-epistemic-role="inference"] {
-  border-left-color: var(--sophie-role-inference, #818cf8);
-}
-
-.readoutGroup[data-epistemic-role="model"] {
-  border-left-color: var(--sophie-role-model, #2563eb);
-}
-
-.readoutGroup[data-epistemic-role="approximation"] {
-  border-left-color: var(--sophie-role-approximation, #cbd5e1);
-  border-left-style: dashed;
-}
-
-.readoutLabel {
-  font-size: var(--sophie-text-xs, 0.75rem);
+.readoutPill {
+  font-family: var(--sophie-font-mono);
+  font-size: var(--sophie-text-pill);
+  font-weight: var(--sophie-weight-semibold);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--sophie-text-muted, #666);
+  letter-spacing: 0.06em;
 }
 
 .readoutValue {
-  font-size: var(--sophie-text-base, 1rem);
+  font-family: var(--sophie-font-mono);
   font-variant-numeric: tabular-nums;
-  color: var(--sophie-text-strong, #1a1a1a);
+  font-size: var(--sophie-text-base);
+  padding-bottom: 2px;
+  border-bottom: 1px solid currentColor;
 }
 
-.approximationToggles {
-  display: flex;
-  flex-direction: column;
-  gap: 0.375rem;
-  padding: var(--sophie-space-2, 0.5rem);
-  border-left: 3px dashed var(--sophie-role-approximation, #cbd5e1);
+/* Per-role color binding — pill text + underline color both come from
+ * the role's CSS var. Specificity keeps these from being overridden by
+ * the generic .readoutValue rule above. */
+
+.readoutGroup[data-epistemic-role="observable"] .readoutPill,
+.readoutGroup[data-epistemic-role="observable"] .readoutValue {
+  color: var(--sophie-role-observable);
 }
 
-.approximationLabel {
+.readoutGroup[data-epistemic-role="model"] .readoutPill,
+.readoutGroup[data-epistemic-role="model"] .readoutValue {
+  color: var(--sophie-role-model);
+}
+
+.readoutGroup[data-epistemic-role="inference"] .readoutPill,
+.readoutGroup[data-epistemic-role="inference"] .readoutValue {
+  color: var(--sophie-role-inference);
+}
+
+.readoutGroup[data-epistemic-role="approximation"] .readoutPill,
+.readoutGroup[data-epistemic-role="approximation"] .readoutValue {
+  color: var(--sophie-role-approximation);
+}
+
+/* Color swatch + chromaticity caption. 56×56 oklch-lerp circle. Motion
+ * gated by prefers-reduced-motion per Principle 4. */
+
+.chromaticityReadoutBody {
   display: flex;
   align-items: center;
-  gap: 0.375rem;
-  font-size: var(--sophie-text-sm, 0.875rem);
+  gap: var(--sophie-space-2);
+}
+
+.colorSwatch {
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: 9999px;
+  border: 1px solid var(--sophie-border);
+  background-color: var(--swatch-color, #000);
+  transition: background-color 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .colorSwatch {
+    transition: none;
+  }
+}
+
+.chromaticityCaption {
+  font-family: var(--sophie-font-sans);
+  font-size: var(--sophie-text-sm);
+  color: var(--sophie-text-muted);
+  font-style: italic;
+}
+
+/* Approximation toggles — bottom-of-card row, 3px dashed amber left
+ * rule. Validity hints sit indented under the toggle label. */
+
+.approxToggles {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sophie-space-1);
+  margin: 0 var(--sophie-space-4) var(--sophie-space-4);
+  padding: var(--sophie-space-2) var(--sophie-space-3);
+  border-left: 3px dashed var(--sophie-role-approximation);
+  background: var(--sophie-surface-2);
+}
+
+.approxLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--sophie-space-1);
+  font-family: var(--sophie-font-sans);
+  font-size: var(--sophie-text-sm);
   cursor: pointer;
 }
 
+.approxLabel input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--sophie-role-approximation);
+  cursor: pointer;
+}
+
+.approxLabel input[type="checkbox"]:focus-visible {
+  outline: var(--sophie-focus-width) solid var(--sophie-focus-color);
+  outline-offset: 2px;
+}
+
 .validityHint {
-  font-size: var(--sophie-text-xs, 0.75rem);
-  color: var(--sophie-text-muted, #666);
+  font-family: var(--sophie-font-sans);
+  font-size: var(--sophie-text-xs);
+  color: var(--sophie-text-muted);
   font-style: italic;
-  margin-left: 1.5rem;
+  margin-left: calc(1rem + var(--sophie-space-1));
 }

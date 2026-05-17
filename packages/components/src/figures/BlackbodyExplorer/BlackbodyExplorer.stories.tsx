@@ -13,6 +13,18 @@ import { BlackbodyExplorer } from "./BlackbodyExplorer.tsx";
  *
  * Stories below cover canonical stellar regimes (Sun, M dwarf, hot
  * blue star) and the multi-instance independence case.
+ *
+ * **Dark-mode coverage** is automatic: the project's test-runner
+ * (PR #77) captures both light and `data-theme="dark"` baselines per
+ * story under `__snapshots__/chromium/`. No dedicated DarkMode story
+ * needed.
+ *
+ * **prefers-reduced-motion** behavior lives in the CSS module:
+ * `@media (prefers-reduced-motion: reduce)` zeros all transitions on
+ * `.colorSwatch`, `.wienPeakOverlay`, and `.solarAnchor`. The state
+ * can't be enabled per-story without OS-level emulation, so a
+ * dedicated ReducedMotion story would render identically to the
+ * default — manual verification via system settings only.
  */
 const meta = {
   title: "Figures/BlackbodyExplorer",

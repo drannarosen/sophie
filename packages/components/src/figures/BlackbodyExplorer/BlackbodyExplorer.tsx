@@ -1,4 +1,5 @@
 import * as Plot from "@observablehq/plot";
+import { Sun, Telescope } from "lucide-react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { ParameterCursor } from "../../interactive/ParameterCursor.tsx";
 import { ParameterSlider } from "../../interactive/ParameterSlider.tsx";
@@ -11,6 +12,7 @@ import {
 } from "./BlackbodyExplorer.schema.ts";
 import { blackbodyToSrgb } from "./chromaticity.ts";
 import { spectralClassification } from "./classification.ts";
+import { InlineMath } from "./InlineMath.tsx";
 import {
   nmToCm,
   planckLambda,
@@ -58,11 +60,43 @@ function buildCurveData(
   return samples;
 }
 
-function formatScientific(value: number): string {
+function formatScientificTex(value: number): string {
   if (value === 0) return "0";
   const exponent = Math.floor(Math.log10(Math.abs(value)));
   const mantissa = value / 10 ** exponent;
-  return `${mantissa.toFixed(2)} × 10^${exponent}`;
+  return `${mantissa.toFixed(2)} \\times 10^{${exponent}}`;
+}
+
+const UNICODE_SUPERSCRIPTS: Record<string, string> = {
+  "0": "⁰",
+  "1": "¹",
+  "2": "²",
+  "3": "³",
+  "4": "⁴",
+  "5": "⁵",
+  "6": "⁶",
+  "7": "⁷",
+  "8": "⁸",
+  "9": "⁹",
+  "-": "⁻",
+};
+
+// Format a log-axis tick value as 10ⁿ using Unicode superscripts —
+// publication-standard convention for scientific axes (matplotlib +
+// matplotlib-rendered ApJ figures use the same form). Tick labels live
+// inside SVG <text> elements where KaTeX cannot be rendered without
+// <foreignObject>, which is unstable across Linux/Mac VR per Section 4
+// of interactive-figure-target.md. Returns an empty string for non-
+// decade values so Plot's minor ticks remain as marks without labels.
+function tickPowerOfTen(value: number): string {
+  if (!Number.isFinite(value) || value <= 0) return "";
+  const exp = Math.round(Math.log10(value));
+  if (Math.abs(value - 10 ** exp) > 1e-9 * value) return "";
+  const expStr = String(exp);
+  const superscript = Array.from(expStr)
+    .map((c) => UNICODE_SUPERSCRIPTS[c] ?? c)
+    .join("");
+  return `10${superscript}`;
 }
 
 interface SpectrumPlotProps {
@@ -71,12 +105,73 @@ interface SpectrumPlotProps {
   showWien: boolean;
 }
 
+const PLOT_WIDTH = 480;
+const PLOT_HEIGHT = 300;
+const PLOT_MARGIN_LEFT = 60;
+const PLOT_MARGIN_BOTTOM = 44;
+
+// Two-layer visible-band per Section 4 of interactive-figure-target.md.
+// Layer 1 (base wash) is rendered inside Plot via rectX with the spec's
+// barely-there warm-neutral fill. Layer 2 (spectral gradient strip) is an
+// HTML overlay above the SVG, positioned via Plot's x-scale at runtime.
+const VISIBLE_BAND_BASE_FILL = "oklch(85% 0.04 80 / 0.05)";
+const SPECTRAL_STRIP_BIN_COUNT = 15;
+
+// Log-equal-spaced bin centers across 380–740 nm. Hue map: violet (290°)
+// at 380 nm, red (25°) at 740 nm — oklch hue runs counterclockwise so we
+// interpolate downward. Chroma + lightness held constant so the strip
+// reads as a clean spectrum without luminance shifts confusing the eye.
+const SPECTRAL_STRIP_BINS = Array.from(
+  { length: SPECTRAL_STRIP_BIN_COUNT },
+  (_, i) => {
+    const t = (i + 0.5) / SPECTRAL_STRIP_BIN_COUNT;
+    const nmCenter =
+      VISIBLE_BAND_NM_MIN * (VISIBLE_BAND_NM_MAX / VISIBLE_BAND_NM_MIN) ** t;
+    const hueT =
+      (nmCenter - VISIBLE_BAND_NM_MIN) /
+      (VISIBLE_BAND_NM_MAX - VISIBLE_BAND_NM_MIN);
+    const hue = 290 - hueT * (290 - 25);
+    return {
+      key: i,
+      color: `oklch(75% 0.18 ${hue.toFixed(1)})`,
+    };
+  }
+);
+
+// Anchor literals match packages/theme/src/anchors.ts. Used as the jsdom
+// fallback when getComputedStyle can't resolve CSS custom properties.
+const ROLE_COLOR_FALLBACK = {
+  model: "oklch(58% 0.13 195)",
+  approximation: "oklch(70% 0.04 60)",
+} as const;
+
+function resolveRoleColor(
+  node: HTMLElement,
+  role: keyof typeof ROLE_COLOR_FALLBACK
+): string {
+  const value = getComputedStyle(node)
+    .getPropertyValue(`--sophie-role-${role}`)
+    .trim();
+  return value || ROLE_COLOR_FALLBACK[role];
+}
+
+interface PlotGeometry {
+  wienXpx: number;
+  bandLeftPx: number;
+  bandRightPx: number;
+}
+
 function SpectrumPlot({ T_K, showRayleighJeans, showWien }: SpectrumPlotProps) {
-  const containerRef = useRef<HTMLDivElement | null>(null);
+  const svgHostRef = useRef<HTMLDivElement | null>(null);
+  const [geometry, setGeometry] = useState<PlotGeometry | null>(null);
+  const wienPeakNm = wienPeakWavelengthCm(T_K) * 1e7;
 
   useEffect(() => {
-    const node = containerRef.current;
+    const node = svgHostRef.current;
     if (!node) return;
+
+    const modelColor = resolveRoleColor(node, "model");
+    const approxColor = resolveRoleColor(node, "approximation");
 
     const planckCurve = buildCurveData(T_K, "planck");
     const overlays: PlanckSample[] = [];
@@ -87,24 +182,27 @@ function SpectrumPlot({ T_K, showRayleighJeans, showWien }: SpectrumPlotProps) {
       overlays.push(...buildCurveData(T_K, "wien"));
     }
 
-    const wienPeakNm = wienPeakWavelengthCm(T_K) * 1e7;
     const yMax = Math.max(...planckCurve.map((p) => p.B), 1);
     const yMin = yMax * 1e-8;
 
     const chart = Plot.plot({
-      width: 480,
-      height: 300,
-      marginLeft: 60,
-      marginBottom: 44,
+      width: PLOT_WIDTH,
+      height: PLOT_HEIGHT,
+      marginLeft: PLOT_MARGIN_LEFT,
+      marginBottom: PLOT_MARGIN_BOTTOM,
       x: {
         type: "log",
-        label: "λ (nm)",
+        label: null,
         domain: [PLOT_LAMBDA_NM_MIN, PLOT_LAMBDA_NM_MAX],
+        ticks: [10, 100, 1000, 10000],
+        tickFormat: tickPowerOfTen,
       },
       y: {
         type: "log",
-        label: "B_λ (erg s⁻¹ cm⁻² sr⁻¹ cm⁻¹)",
+        label: null,
         domain: [yMin, yMax * 2],
+        ticks: 5,
+        tickFormat: tickPowerOfTen,
       },
       marks: [
         Plot.rectX(
@@ -121,7 +219,7 @@ function SpectrumPlot({ T_K, showRayleighJeans, showWien }: SpectrumPlotProps) {
             x2: "x2",
             y1: "y1",
             y2: "y2",
-            fill: "rgba(255, 220, 100, 0.18)",
+            fill: VISIBLE_BAND_BASE_FILL,
             stroke: "none",
             ariaLabel: null,
             ariaHidden: "true",
@@ -130,7 +228,7 @@ function SpectrumPlot({ T_K, showRayleighJeans, showWien }: SpectrumPlotProps) {
         Plot.line(planckCurve, {
           x: "lambdaNm",
           y: "B",
-          stroke: "#2563eb",
+          stroke: modelColor,
           strokeWidth: 2,
           ariaLabel: null,
           ariaHidden: "true",
@@ -140,7 +238,8 @@ function SpectrumPlot({ T_K, showRayleighJeans, showWien }: SpectrumPlotProps) {
           {
             x: "lambdaNm",
             y: "B",
-            stroke: "#94a3b8",
+            stroke: approxColor,
+            strokeOpacity: 0.7,
             strokeDasharray: "4 3",
             strokeWidth: 1.5,
             ariaLabel: null,
@@ -152,20 +251,14 @@ function SpectrumPlot({ T_K, showRayleighJeans, showWien }: SpectrumPlotProps) {
           {
             x: "lambdaNm",
             y: "B",
-            stroke: "#475569",
+            stroke: approxColor,
+            strokeOpacity: 0.7,
             strokeDasharray: "2 3",
             strokeWidth: 1.5,
             ariaLabel: null,
             ariaHidden: "true",
           }
         ),
-        Plot.ruleX([wienPeakNm], {
-          stroke: "#818cf8",
-          strokeDasharray: "6 4",
-          strokeWidth: 1.5,
-          ariaLabel: null,
-          ariaHidden: "true",
-        }),
       ],
     }) as SVGElement;
 
@@ -175,12 +268,84 @@ function SpectrumPlot({ T_K, showRayleighJeans, showWien }: SpectrumPlotProps) {
       `Blackbody spectrum: T = ${T_K.toFixed(0)} K, peak wavelength ${wienPeakNm.toFixed(0)} nm. Visible band shaded.`
     );
     node.replaceChildren(chart);
+
+    // Plot's .scale("x").apply() gives pixel coordinates in the SVG's own
+    // coordinate space; since the SVG fills the host div, those numbers
+    // are also the overlay `left` values relative to .plotContainer.
+    const xScale = (
+      chart as unknown as {
+        scale?: (name: string) => { apply?: (v: number) => number };
+      }
+    ).scale?.("x");
+    if (xScale?.apply) {
+      const wienXpx = xScale.apply(wienPeakNm);
+      const bandLeftPx = xScale.apply(VISIBLE_BAND_NM_MIN);
+      const bandRightPx = xScale.apply(VISIBLE_BAND_NM_MAX);
+      if (
+        Number.isFinite(wienXpx) &&
+        Number.isFinite(bandLeftPx) &&
+        Number.isFinite(bandRightPx)
+      ) {
+        setGeometry({ wienXpx, bandLeftPx, bandRightPx });
+      } else {
+        setGeometry(null);
+      }
+    } else {
+      setGeometry(null);
+    }
+
     return () => {
       chart.remove();
     };
-  }, [T_K, showRayleighJeans, showWien]);
+  }, [T_K, showRayleighJeans, showWien, wienPeakNm]);
 
-  return <div ref={containerRef} className={styles.plotContainer} />;
+  return (
+    <div className={styles.plotContainer}>
+      <div ref={svgHostRef} className={styles.plotSvgHost} />
+      <span className={styles.axisLabelY}>
+        <InlineMath>
+          {String.raw`B_\lambda(T)\;(\mathrm{erg\,s^{-1}\,cm^{-2}\,sr^{-1}\,cm^{-1}})`}
+        </InlineMath>
+      </span>
+      <span className={styles.axisLabelX}>
+        <InlineMath>{String.raw`\lambda\;(\mathrm{nm})`}</InlineMath>
+      </span>
+      {geometry !== null && (
+        <>
+          <div
+            aria-hidden='true'
+            className={styles.spectralStrip}
+            data-spectral-strip
+            style={
+              {
+                left: `${geometry.bandLeftPx}px`,
+                width: `${geometry.bandRightPx - geometry.bandLeftPx}px`,
+              } as React.CSSProperties
+            }
+          >
+            {SPECTRAL_STRIP_BINS.map((bin) => (
+              <span
+                key={bin.key}
+                style={{ background: bin.color } as React.CSSProperties}
+              />
+            ))}
+          </div>
+          <div
+            className={styles.wienPeakOverlay}
+            data-wien-peak-overlay
+            style={{ left: `${geometry.wienXpx}px` } as React.CSSProperties}
+          >
+            <span className={styles.wienPeakLabel}>
+              <InlineMath>
+                {`\\lambda_\\text{peak} = ${wienPeakNm.toFixed(0)}\\,\\mathrm{nm}`}
+              </InlineMath>
+            </span>
+            <span aria-hidden='true' className={styles.wienPeakTick} />
+          </div>
+        </>
+      )}
+    </div>
+  );
 }
 
 /**
@@ -228,8 +393,10 @@ export function BlackbodyExplorer(rawProps: BlackbodyExplorerProps) {
     useParameterStore.getState().setValue(cursorKey, T_SUN);
   };
 
+  const titleId = useId();
+
   return (
-    <section id={id} className={styles.root}>
+    <figure id={id} aria-labelledby={titleId} className={styles.root}>
       <ParameterCursor
         name='T'
         min={minTemperatureK}
@@ -239,8 +406,20 @@ export function BlackbodyExplorer(rawProps: BlackbodyExplorerProps) {
         step={100}
       />
 
-      <div className={styles.figureHeader}>
-        <div className={styles.sliderWrapper}>
+      <figcaption className={styles.titleBar}>
+        <Telescope
+          aria-hidden
+          className={styles.titleBarIcon}
+          focusable={false}
+          size={20}
+        />
+        <span id={titleId} className={styles.titleBarTitle}>
+          Blackbody Spectrum Explorer
+        </span>
+      </figcaption>
+
+      <div className={styles.sliderRow}>
+        <div className={styles.sliderRowSlider}>
           <ParameterSlider
             name={cursorKey}
             label='Blackbody temperature'
@@ -253,106 +432,125 @@ export function BlackbodyExplorer(rawProps: BlackbodyExplorerProps) {
           className={styles.solarAnchor}
           onClick={handleSolarReset}
         >
-          Reset to Sun (5772 K)
+          <Sun
+            aria-hidden
+            className={styles.solarAnchorIcon}
+            focusable={false}
+            size={14}
+          />
+          Reset to Sun
         </button>
       </div>
 
-      <div className={styles.plotPanel} data-epistemic-role='model'>
-        <SpectrumPlot
-          T_K={T_K}
-          showRayleighJeans={showRJ}
-          showWien={showWien}
-        />
+      <div className={styles.body}>
+        <div className={styles.plotPanel} data-epistemic-role='model'>
+          <SpectrumPlot
+            T_K={T_K}
+            showRayleighJeans={showRJ}
+            showWien={showWien}
+          />
+        </div>
+
+        <div className={styles.aside}>
+          <div className={styles.readoutGroup} data-epistemic-role='observable'>
+            <span className={styles.readoutPill}>Observable</span>
+            <div className={styles.chromaticityReadoutBody}>
+              <span
+                aria-hidden='true'
+                className={styles.colorSwatch}
+                data-testid='color-swatch'
+                style={
+                  {
+                    "--swatch-color": `rgb(${swatch.r}, ${swatch.g}, ${swatch.b})`,
+                  } as React.CSSProperties
+                }
+              />
+              <span className={styles.chromaticityCaption}>
+                chromaticity at{" "}
+                <InlineMath>{`T = ${T_K.toFixed(0)}\\,\\mathrm{K}`}</InlineMath>
+              </span>
+            </div>
+          </div>
+
+          <div className={styles.readoutGroup} data-epistemic-role='inference'>
+            <span className={styles.readoutPill}>Wien peak</span>
+            <span
+              className={styles.readoutValue}
+              data-testid='wien-peak-readout'
+            >
+              <InlineMath>
+                {`\\lambda_\\text{peak} = ${lambdaPeakNm.toFixed(0)}\\,\\mathrm{nm}`}
+              </InlineMath>
+            </span>
+          </div>
+
+          <div className={styles.readoutGroup} data-epistemic-role='inference'>
+            <span className={styles.readoutPill}>Stefan–Boltzmann flux</span>
+            <span className={styles.readoutValue} data-testid='flux-readout'>
+              <InlineMath>
+                {`F = ${formatScientificTex(flux)}\\,\\mathrm{erg\\,s^{-1}\\,cm^{-2}}`}
+              </InlineMath>
+            </span>
+          </div>
+
+          <div className={styles.readoutGroup} data-epistemic-role='inference'>
+            <span className={styles.readoutPill}>Spectral class</span>
+            <span
+              className={styles.readoutValue}
+              data-testid='classification-readout'
+            >
+              {klass}-type
+            </span>
+          </div>
+        </div>
       </div>
 
-      <aside className={styles.aside}>
-        <div className={styles.readoutGroup} data-epistemic-role='observable'>
-          <span className={styles.readoutLabel}>What you would see</span>
-          <span className={styles.readoutValue}>
-            <span
-              data-testid='color-swatch'
-              className={styles.colorSwatch}
-              style={
-                {
-                  "--swatch-color": `rgb(${swatch.r}, ${swatch.g}, ${swatch.b})`,
-                } as React.CSSProperties
-              }
-              aria-hidden='true'
+      {showApproximations && (
+        <div
+          className={styles.approxToggles}
+          data-epistemic-role='approximation'
+        >
+          <label className={styles.approxLabel} htmlFor={rjId}>
+            <input
+              aria-describedby={`${rjId}-hint`}
+              checked={showRJ}
+              id={rjId}
+              onChange={(e) => setShowRJ(e.target.checked)}
+              type='checkbox'
             />
-            <span>
-              chromaticity at this T (visible band shaded on the plot)
+            Rayleigh–Jeans limit
+          </label>
+          {showRJ && (
+            <span className={styles.validityHint} id={`${rjId}-hint`}>
+              Valid only at long wavelength (
+              <InlineMath>
+                {String.raw`\lambda \gg \lambda_\text{peak}`}
+              </InlineMath>
+              ); diverges in the UV.
             </span>
-          </span>
+          )}
+
+          <label className={styles.approxLabel} htmlFor={wienId}>
+            <input
+              aria-describedby={`${wienId}-hint`}
+              checked={showWien}
+              id={wienId}
+              onChange={(e) => setShowWien(e.target.checked)}
+              type='checkbox'
+            />
+            Wien approximation
+          </label>
+          {showWien && (
+            <span className={styles.validityHint} id={`${wienId}-hint`}>
+              Valid only at short wavelength (
+              <InlineMath>
+                {String.raw`\lambda \ll \lambda_\text{peak}`}
+              </InlineMath>
+              ); underpredicts in the IR.
+            </span>
+          )}
         </div>
-
-        <div className={styles.readoutGroup} data-epistemic-role='inference'>
-          <span className={styles.readoutLabel}>Wien peak (inferred)</span>
-          <span className={styles.readoutValue} data-testid='wien-peak-readout'>
-            λ_peak = {lambdaPeakNm.toFixed(0)} nm
-          </span>
-        </div>
-
-        <div className={styles.readoutGroup} data-epistemic-role='inference'>
-          <span className={styles.readoutLabel}>
-            Stefan-Boltzmann flux (inferred)
-          </span>
-          <span className={styles.readoutValue} data-testid='flux-readout'>
-            F = {formatScientific(flux)} erg s⁻¹ cm⁻²
-          </span>
-        </div>
-
-        <div className={styles.readoutGroup} data-epistemic-role='inference'>
-          <span className={styles.readoutLabel}>
-            Spectral classification (inferred)
-          </span>
-          <span
-            className={styles.readoutValue}
-            data-testid='classification-readout'
-          >
-            {klass}-type
-          </span>
-        </div>
-
-        {showApproximations && (
-          <div
-            className={styles.approximationToggles}
-            data-epistemic-role='approximation'
-          >
-            <label className={styles.approximationLabel} htmlFor={rjId}>
-              <input
-                id={rjId}
-                type='checkbox'
-                checked={showRJ}
-                onChange={(e) => setShowRJ(e.target.checked)}
-                aria-describedby={`${rjId}-hint`}
-              />
-              Rayleigh-Jeans limit
-            </label>
-            {showRJ && (
-              <span id={`${rjId}-hint`} className={styles.validityHint}>
-                Valid only at long wavelength (λ ≫ λ_peak); diverges in the UV.
-              </span>
-            )}
-
-            <label className={styles.approximationLabel} htmlFor={wienId}>
-              <input
-                id={wienId}
-                type='checkbox'
-                checked={showWien}
-                onChange={(e) => setShowWien(e.target.checked)}
-                aria-describedby={`${wienId}-hint`}
-              />
-              Wien approximation
-            </label>
-            {showWien && (
-              <span id={`${wienId}-hint`} className={styles.validityHint}>
-                Valid only at short wavelength (λ ≪ λ_peak); underpredicts in
-                the IR.
-              </span>
-            )}
-          </div>
-        )}
-      </aside>
-    </section>
+      )}
+    </figure>
   );
 }
