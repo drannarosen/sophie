@@ -54,6 +54,22 @@ The architectural rationale lives in
 [ADR 0027 — MDX render boundary prop threading](../decisions/0027-mdx-render-boundary-prop-threading.md)
 and [ADR 0038 — Pedagogy-index pattern](../decisions/0038-pedagogy-index-pattern.md).
 This page is the chapter author's quick reference.
+
+For **visual chrome anatomy** — what each component looks like, the
+three-tier card-strong / card-light / dissolution model, brand color
+allocation, Lucide icon assignments, and the locked typography stack
+— see [visual-polish-target.md](../vision/design/visual-polish-target.md).
+Workstream 3 (PR-1 through PR-12, May 2026) rebuilt every component
+listed below against that spec.
+:::
+
+:::{important} Shipped vs ADR-locked
+Some entries below are **ADR-locked but not yet shipped** — the
+contract is defined, but no source file exists in
+`packages/components/src/components/` or
+`packages/astro/src/components/` yet. AI authors should avoid using
+these in chapter MDX until they ship; cross-references to them won't
+resolve. These rows are flagged with a ⏳ marker.
 :::
 
 ## The inventory
@@ -70,9 +86,9 @@ This page is the chapter author's quick reference.
 | `<Figure>` | Source for `PedagogyIndex.figureUsages` (per-chapter record of where each registry figure appears). Resolves `name` against the consumer-supplied `figureRegistry`. |
 | `<KeyEquation>` | Source for `PedagogyIndex.equations`. Requires `id` (canonical anchor) and `title`; body must contain exactly one `$$...$$` block (KaTeX-rendered). |
 | `<Objective>` | Pure-display primitive. Only meaningful as a child of `<LearningObjectives>`; the remark extractor walks it during MDX parse to populate `PedagogyIndex.objectives`. |
-| `<MultiRep>` | Children-mode source for `PedagogyIndex.multiRepBindings` (per [ADR 0043](../decisions/0043-notation-registry-multirep-alignment-audit.md)). Wraps `<RepVerbal>`, `<RepEquation refKey symbol>`, `<RepFigure refName symbolLabel>`, `<RepCode refName symbol>`, `<RepIntuition>` children — one concept across multiple representational modes. Feeds the **MR1–MR4** Representation Alignment Audit invariants. |
-| `<RepVerbal>` / `<RepEquation>` / `<RepFigure>` / `<RepCode>` / `<RepIntuition>` | Pure-display primitives. Only meaningful as children of `<MultiRep>`; the extractor walks them during MDX parse to populate `multiRepBindings`. `<RepEquation>` / `<RepFigure>` / `<RepCode>` carry refs that resolve against `equations` / `figureRegistry` / `<CodeCell>` names respectively. |
-| `<Intervention>` | Children-mode source for `PedagogyIndex.interventions` (per [ADR 0044](../decisions/0044-misconception-graph-and-intervention-library.md)). Nests inside a misconception `<Aside>` or `<Callout variant="misconception">` (`addresses="this"`) — or stands outside with an explicit `addresses="<misc-slug>"`. `type` references the 12 canonical interventions in `intervention-index.ts` or `"custom"`. Feeds the **MG3** + **I1–I3** audit invariants. |
+| ⏳ `<MultiRep>` | Children-mode source for `PedagogyIndex.multiRepBindings` (per [ADR 0043](../decisions/0043-notation-registry-multirep-alignment-audit.md)). Wraps `<RepVerbal>`, `<RepEquation refKey symbol>`, `<RepFigure refName symbolLabel>`, `<RepCode refName symbol>`, `<RepIntuition>` children — one concept across multiple representational modes. Feeds the **MR1–MR4** Representation Alignment Audit invariants. **ADR-locked; not yet shipped.** |
+| ⏳ `<RepVerbal>` / `<RepEquation>` / `<RepFigure>` / `<RepCode>` / `<RepIntuition>` | Pure-display primitives. Only meaningful as children of `<MultiRep>`; the extractor walks them during MDX parse to populate `multiRepBindings`. `<RepEquation>` / `<RepFigure>` / `<RepCode>` carry refs that resolve against `equations` / `figureRegistry` / `<CodeCell>` names respectively. **ADR-locked; not yet shipped.** |
+| ⏳ `<Intervention>` | Children-mode source for `PedagogyIndex.interventions` (per [ADR 0044](../decisions/0044-misconception-graph-and-intervention-library.md)). Nests inside a misconception `<Aside>` or `<Callout variant="misconception">` (`addresses="this"`) — or stands outside with an explicit `addresses="<misc-slug>"`. `type` references the 12 canonical interventions in `intervention-index.ts` or `"custom"`. Feeds the **MG3** + **I1–I3** audit invariants. **ADR-locked; not yet shipped.** |
 
 ### Interactive React island
 
@@ -82,7 +98,7 @@ This page is the chapter author's quick reference.
 |---|---|
 | `<InteractiveCallout>` | Side info with a reviewed-state toggle |
 | `<InteractiveCheckbox>` | Single tracked checkbox |
-| `<LearningObjectives>` | Chapter-opening "you will be able to…" list (children-mode, contains `<Objective>` elements). After PR-C4, the LO checkbox interactivity has a known cloneElement-through-astro-slot gap; see follow-ups. |
+| `<LearningObjectives>` | Chapter-opening "you will be able to…" list (children-mode, contains `<Objective>` elements). Per ADR 0027, the child `<Objective>` nodes are harvested into the `objectives` prop via the build-time `transformLearningObjectives` remark transform — the React island reads props (not children), so the previous cloneElement-through-astro-slot gap is resolved. |
 | `<Predict>` | "Predict before the answer" prompt |
 | `<ConfidenceCheck>` | 1–5 / 1–7 confidence rating |
 | `<ComprehensionGate>` | "Did you understand?" gate before next section |
@@ -98,7 +114,7 @@ This page is the chapter author's quick reference.
 | `<EqRef slug="X" />` | `equations` | Equation title with hover preview (KaTeX-rendered tex + title) | Self-closing or children |
 | `<FigureRef name="X" />` | `figureRegistry` + `figureUsages` | "Fig. N" (ordinal) with hover preview (thumbnail + caption) | Self-closing or children |
 | `<ChapterRef slug="X" />` | `chapters` + `modules` | Chapter title with hover preview (module breadcrumb + title + description) | Self-closing or children |
-| `<TDRRef num="14" />` | `tdrReferences` (Teaching Decision Records) | `TDR-N: [title]` with hover preview (title + evidence_type + evidence_strength + 1-line summary) | Self-closing or children |
+| ⏳ `<TDRRef num="14" />` | `tdrReferences` (Teaching Decision Records) | `TDR-N: [title]` with hover preview (title + evidence_type + evidence_strength + 1-line summary) | Self-closing or children. **ADR-locked (0040); not yet shipped.** |
 
 `<TDRRef>` respects per-ADR-0040 visibility rules: in student-facing
 build, internal TDRs render as `<span class="sr-only">` (screen-reader
@@ -122,7 +138,7 @@ tests wait on this signal before exercising hover behavior.
 | `<ChapterFigures chapter="X" />` | All `<Figure>` usages in chapter X, joined with `figureRegistry` for src/alt/caption |
 | `<ChapterKeyInsights chapter="X" />` | All key-insight Asides + Callouts in chapter X |
 | `<ChapterMisconceptions chapter="X" />` | All misconception Asides + Callouts in chapter X |
-| `<ChapterTDRs chapter="X" />` | All TDRs referenced from chapter X via `<TDRRef>`. In student-facing build, filters to public TDRs only (often empty); in instructor build, includes all referenced TDRs |
+| ⏳ `<ChapterTDRs chapter="X" />` | All TDRs referenced from chapter X via `<TDRRef>`. In student-facing build, filters to public TDRs only (often empty); in instructor build, includes all referenced TDRs. **ADR-locked (0040); not yet shipped.** |
 
 Each component currently hardcodes `<h2>` for its section heading. A
 forward-looking `headingLevel?: 2 | 3 | 4` prop will land when a real
@@ -364,6 +380,33 @@ JSDoc:
 | Objective | `lo-` | author-supplied via id |
 | TDR | `tdr-` | passthrough TDR number (e.g., `tdr-14` for TDR-014) |
 
+## Epistemic role (ADR 0058)
+
+Per [ADR 0058 — Epistemic Component Contract](../decisions/0058-epistemic-component-contract.md),
+pedagogy components may optionally declare a `role` field encoding the
+component's place in the **eight-role scientific reasoning taxonomy**:
+
+| Role | What it encodes |
+|---|---|
+| `observable` | An empirical quantity the reader can measure or observe |
+| `model` | A formal theoretical structure being introduced |
+| `inference` | A logical step from observation/data to conclusion |
+| `assumption` | An explicit precondition that scopes a model's validity |
+| `approximation` | A controlled simplification of a more general model |
+| `uncertainty` | A bound on what is known or how precisely |
+| `numerical` | A computational implementation of a model |
+| `misconception` | A common wrong belief being explicitly addressed |
+
+The contract is **optional and additive at v1** — existing components
+work unchanged without declaring a role. New components SHOULD declare
+role where applicable; reviewers should ask the question on every PR.
+The taxonomy underwrites Sophie's "Scientific Reasoning OS" thesis
+(see [reasoning-os/](../vision/reasoning-os/index.md) for the broader
+framing and the per-role authoring patterns).
+
+Components that don't fit any of the eight roles are likely **chrome,
+not pedagogy** — that's also useful information.
+
 ## References
 
 - [ADR 0001](../decisions/0001-platform-not-monorepo.md) — repo shape.
@@ -374,5 +417,7 @@ JSDoc:
 - [ADR 0042](../decisions/0042-pedagogy-contract-and-ai-contribution-ledger.md) — Pedagogy Contract + AI Contribution Ledger (course-level YAML + per-chapter frontmatter; gates the Notation Registry opt-in).
 - [ADR 0043](../decisions/0043-notation-registry-multirep-alignment-audit.md) — Notation Registry + `<MultiRep>` + Representation Alignment Audit (NR1–NR4 + MR1–MR4 invariants).
 - [ADR 0044](../decisions/0044-misconception-graph-and-intervention-library.md) — Misconception Graph + Intervention Library + `<Intervention>` (MG1–MG3 + I1–I3 invariants).
+- [ADR 0058](../decisions/0058-epistemic-component-contract.md) — Epistemic Component Contract: the eight-role taxonomy (optional, additive).
+- [Visual polish target](../vision/design/visual-polish-target.md) — three-tier chrome anatomy, brand color allocation, Lucide icon assignments, locked typography stack (the spec Workstream 3 iterated against).
 - [Component contract](component-contract.md) — the TypeScript interface every component implements.
 - [Add a custom component](../how-to/add-a-custom-component.md) — recipe for new components.
