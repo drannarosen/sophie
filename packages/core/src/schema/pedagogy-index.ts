@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { AuditFindingSchema } from "./audit.ts";
+import { BiographySchema } from "./equation-biography.ts";
 import { InterventionEntrySchema } from "./intervention.ts";
 import { MultiRepIndexEntrySchema } from "./multirep.ts";
 import { NonEmptyString, Slug } from "./primitives.ts";
@@ -73,6 +74,21 @@ export const EquationEntrySchema = z.object({
   chapter: Slug,
   /** DOM id on the source <section>; back-link target. Invariant: anchor === slug for equations. */
   anchor: NonEmptyString,
+  /**
+   * Optional EquationBiography per ADR 0046 + 2026-05-17 design hardening.
+   * Per-equation opt-in; audit invariants E7/E8/E9 (PR-δ) only fire when
+   * biography children are present. Surfaces the queryable epistemic layer
+   * (`epistemicRole` on every prose sub-entry) that ADR 0058 §2 underwrites.
+   */
+  biography: BiographySchema.optional(),
+  /**
+   * Author-declared canonical symbols appearing in this equation (ADR 0043
+   * §R5 → PR-δ' bundle). Surfaces the registry-alignment hook NR1/NR3/NR4
+   * (PR-δ) and the NR2 reference-signal aggregation. Defaults to `[]` so
+   * pre-bundle indexes remain valid; symbols are author-declared, not
+   * heuristic-extracted from TeX.
+   */
+  symbols: z.array(NonEmptyString).default([]),
 });
 export type EquationEntry = z.infer<typeof EquationEntrySchema>;
 

@@ -9,6 +9,7 @@ const wiensLaw: EquationEntry = {
   body: "<p>Peak wavelength of blackbody emission scales inversely with temperature.</p>",
   chapter: "spoiler-alerts",
   anchor: "wiens-law",
+  symbols: [],
 };
 
 const inverseSquare: EquationEntry = {
@@ -19,6 +20,7 @@ const inverseSquare: EquationEntry = {
   body: "<p>Flux falls off as the inverse square of the distance.</p>",
   chapter: "spoiler-alerts",
   anchor: "inverse-square-law",
+  symbols: [],
 };
 
 describe("equations-store", () => {

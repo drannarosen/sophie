@@ -100,6 +100,7 @@ describe("runPedagogyAudit — clean index", () => {
       body: "",
       chapter: "spoiler-alerts",
       anchor: "inverse-square-law",
+      symbols: [],
     };
     const fig: FigureRegistryEntry = {
       name: "three-big-questions",
@@ -297,6 +298,7 @@ describe("E4 — undefined <EqRef slug=X>", () => {
       body: "",
       chapter: "spoiler-alerts",
       anchor: "wiens-law",
+      symbols: [],
     };
     const index: PedagogyIndex = {
       ...emptyIndex(),

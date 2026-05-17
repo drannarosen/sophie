@@ -653,6 +653,7 @@ describe("indexAccumulator equations (cross-chapter)", () => {
     body: "",
     chapter: "ch-a",
     anchor: "default-slug",
+    symbols: [],
     ...overrides,
   });
 
