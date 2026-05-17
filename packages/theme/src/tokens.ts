@@ -63,6 +63,7 @@ export const tokens = {
     mono: v("font-mono"),
   },
   size: {
+    pill: v("text-pill"),
     xs: v("text-xs"),
     sm: v("text-sm"),
     base: v("text-base"),

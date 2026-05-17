@@ -119,6 +119,7 @@ export const fontStacks = {
 // two roles — opt-in usage per component lands in step G (component
 // rebuilds), not here.
 export const sizes = {
+  pill: "0.6875rem",
   xs: "0.75rem",
   sm: "0.875rem",
   base: "1rem",

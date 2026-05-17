@@ -28,3 +28,9 @@ describe.each([
     );
   });
 });
+
+describe("typography tokens", () => {
+  test("emits --sophie-text-pill at 0.6875rem", () => {
+    expect(css).toMatch(/--sophie-text-pill:\s*0\.6875rem/);
+  });
+});
