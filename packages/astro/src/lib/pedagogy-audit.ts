@@ -149,9 +149,11 @@ export interface AuditExtras {
    * When `null` or absent, the NR/MR invariants are skipped (consumer
    * hasn't opted in via
    * `pedagogy-contract.yaml.math_and_units_standards.notation_registry`).
-   * The production caller in `TextbookLayout.astro` loads the registry
-   * via `loadConsumerRegistry(consumerRoot)` and threads the result
-   * here; tests construct fixtures inline.
+   * Intended caller is `TextbookLayout.astro`, which will load the
+   * registry via `loadConsumerRegistry(consumerRoot)` and thread the
+   * result here; that consumer-app wiring is a TODO scoped to PR-ε
+   * (where the smoke target gets its full audit pass end-to-end).
+   * Tests construct fixtures inline.
    */
   notationRegistry?: NotationRegistry | null;
 }
@@ -758,7 +760,18 @@ export function runPedagogyAudit(
     const conceptsById = new Map(
       notationRegistry.concepts.map((c) => [c.id, c])
     );
-    const referencedConceptIds = new Set(index.multiReps.map((m) => m.concept));
+    // Filter to registry-known concepts so the set's name matches its
+    // contents — otherwise typo-bound MultiReps (which MR1 already
+    // flags) would silently appear here, and any future invariant
+    // that consumes the set (e.g., a v2 "almost-referenced" heuristic
+    // via Levenshtein distance on concept ids) would pick up garbage.
+    // NR2 only reads via `.has(c.id)` where `c.id` is registry-known,
+    // so the filter is defensive today and load-bearing tomorrow.
+    const referencedConceptIds = new Set(
+      index.multiReps
+        .filter((m) => conceptsById.has(m.concept))
+        .map((m) => m.concept)
+    );
 
     // -------------------------------------------------------------------
     // MR1 ERROR — <MultiRep concept="X"> for X not in registry

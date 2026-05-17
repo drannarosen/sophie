@@ -223,6 +223,33 @@ describe("MR2 — <RepEquation symbol> doesn't match concept canonical_symbol", 
     expect(report.errors.filter((f) => f.code === "MR1")).toHaveLength(1);
     expect(report.warnings.filter((f) => f.code === "MR2")).toHaveLength(0);
   });
+
+  it("fires once per offending equation rep (per-rep semantics, not per-MultiRep)", () => {
+    // MR2's loop is `for (const rep of mr.reps)` — two equation reps
+    // in one MultiRep that BOTH mismatch the canonical symbol should
+    // emit two separate MR2 warnings (vs MR1's per-MultiRep
+    // emit-once semantics tested separately above).
+    const index = emptyIndex();
+    index.multiReps = [
+      {
+        concept: "orbital-radius",
+        id: "mr-orbital-radius",
+        chapter: "ch",
+        reps: [
+          { kind: "equation", refKey: "kepler-3rd-law", symbol: "R" },
+          { kind: "equation", refKey: "kepler-3rd-law-au", symbol: "D" },
+        ],
+      },
+    ];
+    const report = runPedagogyAudit(index, {
+      notationRegistry: makeRegistry(),
+    });
+    const mr2 = report.warnings.filter((f) => f.code === "MR2");
+    expect(mr2).toHaveLength(2);
+    const messages = mr2.map((f) => f.message).join("\n");
+    expect(messages).toContain("kepler-3rd-law");
+    expect(messages).toContain("kepler-3rd-law-au");
+  });
 });
 
 describe("MR4 — <RepFigure> alt text silent on concept", () => {
