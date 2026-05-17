@@ -54,9 +54,25 @@ const root = (children: ReadonlyArray<MdastChild>): Root => ({
   children: [...children],
 });
 
+/**
+ * Build a JSX attribute value that the extractor's
+ * `readStringListAttr` helper recognizes — i.e., the
+ * `mdxJsxAttributeValueExpression` form that real MDX parsing
+ * emits for `addresses={["a", "b"]}` syntax. The `value` string
+ * is what `readStringListAttr` parses (after single-quote
+ * normalization); `data.estree` is intentionally omitted because
+ * the extractor reads `value` directly.
+ */
+const exprValue = (raw: string): MdxAttribute["value"] => ({
+  type: "mdxJsxAttributeValueExpression",
+  value: raw,
+});
+
+type MdxAttrValue = string | { type: string; value: string };
+
 const mdxFlow = (
   name: string,
-  attrs: Record<string, string>,
+  attrs: Record<string, MdxAttrValue>,
   children: ReadonlyArray<MdastChild> = []
 ): MdxJsxFlowElement => ({
   type: "mdxJsxFlowElement",
@@ -80,7 +96,7 @@ const misconceptionAside = (
   mdxFlow("Aside", { kind: "misconception", name }, children);
 
 const intervention = (
-  attrs: Record<string, string>,
+  attrs: Record<string, MdxAttrValue>,
   body: string
 ): MdxJsxFlowElement => mdxFlow("Intervention", attrs, [para(body)]);
 
@@ -238,6 +254,90 @@ describe("extractInterventions (pure)", () => {
     const entries = extractInterventions(tree, "ch/1");
     expect(entries[0]?.addresses).toEqual(["this"]);
   });
+
+  test("REJECTS author-supplied explicit `id` (extractor is the SOLE source of anchors per I1 review)", () => {
+    // The component schema `InterventionPropsSchema.id` field is
+    // extractor-derived, not authorable — the contract is that the
+    // pedagogy-index entry's `anchor` field and the rendered DOM id
+    // never disagree. Authoring an explicit id would split the two.
+    const tree = root([
+      mdxFlow(
+        "Intervention",
+        {
+          id: "my-explicit-anchor",
+          type: "contrasting-cases",
+          addresses: "this",
+        },
+        [para("body")]
+      ),
+    ]) as unknown as import("mdast").Root;
+    expect(() => extractInterventions(tree, "ch/1")).toThrowError(
+      /id.*extractor-derived.*not authorable/i
+    );
+  });
+
+  test("REJECTS invalid `depth` enum value (no silent coercion to 'light' per I2 review)", () => {
+    const tree = root([
+      intervention(
+        { type: "contrasting-cases", addresses: "this", depth: "deep" },
+        "Body."
+      ),
+    ]) as unknown as import("mdast").Root;
+    expect(() => extractInterventions(tree, "ch/1")).toThrowError(
+      /invalid.*depth.*deep/i
+    );
+  });
+
+  test("REJECTS <Intervention> nested inside another <Intervention>'s body (per M2 review)", () => {
+    // Pathological author shape: nested interventions would
+    // desynchronize anchor numbering between extract (which skips
+    // recursion into Intervention children) and transform (which
+    // uses `visit()` and descends into them).
+    const inner = intervention(
+      { type: "bridging-analogy", addresses: "this" },
+      "Inner body."
+    );
+    const outer: MdxJsxFlowElement = {
+      type: "mdxJsxFlowElement",
+      name: "Intervention",
+      attributes: [
+        {
+          type: "mdxJsxAttribute" as const,
+          name: "type",
+          value: "contrasting-cases",
+        },
+        { type: "mdxJsxAttribute" as const, name: "addresses", value: "this" },
+      ],
+      children: [para("Outer body."), inner],
+    };
+    const tree = root([outer]) as unknown as import("mdast").Root;
+    expect(() => extractInterventions(tree, "ch/1")).toThrowError(
+      /nested intervention/i
+    );
+  });
+
+  test('resolves \'this\' inside a mixed addresses array (e.g. ["this", "other-misc"])', () => {
+    // I3 review test: extractor's per-element map handles a mixed
+    // array — each "this" entry resolves to the enclosing
+    // misconception name; explicit slugs pass through verbatim.
+    const tree = root([
+      misconceptionAside("universe-with-a-center", [
+        intervention(
+          {
+            type: "refutation-text",
+            addresses: exprValue('["this", "other-misc"]'),
+          },
+          "Body."
+        ),
+      ]),
+    ]) as unknown as import("mdast").Root;
+    const entries = extractInterventions(tree, "ch/1");
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.addresses).toEqual([
+      "universe-with-a-center",
+      "other-misc",
+    ]);
+  });
 });
 
 describe("transformIntervention (mutating)", () => {
@@ -258,24 +358,13 @@ describe("transformIntervention (mutating)", () => {
     expect(idAttr?.value).toBe("intervention-contrasting-cases-1");
   });
 
-  test("does NOT overwrite an explicit id supplied by the author", () => {
-    const node = mdxFlow(
-      "Intervention",
-      {
-        type: "contrasting-cases",
-        addresses: "this",
-        id: "my-explicit-anchor",
-      },
-      [para("Body.")]
-    );
-    const tree = root([node]) as unknown as import("mdast").Root;
-    transformIntervention(tree, "ch/1");
-    const idAttrs = node.attributes.filter(
-      (a) => a.type === "mdxJsxAttribute" && a.name === "id"
-    );
-    expect(idAttrs).toHaveLength(1);
-    expect(idAttrs[0]?.value).toBe("my-explicit-anchor");
-  });
+  // Note: the prior "does NOT overwrite an explicit id" test was
+  // removed per the I1 review finding. Authoring an explicit `id`
+  // is now rejected at extract time (see the corresponding
+  // extractor test in the "extractInterventions (pure)" suite).
+  // The transform pass's id-skip logic still defends against a
+  // future re-introduction of authoring `id`, but the chapter-
+  // author path never reaches it because extract throws first.
 
   test("numbering agrees with extractInterventions across multiple blocks (DFS order)", () => {
     const a = intervention(

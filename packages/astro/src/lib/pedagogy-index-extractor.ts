@@ -1211,7 +1211,8 @@ export function extractInterventions(
 
   function visitNode(
     node: unknown,
-    enclosingMisconception: string | null
+    enclosingMisconception: string | null,
+    insideIntervention: boolean
   ): void {
     if (!node || typeof node !== "object") return;
     const n = node as {
@@ -1239,7 +1240,30 @@ export function extractInterventions(
     }
 
     if (n.type === "mdxJsxFlowElement" && n.name === "Intervention") {
+      // Defense-in-depth: extractor sees Intervention nested inside
+      // another Intervention's prose body. Extract would normally skip
+      // recursion into Intervention children, but the transform pass
+      // uses `visit()` which DOES recurse — letting the nested case
+      // through would desynchronize anchor numbering between the two
+      // passes. Throw here so the chapter author surfaces the bug
+      // upfront rather than discovering a 404 hash anchor later.
+      if (insideIntervention) {
+        throw new Error(
+          `<Intervention> inside another <Intervention>'s body in chapter "${chapterSlug}" — nested intervention blocks are not allowed (the structural pairing only makes sense at one level). Resolution: hoist the inner intervention to a sibling of the outer.`
+        );
+      }
       const el = n as MdxJsxFlowElement;
+      // Reject an author-supplied explicit `id`. The PR-γ design has
+      // the extractor as the SOLE source of intervention anchors so
+      // the rendered DOM id and the pedagogy-index `anchor` field
+      // never disagree. Letting the author author an `id` would split
+      // the contract and silently break cross-chapter index links.
+      const authorId = readStringAttr(el, "id");
+      if (authorId) {
+        throw new Error(
+          `<Intervention id="${authorId}"> in chapter "${chapterSlug}" — the \`id\` attr is extractor-derived (PR-γ), not authorable. Resolution: drop the \`id\` prop; the auto-derived \`intervention-<type|name>-<idx>\` anchor is the source of truth for both the DOM and the pedagogy index.`
+        );
+      }
       const type = readStringAttr(el, "type");
       if (!type) {
         throw new Error(
@@ -1268,6 +1292,19 @@ export function extractInterventions(
 
       const limits = readStringAttr(el, "limits") ?? undefined;
       const depthRaw = readStringAttr(el, "depth");
+      // Strict-enum check: silent coercion of `depth="deep"` →
+      // `"light"` would diverge from the component schema's runtime
+      // validation. Match the schema's posture here at extract time
+      // so the build fails fast.
+      if (
+        depthRaw !== undefined &&
+        depthRaw !== "light" &&
+        depthRaw !== "substantial"
+      ) {
+        throw new Error(
+          `<Intervention type="${type}"> in chapter "${chapterSlug}" has invalid \`depth="${depthRaw}"\`. Allowed values: "light", "substantial".`
+        );
+      }
       const depth: InterventionDepth =
         depthRaw === "substantial" ? "substantial" : "light";
 
@@ -1294,19 +1331,26 @@ export function extractInterventions(
         anchor,
       };
       out.push(entry);
-      // Do not recurse into Intervention children (they're prose,
-      // never a nested Intervention or misconception Aside).
+      // Recurse into the body to enforce the no-nested-Intervention
+      // rule (insideIntervention=true). We don't expect any pedagogy
+      // children in the body (it's prose), but the recursion is cheap
+      // and catches the structural-misuse case the M2 review flagged.
+      if (n.children && Array.isArray(n.children)) {
+        for (const child of n.children) {
+          visitNode(child, nextEnclosing, true);
+        }
+      }
       return;
     }
 
     if (n.children && Array.isArray(n.children)) {
       for (const child of n.children) {
-        visitNode(child, nextEnclosing);
+        visitNode(child, nextEnclosing, insideIntervention);
       }
     }
   }
 
-  visitNode(tree, null);
+  visitNode(tree, null, false);
   return out;
 }
 
@@ -1319,10 +1363,18 @@ export function extractInterventions(
  *
  * Numbering MUST match `extractInterventions` (same JSX-DFS order +
  * same `intervention-${slug(type|name)}-${idx}` template) so the
- * two passes produce identical anchors. If the author already set
- * an explicit `id`, leave it alone (the index entry will use the
- * author's id; extractor reads `id` via the same precedence — TODO
- * when an explicit-id case ships).
+ * two passes produce identical anchors. Author-supplied explicit
+ * `id` is rejected by `extractInterventions` upfront (the extractor
+ * is the sole source of intervention anchors per the I1 review),
+ * so this pass never encounters one in well-formed input. The
+ * defensive `if (existing id) skip` guard catches the case where a
+ * future ADR re-opens author authoring; today it's dead code by
+ * construction but cheap to keep.
+ *
+ * Throws on missing `type` (symmetry with `transformMultiRep` — a
+ * malformed JSX node that somehow escaped `extractInterventions`
+ * should surface here rather than silently desynchronize the idx
+ * counter from extract's).
  */
 export function transformIntervention(tree: Root, chapterSlug: string): void {
   let idx = 0;
@@ -1332,22 +1384,18 @@ export function transformIntervention(tree: Root, chapterSlug: string): void {
     };
     if (el.name !== "Intervention") return;
 
-    // Match extractInterventions numbering exactly. If extract throws,
-    // this pass throws too (called sequentially in the remark plugin);
-    // but be defensive about missing `type` so transform doesn't
-    // double-error.
     const type = readStringAttr(el, "type");
-    if (!type) return;
+    if (!type) {
+      throw new Error(
+        `transform: <Intervention> in chapter "${chapterSlug}" is missing a non-empty \`type\` attr (extract should have caught this — file a bug).`
+      );
+    }
     const name = readStringAttr(el, "name");
     idx += 1;
     const typeOrNameSlug =
       type === "custom" && name ? slugify(name) : slugify(type);
     const anchor = `intervention-${typeOrNameSlug}-${idx}`;
 
-    // Skip if author supplied an explicit id (the chapterSlug arg is
-    // reserved for future per-chapter anchor-prefix logic; unused at
-    // v1 since `intervention-` is globally unique within a chapter).
-    void chapterSlug;
     const existingId = el.attributes.find(
       (a) => a.type === "mdxJsxAttribute" && a.name === "id"
     );
