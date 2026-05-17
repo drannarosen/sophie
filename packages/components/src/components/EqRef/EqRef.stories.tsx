@@ -20,6 +20,7 @@ const fixture = [
     body: "<p>Flux falls off as the inverse square of the distance to a point source — the geometric consequence of light spreading over an ever-expanding sphere.</p>",
     chapter: "spoiler-alerts",
     anchor: "inverse-square-law",
+    symbols: [],
   },
   {
     slug: "wiens-law",
@@ -29,6 +30,7 @@ const fixture = [
     body: "<p>The peak wavelength of a blackbody's emission scales inversely with temperature — hotter sources peak bluer; cooler sources peak redder.</p>",
     chapter: "spoiler-alerts",
     anchor: "wiens-law",
+    symbols: [],
   },
 ];
 

@@ -439,6 +439,7 @@ export function extractEquations(
       body: renderChildrenToHtml(el.children),
       chapter: chapterSlug,
       anchor: slug,
+      symbols: [],
     });
   });
 

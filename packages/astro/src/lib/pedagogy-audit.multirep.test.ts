@@ -376,6 +376,7 @@ describe("MR6 — equivalent_to doesn't resolve", () => {
       body: "<p>body</p>",
       chapter: "ch",
       anchor: "kepler-3rd-law",
+      symbols: [],
     };
     index.equations = [kepler];
     index.multiReps = [
@@ -437,6 +438,7 @@ describe("MR6 — equivalent_to doesn't resolve", () => {
         body: "<p>x</p>",
         chapter: "other-chapter",
         anchor: "kepler-3rd-law",
+        symbols: [],
       },
     ];
     index.multiReps = [

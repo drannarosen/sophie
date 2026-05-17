@@ -10,6 +10,20 @@ export {
   type EpistemicRole,
   EpistemicRoleSchema,
 } from "./epistemic-role.js";
+export {
+  type AssumptionEntry,
+  AssumptionEntrySchema,
+  type Biography,
+  BiographySchema,
+  type BreaksWhenEntry,
+  BreaksWhenEntrySchema,
+  type CommonMisuseEntry,
+  CommonMisuseEntrySchema,
+  type ObservableEntry,
+  ObservableEntrySchema,
+  type UnitsEntry,
+  UnitsEntrySchema,
+} from "./equation-biography.js";
 export { type Figure, FigureSchema } from "./figure.js";
 export {
   type InterventionDepth,

@@ -76,6 +76,7 @@ describe("buildPagefindIndex (Layer 1.6)", () => {
         body: "<p>Stefan-Boltzmann luminosity.</p>",
         chapter: "ch",
         anchor: "stefan-boltzmann",
+        symbols: [],
       },
     ]);
     indexAccumulator.addKeyInsights([

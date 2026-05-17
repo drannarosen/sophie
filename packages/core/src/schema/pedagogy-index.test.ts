@@ -89,6 +89,83 @@ describe("EquationEntrySchema", () => {
       EquationEntrySchema.safeParse({ ...validEquation, number: 0 }).success
     ).toBe(false);
   });
+
+  // EquationBiography PR-α — optional biography field per ADR 0046.
+  test("accepts an entry without biography (per-equation opt-in)", () => {
+    expect(EquationEntrySchema.safeParse(validEquation).success).toBe(true);
+  });
+
+  test("accepts an entry WITH a full biography (Wien's law shape)", () => {
+    const result = EquationEntrySchema.safeParse({
+      ...validEquation,
+      biography: {
+        observable: {
+          body: "Peak wavelength of thermal emission vs temperature.",
+          epistemicRole: "observable",
+        },
+        assumptions: [
+          {
+            body: "Source is in local thermodynamic equilibrium.",
+            type: "thermal-equilibrium",
+            epistemicRole: "assumption",
+          },
+        ],
+        units: [
+          { symbol: "T", unit: "K" },
+          { symbol: "\\lambda_{peak}", unit: "cm" },
+        ],
+        breaks_when: {
+          body: "Non-thermal emission (synchrotron, masers, line emission).",
+          epistemicRole: "approximation",
+        },
+        common_misuses: [
+          {
+            body: "Applying Wien's law to absorption-line spectra.",
+            misconception: "wiens-law-absorption-spectra",
+          },
+        ],
+      },
+    });
+    expect(result.success).toBe(true);
+  });
+
+  test("rejects a biography with a wrongly-roled observable (extractor drift guard)", () => {
+    const result = EquationEntrySchema.safeParse({
+      ...validEquation,
+      biography: {
+        observable: { body: "x", epistemicRole: "inference" },
+      },
+    });
+    expect(result.success).toBe(false);
+  });
+
+  // PR-δ' bundle (ADR 0043 §R5) — author-declared symbols on KeyEquation.
+  test("symbols defaults to [] when absent (forward-compat with pre-PR-δ' indexes)", () => {
+    const result = EquationEntrySchema.safeParse(validEquation);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.symbols).toEqual([]);
+    }
+  });
+
+  test("accepts a populated symbols array", () => {
+    const result = EquationEntrySchema.safeParse({
+      ...validEquation,
+      symbols: ["T", "\\lambda_{peak}", "b"],
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.symbols).toHaveLength(3);
+    }
+  });
+
+  test("rejects empty-string entries in symbols (NonEmptyString)", () => {
+    const result = EquationEntrySchema.safeParse({
+      ...validEquation,
+      symbols: ["T", ""],
+    });
+    expect(result.success).toBe(false);
+  });
 });
 
 describe("KeyInsightEntrySchema", () => {

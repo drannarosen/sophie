@@ -16,6 +16,7 @@ const fixture: EquationEntry = {
   body: "<p>The Stefan-Boltzmann law for stellar luminosity.</p>",
   chapter: "stellar-radiation",
   anchor: "stefan-boltzmann-luminosity",
+  symbols: [],
 };
 
 describe("toEquationRecord", () => {
