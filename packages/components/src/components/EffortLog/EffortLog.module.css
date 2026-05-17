@@ -56,6 +56,10 @@
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
+  /* WCAG 2.5.5 AAA target size: 44×44px minimum. Mirrors the same
+     constraint on ComprehensionGate / ConfidenceCheck so the self-
+     assessment family stays visually + interactively coherent. */
+  min-block-size: 44px;
   padding: 0.375rem 0.75rem;
   border: 1px solid var(--sophie-border-subtle);
   border-radius: 999px;

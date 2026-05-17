@@ -62,6 +62,11 @@
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
+  /* WCAG 2.5.5 AAA target size: 44×44px minimum. min-block-size grows
+     the pill to 44px tall regardless of padding/text-size combinations
+     so touch + assistive-tech accuracy stays compliant across all
+     scale variants. Horizontal target follows from content width. */
+  min-block-size: 44px;
   padding: 0.375rem 0.75rem;
   border: 1px solid var(--sophie-border-subtle);
   border-radius: 999px;

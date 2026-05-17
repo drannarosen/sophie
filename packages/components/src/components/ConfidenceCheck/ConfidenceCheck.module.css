@@ -59,7 +59,15 @@
 .option {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.25rem;
+  /* WCAG 2.5.5 AAA target size: 44×44px minimum. Mirrors the same
+     constraint on ComprehensionGate / EffortLog so the self-assessment
+     family stays visually + interactively coherent. ConfidenceCheck's
+     options are bare (radio + numeric label) rather than pill-bordered;
+     min-block-size grows the click area without imposing chrome. */
+  min-block-size: 44px;
+  min-inline-size: 44px;
   cursor: pointer;
   font-size: var(--sophie-text-sm);
   color: var(--sophie-text);
