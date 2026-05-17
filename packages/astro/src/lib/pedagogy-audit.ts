@@ -1,6 +1,10 @@
 import { existsSync } from "node:fs";
 import { relative as relativePath, resolve as resolvePath } from "node:path";
-import type { AuditFinding, PedagogyIndex } from "@sophie/core/schema";
+import type {
+  AuditFinding,
+  NotationRegistry,
+  PedagogyIndex,
+} from "@sophie/core/schema";
 import { slugify } from "@sophie/core/schema";
 
 /**
@@ -61,6 +65,28 @@ import { slugify } from "@sophie/core/schema";
  *   V8  INFO     Validation block has an unknown key (extractor-layer;
  *                Zod 4 .strip() silently drops them, V8 surfaces typos
  *                like `last_validation_date`; ADR 0056 PR 3).
+ *   NR2 INFO     Notation Registry concept declared but no chapter
+ *                references it (orphan registry entry; ADR 0043).
+ *                Reference signal at v1 = MultiRep `concept=`; future
+ *                also counts KeyEquation `symbols` (PR-δ') + EquationBiography
+ *                `<CommonMisuse>` cross-refs.
+ *   MR1 ERROR    `<MultiRep concept="X">` references a concept not present
+ *                in `notation-registry.yaml` (ADR 0043).
+ *   MR2 WARNING  `<MultiRep><RepEquation symbol="…">` doesn't match the
+ *                bound concept's `canonical_symbol` in the registry
+ *                (ADR 0043).
+ *   MR4 INFO     `<MultiRep><RepFigure refName="…">` referenced figure's
+ *                alt text doesn't mention the concept's `verbal_label`
+ *                or `canonical_symbol` (ADR 0043).
+ *   MR6 INFO     `<MultiRep><RepEquation equivalent_to="X">` doesn't
+ *                resolve to a `<KeyEquation>` in the chapter's equation
+ *                index or to another `<RepEquation>` in the same
+ *                MultiRep (chapter-scoped at v1; ADR 0043 §R-MR6).
+ *
+ * The NR/MR invariants only fire when the consumer repo opts in via
+ * `pedagogy-contract.yaml.math_and_units_standards.notation_registry`
+ * (per ADR 0042 + ADR 0043 §opt-in). Pass the loaded registry via
+ * `AuditExtras.notationRegistry`; absent / null = invariants skipped.
  *
  * Not implemented in v1 (extractor-level defense-in-depth is sufficient
  * or the upstream component doesn't exist yet — see TODO markers):
@@ -70,6 +96,12 @@ import { slugify } from "@sophie/core/schema";
  *        usable signal beyond "no source-of-truth title".
  *   MG3, MG4, I1–I4 — require the `<Intervention>` component + Intervention
  *                    Library (ADR 0044 Artifacts 2 + 3); ship with that PR.
+ *   NR1, NR3, NR4 — require per-equation `symbols` metadata on
+ *                   `EquationEntrySchema` (deferred to PR-δ' per the
+ *                   2026-05-17 scope decision; KeyEquation doesn't yet
+ *                   carry the `symbols` field). The audit's NR2 + MR-prefix
+ *                   invariants ship in PR-δ against already-extracted data.
+ *   MR3, MR5 — RepCode deferred per ADR 0043 §R1 (pending CodeCell, ADR 0018).
  *
  * The audit is pure: it never mutates the input index.
  */
@@ -112,6 +144,18 @@ export interface AuditExtras {
    * against the wrong filesystem.
    */
   repoRoot?: string;
+  /**
+   * Loaded Notation Registry per ADR 0043 + 2026-05-17 design hardening.
+   * When `null` or absent, the NR/MR invariants are skipped (consumer
+   * hasn't opted in via
+   * `pedagogy-contract.yaml.math_and_units_standards.notation_registry`).
+   * Intended caller is `TextbookLayout.astro`, which will load the
+   * registry via `loadConsumerRegistry(consumerRoot)` and thread the
+   * result here; that consumer-app wiring is a TODO scoped to PR-ε
+   * (where the smoke target gets its full audit pass end-to-end).
+   * Tests construct fixtures inline.
+   */
+  notationRegistry?: NotationRegistry | null;
 }
 
 /**
@@ -700,6 +744,151 @@ export function runPedagogyAudit(
         code: "V7",
         message: `V7: ${entry.path}: last_validated_date is in the future: ${v.last_validated_date}`,
         location: { path: entry.path },
+      });
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // NR / MR — Notation Registry + MultiRep alignment invariants (ADR 0043)
+  // ---------------------------------------------------------------------
+  // Gated on opt-in: the consumer must declare
+  // `pedagogy-contract.yaml.math_and_units_standards.notation_registry`
+  // (loader: `notation-registry-loader.ts`). When `notationRegistry` is
+  // null the NR/MR block is skipped wholesale.
+  const notationRegistry = extras.notationRegistry ?? null;
+  if (notationRegistry !== null) {
+    const conceptsById = new Map(
+      notationRegistry.concepts.map((c) => [c.id, c])
+    );
+    // Filter to registry-known concepts so the set's name matches its
+    // contents — otherwise typo-bound MultiReps (which MR1 already
+    // flags) would silently appear here, and any future invariant
+    // that consumes the set (e.g., a v2 "almost-referenced" heuristic
+    // via Levenshtein distance on concept ids) would pick up garbage.
+    // NR2 only reads via `.has(c.id)` where `c.id` is registry-known,
+    // so the filter is defensive today and load-bearing tomorrow.
+    const referencedConceptIds = new Set(
+      index.multiReps
+        .filter((m) => conceptsById.has(m.concept))
+        .map((m) => m.concept)
+    );
+
+    // -------------------------------------------------------------------
+    // MR1 ERROR — <MultiRep concept="X"> for X not in registry
+    // -------------------------------------------------------------------
+    for (const mr of index.multiReps) {
+      if (conceptsById.has(mr.concept)) continue;
+      errors.push({
+        severity: "ERROR",
+        code: "MR1",
+        message: `MR1: <MultiRep concept="${mr.concept}"> in chapter "${mr.chapter}" — concept not present in notation-registry.yaml. Resolution: declare the concept (per docs/website/reference/notation-registry-schema.md), or fix the concept slug typo.`,
+        location: { chapter: mr.chapter, anchor: mr.id },
+      });
+    }
+
+    // -------------------------------------------------------------------
+    // MR2 WARNING — <RepEquation symbol="…"> doesn't match the bound
+    //               concept's canonical_symbol
+    // -------------------------------------------------------------------
+    // v1 only checks against `canonical_symbol`; alias support lands
+    // when registry concepts grow an explicit `aliases?: string[]`
+    // field (deferred — out of scope for PR-δ).
+    for (const mr of index.multiReps) {
+      const concept = conceptsById.get(mr.concept);
+      if (!concept) continue; // MR1 already fired for this case.
+      for (const rep of mr.reps) {
+        if (rep.kind !== "equation") continue;
+        if (rep.symbol === concept.canonical_symbol) continue;
+        warnings.push({
+          severity: "WARNING",
+          code: "MR2",
+          message: `MR2: <MultiRep concept="${mr.concept}"> in chapter "${mr.chapter}" — <RepEquation refKey="${rep.refKey}" symbol="${rep.symbol}"> doesn't match the registry's canonical_symbol "${concept.canonical_symbol}". Resolution: change the rep's symbol to match the registry, or update the registry if the symbol drifted intentionally.`,
+          location: { chapter: mr.chapter, anchor: mr.id },
+        });
+      }
+    }
+
+    // -------------------------------------------------------------------
+    // MR4 INFO — <RepFigure> referenced figure's alt text doesn't mention
+    //            the concept's verbal_label or canonical_symbol
+    // -------------------------------------------------------------------
+    // The figure may not exist in the registry (F1/F2 already fire on
+    // that). MR4 only fires when the figure exists AND the alt text is
+    // silent on the concept.
+    const figureRegistryByName = new Map(
+      index.figureRegistry.map((f) => [f.name, f])
+    );
+    for (const mr of index.multiReps) {
+      const concept = conceptsById.get(mr.concept);
+      if (!concept) continue;
+      for (const rep of mr.reps) {
+        if (rep.kind !== "figure") continue;
+        const figure = figureRegistryByName.get(rep.refName);
+        if (!figure) continue; // F1/F2 will surface the missing figure.
+        const altLower = figure.alt.toLowerCase();
+        const mentionsVerbal = altLower.includes(
+          concept.verbal_label.toLowerCase()
+        );
+        const mentionsSymbol = figure.alt.includes(concept.canonical_symbol);
+        if (mentionsVerbal || mentionsSymbol) continue;
+        info.push({
+          severity: "INFO",
+          code: "MR4",
+          message: `MR4: <MultiRep concept="${mr.concept}"> in chapter "${mr.chapter}" — figure "${rep.refName}" alt text doesn't mention the concept's verbal_label ("${concept.verbal_label}") or canonical_symbol ("${concept.canonical_symbol}"). Authoring nudge — readers using screen-readers lose the binding context.`,
+          location: { chapter: mr.chapter, anchor: mr.id },
+        });
+      }
+    }
+
+    // -------------------------------------------------------------------
+    // MR6 INFO — <RepEquation equivalent_to="X"> doesn't resolve
+    // -------------------------------------------------------------------
+    // Chapter-scoped at v1 (per design §D6 + ADR 0043 §R-MR6): X must
+    // resolve to either (a) a <KeyEquation> in the same chapter's
+    // equation index, or (b) another <RepEquation> in the same
+    // MultiRep block. Cross-chapter resolution is a v2 audit-pass flip.
+    const equationsByChapterSlug = new Map<string, Set<string>>();
+    for (const eq of index.equations) {
+      const set = equationsByChapterSlug.get(eq.chapter) ?? new Set<string>();
+      set.add(eq.slug);
+      equationsByChapterSlug.set(eq.chapter, set);
+    }
+    for (const mr of index.multiReps) {
+      const sameMrEquationRefKeys = new Set<string>();
+      for (const rep of mr.reps) {
+        if (rep.kind === "equation") sameMrEquationRefKeys.add(rep.refKey);
+      }
+      const chapterEquationSlugs =
+        equationsByChapterSlug.get(mr.chapter) ?? new Set<string>();
+      for (const rep of mr.reps) {
+        if (rep.kind !== "equation") continue;
+        if (rep.equivalent_to === undefined) continue;
+        if (chapterEquationSlugs.has(rep.equivalent_to)) continue;
+        if (sameMrEquationRefKeys.has(rep.equivalent_to)) continue;
+        info.push({
+          severity: "INFO",
+          code: "MR6",
+          message: `MR6: <MultiRep concept="${mr.concept}"> in chapter "${mr.chapter}" — <RepEquation refKey="${rep.refKey}" equivalent_to="${rep.equivalent_to}"> doesn't resolve to a <KeyEquation> in the chapter or to another <RepEquation> in the same MultiRep. Authoring nudge — declare the equivalent equation explicitly so the binding holds.`,
+          location: { chapter: mr.chapter, anchor: mr.id },
+        });
+      }
+    }
+
+    // -------------------------------------------------------------------
+    // NR2 INFO — registry concept declared but never referenced
+    // -------------------------------------------------------------------
+    // v1 reference signal: MultiRep `concept=` only. Future expansions
+    // (KeyEquation `symbols` per PR-δ', `<CommonMisuse misconception>`
+    // cross-refs from EquationBiography) add more reference sources;
+    // until then a concept counts as referenced only when at least one
+    // MultiRep binds it.
+    for (const concept of notationRegistry.concepts) {
+      if (referencedConceptIds.has(concept.id)) continue;
+      info.push({
+        severity: "INFO",
+        code: "NR2",
+        message: `NR2: Notation Registry concept "${concept.id}" (${concept.verbal_label}) is declared but no <MultiRep concept="${concept.id}"> references it. Authoring nudge — either add a binding chapter or remove the unused registry entry.`,
+        location: {},
       });
     }
   }
