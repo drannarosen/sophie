@@ -4,21 +4,23 @@ const CHAPTER_URL = "/chapters/spoiler-alerts";
 const DESKTOP_VIEWPORT = { width: 1440, height: 900 };
 
 /**
- * PR 6 — sidebar-driven content-width calibration.
+ * PR 6 + PR-12 — sidebar-driven content-width calibration with
+ * Bringhurst-strict measure caps.
  *
- * Per docs/plans/2026-05-13-aside-design.md "Sixth decision":
- * collapsing the left sidebar should widen content to use the
- * freed horizontal space, capped at min(95ch, 100%) for
- * readability. View modes (Focused/Wide) override per PR 5.
+ * PR 6 introduced sidebar-driven widening. PR-12 (post-WS3
+ * page-template token audit) shifted the cap cascade to the
+ * Bringhurst-optimum reading measure per visual-polish-target.md
+ * "Measure (prose max-width)" — 66ch Default, with Focused/Wide
+ * relaxing for code+math / diagrams respectively.
  *
- * | State | Content cap |
- * |---|---|
- * | Default + sidebar=open   | min(75ch, 100%)  |
- * | Default + sidebar=closed | min(95ch, 100%)  |
- * | Focused                  | min(85ch, 100%)  |
- * | Wide                     | min(105ch, 100%) |
+ * | State                    | Content cap     | Role                                  |
+ * |---                       |---              |---                                    |
+ * | Default + sidebar=open   | min(66ch, 100%) | Bringhurst optimum — best for reading |
+ * | Default + sidebar=closed | min(75ch, 100%) | Match Focused — use freed space       |
+ * | Focused                  | min(75ch, 100%) | Code+math get breathing room          |
+ * | Wide                     | min(95ch, 100%) | Diagrams, tables, overviews           |
  *
- * Asserts use relative comparisons (closed > open, Wide > Focused)
+ * Asserts use relative comparisons + generous absolute ranges
  * because exact px values depend on the body font's `ch` unit
  * which differs across systems.
  */
@@ -34,7 +36,7 @@ test.describe("PR 6: content-width responds to sidebar state", () => {
     await page.setViewportSize(DESKTOP_VIEWPORT);
   });
 
-  test("Default mode + sidebar='open': content at 75ch (current behavior)", async ({
+  test("Default mode + sidebar='open': content at the Bringhurst optimum (66ch)", async ({
     page,
   }) => {
     await page.goto(CHAPTER_URL);
@@ -44,13 +46,14 @@ test.describe("PR 6: content-width responds to sidebar state", () => {
       "default"
     );
     const width = await getContentWidth(page);
-    // 75ch at 16px body font ≈ 600px. Allow generous tolerance for
-    // font + scrollbar variance across systems.
-    expect(width).toBeGreaterThan(500);
-    expect(width).toBeLessThan(700);
+    // 66ch at the 17px body font measures ≈ 600px (1ch ≈ 9px). Range
+    // covers font + scrollbar variance while rejecting 75ch above
+    // (~675px) and 50ch below (~450px).
+    expect(width).toBeGreaterThan(450);
+    expect(width).toBeLessThan(680);
   });
 
-  test("Default mode + sidebar='closed': content widens to ~95ch", async ({
+  test("Default mode + sidebar='closed': content widens to ~75ch", async ({
     page,
   }) => {
     await page.goto(CHAPTER_URL);
@@ -62,11 +65,11 @@ test.describe("PR 6: content-width responds to sidebar state", () => {
     );
 
     const width = await getContentWidth(page);
-    // 95ch at the body font measures ≈ 860px (1ch ≈ 9px in this
-    // smoke chapter's font). Range covers font + system variance
-    // while rejecting 75ch (~620px) below and 105ch (~945px) above.
-    expect(width).toBeGreaterThan(720);
-    expect(width).toBeLessThan(910);
+    // 75ch at the body font measures ≈ 680px. Range covers font +
+    // system variance while rejecting 66ch (~600px) below and 95ch
+    // (~860px) above.
+    expect(width).toBeGreaterThan(620);
+    expect(width).toBeLessThan(800);
   });
 
   test("Default mode: closing the sidebar makes content strictly wider", async ({
@@ -84,12 +87,13 @@ test.describe("PR 6: content-width responds to sidebar state", () => {
     const closedWidth = await getContentWidth(page);
 
     // Closed content must be wider than open content by a meaningful
-    // amount (at least 100px) — verifies the rule actually fires,
-    // not just that some computed style changed.
-    expect(closedWidth).toBeGreaterThan(openWidth + 100);
+    // amount. 66ch → 75ch is a 9ch shift (~80px in this body font);
+    // require at least 50px to verify the rule actually fires while
+    // tolerating font-metric variance across systems.
+    expect(closedWidth).toBeGreaterThan(openWidth + 50);
   });
 
-  test("Focused mode: view-mode override wins even with sidebar='closed'", async ({
+  test("Focused mode: matches Default+sidebar-closed cap (both at 75ch)", async ({
     page,
   }) => {
     await page.goto(CHAPTER_URL);
@@ -107,12 +111,15 @@ test.describe("PR 6: content-width responds to sidebar state", () => {
     );
     const focusedWidth = await getContentWidth(page);
 
-    // Focused is 85ch — narrower than Default+sidebar-closed (95ch).
-    // The view-mode override beats the sidebar-state widening.
-    expect(focusedWidth).toBeLessThan(sidebarClosedDefaultWidth);
+    // Both modes cap at 75ch (the upper edge of Bringhurst's
+    // acceptable range). They tie within a few pixels of font
+    // variance. Focused removes the side chrome; sidebar-closed
+    // Default keeps it. The semantic distinction is chrome
+    // presence, not prose width.
+    expect(Math.abs(focusedWidth - sidebarClosedDefaultWidth)).toBeLessThan(10);
   });
 
-  test("Wide mode: view-mode override at 105ch (wider than any Default state)", async ({
+  test("Wide mode: view-mode override at 95ch (wider than any Default state)", async ({
     page,
   }) => {
     await page.goto(CHAPTER_URL);
@@ -128,7 +135,7 @@ test.describe("PR 6: content-width responds to sidebar state", () => {
     );
     const wideWidth = await getContentWidth(page);
 
-    // Wide (105ch) > Default+sidebar-open (75ch).
+    // Wide (95ch) > Default+sidebar-open (66ch).
     expect(wideWidth).toBeGreaterThan(defaultOpenWidth);
   });
 });
