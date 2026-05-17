@@ -103,6 +103,7 @@ project:
         - file: vision/pedagogy/index.md
         - file: vision/design/index.md
         - file: vision/design/visual-polish-target.md
+        - file: vision/design/interactive-figure-target.md
         - file: vision/design/theme-token-audit.md
         - file: vision/features/index.md
         - file: vision/features/accepted.md
