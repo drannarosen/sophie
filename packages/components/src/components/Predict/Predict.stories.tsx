@@ -87,3 +87,65 @@ export const ThreePrompts: Story = {
     ],
   },
 };
+
+// Multi-prompt + reveal — the combinatorial coverage gap between
+// SinglePromptWithReveal (1 prompt + reveal) and ThreePrompts (3
+// prompts, no reveal). Validates the gated-discussion contract under
+// the "all prompts must be filled before Reveal enables" rule across
+// multiple prompts.
+export const MultiPromptWithReveal: Story = {
+  args: {
+    ...ns,
+    id: "multi-reveal",
+    heading: "Predict the Outcome",
+    description:
+      "Before we work through the derivation, commit to a specific prediction for each. The Reveal button enables once all are filled.",
+    prompts: [
+      {
+        id: "doubled-temperature",
+        label:
+          "If a star's effective temperature doubles, how does its total luminosity change?",
+      },
+      {
+        id: "doubled-radius",
+        label:
+          "If only the star's radius doubles (Teff held constant), how does luminosity change?",
+      },
+    ],
+    children: (
+      <div>
+        <p>
+          From the Stefan–Boltzmann relation L = 4πR²σTeff⁴: doubling Teff
+          multiplies L by 2⁴ = 16; doubling R multiplies L by 2² = 4. The
+          temperature dependence dominates — a small change in Teff produces a
+          large luminosity swing, which is why hot massive stars vastly
+          out-luminate cooler ones of comparable size.
+        </p>
+      </div>
+    ),
+  },
+};
+
+// Long prompts — edge case for textarea wrapping and prompt-label
+// vertical flow. Complements the existing short-prompt stories by
+// stressing the typographic measure inside each prompt row.
+export const LongPrompts: Story = {
+  args: {
+    ...ns,
+    id: "long-prompts",
+    description:
+      "These prompts are deliberately long-form — write a sentence or two for each, not a single number.",
+    prompts: [
+      {
+        id: "thermodynamic-limit",
+        label:
+          "Imagine a star at the edge of where the Stefan–Boltzmann law still applies — what physical condition do you think would cause the relation L = 4πR²σTeff⁴ to break down, and what would have to be true about the star for that to happen?",
+      },
+      {
+        id: "observational-limit",
+        label:
+          "Now consider the same question from an observer's perspective: under what observational conditions would you doubt a luminosity inferred from the Stefan–Boltzmann relation, even if you had perfect measurements of R and Teff?",
+      },
+    ],
+  },
+};

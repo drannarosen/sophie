@@ -88,3 +88,48 @@ export const FiveObjectivesCustomHeading: Story = {
     ],
   },
 };
+
+// Long-bodied objectives — verifies that wrapping inside each
+// objective row respects the typographic measure and the Bloom verb
+// stays vertically aligned with the first line of body text. Edge
+// case for chapters with conceptually-dense objectives.
+export const LongObjectiveBodies: Story = {
+  args: {
+    ...ns,
+    id: "long-bodies",
+    objectives: [
+      {
+        id: "synthesize",
+        verb: "Synthesize",
+        body: "the four pieces of observational evidence for an expanding universe — Hubble recession, CMB blackbody spectrum, primordial light-element abundances, and large-scale structure formation — into a single coherent narrative that a non-physicist sibling could follow over dinner.",
+      },
+      {
+        id: "critique",
+        verb: "Critique",
+        body: "a popular-press article claiming that the discovery of dark energy 'overturned everything we knew' about cosmology, identifying where the claim is consistent with the evidence and where it overstates the case.",
+      },
+    ],
+  },
+};
+
+// Two objectives, default heading — fills the 1/2/3/5 count gap and
+// exercises the default "By the end of this lesson…" heading copy
+// (vs the SingleObjective story which also uses the default).
+export const TwoObjectivesDefaultHeading: Story = {
+  args: {
+    ...ns,
+    id: "two-default",
+    objectives: [
+      {
+        id: "distinguish",
+        verb: "Distinguish",
+        body: "parallax-derived distance from standard-candle distance, naming the regime where each is most reliable.",
+      },
+      {
+        id: "compute",
+        verb: "Compute",
+        body: "the distance to a Cepheid variable given its period and apparent magnitude.",
+      },
+    ],
+  },
+};
