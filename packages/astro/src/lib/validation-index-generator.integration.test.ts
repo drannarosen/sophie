@@ -59,7 +59,6 @@ function emptyIndexShape(): PedagogyIndex {
     contractValidations: [],
     extractorFindings: [],
     multiReps: [],
-    notationRegistry: null,
   };
 }
 

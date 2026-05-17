@@ -4,9 +4,18 @@ import type {
   MultiRepIndexEntry,
   SerializedRep,
 } from "@sophie/core/schema";
+import { loadConsumerRegistry } from "../lib/notation-registry-loader";
 import { indexAccumulator } from "../lib/pedagogy-index-extractor";
 
-const { multiReps, notationRegistry } = indexAccumulator.asPedagogyIndex();
+const { multiReps } = indexAccumulator.asPedagogyIndex();
+// Load the Notation Registry directly (PR-ε): in-MDX `<ChapterMultiReps>`
+// evaluates BEFORE its enclosing `<TextbookLayout>` frontmatter (Astro's
+// children-before-parent evaluation order), so the accumulator slot for
+// the registry isn't populated at this point. The loader has a
+// module-level cache keyed by `consumerRoot`, so this is one file read
+// per build regardless of how many `<ChapterMultiReps>` instances ship.
+// Returns `{ registry: null }` when the consumer hasn't opted in.
+const { registry: notationRegistry } = loadConsumerRegistry(process.cwd());
 
 /**
  * `<ChapterMultiReps chapter="..." order="..." heading="..." />` —
@@ -75,7 +84,7 @@ const sorted =
     ? [...inChapter].sort((a, b) =>
         displayLabel(a).localeCompare(displayLabel(b))
       )
-    : inChapter; // accumulator preserves walk order → "appearance"
+    : [...inChapter]; // accumulator preserves walk order → "appearance"
 
 function repKindLabel(rep: SerializedRep): string {
   switch (rep.kind) {
