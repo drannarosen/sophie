@@ -61,6 +61,25 @@ describe("<ParameterCursor>", () => {
     expect(useParameterStore.getState().parameters["ch4:T"]).toBeDefined();
   });
 
+  test("section scope walks up to find figure[id] (PR-2: interactive figures)", () => {
+    // The Tier-1+ interactive figure category (ADR 0058) wraps its outer
+    // container in <figure> + <figcaption> rather than <section>, so the
+    // figure can carry the `figure` ARIA role (NOT a landmark) and multiple
+    // instances on the same page don't trip axe's landmark-unique rule.
+    // ParameterCursor's scope resolution must honor the figure ancestry.
+    render(
+      <figure id='blackbody'>
+        <figcaption>Blackbody Spectrum Explorer</figcaption>
+        <div>
+          <ParameterCursor name='T' min={1000} max={50000} default={5772} />
+        </div>
+      </figure>
+    );
+    expect(
+      useParameterStore.getState().parameters["blackbody:T"]
+    ).toBeDefined();
+  });
+
   test("section scope falls back to unprefixed name when no scopable ancestor exists", () => {
     render(<ParameterCursor name='T' min={1000} max={50000} default={5772} />);
     expect(useParameterStore.getState().parameters["T"]).toBeDefined();

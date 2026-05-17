@@ -5,7 +5,20 @@ import {
 } from "./ParameterCursor.schema.ts";
 import { useParameterStore } from "./store.ts";
 
-const SECTION_TAGS = new Set(["SECTION", "ARTICLE", "MAIN", "DETAILS"]);
+// HTML sectioning + sectioning-root elements that can carry a cursor scope.
+// FIGURE was added with PR 2 (BlackbodyExplorer restyle): per ADR 0058,
+// interactive figures use the <figure> + <figcaption> semantic (figure role,
+// not landmark) so multiple instances on the same page don't trip axe's
+// landmark-unique rule. ParameterCursor's scope resolution must honor the
+// same ancestry — otherwise the cursor falls back to a bare name and any
+// `${id}:T` subscriber can't find its parameter.
+const SECTION_TAGS = new Set([
+  "SECTION",
+  "ARTICLE",
+  "MAIN",
+  "DETAILS",
+  "FIGURE",
+]);
 
 function resolveSectionScope(node: Element | null): string | null {
   let cursor: Element | null = node?.parentElement ?? null;

@@ -132,6 +132,24 @@ describe("<BlackbodyExplorer>", () => {
     expect(document.querySelector('line[stroke-dasharray="6 4"]')).toBeNull();
   });
 
+  test("multiple instances on the same page produce zero axe violations (landmark-unique)", async () => {
+    // Regression: when two <BlackbodyExplorer> render on the same page, the
+    // outer container must NOT trip axe's `landmark-unique` rule. The earlier
+    // implementation used <section aria-labelledby={titleId}> which made each
+    // instance an ARIA `region` landmark; two regions with identical
+    // accessible name "Blackbody Spectrum Explorer" fail landmark-unique.
+    // Switching to <figure> + <figcaption> uses the `figure` role (NOT a
+    // landmark), so duplicates are allowed.
+    const { container } = render(
+      <>
+        <BlackbodyExplorer id='bb-A' initialTemperatureK={3000} />
+        <BlackbodyExplorer id='bb-B' initialTemperatureK={20000} />
+      </>
+    );
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
+
   test("multiple instances on the same page have independent cursors", () => {
     // BlackbodyExplorer renders its own <section id={id}>, so the
     // consumer doesn't need to wrap it — the explorer is self-scoping.

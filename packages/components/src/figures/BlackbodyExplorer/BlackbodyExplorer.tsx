@@ -396,7 +396,7 @@ export function BlackbodyExplorer(rawProps: BlackbodyExplorerProps) {
   const titleId = useId();
 
   return (
-    <section id={id} aria-labelledby={titleId} className={styles.root}>
+    <figure id={id} aria-labelledby={titleId} className={styles.root}>
       <ParameterCursor
         name='T'
         min={minTemperatureK}
@@ -406,7 +406,7 @@ export function BlackbodyExplorer(rawProps: BlackbodyExplorerProps) {
         step={100}
       />
 
-      <header className={styles.titleBar}>
+      <figcaption className={styles.titleBar}>
         <Telescope
           aria-hidden
           className={styles.titleBarIcon}
@@ -416,7 +416,7 @@ export function BlackbodyExplorer(rawProps: BlackbodyExplorerProps) {
         <span id={titleId} className={styles.titleBarTitle}>
           Blackbody Spectrum Explorer
         </span>
-      </header>
+      </figcaption>
 
       <div className={styles.sliderRow}>
         <div className={styles.sliderRowSlider}>
@@ -551,6 +551,6 @@ export function BlackbodyExplorer(rawProps: BlackbodyExplorerProps) {
           )}
         </div>
       )}
-    </section>
+    </figure>
   );
 }
