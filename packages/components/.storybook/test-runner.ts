@@ -32,14 +32,22 @@ import { toMatchImageSnapshot } from "jest-image-snapshot";
  *
  * Theme coverage (per dark-mode-palette.md):
  * - Default light pass writes `<story-id>.png`.
- * - Then re-navigate to the same story with `?globals=theme:dark`
- *   appended (Storybook's URL-globals syntax — toolbar + URL +
- *   test-runner all flip theme via the same `@storybook/addon-themes`
- *   `withThemeByDataAttribute` decorator wired in preview.tsx).
+ * - Then flip `data-theme="dark"` on the iframe's <html> via a direct
+ *   DOM mutation (`@sophie/theme`'s CSS variable graph re-resolves
+ *   immediately — no navigation, no story re-mount).
  * - Dark pass writes `<story-id>--dark.png`.
- * - URL-globals is the SoTA path over a direct DOM mutation: the
- *   addon owns the full theme-application lifecycle (any future side
- *   effects beyond `data-theme` ride along automatically).
+ * - Restore `data-theme="light"` so the page state is stable for the
+ *   next story's test-runner handoff.
+ * - URL-globals (`?globals=theme:dark`) was tried first as the
+ *   "single source of truth" path, but mid-postVisit navigation
+ *   disrupts test-runner internals (`globalThis.__getContext`
+ *   re-registration race against `getStoryContext` in the next
+ *   story's postVisit). addon-themes' `withThemeByDataAttribute`
+ *   produces byte-identical DOM under either path, so direct
+ *   mutation costs nothing visually while staying compatible with
+ *   the test-runner lifecycle. The toolbar/URL paths (interactive
+ *   theme-switching) continue to flow through the addon decorator
+ *   in preview.tsx — that mechanism is unchanged.
  *
  * Set `SKIP_VR=1` (env var) to disable both VR passes while keeping
  * axe. The `test:storybook` script does this by default so local Mac
@@ -54,15 +62,20 @@ const customSnapshotsDir = `${process.cwd()}/__snapshots__/chromium`;
 const skipVR = process.env.SKIP_VR === "1";
 
 /**
- * Append (or replace) a `globals=key:value;...` query parameter on a
- * Storybook iframe URL. Uses URL/URLSearchParams so existing params
- * (`id`, `viewMode`, `args`) survive untouched. Per Storybook's globals
- * URL syntax (essentials/toolbars-and-globals docs).
+ * Set `data-theme="<theme>"` on the iframe's <html>. The
+ * `@storybook/addon-themes` `withThemeByDataAttribute` decorator
+ * (preview.tsx) uses this same attribute when responding to globals
+ * updates, so DOM-direct mutation produces a byte-identical end
+ * state. `@sophie/theme`'s CSS variable graph re-resolves on the
+ * attribute selector match — no relayout, no story re-mount.
  */
-function withTheme(url: string, theme: string): string {
-  const u = new URL(url);
-  u.searchParams.set("globals", `theme:${theme}`);
-  return u.toString();
+async function setTheme(
+  page: import("@playwright/test").Page,
+  theme: string
+): Promise<void> {
+  await page.evaluate((t) => {
+    document.documentElement.setAttribute("data-theme", t);
+  }, theme);
 }
 
 const config: TestRunnerConfig = {
@@ -112,13 +125,11 @@ const config: TestRunnerConfig = {
       customSnapshotIdentifier: context.id,
     });
 
-    // Dark VR baseline. Re-navigate to the same story with the
-    // `theme:dark` global set via URL. addon-themes' decorator picks
-    // up the global and applies `data-theme="dark"` to the iframe's
-    // <html>; the @sophie/theme CSS variable graph re-resolves
-    // automatically. waitForPageReady ensures fonts + CSS settle
-    // before the screenshot.
-    await page.goto(withTheme(page.url(), "dark"));
+    // Dark VR baseline. Flip data-theme on the iframe <html>; the
+    // @sophie/theme CSS variable graph re-resolves immediately. No
+    // navigation — keeps the test-runner lifecycle (`__getContext`,
+    // `getStoryContext`) intact for the next story's postVisit.
+    await setTheme(page, "dark");
     await waitForPageReady(page);
 
     const darkImage = await page.screenshot({ fullPage: true });
@@ -126,6 +137,11 @@ const config: TestRunnerConfig = {
       customSnapshotsDir,
       customSnapshotIdentifier: `${context.id}--dark`,
     });
+
+    // Restore default theme for the next story's handoff. Without
+    // this, addon-themes' globals → data-theme path could race
+    // against our direct mutation on the next iframe mount.
+    await setTheme(page, "light");
   },
 };
 
