@@ -7,6 +7,20 @@ export {
   AsidePropsSchema,
   asideContract,
 } from "./components/Aside/index.ts";
+export type { AssumptionProps } from "./components/Assumption/index.ts";
+export {
+  ASSUMPTION_EPISTEMIC_ROLE,
+  Assumption,
+  AssumptionPropsSchema,
+  assumptionContract,
+} from "./components/Assumption/index.ts";
+export type { BreaksWhenProps } from "./components/BreaksWhen/index.ts";
+export {
+  BREAKS_WHEN_EPISTEMIC_ROLE,
+  BreaksWhen,
+  BreaksWhenPropsSchema,
+  breaksWhenContract,
+} from "./components/BreaksWhen/index.ts";
 export type {
   CalloutProps,
   CalloutVariant,
@@ -39,6 +53,12 @@ export {
   CollapsibleCardPropsSchema,
   collapsibleCardContract,
 } from "./components/CollapsibleCard/index.ts";
+export type { CommonMisuseProps } from "./components/CommonMisuse/index.ts";
+export {
+  CommonMisuse,
+  CommonMisusePropsSchema,
+  commonMisuseContract,
+} from "./components/CommonMisuse/index.ts";
 export type {
   ComprehensionGateProps,
   ComprehensionLevel,
@@ -150,6 +170,13 @@ export {
 // with `__setChapters` / `__setModules` and to anticipate future
 // client-side consumers without rewiring TextbookLayout later.
 export { __setObjectives } from "./components/Objective/objectives-store.ts";
+export type { ObservableProps } from "./components/Observable/index.ts";
+export {
+  OBSERVABLE_EPISTEMIC_ROLE,
+  Observable,
+  ObservablePropsSchema,
+  observableContract,
+} from "./components/Observable/index.ts";
 export type {
   PredictPrompt,
   PredictProps,
@@ -187,6 +214,12 @@ export {
 } from "./components/RepVerbal/index.ts";
 export type { SearchResult } from "./components/Search/index.ts";
 export { SearchModal } from "./components/Search/index.ts";
+export type { UnitsProps } from "./components/Units/index.ts";
+export {
+  Units,
+  UnitsPropsSchema,
+  unitsContract,
+} from "./components/Units/index.ts";
 // Contract
 export type {
   AuditFinding,

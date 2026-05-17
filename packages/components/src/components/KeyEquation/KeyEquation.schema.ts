@@ -1,3 +1,4 @@
+import { NonEmptyString } from "@sophie/core/schema";
 import type { ReactNode } from "react";
 import { z } from "zod";
 
@@ -13,10 +14,19 @@ import { z } from "zod";
  *
  * Required `id` for stable hash anchors (`#wiens-law`) and future
  * cross-references ("See Equation: Wien's Law").
+ *
+ * Optional `symbols` per ADR 0043 §R5 + 2026-05-17 design hardening
+ * §"PR-δ' bundle": author-declared canonical TeX-form symbol list (not
+ * heuristic-extracted from TeX). Surfaces the registry-alignment hook
+ * NR1/NR3/NR4 (PR-δ) and the NR2 reference-signal aggregation. v1
+ * extractor (PR-γ) passes the prop through to
+ * `EquationEntry.symbols`; consumers (audit, AI authoring) read the
+ * pedagogy-index field directly. v1 renderer ignores the prop.
  */
 export const KeyEquationPropsSchema = z.object({
   id: z.string().min(1),
   title: z.string().min(1),
+  symbols: z.array(NonEmptyString).optional(),
   children: z.custom<ReactNode>(),
 });
 

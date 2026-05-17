@@ -3,6 +3,7 @@ import katex from "katex";
 import { Sigma } from "lucide-react";
 import { useMemo } from "react";
 import { useHydrated } from "../../runtime/useHydrated.ts";
+import { BiographySummary } from "./EqRef.biography-summary.tsx";
 import styles from "./EqRef.module.css.js";
 import type { EqRefProps } from "./EqRef.schema.ts";
 import { lookupEquation } from "./equations-store.ts";
@@ -99,6 +100,7 @@ export function EqRef({ slug, children }: EqRefProps) {
             // biome-ignore lint/security/noDangerouslySetInnerHtml: tex is rendered by katex.renderToString from extractor-captured TeX source (not user-supplied content). ADR 0038 + design decision #10.
             dangerouslySetInnerHTML={{ __html: texHtml }}
           />
+          <BiographySummary biography={entry.biography} />
           <HoverCard.Arrow className={styles.arrow} />
         </HoverCard.Content>
       </HoverCard.Portal>

@@ -1,0 +1,43 @@
+/* Units — inline biography element inside a KeyEquation per ADR 0046 +
+ * 2026-05-17 design hardening §D1. NOT a card — renders as a compact
+ * monospace `symbol [unit]` pair so multiple Units children can stack
+ * inline (a "units strip" below the equation body).
+ *
+ * No epistemicRole tagging — <Units> is descriptive metadata, not
+ * epistemic content (ADR 0058 §"chrome"). The audit pulls (symbol,
+ * unit) for the NR1/NR3/NR4 registry-alignment checks (PR-δ).
+ *
+ * Per ADR 0005, no hex/rgb literals.
+ */
+
+.units {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--sophie-space-1);
+  margin-inline-end: var(--sophie-space-2);
+  padding: var(--sophie-space-1) var(--sophie-space-2);
+  background: var(--sophie-surface-2);
+  border: 1px solid var(--sophie-border);
+  border-radius: var(--sophie-radius-full);
+  color: var(--sophie-text);
+  font-family: var(--sophie-font-mono);
+  font-size: var(--sophie-text-xs);
+  line-height: 1.4;
+  white-space: nowrap;
+  vertical-align: baseline;
+}
+
+.symbol {
+  color: var(--sophie-text);
+  font-weight: 600;
+}
+
+.bracket {
+  color: var(--sophie-text-muted);
+  font-weight: 400;
+}
+
+.unit {
+  color: var(--sophie-text-muted);
+  font-weight: 500;
+}

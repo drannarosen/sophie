@@ -1,0 +1,137 @@
+---
+import type { Biography } from "@sophie/core/schema";
+
+/**
+ * Shared biography render for `<ChapterEquations>` + `<CourseEquations>`
+ * per ADR 0046 + 2026-05-17 design hardening §"Surface 2/3".
+ *
+ * Renders full biography sections in source-doc order:
+ * - Observable (singleton, prose body)
+ * - Assumptions (list; typed slugs first, then untyped)
+ * - Units (inline "symbol [unit]" pairs, comma-separated)
+ * - BreaksWhen (singleton, prose body)
+ * - CommonMisuses (list, collapsed behind <details> disclosure per design §"Surface 2")
+ *
+ * Renders nothing when biography is undefined OR fully empty
+ * (per-equation opt-in per ADR 0046).
+ *
+ * `<details>` disclosure is keyboard-accessible by default (native
+ * HTML widget); no Radix wrapper needed. axe-core verifies the
+ * accessible-name requirement via the wrapping `<summary>`.
+ */
+export interface Props {
+  biography: Biography | undefined;
+}
+
+const { biography } = Astro.props;
+
+const hasContent =
+  biography !== undefined &&
+  (biography.observable !== undefined ||
+    biography.assumptions.length > 0 ||
+    biography.units.length > 0 ||
+    biography.breaks_when !== undefined ||
+    biography.common_misuses.length > 0);
+---
+
+{
+  hasContent && (
+    <div
+      class='sophie-equation-biography'
+      data-sophie-equation-biography=''
+    >
+      {biography.observable && (
+        <div class='sophie-equation-biography__section sophie-equation-biography__section--observable'>
+          <span class='sophie-equation-biography__label'>Observable</span>
+          <p class='sophie-equation-biography__body'>
+            {biography.observable.body}
+          </p>
+        </div>
+      )}
+
+      {biography.assumptions.length > 0 && (
+        <div class='sophie-equation-biography__section sophie-equation-biography__section--assumptions'>
+          <span class='sophie-equation-biography__label'>
+            {biography.assumptions.length === 1
+              ? "Assumption"
+              : "Assumptions"}
+          </span>
+          <ul class='sophie-equation-biography__list'>
+            {biography.assumptions.map((a) => (
+              <li class='sophie-equation-biography__item'>
+                {a.type && (
+                  <span class='sophie-equation-biography__type-slug'>
+                    {a.type}
+                  </span>
+                )}
+                {a.type && " — "}
+                {a.body}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {biography.units.length > 0 && (
+        <div class='sophie-equation-biography__section sophie-equation-biography__section--units'>
+          <span class='sophie-equation-biography__label'>Units</span>
+          <span class='sophie-equation-biography__units-strip'>
+            {biography.units.map((u, idx) => (
+              <>
+                {idx > 0 && (
+                  <span class='sophie-equation-biography__units-separator'>
+                    ,{" "}
+                  </span>
+                )}
+                <span class='sophie-equation-biography__units-pair'>
+                  <span class='sophie-equation-biography__units-symbol'>
+                    {u.symbol}
+                  </span>
+                  <span class='sophie-equation-biography__units-bracket'>
+                    {" ["}
+                  </span>
+                  <span class='sophie-equation-biography__units-unit'>
+                    {u.unit}
+                  </span>
+                  <span class='sophie-equation-biography__units-bracket'>
+                    {"]"}
+                  </span>
+                </span>
+              </>
+            ))}
+          </span>
+        </div>
+      )}
+
+      {biography.breaks_when && (
+        <div class='sophie-equation-biography__section sophie-equation-biography__section--breaks-when'>
+          <span class='sophie-equation-biography__label'>Breaks when</span>
+          <p class='sophie-equation-biography__body'>
+            {biography.breaks_when.body}
+          </p>
+        </div>
+      )}
+
+      {biography.common_misuses.length > 0 && (
+        <details class='sophie-equation-biography__details'>
+          <summary class='sophie-equation-biography__summary'>
+            Common misuses ({biography.common_misuses.length})
+          </summary>
+          <ul class='sophie-equation-biography__list'>
+            {biography.common_misuses.map((m) => (
+              <li class='sophie-equation-biography__item'>
+                {m.misconception && (
+                  <span class='sophie-equation-biography__misconception-ref'>
+                    {m.misconception}
+                  </span>
+                )}
+                {m.misconception && " — "}
+                {m.body}
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+    </div>
+  )
+}

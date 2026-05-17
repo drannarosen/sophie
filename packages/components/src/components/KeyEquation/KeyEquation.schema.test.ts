@@ -30,4 +30,29 @@ describe("KeyEquationPropsSchema", () => {
     const { title: _title, ...noTitle } = valid;
     expect(KeyEquationPropsSchema.safeParse(noTitle).success).toBe(false);
   });
+
+  // PR-δ' bundle (ADR 0043 §R5) — author-declared symbols.
+  it("accepts the optional `symbols` array (author-declared canonical TeX-form symbols)", () => {
+    expect(
+      KeyEquationPropsSchema.safeParse({
+        ...valid,
+        symbols: ["T", "\\lambda_{peak}", "b"],
+      }).success
+    ).toBe(true);
+  });
+
+  it("accepts an empty `symbols` array", () => {
+    expect(
+      KeyEquationPropsSchema.safeParse({ ...valid, symbols: [] }).success
+    ).toBe(true);
+  });
+
+  it("rejects empty-string entries in `symbols` (NonEmptyString)", () => {
+    expect(
+      KeyEquationPropsSchema.safeParse({
+        ...valid,
+        symbols: ["T", ""],
+      }).success
+    ).toBe(false);
+  });
 });
