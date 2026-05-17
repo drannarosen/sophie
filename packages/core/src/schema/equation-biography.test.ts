@@ -46,6 +46,15 @@ describe("ObservableEntrySchema", () => {
     const result = ObservableEntrySchema.safeParse({ body: "…" });
     expect(result.success).toBe(false);
   });
+
+  it("rejects unknown keys (.strict() — guards against extractor drift)", () => {
+    const result = ObservableEntrySchema.safeParse({
+      body: "…",
+      epistemicRole: "observable",
+      somethingExtra: "drift",
+    });
+    expect(result.success).toBe(false);
+  });
 });
 
 describe("AssumptionEntrySchema", () => {
@@ -88,6 +97,24 @@ describe("AssumptionEntrySchema", () => {
     const result = AssumptionEntrySchema.safeParse({
       body: "…",
       epistemicRole: "observable",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts an empty concept_ref array (v2 forward-compat seam, populated state)", () => {
+    const result = AssumptionEntrySchema.safeParse({
+      body: "…",
+      epistemicRole: "assumption",
+      concept_ref: [],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects unknown keys (.strict() — guards against extractor drift)", () => {
+    const result = AssumptionEntrySchema.safeParse({
+      body: "…",
+      epistemicRole: "assumption",
+      assumptions: [],
     });
     expect(result.success).toBe(false);
   });
@@ -135,13 +162,20 @@ describe("UnitsEntrySchema", () => {
     );
   });
 
-  it("does NOT carry an epistemicRole (descriptive metadata per ADR 0058 'chrome')", () => {
-    // Per ADR 0046 §R1 + ADR 0058 — <Units> is descriptive metadata, not
-    // epistemic content. The schema therefore should not accept (and the
-    // extractor never emits) an epistemicRole field. Stripping is OK; the
-    // schema being open-ish here is acceptable since the extractor controls
-    // emission. The negative assertion: passing role should not be required
-    // and the parsed result should not surface a role field.
+  it("does NOT carry an epistemicRole — passing one fails parse (.strict())", () => {
+    // ADR 0058 §"chrome" — <Units> is descriptive metadata, not epistemic
+    // content. `.strict()` makes this structural rather than descriptive: a
+    // future extractor accidentally emitting `epistemicRole: "..."` on a
+    // Units entry fails parse rather than silently shipping a drifted role.
+    const result = UnitsEntrySchema.safeParse({
+      symbol: "T",
+      unit: "K",
+      epistemicRole: "observable",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("does not surface an epistemicRole field on a clean parse", () => {
     const result = UnitsEntrySchema.safeParse({ symbol: "T", unit: "K" });
     expect(result.success).toBe(true);
     if (result.success) {
@@ -174,6 +208,15 @@ describe("BreaksWhenEntrySchema", () => {
     const result = BreaksWhenEntrySchema.safeParse({
       body: "…",
       epistemicRole: "assumption",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects unknown keys (.strict() — guards against extractor drift)", () => {
+    const result = BreaksWhenEntrySchema.safeParse({
+      body: "…",
+      epistemicRole: "approximation",
+      common_misuses: [],
     });
     expect(result.success).toBe(false);
   });
@@ -213,7 +256,19 @@ describe("CommonMisuseEntrySchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("does NOT carry an epistemicRole (the linked misconception node carries 'misconception')", () => {
+  it("does NOT carry an epistemicRole — passing one fails parse (.strict())", () => {
+    // ADR 0058 — the linked misconception node carries "misconception"; the
+    // cross-ref entry carries no role of its own. `.strict()` enforces this
+    // structurally rather than descriptively.
+    const result = CommonMisuseEntrySchema.safeParse({
+      body: "…",
+      misconception: "wiens-law-absorption-spectra",
+      epistemicRole: "misconception",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("does not surface an epistemicRole field on a clean parse", () => {
     const result = CommonMisuseEntrySchema.safeParse({
       body: "…",
       misconception: "wiens-law-absorption-spectra",
@@ -280,6 +335,16 @@ describe("BiographySchema (aggregate)", () => {
   it("rejects an observable with the wrong role (extractor drift guard)", () => {
     const result = BiographySchema.safeParse({
       observable: { body: "…", epistemicRole: "inference" },
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects unknown top-level keys (.strict() — catches singular-vs-plural typos)", () => {
+    // A common authoring/extractor bug: writing singular `assumption` instead
+    // of plural `assumptions`. Without .strict() the typo is silently dropped
+    // and the equation ships with no assumptions in the index.
+    const result = BiographySchema.safeParse({
+      assumption: [{ body: "x", epistemicRole: "assumption" }],
     });
     expect(result.success).toBe(false);
   });
