@@ -1,19 +1,42 @@
 export const anchors = {
   ink: "#0f1115",
   paper: "#f9fafb",
+  // Dark-mode page substrate. Decoupled from `ink` because `ink` is
+  // semantically the light-mode body-text color — different role that
+  // happens to share a near-black hex. `darkBg` is the soft-dark page
+  // (Tailwind gray-900) per dark-mode-palette.md; surfaces above derive
+  // from it via color-mix percentages tuned to land at gray-800/700/600.
+  darkBg: "#111827",
 } as const;
 
 // Hardcoded light-mode surface stack. Overrides the symmetric color-mix
 // derivation in generate-css.ts so cards render as pure white on the
-// gray-50 page (per visual-polish-target.md). Dark-mode keeps the
-// symmetric derivation off the cool paper anchor — a dedicated
-// dark-mode surface stack ships in a later sweep (audit § Section 5).
+// gray-50 page (per visual-polish-target.md) — the derivation off the
+// `paper` anchor produced gray-200-ish surface-1, not the pure white
+// the spec wanted. Hardcoding here is a visual correction, not a design
+// principle: dark-mode surfaces stay derivation-based against the new
+// `darkBg` anchor (per dark-mode-palette.md).
 export const lightSurfaces = {
   surface1: "#ffffff",
   surface2: "#f3f4f6",
   surface3: "#e5e7eb",
   border: "#e5e7eb",
   borderSubtle: "#f3f4f6",
+} as const;
+
+// Dark-mode surface derivation percentages. Each entry mixes `darkBg`
+// with `paper` in OKLCH to lift luminance step-by-step. Starting values
+// chosen to land near the Tailwind gray-800/700/600 stack named in
+// dark-mode-palette.md; tune per VR review (PR-2/3) if a surface reads
+// off. `border` and `borderSubtle` invert the derivation (mix `paper`
+// into `darkBg`) so the border reads as a lighter "highlight ring"
+// against the card body — standard dark-mode card-elevation language.
+export const darkSurfacesMix = {
+  surface1: 87,
+  surface2: 72,
+  surface3: 60,
+  border: 12,
+  borderSubtle: 6,
 } as const;
 
 // Text color used on saturated brand/status accent backgrounds.
@@ -24,6 +47,19 @@ export const brand = {
   teal: { fill: "#2f8c8d", text: "#1f6f70" },
   rose: { fill: "#b07a93", text: "#8c5a73" },
   violet: { fill: "#6d7794", text: "#515a7a" },
+} as const;
+
+// Dark-mode brand palette. Lighter fills (Tailwind-300 family) for
+// visibility against surface-1 = gray-800; lighter title-bar text
+// (Tailwind-200 family) for legibility on the dark-tinted title bar
+// (color-mix(accent 12%, gray-800)). Brand-violet stays desaturated —
+// lifting L in OKLCH while holding hue+chroma keeps the slate-like
+// brand identity; adding saturation would shift slate → indigo.
+// Per dark-mode-palette.md "Brand and status luminance".
+export const darkBrand = {
+  teal: { fill: "#5eead4", text: "#99f6e4" },
+  rose: { fill: "#fda4af", text: "#fecdd3" },
+  violet: { fill: "#a3acc7", text: "#cbd0dc" },
 } as const;
 
 export const status = {
@@ -37,6 +73,18 @@ export const status = {
   // text via color-mix in generate-css.ts.
   info: "#2563eb",
   neutral: "#6b7280",
+} as const;
+
+// Dark-mode status overrides. success/warning/danger sit comfortably
+// above 3:1 non-text-contrast on gray-900; info (true blue) and neutral
+// (gray-500) slide below it — lifted to Tailwind blue-400 and gray-400
+// for 7:1 contrast. Per dark-mode-palette.md "Status colors" table.
+export const darkStatus = {
+  success: "#34d399",
+  warning: "#fbbf24",
+  danger: "#fb7185",
+  info: "#60a5fa",
+  neutral: "#9ca3af",
 } as const;
 
 // Self-hosted IBM Plex family (per visual-polish-target.md). The
@@ -135,21 +183,56 @@ export const cardRules = {
 
 // Per-callout-variant title-bar background tints. Each entry names the
 // accent CSS variable (the `--sophie-*` slot, without the `var(...)`
-// wrapper) and the percent-tint to mix into surface-1 for the title-bar
-// background. Tints are tuned per variant — `caution` rides lighter
-// than `warning` (same amber accent, half the tint) so the two read as
-// distinct emphasis levels of the same signal family. `summary` and
-// `roadmap` use neutral because they're structural chrome, not
-// pedagogically rare moments.
+// wrapper) and per-mode percent-tints to mix into surface-1 for the
+// title-bar background. `caution` rides lighter than `warning` (same
+// amber accent, half the tint) so the two read as distinct emphasis
+// levels of the same signal family. `summary` and `roadmap` use
+// neutral because they're structural chrome, not pedagogically rare
+// moments.
+//
+// `tintPctDark` lands +4 above `tintPctLight` because OKLCH mixing
+// against a darker substrate (gray-800) absorbs chroma differently
+// than against pure white — the symmetric percentage produces "barely
+// tinted gray" in dark. Tune per VR review (PR-2/3) if any reads off.
+// Per dark-mode-palette.md "Callout title-bar tints".
 export const calloutTitleBg = {
-  info: { accent: "status-info", tintPct: 8 },
-  tip: { accent: "status-success", tintPct: 8 },
-  warning: { accent: "status-warning", tintPct: 8 },
-  caution: { accent: "status-warning", tintPct: 4 },
-  danger: { accent: "status-danger", tintPct: 8 },
-  "key-insight": { accent: "brand-teal", tintPct: 8 },
-  misconception: { accent: "brand-rose", tintPct: 8 },
-  definition: { accent: "brand-violet", tintPct: 8 },
-  summary: { accent: "status-neutral", tintPct: 8 },
-  roadmap: { accent: "status-neutral", tintPct: 8 },
+  info: { accent: "status-info", tintPctLight: 8, tintPctDark: 12 },
+  tip: { accent: "status-success", tintPctLight: 8, tintPctDark: 12 },
+  warning: { accent: "status-warning", tintPctLight: 8, tintPctDark: 12 },
+  caution: { accent: "status-warning", tintPctLight: 4, tintPctDark: 6 },
+  danger: { accent: "status-danger", tintPctLight: 8, tintPctDark: 12 },
+  "key-insight": { accent: "brand-teal", tintPctLight: 8, tintPctDark: 12 },
+  misconception: { accent: "brand-rose", tintPctLight: 8, tintPctDark: 12 },
+  definition: { accent: "brand-violet", tintPctLight: 8, tintPctDark: 12 },
+  summary: { accent: "status-neutral", tintPctLight: 8, tintPctDark: 12 },
+  roadmap: { accent: "status-neutral", tintPctLight: 8, tintPctDark: 12 },
+} as const;
+
+// Validation tracker tint percentages (ADR 0056). Stripes reuse the
+// semantic status palette directly; backgrounds derive `tintPct%`-tinted
+// surfaces via color-mix on `transparent` so admonitions read as subtle
+// wash rather than saturated alert. `tintPctDark` lifts +4 to compensate
+// for the lower-luminance substrate (gray-800/900) — same logic as
+// `calloutTitleBg`. Per dark-mode-palette.md "Validation tracker tints".
+export const validationTints = {
+  unvalidated: {
+    stripe: "status-neutral",
+    tintPctLight: 6,
+    tintPctDark: 10,
+  },
+  "in-progress": {
+    stripe: "status-info",
+    tintPctLight: 6,
+    tintPctDark: 10,
+  },
+  validated: {
+    stripe: "status-success",
+    tintPctLight: 6,
+    tintPctDark: 10,
+  },
+  "re-validation-needed": {
+    stripe: "status-warning",
+    tintPctLight: 6,
+    tintPctDark: 10,
+  },
 } as const;
