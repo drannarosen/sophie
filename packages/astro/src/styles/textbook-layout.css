@@ -32,7 +32,7 @@
   grid-template-columns: var(--sophie-sidebar-w) 1fr var(--sophie-right-w);
   grid-template-rows: var(--sophie-topbar-h) 1fr;
   min-height: 100dvh;
-  background: var(--sophie-bg, #fbfaf7);
+  background: var(--sophie-bg);
   color: var(--sophie-text);
   /* Positioned containing block for absolute-positioned <Aside>
      elements docked in the right column area (PR 6). Side effect:
@@ -76,16 +76,49 @@
   grid-area: content;
   padding-inline: clamp(1rem, 4vw, 3rem);
   padding-block: 2rem;
-  /* Cap reading width at 75ch in Default mode, but never exceed the
-     available viewport (after sidebar / right column reserve their
-     space). Prevents horizontal overflow on narrow viewports where
-     75ch would be wider than the column. */
-  max-inline-size: min(75ch, 100%);
+  /* Cap reading width at 66ch in Default mode — the Bringhurst optimum
+     for single-column prose (see visual-polish-target.md "Spacing rhythm"
+     row). Focused (75ch) and Wide (95ch) below relax the cap when
+     side columns are hidden. `min(…, 100%)` prevents horizontal overflow
+     on narrow viewports where the cap would exceed the available column. */
+  max-inline-size: min(66ch, 100%);
   margin-inline: auto;
   inline-size: 100%;
+  /* Prose typography — IBM Plex Sans at the 17px body size + 1.65
+     line-height locked by visual-polish-target.md PR-2/PR-3. The page
+     frame consumes the same tokens as the rebuilt Tier-1/2/3
+     components so chapter prose flows in the same rhythm as the
+     pedagogy chrome around it. */
+  font-family: var(--sophie-font-sans);
+  font-size: var(--sophie-text-body);
+  line-height: var(--sophie-leading-prose);
   /* Prevent extra-wide chapter content (long inline code, big tables)
      from forcing horizontal scroll at any viewport. */
   overflow-wrap: break-word;
+}
+
+/* Asymmetric heading rhythm per visual-polish-target.md — h2 owns the
+   next paragraph (generous top, tight bottom), h3 even tighter. All
+   headings consume the heading-margin tokens added in PR-3 instead of
+   inheriting browser defaults. Weight stays at semibold across the
+   hierarchy; size carries the level (MyST convention; visual-polish-
+   target.md "Spacing rhythm" §"All headings weight"). */
+.sophie-content h1 {
+  margin-block-start: var(--sophie-heading-h1-margin-top);
+  margin-block-end: var(--sophie-heading-h1-margin-bottom);
+  font-weight: var(--sophie-weight-semibold);
+}
+
+.sophie-content h2 {
+  margin-block-start: var(--sophie-heading-h2-margin-top);
+  margin-block-end: var(--sophie-heading-h2-margin-bottom);
+  font-weight: var(--sophie-weight-semibold);
+}
+
+.sophie-content h3 {
+  margin-block-start: var(--sophie-heading-h3-margin-top);
+  margin-block-end: var(--sophie-heading-h3-margin-bottom);
+  font-weight: var(--sophie-weight-semibold);
 }
 
 .sophie-right {
@@ -107,16 +140,16 @@
 }
 
 /* When the sidebar is hidden, let content widen to use the freed
-   horizontal space — up to a readability ceiling of 95ch.
-   Otherwise users who deliberately collapse the sidebar see the
-   prose stay narrow with leftover whitespace (a regression on
-   user signal).
+   horizontal space — to 75ch (equivalent to Focused mode's cap, but
+   still under Bringhurst's 75ch upper bound). Users who collapse the
+   sidebar deliberately see the prose breathe a bit more rather than
+   leaving leftover whitespace.
 
    Cascade order matters: this rule comes BEFORE the view-mode
-   overrides below, so Focused (85ch) and Wide (105ch) win when
+   overrides below, so Focused (75ch) and Wide (95ch) win when
    active even with sidebar="closed". */
 :root[data-sidebar="closed"] .sophie-content {
-  max-inline-size: min(95ch, 100%);
+  max-inline-size: min(75ch, 100%);
 }
 
 /* Sidebar toggle button — basic primitive shape; full design in @sophie/theme later. */
@@ -124,7 +157,7 @@
   appearance: none;
   background: transparent;
   border: 1px solid var(--sophie-border);
-  border-radius: 6px;
+  border-radius: var(--sophie-radius-sm);
   padding: 0.375rem 0.625rem;
   font-size: 1rem;
   line-height: 1;
@@ -133,13 +166,12 @@
 }
 
 .sophie-sidebar-toggle:focus-visible {
-  outline: var(--sophie-focus-width, 2px) solid
-    var(--sophie-focus-color, #5b8def);
+  outline: var(--sophie-focus-width) solid var(--sophie-focus-color);
   outline-offset: 2px;
 }
 
 .sophie-sidebar-toggle:hover {
-  background: var(--sophie-bg, #fbfaf7);
+  background: var(--sophie-bg);
 }
 
 /* Theme toggle button — same primitive shape as the sidebar toggle.
@@ -150,7 +182,7 @@
   appearance: none;
   background: transparent;
   border: 1px solid var(--sophie-border);
-  border-radius: 6px;
+  border-radius: var(--sophie-radius-sm);
   padding: 0.375rem 0.625rem;
   font-size: 1rem;
   line-height: 1;
@@ -161,13 +193,12 @@
 }
 
 .sophie-theme-toggle:focus-visible {
-  outline: var(--sophie-focus-width, 2px) solid
-    var(--sophie-focus-color, #5b8def);
+  outline: var(--sophie-focus-width) solid var(--sophie-focus-color);
   outline-offset: 2px;
 }
 
 .sophie-theme-toggle:hover {
-  background: var(--sophie-bg, #fbfaf7);
+  background: var(--sophie-bg);
 }
 
 .sophie-theme-icon {
@@ -187,7 +218,7 @@
   appearance: none;
   background: transparent;
   border: 1px solid var(--sophie-border);
-  border-radius: 6px;
+  border-radius: var(--sophie-radius-sm);
   padding: 0.375rem 0.625rem;
   font-size: 1rem;
   line-height: 1;
@@ -198,13 +229,12 @@
 }
 
 .sophie-view-mode-toggle:focus-visible {
-  outline: var(--sophie-focus-width, 2px) solid
-    var(--sophie-focus-color, #5b8def);
+  outline: var(--sophie-focus-width) solid var(--sophie-focus-color);
   outline-offset: 2px;
 }
 
 .sophie-view-mode-toggle:hover {
-  background: var(--sophie-bg, #fbfaf7);
+  background: var(--sophie-bg);
 }
 
 .sophie-view-mode-icon {
@@ -246,14 +276,17 @@
   border-inline-start: 0;
 }
 
-/* Content cap relaxes as chrome recedes. Default's 75ch cap is
-   set on .sophie-content directly above; these override. */
+/* Content cap relaxes as chrome recedes. Default is 66ch (Bringhurst
+   optimum; set on .sophie-content above). Focused relaxes to 75ch
+   (the upper edge of Bringhurst's acceptable range — gives code +
+   math more horizontal room). Wide relaxes further to 95ch for
+   diagrams, wide tables, and overview pages. */
 :root[data-view-mode="focused"] .sophie-content {
-  max-inline-size: min(85ch, 100%);
+  max-inline-size: min(75ch, 100%);
 }
 
 :root[data-view-mode="wide"] .sophie-content {
-  max-inline-size: min(105ch, 100%);
+  max-inline-size: min(95ch, 100%);
 }
 
 /* The per-element sidebar toggle is only meaningful while a sidebar
@@ -338,7 +371,7 @@
 
 .sophie-module-title {
   font-size: 0.75rem;
-  font-weight: var(--sophie-weight-semibold, 600);
+  font-weight: var(--sophie-weight-semibold);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--sophie-text-muted);
@@ -352,7 +385,7 @@
 .sophie-chapter-list a {
   display: block;
   padding: 0.375rem 0.5rem;
-  border-radius: var(--sophie-radius-sm, 6px);
+  border-radius: var(--sophie-radius-sm);
   color: var(--sophie-text);
   text-decoration: none;
 }
@@ -362,15 +395,14 @@
 }
 
 .sophie-chapter-list a:focus-visible {
-  outline: var(--sophie-focus-width, 2px) solid
-    var(--sophie-focus-color, #5b8def);
+  outline: var(--sophie-focus-width) solid var(--sophie-focus-color);
   outline-offset: 2px;
 }
 
 .sophie-chapter-list a[aria-current="page"] {
   background: var(--sophie-surface-2);
   color: var(--sophie-accent);
-  font-weight: var(--sophie-weight-semibold, 600);
+  font-weight: var(--sophie-weight-semibold);
 }
 
 /* ===== In-page table of contents (PR 4) ===== */
@@ -383,7 +415,7 @@
 
 .sophie-toc-heading {
   font-size: 0.75rem;
-  font-weight: var(--sophie-weight-semibold, 600);
+  font-weight: var(--sophie-weight-semibold);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--sophie-text-muted);
@@ -411,7 +443,7 @@
 .sophie-toc-link {
   display: block;
   padding: 0.25rem 0.375rem;
-  border-radius: var(--sophie-radius-sm, 6px);
+  border-radius: var(--sophie-radius-sm);
   color: var(--sophie-text-2);
   text-decoration: none;
   border-inline-start: 2px solid transparent;
@@ -428,8 +460,7 @@
 }
 
 .sophie-toc-link:focus-visible {
-  outline: var(--sophie-focus-width, 2px) solid
-    var(--sophie-focus-color, #5b8def);
+  outline: var(--sophie-focus-width) solid var(--sophie-focus-color);
   outline-offset: 2px;
 }
 
@@ -437,7 +468,7 @@
   color: var(--sophie-accent);
   border-inline-start-color: var(--sophie-accent);
   background: var(--sophie-surface-2);
-  font-weight: var(--sophie-weight-semibold, 600);
+  font-weight: var(--sophie-weight-semibold);
 }
 
 /* Mobile drawer + FAB. Hidden by default; revealed on mobile. */
@@ -457,11 +488,11 @@
     z-index: 20;
     padding: 0.625rem 0.875rem;
     border: 1px solid var(--sophie-border);
-    border-radius: 999px;
+    border-radius: var(--sophie-radius-full);
     background: var(--sophie-surface-1);
     color: var(--sophie-text);
     font-size: 0.875rem;
-    font-weight: var(--sophie-weight-medium, 500);
+    font-weight: var(--sophie-weight-medium);
     cursor: pointer;
     box-shadow: var(--sophie-shadow-card);
   }
@@ -471,8 +502,7 @@
   }
 
   .sophie-toc-fab:focus-visible {
-    outline: var(--sophie-focus-width, 2px) solid
-      var(--sophie-focus-color, #5b8def);
+    outline: var(--sophie-focus-width) solid var(--sophie-focus-color);
     outline-offset: 2px;
   }
 
@@ -484,7 +514,9 @@
     inline-size: min(85vw, 320px);
     background: var(--sophie-surface-1);
     border-inline-start: 1px solid var(--sophie-border);
-    box-shadow: -8px 0 24px color-mix(in oklch, #0f1115 18%, transparent);
+    /* Heavier than --sophie-shadow-card (Tier-1 component elevation);
+       drawer floats over chapter content so it needs more presence. */
+    box-shadow: var(--sophie-shadow-popover);
     transform: translateX(100%);
     transition: transform 220ms ease-out;
     z-index: 25;
@@ -505,7 +537,7 @@
 
   .sophie-toc-drawer-title {
     font-size: 0.875rem;
-    font-weight: var(--sophie-weight-semibold, 600);
+    font-weight: var(--sophie-weight-semibold);
     text-transform: uppercase;
     letter-spacing: 0.06em;
     color: var(--sophie-text-muted);
@@ -515,7 +547,7 @@
     appearance: none;
     background: transparent;
     border: 1px solid var(--sophie-border-subtle);
-    border-radius: var(--sophie-radius-sm, 6px);
+    border-radius: var(--sophie-radius-sm);
     padding: 0.25rem;
     cursor: pointer;
     color: inherit;
@@ -527,8 +559,7 @@
   }
 
   .sophie-toc-drawer-close:focus-visible {
-    outline: var(--sophie-focus-width, 2px) solid
-      var(--sophie-focus-color, #5b8def);
+    outline: var(--sophie-focus-width) solid var(--sophie-focus-color);
     outline-offset: 2px;
   }
 }
@@ -575,22 +606,22 @@
   align-items: center;
   gap: var(--sophie-space-2);
   padding: var(--sophie-space-1) var(--sophie-space-3);
-  border: 1px solid var(--sophie-color-border);
+  border: 1px solid var(--sophie-border);
   border-radius: var(--sophie-radius-md);
   background: transparent;
-  color: var(--sophie-color-text-muted);
+  color: var(--sophie-text-muted);
   cursor: pointer;
   font-size: 0.9em;
 }
 .sophie-search-trigger:hover {
-  background: var(--sophie-color-surface-2);
+  background: var(--sophie-surface-2);
 }
 .sophie-search-trigger__kbd {
   font-size: 0.8em;
   padding: 0 var(--sophie-space-1);
-  border: 1px solid var(--sophie-color-border);
+  border: 1px solid var(--sophie-border);
   border-radius: var(--sophie-radius-sm);
-  background: var(--sophie-color-surface-0);
+  background: var(--sophie-surface-1);
 }
 
 /* ============================================================
@@ -669,45 +700,21 @@
     break-inside: avoid;
   }
 
-  /* (4) Interactive components → static pedagogy-preserving form */
+  /* (4) Interactive components → static pedagogy-preserving form.
 
-  /* CollapsibleCard: force-expanded body, hide chevron */
-  .sophie-collapsible-card [data-state="closed"] {
-    display: block;
-  }
-  .sophie-collapsible-card-chevron {
-    display: none;
-  }
+     The pre-WS3 design contemplated print rules keyed on stable
+     `.sophie-<component>` global classes for CollapsibleCard,
+     InteractiveCheckbox, Predict, ConfidenceCheck/EffortLog/
+     ComprehensionGate (collectively "self-assessment"), and
+     GlossaryTerm. Only Aside + GlossaryTerm currently emit such
+     classes; the others use CSS-modules-hashed names exclusively.
 
-  /* InteractiveCheckbox: render as static empty glyph */
-  .sophie-interactive-checkbox input[type="checkbox"] {
-    appearance: auto;
-    pointer-events: none;
-  }
-
-  /* Predict: hide reveal button, draw blank answer-space */
-  .sophie-predict[data-revealed="false"] .sophie-predict-reveal-button {
-    display: none;
-  }
-  .sophie-predict::after {
-    content: "";
-    display: block;
-    min-height: 4em;
-    border-bottom: 1px solid var(--sophie-border);
-  }
-
-  /* SelfAssessment: hide reveal button, show answer */
-  .sophie-self-assessment-answer {
-    display: block;
-  }
-  .sophie-self-assessment-reveal-button {
-    display: none;
-  }
-
-  /* GlossaryTerm first-use footnote: reveal */
-  .sophie-glossary-term[data-first-use="true"] .sophie-glossary-footnote {
-    display: inline;
-  }
+     Print rules were dropped here in PR-12 because their selectors
+     were orphans — none fired against real DOM. Re-establishing
+     them is a Phase-2 follow-up that needs to land in two halves:
+     (a) component-side `className="sophie-<name>"` hooks, then
+     (b) the corresponding @media print contracts here. Tracked as
+     a P3 in the 2026-05-16 Workstream 3 completion audit. */
 }
 
 /* Default (non-print) state: glossary footnote spans are hidden.
