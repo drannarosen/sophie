@@ -1,0 +1,54 @@
+/* <Figure> — root chrome primitive.
+ *
+ * Anatomy:
+ *   .root             outer card. 1px border, 5px radius, surface-1
+ *                     fill, card shadow, Plex Sans body font. Slots
+ *                     for FigureTitle / FigureControls / FigureBody /
+ *                     FigureFooter / FigureCaption stack vertically
+ *                     in source order (strict per locked decision 5).
+ *
+ *   .root[data-epistemic-role=*]
+ *                     when the optional role prop is provided, a 4px
+ *                     role-colored left rule differentiates the
+ *                     figure as Tier-1+ (matches BlackbodyExplorer's
+ *                     PR-2 anatomy). Default (no role) ships without
+ *                     the rule per the chrome contract.
+ */
+
+.root {
+  display: flex;
+  flex-direction: column;
+  background: var(--sophie-surface-1);
+  border: 1px solid var(--sophie-border);
+  border-radius: var(--sophie-radius-sm);
+  box-shadow: var(--sophie-shadow-card);
+  color: var(--sophie-text);
+  font-family: var(--sophie-font-sans);
+  line-height: var(--sophie-leading-prose);
+  overflow: hidden;
+}
+
+.root[data-epistemic-role="observable"] {
+  border-left: 4px solid var(--sophie-role-observable);
+}
+.root[data-epistemic-role="model"] {
+  border-left: 4px solid var(--sophie-role-model);
+}
+.root[data-epistemic-role="inference"] {
+  border-left: 4px solid var(--sophie-role-inference);
+}
+.root[data-epistemic-role="assumption"] {
+  border-left: 4px solid var(--sophie-role-assumption);
+}
+.root[data-epistemic-role="approximation"] {
+  border-left: 4px solid var(--sophie-role-approximation);
+}
+.root[data-epistemic-role="uncertainty"] {
+  border-left: 4px solid var(--sophie-role-uncertainty);
+}
+.root[data-epistemic-role="numerical"] {
+  border-left: 4px solid var(--sophie-role-numerical);
+}
+.root[data-epistemic-role="misconception"] {
+  border-left: 4px solid var(--sophie-role-misconception);
+}
