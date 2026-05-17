@@ -702,24 +702,48 @@
 
   /* (4) Interactive components → static pedagogy-preserving form.
 
-     The pre-WS3 design contemplated print rules keyed on stable
-     `.sophie-<component>` global classes for CollapsibleCard,
-     InteractiveCheckbox, Predict, ConfidenceCheck/EffortLog/
-     ComprehensionGate (collectively "self-assessment"), and
-     GlossaryTerm. Only Aside + GlossaryTerm currently emit such
-     classes; the others use CSS-modules-hashed names exclusively.
+     Each component below emits a stable `.sophie-<name>` className
+     hook (Workstream P2-1 PR-4), paired with a print rule here that
+     preserves the pedagogical contract in the static handout.
+     Self-assessment family (ConfidenceCheck/EffortLog/Comprehension-
+     Gate) emits hooks for future use but needs no print rule today —
+     native radio buttons print their current state correctly. */
 
-     Print rules were dropped here in PR-12 because their selectors
-     were orphans — none fired against real DOM. Re-establishing
-     them is a Phase-2 follow-up that needs to land in two halves:
-     (a) component-side `className="sophie-<name>"` hooks, then
-     (b) the corresponding @media print contracts here. Tracked as
-     a P3 in the 2026-05-16 Workstream 3 completion audit. */
+  /* CollapsibleCard: force-expand the body and hide the chevron, so
+     printed handouts contain the deep-dive content rather than just
+     the closed disclosure header. Radix sets `data-state` on the
+     Collapsible.Content element; we override its closed-state hide. */
+  .sophie-collapsible-card [data-state] {
+    display: block;
+  }
+  .sophie-collapsible-card [aria-hidden="true"] {
+    display: none;
+  }
+
+  /* Predict: hide the reveal button and any revealed content, so the
+     printed worksheet shows the prompts (with whatever the student
+     wrote in the textareas) but does NOT spoil the gated discussion
+     content. */
+  .sophie-predict-reveal-button,
+  .sophie-predict-reveal-content {
+    display: none;
+  }
+
+  /* GlossaryTerm first-use footnote: reveal in print. The footnote
+     span is rendered into the DOM only when data-first-use="true"
+     (GlossaryTerm.tsx); on screen it's hidden by the default rule
+     below the @media block; in print it should appear inline as a
+     footnote-style definition so readers of the static handout see
+     the term defined on first occurrence. */
+  .sophie-glossary-footnote {
+    display: inline;
+  }
 }
 
 /* Default (non-print) state: glossary footnote spans are hidden.
-   Outside the @media print block so it applies to both screen and print
-   when no [data-first-use="true"] match. */
+   Outside the @media print block so the screen view doesn't show the
+   footnote text duplicated alongside the HoverCard popover. The print
+   rule above overrides this for handout output. */
 .sophie-glossary-footnote {
   display: none;
 }

@@ -39,7 +39,11 @@ export function ConfidenceCheck({
   const choices = Array.from({ length: scale }, (_, i) => i + 1);
 
   return (
-    <div role='radiogroup' aria-labelledby={labelId} className={styles.section}>
+    <div
+      role='radiogroup'
+      aria-labelledby={labelId}
+      className={`${styles.section} sophie-confidence-check`}
+    >
       <header className={styles.titleBar}>
         <Gauge className={styles.icon} size={20} aria-hidden />
         <span id={labelId} className={styles.title}>

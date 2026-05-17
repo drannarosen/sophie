@@ -52,7 +52,7 @@ export function CollapsibleCard({
     <Collapsible.Root
       open={open}
       onOpenChange={setOpen}
-      className={styles.card}
+      className={`${styles.card} sophie-collapsible-card`}
       onKeyDown={handleKeyDown}
     >
       <Collapsible.Trigger {...controlProps} className={styles.trigger}>
