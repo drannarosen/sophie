@@ -1,7 +1,9 @@
 import { existsSync } from "node:fs";
 import { relative as relativePath, resolve as resolvePath } from "node:path";
+import { getInterventionByName } from "@sophie/components";
 import type {
   AuditFinding,
+  InterventionEntry,
   NotationRegistry,
   PedagogyIndex,
 } from "@sophie/core/schema";
@@ -82,6 +84,23 @@ import { slugify } from "@sophie/core/schema";
  *                resolve to a `<KeyEquation>` in the chapter's equation
  *                index or to another `<RepEquation>` in the same
  *                MultiRep (chapter-scoped at v1; ADR 0043 §R-MR6).
+ *   I1  WARNING  `<Intervention addresses="…">` references a misconception
+ *                not declared anywhere in the index, OR the literal "this"
+ *                survived extraction (no enclosing `<Aside kind="misconception">`
+ *                — extractor leaves "this" verbatim in that case; ADR 0044).
+ *   I2  ERROR    `<Intervention type="…">` is not in `intervention-index.ts`
+ *                and `type !== "custom"` (ADR 0044). Catches typos +
+ *                authors reaching for canonical names that don't exist.
+ *   I3  INFO     `<Intervention type="bridging-analogy">` lacks `limits`
+ *                (Clement 1993 explicit-limits authoring nudge; ADR 0044).
+ *   MG3 WARNING  Misconception declared but no `<Intervention>` paired
+ *                with it course-wide (ADR 0044). Surfaces unaddressed
+ *                misconceptions early so the chapter author knows where
+ *                remediation is missing.
+ *   MG4 INFO     Course-level depth-coverage summary: total misconceptions,
+ *                count with ≥1 `depth="substantial"` intervention, count
+ *                with only `depth="light"`, count addressed. Single-finding
+ *                summary table (ADR 0044 §D3); MG3 separately flags zeroes.
  *
  * The NR/MR invariants only fire when the consumer repo opts in via
  * `pedagogy-contract.yaml.math_and_units_standards.notation_registry`
@@ -94,8 +113,11 @@ import { slugify } from "@sophie/core/schema";
  *                            parallel check deferred.
  *   M3 — orphan misconception heuristic; deferred until we have a
  *        usable signal beyond "no source-of-truth title".
- *   MG3, MG4, I1–I4 — require the `<Intervention>` component + Intervention
- *                    Library (ADR 0044 Artifacts 2 + 3); ship with that PR.
+ *   I4 — verifies every canonical-intervention's `move:` resolves to a
+ *        real entry in `move-index.ts` (ADR 0041). Deferred until
+ *        `move-index.ts` ships (ADR 0044 §R-I4 deferral note); the
+ *        `move:` field on each `intervention-index.ts` entry is the
+ *        forward-compat seam declared now.
  *   NR1, NR3, NR4 — require per-equation `symbols` metadata on
  *                   `EquationEntrySchema` (deferred to PR-δ' per the
  *                   2026-05-17 scope decision; KeyEquation doesn't yet
@@ -891,6 +913,160 @@ export function runPedagogyAudit(
         location: {},
       });
     }
+  }
+
+  // ---------------------------------------------------------------------
+  // Intervention invariants (ADR 0044 + 2026-05-17 design §D7 + PR-δ):
+  //   I2 ERROR    Unknown canonical intervention type
+  //   I1 WARNING  Unknown addresses OR "this" outside misconception parent
+  //   I3 INFO     Bridging-analogy without `limits` (Clement 1993 nudge)
+  //   MG3 WARNING Orphan misconception (no <Intervention> pairs with it)
+  //   MG4 INFO    Course-level depth-coverage summary
+  // ---------------------------------------------------------------------
+  // Build a set of declared misconception anchors so I1 + MG3 can answer
+  // "does this address resolve to a known misconception?" in O(1). The
+  // anchor is the canonical identifier (per the PR-δ extractor fix that
+  // promotes `name` to anchor precedence). Audit-time lookups are
+  // chapter-agnostic — interventions reference misconceptions across
+  // the course, not just within their own chapter.
+  const declaredMisconceptionAnchors = new Set<string>(
+    index.misconceptions.map((m) => m.anchor)
+  );
+
+  // -------------------------------------------------------------------
+  // I2 ERROR — <Intervention type="X"> where X is not in
+  //            intervention-index.ts AND X !== "custom".
+  // -------------------------------------------------------------------
+  // The extractor's `.superRefine` (PR-β) catches `type="custom"`
+  // without `name` at parse time. I2 here catches the "made up
+  // canonical name" case (typo or author reaching for a name that
+  // doesn't exist in the library). Schema layer is permissive on
+  // `type: z.string()` per design §D1; the audit is the enforcement
+  // surface for catalog membership.
+  for (const iv of index.interventions) {
+    if (iv.type === "custom") continue;
+    if (getInterventionByName(iv.type) !== undefined) continue;
+    errors.push({
+      severity: "ERROR",
+      code: "I2",
+      message: `I2: <Intervention type="${iv.type}"> in chapter "${iv.chapter}" — "${iv.type}" is not a canonical name in intervention-index.ts. Resolution: pick one of the 12 canonical interventions (see docs/website/reference/intervention-library.md), or declare \`type="custom" name="${iv.type}"\` to opt out of the canonical library.`,
+      location: { chapter: iv.chapter, anchor: iv.anchor },
+    });
+  }
+
+  // -------------------------------------------------------------------
+  // I1 WARNING — <Intervention addresses="…"> references a misconception
+  //              not declared anywhere in the course, OR the literal
+  //              "this" survived extraction (i.e. the Intervention is
+  //              standalone but author wrote `addresses="this"`).
+  // -------------------------------------------------------------------
+  // The extractor (PR-γ) rewrites "this" → enclosing misconception
+  // name when the Intervention is nested in a misconception Aside.
+  // Surviving "this" means the Intervention was standalone with
+  // `addresses="this"` — a real authoring bug we flag here.
+  //
+  // Authors who address a misconception declared in ANOTHER chapter
+  // pass this check (the misconception set is course-wide).
+  for (const iv of index.interventions) {
+    for (const target of iv.addresses) {
+      if (target === "this") {
+        warnings.push({
+          severity: "WARNING",
+          code: "I1",
+          message: `I1: <Intervention type="${iv.type}"> in chapter "${iv.chapter}" — \`addresses="this"\` survived extraction (the Intervention is not nested inside a <Aside kind="misconception">). Resolution: nest the intervention inside the misconception Aside, or replace "this" with the misconception's anchor slug.`,
+          location: { chapter: iv.chapter, anchor: iv.anchor },
+        });
+        continue;
+      }
+      if (declaredMisconceptionAnchors.has(target)) continue;
+      warnings.push({
+        severity: "WARNING",
+        code: "I1",
+        message: `I1: <Intervention type="${iv.type}"> in chapter "${iv.chapter}" — \`addresses="${target}"\` references a misconception not declared anywhere in the course. Resolution: declare the misconception (Aside or Callout with that anchor) in some chapter, or fix the slug typo.`,
+        location: { chapter: iv.chapter, anchor: iv.anchor },
+      });
+    }
+  }
+
+  // -------------------------------------------------------------------
+  // I3 INFO — bridging-analogy without `limits` (Clement 1993 nudge)
+  // -------------------------------------------------------------------
+  // Clement 1993's bridging-analogy framework prescribes EXPLICIT
+  // limits ("the analogy maps X but breaks down on Y") as essential
+  // for resilient remediation. Authoring nudge, INFO-level.
+  for (const iv of index.interventions) {
+    if (iv.type !== "bridging-analogy") continue;
+    if (iv.limits) continue;
+    info.push({
+      severity: "INFO",
+      code: "I3",
+      message: `I3: <Intervention type="bridging-analogy"> in chapter "${iv.chapter}" lacks \`limits\`. Authoring nudge — Clement 1993 prescribes explicit limits ("the analogy maps X but breaks down on Y") for resilient remediation.`,
+      location: { chapter: iv.chapter, anchor: iv.anchor },
+    });
+  }
+
+  // -------------------------------------------------------------------
+  // MG3 WARNING — orphan misconception (no <Intervention> pairs)
+  // -------------------------------------------------------------------
+  // Course-wide pairing check: every declared misconception SHOULD
+  // have at least one intervention addressing it. Authoring nudge
+  // for the chapter author + course-coordinator — pairing is the
+  // structural promise of ADR 0044's misconception-graph + intervention
+  // model. WARNING (not ERROR) per design §D7: zero-pairing is a
+  // gap, not a contract violation.
+  const interventionTargets = new Set<string>(
+    index.interventions.flatMap((iv) => iv.addresses)
+  );
+  for (const misc of index.misconceptions) {
+    if (interventionTargets.has(misc.anchor)) continue;
+    warnings.push({
+      severity: "WARNING",
+      code: "MG3",
+      message: `MG3: Misconception "${misc.anchor}" (chapter "${misc.chapter}") is declared but no <Intervention> pairs with it course-wide. Resolution: add an <Intervention addresses="${misc.anchor}"> (nested in the misconception Aside or standalone) in some chapter, or remove the misconception declaration if it's no longer in scope.`,
+      location: { chapter: misc.chapter, anchor: misc.anchor },
+    });
+  }
+
+  // -------------------------------------------------------------------
+  // MG4 INFO — course-level depth-coverage summary
+  // -------------------------------------------------------------------
+  // Single-finding summary per design §D3: counts of misconceptions
+  // by remediation-depth bucket. MG3 separately flags the zeroes;
+  // MG4 surfaces the substantial-vs-light split so course-coordinators
+  // can see where the heavy-lifting interventions concentrate.
+  const totalMisconceptions = index.misconceptions.length;
+  if (totalMisconceptions > 0) {
+    const interventionsByTarget = new Map<string, InterventionEntry[]>();
+    for (const iv of index.interventions) {
+      for (const target of iv.addresses) {
+        const list = interventionsByTarget.get(target) ?? [];
+        list.push(iv);
+        interventionsByTarget.set(target, list);
+      }
+    }
+    let substantialCount = 0;
+    let lightOnlyCount = 0;
+    let unaddressedCount = 0;
+    for (const misc of index.misconceptions) {
+      const pairs = interventionsByTarget.get(misc.anchor);
+      if (!pairs || pairs.length === 0) {
+        unaddressedCount += 1;
+        continue;
+      }
+      if (pairs.some((iv) => iv.depth === "substantial")) {
+        substantialCount += 1;
+      } else {
+        lightOnlyCount += 1;
+      }
+    }
+    const pct = (n: number) =>
+      `${((n / totalMisconceptions) * 100).toFixed(0)}%`;
+    info.push({
+      severity: "INFO",
+      code: "MG4",
+      message: `MG4 — Intervention depth coverage:\n  ${totalMisconceptions} misconceptions total\n  ${substantialCount} have ≥1 substantial intervention (${pct(substantialCount)})\n  ${lightOnlyCount} have only light interventions (${pct(lightOnlyCount)})\n  ${unaddressedCount} have no interventions (${pct(unaddressedCount)})  ← would fire MG3 separately`,
+      location: {},
+    });
   }
 
   return { errors, warnings, info };
