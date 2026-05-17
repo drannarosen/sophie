@@ -17,6 +17,7 @@ import {
   formatAuditReport,
   runAuditOncePerProcess,
 } from "../lib/audit-cache";
+import { loadConsumerRegistry } from "../lib/notation-registry-loader";
 import { indexAccumulator } from "../lib/pedagogy-index-extractor";
 import { extractContractValidations } from "../lib/validation-extractor";
 import ContentColumn from "./ContentColumn.astro";
@@ -144,12 +145,28 @@ const { entries: contractValidations, findings: extractorFindings } =
   await extractContractValidations(repoRoot);
 indexAccumulator.setContractValidations(contractValidations, extractorFindings);
 
-// Re-snapshot AFTER the validation extractor populates the accumulator
-// so `runPedagogyAudit` sees the contract validations + extractor findings.
+// PR-ε: load the consumer's Notation Registry (ADR 0043) once per
+// build and push it into the accumulator. Mirrors the figureRegistry
+// two-tier model (PR-C3): MDX walk produces `multiReps`; consumer YAML
+// produces `notationRegistry`. The loader returns `{ registry: null }`
+// when the consumer hasn't opted in via
+// `pedagogy-contract.yaml.math_and_units_standards.notation_registry`
+// (per ADR 0042 + ADR 0043 §opt-in seam), in which case the audit's
+// NR/MR invariants silently skip and `<ChapterMultiReps>` falls back
+// to raw concept slugs. Throws (build-failing) when the contract opts
+// in but `notation-registry.yaml` is missing — `loadConsumerRegistry`'s
+// resolution message instructs the author to either create the file or
+// drop the opt-in.
+const { registry: notationRegistry } = loadConsumerRegistry(repoRoot);
+indexAccumulator.setNotationRegistry(notationRegistry);
+
+// Re-snapshot AFTER the validation extractor + registry loader populate
+// the accumulator so `runPedagogyAudit` sees the contract validations,
+// extractor findings, AND the registry.
 const pedagogyWithContracts = indexAccumulator.asPedagogyIndex();
 const auditReport = runAuditOncePerProcess(
   pedagogyWithContracts,
-  { draftChapterSlugs, repoRoot },
+  { draftChapterSlugs, repoRoot, notationRegistry },
   import.meta.env.PROD,
 );
 if (auditReport !== null) {

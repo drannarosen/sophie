@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { AuditFindingSchema } from "./audit.ts";
 import { MultiRepIndexEntrySchema } from "./multirep.ts";
+import { NotationRegistrySchema } from "./notation-registry.ts";
 import { NonEmptyString, Slug } from "./primitives.ts";
 import { ValidationSchema } from "./validation.ts";
 
@@ -342,6 +343,19 @@ export const PedagogyIndexSchema = z.object({
    * apps that don't author MultiRep bindings yet keep working.
    */
   multiReps: z.array(MultiRepIndexEntrySchema).readonly().default([]),
+  /**
+   * Consumer-app-owned Notation Registry (ADR 0043). Loaded by
+   * `loadConsumerRegistry(consumerRoot)` and pushed into the
+   * accumulator via `setNotationRegistry` at `TextbookLayout` SSR-merge
+   * time. `null` when the consumer hasn't opted in (no
+   * `pedagogy-contract.yaml` or empty
+   * `math_and_units_standards.notation_registry`). Consumed at audit
+   * time (NR/MR invariants — gated on `notationRegistry !== null`) and
+   * by `<ChapterMultiReps>` (verbal-label + canonical-symbol lookups).
+   * Mirrors the `figureRegistry` two-tier shape (PR-C3): MDX walk
+   * produces `multiReps`; consumer YAML produces `notationRegistry`.
+   */
+  notationRegistry: NotationRegistrySchema.nullable().default(null),
   /**
    * Per-contract validation entries (ADR 0056). One entry per ADR
    * (`docs/website/decisions/*.md`) and per reference doc

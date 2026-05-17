@@ -41,6 +41,7 @@ function makeEmptyIndex(): PedagogyIndex {
     contractValidations: [],
     extractorFindings: [],
     multiReps: [],
+    notationRegistry: null,
   };
 }
 

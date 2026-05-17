@@ -149,11 +149,11 @@ export interface AuditExtras {
    * When `null` or absent, the NR/MR invariants are skipped (consumer
    * hasn't opted in via
    * `pedagogy-contract.yaml.math_and_units_standards.notation_registry`).
-   * Intended caller is `TextbookLayout.astro`, which will load the
-   * registry via `loadConsumerRegistry(consumerRoot)` and thread the
-   * result here; that consumer-app wiring is a TODO scoped to PR-ε
-   * (where the smoke target gets its full audit pass end-to-end).
-   * Tests construct fixtures inline.
+   * Threaded from `TextbookLayout.astro` (PR-ε wire-up): the layout
+   * calls `loadConsumerRegistry(consumerRoot)`, pushes the registry
+   * into the accumulator via `setNotationRegistry`, and passes it here
+   * as the audit's NR/MR input. Tests construct fixtures inline (no
+   * accumulator round-trip required).
    */
   notationRegistry?: NotationRegistry | null;
 }

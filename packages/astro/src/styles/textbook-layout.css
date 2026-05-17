@@ -685,7 +685,8 @@
   .sophie-chapter-misconceptions__term,
   .sophie-course-misconceptions__term,
   .sophie-chapter-glossary__term,
-  .sophie-course-glossary__term {
+  .sophie-course-glossary__term,
+  .sophie-chapter-multireps__term {
     break-after: avoid;
   }
 
@@ -696,7 +697,8 @@
   .sophie-chapter-misconceptions__body,
   .sophie-course-misconceptions__body,
   .sophie-chapter-glossary__body,
-  .sophie-course-glossary__body {
+  .sophie-course-glossary__body,
+  .sophie-chapter-multireps__body {
     break-inside: avoid;
   }
 

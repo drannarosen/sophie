@@ -12,6 +12,7 @@ import {
   type MisconceptionEntry,
   type ModuleEntry,
   type MultiRepIndexEntry,
+  type NotationRegistry,
   type ObjectiveEntry,
   type PedagogyIndex,
   type SerializedRep,
@@ -1356,6 +1357,18 @@ interface GlobalIndexState {
    * consumed by audit invariants MR1–MR4/MR6 in PR-δ.
    */
   multiReps: Map<string, MultiRepIndexEntry>;
+  /**
+   * Consumer-supplied Notation Registry (ADR 0043 + 2026-05-17 design
+   * hardening §D7 + PR-ε wire-up). Loaded by
+   * `loadConsumerRegistry(consumerRoot)` from the consumer's
+   * `notation-registry.yaml` and pushed via `setNotationRegistry()` at
+   * `TextbookLayout` SSR-merge time. Mirrors `figureRegistry` (PR-C3
+   * two-tier model): MDX walk produces `multiReps`; consumer YAML
+   * produces `notationRegistry`. `null` when the consumer hasn't opted
+   * in. Last-write-wins; consumer-global; NOT touched by
+   * `clearChapter` (the registry file is external to chapter MDX).
+   */
+  notationRegistry: NotationRegistry | null;
 }
 
 function getGlobalState(): GlobalIndexState {
@@ -1375,6 +1388,7 @@ function getGlobalState(): GlobalIndexState {
       contractValidations: [],
       extractorFindings: [],
       multiReps: new Map(),
+      notationRegistry: null,
     };
   }
   return g[GLOBAL_KEY];
@@ -1601,6 +1615,24 @@ class IndexAccumulator {
   }
 
   /**
+   * Push the consumer-supplied Notation Registry (ADR 0043 + PR-ε)
+   * into the accumulator. Mirrors `setFigureRegistry` semantics:
+   * last-write-wins, consumer-global, NOT touched by `clearChapter`
+   * (the registry file is external to chapter MDX). Called from
+   * `TextbookLayout` after `loadConsumerRegistry(consumerRoot)`
+   * resolves. `null` means the consumer hasn't opted into the
+   * registry (no `pedagogy-contract.yaml` or empty
+   * `math_and_units_standards.notation_registry` field); audit
+   * NR/MR invariants gate on `notationRegistry !== null` and
+   * `<ChapterMultiReps>` silently degrades to raw concept slugs
+   * when there's no registry to look verbal labels up against.
+   */
+  setNotationRegistry(registry: NotationRegistry | null): void {
+    const state = getGlobalState();
+    state.notationRegistry = registry;
+  }
+
+  /**
    * Add a chapter's extracted objectives. Keyed by
    * `${chapter}#${anchor}`; different chapters can each declare an
    * objective with the same `id` (no semantic collision at this layer
@@ -1718,6 +1750,7 @@ class IndexAccumulator {
       contractValidations: state.contractValidations,
       extractorFindings: state.extractorFindings,
       multiReps: Array.from(state.multiReps.values()),
+      notationRegistry: state.notationRegistry,
     };
   }
 }
@@ -1747,6 +1780,7 @@ export function resetIndexAccumulator(): void {
   state.inlineRefUsages = [];
   state.contractValidations = [];
   state.extractorFindings = [];
+  state.notationRegistry = null;
   state.multiReps.clear();
 }
 

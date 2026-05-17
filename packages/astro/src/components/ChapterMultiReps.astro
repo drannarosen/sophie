@@ -1,0 +1,164 @@
+---
+import type {
+  Concept,
+  MultiRepIndexEntry,
+  SerializedRep,
+} from "@sophie/core/schema";
+import { indexAccumulator } from "../lib/pedagogy-index-extractor";
+
+const { multiReps, notationRegistry } = indexAccumulator.asPedagogyIndex();
+
+/**
+ * `<ChapterMultiReps chapter="..." order="..." heading="..." />` —
+ * Astro consumer of the build-time pedagogy index (ADR 0038) for the
+ * MultiRep family (ADR 0043 + 2026-05-17 design hardening §D8). Closes
+ * the MultiRep family by surfacing every `<MultiRep>` binding declared
+ * in a chapter as a per-concept navigational index.
+ *
+ * Why an index (not a full re-render): each `<MultiRep>` already
+ * renders its full binding card at source (the `mr-<concept-slug>`
+ * anchor). The aggregator's job is navigation + summary, mirroring
+ * `<ChapterFigures>`'s index-of-figures shape rather than
+ * `<ChapterEquations>`'s body-re-render shape. The chapter-end summary
+ * is for "what concepts did this chapter bind, and which
+ * representations did it bind them across" — a reader's affordance,
+ * not a duplicate.
+ *
+ * Lookups: registry-resolved when `notationRegistry !== null`. The
+ * registry's `verbal_label` is what readers see; `concept` slug is the
+ * fallback when (a) no registry is loaded (consumer hasn't opted in
+ * via `pedagogy-contract.yaml.math_and_units_standards.notation_registry`,
+ * per ADR 0042 + ADR 0043 opt-in seam), or (b) the concept isn't in the
+ * registry (MR1 ERROR catches this at audit time; render still degrades
+ * gracefully so authors see *something* during incremental authoring).
+ *
+ * Pure Astro; no client JS. Per-component CSS hooks under
+ * `sophie-chapter-multireps__*` follow the existing Chapter*
+ * convention.
+ */
+export interface Props {
+  /** Chapter slug to filter the index by (e.g. "measuring-the-sky"). */
+  chapter: string;
+  /**
+   * Sort strategy. Default `"alphabetical"` (by registry `verbal_label`
+   * — falls back to concept slug when no registry is loaded). Matches
+   * `<ChapterEquations>` / `<ChapterFigures>` precedent for math/
+   * symbol-heavy content.
+   */
+  order?: "alphabetical" | "appearance";
+  /** Optional heading rendered above the list. */
+  heading?: string;
+}
+
+const { chapter, order = "alphabetical", heading } = Astro.props;
+
+const inChapter: MultiRepIndexEntry[] = multiReps.filter(
+  (mr) => mr.chapter === chapter
+);
+
+// O(1) concept lookup keyed by `id`. `null` registry → empty map → all
+// lookups fall back to the raw concept slug downstream. Defensive: if
+// the same concept id is declared twice in the registry the NR3 audit
+// invariant (PR-δ' — ADR 0043 §R5) will ERROR; here we keep the
+// last-wins behavior of Map and let the audit be the source of truth
+// on registry correctness.
+const conceptsById: Map<string, Concept> = new Map(
+  (notationRegistry?.concepts ?? []).map((c) => [c.id, c])
+);
+
+function displayLabel(entry: MultiRepIndexEntry): string {
+  return conceptsById.get(entry.concept)?.verbal_label ?? entry.concept;
+}
+
+const sorted =
+  order === "alphabetical"
+    ? [...inChapter].sort((a, b) =>
+        displayLabel(a).localeCompare(displayLabel(b))
+      )
+    : inChapter; // accumulator preserves walk order → "appearance"
+
+function repKindLabel(rep: SerializedRep): string {
+  switch (rep.kind) {
+    case "verbal":
+      return "verbal";
+    case "equation":
+      return "equation";
+    case "figure":
+      return "figure";
+  }
+}
+
+function repDetail(rep: SerializedRep): string | null {
+  switch (rep.kind) {
+    case "verbal":
+      return null;
+    case "equation":
+      return `${rep.symbol} → ${rep.refKey}`;
+    case "figure":
+      return rep.refName;
+  }
+}
+---
+
+{heading && <h2 class='sophie-chapter-multireps__heading'>{heading}</h2>}
+{
+  sorted.length === 0 ? (
+    <p class='sophie-chapter-multireps__empty'>
+      No MultiRep concept bindings in this chapter yet.
+    </p>
+  ) : (
+    <dl class='sophie-chapter-multireps' data-sophie-chapter-multireps=''>
+      {sorted.map((entry) => {
+        const label = displayLabel(entry);
+        const concept = conceptsById.get(entry.concept);
+        const symbol = concept?.canonical_symbol;
+        return (
+          <Fragment>
+            <dt class='sophie-chapter-multireps__term'>
+              <span class='sophie-chapter-multireps__concept'>{label}</span>
+              {symbol && (
+                <span
+                  class='sophie-chapter-multireps__symbol'
+                  aria-label='canonical symbol'
+                >
+                  {symbol}
+                </span>
+              )}
+              <a
+                class='sophie-chapter-multireps__anchor'
+                href={`#${entry.id}`}
+                aria-label={`Jump to binding for ${label}`}
+              >
+                ↗
+              </a>
+            </dt>
+            <dd class='sophie-chapter-multireps__body'>
+              <ul
+                class='sophie-chapter-multireps__reps'
+                aria-label={`Representations of ${label}`}
+              >
+                {entry.reps.map((rep) => {
+                  const detail = repDetail(rep);
+                  return (
+                    <li class='sophie-chapter-multireps__rep'>
+                      <span
+                        class={`sophie-chapter-multireps__pill sophie-chapter-multireps__pill--${rep.kind}`}
+                      >
+                        {repKindLabel(rep)}
+                      </span>
+                      {detail && (
+                        <span class='sophie-chapter-multireps__rep-detail'>
+                          {detail}
+                        </span>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </dd>
+          </Fragment>
+        );
+      })}
+    </dl>
+  )
+}
