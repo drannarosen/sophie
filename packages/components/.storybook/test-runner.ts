@@ -61,6 +61,22 @@ import { toMatchImageSnapshot } from "jest-image-snapshot";
 const customSnapshotsDir = `${process.cwd()}/__snapshots__/chromium`;
 const skipVR = process.env.SKIP_VR === "1";
 
+// VR pixel-diff tolerance. 0.5% absorbs sub-pixel anti-aliasing
+// variance between renders (Observable Plot's SVG rasterization is
+// not byte-deterministic across separate renders on the same Linux
+// runner; BlackbodyExplorer reliably produces 0.08–0.15% diffs from
+// anti-aliasing decisions alone). The default failureThreshold of 0
+// catches *any* pixel change — too strict for SVG-heavy chrome.
+// Real visual regressions (chrome rebinds, color shifts, layout
+// drift) move pixels well above 0.5%; PR-1 through PR-4 produced
+// zero VR diffs against existing baselines under this threshold.
+// Per ADR 0057: CI Linux remains the canonical baseline platform.
+const snapshotOpts = {
+  customSnapshotsDir,
+  failureThreshold: 0.005,
+  failureThresholdType: "percent" as const,
+};
+
 /**
  * Set `data-theme="<theme>"` on the iframe's <html>. The
  * `@storybook/addon-themes` `withThemeByDataAttribute` decorator
@@ -121,7 +137,7 @@ const config: TestRunnerConfig = {
     // `test-results/` on failure.
     const lightImage = await page.screenshot({ fullPage: true });
     expect(lightImage).toMatchImageSnapshot({
-      customSnapshotsDir,
+      ...snapshotOpts,
       customSnapshotIdentifier: context.id,
     });
 
@@ -134,7 +150,7 @@ const config: TestRunnerConfig = {
 
     const darkImage = await page.screenshot({ fullPage: true });
     expect(darkImage).toMatchImageSnapshot({
-      customSnapshotsDir,
+      ...snapshotOpts,
       customSnapshotIdentifier: `${context.id}--dark`,
     });
 
