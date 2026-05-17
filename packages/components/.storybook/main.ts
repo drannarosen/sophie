@@ -10,7 +10,15 @@ const config: StorybookConfig = {
     name: "@storybook/react-vite",
     options: {},
   },
-  stories: ["../src/**/*.stories.@(ts|tsx|mdx)"],
+  stories: [
+    "../src/**/*.stories.@(ts|tsx|mdx)",
+    // Central Storybook glob-scans sibling figure packages so the
+    // whole Sophie surface browses in one Storybook instance. Production
+    // package deps stay clean — only .storybook/ pulls cross-package
+    // story files. Decision per the 2026-05-17 brainstorm session.
+    "../../figures-kit/src/**/*.stories.@(ts|tsx|mdx)",
+    "../../figures-astro/src/**/*.stories.@(ts|tsx|mdx)",
+  ],
   addons: ["@storybook/addon-a11y", "@storybook/addon-themes"],
   typescript: {
     check: false,

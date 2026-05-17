@@ -396,6 +396,164 @@ importers:
         specifier: ^4.1.5
         version: 4.1.5(@types/node@25.6.2)(@vitest/coverage-v8@4.1.5)(jsdom@29.1.1)(vite@8.0.11(@types/node@25.6.2)(esbuild@0.27.7)(tsx@4.21.0)(yaml@2.8.4))
 
+  packages/figures-astro:
+    dependencies:
+      '@observablehq/plot':
+        specifier: ^0.6.17
+        version: 0.6.17
+      '@sophie/components':
+        specifier: workspace:*
+        version: link:../components
+      '@sophie/core':
+        specifier: workspace:*
+        version: link:../core
+      '@sophie/figures-kit':
+        specifier: workspace:*
+        version: link:../figures-kit
+      '@sophie/theme':
+        specifier: workspace:*
+        version: link:../theme
+      katex:
+        specifier: ^0.16.45
+        version: 0.16.45
+      lucide-react:
+        specifier: ^1.14.0
+        version: 1.14.0(react@19.2.6)
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@testing-library/jest-dom':
+        specifier: ^6.9.1
+        version: 6.9.1
+      '@testing-library/react':
+        specifier: ^16.3.2
+        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      '@types/jest-axe':
+        specifier: ^3.5.9
+        version: 3.5.9
+      '@types/katex':
+        specifier: ^0.16.8
+        version: 0.16.8
+      '@types/node':
+        specifier: ^25.6.2
+        version: 25.6.2
+      '@types/react':
+        specifier: ^19.2.14
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: ^19.2.3
+        version: 19.2.3(@types/react@19.2.14)
+      '@vitest/coverage-v8':
+        specifier: ^4.1.5
+        version: 4.1.5(vitest@4.1.5)
+      jest-axe:
+        specifier: ^10.0.0
+        version: 10.0.0
+      jsdom:
+        specifier: ^29.1.1
+        version: 29.1.1
+      postcss:
+        specifier: ^8.5.14
+        version: 8.5.14
+      postcss-modules:
+        specifier: ^6.0.1
+        version: 6.0.1(postcss@8.5.14)
+      react:
+        specifier: ^19.2.6
+        version: 19.2.6
+      react-dom:
+        specifier: ^19.2.6
+        version: 19.2.6(react@19.2.6)
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(@swc/core@1.15.33)(postcss@8.5.14)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.4)
+      tsx:
+        specifier: ^4.21.0
+        version: 4.21.0
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: ^4.1.5
+        version: 4.1.5(@types/node@25.6.2)(@vitest/coverage-v8@4.1.5)(jsdom@29.1.1)(vite@8.0.11(@types/node@25.6.2)(esbuild@0.27.7)(tsx@4.21.0)(yaml@2.8.4))
+
+  packages/figures-kit:
+    dependencies:
+      '@sophie/components':
+        specifier: workspace:*
+        version: link:../components
+      '@sophie/core':
+        specifier: workspace:*
+        version: link:../core
+      '@sophie/theme':
+        specifier: workspace:*
+        version: link:../theme
+      katex:
+        specifier: ^0.16.45
+        version: 0.16.45
+      lucide-react:
+        specifier: ^1.14.0
+        version: 1.14.0(react@19.2.6)
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@testing-library/jest-dom':
+        specifier: ^6.9.1
+        version: 6.9.1
+      '@testing-library/react':
+        specifier: ^16.3.2
+        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      '@types/jest-axe':
+        specifier: ^3.5.9
+        version: 3.5.9
+      '@types/katex':
+        specifier: ^0.16.8
+        version: 0.16.8
+      '@types/node':
+        specifier: ^25.6.2
+        version: 25.6.2
+      '@types/react':
+        specifier: ^19.2.14
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: ^19.2.3
+        version: 19.2.3(@types/react@19.2.14)
+      '@vitest/coverage-v8':
+        specifier: ^4.1.5
+        version: 4.1.5(vitest@4.1.5)
+      jest-axe:
+        specifier: ^10.0.0
+        version: 10.0.0
+      jsdom:
+        specifier: ^29.1.1
+        version: 29.1.1
+      postcss:
+        specifier: ^8.5.14
+        version: 8.5.14
+      postcss-modules:
+        specifier: ^6.0.1
+        version: 6.0.1(postcss@8.5.14)
+      react:
+        specifier: ^19.2.6
+        version: 19.2.6
+      react-dom:
+        specifier: ^19.2.6
+        version: 19.2.6(react@19.2.6)
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(@swc/core@1.15.33)(postcss@8.5.14)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.4)
+      tsx:
+        specifier: ^4.21.0
+        version: 4.21.0
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: ^4.1.5
+        version: 4.1.5(@types/node@25.6.2)(@vitest/coverage-v8@4.1.5)(jsdom@29.1.1)(vite@8.0.11(@types/node@25.6.2)(esbuild@0.27.7)(tsx@4.21.0)(yaml@2.8.4))
+
   packages/theme:
     dependencies:
       '@fontsource-variable/ibm-plex-sans':
