@@ -25,10 +25,10 @@ block (ADR 0056). Regenerated on every build; suppressed when
 |---|---|
 | Validated | 14 |
 | In progress | 8 |
-| Unvalidated | 59 |
+| Unvalidated | 60 |
 | Re-validation needed | 0 |
 | Missing block | 0 |
-| Total | 81 |
+| Total | 82 |
 
 ## Evidence kinds
 
@@ -108,6 +108,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0056-validation-tracker.md](/validation-tracker/) | validated | 2026-05-16 | audit, deployment, manual, review, test | All six PRs (#43 schema, #44 bulk migration, #50 admonition, #51 audit, #52 index, this PR curated-pass + reference doc + V1/V2 promotion) shipped. Self-referential validation complete; tracker is the source of truth for every ADR + reference doc's validation state as of 2026-05-16. |
 | [docs/website/decisions/0057-visual-regression-baseline.md](/visual-regression-baseline/) | unvalidated | — | — |  |
 | [docs/website/decisions/0058-epistemic-component-contract.md](/epistemic-component-contract/) | unvalidated | — | — |  |
+| [docs/website/decisions/0059-linked-representation-state-primitive.md](/linked-representation-state-primitive/) | unvalidated | — | — |  |
 
 ### Reference docs
 
