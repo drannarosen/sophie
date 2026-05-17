@@ -34,3 +34,9 @@ describe("typography tokens", () => {
     expect(css).toMatch(/--sophie-text-pill:\s*0\.6875rem/);
   });
 });
+
+describe("spacing tokens", () => {
+  test("emits --sophie-space-half at 0.125rem", () => {
+    expect(css).toMatch(/--sophie-space-half:\s*0\.125rem/);
+  });
+});

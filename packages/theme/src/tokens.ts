@@ -86,6 +86,7 @@ export const tokens = {
   },
   space: {
     0: v("space-0"),
+    half: v("space-half"),
     1: v("space-1"),
     2: v("space-2"),
     3: v("space-3"),
