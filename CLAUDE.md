@@ -46,6 +46,18 @@ Sophie is a schema-driven, AI-authorable platform for interactive
 scientific textbooks, course websites, slide decks, and LMS exports.
 Standalone, distributable platform modeled on MyST and Quarto.
 
+Sophie is also a **Scientific Reasoning OS**: its component contract,
+schema, and authoring model encode the epistemic structure of
+scientific reasoning (Observable / Model / Inference / Assumption /
+Approximation / Uncertainty / Numerical / Misconception). This is
+the *vertical STEM specialization* of Sophie's horizontal Learning
+Design System positioning — LDS describes what Sophie does for any
+discipline; Reasoning OS describes what Sophie becomes when an LDS
+is optimized for scientific reasoning. The eight-role taxonomy is
+locked by ADR 0058. See [`docs/website/vision/reasoning-os/`](docs/website/vision/reasoning-os/index.md)
+for the thesis and [`docs/website/explanation/scientific-reasoning-os.md`](docs/website/explanation/scientific-reasoning-os.md)
+for the author-facing how-to.
+
 - **Platform repo (current location)**: `drannarosen/sophie` on GitHub.
   May move to a more official org later; treat the current location as
   authoritative for now.
@@ -75,36 +87,59 @@ npx mystmd start          # serves locally on http://localhost:3000
 npx mystmd build --html   # static build → _build/html/
 ```
 
-## Locked decisions — ADRs 0001–0029
+## Locked decisions — ADRs 0001–0058
 
 Read the relevant ADR before proposing changes that touch its area.
+This table is a load-bearing-decisions index, not a complete listing —
+not every ADR appears here. Browse `docs/website/decisions/` for the
+full set (0001–0058 at last count).
 
-| Concern | ADR | Decision |
-|---|---|---|
-| Repo shape | 0001 | Standalone platform; courses are *separate* consumer repos |
-| Renderer | 0002 | Astro 6 + MDX (was Astro 5; see ADR 0002 revision note) |
-| Schema | 0003 | Zod as source of truth |
-| Component contract | 0004 | `serialize` separate from render; axe-core for a11y; `useInteractive` helper; composition rules |
-| Theming | 0005 | TS tokens → CSS vars + Tailwind preset; CSS Modules in components |
-| Slides | 0006 | Reveal.js + thin Astro adapter (Spectacle on radar) |
-| Persistence | 0007 | IndexedDB + `ResponseStore` repository + BroadcastChannel |
-| Demos | 0008 | Cosmic Playground manifest + iframe + postMessage |
-| i18n | 0009 | `Chapter.lang` reserved; no real i18n in v1 |
-| Docs site | 0010 | MyST for design docs (transitional → Sophie-hosted later) |
-| JS package mgr | 0011 | **pnpm** (never npm/yarn) |
-| Python | 0012 | **uv** |
-| Lint+format | 0013 | **Biome** (replaces ESLint+Prettier) |
-| Monorepo orchestration | 0014 | **Turborepo** |
-| Dev preview | 0015 | `sophie dev` + Storybook + Playwright MCP |
-| Concept maps | 0016 | React Flow (**proposed**, v2+) |
-| Naming | 0017 | Renamed Sophia → Sophie |
-| Code editor | 0018 | CodeMirror 6 inside `<CodeCell>` |
-| A11y primitives | 0019 | Radix UI |
-| Syntax highlight | 0020 | Shiki via rehype-pretty-code |
-| Data viz | 0021 | Observable Plot |
-| Library bundler | 0022 | tsup |
-| Build order | 0023 | **Vertical-slice-first**: lean Phase 0, refactor outward as patterns emerge |
-| BroadcastChannel LWW | 0029 | Per-write `Date.now()` timestamps; `useInteractive` ignores stale incoming writes (refines ADR 0007) |
+| Concern                          | ADR  | Decision                                                                                                                  |
+| -------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------- |
+| Repo shape                       | 0001 | Standalone platform; courses are *separate* consumer repos                                                                |
+| Renderer                         | 0002 | Astro 6 + MDX (was Astro 5; see ADR 0002 revision note)                                                                   |
+| Schema                           | 0003 | Zod as source of truth                                                                                                    |
+| Component contract               | 0004 | `serialize` separate from render; axe-core for a11y; `useInteractive` helper; composition rules                           |
+| Theming                          | 0005 | TS tokens → CSS vars + Tailwind preset; CSS Modules in components                                                         |
+| Slides                           | 0006 | Reveal.js + thin Astro adapter (Spectacle on radar)                                                                       |
+| Persistence                      | 0007 | IndexedDB + `ResponseStore` repository + BroadcastChannel                                                                 |
+| Demos                            | 0008 | Cosmic Playground manifest + iframe + postMessage                                                                         |
+| i18n                             | 0009 | `Chapter.lang` reserved; no real i18n in v1                                                                               |
+| Docs site                        | 0010 | MyST for design docs (transitional → Sophie-hosted later)                                                                 |
+| JS package mgr                   | 0011 | **pnpm** (never npm/yarn)                                                                                                 |
+| Python                           | 0012 | **uv**                                                                                                                    |
+| Lint+format                      | 0013 | **Biome** (replaces ESLint+Prettier)                                                                                      |
+| Monorepo orchestration           | 0014 | **Turborepo**                                                                                                             |
+| Dev preview                      | 0015 | `sophie dev` + Storybook + Playwright MCP                                                                                 |
+| Concept maps                     | 0016 | React Flow (**proposed**, v2+)                                                                                            |
+| Naming                           | 0017 | Renamed Sophia → Sophie                                                                                                   |
+| Code editor                      | 0018 | CodeMirror 6 inside `<CodeCell>`                                                                                          |
+| A11y primitives                  | 0019 | Radix UI                                                                                                                  |
+| Syntax highlight                 | 0020 | Shiki via rehype-pretty-code                                                                                              |
+| Data viz                         | 0021 | Observable Plot                                                                                                           |
+| Library bundler                  | 0022 | tsup                                                                                                                      |
+| Build order                      | 0023 | **Vertical-slice-first**: lean Phase 0, refactor outward as patterns emerge                                               |
+| License                          | 0024 | AGPL — rules out paid recurring SaaS for the platform's CI gate                                                           |
+| Tailwind                         | 0026 | Tailwind v4 CSS-first                                                                                                     |
+| Storybook                        | 0028 | Storybook with axe-core; visual regression deferred (superseded by 0057)                                                  |
+| BroadcastChannel LWW             | 0029 | Per-write `Date.now()` timestamps; `useInteractive` ignores stale incoming writes (refines ADR 0007)                      |
+| Audience + AI authoring          | 0030 | AI as primary author; four AI roles (author/pedagogy/domain/brainstorm); instructor as supervisor (HITL)                  |
+| Compound component primitives    | 0031 | Compound component layout primitives                                                                                      |
+| Pedagogy-index pattern           | 0038 | Pedagogy index serialized from MDX AST; consumed by audit, diff, AI authoring                                             |
+| Teaching Decision Records (TDRs) | 0040 | Curriculum-side audit trail in consumer repos' `teaching-decisions/`                                                      |
+| Teaching Move Library            | 0041 | 18 named teaching moves across 7 families; `pedagogy_intent` declared against the library                                 |
+| Pedagogy Contract + AI Ledger    | 0042 | `pedagogy-contract.yaml` at consumer repo root; AI contribution provenance public-facing by default                       |
+| Notation Registry + MultiRep     | 0043 | Symbol/unit registry as external source of truth; alignment audit                                                         |
+| Misconception Graph              | 0044 | Misconceptions as graph nodes with prerequisite/related edges; 12 canonical interventions in platform library             |
+| Pedagogical Diff / Curriculum CI | 0045 | `sophie diff` with two-axis taxonomy (granularity × severity)                                                             |
+| Equation Biography               | 0046 | Per-equation children declaring observable / assumption / units / validity-domain / common-misuse                         |
+| Empirical validation             | 0047 | 2-paper SoTL plan with 8 metrics                                                                                          |
+| LDS Content Plugin System        | 0048 | Plugin contract for cross-course content (concepts, misconceptions, equations)                                            |
+| Conformance Failure Modes        | 0053 | 5-mode taxonomy + `audit_overrides`                                                                                       |
+| Squash-merge convention          | 0055 | Squash-merge for code PRs                                                                                                 |
+| Validation tracker               | 0056 | ADR frontmatter `validation:` block (status / last_validated_date / evidence)                                             |
+| Visual regression baseline       | 0057 | Self-hosted `@storybook/test-runner` + Playwright; CI Linux as canonical baseline (supersedes 0028 VR deferral)           |
+| **Epistemic Component Contract** | 0058 | **Eight-role taxonomy** (optional, additive); amends 0003/0004/0044/0046; underwrites Reasoning-OS thesis                  |
 
 ## Engineering principles
 
@@ -164,6 +199,18 @@ to every PR, every design decision, every refactor.
   emphasis. "The best" is decided collaboratively (HITL mandate);
   "now" means in this PR rather than deferred to a hypothetical
   follow-up that never lands.
+
+- **Epistemic legibility is a first-class concern.** When designing
+  any new pedagogy component, ask: what epistemic role does this
+  encode (observable / model / inference / assumption / approximation
+  / uncertainty / numerical / misconception)? Components that don't
+  fit any of the eight are likely chrome, not pedagogy. Sophie's
+  Scientific Reasoning OS thesis (see ADR 0058 + `docs/website/vision/reasoning-os/`)
+  depends on the role contract being consistently applied; pedagogy
+  components that drift from it dilute the platform's distinguishing
+  claim. The contract is *optional and additive* at v1 (no required
+  migration), but new components should declare role wherever
+  applicable, and reviewers should ask the question on every PR.
 
 ## Conventions
 

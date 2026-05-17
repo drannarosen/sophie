@@ -258,6 +258,222 @@ the six child components + three audit invariants.
 
 ---
 
+(a8-omiflow-composite-primitive)=
+## A8. `<OMIFlow>` composite primitive
+
+**Status.** Accepted-pending-ADR. Surfaced 2026-05-16 alongside
+[ADR 0058 — Epistemic Component Contract](../../decisions/0058-epistemic-component-contract.md),
+which is A8's prerequisite. A8 is the **canonical compound primitive**
+that demonstrates ADR 0058's eight-role contract end-to-end — three
+declared slots (`observable`, `model`, `inference`), per-slot role
+declaration, and the first chapter-level audit invariant
+(*"every `framing: 'OMI'` chapter reaches all three roles"*) bound
+to it.
+
+**Motivating use case.** Sophie chapters declare
+`framing: 'OMI'|'PMI'|'custom'` today, but the OMI arc is implicit
+in prose. A8 makes it *visible on the page* as a three-panel
+composite — observable evidence on the left, the explanatory model
+in the middle, the resulting inference on the right — with each
+panel carrying its declared epistemic role. ASTR 201 Module 3
+(stellar spectra → temperature → composition) is the first chapter
+that benefits.
+
+**Design sketch.** Three named slots: `<OMIFlow.Observable>`,
+`<OMIFlow.Model>`, `<OMIFlow.Inference>`. Each slot declares
+`epistemicRole` per the Reasoning-OS contract. Layout defaults to
+three-column on desktop, stacked on mobile. The composite registers
+with the pedagogy index extractor (per
+[ADR 0038](../../decisions/0038-pedagogy-index-pattern.md)) as a
+single OMIFlow node with three role-bearing children. Future audit
+invariant: *"chapters with `framing: 'OMI'` SHOULD render exactly
+one `<OMIFlow>`."*
+
+**Rough cost.** ~3–5 days (component + schema + audit invariant +
+axe-core test + Storybook stories + smoke chapter migration).
+
+**Defended priority claim.** A8 is the *minimum viable proof* that
+ADR 0058's contract pays off. Without it, the eight-role taxonomy
+remains conceptual. With it, the contract has a working compound-
+primitive instance that future C-tier components (A9, A10) extend.
+A8 ships before A9–A11 because it is the smallest piece that
+validates the larger thesis.
+
+**Open ADR questions.**
+- How does `<OMIFlow>` interact with the chapter-level
+  `framing: 'OMI'` discriminator? (One-to-one match? Multiple
+  OMIFlows allowed per chapter? At least one required?)
+- Does `<OMIFlow>` declare a `description=` or `concept_ref=`
+  attribute that ties the three slots together as "one analytical
+  argument," analogous to the way Equation Biography children tie
+  to one `<KeyEquation>`?
+- Does the audit invariant fire as INFO, WARNING, or ERROR? (Likely
+  WARNING — strong nudge, not a correctness gate.)
+
+---
+
+(a9-assumptionstack)=
+## A9. `<AssumptionStack>` togglable assumption list
+
+**Status.** Accepted-pending-ADR. Surfaced 2026-05-16 alongside
+[ADR 0058](../../decisions/0058-epistemic-component-contract.md).
+Prerequisite: ADR 0058 (contract) + A11 (linked-rep state, for the
+interesting version where toggling propagates to other views).
+
+**Motivating use case.** Most derivations rest on a stack of
+unstated assumptions — *"hydrostatic equilibrium, ideal gas EOS,
+spherical symmetry."* Today these are at best `<Assumption>` children
+of an equation; at worst they're invisible prose. A9 surfaces them
+as a togglable list at the analysis level, with each entry carrying
+role `assumption` (or `approximation` for entries with a named
+validity domain). Toggling an assumption "off" should be legible
+even before A11 propagation lands; A11 makes the toggle *do*
+something (linked views update).
+
+**Design sketch.** `<AssumptionStack>` wraps `<AssumptionStack.Entry>`
+children, each declaring role (`assumption` default, `approximation`
+opt-in via attribute) and optional `validity_domain=` prose.
+Toggling pre-A11 is purely visual (a strikethrough on the entry).
+Post-A11, toggle state participates in the page's linked-rep cursor
+so that *"with degeneracy off"* updates the stellar-structure plot.
+
+**Rough cost.** ~3–4 days for the pre-A11 visual version; ~1 week
+incremental for A11 integration.
+
+**Defended priority claim.** Ships after A8 because A8 demonstrates
+the contract in the simplest case (three orthogonal slots); A9 is
+the slightly more complex case (a variable-length list of one
+role-type with an opt-in variant). A9 before A10 because
+assumptions are a more universal STEM teaching surface than
+uncertainty overlays.
+
+**Open ADR questions.**
+- Does `<AssumptionStack>` produce a graph relation in the
+  pedagogy index (assumptions linked to the equation or section
+  they govern)? Likely yes, mirroring
+  [ADR 0044](../../decisions/0044-misconception-graph-and-intervention-library.md)'s
+  graph approach.
+- How does this compose with
+  [ADR 0046](../../decisions/0046-equation-biography.md)
+  `<Assumption>` children of `<KeyEquation>`? Same component
+  reused, or separate primitives with a shared underlying schema?
+
+---
+
+(a10-uncertaintylens)=
+## A10. `<UncertaintyLens>` overlay
+
+**Status.** Accepted-pending-ADR. Surfaced 2026-05-16 alongside
+[ADR 0058](../../decisions/0058-epistemic-component-contract.md).
+Prerequisite: ADR 0058 (the role `uncertainty` is one of the
+eight). The interesting version depends on A11 for cross-view
+synchronization.
+
+**Motivating use case.** Most STEM figures hide uncertainty — they
+render the "best fit" curve cleanly and relegate error bars to a
+small ± in a caption. A10 inverts this: an `<UncertaintyLens>` is
+a toggleable overlay on any compatible figure (transit fit,
+posterior, ensemble simulation, parameter sweep) that reveals
+posterior spread, error bars, model degeneracy, or ensemble bands
+as a first-class visual layer. Goal: students *see* uncertainty
+as the normal state of scientific knowledge rather than as
+optional decoration.
+
+**Design sketch.** `<UncertaintyLens figure="id" mode="posterior|errorbars|ensemble|degeneracy">`
+wraps a child figure and renders the named uncertainty representation
+as an overlay layer. The lens declares role `uncertainty`; the
+underlying figure declares its own role (`observable`, `inference`,
+`model`). Future visual-grammar tokens (per
+[ADR 0005](../../decisions/0005-theming-three-layers.md))
+will hint the overlay color/translucency.
+
+**Rough cost.** ~1 week for the static overlay; +3–5 days for A11-
+linked dynamic uncertainty (e.g., posterior bands that update as a
+parameter cursor moves).
+
+**Defended priority claim.** A10 is the **uncertainty-as-first-
+class-content** showcase. The Reasoning-OS thesis claim *"science is
+uncertainty-dominated; education should encode that"* is hollow
+without at least one component that operationalizes it. A10 is
+that component. Defers to A8 and A9 because uncertainty visuals
+are visually showy but lower frequency in actual ASTR 201 / COMP
+521 content than OMI flows and assumption stacks.
+
+**Open ADR questions.**
+- What's the canonical underlying figure type? Observable Plot
+  (per [ADR 0021](../../decisions/0021-observable-plot-data-viz.md))
+  with overlay groups? A custom canvas surface?
+- How are posterior samples passed to the lens — inline JSON,
+  loaded from a `.npy`-equivalent, or computed at build time from
+  a pedagogy index field?
+- Does the lens have a "scrub through samples" interaction, or is
+  the visualization static-on-toggle?
+
+---
+
+(a11-linked-representation-state-primitive)=
+## A11. Linked-representation state primitive
+
+**Status.** Accepted-pending-ADR. Surfaced 2026-05-16 alongside
+[ADR 0058](../../decisions/0058-epistemic-component-contract.md).
+Prerequisite: ADR 0058 (the role contract); detailed motivation +
+design surface in
+[vision/reasoning-os/linked-representations.md](../reasoning-os/linked-representations.md).
+
+**Motivating use case.** Cross-component reactive state. One
+parameter cursor (e.g., a stellar-mass slider) co-varies multiple
+representations of the same physical system — HR diagram + spectrum
++ interior structure + equation panel + timescale indicator — *on
+the same page*, in real time. Today Sophie has no shape for this:
+[`useInteractive`](../../decisions/0007-persistence-indexeddb.md)
+(ADR 0007) is per-component, per-student, durable; the linked-rep
+cursor is page-shared, ephemeral, ~60Hz. The two state shapes are
+architecturally distinct.
+
+**Design sketch.** Page-local reactive store (likely
+[Zustand](https://zustand-demo.pmnd.rs/) or an equivalent compact
+external-store pattern), with a `useLinkedParameter("mass")`
+subscription hook. No IndexedDB binding. Components opt-in by
+calling the hook; the store re-renders subscribers on cursor
+change. Composes with `useInteractive` at *answer-submission* time
+(a `<Predict>` answer captures the cursor value as a snapshot in
+its durable write).
+
+**Rough cost.** ~1.5–2 weeks for the primitive + one consumer
+demonstration page. The cost is mostly architectural:
+SSR/hydration correctness, scope-boundary semantics
+(page-level vs. section-level), and composability with
+`useInteractive` at the boundary.
+
+**Defended priority claim.** A11 is the **architectural prerequisite**
+for the interesting versions of A8, A9, and A10. A8 can ship a
+static three-panel `<OMIFlow>` without A11, but the showcase
+version where parameter sweeps animate all three panels needs A11.
+Same for A9 (toggle-propagation across linked views) and A10
+(parameter-driven uncertainty bands).
+
+The order A8 → A9 → A10 → A11 is *demonstration-first* — each of
+A8–A10 ships in a useful pre-A11 form, then A11 lands and
+upgrades them. The alternative ordering (A11 first) is rejected
+because it would ship infrastructure with no consumer; the
+chosen ordering ships consumers first, then upgrades them when
+the infrastructure earns its keep.
+
+**Open ADR questions.** See the
+[linked-representations vision page](../reasoning-os/linked-representations.md)
+for the full list. Headline items:
+
+- Store library choice (Zustand / Jotai / bespoke
+  `useSyncExternalStore`).
+- Scope boundaries (page-level default; section-level opt-in?).
+- Animation API (built-in motion primitives, or component-declared?).
+- SSR/hydration behavior with a default cursor value.
+- Whether components must declare epistemic role at subscription
+  time (linked to ADR 0058 enforcement) or stay role-agnostic.
+- Composability with `useInteractive` at snapshot-write time.
+
+---
+
 ## Graduated entries (links only)
 
 Once an entry's ADR ships, this tail section keeps a complete

@@ -94,6 +94,7 @@ project:
         - file: explanation/audit-and-ai-authoring.md
         - file: explanation/pedagogical-foundations.md
         - file: explanation/persistence-model.md
+        - file: explanation/scientific-reasoning-os.md
         - file: explanation/why-not-myst-for-sophie.md
         - file: explanation/why-myst-for-docs.md
     - title: Vision
@@ -107,6 +108,9 @@ project:
         - file: vision/features/accepted.md
         - file: vision/features/backlog.md
         - file: vision/features/speculative.md
+        - file: vision/reasoning-os/index.md
+        - file: vision/reasoning-os/epistemic-grammar.md
+        - file: vision/reasoning-os/linked-representations.md
         - file: vision/transitions/index.md
     - title: Decisions
       children:
@@ -168,6 +172,7 @@ project:
         - file: decisions/0055-squash-merge-for-code-prs.md
         - file: decisions/0056-validation-tracker.md
         - file: decisions/0057-visual-regression-baseline.md
+        - file: decisions/0058-epistemic-component-contract.md
     - title: Status
       children:
         - file: status/roadmap.md
