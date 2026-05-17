@@ -1,4 +1,5 @@
 import * as Plot from "@observablehq/plot";
+import { Sun, Telescope } from "lucide-react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { ParameterCursor } from "../../interactive/ParameterCursor.tsx";
 import { ParameterSlider } from "../../interactive/ParameterSlider.tsx";
@@ -229,8 +230,10 @@ export function BlackbodyExplorer(rawProps: BlackbodyExplorerProps) {
     useParameterStore.getState().setValue(cursorKey, T_SUN);
   };
 
+  const titleId = useId();
+
   return (
-    <section id={id} className={styles.root}>
+    <section id={id} aria-labelledby={titleId} className={styles.root}>
       <ParameterCursor
         name='T'
         min={minTemperatureK}
@@ -240,8 +243,20 @@ export function BlackbodyExplorer(rawProps: BlackbodyExplorerProps) {
         step={100}
       />
 
-      <div className={styles.figureHeader}>
-        <div className={styles.sliderWrapper}>
+      <header className={styles.titleBar}>
+        <Telescope
+          aria-hidden
+          className={styles.titleBarIcon}
+          focusable={false}
+          size={20}
+        />
+        <span id={titleId} className={styles.titleBarTitle}>
+          Blackbody Spectrum Explorer
+        </span>
+      </header>
+
+      <div className={styles.sliderRow}>
+        <div className={styles.sliderRowSlider}>
           <ParameterSlider
             name={cursorKey}
             label='Blackbody temperature'
@@ -254,113 +269,125 @@ export function BlackbodyExplorer(rawProps: BlackbodyExplorerProps) {
           className={styles.solarAnchor}
           onClick={handleSolarReset}
         >
-          Reset to Sun (5772 K)
+          <Sun
+            aria-hidden
+            className={styles.solarAnchorIcon}
+            focusable={false}
+            size={14}
+          />
+          Reset to Sun
         </button>
       </div>
 
-      <div className={styles.plotPanel} data-epistemic-role='model'>
-        <SpectrumPlot
-          T_K={T_K}
-          showRayleighJeans={showRJ}
-          showWien={showWien}
-        />
+      <div className={styles.body}>
+        <div className={styles.plotPanel} data-epistemic-role='model'>
+          <SpectrumPlot
+            T_K={T_K}
+            showRayleighJeans={showRJ}
+            showWien={showWien}
+          />
+        </div>
+
+        <div className={styles.aside}>
+          <div className={styles.readoutGroup} data-epistemic-role='observable'>
+            <span className={styles.readoutPill}>Observable</span>
+            <div className={styles.chromaticityReadoutBody}>
+              <span
+                aria-hidden='true'
+                className={styles.colorSwatch}
+                data-testid='color-swatch'
+                style={
+                  {
+                    "--swatch-color": `rgb(${swatch.r}, ${swatch.g}, ${swatch.b})`,
+                  } as React.CSSProperties
+                }
+              />
+              <span className={styles.chromaticityCaption}>
+                chromaticity at{" "}
+                <InlineMath>{`T = ${T_K.toFixed(0)}\\,\\mathrm{K}`}</InlineMath>
+              </span>
+            </div>
+          </div>
+
+          <div className={styles.readoutGroup} data-epistemic-role='inference'>
+            <span className={styles.readoutPill}>Wien peak</span>
+            <span
+              className={styles.readoutValue}
+              data-testid='wien-peak-readout'
+            >
+              <InlineMath>
+                {`\\lambda_\\text{peak} = ${lambdaPeakNm.toFixed(0)}\\,\\mathrm{nm}`}
+              </InlineMath>
+            </span>
+          </div>
+
+          <div className={styles.readoutGroup} data-epistemic-role='inference'>
+            <span className={styles.readoutPill}>Stefan–Boltzmann flux</span>
+            <span className={styles.readoutValue} data-testid='flux-readout'>
+              <InlineMath>
+                {`F = ${formatScientificTex(flux)}\\,\\mathrm{erg\\,s^{-1}\\,cm^{-2}}`}
+              </InlineMath>
+            </span>
+          </div>
+
+          <div className={styles.readoutGroup} data-epistemic-role='inference'>
+            <span className={styles.readoutPill}>Spectral class</span>
+            <span
+              className={styles.readoutValue}
+              data-testid='classification-readout'
+            >
+              {klass}-type
+            </span>
+          </div>
+        </div>
       </div>
 
-      <aside className={styles.aside}>
-        <div className={styles.readoutGroup} data-epistemic-role='observable'>
-          <span className={styles.readoutLabel}>What you would see</span>
-          <span className={styles.readoutValue}>
-            <span
-              data-testid='color-swatch'
-              className={styles.colorSwatch}
-              style={
-                {
-                  "--swatch-color": `rgb(${swatch.r}, ${swatch.g}, ${swatch.b})`,
-                } as React.CSSProperties
-              }
-              aria-hidden='true'
+      {showApproximations && (
+        <div
+          className={styles.approxToggles}
+          data-epistemic-role='approximation'
+        >
+          <label className={styles.approxLabel} htmlFor={rjId}>
+            <input
+              aria-describedby={`${rjId}-hint`}
+              checked={showRJ}
+              id={rjId}
+              onChange={(e) => setShowRJ(e.target.checked)}
+              type='checkbox'
             />
-            <span>
-              chromaticity at this T (visible band shaded on the plot)
+            Rayleigh–Jeans limit
+          </label>
+          {showRJ && (
+            <span className={styles.validityHint} id={`${rjId}-hint`}>
+              Valid only at long wavelength (
+              <InlineMath>
+                {String.raw`\lambda \gg \lambda_\text{peak}`}
+              </InlineMath>
+              ); diverges in the UV.
             </span>
-          </span>
+          )}
+
+          <label className={styles.approxLabel} htmlFor={wienId}>
+            <input
+              aria-describedby={`${wienId}-hint`}
+              checked={showWien}
+              id={wienId}
+              onChange={(e) => setShowWien(e.target.checked)}
+              type='checkbox'
+            />
+            Wien approximation
+          </label>
+          {showWien && (
+            <span className={styles.validityHint} id={`${wienId}-hint`}>
+              Valid only at short wavelength (
+              <InlineMath>
+                {String.raw`\lambda \ll \lambda_\text{peak}`}
+              </InlineMath>
+              ); underpredicts in the IR.
+            </span>
+          )}
         </div>
-
-        <div className={styles.readoutGroup} data-epistemic-role='inference'>
-          <span className={styles.readoutLabel}>Wien peak (inferred)</span>
-          <span className={styles.readoutValue} data-testid='wien-peak-readout'>
-            <InlineMath>
-              {`\\lambda_\\text{peak} = ${lambdaPeakNm.toFixed(0)}\\,\\mathrm{nm}`}
-            </InlineMath>
-          </span>
-        </div>
-
-        <div className={styles.readoutGroup} data-epistemic-role='inference'>
-          <span className={styles.readoutLabel}>
-            Stefan-Boltzmann flux (inferred)
-          </span>
-          <span className={styles.readoutValue} data-testid='flux-readout'>
-            <InlineMath>
-              {`F = ${formatScientificTex(flux)}\\,\\mathrm{erg\\,s^{-1}\\,cm^{-2}}`}
-            </InlineMath>
-          </span>
-        </div>
-
-        <div className={styles.readoutGroup} data-epistemic-role='inference'>
-          <span className={styles.readoutLabel}>
-            Spectral classification (inferred)
-          </span>
-          <span
-            className={styles.readoutValue}
-            data-testid='classification-readout'
-          >
-            {klass}-type
-          </span>
-        </div>
-
-        {showApproximations && (
-          <div
-            className={styles.approximationToggles}
-            data-epistemic-role='approximation'
-          >
-            <label className={styles.approximationLabel} htmlFor={rjId}>
-              <input
-                id={rjId}
-                type='checkbox'
-                checked={showRJ}
-                onChange={(e) => setShowRJ(e.target.checked)}
-                aria-describedby={`${rjId}-hint`}
-              />
-              Rayleigh-Jeans limit
-            </label>
-            {showRJ && (
-              <span id={`${rjId}-hint`} className={styles.validityHint}>
-                Valid only at long wavelength (
-                <InlineMath>{String.raw`\lambda \gg \lambda_\text{peak}`}</InlineMath>
-                ); diverges in the UV.
-              </span>
-            )}
-
-            <label className={styles.approximationLabel} htmlFor={wienId}>
-              <input
-                id={wienId}
-                type='checkbox'
-                checked={showWien}
-                onChange={(e) => setShowWien(e.target.checked)}
-                aria-describedby={`${wienId}-hint`}
-              />
-              Wien approximation
-            </label>
-            {showWien && (
-              <span id={`${wienId}-hint`} className={styles.validityHint}>
-                Valid only at short wavelength (
-                <InlineMath>{String.raw`\lambda \ll \lambda_\text{peak}`}</InlineMath>
-                ); underpredicts in the IR.
-              </span>
-            )}
-          </div>
-        )}
-      </aside>
+      )}
     </section>
   );
 }
