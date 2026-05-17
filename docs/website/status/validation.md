@@ -39,7 +39,7 @@ block (ADR 0056). Regenerated on every build; suppressed when
 | review | 16 |
 | deployment | 12 |
 | audit | 5 |
-| manual | 20 |
+| manual | 23 |
 
 ## Extractor findings
 
@@ -93,10 +93,10 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0040-teaching-decision-records.md](/teaching-decision-records/) | in progress | 2026-05-16 | deployment, review | Contract spec'd + cross-referenced; tooling + TDR-coverage audit invariant not yet wired. Code lands in a follow-up PR (separate from the validation tracker rollout). |
 | [docs/website/decisions/0041-teaching-move-library.md](/teaching-move-library/) | in progress | 2026-05-16 | deployment, manual, review | Taxonomy spec'd in reference doc; no automated audit of move IDs against pedagogy-contract.reasoning\_style yet. Code follow-up tracked. |
 | [docs/website/decisions/0042-pedagogy-contract-and-ai-contribution-ledger.md](/pedagogy-contract-and-ai-contribution-ledger/) | in progress | 2026-05-16 | deployment, manual, review | Schema + reference docs are stable; runtime renderer + audit invariants land in follow-up work. |
-| [docs/website/decisions/0043-notation-registry-multirep-alignment-audit.md](/notation-registry-multirep-alignment-audit/) | in progress | 2026-05-16 | deployment, manual, review | Schema + reference shape stable; audit + runtime alignment-checker code lands in follow-up PRs. |
-| [docs/website/decisions/0044-misconception-graph-and-intervention-library.md](/misconception-graph-and-intervention-library/) | in progress | 2026-05-16 | audit, deployment, manual, test | Graph schema + first audit pair shipped; intervention runtime + remaining audit invariants land in follow-up PRs. |
+| [docs/website/decisions/0043-notation-registry-multirep-alignment-audit.md](/notation-registry-multirep-alignment-audit/) | in progress | 2026-05-17 | deployment, manual, review | Schema + reference shape stable; 2026-05-17 design hardening locks the v1 ship-shape (3 Rep children, framed-card+grid render, epistemic\_role on registry); audit + runtime code lands in Phase 3 sprint PRs α–ε. |
+| [docs/website/decisions/0044-misconception-graph-and-intervention-library.md](/misconception-graph-and-intervention-library/) | in progress | 2026-05-17 | audit, deployment, manual, test | Graph schema + first audit pair shipped; 2026-05-17 design hardening locks the v1 ship-shape (12 canonical interventions, sub-card render, no PR-α/PR-ε); intervention runtime + MG3/MG4/I1–I3 audit invariants land in Phase 3 sprint PRs β–δ. |
 | [docs/website/decisions/0045-pedagogical-diff-curriculum-ci.md](/pedagogical-diff-curriculum-ci/) | in progress | 2026-05-16 | deployment, manual, review | Contract + taxonomy stable; CLI implementation + CI enforcement land in follow-up PRs. |
-| [docs/website/decisions/0046-equation-biography.md](/equation-biography/) | in progress | 2026-05-16 | deployment, manual, test | Schema + reference doc stable; runtime biography surface + audit invariants not yet shipped. |
+| [docs/website/decisions/0046-equation-biography.md](/equation-biography/) | in progress | 2026-05-17 | deployment, manual, test | Schema + reference doc stable; 2026-05-17 design hardening locks the v1 ship-shape (6 biography children with hardcoded epistemicRole const, bundled render updates in PR-β, Wien's law smoke fixture); runtime biography surface + E7/E8/E9 audit invariants land in Phase 3 sprint PRs α–δ. |
 | [docs/website/decisions/0047-empirical-validation-plan.md](/empirical-validation-plan/) | unvalidated | — | — |  |
 | [docs/website/decisions/0048-sophie-lds-content-plugins.md](/sophie-lds-content-plugins/) | in progress | 2026-05-16 | deployment, manual | Contract spec'd; runtime plugin system implementation deferred until first cross-course consumer surfaces a concrete need. |
 | [docs/website/decisions/0049-sophie-refactor-cli.md](/sophie-refactor-cli/) | unvalidated | — | — |  |
