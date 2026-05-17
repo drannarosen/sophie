@@ -13,6 +13,7 @@ import {
   leadings,
   lightSurfaces,
   radii,
+  role,
   sizes,
   spacings,
   status,
@@ -117,6 +118,15 @@ function brandStatusBlock(scheme: Scheme): string {
     `--sophie-status-info: ${s.info};`,
     `--sophie-status-neutral: ${s.neutral};`,
   ].join("\n    ");
+}
+
+// Epistemic-role color slots per scheme. Iterates the `role` map in
+// anchors.ts so new entries (model / inference / approximation) appear
+// in :root and [data-theme="dark"] without changes to this generator.
+function roleBlock(scheme: Scheme): string {
+  return Object.entries(role)
+    .map(([name, variants]) => `--sophie-role-${name}: ${variants[scheme]};`)
+    .join("\n    ");
 }
 
 // Truly mode-invariant utilities. Accent alias, link-hover alias, and
@@ -230,6 +240,9 @@ export function generateCSS(): string {
   /* Validation tracker tints — light */
   ${validationTintsBlock("light")}
 
+  /* Epistemic role colors — light */
+  ${roleBlock("light")}
+
   /* Mode-invariant utilities (accent alias, text-on-accent) */
   ${invariantUtilitiesBlock()}
 
@@ -267,6 +280,9 @@ export function generateCSS(): string {
 
   /* Validation tracker tints — dark */
   ${validationTintsBlock("dark")}
+
+  /* Epistemic role colors — dark */
+  ${roleBlock("dark")}
 }
 
 @media (prefers-color-scheme: dark) {
@@ -276,6 +292,7 @@ export function generateCSS(): string {
     ${brandStatusBlock("dark")}
     ${calloutTitleBgBlock("dark")}
     ${validationTintsBlock("dark")}
+    ${roleBlock("dark")}
   }
 }
 
@@ -289,6 +306,7 @@ export function generateCSS(): string {
     ${brandStatusBlock("light")}
     ${calloutTitleBgBlock("light")}
     ${validationTintsBlock("light")}
+    ${roleBlock("light")}
     color-scheme: light;
   }
 }

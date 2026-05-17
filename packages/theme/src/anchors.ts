@@ -62,6 +62,19 @@ export const darkBrand = {
   violet: { fill: "#a3acc7", text: "#cbd0dc" },
 } as const;
 
+// Epistemic-role color slots for interactive figures (Tier-1+ category).
+// Each entry pairs a light-mode and dark-mode oklch value. `observable`
+// ships first (Task 1.3); model / inference / approximation land in
+// Tasks 1.4–1.6. The generator's roleBlock(mode) iterates this map, so
+// new entries appear in :root and [data-theme="dark"] without changes
+// to the generator template.
+export const role = {
+  observable: { light: "oklch(48% 0.02 60)", dark: "oklch(73% 0.02 60)" },
+  model: { light: "oklch(58% 0.13 195)", dark: "oklch(78% 0.13 195)" },
+  inference: { light: "oklch(63% 0.16 12)", dark: "oklch(83% 0.16 12)" },
+  approximation: { light: "oklch(70% 0.04 60)", dark: "oklch(85% 0.04 60)" },
+} as const;
+
 export const status = {
   success: "#34d399",
   warning: "#fbbf24",
@@ -106,6 +119,7 @@ export const fontStacks = {
 // two roles — opt-in usage per component lands in step G (component
 // rebuilds), not here.
 export const sizes = {
+  pill: "0.6875rem",
   xs: "0.75rem",
   sm: "0.875rem",
   base: "1rem",
@@ -132,6 +146,7 @@ export const weights = {
 
 export const spacings = {
   0: "0",
+  half: "0.125rem",
   1: "0.25rem",
   2: "0.5rem",
   3: "0.75rem",

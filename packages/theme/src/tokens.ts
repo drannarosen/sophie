@@ -30,6 +30,12 @@ export const tokens = {
       info: v("status-info"),
       neutral: v("status-neutral"),
     },
+    role: {
+      observable: v("role-observable"),
+      model: v("role-model"),
+      inference: v("role-inference"),
+      approximation: v("role-approximation"),
+    },
     validation: {
       unvalidated: {
         stripe: v("validation-unvalidated-stripe"),
@@ -57,6 +63,7 @@ export const tokens = {
     mono: v("font-mono"),
   },
   size: {
+    pill: v("text-pill"),
     xs: v("text-xs"),
     sm: v("text-sm"),
     base: v("text-base"),
@@ -79,6 +86,7 @@ export const tokens = {
   },
   space: {
     0: v("space-0"),
+    half: v("space-half"),
     1: v("space-1"),
     2: v("space-2"),
     3: v("space-3"),
