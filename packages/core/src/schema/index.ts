@@ -5,9 +5,31 @@ export {
   AuditSeveritySchema,
 } from "./audit.js";
 export { type Chapter, ChapterSchema, ChapterStatus } from "./chapter.js";
+export {
+  EPISTEMIC_ROLES,
+  type EpistemicRole,
+  EpistemicRoleSchema,
+} from "./epistemic-role.js";
 export { type Figure, FigureSchema } from "./figure.js";
 export { type Module, ModuleSchema } from "./module.js";
 export { chaptersForModule } from "./module-nav.js";
+export {
+  type MultiRep,
+  type MultiRepIndexEntry,
+  MultiRepIndexEntrySchema,
+  MultiRepLayoutSchema,
+  MultiRepSchema,
+  type SerializedRep,
+  SerializedRepSchema,
+} from "./multirep.js";
+export {
+  type CommonConfusion,
+  CommonConfusionSchema,
+  type Concept,
+  ConceptSchema,
+  type NotationRegistry,
+  NotationRegistrySchema,
+} from "./notation-registry.js";
 export {
   type ChapterEntry,
   ChapterEntrySchema,
