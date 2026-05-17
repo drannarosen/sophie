@@ -44,7 +44,7 @@ export function Predict({
   );
 
   return (
-    <section className={styles.section}>
+    <section className={`${styles.section} sophie-predict`}>
       <header className={styles.titleBar}>
         <Telescope className={styles.icon} size={20} aria-hidden />
         <h2 className={styles.heading}>{heading}</h2>
@@ -191,7 +191,7 @@ function RevealGate({
     <div className={styles.revealGate}>
       <button
         type='button'
-        className={styles.revealButton}
+        className={`${styles.revealButton} sophie-predict-reveal-button`}
         aria-busy={controlProps["aria-busy"]}
         disabled={gatedDisabled}
         onClick={handleReveal}
@@ -199,7 +199,11 @@ function RevealGate({
         Reveal
       </button>
       {revealed && (
-        <div ref={contentRef} tabIndex={-1} className={styles.revealContent}>
+        <div
+          ref={contentRef}
+          tabIndex={-1}
+          className={`${styles.revealContent} sophie-predict-reveal-content`}
+        >
           {children}
         </div>
       )}

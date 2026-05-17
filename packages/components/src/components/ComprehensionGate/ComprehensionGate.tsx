@@ -35,7 +35,11 @@ export function ComprehensionGate({
   >(course, chapter, "comprehension", id, "");
 
   return (
-    <div role='radiogroup' aria-labelledby={labelId} className={styles.section}>
+    <div
+      role='radiogroup'
+      aria-labelledby={labelId}
+      className={`${styles.section} sophie-comprehension-gate`}
+    >
       <header className={styles.titleBar}>
         <Compass className={styles.icon} size={20} aria-hidden />
         <span id={labelId} className={styles.title}>

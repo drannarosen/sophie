@@ -25,7 +25,11 @@ export function EffortLog({ course, chapter, id, prompt }: EffortLogProps) {
   >(course, chapter, "effort", id, "");
 
   return (
-    <div role='radiogroup' aria-labelledby={labelId} className={styles.section}>
+    <div
+      role='radiogroup'
+      aria-labelledby={labelId}
+      className={`${styles.section} sophie-effort-log`}
+    >
       <header className={styles.titleBar}>
         <ClipboardList className={styles.icon} size={20} aria-hidden />
         <span id={labelId} className={styles.title}>

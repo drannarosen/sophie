@@ -30,7 +30,9 @@ export function InteractiveCheckbox({
     initial
   );
 
-  const rowClass = className ? `${styles.row} ${className}`.trim() : styles.row;
+  const rowClass = [styles.row, "sophie-interactive-checkbox", className]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <span className={rowClass}>
