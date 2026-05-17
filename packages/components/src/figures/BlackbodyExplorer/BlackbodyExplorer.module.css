@@ -191,6 +191,26 @@
   pointer-events: none;
 }
 
+/* Spectral gradient strip — 6px-tall band at the top edge of the plot
+ * area, sitting along the visible-band wavelength range. 15 log-equal-
+ * spaced bins each filled to its oklch wavelength color (violet → red).
+ * Position derives from Plot's x-scale at runtime (left + width are set
+ * inline; height is fixed). Sits ABOVE the SVG so it occludes Plot's
+ * own visible-band base-wash rect at the very top edge. */
+
+.spectralStrip {
+  position: absolute;
+  top: 20px; /* Plot marginTop default */
+  height: 6px;
+  display: flex;
+  pointer-events: none;
+}
+
+.spectralStrip > span {
+  flex: 1;
+  display: block;
+}
+
 /* Wien-peak HTML overlay — 12px downward tick at plot top + KaTeX label
  * sitting above it. Position lerps as T changes (Principle 4: motion is
  * meaning). The `left` CSS var is set inline from Plot's x-scale.apply()

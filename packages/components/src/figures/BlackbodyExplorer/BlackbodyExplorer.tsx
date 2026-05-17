@@ -110,14 +110,68 @@ const PLOT_HEIGHT = 300;
 const PLOT_MARGIN_LEFT = 60;
 const PLOT_MARGIN_BOTTOM = 44;
 
+// Two-layer visible-band per Section 4 of interactive-figure-target.md.
+// Layer 1 (base wash) is rendered inside Plot via rectX with the spec's
+// barely-there warm-neutral fill. Layer 2 (spectral gradient strip) is an
+// HTML overlay above the SVG, positioned via Plot's x-scale at runtime.
+const VISIBLE_BAND_BASE_FILL = "oklch(85% 0.04 80 / 0.05)";
+const SPECTRAL_STRIP_BIN_COUNT = 15;
+
+// Log-equal-spaced bin centers across 380–740 nm. Hue map: violet (290°)
+// at 380 nm, red (25°) at 740 nm — oklch hue runs counterclockwise so we
+// interpolate downward. Chroma + lightness held constant so the strip
+// reads as a clean spectrum without luminance shifts confusing the eye.
+const SPECTRAL_STRIP_BINS = Array.from(
+  { length: SPECTRAL_STRIP_BIN_COUNT },
+  (_, i) => {
+    const t = (i + 0.5) / SPECTRAL_STRIP_BIN_COUNT;
+    const nmCenter =
+      VISIBLE_BAND_NM_MIN * (VISIBLE_BAND_NM_MAX / VISIBLE_BAND_NM_MIN) ** t;
+    const hueT =
+      (nmCenter - VISIBLE_BAND_NM_MIN) /
+      (VISIBLE_BAND_NM_MAX - VISIBLE_BAND_NM_MIN);
+    const hue = 290 - hueT * (290 - 25);
+    return {
+      key: i,
+      color: `oklch(75% 0.18 ${hue.toFixed(1)})`,
+    };
+  }
+);
+
+// Anchor literals match packages/theme/src/anchors.ts. Used as the jsdom
+// fallback when getComputedStyle can't resolve CSS custom properties.
+const ROLE_COLOR_FALLBACK = {
+  model: "oklch(58% 0.13 195)",
+  approximation: "oklch(70% 0.04 60)",
+} as const;
+
+function resolveRoleColor(
+  node: HTMLElement,
+  role: keyof typeof ROLE_COLOR_FALLBACK
+): string {
+  const value = getComputedStyle(node)
+    .getPropertyValue(`--sophie-role-${role}`)
+    .trim();
+  return value || ROLE_COLOR_FALLBACK[role];
+}
+
+interface PlotGeometry {
+  wienXpx: number;
+  bandLeftPx: number;
+  bandRightPx: number;
+}
+
 function SpectrumPlot({ T_K, showRayleighJeans, showWien }: SpectrumPlotProps) {
   const svgHostRef = useRef<HTMLDivElement | null>(null);
-  const [wienXpx, setWienXpx] = useState<number | null>(null);
+  const [geometry, setGeometry] = useState<PlotGeometry | null>(null);
   const wienPeakNm = wienPeakWavelengthCm(T_K) * 1e7;
 
   useEffect(() => {
     const node = svgHostRef.current;
     if (!node) return;
+
+    const modelColor = resolveRoleColor(node, "model");
+    const approxColor = resolveRoleColor(node, "approximation");
 
     const planckCurve = buildCurveData(T_K, "planck");
     const overlays: PlanckSample[] = [];
@@ -165,7 +219,7 @@ function SpectrumPlot({ T_K, showRayleighJeans, showWien }: SpectrumPlotProps) {
             x2: "x2",
             y1: "y1",
             y2: "y2",
-            fill: "rgba(255, 220, 100, 0.18)",
+            fill: VISIBLE_BAND_BASE_FILL,
             stroke: "none",
             ariaLabel: null,
             ariaHidden: "true",
@@ -174,7 +228,7 @@ function SpectrumPlot({ T_K, showRayleighJeans, showWien }: SpectrumPlotProps) {
         Plot.line(planckCurve, {
           x: "lambdaNm",
           y: "B",
-          stroke: "#2563eb",
+          stroke: modelColor,
           strokeWidth: 2,
           ariaLabel: null,
           ariaHidden: "true",
@@ -184,7 +238,8 @@ function SpectrumPlot({ T_K, showRayleighJeans, showWien }: SpectrumPlotProps) {
           {
             x: "lambdaNm",
             y: "B",
-            stroke: "#94a3b8",
+            stroke: approxColor,
+            strokeOpacity: 0.7,
             strokeDasharray: "4 3",
             strokeWidth: 1.5,
             ariaLabel: null,
@@ -196,7 +251,8 @@ function SpectrumPlot({ T_K, showRayleighJeans, showWien }: SpectrumPlotProps) {
           {
             x: "lambdaNm",
             y: "B",
-            stroke: "#475569",
+            stroke: approxColor,
+            strokeOpacity: 0.7,
             strokeDasharray: "2 3",
             strokeWidth: 1.5,
             ariaLabel: null,
@@ -213,17 +269,30 @@ function SpectrumPlot({ T_K, showRayleighJeans, showWien }: SpectrumPlotProps) {
     );
     node.replaceChildren(chart);
 
-    // Position the Wien-peak HTML overlay via Plot's x-scale. The scale's
-    // .apply() returns a pixel coordinate in the SVG's own coordinate
-    // space; since the SVG fills the host div, the same number is the
-    // overlay's `left` value relative to .plotContainer.
+    // Plot's .scale("x").apply() gives pixel coordinates in the SVG's own
+    // coordinate space; since the SVG fills the host div, those numbers
+    // are also the overlay `left` values relative to .plotContainer.
     const xScale = (
       chart as unknown as {
         scale?: (name: string) => { apply?: (v: number) => number };
       }
     ).scale?.("x");
-    const px = xScale?.apply?.(wienPeakNm);
-    setWienXpx(Number.isFinite(px) ? (px as number) : null);
+    if (xScale?.apply) {
+      const wienXpx = xScale.apply(wienPeakNm);
+      const bandLeftPx = xScale.apply(VISIBLE_BAND_NM_MIN);
+      const bandRightPx = xScale.apply(VISIBLE_BAND_NM_MAX);
+      if (
+        Number.isFinite(wienXpx) &&
+        Number.isFinite(bandLeftPx) &&
+        Number.isFinite(bandRightPx)
+      ) {
+        setGeometry({ wienXpx, bandLeftPx, bandRightPx });
+      } else {
+        setGeometry(null);
+      }
+    } else {
+      setGeometry(null);
+    }
 
     return () => {
       chart.remove();
@@ -241,19 +310,39 @@ function SpectrumPlot({ T_K, showRayleighJeans, showWien }: SpectrumPlotProps) {
       <span className={styles.axisLabelX}>
         <InlineMath>{String.raw`\lambda\;(\mathrm{nm})`}</InlineMath>
       </span>
-      {wienXpx !== null && (
-        <div
-          className={styles.wienPeakOverlay}
-          data-wien-peak-overlay
-          style={{ left: `${wienXpx}px` } as React.CSSProperties}
-        >
-          <span className={styles.wienPeakLabel}>
-            <InlineMath>
-              {`\\lambda_\\text{peak} = ${wienPeakNm.toFixed(0)}\\,\\mathrm{nm}`}
-            </InlineMath>
-          </span>
-          <span aria-hidden='true' className={styles.wienPeakTick} />
-        </div>
+      {geometry !== null && (
+        <>
+          <div
+            aria-hidden='true'
+            className={styles.spectralStrip}
+            data-spectral-strip
+            style={
+              {
+                left: `${geometry.bandLeftPx}px`,
+                width: `${geometry.bandRightPx - geometry.bandLeftPx}px`,
+              } as React.CSSProperties
+            }
+          >
+            {SPECTRAL_STRIP_BINS.map((bin) => (
+              <span
+                key={bin.key}
+                style={{ background: bin.color } as React.CSSProperties}
+              />
+            ))}
+          </div>
+          <div
+            className={styles.wienPeakOverlay}
+            data-wien-peak-overlay
+            style={{ left: `${geometry.wienXpx}px` } as React.CSSProperties}
+          >
+            <span className={styles.wienPeakLabel}>
+              <InlineMath>
+                {`\\lambda_\\text{peak} = ${wienPeakNm.toFixed(0)}\\,\\mathrm{nm}`}
+              </InlineMath>
+            </span>
+            <span aria-hidden='true' className={styles.wienPeakTick} />
+          </div>
+        </>
       )}
     </div>
   );
