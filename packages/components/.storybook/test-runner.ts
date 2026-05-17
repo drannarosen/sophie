@@ -20,17 +20,30 @@ import { toMatchImageSnapshot } from "jest-image-snapshot";
  * 2. **a11y gate** (axe-core via `axe-playwright`) — mandatory per
  *    ADR 0004. `color-contrast` is excluded to match the project-wide
  *    a11y posture (every smoke spec disables it; design-system review
- *    handles contrast separately).
+ *    handles contrast separately). Runs once per story against the
+ *    default theme; structural axe rules (labels/landmarks/ARIA/focus)
+ *    are mode-invariant, so the light-mode pass covers both schemes.
  * 3. **visual-regression gate** (`jest-image-snapshot`) — per ADR 0057
- *    (supersedes ADR 0028). One PNG per story under
+ *    (supersedes ADR 0028). One PNG per story per theme under
  *    `__snapshots__/chromium/`. CI's Linux runner is the canonical
  *    baseline platform; local Mac runs will diff against committed
  *    PNGs and fail — regenerate via the `vr-update` workflow rather
  *    than locally.
  *
- * Set `SKIP_VR=1` (env var) to disable the VR gate while keeping axe.
- * The `test:storybook` script does this by default so local axe runs
- * on Mac don't get blocked by CoreText/FreeType baseline divergence;
+ * Theme coverage (per dark-mode-palette.md):
+ * - Default light pass writes `<story-id>.png`.
+ * - Then re-navigate to the same story with `?globals=theme:dark`
+ *   appended (Storybook's URL-globals syntax — toolbar + URL +
+ *   test-runner all flip theme via the same `@storybook/addon-themes`
+ *   `withThemeByDataAttribute` decorator wired in preview.tsx).
+ * - Dark pass writes `<story-id>--dark.png`.
+ * - URL-globals is the SoTA path over a direct DOM mutation: the
+ *   addon owns the full theme-application lifecycle (any future side
+ *   effects beyond `data-theme` ride along automatically).
+ *
+ * Set `SKIP_VR=1` (env var) to disable both VR passes while keeping
+ * axe. The `test:storybook` script does this by default so local Mac
+ * runs don't get blocked by CoreText/FreeType baseline divergence;
  * the `test:vr` script omits it so the VR gate runs in CI.
  *
  * Both gates run on every story; failures in either block CI. The
@@ -39,6 +52,18 @@ import { toMatchImageSnapshot } from "jest-image-snapshot";
  */
 const customSnapshotsDir = `${process.cwd()}/__snapshots__/chromium`;
 const skipVR = process.env.SKIP_VR === "1";
+
+/**
+ * Append (or replace) a `globals=key:value;...` query parameter on a
+ * Storybook iframe URL. Uses URL/URLSearchParams so existing params
+ * (`id`, `viewMode`, `args`) survive untouched. Per Storybook's globals
+ * URL syntax (essentials/toolbars-and-globals docs).
+ */
+function withTheme(url: string, theme: string): string {
+  const u = new URL(url);
+  u.searchParams.set("globals", `theme:${theme}`);
+  return u.toString();
+}
 
 const config: TestRunnerConfig = {
   setup() {
@@ -72,18 +97,35 @@ const config: TestRunnerConfig = {
     // the screenshot below deterministic.
     await waitForPageReady(page);
 
-    // Visual-regression snapshot. Naming: `<story-id>.png` where the
-    // story id is Storybook's CSF-derived slug (e.g. `aside--note`).
-    // First run on a fresh checkout creates the baseline; subsequent
-    // runs diff against it and write expected/actual/diff PNGs to
-    // `test-results/` on failure.
-    if (!skipVR && storyContext.parameters?.vr?.disable !== true) {
-      const image = await page.screenshot({ fullPage: true });
-      expect(image).toMatchImageSnapshot({
-        customSnapshotsDir,
-        customSnapshotIdentifier: context.id,
-      });
+    if (skipVR || storyContext.parameters?.vr?.disable === true) {
+      return;
     }
+
+    // Light VR baseline. Naming: `<story-id>.png` where the story id
+    // is Storybook's CSF-derived slug (e.g. `aside--note`). First run
+    // on a fresh checkout creates the baseline; subsequent runs diff
+    // against it and write expected/actual/diff PNGs to
+    // `test-results/` on failure.
+    const lightImage = await page.screenshot({ fullPage: true });
+    expect(lightImage).toMatchImageSnapshot({
+      customSnapshotsDir,
+      customSnapshotIdentifier: context.id,
+    });
+
+    // Dark VR baseline. Re-navigate to the same story with the
+    // `theme:dark` global set via URL. addon-themes' decorator picks
+    // up the global and applies `data-theme="dark"` to the iframe's
+    // <html>; the @sophie/theme CSS variable graph re-resolves
+    // automatically. waitForPageReady ensures fonts + CSS settle
+    // before the screenshot.
+    await page.goto(withTheme(page.url(), "dark"));
+    await waitForPageReady(page);
+
+    const darkImage = await page.screenshot({ fullPage: true });
+    expect(darkImage).toMatchImageSnapshot({
+      customSnapshotsDir,
+      customSnapshotIdentifier: `${context.id}--dark`,
+    });
   },
 };
 
