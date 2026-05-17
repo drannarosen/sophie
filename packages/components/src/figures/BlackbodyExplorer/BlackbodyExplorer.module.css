@@ -142,6 +142,55 @@
   width: 100%;
 }
 
+/* Plot internals — Plex Sans in tick labels (per Section 2). Plot emits
+ * each tick label as <text> inside g[aria-label="x-axis tick label"] (or
+ * y-axis); the axis-domain baseline and tick marks are <line>/<path>
+ * elements inside g[aria-label*="-axis"]. We target both groups by
+ * attribute selector. */
+
+.plotContainer svg text {
+  font-family: var(--sophie-font-sans);
+  font-size: 11px;
+  fill: var(--sophie-text-muted);
+}
+
+.plotContainer svg [aria-label*="-axis"] line,
+.plotContainer svg [aria-label*="-axis"] path {
+  stroke: var(--sophie-border);
+  stroke-width: 0.5px;
+}
+
+/* HTML axis labels — KaTeX-rendered, positioned absolutely against the
+ * plot container. Y label rotated 90° in the left margin; X label
+ * centered horizontally below the plot area. Plot uses width=480,
+ * height=300, marginLeft=60, marginRight=20 (default), marginBottom=44,
+ * marginTop=20 (default). Plot-area center: x=260, y=138. */
+
+.axisLabelX {
+  position: absolute;
+  bottom: var(--sophie-space-1);
+  left: 260px;
+  transform: translateX(-50%);
+  font-family: var(--sophie-font-sans);
+  font-size: var(--sophie-text-sm);
+  color: var(--sophie-text);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.axisLabelY {
+  position: absolute;
+  top: 138px;
+  left: var(--sophie-space-1);
+  transform: rotate(-90deg) translateX(-50%);
+  transform-origin: left top;
+  font-family: var(--sophie-font-sans);
+  font-size: var(--sophie-text-sm);
+  color: var(--sophie-text);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
 /* Wien-peak HTML overlay — 12px downward tick at plot top + KaTeX label
  * sitting above it. Position lerps as T changes (Principle 4: motion is
  * meaning). The `left` CSS var is set inline from Plot's x-scale.apply()

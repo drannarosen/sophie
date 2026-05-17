@@ -67,6 +67,38 @@ function formatScientificTex(value: number): string {
   return `${mantissa.toFixed(2)} \\times 10^{${exponent}}`;
 }
 
+const UNICODE_SUPERSCRIPTS: Record<string, string> = {
+  "0": "⁰",
+  "1": "¹",
+  "2": "²",
+  "3": "³",
+  "4": "⁴",
+  "5": "⁵",
+  "6": "⁶",
+  "7": "⁷",
+  "8": "⁸",
+  "9": "⁹",
+  "-": "⁻",
+};
+
+// Format a log-axis tick value as 10ⁿ using Unicode superscripts —
+// publication-standard convention for scientific axes (matplotlib +
+// matplotlib-rendered ApJ figures use the same form). Tick labels live
+// inside SVG <text> elements where KaTeX cannot be rendered without
+// <foreignObject>, which is unstable across Linux/Mac VR per Section 4
+// of interactive-figure-target.md. Returns an empty string for non-
+// decade values so Plot's minor ticks remain as marks without labels.
+function tickPowerOfTen(value: number): string {
+  if (!Number.isFinite(value) || value <= 0) return "";
+  const exp = Math.round(Math.log10(value));
+  if (Math.abs(value - 10 ** exp) > 1e-9 * value) return "";
+  const expStr = String(exp);
+  const superscript = Array.from(expStr)
+    .map((c) => UNICODE_SUPERSCRIPTS[c] ?? c)
+    .join("");
+  return `10${superscript}`;
+}
+
 interface SpectrumPlotProps {
   T_K: number;
   showRayleighJeans: boolean;
@@ -106,13 +138,17 @@ function SpectrumPlot({ T_K, showRayleighJeans, showWien }: SpectrumPlotProps) {
       marginBottom: PLOT_MARGIN_BOTTOM,
       x: {
         type: "log",
-        label: "λ (nm)",
+        label: null,
         domain: [PLOT_LAMBDA_NM_MIN, PLOT_LAMBDA_NM_MAX],
+        ticks: [10, 100, 1000, 10000],
+        tickFormat: tickPowerOfTen,
       },
       y: {
         type: "log",
-        label: "B_λ (erg s⁻¹ cm⁻² sr⁻¹ cm⁻¹)",
+        label: null,
         domain: [yMin, yMax * 2],
+        ticks: 5,
+        tickFormat: tickPowerOfTen,
       },
       marks: [
         Plot.rectX(
@@ -197,6 +233,14 @@ function SpectrumPlot({ T_K, showRayleighJeans, showWien }: SpectrumPlotProps) {
   return (
     <div className={styles.plotContainer}>
       <div ref={svgHostRef} className={styles.plotSvgHost} />
+      <span className={styles.axisLabelY}>
+        <InlineMath>
+          {String.raw`B_\lambda(T)\;(\mathrm{erg\,s^{-1}\,cm^{-2}\,sr^{-1}\,cm^{-1}})`}
+        </InlineMath>
+      </span>
+      <span className={styles.axisLabelX}>
+        <InlineMath>{String.raw`\lambda\;(\mathrm{nm})`}</InlineMath>
+      </span>
       {wienXpx !== null && (
         <div
           className={styles.wienPeakOverlay}
