@@ -32,6 +32,7 @@ export const tokens = {
     },
     role: {
       observable: v("role-observable"),
+      model: v("role-model"),
     },
     validation: {
       unvalidated: {

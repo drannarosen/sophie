@@ -70,6 +70,8 @@ export const darkBrand = {
 // to the generator template.
 export const role = {
   observable: { light: "oklch(48% 0.02 60)", dark: "oklch(73% 0.02 60)" },
+  model: { light: "oklch(58% 0.13 195)", dark: "oklch(78% 0.13 195)" },
+  // inference / approximation added in Tasks 1.5–1.6
 } as const;
 
 export const status = {
