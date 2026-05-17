@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { anchors, brand } from "../src/anchors.ts";
+import { anchors, brand, darkBrand } from "../src/anchors.ts";
 import { checkContrast } from "./contrast.ts";
 import { generateCSS } from "./generate-css.ts";
 import { generateTailwind } from "./generate-tailwind.ts";
@@ -9,10 +9,32 @@ import { generateTailwind } from "./generate-tailwind.ts";
 const here = dirname(fileURLToPath(import.meta.url));
 const distDir = join(here, "..", "dist");
 
+// Brand text contrast — checked against the page bg (`paper` in light,
+// `darkBg` in dark) rather than the title-bar tint. The title bar is
+// `color-mix(brand X%, surface-1)`, which differs from pure paper/darkBg
+// by only a few luminance points — the page-bg check is the closest
+// approximation we can make with hex-only inputs (the contrast utility
+// can't parse color-mix(in oklch, …)). Verified visually in component
+// VR baselines per ADR 0057.
 const checks = [
   checkContrast("brand.teal.text on paper", brand.teal.text, anchors.paper),
   checkContrast("brand.rose.text on paper", brand.rose.text, anchors.paper),
   checkContrast("brand.violet.text on paper", brand.violet.text, anchors.paper),
+  checkContrast(
+    "darkBrand.teal.text on darkBg",
+    darkBrand.teal.text,
+    anchors.darkBg
+  ),
+  checkContrast(
+    "darkBrand.rose.text on darkBg",
+    darkBrand.rose.text,
+    anchors.darkBg
+  ),
+  checkContrast(
+    "darkBrand.violet.text on darkBg",
+    darkBrand.violet.text,
+    anchors.darkBg
+  ),
 ];
 
 const failures = checks.filter((c) => !c.passesAA);

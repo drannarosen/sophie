@@ -3,6 +3,9 @@ import {
   brand,
   calloutTitleBg,
   cardRules,
+  darkBrand,
+  darkStatus,
+  darkSurfacesMix,
   focus,
   fontStacks,
   headings,
@@ -14,33 +17,34 @@ import {
   spacings,
   status,
   textOnAccent,
+  validationTints,
   weights,
 } from "../src/anchors.ts";
 
-interface ColorMode {
-  bg: string;
-  fg: string;
-  scheme: "light" | "dark";
-}
+type Scheme = "light" | "dark";
 
-const light: ColorMode = {
-  bg: anchors.paper,
-  fg: anchors.ink,
-  scheme: "light",
-};
-const dark: ColorMode = {
-  bg: anchors.ink,
-  fg: anchors.paper,
-  scheme: "dark",
-};
+// Surface + text + shadow declarations per scheme.
+//
+// Light mode: hardcoded `lightSurfaces` (visual correction — the symmetric
+// derivation against `paper` produced gray-200-ish surface-1, not the pure
+// white the visual-polish-target requires).
+//
+// Dark mode: derivation-based against the `darkBg` anchor (Tailwind gray-900
+// in dark-mode-palette.md). Percentages in `darkSurfacesMix` are tuned to
+// land near the gray-800/700/600 stack; `border` and `borderSubtle` invert
+// the derivation (mix `paper` into transparent) so the border reads as a
+// lighter highlight ring against the card body — standard dark-mode card-
+// elevation language.
+//
+// Shadow: scheme-tinted derivation in light mode keeps cards softly lifted
+// off the gray-50 page. In dark, the shadow color and page bg would sit
+// within ~3% luminance of each other; the shadow has nothing to land on.
+// Per dark-mode-palette.md "Card elevation in Tier 1": resolve to `none`
+// in dark and let the highlight-ring border do the elevation work.
+function colorBlock(scheme: Scheme): string {
+  const bg = scheme === "light" ? anchors.paper : anchors.darkBg;
+  const fg = scheme === "light" ? anchors.ink : anchors.paper;
 
-function colorBlock(mode: ColorMode): string {
-  const { bg, fg, scheme } = mode;
-  // Light mode uses the hardcoded cool-neutral surface stack (gray-50
-  // page, pure-white cards, gray-200 borders) per visual-polish-target.md.
-  // Dark mode keeps the symmetric color-mix derivation against the cool
-  // paper anchor; a dedicated dark-mode tuning sweep ships later (audit
-  // § Section 5).
   const surfaces =
     scheme === "light"
       ? [
@@ -51,12 +55,27 @@ function colorBlock(mode: ColorMode): string {
           `--sophie-border-subtle: ${lightSurfaces.borderSubtle};`,
         ]
       : [
-          `--sophie-surface-1: color-mix(in oklch, ${bg} 92%, ${fg});`,
-          `--sophie-surface-2: color-mix(in oklch, ${bg} 86%, ${fg});`,
-          `--sophie-surface-3: color-mix(in oklch, ${bg} 80%, ${fg});`,
-          `--sophie-border: color-mix(in oklch, ${fg} 8%, transparent);`,
-          `--sophie-border-subtle: color-mix(in oklch, ${fg} 5%, transparent);`,
+          `--sophie-surface-1: color-mix(in oklch, ${bg} ${darkSurfacesMix.surface1}%, ${fg});`,
+          `--sophie-surface-2: color-mix(in oklch, ${bg} ${darkSurfacesMix.surface2}%, ${fg});`,
+          `--sophie-surface-3: color-mix(in oklch, ${bg} ${darkSurfacesMix.surface3}%, ${fg});`,
+          `--sophie-border: color-mix(in oklch, ${fg} ${darkSurfacesMix.border}%, transparent);`,
+          `--sophie-border-subtle: color-mix(in oklch, ${fg} ${darkSurfacesMix.borderSubtle}%, transparent);`,
         ];
+
+  const shadow =
+    scheme === "light"
+      ? [
+          // Scheme-tinted card shadow keeps Tier 1 lifted off the gray-50
+          // page. 4% concentration matches the original visual.
+          `--sophie-shadow-card: 0 1px 3px color-mix(in oklch, ${fg} 4%, transparent);`,
+        ]
+      : [
+          // Dark mode: shadow color ≈ page bg, so shadows are visually
+          // inert. Elevation comes from the border-as-highlight ring +
+          // 4px-vs-3px rule width (dark-mode-palette.md § Card elevation).
+          "--sophie-shadow-card: none;",
+        ];
+
   return [
     `--sophie-bg: ${bg};`,
     ...surfaces,
@@ -67,54 +86,47 @@ function colorBlock(mode: ColorMode): string {
     `--sophie-link: color-mix(in oklch, var(--sophie-accent) 70%, var(--sophie-text));`,
     // Modal backdrop. Derived from ${fg} so it stays visible against the
     // scheme-appropriate surface — ink-tinted overlay in light mode,
-    // paper-tinted in dark mode. 50% concentration gives a clear
-    // "behind-modal" darkening without going opaque.
+    // paper-tinted in dark mode.
     `--sophie-overlay-bg: color-mix(in oklch, ${fg} 50%, transparent);`,
-    // Scheme-aware card shadow. Derived from ${fg} (=ink in light mode,
-    // paper in dark mode) so the shadow color adapts to scheme instead
-    // of being invisible in dark mode like a hardcoded #0f1115 would be.
-    // 4% concentration matches the original visual in light mode.
-    `--sophie-shadow-card: 0 1px 3px color-mix(in oklch, ${fg} 4%, transparent);`,
-    // Same pattern for popover surfaces (FigureRef / EqRef / GlossaryTerm).
-    // 12% concentration matches the original `rgb(0 0 0 / 0.12)` in light
-    // mode and stays visible against dark surface-1.
+    ...shadow,
+    // Popover shadow stays scheme-tinted in both modes — popover surfaces
+    // are Tier-1 chrome (FigureRef / EqRef / GlossaryTerm cards) and need
+    // *some* lift; in dark they sit on `surface-1` rather than the page,
+    // so a paper-tinted shadow remains visible.
     `--sophie-shadow-popover: 0 4px 12px color-mix(in oklch, ${fg} 12%, transparent);`,
   ].join("\n    ");
 }
 
-function modeInvariantBlock(): string {
+// Brand + status per scheme. Light uses the values designed against pure
+// white cards (`brand`/`status`); dark uses the lifted-luminance values
+// designed against gray-800 cards (`darkBrand`/`darkStatus`). Per dark-
+// mode-palette.md "Brand and status luminance".
+function brandStatusBlock(scheme: Scheme): string {
+  const b = scheme === "light" ? brand : darkBrand;
+  const s = scheme === "light" ? status : darkStatus;
   return [
-    `--sophie-brand-teal: ${brand.teal.fill};`,
-    `--sophie-brand-teal-text: ${brand.teal.text};`,
-    `--sophie-brand-rose: ${brand.rose.fill};`,
-    `--sophie-brand-rose-text: ${brand.rose.text};`,
-    `--sophie-brand-violet: ${brand.violet.fill};`,
-    `--sophie-brand-violet-text: ${brand.violet.text};`,
-    `--sophie-status-success: ${status.success};`,
-    `--sophie-status-warning: ${status.warning};`,
-    `--sophie-status-danger: ${status.danger};`,
-    `--sophie-status-info: ${status.info};`,
-    `--sophie-status-neutral: ${status.neutral};`,
+    `--sophie-brand-teal: ${b.teal.fill};`,
+    `--sophie-brand-teal-text: ${b.teal.text};`,
+    `--sophie-brand-rose: ${b.rose.fill};`,
+    `--sophie-brand-rose-text: ${b.rose.text};`,
+    `--sophie-brand-violet: ${b.violet.fill};`,
+    `--sophie-brand-violet-text: ${b.violet.text};`,
+    `--sophie-status-success: ${s.success};`,
+    `--sophie-status-warning: ${s.warning};`,
+    `--sophie-status-danger: ${s.danger};`,
+    `--sophie-status-info: ${s.info};`,
+    `--sophie-status-neutral: ${s.neutral};`,
+  ].join("\n    ");
+}
+
+// Truly mode-invariant utilities. Accent alias, link-hover alias, and
+// text-on-accent (white reads AA-clear on every brand/status fill in
+// both schemes).
+function invariantUtilitiesBlock(): string {
+  return [
     "--sophie-accent: var(--sophie-brand-teal);",
     "--sophie-link-hover: var(--sophie-accent);",
-    // Text color used on saturated brand/status accent backgrounds
-    // (e.g., active chips, primary buttons). Mode-invariant white reads
-    // AA-clear on all current accent fills (brand-teal/rose/violet,
-    // status-info/warning/danger). A scheme-aware variant can ship if
-    // we add a light-on-dark accent (e.g., pastel buttons in dark mode).
     `--sophie-text-on-accent: ${textOnAccent};`,
-    // Validation tracker palette (ADR 0056). Stripes reuse the
-    // semantic status palette directly; backgrounds derive 6%-tint
-    // surfaces via color-mix so admonitions read as subtle wash
-    // rather than saturated alert.
-    "--sophie-validation-unvalidated-stripe: var(--sophie-status-neutral);",
-    "--sophie-validation-unvalidated-bg: color-mix(in oklch, var(--sophie-status-neutral) 6%, transparent);",
-    "--sophie-validation-in-progress-stripe: var(--sophie-status-info);",
-    "--sophie-validation-in-progress-bg: color-mix(in oklch, var(--sophie-status-info) 6%, transparent);",
-    "--sophie-validation-validated-stripe: var(--sophie-status-success);",
-    "--sophie-validation-validated-bg: color-mix(in oklch, var(--sophie-status-success) 6%, transparent);",
-    "--sophie-validation-re-validation-needed-stripe: var(--sophie-status-warning);",
-    "--sophie-validation-re-validation-needed-bg: color-mix(in oklch, var(--sophie-status-warning) 6%, transparent);",
   ].join("\n  ");
 }
 
@@ -170,18 +182,34 @@ function cardRulesBlock(): string {
     .join("\n  ");
 }
 
-function calloutTitleBgBlock(): string {
-  // Per-variant title-bar background tints. Each derives from the
-  // variant's accent color and surface-1 via color-mix(in oklch, …) —
-  // the same mechanism ADR 0056's validation tracker uses for its
-  // status-tinted admonition surfaces. Per-component opt-in (consuming
-  // these tokens in Callout.module.css) lands in step G.
+// Per-variant callout title-bar tints. Each derives from the variant's
+// accent color and surface-1 via color-mix(in oklch, …). `tintPctDark`
+// lifts +4 over `tintPctLight` so the tint reads as recognizable on the
+// darker substrate — symmetric percentages would produce "barely tinted
+// gray" in dark. Per dark-mode-palette.md "Callout title-bar tints".
+function calloutTitleBgBlock(scheme: Scheme): string {
   return Object.entries(calloutTitleBg)
-    .map(
-      ([variant, { accent, tintPct }]) =>
-        `--sophie-callout-${variant}-title-bg: color-mix(in oklch, var(--sophie-${accent}) ${tintPct}%, var(--sophie-surface-1));`
-    )
-    .join("\n  ");
+    .map(([variant, { accent, tintPctLight, tintPctDark }]) => {
+      const pct = scheme === "light" ? tintPctLight : tintPctDark;
+      return `--sophie-callout-${variant}-title-bg: color-mix(in oklch, var(--sophie-${accent}) ${pct}%, var(--sophie-surface-1));`;
+    })
+    .join("\n    ");
+}
+
+// Validation tracker (ADR 0056). Stripes reuse the semantic status
+// palette directly; backgrounds derive `tintPct%`-tinted surfaces via
+// color-mix on `transparent` so admonitions read as subtle wash rather
+// than saturated alert. Same +4 lift in dark as `calloutTitleBgBlock`.
+function validationTintsBlock(scheme: Scheme): string {
+  return Object.entries(validationTints)
+    .flatMap(([key, { stripe, tintPctLight, tintPctDark }]) => {
+      const pct = scheme === "light" ? tintPctLight : tintPctDark;
+      return [
+        `--sophie-validation-${key}-stripe: var(--sophie-${stripe});`,
+        `--sophie-validation-${key}-bg: color-mix(in oklch, var(--sophie-${stripe}) ${pct}%, transparent);`,
+      ];
+    })
+    .join("\n    ");
 }
 
 export function generateCSS(): string {
@@ -190,11 +218,20 @@ export function generateCSS(): string {
 :root {
   color-scheme: light dark;
 
-  /* Color — light */
-  ${colorBlock(light)}
+  /* Color — light (surfaces, text, shadow) */
+  ${colorBlock("light")}
 
-  /* Brand + status (mode-invariant) */
-  ${modeInvariantBlock()}
+  /* Brand + status — light */
+  ${brandStatusBlock("light")}
+
+  /* Callout title-bar tints — light */
+  ${calloutTitleBgBlock("light")}
+
+  /* Validation tracker tints — light */
+  ${validationTintsBlock("light")}
+
+  /* Mode-invariant utilities (accent alias, text-on-accent) */
+  ${invariantUtilitiesBlock()}
 
   /* Typography */
   ${typographyBlock()}
@@ -216,28 +253,42 @@ export function generateCSS(): string {
 
   /* Card chrome — tier-1/tier-2 left-rule widths */
   ${cardRulesBlock()}
-
-  /* Callout title-bar tints — per-variant 6–10% accent over surface-1 */
-  ${calloutTitleBgBlock()}
 }
 
 [data-theme="dark"] {
-  /* Color — dark (explicit override) */
-    ${colorBlock(dark)}
+  /* Color — dark (surfaces, text, shadow=none) */
+  ${colorBlock("dark")}
+
+  /* Brand + status — dark (lifted luminance per dark-mode-palette.md) */
+  ${brandStatusBlock("dark")}
+
+  /* Callout title-bar tints — dark (split tintPctDark) */
+  ${calloutTitleBgBlock("dark")}
+
+  /* Validation tracker tints — dark */
+  ${validationTintsBlock("dark")}
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
-    /* Color — dark (system preference) */
-    ${colorBlock(dark)}
+    /* Color — dark (system preference; mirrors [data-theme="dark"]) */
+    ${colorBlock("dark")}
+    ${brandStatusBlock("dark")}
+    ${calloutTitleBgBlock("dark")}
+    ${validationTintsBlock("dark")}
   }
 }
 
 @media print {
   :root,
   html[data-theme="dark"] {
-    /* Color — light (forced for print regardless of active theme) */
-    ${colorBlock(light)}
+    /* Force full light identity for print regardless of active theme.
+       Includes brand/status/callout/validation overrides so a chapter
+       printed from dark mode still renders the light contract. */
+    ${colorBlock("light")}
+    ${brandStatusBlock("light")}
+    ${calloutTitleBgBlock("light")}
+    ${validationTintsBlock("light")}
     color-scheme: light;
   }
 }
