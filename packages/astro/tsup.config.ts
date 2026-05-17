@@ -57,6 +57,15 @@ export default defineConfig({
     // renders. Must exist at dist/lib/audit-cache.js to resolve from
     // the copied-verbatim .astro files in dist/components/.
     "lib/audit-cache": "src/lib/audit-cache.ts",
+    // `lib/notation-registry-loader` reads + parses the consumer's
+    // pedagogy-contract.yaml + notation-registry.yaml (ADR 0042 + ADR
+    // 0043). Imported by TextbookLayout (PR-ε wire-up): the layout
+    // calls `loadConsumerRegistry(repoRoot)`, pushes the registry into
+    // the accumulator via `setNotationRegistry`, and threads it into
+    // the audit's NR/MR invariants. Must exist at
+    // dist/lib/notation-registry-loader.js to resolve from the
+    // copied-verbatim .astro files in dist/components/.
+    "lib/notation-registry-loader": "src/lib/notation-registry-loader.ts",
     // `lib/pedagogy-index-virtual-module` is the optional Vite plugin
     // exposing `virtual:sophie/pedagogy-index`. Not used by the
     // chrome critical path (Vite caches load() before chapter parse);

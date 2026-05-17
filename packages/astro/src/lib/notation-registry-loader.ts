@@ -64,12 +64,46 @@ export function parseNotationRegistry(text: string): NotationRegistry {
   return NotationRegistrySchema.parse(parsed);
 }
 
+/**
+ * Module-level cache (PR-ε): deduplicates file IO across the multiple
+ * consumers that call `loadConsumerRegistry` in a single Astro build.
+ * In-MDX `<ChapterMultiReps>` evaluates BEFORE its enclosing
+ * `<TextbookLayout>` frontmatter (Astro's children-before-parent
+ * evaluation order), so we can't share registry state via the
+ * accumulator — every consumer that needs the registry calls this
+ * loader directly. The cache makes the second-through-Nth call a
+ * map lookup.
+ *
+ * Keyed by `consumerRoot` so test cases that exercise multiple
+ * roots don't share state across that parameter boundary. Production
+ * builds always pass the same `process.cwd()`, so the cache hits
+ * after the first call within a build. Test-only reset via
+ * `__resetConsumerRegistryCacheForTesting()`.
+ */
+const consumerRegistryCache = new Map<string, ConsumerRegistryResult>();
+
+export function __resetConsumerRegistryCacheForTesting(): void {
+  consumerRegistryCache.clear();
+}
+
 export function loadConsumerRegistry(
   consumerRoot: string
 ): ConsumerRegistryResult {
+  const cached = consumerRegistryCache.get(consumerRoot);
+  if (cached !== undefined) return cached;
+
   const contractPath = join(consumerRoot, "pedagogy-contract.yaml");
   const registryPath = join(consumerRoot, "notation-registry.yaml");
 
+  const result = computeConsumerRegistry(contractPath, registryPath);
+  consumerRegistryCache.set(consumerRoot, result);
+  return result;
+}
+
+function computeConsumerRegistry(
+  contractPath: string,
+  registryPath: string
+): ConsumerRegistryResult {
   if (!existsSync(contractPath)) {
     return { registry: null, optedIn: false, contractFound: false };
   }
