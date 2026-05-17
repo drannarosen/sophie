@@ -1,0 +1,56 @@
+/* RepVerbal — prose representation rendered inside a `<MultiRep>` card.
+ *
+ * Per ADR 0005, all colors/spacings flow through @sophie/theme tokens
+ * (no hex/rgb literals). The role-pill visual idiom matches the
+ * pill vocabulary established by PR-2 (interactive-figure design spec
+ * + role/pill/space tokens) so the Reasoning OS components share a
+ * consistent visual vocabulary.
+ *
+ * RepVerbal is one of three sibling primitives (verbal / equation /
+ * figure); they share the .rep / .pill / .body class names so the
+ * MultiRep parent can use a common CSS grid cell shape.
+ */
+
+.rep {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sophie-space-2);
+  padding: var(--sophie-space-3);
+  border-radius: var(--sophie-radius-sm);
+  background: var(--sophie-surface-1);
+  color: var(--sophie-text);
+  font-family: var(--sophie-font-sans);
+}
+
+.pill {
+  align-self: flex-start;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  background: color-mix(
+    in oklch,
+    var(--sophie-brand-violet) 14%,
+    var(--sophie-surface-1)
+  );
+  color: var(--sophie-brand-violet-text);
+  font-size: var(--sophie-text-xs);
+  font-weight: var(--sophie-weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+}
+
+.body {
+  font-size: var(--sophie-text-body);
+  line-height: var(--sophie-leading-prose);
+}
+
+.body :is(p, ul, ol) {
+  margin-block: var(--sophie-space-2);
+}
+
+.body > :first-child {
+  margin-block-start: 0;
+}
+
+.body > :last-child {
+  margin-block-end: 0;
+}
