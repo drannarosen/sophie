@@ -30,6 +30,9 @@ export const tokens = {
       info: v("status-info"),
       neutral: v("status-neutral"),
     },
+    role: {
+      observable: v("role-observable"),
+    },
     validation: {
       unvalidated: {
         stripe: v("validation-unvalidated-stripe"),
