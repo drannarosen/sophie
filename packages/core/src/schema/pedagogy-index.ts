@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { AuditFindingSchema } from "./audit.ts";
+import { MultiRepIndexEntrySchema } from "./multirep.ts";
 import { NonEmptyString, Slug } from "./primitives.ts";
 import { ValidationSchema } from "./validation.ts";
 
@@ -333,6 +334,14 @@ export const PedagogyIndexSchema = z.object({
   objectives: z.array(ObjectiveEntrySchema).readonly(),
   /** Per-chapter inline-ref callsites — populated by the extractor for the audit pass. */
   inlineRefUsages: z.array(InlineRefUsageEntrySchema).readonly(),
+  /**
+   * Per-chapter MultiRep concept-binding entries (ADR 0043 +
+   * 2026-05-17 design hardening). Populated by `extractMultiReps`;
+   * consumed by audit invariants MR1–MR4/MR6 (and NR1–NR4 via the
+   * Notation Registry loader, PR-δ). Defaults to `[]` so consumer
+   * apps that don't author MultiRep bindings yet keep working.
+   */
+  multiReps: z.array(MultiRepIndexEntrySchema).readonly().default([]),
   /**
    * Per-contract validation entries (ADR 0056). One entry per ADR
    * (`docs/website/decisions/*.md`) and per reference doc

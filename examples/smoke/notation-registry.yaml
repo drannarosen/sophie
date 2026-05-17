@@ -1,0 +1,52 @@
+# Minimal Notation Registry for the smoke target.
+# See docs/website/reference/notation-registry-schema.md +
+# docs/website/decisions/0043-notation-registry-multirep-alignment-audit.md
+# + docs/plans/2026-05-17-multirep-design.md.
+#
+# Concepts declared here are referenced by <MultiRep concept="…"> in
+# the smoke chapter content. The MR1 audit ERROR fires when a chapter
+# binds a concept that isn't in this registry. Per the 2026-05-17
+# design hardening §D3, the optional `epistemic_role:` field lifts
+# ADR 0058's 8-role taxonomy to the canonical concept-catalog —
+# every Reasoning OS component that binds a concept reads its role
+# from here, not from per-instance props.
+
+version: "1"
+course: "smoke"
+last_updated: "2026-05-17"
+
+concepts:
+  - id: "celestial-sphere"
+    verbal_label: "celestial sphere"
+    canonical_symbol: "S"
+    latex: "S"
+    epistemic_role: "model"
+    units: "(dimensionless — geometric construct)"
+    introduced_in: "01-foundations/measuring-the-sky"
+    notes: >-
+      The celestial sphere is the idealized 2D surface onto which all
+      stars are projected for coordinate purposes. It's a model, not an
+      observable — the role binding helps Reasoning OS surfaces
+      distinguish "what we posit" from "what we measure".
+
+  - id: "apparent-magnitude"
+    verbal_label: "apparent magnitude"
+    canonical_symbol: "m"
+    latex: "m"
+    epistemic_role: "observable"
+    units: "(dimensionless — log-scale brightness)"
+    code_alias: "m"
+    common_confusions:
+      - symbol: "M"
+        meaning: "absolute magnitude — intrinsic brightness, NOT apparent"
+        concept_ref: "absolute-magnitude"
+    introduced_in: "01-foundations/measuring-the-sky"
+
+  - id: "angular-size"
+    verbal_label: "angular size"
+    canonical_symbol: "\\theta"
+    latex: "\\theta"
+    epistemic_role: "observable"
+    units: "arcsec (small-angle); degrees (wide-field)"
+    code_alias: "theta_arcsec"
+    introduced_in: "01-foundations/measuring-the-sky"

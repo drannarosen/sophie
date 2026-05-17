@@ -40,6 +40,7 @@ function makeEmptyIndex(): PedagogyIndex {
     inlineRefUsages: [],
     contractValidations: [],
     extractorFindings: [],
+    multiReps: [],
   };
 }
 

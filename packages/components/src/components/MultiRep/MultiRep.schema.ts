@@ -17,16 +17,18 @@ import { z } from "zod";
  *
  * `conceptLabel` carries the registry concept's `verbal_label` for
  * the framed-card header ("orbital radius" rather than the
- * "orbital-radius" slug). PR-γ injects it via registry lookup; in
- * Storybook and tests it's passed directly. v1 falls back to the
- * `concept` slug when `conceptLabel` is absent.
+ * "orbital-radius" slug). PR-δ (the audit + registry-loader sprint)
+ * will inject it via registry lookup at MDX-parse time; in Storybook
+ * and tests it's passed directly. v1 (this sprint) renders the
+ * `concept` slug as the header fallback when `conceptLabel` is
+ * absent — the smoke fixture exercises that fallback path.
  */
 export const MultiRepPropsSchema = z.object({
   /** Registered concept `id` from `notation-registry.yaml`. */
   concept: Slug,
   /**
    * The concept's human-readable label (registry `verbal_label`).
-   * PR-γ injects via registry lookup; falls back to `concept` slug
+   * PR-δ's registry loader will inject; falls back to `concept` slug
    * when absent.
    */
   conceptLabel: z.string().min(1).optional(),

@@ -58,6 +58,7 @@ function emptyIndexShape(): PedagogyIndex {
     misconceptions: [],
     contractValidations: [],
     extractorFindings: [],
+    multiReps: [],
   };
 }
 

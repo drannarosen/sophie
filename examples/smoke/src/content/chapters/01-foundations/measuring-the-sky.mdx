@@ -9,7 +9,14 @@ description: "(stub — placeholder for nav demo) Coordinates, magnitudes, angul
 tags: ["foundations", "coordinates"]
 ---
 
-import { LearningObjectives, Objective } from "@sophie/components";
+import {
+  LearningObjectives,
+  MultiRep,
+  Objective,
+  RepEquation,
+  RepFigure,
+  RepVerbal,
+} from "@sophie/components";
 
 This chapter is a **placeholder** wired into the Sophie smoke target so
 the sidebar module/chapter navigation has a real second chapter to
@@ -34,5 +41,27 @@ sphere; magnitudes describe how much of its light reaches us; angular
 sizes encode resolution. Each measurement is a *number with a unit*,
 and each unit will, eventually, demand a careful answer to *which
 reference frame*, *whose telescope*, and *what wavelength range*.
+
+## Apparent magnitude
+
+The most basic observable for any star is how bright it appears. Bind
+the concept across its representations before the real chapter unpacks
+it:
+
+<MultiRep concept="apparent-magnitude">
+  <RepVerbal>
+    Apparent magnitude *m* is how bright a star looks from Earth — a
+    log-scale measurement defined so that brighter sources have
+    *smaller* numbers. The full Moon is roughly *m* = −13; the
+    faintest naked-eye stars are *m* ≈ 6.
+  </RepVerbal>
+  <RepEquation refKey="pogson-magnitude" symbol="m" />
+</MultiRep>
+
+(The above MultiRep is the smoke target's exercise of the v1
+`<RepVerbal>` + `<RepEquation>` binding shape; it intentionally omits
+the chapter-author's job of also declaring the `<KeyEquation
+id="pogson-magnitude">` block — PR-γ's audit-time resolution checks
+land in PR-δ, when MR2/MR4 invariants surface unresolved refKeys.)
 
 The real chapter would unpack each of those threads.

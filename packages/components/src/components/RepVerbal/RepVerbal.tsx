@@ -5,13 +5,18 @@ import type { RepVerbalProps } from "./RepVerbal.schema.ts";
  * RepVerbal — prose representation child of `<MultiRep>`.
  *
  * Two render modes:
- * - **Author mode** (used in MDX source): inline children rendered
- *   verbatim. The build-time `transformMultiRep` extractor (PR-γ)
- *   walks these and serializes the prose into a `body` string on
- *   the parent's `reps` array.
- * - **Extractor-fed mode** (used by `<MultiRep>` runtime + Storybook
- *   fixtures): `body` prop rendered as a paragraph. Either mode is
- *   valid; the renderer uses whichever is present.
+ * - **Author mode** (used in MDX source + author-side Storybook):
+ *   inline `children` rendered verbatim as React nodes. The build-time
+ *   `transformMultiRep` extractor walks these and serializes the prose
+ *   into a `body` HTML string on the parent's `reps` array.
+ * - **Extractor-fed mode** (used at runtime after `transformMultiRep`
+ *   mutates the AST): `body` is the HTML string `renderChildrenToHtml`
+ *   produced from the authored MDX children — inline emphasis, links,
+ *   code spans already serialized. Injected via `dangerouslySetInnerHTML`
+ *   so the markup survives the round-trip; matches the `<Objective>`
+ *   precedent (`Objective.tsx`'s body rendering). Without this, React
+ *   escapes the HTML string and the reader sees literal `<em>m</em>`
+ *   text instead of italicized *m*.
  *
  * Per ADR 0058, RepVerbal carries no `epistemicRole` — role lives on
  * the bound concept's Notation Registry entry per the 2026-05-17
@@ -21,7 +26,17 @@ export function RepVerbal({ children, body }: RepVerbalProps) {
   return (
     <div className={styles.rep} data-rep-kind='verbal'>
       <span className={styles.pill}>verbal</span>
-      <div className={styles.body}>{children ?? body}</div>
+      {children !== undefined ? (
+        <div className={styles.body}>{children}</div>
+      ) : body !== undefined ? (
+        <div
+          className={styles.body}
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: body is build-time-serialized author MDX from renderChildrenToHtml (same trust boundary as <Objective>'s body) — never runtime input
+          dangerouslySetInnerHTML={{ __html: body }}
+        />
+      ) : (
+        <div className={styles.body} />
+      )}
     </div>
   );
 }
