@@ -15,7 +15,7 @@ describe("<InlineMath>", () => {
   });
 
   test("renders in inline (not display) mode by default", () => {
-    const { container } = render(<InlineMath>{String.raw`E = mc^2`}</InlineMath>);
+    const { container } = render(<InlineMath>E = mc^2</InlineMath>);
     // KaTeX display mode emits .katex-display; inline mode does not.
     expect(container.querySelector(".katex-display")).toBeNull();
     expect(container.querySelector(".katex")).not.toBeNull();
@@ -30,10 +30,17 @@ describe("<InlineMath>", () => {
     expect(container.querySelector(".katex-error, .katex")).not.toBeNull();
   });
 
-  test("sets aria-label to the LaTeX source for screen readers", () => {
+  test("emits KaTeX MathML annotation for screen readers (not aria-label)", () => {
+    // KaTeX `output: "html"` emits both a visual `.katex-html` block and a
+    // hidden `.katex-mathml` block consumed by AT. Per ADR 0004 + EqRef
+    // precedent, we let MathML do the screen-reader work — adding aria-label
+    // on a bare <span> with no role is prohibited by WAI-ARIA (axe-core
+    // aria-prohibited-attr) and would shadow the richer MathML structure.
     const tex = String.raw`B_\lambda(T)`;
     const { container } = render(<InlineMath>{tex}</InlineMath>);
-    const span = container.querySelector("span[aria-label]");
-    expect(span?.getAttribute("aria-label")).toBe(tex);
+    expect(container.querySelector(".katex-mathml")).not.toBeNull();
+    expect(container.querySelector(".katex-mathml math")).not.toBeNull();
+    // No aria-label on the wrapping span (would be aria-prohibited-attr).
+    expect(container.querySelector("span[aria-label]")).toBeNull();
   });
 });

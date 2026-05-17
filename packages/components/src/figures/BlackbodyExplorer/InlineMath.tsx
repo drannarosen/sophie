@@ -30,14 +30,16 @@ export function InlineMath({ children }: InlineMathProps) {
       katex.renderToString(children, {
         displayMode: false,
         throwOnError: false,
-        output: "html",
+        // htmlAndMathml: the .katex-mathml block is consumed by assistive
+        // technologies; the .katex-html block paints the visual glyphs.
+        // Dropping the MathML half breaks math screen-reader UX. See ADR 0004.
+        output: "htmlAndMathml",
       }),
     [children]
   );
 
   return (
     <span
-      aria-label={children}
       // biome-ignore lint/security/noDangerouslySetInnerHtml: tex is rendered by katex.renderToString from author-controlled component-internal LaTeX source (not user-supplied content). See EqRef/Search precedent + ADR 0030.
       dangerouslySetInnerHTML={{ __html: html }}
     />

@@ -11,6 +11,7 @@ import {
 } from "./BlackbodyExplorer.schema.ts";
 import { blackbodyToSrgb } from "./chromaticity.ts";
 import { spectralClassification } from "./classification.ts";
+import { InlineMath } from "./InlineMath.tsx";
 import {
   nmToCm,
   planckLambda,
@@ -58,11 +59,11 @@ function buildCurveData(
   return samples;
 }
 
-function formatScientific(value: number): string {
+function formatScientificTex(value: number): string {
   if (value === 0) return "0";
   const exponent = Math.floor(Math.log10(Math.abs(value)));
   const mantissa = value / 10 ** exponent;
-  return `${mantissa.toFixed(2)} × 10^${exponent}`;
+  return `${mantissa.toFixed(2)} \\times 10^{${exponent}}`;
 }
 
 interface SpectrumPlotProps {
@@ -288,7 +289,9 @@ export function BlackbodyExplorer(rawProps: BlackbodyExplorerProps) {
         <div className={styles.readoutGroup} data-epistemic-role='inference'>
           <span className={styles.readoutLabel}>Wien peak (inferred)</span>
           <span className={styles.readoutValue} data-testid='wien-peak-readout'>
-            λ_peak = {lambdaPeakNm.toFixed(0)} nm
+            <InlineMath>
+              {`\\lambda_\\text{peak} = ${lambdaPeakNm.toFixed(0)}\\,\\mathrm{nm}`}
+            </InlineMath>
           </span>
         </div>
 
@@ -297,7 +300,9 @@ export function BlackbodyExplorer(rawProps: BlackbodyExplorerProps) {
             Stefan-Boltzmann flux (inferred)
           </span>
           <span className={styles.readoutValue} data-testid='flux-readout'>
-            F = {formatScientific(flux)} erg s⁻¹ cm⁻²
+            <InlineMath>
+              {`F = ${formatScientificTex(flux)}\\,\\mathrm{erg\\,s^{-1}\\,cm^{-2}}`}
+            </InlineMath>
           </span>
         </div>
 
@@ -330,7 +335,9 @@ export function BlackbodyExplorer(rawProps: BlackbodyExplorerProps) {
             </label>
             {showRJ && (
               <span id={`${rjId}-hint`} className={styles.validityHint}>
-                Valid only at long wavelength (λ ≫ λ_peak); diverges in the UV.
+                Valid only at long wavelength (
+                <InlineMath>{String.raw`\lambda \gg \lambda_\text{peak}`}</InlineMath>
+                ); diverges in the UV.
               </span>
             )}
 
@@ -346,8 +353,9 @@ export function BlackbodyExplorer(rawProps: BlackbodyExplorerProps) {
             </label>
             {showWien && (
               <span id={`${wienId}-hint`} className={styles.validityHint}>
-                Valid only at short wavelength (λ ≪ λ_peak); underpredicts in
-                the IR.
+                Valid only at short wavelength (
+                <InlineMath>{String.raw`\lambda \ll \lambda_\text{peak}`}</InlineMath>
+                ); underpredicts in the IR.
               </span>
             )}
           </div>
