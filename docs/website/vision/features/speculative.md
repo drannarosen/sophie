@@ -153,3 +153,71 @@ Don't build a separate artifact when one already does the job.
 - Promotion criteria: TDRs ship and don't capture some
   notebook-shaped need we can't yet articulate. Probably never
   promotes.
+
+---
+
+## S7. Lightweight engagement analytics for chapter authors
+
+**What it is.** A page-view-level analytics layer for live Sophie
+courses, separate from B9's outcome-side research telemetry. The
+canonical implementation would be Umami Cloud's free tier (or
+self-hosted Umami): cookie-less, no-PII, no consent-banner-required
+page-view + time-on-page metrics. The signal it carries: "which
+chapters got visited," "average time-on-chapter," "bounce rate per
+chapter." Author-facing only — answers the "is the chapter landing
+at all?" question without per-student tracking.
+
+**Why it might matter.** Cheap visibility for chapter authors to
+spot regressions ("Chapter 11 dropped from 28 visits to 12"). Useful
+informal evidence for the teaching-effectiveness portion of a
+tenure file ("students engaged with interactive figures at X% rate
+across the semester"). Privacy-respecting by design, so adding it
+doesn't compromise Sophie's local-first posture (per ADR 0007). One
+hour of setup; ~$0/month at any plausible scale (free tier covers
+thousands of students before paid-tier).
+
+**Why it might not.** Three real costs that aren't on the bill:
+
+1. **Cognitive overhead.** Even free dashboards add a thing to
+   periodically check. For a pre-tenure astrophysicist whose binding
+   constraint is research time, not money, an end-of-semester
+   anonymous survey (Google Form, 5 min for students) gives richer
+   *qualitative* signal than 14 weeks of quantitative dashboards.
+2. **Gross-engagement-metrics rarely change decisions.** Page-view
+   counts at 30 students don't reach statistical significance for
+   anything. Author's own classroom observations + TA reports +
+   end-of-semester survey already cover the "is this landing?"
+   question at higher information density.
+3. **Wrong stepping stone if/when DBER becomes part of the tenure
+   case.** B9's structured outcome telemetry is the real research
+   substrate. Umami-style page metrics aren't a precursor — they're
+   an orthogonal layer that adds no infrastructure value to B9 if
+   B9 ever ships.
+
+Explicitly distinct from:
+
+- **B9** (Learning Telemetry, outcome-side measurement): structured
+  per-submission correctness, calibration deltas, time-on-task
+  joined to chapter-version, IRB-gated. Research-grade.
+- **S5** (Cohort comparison + SoTL analytics): multi-cohort
+  longitudinal claims. Far-future.
+
+**Estimated cost.** Trivially small — 1 hour to deploy Umami Cloud,
+zero ongoing. The cost is attention, not engineering.
+
+**Status.**
+- 2026-05-17 — surfaced + explicitly skip-for-now during a session
+  about how Anna would collect engagement data for ASTR 201 fa26.
+  Anna recalibrated the framing: astrophysicist using Sophie as
+  double-duty teaching infrastructure, not committed to DBER. End-
+  of-semester anonymous survey covers the actual need; analytics
+  adds attention-cost without proportional value at 30-student
+  scale.
+- Promotion criteria: any one of
+  (a) class scales beyond ~100 students (informal awareness no
+      longer feasible),
+  (b) Anna's chair-mentor conversation confirms DBER/teaching-infra
+      counts toward tenure AND survey-only evidence proves
+      insufficient,
+  (c) Sophie hosts a course with shared instructor team where
+      asynchronous engagement signal is the only viable check.
