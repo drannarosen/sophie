@@ -11,7 +11,7 @@ tags:
   - lds
 validation:
   status: in-progress
-  last_validated_date: "2026-05-16"
+  last_validated_date: "2026-05-17"
   evidence:
     - kind: review
       ref: docs/reviews/2026-05-14-adrs-0040-0045-foundation-review.md
@@ -24,11 +24,15 @@ validation:
       ref: docs/website/reference/multirep-component.md
       date: "2026-05-14"
       notes: "MultiRep component reference doc shipped."
+    - kind: manual
+      ref: docs/plans/2026-05-17-multirep-design.md
+      date: "2026-05-17"
+      notes: "Phase 1 design hardening locked: render shape, pedagogy-index entry shape, ADR 0058 composition (epistemic_role on registry concept), RepCode deferral, PR cadence. See Revisions §R1–R4 below."
     - kind: deployment
       ref: null
       date: null
-      notes: "Notation-registry audit invariants + runtime alignment checker pending."
-  notes: "Schema + reference shape stable; audit + runtime alignment-checker code lands in follow-up PRs."
+      notes: "Notation-registry audit invariants + runtime alignment checker pending. v1 implementation sprint scheduled (Phase 3 per session plan)."
+  notes: "Schema + reference shape stable; 2026-05-17 design hardening locks the v1 ship-shape (3 Rep children, framed-card+grid render, epistemic_role on registry); audit + runtime code lands in Phase 3 sprint PRs α–ε."
 ---
 
 # ADR 0043: Notation Registry + MultiRep + Representation Alignment Audit
@@ -697,3 +701,102 @@ follow real authoring experience.
 
 Full citations in [`reference/teaching-moves.md`](../reference/teaching-moves.md)
 under *multiple-representations-binding*.
+
+## Revisions (2026-05-17 — Reasoning OS Core Phase 1 hardening)
+
+The Reasoning OS pedagogical-core sprint surfaced two deltas to the
+locked ADR 0043 contract while resolving the surfaces the 2026-05-14
+hardening pass explicitly deferred (rendering shape, pedagogy-index
+entry shape, composition with ADR 0058). Full design lockup at
+[`docs/plans/2026-05-17-multirep-design.md`](../../plans/2026-05-17-multirep-design.md).
+
+### R1 — `<RepCode>` deferred from v1 contract
+
+v1 of the MultiRep sprint ships `<RepVerbal>` + `<RepEquation>` +
+`<RepFigure>` only. `<RepCode>` requires `<CodeCell>` (ADR 0018) as
+a binding target for the in-chapter mode; `<CodeCell>` is not in
+scope for the Reasoning OS core sprint and is not yet shipped as a
+component. Rather than force `<RepCode>` to ship external-only at v1
+(8 required attributes per binding is a heavy authoring tax with no
+in-chapter alternative), the v1 contract is explicitly a subset of
+the locked ADR 0043 shape.
+
+Audit-invariant consequence: **MR3 + MR5 are deferred with `<RepCode>`**.
+v1 audit surface = NR1–NR4 + MR1, MR2, MR4, MR6 (8 invariants total).
+MR3 + MR5 ship in the follow-on sprint that brings `<RepCode>` +
+`<CodeCell>` together.
+
+The deferral is non-breaking: `SerializedRep` is a Zod
+`discriminatedUnion("kind", ...)` at v1, so adding `kind: "code"`
+later is a one-line schema bump. The runtime renderer uses
+`default:` + `console.warn` (not `throw`) on unknown kinds, so older
+runtimes encountering v2 RepCode bindings degrade gracefully.
+
+### R2 — Notation Registry concept gains optional `epistemic_role:` field (ADR 0058 binding)
+
+The Notation Registry concept schema (§Artifact 1) gains an optional
+field:
+
+```yaml
+concepts:
+  - id: "orbital-radius"
+    verbal_label: "orbital radius"
+    canonical_symbol: "r"
+    epistemic_role: "observable"        # NEW — ADR 0058 enum, optional
+    ...
+```
+
+`epistemic_role` references the 8-role taxonomy locked in
+[ADR 0058](./0058-epistemic-component-contract.md). The decision lifts
+role from "a per-component declaration" to "a per-concept declaration
+in the canonical concept catalog." Rationale:
+
+- Role is a property of the *concept*, not of any single chapter's
+  invocation of it. Lifting to the registry avoids per-MultiRep
+  re-declaration.
+- **The registry becomes the canonical concept-catalog for ALL
+  Reasoning OS components.** Future composites (`<OMIFlow>`,
+  `<UncertaintyLens>`, `<AssumptionStack>` per ADR 0058's A8–A11
+  registry) bind to the same source — the schema is the long-lived
+  contract for the entire Reasoning OS surface, not a MultiRep-specific
+  artifact.
+- AI authoring per ADR 0030 can query "show me every `observable`
+  concept introduced in Module 2" without consulting a separate
+  lookup table.
+
+`<MultiRep>` itself carries no `epistemicRole` prop; the extractor /
+audit / renderer resolve role via registry lookup. The field is
+optional at v1 — concepts without declared role are valid (audit
+treats as "unknown role"; consumers gracefully degrade).
+
+This revision is non-breaking: `NotationRegistrySchema` adds one
+optional field. Existing registries without the field continue to
+parse and validate.
+
+### R3 — `<RepIntuition>` drop (2026-05-14) re-confirmed
+
+The 2026-05-14 hardening dropped the `<RepIntuition>` child primitive.
+The 2026-05-17 design hardening re-confirmed: intuition framing
+belongs in `<RepVerbal>` prose (use a leading "Think of this as…"
+sentence). No `<RepIntuition>` component ships at any v1.
+
+### R4 — Render shape locked: framed card + responsive grid + role pills + canonical order
+
+The "Reader-facing behavior" section of the multirep-component
+reference was explicitly TBD ("design TBD in follow-up code PR"). v1
+locks:
+
+- **Framed binding card** with concept `verbal_label` inset into the
+  top border; anchor `mr-<concept-slug>`
+- **Responsive CSS Grid** inside the card (side-by-side on wide,
+  single-column stack on narrow / print)
+- **Role pill per child** (`[verbal]` / `[equation]` / `[figure]`)
+- **Canonical render order**: verbal → equation → figure regardless
+  of source order
+- `<MultiRep order>` and `<MultiRep display>` props accepted at v1
+  (renderer ignores; reserved for v2 alternative modes)
+
+The "layout" prop's `"toggle"` / `"side-by-side"` / `"stack"` enum
+documented in the reference is superseded — v1 ships the responsive
+grid uniformly and the `display=` prop is reserved (no-op) for v2
+alternative modes.

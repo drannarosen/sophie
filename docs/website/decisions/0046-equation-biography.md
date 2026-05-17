@@ -9,7 +9,7 @@ tags:
   - lds
 validation:
   status: in-progress
-  last_validated_date: "2026-05-16"
+  last_validated_date: "2026-05-17"
   evidence:
     - kind: manual
       ref: docs/website/reference/equation-biography-schema.md
@@ -19,11 +19,15 @@ validation:
       ref: packages/components/src/components/KeyEquation/KeyEquation.test.tsx
       date: "2026-05-12"
       notes: "Underlying KeyEquation component tested; biography frontmatter not yet exercised."
+    - kind: manual
+      ref: docs/plans/2026-05-17-equation-biography-design.md
+      date: "2026-05-17"
+      notes: "Phase 1 design hardening locked: explicit epistemicRole const per biography component (greenfield ADR 0058 binding), Wien's law smoke fixture, PR cadence α→β→γ→δ. See Revisions §R1–R6 below."
     - kind: deployment
       ref: null
       date: null
-      notes: "Per-equation biography page rendering + provenance audit invariants pending."
-  notes: "Schema + reference doc stable; runtime biography surface + audit invariants not yet shipped."
+      notes: "6 biography components + render-surface updates (EqRef hover, ChapterEquations, CourseEquations) + transformEquationBiography + E7/E8/E9 audit invariants pending. v1 implementation sprint scheduled (Phase 3 per session plan)."
+  notes: "Schema + reference doc stable; 2026-05-17 design hardening locks the v1 ship-shape (6 biography children with hardcoded epistemicRole const, bundled render updates in PR-β, Wien's law smoke fixture); runtime biography surface + E7/E8/E9 audit invariants land in Phase 3 sprint PRs α–δ."
 ---
 
 # ADR 0046: Equation Biography
@@ -649,3 +653,124 @@ posture for v1.
 - [equation-biography-schema.md](../reference/equation-biography-schema.md)
   — full schema specification with per-component shape, render-
   surface details, and the three audit invariants.
+
+## Revisions (2026-05-17 — Reasoning OS Core Phase 1 hardening)
+
+The Reasoning OS pedagogical-core sprint locked one substantive new
+decision (explicit `epistemicRole` const per biography component) and
+re-confirmed several existing locks for hardening clarity. Full design
+lockup at [`docs/plans/2026-05-17-equation-biography-design.md`](../../plans/2026-05-17-equation-biography-design.md).
+
+### R1 — Each biography component declares `epistemicRole` as hardcoded const (new ADR 0058 binding)
+
+Each biography child declares a fixed `epistemicRole` value in its
+component definition — NOT an author-set prop. PedagogyIndex entries
+carry the role explicitly. Authors don't see or set the role; the
+schema/extractor surfaces it for consumers.
+
+Role mapping per ADR 0058's 8-role taxonomy:
+
+| Component | epistemicRole |
+|---|---|
+| `<Observable>` | `"observable"` |
+| `<Assumption>` | `"assumption"` |
+| `<BreaksWhen>` | `"approximation"` (validity-domain marker) |
+| `<CommonMisuse>` | (no own role — cross-refs the misconception graph; the linked end carries `"misconception"`) |
+| `<Units>` | (no role — descriptive metadata per ADR 0058's "components that don't fit any role are likely chrome") |
+| `<KeyEquation>` math body | `"model"` (per ADR 0058 §3 lookup table) |
+
+Rationale:
+
+- **Greenfield**: no retrofit cost. Biography children don't ship
+  yet; declaring `epistemicRole` at the component-definition level is
+  one extra const per component.
+- **Code-grounds the ADR 0058 §3 lookup table**: the component is the
+  source of truth instead of a documentation-only mapping. Reduces
+  drift risk between docs and code.
+- **Unlocks the queryable epistemic surface**: consumers (audit, AI
+  authoring, theme tokens) read a uniform field from the pedagogy
+  index. Trivial v2 queries: "show me every `assumption` declared in
+  Module 4" or "every `approximation` (BreaksWhen) across the course."
+- **Pairs with MultiRep's registry-as-catalog decision** (ADR 0043 §R2
+  in its 2026-05-17 hardening): registry carries concept-level role;
+  components carry component-level role. Together they complete the
+  Reasoning OS role-binding surface.
+
+This is the **first greenfield surface to take the explicit-role-
+declaration path** from ADR 0058 §2's "optional, additive" stance —
+biography children declare role at v1 ship rather than via the
+implicit lookup table.
+
+Schema consequence: `PedagogyIndex.equations[i].biography.observable.epistemicRole`,
+`.biography.assumptions[j].epistemicRole`,
+`.biography.breaks_when.epistemicRole` are **required fields** at v1
+(value supplied by extractor from component const). `<Units>` and
+`<CommonMisuse>` entries do not carry the field. Unlocks the
+uniform-query layer trivially at v2.
+
+### R2 — Rendering updates bundled into PR-β
+
+The 6 biography components have no own UI — they serialize children
+into KeyEquation's pedagogy-index schema. The user-visible payoff is
+the rendering updates to three existing components: `<EqRef>` hover
+preview (compact summary), `<ChapterEquations>` (full + `<details>`
+disclosure for misuse lists), `<CourseEquations>` (full).
+
+PR-β bundles the 6 new biography components + the three render-surface
+updates as a single coherent family deliverable. Splitting rendering
+into PR-β' would ship biography components with no consumer.
+
+### R3 — Smoke fixture locked as Wien's law
+
+Per the ADR's own "Suggested authoring order for ASTR 201 Module 1:
+Wien's law first (most fully-formed biography case)." Wien's law
+exercises every biography child (2 assumptions, 1 BreaksWhen, 1
+CommonMisuse, 2 Units, 1 Observable) and renders end-to-end at all
+three surfaces.
+
+Inverse-square law gets its biography in Phase 4 (PR-7 chapter
+capstone for the Reasoning OS Core arc) — separates the
+EquationBiography sprint's smoke fixture from the chapter-capstone
+deliverable.
+
+### R4 — Re-confirmations from prior locks
+
+The 2026-05-17 hardening pass re-confirmed several decisions already
+in ADR 0046 §Decision text, calling them out explicitly for
+implementation clarity:
+
+- All 6 biography children remain **optional** (E7 stays INFO, not
+  WARNING / ERROR — authoring incrementally is supported)
+- **Per-equation `/equations/<slug>` page deferred** to a future
+  "Equation Pages" ADR; CourseEquations covers v1
+- **No Pedagogy Contract gate** — per-equation opt-in by authoring;
+  the three E-prefix invariants only fire when biography children
+  present
+
+### R5 — Forward-compat seams baked into v1
+
+Reserved schema slots for non-breaking v2 evolution:
+
+- `<Assumption type>` is `z.string().optional()` at v1; v2 may
+  promote to `assumption-index.ts` enum (back-compat via
+  `z.enum([...]).or(z.string())`)
+- Reserve `concept_ref?: z.array(z.string()).optional()` on
+  `<Observable>` / `<Assumption>` / `<BreaksWhen>` entry schemas
+  (unused at v1; v2 may add explicit NR linkage)
+- Reserve `citation_doi?: z.string().optional()` +
+  `citation_bibtex?: z.string().optional()` on `<CommonMisuse>` entry
+  schema (unused at v1; v2 fills with structured citations)
+- Anchor granularity is equation-level (`eq-wiens-law`) at v1; v2
+  may add sub-equation anchors (`eq-wiens-law/breaks-when`) per ADR
+  0045 without schema break
+
+### R6 — PR cadence: α → β → γ → δ (no ε)
+
+| PR | Subject |
+|----|---------|
+| α  | Schema for 6 biography sub-schemas + aggregate `BiographySchema` + extend `KeyEquationSchema` with optional `biography` field |
+| β  | 6 biography components (each with hardcoded `epistemicRole` const where applicable) + extend `<KeyEquation>` walker + rendering updates to `<EqRef>` + `<ChapterEquations>` + `<CourseEquations>` + tests + stories |
+| γ  | `transformEquationBiography` extractor + extend `pedagogy-index-extractor.ts` + Wien's law smoke fixture |
+| δ  | E7 + E8 + E9 audit invariants + per-invariant tests |
+
+No PR-ε — rendering happens in existing surfaces, no aggregator needed.

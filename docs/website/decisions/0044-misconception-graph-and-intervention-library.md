@@ -10,7 +10,7 @@ tags:
   - lds
 validation:
   status: in-progress
-  last_validated_date: "2026-05-16"
+  last_validated_date: "2026-05-17"
   evidence:
     - kind: test
       ref: packages/astro/src/lib/pedagogy-audit.test.ts
@@ -27,11 +27,15 @@ validation:
     - kind: manual
       ref: docs/website/reference/intervention-library.md
       date: "2026-05-14"
+    - kind: manual
+      ref: docs/plans/2026-05-17-intervention-design.md
+      date: "2026-05-17"
+      notes: "Phase 1 design hardening locked: 12-canonical-intervention library, sub-card render shape, standalone interventions, MG4 console-table format, I4 + MisconceptionGraphPage deferrals, addresses=string|string[] forward-compat. See Revisions §R1–R6 below."
     - kind: deployment
       ref: null
       date: null
-      notes: "Intervention component + MG3/MG4/I1–I4 audit invariants pending; multi-chapter graph at scale deferred to ASTR 201 fa26."
-  notes: "Graph schema + first audit pair shipped; intervention runtime + remaining audit invariants land in follow-up PRs."
+      notes: "<Intervention> component + intervention-index.ts + MG3/MG4/I1–I3 audit invariants pending. v1 implementation sprint scheduled (Phase 3 per session plan, β → γ → δ cadence). I4 deferred until ADR 0041 move-index.ts ships; MisconceptionGraphPage deferred to v2; multi-chapter graph at scale deferred to ASTR 201 fa26."
+  notes: "Graph schema + first audit pair shipped; 2026-05-17 design hardening locks the v1 ship-shape (12 canonical interventions, sub-card render, no PR-α/PR-ε); intervention runtime + MG3/MG4/I1–I3 audit invariants land in Phase 3 sprint PRs β–δ."
 ---
 
 # ADR 0044: Misconception Graph + Intervention Library
@@ -673,3 +677,110 @@ Sophie LDS keeps the universal scope.
   (S. Vosniadou, ed.), pp. 61–82. Routledge.
 
 Full citations + DOIs in `reference/intervention-library.md` per-entry.
+
+## Revisions (2026-05-17 — Reasoning OS Core Phase 1 hardening)
+
+The Reasoning OS pedagogical-core sprint surfaced two scope deltas to
+ADR 0044's v1 contract and locked the `<Intervention>` rendering shape
+that ADR 0044 explicitly deferred. Full design lockup at
+[`docs/plans/2026-05-17-intervention-design.md`](../../plans/2026-05-17-intervention-design.md).
+
+### R1 — `<MisconceptionGraphPage>` route deferred from v1 to v2
+
+ADR 0044 §Consequences "For Sophie-the-platform (future code PR)"
+lists `<MisconceptionGraphPage>` at `/about-this-course/misconception-graph/`
+as a v1 follow-up code-PR deliverable. The Reasoning OS Core Phase 1
+sprint defers it to v2:
+
+- Graph visualization is non-trivial design (React Flow? D3? mermaid?
+  static SVG?) and is a separate concern from "graph data exists and
+  is queryable."
+- The chapter capstone (PR-7, Phase 4) doesn't depend on the route —
+  misconception + intervention pairings render inline in chapter
+  context.
+- The data the page would consume already lives in `PedagogyIndex`
+  post-PR-γ; v2 ships a new route + viz component with zero schema or
+  extractor change.
+
+Per ADR 0023 vertical-slice-first: ship the lean component + audit at
+v1; layer the route on top when the graph viz design earns its own
+sprint.
+
+### R2 — I4 audit deferred until ADR 0041 `move-index.ts` ships
+
+I4 (every canonical intervention's `move:` field resolves to a real
+move in `move-index.ts`) requires `move-index.ts` to exist. ADR 0041
+introduced `move-index.ts` as a planned platform-level catalog
+parallel to `intervention-index.ts`, but `move-index.ts` is not in
+scope for the Reasoning OS Core sprint.
+
+Forward-compat seam: **every canonical intervention in
+`intervention-index.ts` declares a `move:` field at v1** (per ADR 0041
+hardening). The field is unverified at v1; I4 turns on when
+`move-index.ts` ships, with no schema or component change. The
+`move:` field is the seam declared now to avoid a breaking change
+later.
+
+### R3 — `<Intervention>` render shape locked: sub-card nested in misconception Aside
+
+ADR 0044 specified `<Intervention>` as a children-mode component but
+did not lock the visual treatment. v1 ships:
+
+- **Distinct sub-card inside misconception Aside** (when nested) with:
+  - **Type-pill header** (e.g., `[contrasting-cases]`)
+  - **Citation chip** (clickable → intervention-library reference)
+  - **Body prose**
+  - **Optional `limits` sub-section** rendered as italicized "Limits: …"
+    final block (surfaces Clement 1993's explicit-limits-on-bridging-
+    analogies recommendation; I3 INFO nudges this)
+- **Standalone form** (outside Aside, with `addresses="<misc-slug>"`)
+  renders the same sub-card with a leading "↗ Addresses: …" header
+  showing the misconception's `label` for pairing context.
+- **`type="custom"`** renders the `name` as type-pill text with a small
+  "custom" annotation chip and no citation chip.
+- **`depth` field is audit-only metadata** (not visualized to readers).
+  MG4 surfaces course-wide depth statistics for instructors; readers
+  see intervention content.
+
+Pedagogical rationale: hiding the intervention behind interaction
+(disclosure, tabs) destroys the pairing-visibility that's the load-
+bearing claim of structured misconception remediation. The sub-card
+is the resolution to the misconception; the visual hierarchy makes
+the pairing structurally legible.
+
+### R4 — Forward-compat: `<Intervention addresses>` accepts `string | string[]`
+
+v1 ADR text shows `addresses="<misc-slug>"` (single target). v1 schema
+extends to `z.union([z.string(), z.array(z.string())])` — single
+target at v1 with the array form valid but unused. v2 multi-target
+addressing (one intervention addresses multiple misconceptions) lands
+without a breaking change.
+
+### R5 — `<Intervention>` declared to carry no `epistemicRole` (deliberate non-decision per ADR 0058)
+
+ADR 0058's 8-role taxonomy does not include "remediation" or
+"intervention" as roles. `<Intervention>` therefore carries no
+`epistemicRole`; the misconception it pairs with already carries role
+`misconception` per ADR 0058 §3 implicit lookup table.
+
+This is documented as a *deliberate* non-decision so future
+contributors don't try to fit `<Intervention>` into the existing 8
+roles. A future ADR may extend the taxonomy with a 9th role; no
+breaking change required either way.
+
+### R6 — v1 library ships all 12 canonical interventions; PR cadence trimmed
+
+The Reasoning OS Core sprint ships all 12 canonical interventions
+(Confrontation × 3 + Bridging × 3 + Restructuring × 3 + Reinforcement
+× 3) in `intervention-index.ts` at v1 — content work, not architectural
+change.
+
+PR cadence is trimmed from ADR 0044's implicit α/β/γ/δ/ε to
+**β → γ → δ** because:
+
+- No PR-α: `MisconceptionEntrySchema` with all 4 graph fields already
+  ships in
+  [packages/core/src/schema/pedagogy-index.ts:149-173](../../../packages/core/src/schema/pedagogy-index.ts);
+  MG1 + MG2 audit invariants already ship.
+- No PR-ε: no aggregator at v1 (MisconceptionGraphPage deferred per R1
+  above; chapter-level rendering happens inline).
