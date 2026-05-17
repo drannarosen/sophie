@@ -1,0 +1,95 @@
+/* MultiRep — framed binding card with responsive CSS Grid + concept-
+ * label header inset in the top border + role-pilled child cells.
+ *
+ * Per the 2026-05-17 MultiRep design hardening §D2 + §D4:
+ * - Framed card = the load-bearing visual signal that "these reps
+ *   belong together"
+ * - Responsive grid (auto-fit + minmax) = side-by-side on wide
+ *   viewports for the DeFT translation move; single-column stack
+ *   on narrow
+ * - Concept-label header inset in top border, left-aligned, small
+ *   text style — matches Sophie's existing callout-card visual idiom
+ * - Print mode uses the stacked variant via @media print
+ *
+ * Tier-1 (card-strong) chrome echoes KeyEquation's anatomy:
+ *   - 4px violet left rule (binding-card variant of brand-violet)
+ *   - Drop shadow via --sophie-shadow-card
+ *   - 1px border
+ *   - Title-bar tint via color-mix() against surface-1
+ *
+ * Per ADR 0005: tokens-only, no hex/rgb literals.
+ */
+
+.bindingCard {
+  position: relative;
+  margin-block: var(--sophie-space-5);
+  background: var(--sophie-surface-1);
+  border: 1px solid var(--sophie-border);
+  border-left: var(--sophie-card-rule-strong) solid var(--sophie-brand-violet);
+  border-radius: var(--sophie-radius-sm);
+  box-shadow: var(--sophie-shadow-card);
+  color: var(--sophie-text);
+  font-family: var(--sophie-font-sans);
+  line-height: var(--sophie-leading-prose);
+  overflow: hidden;
+  scroll-margin-block-start: var(--sophie-space-4);
+}
+
+.bindingCard:target {
+  outline: 2px solid var(--sophie-accent);
+  outline-offset: 4px;
+}
+
+.conceptHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--sophie-space-2);
+  padding: var(--sophie-space-2) var(--sophie-space-4);
+  background: color-mix(
+    in oklch,
+    var(--sophie-brand-violet) 8%,
+    var(--sophie-surface-1)
+  );
+  border-bottom: 1px solid var(--sophie-border);
+  color: var(--sophie-brand-violet-text);
+  font-weight: var(--sophie-weight-semibold);
+  font-size: var(--sophie-text-sm);
+  letter-spacing: 0.02em;
+}
+
+.conceptKindLabel {
+  color: var(--sophie-text-muted);
+  font-weight: var(--sophie-weight-medium);
+  font-size: var(--sophie-text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.conceptLabel {
+  font-family: var(--sophie-font-sans);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+  grid-auto-flow: row dense;
+  gap: var(--sophie-space-3);
+  padding: var(--sophie-space-3) var(--sophie-space-4);
+}
+
+/* Print mode uses the stacked variant — avoids break-inside complications
+ * and CoreText/FreeType render divergence on heterogeneous grid content. */
+@media print {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  .bindingCard {
+    box-shadow: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bindingCard {
+    scroll-behavior: auto;
+  }
+}

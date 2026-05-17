@@ -1,0 +1,68 @@
+/* RepFigure — figure-reference representation rendered inside a
+ * `<MultiRep>` card. Sibling shape to RepVerbal + RepEquation.
+ *
+ * Visual: role pill + a styled "→ see Fig. <refName>" reference line +
+ * the optional declared `symbolLabel` as a small inline annotation.
+ *
+ * Per ADR 0005, tokens-only; no hex/rgb literals.
+ */
+
+.rep {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sophie-space-2);
+  padding: var(--sophie-space-3);
+  border-radius: var(--sophie-radius-sm);
+  background: var(--sophie-surface-1);
+  color: var(--sophie-text);
+  font-family: var(--sophie-font-sans);
+}
+
+.pill {
+  align-self: flex-start;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  background: color-mix(
+    in oklch,
+    var(--sophie-brand-violet) 14%,
+    var(--sophie-surface-1)
+  );
+  color: var(--sophie-brand-violet-text);
+  font-size: var(--sophie-text-xs);
+  font-weight: var(--sophie-weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+}
+
+.refLine {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--sophie-space-1);
+  font-size: var(--sophie-text-body);
+  line-height: var(--sophie-leading-prose);
+}
+
+.refArrow {
+  color: var(--sophie-text-muted);
+  font-weight: var(--sophie-weight-semibold);
+}
+
+.refLabel {
+  color: var(--sophie-text-muted);
+  font-size: var(--sophie-text-sm);
+}
+
+.refName {
+  color: var(--sophie-brand-violet-text);
+  font-weight: var(--sophie-weight-semibold);
+  font-family: var(--sophie-font-mono);
+  font-size: 0.95em;
+}
+
+.symbolLabel {
+  color: var(--sophie-text);
+  font-style: italic;
+  font-family: var(--sophie-font-serif, var(--sophie-font-sans));
+  font-size: 1.05em;
+}

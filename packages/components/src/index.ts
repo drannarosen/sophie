@@ -125,6 +125,12 @@ export {
   LearningObjectivesPropsSchema,
   learningObjectivesContract,
 } from "./components/LearningObjectives/index.ts";
+export type { MultiRepProps } from "./components/MultiRep/index.ts";
+export {
+  MultiRep,
+  MultiRepPropsSchema,
+  multiRepContract,
+} from "./components/MultiRep/index.ts";
 export type { ObjectiveProps } from "./components/Objective/index.ts";
 export {
   Objective,
@@ -155,6 +161,24 @@ export {
   ReflectionPropsSchema,
   reflectionContract,
 } from "./components/Reflection/index.ts";
+export type { RepEquationProps } from "./components/RepEquation/index.ts";
+export {
+  RepEquation,
+  RepEquationPropsSchema,
+  repEquationContract,
+} from "./components/RepEquation/index.ts";
+export type { RepFigureProps } from "./components/RepFigure/index.ts";
+export {
+  RepFigure,
+  RepFigurePropsSchema,
+  repFigureContract,
+} from "./components/RepFigure/index.ts";
+export type { RepVerbalProps } from "./components/RepVerbal/index.ts";
+export {
+  RepVerbal,
+  RepVerbalPropsSchema,
+  repVerbalContract,
+} from "./components/RepVerbal/index.ts";
 export type { SearchResult } from "./components/Search/index.ts";
 export { SearchModal } from "./components/Search/index.ts";
 

@@ -1,0 +1,86 @@
+/* RepEquation — equation-reference representation rendered inside a
+ * `<MultiRep>` card. Sibling shape to RepVerbal + RepFigure.
+ *
+ * Visual: role pill + a styled "→ see <refKey>" reference line + the
+ * declared `symbol` as a KaTeX-style inline emphasis. Equivalent-form
+ * declarations (`equivalent_to` + `via`) render as a small footnote
+ * line below the main reference.
+ *
+ * Per ADR 0005, all colors/spacings flow through @sophie/theme
+ * tokens. Reference link styling matches the `<EqRef>` cross-
+ * reference idiom established earlier in the platform.
+ */
+
+.rep {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sophie-space-2);
+  padding: var(--sophie-space-3);
+  border-radius: var(--sophie-radius-sm);
+  background: var(--sophie-surface-1);
+  color: var(--sophie-text);
+  font-family: var(--sophie-font-sans);
+}
+
+.pill {
+  align-self: flex-start;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  background: color-mix(
+    in oklch,
+    var(--sophie-brand-violet) 14%,
+    var(--sophie-surface-1)
+  );
+  color: var(--sophie-brand-violet-text);
+  font-size: var(--sophie-text-xs);
+  font-weight: var(--sophie-weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+}
+
+.refLine {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--sophie-space-1);
+  font-size: var(--sophie-text-body);
+  line-height: var(--sophie-leading-prose);
+}
+
+.refArrow {
+  color: var(--sophie-text-muted);
+  font-weight: var(--sophie-weight-semibold);
+}
+
+.refKey {
+  color: var(--sophie-brand-violet-text);
+  font-weight: var(--sophie-weight-semibold);
+  font-family: var(--sophie-font-mono);
+  font-size: 0.95em;
+}
+
+.symbol {
+  color: var(--sophie-text);
+  font-style: italic;
+  font-family: var(--sophie-font-serif, var(--sophie-font-sans));
+  font-size: 1.05em;
+}
+
+.symbolLabel {
+  color: var(--sophie-text-muted);
+  font-size: var(--sophie-text-sm);
+}
+
+.equivLine {
+  padding-block-start: var(--sophie-space-1);
+  border-block-start: 1px dashed var(--sophie-border);
+  color: var(--sophie-text-muted);
+  font-size: var(--sophie-text-sm);
+  line-height: var(--sophie-leading-snug, 1.4);
+}
+
+.equivVia {
+  font-family: var(--sophie-font-mono);
+  font-size: 0.9em;
+  color: var(--sophie-brand-violet-text);
+}
