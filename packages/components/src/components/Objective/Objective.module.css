@@ -10,9 +10,9 @@
 .objective {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: var(--space-lo-row-inline-gap, 0.625rem);
+  gap: 0.625rem;
   align-items: baseline;
-  line-height: 1.5;
+  line-height: var(--sophie-leading-prose);
 }
 
 .objective.displayOnly {
@@ -22,10 +22,11 @@
 
 .checkbox {
   margin: 0;
-  inline-size: var(--size-lo-checkbox, 1rem);
-  block-size: var(--size-lo-checkbox, 1rem);
+  inline-size: 1rem;
+  block-size: 1rem;
   cursor: pointer;
   align-self: center;
+  accent-color: var(--sophie-brand-teal);
 }
 
 .checkbox:focus-visible {
