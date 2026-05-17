@@ -38,17 +38,23 @@ test.describe("PR-C3: <CourseMisconceptions /> on /misconceptions", () => {
     const block = page.locator("[data-sophie-course-misconceptions]");
     await expect(block).toBeAttached();
     const terms = block.locator(".sophie-course-misconceptions__term");
-    // Two misconceptions: the original Callout-sourced "Misconception
-    // Alert" (spoiler-alerts) + the Aside-sourced
-    // "universe-with-a-center" (misconception-fixture, added by
-    // Intervention PR-γ).
+    // Two misconceptions:
+    //   1. Callout-sourced "Misconception Alert" (spoiler-alerts) —
+    //      anchor `misconception-alert` slugified from the title.
+    //      Rendered as the dt's DOM id.
+    //   2. Aside-sourced (misconception-fixture, added by Intervention
+    //      PR-γ) — anchor `misc-1` from the auto-counter per
+    //      ChapterMisconceptions convention. The `name="universe-with-a-center"`
+    //      attribute is metadata for graph-edges, NOT the anchor.
+    //
+    // The user-visible <dt> text is the entry's *label* (Callout's
+    // `title` for long; "Misconception (brief)" default for short
+    // when no `label` attr is supplied — which is the fixture's
+    // case). Pin by anchor id selector rather than text — robust
+    // to label-text changes.
     await expect(terms).toHaveCount(2);
-    await expect(terms.filter({ hasText: "Misconception Alert" })).toHaveCount(
-      1
-    );
-    await expect(
-      terms.filter({ hasText: "universe-with-a-center" })
-    ).toHaveCount(1);
+    await expect(page.locator("dt#misconception-alert")).toHaveCount(1);
+    await expect(page.locator("dt#misc-1")).toHaveCount(1);
   });
 
   test("Callout-sourced entry carries the `length: 'long'` modifier class on both <dt> and <dd>", async ({
@@ -87,15 +93,18 @@ test.describe("PR-C3: <CourseMisconceptions /> on /misconceptions", () => {
   }) => {
     // Symmetric assertion for the Aside-sourced entry added by
     // Intervention PR-γ. The misconception-fixture chapter binds
-    // `<Aside kind="misconception" name="universe-with-a-center">`,
-    // so this entry must carry `--short` on both <dt> and <dd>.
+    // `<Aside kind="misconception" name="universe-with-a-center">`
+    // without an explicit `label`, so the rendered `<dt>` text falls
+    // back to "Misconception (brief)" (the default short-form
+    // label per ChapterMisconceptions). The anchor is `misc-1`
+    // (auto-counter; the Aside's `name` attr is metadata, not the
+    // anchor). Pin by the `--short` modifier class to find the
+    // Aside-sourced entry — only one exists on the page.
     await page.goto(MISCONCEPTIONS_URL);
-    const asideTerm = page
-      .locator(".sophie-course-misconceptions__term")
-      .filter({ hasText: "universe-with-a-center" });
-    await expect(asideTerm).toHaveClass(
-      /sophie-course-misconceptions__term--short/
+    const asideTerm = page.locator(
+      ".sophie-course-misconceptions__term.sophie-course-misconceptions__term--short"
     );
+    await expect(asideTerm).toHaveCount(1);
     const asideBody = asideTerm.locator("xpath=following-sibling::dd[1]");
     await expect(asideBody).toHaveClass(
       /sophie-course-misconceptions__body--short/
