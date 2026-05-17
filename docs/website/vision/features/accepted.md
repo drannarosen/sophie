@@ -261,7 +261,13 @@ the six child components + three audit invariants.
 (a8-omiflow-composite-primitive)=
 ## A8. `<OMIFlow>` composite primitive
 
-**Status.** Accepted-pending-ADR. Surfaced 2026-05-16 alongside
+**Status.** Accepted-pending-ADR. **Prerequisite met 2026-05-16** —
+both [ADR 0058](../../decisions/0058-epistemic-component-contract.md)
+(role contract) and
+[ADR 0059](../../decisions/0059-linked-representation-state-primitive.md)
+(A11 linked-representation primitive) are now graduated. A8 is
+**ready to graduate** as the next concrete C-tier component.
+Surfaced 2026-05-16 alongside
 [ADR 0058 — Epistemic Component Contract](../../decisions/0058-epistemic-component-contract.md),
 which is A8's prerequisite. A8 is the **canonical compound primitive**
 that demonstrates ADR 0058's eight-role contract end-to-end — three
@@ -412,65 +418,47 @@ are visually showy but lower frequency in actual ASTR 201 / COMP
 ---
 
 (a11-linked-representation-state-primitive)=
-## A11. Linked-representation state primitive
+## A11. Linked-representation state primitive — graduated 2026-05-16
 
-**Status.** Accepted-pending-ADR. Surfaced 2026-05-16 alongside
-[ADR 0058](../../decisions/0058-epistemic-component-contract.md).
-Prerequisite: ADR 0058 (the role contract); detailed motivation +
-design surface in
-[vision/reasoning-os/linked-representations.md](../reasoning-os/linked-representations.md).
+**Graduated** → [ADR 0059 — Linked-representation state primitive](../../decisions/0059-linked-representation-state-primitive.md)
++ `@sophie/components/interactive/` (Zustand store +
+`useLinkedParameter` hook + `<ParameterCursor>` + `<ParameterSlider>`)
++ first-consumer validation in `<BlackbodyExplorer>` exercising four
+ADR 0058 epistemic roles (model / observable / inference /
+approximation) end-to-end.
 
-**Motivating use case.** Cross-component reactive state. One
-parameter cursor (e.g., a stellar-mass slider) co-varies multiple
-representations of the same physical system — HR diagram + spectrum
-+ interior structure + equation panel + timescale indicator — *on
-the same page*, in real time. Today Sophie has no shape for this:
-[`useInteractive`](../../decisions/0007-persistence-indexeddb.md)
-(ADR 0007) is per-component, per-student, durable; the linked-rep
-cursor is page-shared, ephemeral, ~60Hz. The two state shapes are
-architecturally distinct.
+The ADR resolved six brainstorm open questions: (Q1) Zustand over
+Jotai / Context / bespoke `useSyncExternalStore` — small, hooks-
+first, no provider, SSR-safe, per-key selectors. (Q2) Section-
+scoped cursors by default, opt-in cross-section sharing via
+`cursorGroup="..."` — named in the ADR as the **"explicit widen,
+not tighten" principle** generalizable to future Sophie scope-
+default decisions. (Q3) No built-in animation primitive —
+subscribers handle their own motion (Framer / D3 / CSS); keeps the
+primitive ~3 KB and avoids forcing one motion vocabulary across
+all consumers. (Q4) SSR-safe via default-value render + client-
+mount hydration; `<ParameterCursor>` registers in
+`useLayoutEffect`. (Q5) `useInteractive` composability via
+snapshot-on-submission (cursor value captured in the durable
+`<Predict>` write); A11 itself never persists. (Q6) **Sequencing
+flipped from the original plan**: A11 ships before A8. A8 as a
+static composite demonstrates nothing the contract doesn't already
+say; A8's interesting version needs A11 anyway. Building A8 on top
+of A11 from day one avoids the refactor.
 
-**Design sketch.** Page-local reactive store (likely
-[Zustand](https://zustand-demo.pmnd.rs/) or an equivalent compact
-external-store pattern), with a `useLinkedParameter("mass")`
-subscription hook. No IndexedDB binding. Components opt-in by
-calling the hook; the store re-renders subscribers on cursor
-change. Composes with `useInteractive` at *answer-submission* time
-(a `<Predict>` answer captures the cursor value as a snapshot in
-its durable write).
+A11 graduates as the **eighth graduation** through the staging-
+area lifecycle, and the **first feature-tier ADR after the
+Reasoning-OS thesis** (ADR 0058). Together with ADR 0058's role
+contract, A11 makes Sophie's "Scientific Reasoning OS" claim
+concrete: a contract + a primitive + a first consumer that
+validates them both.
 
-**Rough cost.** ~1.5–2 weeks for the primitive + one consumer
-demonstration page. The cost is mostly architectural:
-SSR/hydration correctness, scope-boundary semantics
-(page-level vs. section-level), and composability with
-`useInteractive` at the boundary.
-
-**Defended priority claim.** A11 is the **architectural prerequisite**
-for the interesting versions of A8, A9, and A10. A8 can ship a
-static three-panel `<OMIFlow>` without A11, but the showcase
-version where parameter sweeps animate all three panels needs A11.
-Same for A9 (toggle-propagation across linked views) and A10
-(parameter-driven uncertainty bands).
-
-The order A8 → A9 → A10 → A11 is *demonstration-first* — each of
-A8–A10 ships in a useful pre-A11 form, then A11 lands and
-upgrades them. The alternative ordering (A11 first) is rejected
-because it would ship infrastructure with no consumer; the
-chosen ordering ships consumers first, then upgrades them when
-the infrastructure earns its keep.
-
-**Open ADR questions.** See the
-[linked-representations vision page](../reasoning-os/linked-representations.md)
-for the full list. Headline items:
-
-- Store library choice (Zustand / Jotai / bespoke
-  `useSyncExternalStore`).
-- Scope boundaries (page-level default; section-level opt-in?).
-- Animation API (built-in motion primitives, or component-declared?).
-- SSR/hydration behavior with a default cursor value.
-- Whether components must declare epistemic role at subscription
-  time (linked to ADR 0058 enforcement) or stay role-agnostic.
-- Composability with `useInteractive` at snapshot-write time.
+**Status.**
+- 2026-05-16 — surfaced (accepted-pending-ADR) alongside ADR 0058
+- 2026-05-16 — graduated → [ADR 0059](../../decisions/0059-linked-representation-state-primitive.md)
+  + 371 tests pass, 4 epistemic roles validated in
+  `<BlackbodyExplorer>`, full physics validation
+  against NIST/IAU reference values
 
 ---
 
@@ -500,3 +488,7 @@ is no longer load-bearing for ongoing work.
   + [Pedagogical change taxonomy](../../reference/pedagogical-change-taxonomy.md). Graduated 2026-05-14.
 - **A7 — Equation Biography** → [ADR 0046](../../decisions/0046-equation-biography.md)
   + [Equation Biography schema](../../reference/equation-biography-schema.md). Graduated 2026-05-14.
+- **A11 — Linked-representation state primitive** → [ADR 0059](../../decisions/0059-linked-representation-state-primitive.md)
+  + `@sophie/components/interactive/` (`useLinkedParameter`,
+  `<ParameterCursor>`, `<ParameterSlider>`) + first-consumer
+  validation in `<BlackbodyExplorer>`. Graduated 2026-05-16.

@@ -1,0 +1,69 @@
+.root {
+  display: grid;
+  grid-template-areas:
+    "label readout"
+    "slider slider";
+  grid-template-columns: 1fr auto;
+  gap: var(--sophie-space-2, 0.5rem);
+  align-items: baseline;
+  width: 100%;
+}
+
+.label {
+  grid-area: label;
+  font-size: var(--sophie-text-sm, 0.875rem);
+  font-weight: 500;
+  color: var(--sophie-text-strong, #1a1a1a);
+}
+
+.readout {
+  grid-area: readout;
+  font-variant-numeric: tabular-nums;
+  font-size: var(--sophie-text-sm, 0.875rem);
+  color: var(--sophie-text-muted, #555);
+}
+
+.slider {
+  grid-area: slider;
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 1.25rem;
+  width: 100%;
+  user-select: none;
+  touch-action: none;
+}
+
+.track {
+  position: relative;
+  flex-grow: 1;
+  height: 4px;
+  background: var(--sophie-surface-muted, #e5e5e5);
+  border-radius: 9999px;
+}
+
+.range {
+  position: absolute;
+  height: 100%;
+  background: var(--sophie-accent, #2563eb);
+  border-radius: 9999px;
+}
+
+.thumb {
+  display: block;
+  width: 1.125rem;
+  height: 1.125rem;
+  background: var(--sophie-surface-elevated, #fff);
+  border: 2px solid var(--sophie-accent, #2563eb);
+  border-radius: 9999px;
+  cursor: grab;
+}
+
+.thumb:focus-visible {
+  outline: 2px solid var(--sophie-focus-ring, #2563eb);
+  outline-offset: 2px;
+}
+
+.thumb:active {
+  cursor: grabbing;
+}
