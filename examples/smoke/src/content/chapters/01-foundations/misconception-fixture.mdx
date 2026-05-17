@@ -1,0 +1,78 @@
+---
+title: "Lecture 3: Misconceptions and Interventions"
+slug: "misconception-fixture"
+module: "foundations"
+order: 3
+status: "stable"
+lang: "en"
+description: "(smoke fixture — pairs a misconception Aside with two literature-grounded interventions, exercising the PR-γ extractor end-to-end so the pedagogy-index `interventions` collection populates with addresses='this' resolved.)"
+tags: ["foundations", "interventions", "smoke"]
+---
+
+import { Aside, Intervention } from "@sophie/components";
+
+This chapter is a **smoke fixture** for the Intervention PR-γ extractor. It
+pairs one misconception Aside with two literature-grounded interventions so
+the pedagogy-index `interventions` collection populates from real MDX and
+the `addresses="this"` rewriting can be verified end-to-end. The real
+chapter capstone (PR-7 in the Reasoning OS arc) will use this pattern at
+scale.
+
+## Misconception with paired interventions
+
+<Aside
+  kind="misconception"
+  name="universe-with-a-center"
+  short="The universe expanded from a single center point — like a firework."
+>
+  Many students model the universe as expanding from a single center point —
+  like a firework or explosion happening in a pre-existing space. The actual
+  observation is isotropic Hubble flow from every vantage point; no center
+  exists.
+
+  <Intervention type="contrasting-cases" addresses="this">
+    Predict what you'd observe if the universe had a center, then compare to
+    the actual observation: isotropic Hubble flow from every vantage point.
+    The contrast surfaces why "no center" follows from the data.
+  </Intervention>
+
+  <Intervention
+    type="bridging-analogy"
+    addresses="this"
+    limits="Bread has an outside; the universe doesn't."
+    depth="substantial"
+  >
+    Bread baking with raisins: from any raisin's perspective, every other
+    raisin recedes — no raisin is "the center." The expansion is happening
+    everywhere at once, not from a privileged point.
+  </Intervention>
+</Aside>
+
+## Standalone (course-level) intervention
+
+A second misconception is addressed by a refutation-text intervention
+declared standalone (no enclosing Aside) — the kind of pattern an
+instructor uses at module-end to consolidate the correct conception
+across the chapter's spread.
+
+<Intervention
+  type="refutation-text"
+  addresses="brighter-equals-closer"
+>
+  It's tempting to say a brighter star must be closer. But two stars at the
+  same distance can differ in apparent brightness by orders of magnitude if
+  one is intrinsically luminous (a hot supergiant) and the other is a dim
+  red dwarf. Apparent brightness is a product of distance AND intrinsic
+  luminosity — distance alone is not enough.
+</Intervention>
+
+## What the extractor produces
+
+After this chapter's MDX walks the PR-γ extractor, the pedagogy-index
+`interventions` collection should hold three entries:
+
+- `intervention-contrasting-cases-1` — addresses `["universe-with-a-center"]` (`"this"` resolved from the enclosing Aside name)
+- `intervention-bridging-analogy-2` — same misconception target, with `limits` and `depth: "substantial"` populated
+- `intervention-refutation-text-3` — standalone, addresses `["brighter-equals-closer"]` verbatim
+
+The audit's MG3 / I1 / I2 / I3 invariants (PR-δ) consume these entries.

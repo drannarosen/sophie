@@ -32,6 +32,7 @@ function makeIndex(partial: Partial<PedagogyIndex> = {}): PedagogyIndex {
     contractValidations: [],
     extractorFindings: [],
     multiReps: [],
+    interventions: [],
     ...partial,
   };
 }

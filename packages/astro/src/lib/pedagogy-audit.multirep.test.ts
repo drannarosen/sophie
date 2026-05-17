@@ -38,6 +38,7 @@ function emptyIndex(): PedagogyIndex {
     contractValidations: [],
     extractorFindings: [],
     multiReps: [],
+    interventions: [],
   };
 }
 
