@@ -110,6 +110,12 @@ export {
   InteractiveCheckboxPropsSchema,
   interactiveCheckboxContract,
 } from "./components/InteractiveCheckbox/index.ts";
+export type { InterventionProps } from "./components/Intervention/index.ts";
+export {
+  Intervention,
+  InterventionPropsSchema,
+  interventionContract,
+} from "./components/Intervention/index.ts";
 export type { KeyEquationProps } from "./components/KeyEquation/index.ts";
 export {
   KeyEquation,
@@ -181,7 +187,6 @@ export {
 } from "./components/RepVerbal/index.ts";
 export type { SearchResult } from "./components/Search/index.ts";
 export { SearchModal } from "./components/Search/index.ts";
-
 // Contract
 export type {
   AuditFinding,
@@ -203,7 +208,6 @@ export {
   BlackbodyExplorerPropsSchema,
   blackbodyExplorerContract,
 } from "./figures/BlackbodyExplorer/index.ts";
-
 // Interactive — A11 linked-representation primitive (per ADR 0059)
 export type {
   ParameterCursorProps,
@@ -221,6 +225,10 @@ export {
   useLinkedParameter,
   useParameterStore,
 } from "./interactive/index.ts";
+export {
+  getInterventionByName,
+  getInterventionLibrary,
+} from "./intervention/intervention-index.ts";
 // Runtime — public surface re-exported from runtime/index.ts
 export type {
   BroadcastChannelLayer,
