@@ -186,10 +186,14 @@ export function getInterventionLibrary(): ReadonlyArray<InterventionLibraryEntry
 }
 
 /**
- * O(1) lookup by canonical name. Returns `undefined` when not found
- * (the I2 audit at PR-δ catches misuse at build time; runtime
- * consumers degrade gracefully — the component skips the citation
- * chip when no library entry resolves).
+ * Lookup by canonical name (linear over the 12-entry catalog at v1).
+ * Returns `undefined` when not found — the I2 audit at PR-δ catches
+ * misuse at build time; runtime consumers degrade gracefully (the
+ * component skips the citation chip when no library entry resolves).
+ *
+ * If the catalog grows past ~50 entries, back this with a Map built
+ * once at module load; at 12 entries the linear scan is faster than
+ * a Map allocation.
  */
 export function getInterventionByName(
   name: string

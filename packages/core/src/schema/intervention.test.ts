@@ -96,6 +96,23 @@ describe("InterventionEntrySchema (pedagogy-index entry)", () => {
     });
     expect(result.success).toBe(false);
   });
+
+  it("REJECTS type=custom WITHOUT name (.superRefine — mirrors component-side constraint)", () => {
+    const result = InterventionEntrySchema.safeParse({
+      type: "custom",
+      addresses: ["stars-are-points"],
+      body: "body",
+      depth: "light",
+      chapter: "ch",
+      anchor: "a",
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const issue = result.error.issues.find((i) => i.path.includes("name"));
+      expect(issue).toBeDefined();
+      expect(issue?.message).toMatch(/name.*required.*custom/i);
+    }
+  });
 });
 
 describe("InterventionLibraryEntrySchema (intervention-index.ts entry)", () => {

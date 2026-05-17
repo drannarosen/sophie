@@ -39,6 +39,7 @@ import type { InterventionProps } from "./Intervention.schema.ts";
  * exists alongside an inline `<MisconceptionRef>`.
  */
 export function Intervention({
+  id,
   type,
   name,
   addresses,
@@ -49,22 +50,25 @@ export function Intervention({
 
   const isCustom = type === "custom";
   const libraryEntry = isCustom ? undefined : getInterventionByName(type);
-  // Author-facing label: custom interventions surface the `name` prop;
-  // canonical interventions surface the type slug verbatim. We never
-  // synthesize prose here — the label is structural.
+  // Schema's .superRefine guarantees `name` is non-undefined when
+  // isCustom; we still narrow with ?? for the TS-output type.
   const pillLabel = isCustom ? (name ?? type) : type;
 
-  // Normalize `addresses` for the standalone-case render. `"this"` is
-  // the in-Aside form; rendering it as a header would surface the raw
-  // string to readers (no semantic value). When `addresses === "this"`,
-  // the visual context (intervention nested in misconception Aside)
-  // already conveys what's addressed, so we omit the header.
+  // Build the displayed addresses list. `"this"` (the in-Aside form
+  // where the parent misconception name is implicit) gets FILTERED
+  // OUT of the rendered list rather than suppressing the entire
+  // header — that way mixed-array cases like ["this", "some-misc"]
+  // (an extractor intermediate state) still surface the explicit
+  // slug to the reader instead of hiding everything. When the
+  // filtered list is empty, omit the header entirely (the
+  // visual context already conveys what's addressed).
   const addressesArray = Array.isArray(addresses) ? addresses : [addresses];
-  const showAddressesHeader =
-    addressesArray.length > 0 && !addressesArray.includes("this");
+  const visibleAddresses = addressesArray.filter((slug) => slug !== "this");
+  const showAddressesHeader = visibleAddresses.length > 0;
 
   return (
     <aside
+      id={id}
       role='note'
       aria-labelledby={titleId}
       className={styles.intervention}
@@ -78,7 +82,7 @@ export function Intervention({
           <span>
             Addresses:{" "}
             <span className={styles.addressesTargets}>
-              {addressesArray.join(", ")}
+              {visibleAddresses.join(", ")}
             </span>
           </span>
         </div>
@@ -87,11 +91,7 @@ export function Intervention({
         <span id={titleId} className={styles.typePill}>
           {pillLabel}
         </span>
-        {isCustom && (
-          <span className={styles.customAnnotation} data-custom-annotation=''>
-            custom
-          </span>
-        )}
+        {isCustom && <span className={styles.customAnnotation}>custom</span>}
         {libraryEntry && (
           <span className={styles.citation}>· {libraryEntry.citation}</span>
         )}

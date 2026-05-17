@@ -92,6 +92,40 @@ describe("<Intervention>", () => {
     expect(screen.getByText("misc-a, misc-b")).toBeInTheDocument();
   });
 
+  it("filters out 'this' from a mixed-array addresses list, surfacing only explicit slugs in the header", () => {
+    // Mixed-array case: an authoring or extractor intermediate state
+    // where `["this", "explicit-slug"]` is supplied. Hiding the entire
+    // header would suppress information; the component instead filters
+    // out `"this"` and renders the remaining explicit slug(s).
+    render(
+      <Intervention
+        type='refutation-text'
+        addresses={["this", "explicit-slug"]}
+      >
+        Body prose
+      </Intervention>
+    );
+    expect(screen.getByText(/Addresses:/)).toBeInTheDocument();
+    expect(screen.getByText("explicit-slug")).toBeInTheDocument();
+    // The literal "this" must NOT appear in the displayed list.
+    expect(screen.queryByText(/^this$/)).not.toBeInTheDocument();
+  });
+
+  it("renders the id prop on the rendered <aside> (so #anchor hash navigation lands here, :target highlights)", () => {
+    const { container } = render(
+      <Intervention
+        id='intervention-contrasting-cases-1'
+        type='contrasting-cases'
+        addresses='this'
+      >
+        Body prose
+      </Intervention>
+    );
+    expect(
+      container.querySelector("#intervention-contrasting-cases-1")
+    ).not.toBeNull();
+  });
+
   it("renders the optional limits sub-section when `limits` prop is supplied", () => {
     render(
       <Intervention

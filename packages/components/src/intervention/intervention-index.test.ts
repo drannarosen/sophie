@@ -72,7 +72,7 @@ describe("intervention-index.ts (canonical library per ADR 0044)", () => {
     expect(getInterventionByName("not-a-real-intervention")).toBeUndefined();
   });
 
-  it("ships the four named Confrontation-family literature anchors", () => {
+  it("ships the three named Confrontation-family literature anchors", () => {
     const confrontation = getInterventionLibrary().filter(
       (entry) => entry.family === "confrontation"
     );
