@@ -44,3 +44,28 @@ export const LongFormPrompt: Story = {
       "Take a few minutes — this is the one writing exercise that's not graded.",
   },
 };
+
+// Minimal prompt — verifies the Tier-1 card-strong chrome (icon +
+// title bar + body) reads correctly even when the prompt is a single
+// word. Edge case for the rendered baseline.
+export const MinimalPrompt: Story = {
+  args: {
+    ...ns,
+    id: "minimal",
+    prompt: "Reflect.",
+  },
+};
+
+// Multi-sentence placeholder — verifies the textarea placeholder
+// wraps gracefully when the hint guides an extended response.
+// Complements LongFormPrompt by lengthening the placeholder rather
+// than the prompt itself.
+export const ExtendedResponseHint: Story = {
+  args: {
+    ...ns,
+    id: "extended-hint",
+    prompt: "What was the most surprising idea in this section?",
+    placeholder:
+      "Aim for 3–5 sentences. Name the idea, explain why it surprised you, and connect it to one thing you already knew. There's no wrong answer — just a thoughtful one.",
+  },
+};
