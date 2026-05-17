@@ -1538,10 +1538,9 @@ describe("extractMisconceptions (pure)", () => {
 
   test("Intervention PR-δ — `name` falls through to slug(title) when `name` is absent (back-compat)", () => {
     const tree = root([
-      mdxAside(
-        { kind: "misconception", title: "Brighter equals closer" },
-        [para("body")]
-      ),
+      mdxAside({ kind: "misconception", title: "Brighter equals closer" }, [
+        para("body"),
+      ]),
     ]);
 
     const entries = extractMisconceptions(tree as never, "ch");
