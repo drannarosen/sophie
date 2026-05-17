@@ -800,3 +800,61 @@ The "layout" prop's `"toggle"` / `"side-by-side"` / `"stack"` enum
 documented in the reference is superseded — v1 ships the responsive
 grid uniformly and the `display=` prop is reserved (no-op) for v2
 alternative modes.
+
+### R5 — NR1 / NR3 / NR4 deferred from PR-δ to PR-δ' (KeyEquation `symbols` metadata prerequisite)
+
+The PR-δ audit sprint (merged 2026-05-17 as
+[PR #86](https://github.com/drannarosen/sophie/pull/86)) ships the
+Notation Registry loader + opt-in gate + 5 invariants (MR1 ERROR,
+MR2 WARNING, MR4 INFO, MR6 INFO, NR2 INFO). The 3 NR-prefix
+invariants that the §Artifact-3 audit table specifies — NR1, NR3,
+NR4 — are deferred to a follow-on PR-δ' because they consume
+**per-equation `symbols` metadata** that `EquationEntrySchema`
+(in `@sophie/core`) doesn't yet carry.
+
+Original §Artifact-3 §NR1 cell text:
+
+> `<KeyEquation>` declares one or more symbols in its `symbols`
+> metadata (see ADR 0038 §extractors) that are not present in
+> `notation-registry.yaml`.
+
+That presupposed a `KeyEquation.symbols` field that no PR has yet
+added. v1 `EquationEntrySchema` is `{ slug, title, number, tex,
+body, chapter, anchor }` — no `symbols` array.
+
+The 2026-05-17 scope decision matches the same pattern as PR-γ's
+`<RepCode>` deferral (§R1 above): ship what's structurally complete,
+flag what requires upstream schema bumps, name the follow-on sprint.
+
+**PR-δ' scope** (small follow-on):
+
+1. Extend `KeyEquationPropsSchema` in `@sophie/components` with an
+   optional `symbols: string[]` prop — author-declared, not extracted
+   from TeX heuristics (TeX parsing is fragile per the 2026-05-17
+   design conversation).
+2. Extend `EquationEntrySchema` in `@sophie/core` with
+   `symbols: string[]` (defaults to `[]` for forward-compat with
+   pre-PR-δ' indexes — same shape as the `multiReps` default added
+   in PR-γ).
+3. Extend `extractEquations` in `@sophie/astro/src/lib/pedagogy-index-extractor.ts`
+   to harvest the `symbols` prop.
+4. Add the 3 audit invariants to `pedagogy-audit.ts`:
+   - **NR1** WARNING — `<KeyEquation symbols=[…]>` declares a symbol
+     not present in `notation-registry.yaml`. Equations whose
+     symbols are inherently per-derivation (generic *x* / *y*
+     placeholders) opt out by marking them `transient: true` in the
+     equation metadata (per §Artifact-3 §NR1 cell hardening).
+   - **NR3** ERROR — same symbol bound to different `concept.id`s
+     across the registry (declaration collision).
+   - **NR4** WARNING — symbol declared in registry with explicit
+     units; `<KeyEquation>` uses it without unit context in prose.
+
+NR3 is **registry-only** (it walks the registry's concepts, not
+chapter equations) so it could technically ship in PR-δ — but the
+2026-05-17 scope decision groups all three NR-prefix invariants
+into PR-δ' for coherence with the `symbols`-metadata deliverable.
+
+This revision pairs with the JSDoc deferral note in
+[`packages/astro/src/lib/pedagogy-audit.ts`](../../../packages/astro/src/lib/pedagogy-audit.ts)
+("Not implemented in v1" block) and the AuditExtras.notationRegistry
+TODO for PR-ε's `TextbookLayout.astro` loader wire-up.
