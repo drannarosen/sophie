@@ -118,6 +118,20 @@ describe("<BlackbodyExplorer>", () => {
     );
   });
 
+  test("Wien-peak renders via KaTeX HTML overlay, not as a full-height dashed SVG rule", () => {
+    render(<BlackbodyExplorer id='wien' initialTemperatureK={5772} />);
+    // The HTML overlay element exists at the spec'd test hook
+    const overlay = document.querySelector("[data-wien-peak-overlay]");
+    expect(overlay).not.toBeNull();
+    // KaTeX renders the lambda_peak label inside it (.katex is the wrapper
+    // span KaTeX emits, regardless of html-only or htmlAndMathml mode).
+    expect(overlay?.querySelector(".katex")).not.toBeNull();
+    expect(overlay?.textContent).toMatch(/502/);
+    // The legacy full-height dashed Plot.ruleX SVG line must be gone —
+    // pre-restyle it was stroke-dasharray="6 4" in #818cf8 indigo.
+    expect(document.querySelector('line[stroke-dasharray="6 4"]')).toBeNull();
+  });
+
   test("multiple instances on the same page have independent cursors", () => {
     // BlackbodyExplorer renders its own <section id={id}>, so the
     // consumer doesn't need to wrap it — the explorer is self-scoping.

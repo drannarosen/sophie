@@ -137,6 +137,47 @@
   min-height: 280px;
 }
 
+.plotSvgHost {
+  position: relative;
+  width: 100%;
+}
+
+/* Wien-peak HTML overlay — 12px downward tick at plot top + KaTeX label
+ * sitting above it. Position lerps as T changes (Principle 4: motion is
+ * meaning). The `left` CSS var is set inline from Plot's x-scale.apply()
+ * since the pixel position depends on the figure's runtime geometry. */
+
+.wienPeakOverlay {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  transition: left 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wienPeakOverlay {
+    transition: none;
+  }
+}
+
+.wienPeakLabel {
+  font-family: var(--sophie-font-sans);
+  font-size: var(--sophie-text-xs);
+  color: var(--sophie-role-inference);
+  white-space: nowrap;
+  padding-bottom: 2px;
+}
+
+.wienPeakTick {
+  width: 1.5px;
+  height: 12px;
+  background: var(--sophie-role-inference);
+}
+
 .aside {
   display: flex;
   flex-direction: column;

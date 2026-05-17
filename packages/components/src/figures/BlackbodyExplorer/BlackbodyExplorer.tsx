@@ -73,11 +73,18 @@ interface SpectrumPlotProps {
   showWien: boolean;
 }
 
+const PLOT_WIDTH = 480;
+const PLOT_HEIGHT = 300;
+const PLOT_MARGIN_LEFT = 60;
+const PLOT_MARGIN_BOTTOM = 44;
+
 function SpectrumPlot({ T_K, showRayleighJeans, showWien }: SpectrumPlotProps) {
-  const containerRef = useRef<HTMLDivElement | null>(null);
+  const svgHostRef = useRef<HTMLDivElement | null>(null);
+  const [wienXpx, setWienXpx] = useState<number | null>(null);
+  const wienPeakNm = wienPeakWavelengthCm(T_K) * 1e7;
 
   useEffect(() => {
-    const node = containerRef.current;
+    const node = svgHostRef.current;
     if (!node) return;
 
     const planckCurve = buildCurveData(T_K, "planck");
@@ -89,15 +96,14 @@ function SpectrumPlot({ T_K, showRayleighJeans, showWien }: SpectrumPlotProps) {
       overlays.push(...buildCurveData(T_K, "wien"));
     }
 
-    const wienPeakNm = wienPeakWavelengthCm(T_K) * 1e7;
     const yMax = Math.max(...planckCurve.map((p) => p.B), 1);
     const yMin = yMax * 1e-8;
 
     const chart = Plot.plot({
-      width: 480,
-      height: 300,
-      marginLeft: 60,
-      marginBottom: 44,
+      width: PLOT_WIDTH,
+      height: PLOT_HEIGHT,
+      marginLeft: PLOT_MARGIN_LEFT,
+      marginBottom: PLOT_MARGIN_BOTTOM,
       x: {
         type: "log",
         label: "λ (nm)",
@@ -161,13 +167,6 @@ function SpectrumPlot({ T_K, showRayleighJeans, showWien }: SpectrumPlotProps) {
             ariaHidden: "true",
           }
         ),
-        Plot.ruleX([wienPeakNm], {
-          stroke: "#818cf8",
-          strokeDasharray: "6 4",
-          strokeWidth: 1.5,
-          ariaLabel: null,
-          ariaHidden: "true",
-        }),
       ],
     }) as SVGElement;
 
@@ -177,12 +176,43 @@ function SpectrumPlot({ T_K, showRayleighJeans, showWien }: SpectrumPlotProps) {
       `Blackbody spectrum: T = ${T_K.toFixed(0)} K, peak wavelength ${wienPeakNm.toFixed(0)} nm. Visible band shaded.`
     );
     node.replaceChildren(chart);
+
+    // Position the Wien-peak HTML overlay via Plot's x-scale. The scale's
+    // .apply() returns a pixel coordinate in the SVG's own coordinate
+    // space; since the SVG fills the host div, the same number is the
+    // overlay's `left` value relative to .plotContainer.
+    const xScale = (
+      chart as unknown as {
+        scale?: (name: string) => { apply?: (v: number) => number };
+      }
+    ).scale?.("x");
+    const px = xScale?.apply?.(wienPeakNm);
+    setWienXpx(Number.isFinite(px) ? (px as number) : null);
+
     return () => {
       chart.remove();
     };
-  }, [T_K, showRayleighJeans, showWien]);
+  }, [T_K, showRayleighJeans, showWien, wienPeakNm]);
 
-  return <div ref={containerRef} className={styles.plotContainer} />;
+  return (
+    <div className={styles.plotContainer}>
+      <div ref={svgHostRef} className={styles.plotSvgHost} />
+      {wienXpx !== null && (
+        <div
+          className={styles.wienPeakOverlay}
+          data-wien-peak-overlay
+          style={{ left: `${wienXpx}px` } as React.CSSProperties}
+        >
+          <span className={styles.wienPeakLabel}>
+            <InlineMath>
+              {`\\lambda_\\text{peak} = ${wienPeakNm.toFixed(0)}\\,\\mathrm{nm}`}
+            </InlineMath>
+          </span>
+          <span aria-hidden='true' className={styles.wienPeakTick} />
+        </div>
+      )}
+    </div>
+  );
 }
 
 /**
