@@ -140,6 +140,7 @@ full set (0001–0058 at last count).
 | Validation tracker               | 0056 | ADR frontmatter `validation:` block (status / last_validated_date / evidence)                                             |
 | Visual regression baseline       | 0057 | Self-hosted `@storybook/test-runner` + Playwright; CI Linux as canonical baseline (supersedes 0028 VR deferral)           |
 | **Epistemic Component Contract** | 0058 | **Eight-role taxonomy** (optional, additive); amends 0003/0004/0044/0046; underwrites Reasoning-OS thesis                  |
+| **Linked-representation state**  | 0059 | **A11 graduated**: Zustand page-local store + `useLinkedParameter` + `<ParameterCursor>` + `<ParameterSlider>`             |
 
 ## Engineering principles
 

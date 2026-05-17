@@ -169,7 +169,34 @@ export {
   listRegistered,
   registerComponent,
 } from "./contract/index.ts";
+// Figures — domain-specific interactive figures. v1 ships
+// <BlackbodyExplorer> here as the canonical Reasoning-OS contract
+// demonstration; long-term, astronomy-specific figures graduate to
+// a Sophie Astro sub-brand package per ADR 0001.
+export type { BlackbodyExplorerProps } from "./figures/BlackbodyExplorer/index.ts";
+export {
+  BlackbodyExplorer,
+  BlackbodyExplorerPropsSchema,
+  blackbodyExplorerContract,
+} from "./figures/BlackbodyExplorer/index.ts";
 
+// Interactive — A11 linked-representation primitive (per ADR 0059)
+export type {
+  ParameterCursorProps,
+  ParameterDefinition,
+  ParameterSliderProps,
+  ParameterStoreState,
+} from "./interactive/index.ts";
+export {
+  ParameterCursor,
+  ParameterCursorPropsSchema,
+  ParameterSlider,
+  ParameterSliderPropsSchema,
+  parameterCursorContract,
+  parameterSliderContract,
+  useLinkedParameter,
+  useParameterStore,
+} from "./interactive/index.ts";
 // Runtime — public surface re-exported from runtime/index.ts
 export type {
   BroadcastChannelLayer,

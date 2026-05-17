@@ -173,6 +173,7 @@ project:
         - file: decisions/0056-validation-tracker.md
         - file: decisions/0057-visual-regression-baseline.md
         - file: decisions/0058-epistemic-component-contract.md
+        - file: decisions/0059-linked-representation-state-primitive.md
     - title: Status
       children:
         - file: status/roadmap.md
