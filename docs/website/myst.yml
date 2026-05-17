@@ -58,6 +58,9 @@ project:
         - file: how-to/integrate-cosmic-playground.md
         - file: how-to/cite-with-csl-json.md
         - file: how-to/add-a-custom-component.md
+        - file: how-to/author-multireps.md
+        - file: how-to/pair-misconceptions-with-interventions.md
+        - file: how-to/author-equation-biographies.md
         - file: how-to/run-visual-regression-locally.md
         - file: how-to/deploy-to-github-pages.md
     - title: Reference

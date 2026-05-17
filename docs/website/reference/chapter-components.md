@@ -70,9 +70,10 @@ This page is the chapter author's quick reference.
 | `<Figure>` | Source for `PedagogyIndex.figureUsages` (per-chapter record of where each registry figure appears). Resolves `name` against the consumer-supplied `figureRegistry`. |
 | `<KeyEquation>` | Source for `PedagogyIndex.equations`. Requires `id` (canonical anchor) and `title`; body must contain exactly one `$$...$$` block (KaTeX-rendered). |
 | `<Objective>` | Pure-display primitive. Only meaningful as a child of `<LearningObjectives>`; the remark extractor walks it during MDX parse to populate `PedagogyIndex.objectives`. |
-| `<MultiRep>` | Children-mode source for `PedagogyIndex.multiRepBindings` (per [ADR 0043](../decisions/0043-notation-registry-multirep-alignment-audit.md)). Wraps `<RepVerbal>`, `<RepEquation refKey symbol>`, `<RepFigure refName symbolLabel>`, `<RepCode refName symbol>`, `<RepIntuition>` children — one concept across multiple representational modes. Feeds the **MR1–MR4** Representation Alignment Audit invariants. |
-| `<RepVerbal>` / `<RepEquation>` / `<RepFigure>` / `<RepCode>` / `<RepIntuition>` | Pure-display primitives. Only meaningful as children of `<MultiRep>`; the extractor walks them during MDX parse to populate `multiRepBindings`. `<RepEquation>` / `<RepFigure>` / `<RepCode>` carry refs that resolve against `equations` / `figureRegistry` / `<CodeCell>` names respectively. |
-| `<Intervention>` | Children-mode source for `PedagogyIndex.interventions` (per [ADR 0044](../decisions/0044-misconception-graph-and-intervention-library.md)). Nests inside a misconception `<Aside>` or `<Callout variant="misconception">` (`addresses="this"`) — or stands outside with an explicit `addresses="<misc-slug>"`. `type` references the 12 canonical interventions in `intervention-index.ts` or `"custom"`. Feeds the **MG3** + **I1–I3** audit invariants. |
+| `<MultiRep>` 🚧 in-progress | Children-mode source for `PedagogyIndex.multiReps` (per [ADR 0043](../decisions/0043-notation-registry-multirep-alignment-audit.md); v1 design locked in [2026-05-17 design doc](../../plans/2026-05-17-multirep-design.md)). Wraps `<RepVerbal>`, `<RepEquation refKey symbol>`, `<RepFigure refName symbolLabel>` children at v1 — one concept across multiple representational modes. Feeds the **MR1, MR2, MR4, MR6 + NR1–NR4** Representation Alignment Audit invariants. `<RepCode>` deferred until `<CodeCell>` ships (ADR 0018); `<RepIntuition>` dropped 2026-05-14 (intuition framing belongs in `<RepVerbal>`). |
+| `<RepVerbal>` / `<RepEquation>` / `<RepFigure>` 🚧 in-progress | Pure-display primitives. Only meaningful as children of `<MultiRep>`; the extractor walks them during MDX parse to populate `multiReps`. `<RepEquation>` / `<RepFigure>` carry refs that resolve against `equations` / `figureRegistry` names respectively. |
+| `<Intervention>` 🚧 in-progress | Children-mode source for `PedagogyIndex.interventions` (per [ADR 0044](../decisions/0044-misconception-graph-and-intervention-library.md); v1 design locked in [2026-05-17 design doc](../../plans/2026-05-17-intervention-design.md)). Nests inside a misconception `<Aside>` or `<Callout variant="misconception">` (`addresses="this"`) — or stands outside with an explicit `addresses="<misc-slug>"`. `type` references the 12 canonical interventions in `intervention-index.ts` or `"custom"`. Feeds the **MG3 + MG4 + I1–I3** audit invariants. (I4 deferred until ADR 0041 `move-index.ts` ships.) |
+| `<Observable>` / `<Assumption>` / `<Units>` / `<BreaksWhen>` / `<CommonMisuse>` 🚧 in-progress | Biography children of `<KeyEquation>` (per [ADR 0046](../decisions/0046-equation-biography.md); v1 design locked in [2026-05-17 design doc](../../plans/2026-05-17-equation-biography-design.md)). Make an equation's observational meaning, assumptions, units, validity domain, and common student misuses first-class structured metadata. Each component declares its `epistemicRole` as a hardcoded const (Observable→observable, Assumption→assumption, BreaksWhen→approximation, Units→none, CommonMisuse→cross-refs misconception). Feeds the **E7 + E8 + E9** audit invariants (only fire when biography children present). |
 
 ### Interactive React island
 
@@ -122,6 +123,7 @@ tests wait on this signal before exercising hover behavior.
 | `<ChapterFigures chapter="X" />` | All `<Figure>` usages in chapter X, joined with `figureRegistry` for src/alt/caption |
 | `<ChapterKeyInsights chapter="X" />` | All key-insight Asides + Callouts in chapter X |
 | `<ChapterMisconceptions chapter="X" />` | All misconception Asides + Callouts in chapter X |
+| `<ChapterMultiReps chapter="X" />` 🚧 in-progress | All `<MultiRep>` bindings declared in chapter X, grouped by concept (per [2026-05-17 design](../../plans/2026-05-17-multirep-design.md)) |
 | `<ChapterTDRs chapter="X" />` | All TDRs referenced from chapter X via `<TDRRef>`. In student-facing build, filters to public TDRs only (often empty); in instructor build, includes all referenced TDRs |
 
 Each component currently hardcodes `<h2>` for its section heading. A
@@ -325,8 +327,9 @@ errors at build time, not at runtime.
 | Inline reference to another chapter | `<ChapterRef slug="X" />` |
 | Inline reference to a Teaching Decision Record | `<TDRRef num="14" />` (per [ADR 0040](../decisions/0040-teaching-decision-records.md)) |
 | The chapter-opening "you will be able to..." list | `<LearningObjectives>` with `<Objective>` children |
-| One concept presented across multiple representational modes (prose + equation + figure + code + intuition) with explicit cross-bindings | `<MultiRep>` with `<RepVerbal>` / `<RepEquation>` / `<RepFigure>` / `<RepCode>` / `<RepIntuition>` children |
-| A pedagogical intervention paired with a misconception (worked example, contrasting cases, bridging analogy, etc.) | `<Intervention type="..." addresses="this">` nested inside a misconception `<Aside>` or `<Callout>` |
+| One concept presented across multiple representational modes (prose + equation + figure) with explicit cross-bindings | `<MultiRep>` 🚧 with `<RepVerbal>` / `<RepEquation>` / `<RepFigure>` children. `<RepCode>` deferred (pending `<CodeCell>`); intuition framing lives in `<RepVerbal>` prose. |
+| A pedagogical intervention paired with a misconception (worked example, contrasting cases, bridging analogy, etc.) | `<Intervention type="..." addresses="this">` 🚧 nested inside a misconception `<Aside>` or `<Callout>` |
+| Observational meaning / assumptions / units / validity domain / common misuses of a `<KeyEquation>` | `<Observable>` / `<Assumption>` / `<Units>` / `<BreaksWhen>` / `<CommonMisuse>` 🚧 as biography children of `<KeyEquation>` |
 | A single checkbox for a tracked item | `<InteractiveCheckbox>` |
 | A "predict before the answer" prompt | `<Predict>` |
 | A confidence rating (1–5 or 1–7) | `<ConfidenceCheck>` |
@@ -372,7 +375,9 @@ JSDoc:
 - [ADR 0027](../decisions/0027-mdx-render-boundary-prop-threading.md) — static vs persistence-bearing render boundary.
 - [ADR 0038](../decisions/0038-pedagogy-index-pattern.md) — pedagogy-index pattern (the architectural basis for the cross-reference and aggregator categories).
 - [ADR 0042](../decisions/0042-pedagogy-contract-and-ai-contribution-ledger.md) — Pedagogy Contract + AI Contribution Ledger (course-level YAML + per-chapter frontmatter; gates the Notation Registry opt-in).
-- [ADR 0043](../decisions/0043-notation-registry-multirep-alignment-audit.md) — Notation Registry + `<MultiRep>` + Representation Alignment Audit (NR1–NR4 + MR1–MR4 invariants).
-- [ADR 0044](../decisions/0044-misconception-graph-and-intervention-library.md) — Misconception Graph + Intervention Library + `<Intervention>` (MG1–MG3 + I1–I3 invariants).
+- [ADR 0043](../decisions/0043-notation-registry-multirep-alignment-audit.md) — Notation Registry + `<MultiRep>` + Representation Alignment Audit. v1 ships NR1–NR4 + MR1, MR2, MR4, MR6 invariants (MR3 + MR5 deferred with `<RepCode>`). See [2026-05-17 design hardening](../../plans/2026-05-17-multirep-design.md).
+- [ADR 0044](../decisions/0044-misconception-graph-and-intervention-library.md) — Misconception Graph + Intervention Library + `<Intervention>`. MG1 + MG2 already ship; v1 sprint adds MG3 + MG4 + I1–I3 (I4 deferred until `move-index.ts` ships). See [2026-05-17 design hardening](../../plans/2026-05-17-intervention-design.md).
+- [ADR 0046](../decisions/0046-equation-biography.md) — Equation Biography (6 children of `<KeyEquation>`) + E7 + E8 + E9 audit invariants. See [2026-05-17 design hardening](../../plans/2026-05-17-equation-biography-design.md).
+- [ADR 0058](../decisions/0058-epistemic-component-contract.md) — Epistemic Component Contract (8-role taxonomy). MultiRep binds role via Notation Registry concept declaration; EquationBiography children declare role as hardcoded const.
 - [Component contract](component-contract.md) — the TypeScript interface every component implements.
 - [Add a custom component](../how-to/add-a-custom-component.md) — recipe for new components.
