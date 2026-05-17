@@ -43,9 +43,10 @@ test.describe("PR-C3: <CourseMisconceptions /> on /misconceptions", () => {
     //      anchor `misconception-alert` slugified from the title.
     //      Rendered as the dt's DOM id.
     //   2. Aside-sourced (misconception-fixture, added by Intervention
-    //      PR-γ) — anchor `misc-1` from the auto-counter per
-    //      ChapterMisconceptions convention. The `name="universe-with-a-center"`
-    //      attribute is metadata for graph-edges, NOT the anchor.
+    //      PR-γ) — anchor `universe-with-a-center` derived from the
+    //      `name="universe-with-a-center"` attr per Intervention
+    //      PR-δ's anchor-precedence fix that promoted `name` above
+    //      slug(title) in the misconception extractor.
     //
     // The user-visible <dt> text is the entry's *label* (Callout's
     // `title` for long; "Misconception (brief)" default for short
@@ -54,7 +55,7 @@ test.describe("PR-C3: <CourseMisconceptions /> on /misconceptions", () => {
     // to label-text changes.
     await expect(terms).toHaveCount(2);
     await expect(page.locator("dt#misconception-alert")).toHaveCount(1);
-    await expect(page.locator("dt#misc-1")).toHaveCount(1);
+    await expect(page.locator("dt#universe-with-a-center")).toHaveCount(1);
   });
 
   test("Callout-sourced entry carries the `length: 'long'` modifier class on both <dt> and <dd>", async ({
@@ -96,10 +97,11 @@ test.describe("PR-C3: <CourseMisconceptions /> on /misconceptions", () => {
     // `<Aside kind="misconception" name="universe-with-a-center">`
     // without an explicit `label`, so the rendered `<dt>` text falls
     // back to "Misconception (brief)" (the default short-form
-    // label per ChapterMisconceptions). The anchor is `misc-1`
-    // (auto-counter; the Aside's `name` attr is metadata, not the
-    // anchor). Pin by the `--short` modifier class to find the
-    // Aside-sourced entry — only one exists on the page.
+    // label per ChapterMisconceptions). The anchor is
+    // `universe-with-a-center` — derived from the `name` attr per
+    // Intervention PR-δ's anchor-precedence fix. Pin by the
+    // `--short` modifier class to find the Aside-sourced entry —
+    // only one exists on the page.
     await page.goto(MISCONCEPTIONS_URL);
     const asideTerm = page.locator(
       ".sophie-course-misconceptions__term.sophie-course-misconceptions__term--short"
