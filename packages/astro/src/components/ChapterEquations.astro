@@ -1,6 +1,7 @@
 ---
 import type { EquationEntry } from "@sophie/core/schema";
 import { indexAccumulator } from "../lib/pedagogy-index-extractor";
+import BiographyRender from "./BiographyRender.astro";
 
 const { equations } = indexAccumulator.asPedagogyIndex();
 
@@ -60,10 +61,10 @@ const sorted =
             </span>
             <span class='sophie-chapter-equations__title'>{entry.title}</span>
           </dt>
-          <dd
-            class='sophie-chapter-equations__body'
-            set:html={entry.body}
-          />
+          <dd class='sophie-chapter-equations__body'>
+            <div set:html={entry.body} />
+            <BiographyRender biography={entry.biography} />
+          </dd>
         </Fragment>
       ))}
     </dl>

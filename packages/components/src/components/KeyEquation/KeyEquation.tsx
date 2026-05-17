@@ -21,6 +21,10 @@ import type { KeyEquationProps } from "./KeyEquation.schema.ts";
  * across multiple instances on the same page.
  */
 export function KeyEquation({ id, title, children }: KeyEquationProps) {
+  // `symbols` is intentionally NOT destructured into the render — it's
+  // author-declared metadata consumed by the PR-γ extractor + PR-δ NR
+  // audit invariants. Surfacing it in the rendered DOM would duplicate
+  // the (symbol → registry) source of truth without a render-side use.
   const titleId = useId();
   return (
     <section id={id} aria-labelledby={titleId} className={styles.section}>

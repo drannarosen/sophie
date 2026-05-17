@@ -89,3 +89,32 @@
   stroke: var(--sophie-border-subtle);
   stroke-width: 1px;
 }
+
+/* Compact-biography summary line per ADR 0046 design §"Surface 1" —
+ * counts of assumptions/misuses + optional "valid in: <type>" lead. Only
+ * rendered when the equation entry's biography is populated; absent
+ * when no biography is authored (per-equation opt-in). */
+.biography {
+  margin-block-start: var(--sophie-space-2);
+  padding-block-start: var(--sophie-space-2);
+  border-top: 1px solid var(--sophie-border-subtle);
+  color: var(--sophie-text-muted);
+  font-size: var(--sophie-text-xs);
+  font-family: var(--sophie-font-sans);
+  line-height: 1.5;
+}
+
+.biographyCounts {
+  color: var(--sophie-text);
+  font-weight: 500;
+}
+
+.biographyValid {
+  color: var(--sophie-text-muted);
+}
+
+.biographyValidSlug {
+  color: var(--sophie-text);
+  font-family: var(--sophie-font-mono);
+  font-weight: 500;
+}
