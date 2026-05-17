@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { AuditFindingSchema } from "./audit.ts";
+import { InterventionEntrySchema } from "./intervention.ts";
 import { MultiRepIndexEntrySchema } from "./multirep.ts";
 import { NonEmptyString, Slug } from "./primitives.ts";
 import { ValidationSchema } from "./validation.ts";
@@ -342,6 +343,14 @@ export const PedagogyIndexSchema = z.object({
    * apps that don't author MultiRep bindings yet keep working.
    */
   multiReps: z.array(MultiRepIndexEntrySchema).readonly().default([]),
+  /**
+   * Per-chapter `<Intervention>` callsite entries (ADR 0044 +
+   * 2026-05-17 design hardening). Populated by `extractInterventions`;
+   * consumed by audit invariants MG3/MG4/I1/I2/I3 (PR-δ). Defaults to
+   * `[]` so consumer apps that don't pair misconceptions with
+   * interventions yet keep working unchanged.
+   */
+  interventions: z.array(InterventionEntrySchema).readonly().default([]),
   /**
    * Per-contract validation entries (ADR 0056). One entry per ADR
    * (`docs/website/decisions/*.md`) and per reference doc

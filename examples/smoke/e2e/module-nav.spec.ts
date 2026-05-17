@@ -34,9 +34,17 @@ test.describe("PR 3: Module/chapter sidebar nav", () => {
     const foundations = page.locator(
       ".sophie-module[data-module='foundations'] .sophie-chapter-list a"
     );
-    await expect(foundations).toHaveCount(2);
+    // Three foundations chapters as of Intervention PR-γ: the PR-γ
+    // smoke fixture (`misconception-fixture.mdx`, order=3) pairs a
+    // misconception Aside with two literature-grounded interventions
+    // so the extractor's pedagogy-index `interventions` collection
+    // populates end-to-end.
+    await expect(foundations).toHaveCount(3);
     await expect(foundations.nth(0)).toHaveText(/Spoiler Alerts/);
     await expect(foundations.nth(1)).toHaveText(/Measuring the Sky/);
+    await expect(foundations.nth(2)).toHaveText(
+      /Misconceptions and Interventions/
+    );
 
     const stars = page.locator(
       ".sophie-module[data-module='stars'] .sophie-chapter-list a"

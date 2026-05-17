@@ -55,13 +55,21 @@ const InterventionAddressesSchema = z.union([
 export const InterventionPropsSchema = z
   .object({
     /**
-     * Optional anchor id (matches the pedagogy-index entry's
-     * `anchor` field, e.g. `intervention-contrasting-cases-1`).
-     * When supplied, the rendered `<aside>` carries the id so
-     * `#anchor`-style hash navigation lands on this block and the
-     * `:target` outline activates. The PR-γ extractor auto-derives
-     * this id from `type+name+chapter-index` and threads it through
-     * at render time; chapter authors typically omit it.
+     * Extractor-derived anchor id (NOT authorable). The PR-γ extractor
+     * + transform pass set this to
+     * `intervention-${slug(type|name)}-${idx}` so the rendered
+     * `<aside>` carries the same anchor stored on the pedagogy-index
+     * entry — hash navigation (`#intervention-contrasting-cases-1`)
+     * lands on the rendered DOM and the `:target` outline activates.
+     *
+     * Chapter authors **must NOT** supply this prop in MDX source.
+     * The PR-γ extractor rejects author-supplied `id` with a build-
+     * failing error (see `extractInterventions`) because letting the
+     * author author an id would split the contract between the
+     * pedagogy-index `anchor` field and the rendered DOM id — index
+     * cross-links from other chapters would silently 404. The
+     * `optional()` here is for the post-transform JSX shape where
+     * the extractor has filled the value in.
      */
     id: NonEmptyString.optional(),
     /**
