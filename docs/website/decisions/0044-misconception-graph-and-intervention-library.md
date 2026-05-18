@@ -784,3 +784,42 @@ PR cadence is trimmed from ADR 0044's implicit α/β/γ/δ/ε to
   MG1 + MG2 audit invariants already ship.
 - No PR-ε: no aggregator at v1 (MisconceptionGraphPage deferred per R1
   above; chapter-level rendering happens inline).
+
+### R7 — Misconception anchor precedence + Intervention `addresses="this"` slugify alignment
+
+Surfaced and closed in PR-δ
+([PR #90](https://github.com/drannarosen/sophie/pull/90), squash-merged
+2026-05-17). Two extractor changes that together close a cross-cutting
+coupling gap between the misconception-graph anchor scheme and the
+Intervention `addresses="this"` resolution:
+
+1. **Misconception anchor precedence** is now `id > slug(name) >
+   slug(title) > misc-${counter}` (per-chapter sequential). The
+   precedence places `name` **above** `slug(title)` so an
+   `<Aside kind="misconception" name="…" title="…">` resolves to the
+   `name`-derived anchor, not the prettier title-derived one. See
+   [`pedagogy-index-extractor.ts:836-843`](../../../packages/astro/src/lib/pedagogy-index-extractor.ts).
+
+2. **`<Intervention addresses="this">` rewrite** uses `slugify(miscName)`
+   (the enclosing `<Aside kind="misconception" name="…">`'s
+   slugified `name`), matching the misconception anchor precedence
+   exactly. See [`pedagogy-index-extractor.ts:1450-1461`](../../../packages/astro/src/lib/pedagogy-index-extractor.ts).
+
+Without this alignment, an author writing `<Aside kind="misconception"
+name="Universe With A Center" title="Cosmology has no center"><Intervention
+addresses="this">…</Intervention></Aside>` would have produced a
+misconception anchor of `cosmology-has-no-center` (slugified `title`)
+but an intervention resolution of `universe-with-a-center` (slugified
+`name`) — the audit's I1 invariant would have fired a misleading
+"unresolved cross-ref" WARNING.
+
+The fix is **structural**, not heuristic: both sides now read from
+the same precedence ordering, and the precedence is documented in
+the inline extractor comments. Future extractors that introduce new
+cross-refs to misconception anchors (e.g., `<MisconceptionRef
+name="…">`, deferred per ADR 0044 §R1) must follow the same
+precedence to land on the same anchor.
+
+The Phase B Reasoning OS core audit (§2.2; 2026-05-17) confirmed
+this fix was the right shape and called out the inline comment block
+as the architectural reference for the next contributor.
