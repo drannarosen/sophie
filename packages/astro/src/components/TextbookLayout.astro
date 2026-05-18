@@ -82,6 +82,18 @@ const allChapters: CollectionEntry<"chapters">[] =
   await getCollection("chapters");
 const modules: CollectionEntry<"modules">[] = await getCollection("modules");
 await Promise.all(allChapters.map((c) => render(c)));
+// ADR 0060 registry pattern: force every equation registry MDX through
+// our remark plugin BEFORE the audit runs, so R1/R4 see a complete
+// declarations-vs-citations picture. In production, Astro pre-renders
+// every page (including /equations/<id>), so the accumulator is
+// populated by build-end. In dev, content collections are processed
+// lazily on request — without this eager render, requesting a chapter
+// before any /equations/<id> page fires R1 ("citation without
+// declaration") because the registry MDX hasn't been processed yet.
+// Mirrors the chapters eager-render above.
+const equationEntries: CollectionEntry<"equations">[] =
+  await getCollection("equations");
+await Promise.all(equationEntries.map((e) => render(e)));
 const chapters = getStudentChapters(allChapters);
 // Push the consumer-supplied figure registry into the accumulator
 // BEFORE snapshotting / before the slot renders so that
