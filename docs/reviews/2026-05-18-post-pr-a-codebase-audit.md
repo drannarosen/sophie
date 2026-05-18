@@ -15,6 +15,15 @@ validation-* lib cluster has the same "single-orchestrator that grew
 by accretion" shape as the C1/C2 targets and would benefit from the
 same grouping treatment.
 
+**Revision (§2 — 2026-05-18 evening):** Anna sharpened the framing
+during the audit walkthrough — Sophie is AI-authored (per ADR 0030
++ this session's design conversation), and the codebase itself is one
+of AI's authoring tools. This now-explicit principle is captured in
+**[ADR 0061 — AI-optimized codebase design](../decisions/0061-ai-optimized-codebase-design.md)**.
+Several recommendations in this audit revised upward as a result —
+see the post-§Backlog **"Revised scope under ADR 0061"** subsection
+for what changed.
+
 ---
 
 ## Section 1: What Changed (PR-A recap)
@@ -262,34 +271,77 @@ This audit:
 
 ---
 
-## Sequencing recommendation
+## Revised scope under ADR 0061 (§2 revision — 2026-05-18 evening)
 
-If executing the backlog in a single Session-7-or-8 arc, the
-priorities map cleanly onto bucket structure:
+After Anna's clarification that the AI-optimization principle is
+forward-looking (Sophie will grow; lock in the right shape *now*
+before accretion costs compound), several recommendations shift up
+or flip outright. [ADR 0061 — AI-optimized codebase design](../decisions/0061-ai-optimized-codebase-design.md)
+formalizes the principle; this section maps the audit's backlog to
+the ADR's rules.
+
+| Item | Pre-ADR-0061 disposition | Post-ADR-0061 disposition | ADR 0061 rule |
+|------|--------------------------|---------------------------|---------------|
+| **C1** extractor split | Locked | Locked | Rules 1, 3, 4 |
+| **C2** audit split | Locked | Locked | Rules 1, 3, 4 |
+| **C3** test-file restructuring | Locked (post-C1/C2) | Locked + scoped per Rule 6 (tests split with source) | Rule 6 |
+| **C4** `schema/pedagogy-index.ts` (420 LOC) | "Don't split — schema files are scan-end-to-end" | **REVERSED: domain-group split into ~6 files** in `pedagogy-index-entries/` after C1 | Rules 1, 4 |
+| **C5** validation cluster grouping | P2 candidate, optional | **Locked: ship in Bucket C** | Rules 1, 4 |
+| **C6** transform-* test co-location | P4 defer | **Active**: ships with C3, not deferred | Rule 6 |
+| **C7** aside-positioning seam split | P4 defer | **Active**: split `compute-placements.ts` (pure) + `install-positioning.ts` (DOM) | Rules 1, 4 |
+| **P6** per-file LOC budget | P5 future maturity | **Ship in same arc** as Biome custom rule (300 info / 500 warn / 800 error) | Rule 3 |
+| **B4** doc-drift sweep (12 files) | P1 | P1 + retroactively required by Rule 5 | Rule 5 |
+
+### New items added under ADR 0061
+
+- **C8 — Useful-or-not audit of `useInteractive.ts` (238 LOC)**: at
+  Rule 3's *info* threshold; worth a 15-min pass to confirm
+  single-responsibility (currently: persistence + hydration +
+  BroadcastChannel — possibly worth a `useInteractive/` directory
+  split). ~30 min if it splits, 0 if it doesn't.
+- **C9 — `intervention-index.ts` (202 LOC)**: borderline; pair with C8.
+- **D4 — Atomic-docs check as PR template item**: add a checkbox to
+  the PR template ("Touched anything in `docs/website/`? Same PR
+  updates the docs."). Mechanical enforcement of Rule 5.
+
+### What Bucket-C size becomes
+
+Pre-ADR-0061, Bucket C totaled ~5 hours (C1: 3h, C2: 2h, deferred
+C3/C6/C7). Post-ADR-0061: ~8–10 hours, ordered as:
+
+| # | Item | Est. | Notes |
+|--:|---|---:|---|
+| 1 | **B4 doc-drift sweep** | 45 min | Bucket B; do first so docs are templates the C-arc references |
+| 2 | C5 validation cluster grouping | 1.5 h | Smallest, builds confidence in the pattern |
+| 3 | C1 extractor split | 3 h | Biggest blast radius; sets seams for C4 |
+| 4 | C4 schema domain-split | 1 h | Uses C1's seams as template |
+| 5 | C2 audit split | 2 h | Independent of C4 |
+| 6 | C3 + C6 test restructuring | 1 h | Mechanical follow-up |
+| 7 | C7 aside-positioning split | 30 min | |
+| 8 | C8 + C9 useful-or-not audits | 30 min | Confirm fit or skip |
+| 9 | P6 LOC budget Biome rule | 30 min | Locks the policy forward |
+
+Bucket B1/B2/B3 (NR4 invariant, Stefan-Boltzmann, chapter-components)
+remain as originally planned, sequenced before or after Bucket C
+based on Anna's preference.
+
+---
+
+## Sequencing recommendation (legacy — superseded by §2 revision)
+
+The pre-ADR-0061 sequencing kept for archival:
 
 ```
-Bucket B (locked):
+Bucket B (originally locked):
 ├── B1 — NR4 invariant per ADR 0046 §R10
 ├── B2 — Stefan-Boltzmann registry entry
 ├── B3 — chapter-components.md update
-└── B4 (NEW — P1) — Doc-drift sweep (12 files; ~45 min)
 
-Bucket C (locked + expanded):
+Bucket C (originally locked):
 ├── C1 — Split pedagogy-index-extractor.ts (2,454 LOC)
 ├── C2 — Split pedagogy-audit.ts (1,478 LOC)
 ├── C3 — Test-file restructuring (post-C1/C2)
-├── C4 — schema/pedagogy-index.ts: DO NOT SPLIT (recommend skip)
-├── C5 (NEW — P2) — Validation cluster grouping (~835 LOC; ~1.5h)
-├── C6 (NEW — P4) — transform-* test co-location (post-C1)
-└── C7 (NEW — P4, optional) — Aside positioning seam split
-
-Bucket D (NEW — P3, before/after B+C):
-├── D1 — M3 TODO: move to issue, remove from code
-├── D2 — Vision-page registry-ecosystem TOC (with collision investigation)
-└── D3 — Document eager-render pattern (ADR 0060 amendment)
+├── C4 — schema/pedagogy-index.ts: DO NOT SPLIT (recommend skip) [REVERSED]
 ```
 
-Bucket B4 (doc-drift sweep) is the **highest-leverage immediate
-follow-up** — it's mechanical, it's directly downstream of PR-A's
-atomic rename, and leaving it undone undermines the ADR-driven
-discipline that the rest of the codebase is built on.
+See "Revised scope under ADR 0061" above for the current plan.
