@@ -566,3 +566,47 @@ or none).
   — full plugin API + override semantics.
 - [`vision/features/backlog.md`](../vision/features/backlog.md) —
   successor ADRs (0048-A/B/C) for content population.
+
+## Revisions (2026-05-18 — Registry ecosystem amendment)
+
+### R1 — Registries are the canonical unit of cross-course content sharing
+
+[ADR 0060 — Registry Ecosystem](./0060-registry-ecosystem.md) names
+the **unit of sharing** ADR 0048's plugin layer needed but didn't
+specify. Cross-course content imports now have a concrete shape:
+**one registry entry per shareable unit**, with the schema, loader,
+and audit conventions ADR 0060 standardizes across registry types.
+
+The thesis ADR 0048 articulated — Sophie Astro's equation registry
+imported by Sophie Compute for a numerical-methods chapter, or
+Sophie Compute's algorithm-analysis registry imported by Sophie Astro
+for a computational-modeling unit — only makes sense if every shared
+item follows one shape. Pre-0060, "cross-course content" was
+necessarily abstract because the unit was undefined. Post-0060, the
+unit is **a registry entry** (file at `src/content/<registry>/<id>.mdx`,
+schema-validated, loader-resolved, audit-checked).
+
+### R2 — Plugin override semantics extend to registries
+
+The override conventions in [sophie-plugin-system.md](../reference/sophie-plugin-system.md)
+extend naturally to registry-pulled content:
+
+- **Content overrides** (`audit_overrides`, prerequisite revisions,
+  symbol-collision overrides per ADR 0053) operate on registry
+  entries the same way they operate on chapter inline content.
+  An imported equation registry can be partially overridden by the
+  consumer course without forking the entire registry.
+- **Loader composition**: per ADR 0060's `loadRegistry<T>` helper,
+  the plugin layer composes registry loaders — a consumer course's
+  `loadEquationsRegistry()` reads its own `src/content/equations/`
+  AND any plugin-imported registries, with consumer entries
+  shadowing plugin entries on slug collision.
+
+### R3 — Successor ADRs 0048-A/B/C are unblocked
+
+The placeholder for content-population ADRs (0048-A/B/C) referenced
+above no longer needs to define *what* content gets shared.
+ADR 0060 specifies the content-shape contract; successor ADRs only
+need to specify the *exchange* mechanics (versioning, dependency
+resolution, plugin manifest format). Net: the content-population
+ADRs become smaller and more focused than originally scoped.

@@ -87,12 +87,12 @@ npx mystmd start          # serves locally on http://localhost:3000
 npx mystmd build --html   # static build → _build/html/
 ```
 
-## Locked decisions — ADRs 0001–0058
+## Locked decisions — ADRs 0001–0060
 
 Read the relevant ADR before proposing changes that touch its area.
 This table is a load-bearing-decisions index, not a complete listing —
 not every ADR appears here. Browse `docs/website/decisions/` for the
-full set (0001–0058 at last count).
+full set (0001–0060 at last count).
 
 | Concern                          | ADR  | Decision                                                                                                                  |
 | -------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------- |
@@ -141,6 +141,7 @@ full set (0001–0058 at last count).
 | Visual regression baseline       | 0057 | Self-hosted `@storybook/test-runner` + Playwright; CI Linux as canonical baseline (supersedes 0028 VR deferral)           |
 | **Epistemic Component Contract** | 0058 | **Eight-role taxonomy** (optional, additive); amends 0003/0004/0044/0046; underwrites Reasoning-OS thesis                  |
 | **Linked-representation state**  | 0059 | **A11 graduated**: Zustand page-local store + `useLinkedParameter` + `<ParameterCursor>` + `<ParameterSlider>`             |
+| **Registry ecosystem**           | 0060 | **Universal+reusable → registry; one-shot → inline (collection)**: 6 shared conventions; amends 0038/0043/0044/0046/0048    |
 
 ## Engineering principles
 

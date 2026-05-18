@@ -120,6 +120,48 @@ Plus three cross-cutting amendments to existing ADRs / docs:
   Several v1 invariants are gameable by perfunctory
   satisfaction — by design. Quality lives elsewhere.
 
+### Registry ecosystem (2026-05-18)
+
+Following PR-7's chapter capstone (which surfaced equation
+biography drift between `spoiler-alerts.mdx` and
+`wiens-law-fixture.mdx` — two slugs, two biographies, guaranteed to
+diverge), Anna and Claude locked the **registry ecosystem** as
+Sophie's second content-architecture axiom (parallel to ADR 0058's
+8-role epistemic contract).
+
+| ADR | Title | Description |
+|---|---|---|
+| [0060](../decisions/0060-registry-ecosystem.md) | Registry Ecosystem | Bright-line rule (universal + reusable → registry; one-shot → inline collection) + six shared platform conventions (storage / schema / loader / audit primitives / `<RegistryRef>` family / aggregators). Amends 0038, 0043, 0044, 0046, 0048. |
+
+Vision-level framing at [vision/design/registry-ecosystem.md](../vision/design/registry-ecosystem.md)
+— the thesis-side counterpart positioning the registry ecosystem
+as Sophie's content-architecture commitment alongside the
+Reasoning OS epistemic contract.
+
+**PR sequence (initial phase):**
+
+- **PR-A — Equations registry + ecosystem infrastructure**: new
+  `src/content/equations/` collection (one MDX file per equation);
+  shared `loadRegistry<T>` helper; shared audit primitives (R1
+  ERROR / R2 WARNING / R3 ERROR / R4 WARNING); `<KeyEquation
+  refId>` lookup; `<EquationRef>` cross-ref; new `<DerivationStep>`
+  biography child. Migrates PR-7's three inline biographies
+  (`inverse-square-law`, `wiens-law`, `orbital-mass`) to the
+  registry; chapter MDX shrinks dramatically.
+- **PR-B — Figures registry refactor**: one MDX file per figure
+  (replacing the generated `figures.ts`); reuses PR-A's
+  infrastructure. Validates the loader / audit / ref abstractions
+  are reusable across registry types.
+
+**Deferred to future phases** (per ADR 0060's promotion-on-reuse-
+signal rule):
+
+- Misconceptions registry (ADR 0044 §R9 names the path; PR-7
+  misconceptions are inline and that's appropriate for one
+  chapter).
+- Definitions registry.
+- Worked-examples registry.
+
 **Next up:** future ADRs promote from
 [backlog](../vision/features/backlog.md) as authoring volume
 surfaces real friction. Highest-leverage near-term candidates:

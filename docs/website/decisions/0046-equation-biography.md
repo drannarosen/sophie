@@ -835,3 +835,83 @@ binding is grounded structurally rather than by inline strings.
 - E10 (and similar) misconception-graph cross-ref audit invariants
   for `<CommonMisuse misconception="X">` — scheduled for PR-D of the
   Session 4 audit-fix sprint (see audit §P3-2).
+
+## Revisions (2026-05-18 — Registry ecosystem amendment)
+
+[ADR 0060 — Registry Ecosystem](./0060-registry-ecosystem.md) moves
+equation biographies from chapter-inline storage to a per-equation
+registry. The **biography contract is unchanged** — what changes is
+*where* the biography lives.
+
+### R8 — Equation biography migrates to registry storage
+
+Pre-0060: a `<KeyEquation id="..." symbols={[…]}>` block in a chapter
+MDX held the equation's primary `$$tex$$` plus biography children
+(Observable, Assumption, Units, BreaksWhen, CommonMisuse) inline.
+The pedagogy-index extractor walked the chapter MDX AST to build
+`PedagogyIndex.equations[i]`.
+
+Post-0060: each equation gets its own file at
+`src/content/equations/<id>.mdx`. Frontmatter holds the structured
+fields (`id`, `title`, `tex`, `symbols`, plus new fields detailed
+in §R9). Body holds the biography children (Observable, Assumption,
+BreaksWhen, CommonMisuse) using exactly the same components ADR 0046
+defines.
+
+Chapter MDX shrinks dramatically. The new chapter-side authoring
+shape:
+
+```mdx
+<KeyEquation refId="wiens-law">
+  We've seen Wien's law before; in this chapter we apply it to
+  dust thermal emission…
+</KeyEquation>
+```
+
+- `refId` (new prop) looks up the registry entry at build time and
+  renders the full card from registry-pulled biography children.
+- Children render as **chapter framing prose at the top of the
+  card**, before the equation tex. Authors who don't want
+  chapter-specific framing write `<KeyEquation refId="..." />`
+  self-closing.
+- Chapter-side biography overrides are **not supported at v1**
+  (strict — preserves the registry as one source of truth). If a
+  chapter needs a different biography slice, the right move is to
+  add an `Assumption` or `BreaksWhen` clause to the registry entry,
+  not to override locally.
+
+### R9 — Net-new biography fields beyond ADR 0046's original five
+
+PR-7's chapter capstone surfaced four "multiple parts" that the
+ADR 0046 biography contract didn't cover. ADR 0060 brainstorm
+locked these as additional Phase-1 fields:
+
+| Field | Storage | Shape |
+|---|---|---|
+| **Constants table** | frontmatter | `constants: [{ symbol, value, unit, name }]` — equation-specific constants (Wien's b, gravity's G, Planck's h) |
+| **Rearranged forms** | frontmatter | `rearranged_forms: [{ tex, solves_for, label? }]` — sibling forms of the primary equation (e.g., `d = sqrt(L/4πF)` alongside `F = L/4πd²`) |
+| **Related-equation cross-refs** | frontmatter | `related: [{ refId, kind, description? }]` where `kind ∈ {"see-also", "prereq", "derives-from"}` |
+| **Derivation step list** | body | `<DerivationStep label="...">` children — collapsible-by-default; chapter force-expands via `<KeyEquation refId="..." showDerivation />` |
+
+`<DerivationStep>` is a **new biography component** added to ADR
+0046's family. It inherits the same pattern as Observable /
+Assumption / BreaksWhen / CommonMisuse: a Tier-3 chrome card, an
+`epistemicRole` const (likely `"model"` — the derivation IS the
+model-construction trace), and an extractor path that serializes
+children into the index.
+
+### R10 — Symbol units migrate to notation-registry, not per-equation
+
+ADR 0046's original `<Units symbol="..." unit="...">` biography
+child carried the unit inline. ADR 0060 moves unit declaration to
+the notation registry: the equation file declares `symbols: ["T",
+"\\lambda_{peak}"]`, and the loader resolves each symbol to its
+notation-registry concept (which carries `units`).
+
+The `<Units>` biography child remains supported for cases where the
+notation registry doesn't have an entry (e.g., one-off equation-
+local symbols), but the **registry path is the default**. This
+eliminates the duplication PR-7 surfaced (units declared once in
+notation-registry AND again per equation in `<Units>` children)
+and resolves the JSX-attribute-vs-expression escaping mismatch the
+fixture chapter has been hitting since it landed.

@@ -566,3 +566,47 @@ production bugs that simple timing patterns hide.
   — the schema (materialized in PR-C1).
 - [`packages/astro/src/lib/pedagogy-index-extractor.ts`](../../../packages/astro/src/lib/pedagogy-index-extractor.ts)
   — the remark plugin (materialized in PR-C1).
+
+## Revisions (2026-05-18 — Registry ecosystem amendment)
+
+[ADR 0060 — Registry Ecosystem](./0060-registry-ecosystem.md) names a
+second source for pedagogy-index content. The pedagogy index now
+aggregates from **two patterns** at the consumption layer.
+
+### R1 — Pedagogy index aggregates registry + collection sources
+
+Pre-0060: every pedagogy-index entry came from chapter-inline MDX,
+extracted by `pedagogy-index-extractor` at build time. The extractor
+walked the MDX AST and populated `PedagogyIndex.{equations,
+misconceptions, definitions, keyInsights, …}` from chapter content.
+
+Post-0060: equations and figures migrate to the registry pattern
+(per-entry MDX files in `src/content/equations/` and
+`src/content/figures/`). The pedagogy index continues to expose the
+same shape (`PedagogyIndex.equations[]`, `PedagogyIndex.figures[]`),
+but the *source* of each entry differs:
+
+| Index field | Source pre-0060 | Source post-0060 |
+|---|---|---|
+| `equations` | chapter-inline `<KeyEquation>` | `src/content/equations/*.mdx` registry (PR-A) |
+| `figures` | `figures.ts` generated from `figures.yml` | `src/content/figures/*.mdx` registry (PR-B) |
+| `misconceptions`, `definitions`, `keyInsights`, `objectives` | chapter-inline | chapter-inline (unchanged at v1) |
+
+The `pedagogy-index-extractor` gains a registry-collection loader
+path alongside its existing chapter-MDX walker. Consumers (audit,
+aggregators, `<EqRef>` lookup, AI authoring) read the index the same
+way regardless of source.
+
+### R2 — The two patterns coexist by design
+
+Registry-pattern content (universal + reusable, per ADR 0060's
+bright-line rule) and collection-pattern content (one-shot or
+instance-specific, authored inline) both feed the pedagogy index.
+The `<ChapterXxx>` / `<CourseXxx>` aggregators don't care which
+pattern produced an entry — they render the same dt/dd shape either
+way. The asymmetry lives at the *authoring* layer, not at the
+*consumption* layer.
+
+This preserves ADR 0038's original contract (one pedagogy index;
+multiple consumers; one extraction phase) while accommodating the
+registry-vs-collection distinction the ecosystem requires.

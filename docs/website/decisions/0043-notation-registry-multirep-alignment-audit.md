@@ -885,3 +885,45 @@ The `transient: true` opt-out clause for generic per-derivation
 placeholders did NOT ship — authors opt out at v1 by simply not
 declaring those symbols on `KeyEquation.symbols`. Reserved as a v2
 schema extension if a real consumer ever needs it.
+
+## Revisions (2026-05-18 — Registry ecosystem amendment)
+
+### R8 — Notation registry is one instance of the registry-ecosystem pattern
+
+[ADR 0060 — Registry Ecosystem](./0060-registry-ecosystem.md) names
+the shape ADR 0043 has been implementing all along. The notation
+registry is now formally **one instance of a platform pattern** that
+also covers equations (PR-A) and figures (PR-B), with misconception,
+definition, and worked-example registries to follow in future phases.
+
+The ADR 0043 contract is unchanged. The framing changes:
+
+- **Then**: "Notation Registry is a domain-specific symbol/unit
+  catalog with bespoke loader, schema, and audit invariants."
+- **Now**: "Notation Registry is one entry in a platform registry
+  ecosystem. Its loader, schema, and NR1–NR4 audit invariants
+  factor into shared primitives + type-specific layers."
+
+The notation registry differs from the other Phase-1 registries
+(equations, figures) in one specific way: it stores **pure-data
+concept entries** (id, verbal_label, canonical_symbol, units,
+epistemic_role) — no prose. ADR 0060 lets pure-data registries stay
+as YAML at the consumer-repo root (the existing
+`notation-registry.yaml` shape), while prose-rich registries use
+Astro content collections at `src/content/<name>/`. The shared
+loader / audit / ref-primitive abstractions cover both storage
+modes.
+
+### R9 — `<RegistryRef>` family wraps existing reference primitives
+
+ADR 0060's reference-primitive convention generalizes the existing
+`<EqRef>`, `<FigureRef>`, `<GlossaryTerm>`, `<ChapterRef>`,
+`<TDRRef>` family. Each becomes a thin wrapper over a shared
+`<RegistryRef collection refId>` base. The author-facing names and
+APIs don't change; the implementation layers a shared
+hover-card + hydration + back-link path under the surface.
+
+No notation-registry-specific action is needed at the ADR 0043
+level — concepts continue to be cited inline by `<MultiRep
+concept="…">` and indirectly through `<KeyEquation symbols={[…]}>`.
+The framework extension is purely platform-internal.

@@ -860,3 +860,56 @@ The previous `// TODO once that store exists alongside an inline
 is replaced by a reference to this §R8 note (PR-D, Session 4
 audit-fix sprint) per CLAUDE.md "no `TODO` without an issue link"
 — this §R-note serves the same audit-trail role as a GitHub issue.
+
+## Revisions (2026-05-18 — Registry ecosystem amendment)
+
+### R9 — `<MisconceptionRef>` unblocks once the misconception registry exists
+
+§R8 (2026-05-17) deferred `<MisconceptionRef>` + a misconception-
+store lookup to v2, blocked on "neither prerequisite ships at v1."
+[ADR 0060 — Registry Ecosystem](./0060-registry-ecosystem.md) names
+the path forward.
+
+The misconception registry is in **Phase 2** of the registry-
+ecosystem rollout, deferred until cross-chapter reuse signals
+appear (per ADR 0060's bright-line rule: universal + reusable →
+registry, with reuse pressure as the promotion signal). PR-7 just
+landed 8 misconceptions inline in `spoiler-alerts.mdx` (collection
+pattern); none are yet referenced from a second chapter, so the
+promotion signal hasn't fired.
+
+When the misconception registry does land (Phase 2):
+
+- Each misconception becomes a file at
+  `src/content/misconceptions/<slug>.mdx` with frontmatter
+  `{ id, name, label?, length, tags, version }` and body containing
+  the misconception prose + nested `<Intervention>` children that
+  travel with it.
+- `<MisconceptionRef refId="...">` becomes a thin wrapper over the
+  shared `<RegistryRef collection refId>` base introduced by
+  PR-A (per ADR 0060 §convention 5).
+- Chapter inline `<Aside kind="misconception" name="...">` continues
+  to work as the collection-pattern shape for chapter-specific
+  misconceptions; cross-chapter-reused misconceptions migrate to the
+  registry.
+
+Until that lands, the v1 raw-slug "Addresses: `universe-with-a-center`"
+render documented in §R8 remains the canonical behavior.
+
+### R10 — Intervention library stays where it is
+
+The 12-entry intervention library at
+[`intervention-index.ts`](../../../packages/components/src/intervention/intervention-index.ts)
+was flagged as registry-shaped by ADR 0060's audit of existing
+registries. It is *already* a registry by the ADR 0060 rule
+(universal + reusable; loaded by `getInterventionLibrary()`;
+referenced from chapters by `<Intervention type="…">`).
+
+No migration is needed. The intervention library is **platform-
+level content** (the canonical 12 cognitive-science remediation
+moves), not consumer-repo content, so it stays in
+`@sophie/components` rather than moving to a consumer-repo
+`src/content/interventions/` collection. ADR 0048's plugin layer
+will let consumers extend the platform library with course-specific
+interventions in a future phase — that extension will use the
+content-collection shape described in ADR 0060.
