@@ -126,10 +126,19 @@ These are the genres Sophie commits to today.
   [3Blue1Brown](https://www.youtube.com/@3blue1brown) on YouTube, and
   the maintained open-source library is at
   [manim.community](https://www.manim.community/). *Sweet spot:*
-  derivations and narrated worked examples with faded scaffolds.
-  *Not the spine:* image tours, parameter sweeps (use interactive
-  figures), photographic-imagery storytelling. See §5 for the
-  cinematic-appendix thesis.
+  derivations and narrated worked examples with faded scaffolds —
+  expanded into an eight-subtype catalog
+  (algebraic derivations, geometric proofs, calculus walkthroughs,
+  limit-case animations, dimensional analysis, numerical-method
+  walkthroughs, faded-scaffold worked examples, comparison overlays).
+  See [`manim-program.md`](manim-program.md) for the full Manim
+  vision — the subtype catalog with ASTR 201 examples, the
+  role-coded animation thesis, the astronomy-specific affordances
+  (`ImageMobject` + astropy/FITS, numpy-driven Mobjects), the
+  `manim-slides` reuse story, and the Phase 1 Module-1 pilot
+  commitment. *Not the spine:* image tours, parameter sweeps (use
+  interactive figures), photographic-imagery storytelling. See §5
+  for the cinematic-appendix thesis.
 - **Interactive figures.** Sophie's primary multimedia surface; the
   spec lives in
   [`interactive-figure-target.md`](interactive-figure-target.md),
@@ -275,6 +284,19 @@ Operationally, this means Manim clips are used *narrowly* in ASTR
 Parameter sweeps, image tours, and other "video-shaped" pedagogical
 moments belong to declarative components (interactive figures, sky
 tours, sonification clips).
+
+**Narrow ≠ shallow.** "One genre, used narrowly" doesn't mean "one
+or two clips." The
+[Manim program doc](manim-program.md) catalogs eight distinct
+content subtypes within the derivation-and-worked-example category
+(algebraic derivations, geometric proofs, calculus walkthroughs,
+limit-case animations, dimensional analysis, numerical-method
+walkthroughs, faded-scaffold worked examples, comparison overlays),
+plus the role-coded animation thesis that makes Sophie's Manim
+clips distinctive. The exception-status framing is about
+*declarative-component contract scope*, not about how much
+substance Manim carries. Inside its lane, the Manim program is
+broad and pedagogically deep.
 
 ## §6 — Manim-alternatives surveyed (and rejected, for now)
 

@@ -109,6 +109,7 @@ project:
         - file: vision/design/visual-polish-target.md
         - file: vision/design/interactive-figure-target.md
         - file: vision/design/multimedia-portfolio.md
+        - file: vision/design/manim-program.md
         - file: vision/design/dark-mode-palette.md
         - file: vision/design/theme-token-audit.md
         - file: vision/features/index.md

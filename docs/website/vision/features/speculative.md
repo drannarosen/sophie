@@ -421,3 +421,88 @@ audio embed chrome. Hard to justify pre-tenure while NotebookLM works.
 See also:
 [multimedia portfolio map](../design/multimedia-portfolio.md) — the
 brainstorm output that produced S8-S11.
+
+---
+
+## S12. Sophie-to-Manim authoring bridge
+
+**What it is.** A CLI tool — call it `sophie manim scaffold
+<chapter>` — that reads Sophie's structured chapter source and
+emits a Manim CE script skeleton ready for AI redlining + human
+review. Three structural inputs already exist in Sophie source
+and map cleanly onto Manim's authoring needs:
+
+- [`<EquationBiography>`](../../decisions/0046-equation-biography.md)
+  blocks declare the assumption / break-when / common-misuse
+  structure of each equation. That's the *narrative scaffold* of
+  a derivation-clip script — which substitution comes when, under
+  which assumption, which approximation gets relaxed at which
+  step.
+- The
+  [pedagogy index](../../decisions/0038-pedagogy-index-pattern.md)
+  serializes chapter narration structure (key insights, asides,
+  misconception flags). That's the cue-point sequence for
+  `self.next_slide()` calls in `manim-slides` output, plus
+  candidate breakpoints for narrated pacing.
+- The
+  [epistemic role contract](../../decisions/0058-epistemic-component-contract.md)
+  defines the observable / model / inference / approximation
+  vocabulary that maps onto Manim's
+  `set_color_by_tex_to_color_map({...})` — the
+  [role-coded animation thesis](../design/manim-program.md#id-3-the-role-coded-animation-thesis)
+  in the Manim program doc.
+
+The bridge takes those three substrates and produces a derivation-
+skeleton .py script: `MathTex` calls in the right order, the
+role-color map declared at the top, `next_slide()` boundaries
+placed at narrated breakpoints, and `TransformMatchingTex` calls
+between consecutive equations. The script is a *starting point*,
+not a finished clip — Anna (or AI orchestrator) refines geometry,
+pacing, and visual choreography from there.
+
+**Why it might matter.** Highest-leverage future move in the
+Manim program. Turns Sophie's existing schema'd chapter source
+into Manim authoring fuel, dramatically lowering the per-clip
+authoring cost. If full-semester Manim coverage becomes a goal
+(promotion criterion from
+[Manim Phase 1](../design/manim-program.md#id-6-phase-1-commitment-module-1-pilot)),
+manual authoring at ~1-4 hours per clip × 12 chapters becomes
+the binding constraint; a scaffold bridge collapses much of that
+to AI-generates-skeleton + Anna-redlines. Also a real
+differentiation claim — no competing platform turns its content
+schema into animation source.
+
+**Why it might not.** Two real risks:
+
+1. **No manual baseline yet.** The bridge is only valuable if
+   the manual authoring patterns are clear enough to encode in a
+   template. The Phase 1 Module-1 pilot must ship first; the
+   pilot teaches us which manual patterns are stable enough to
+   automate vs. which need human judgment per clip.
+2. **AI-orchestrated authoring may already be good enough
+   without the bridge.** If GPT-class models can write a working
+   Manim script from a one-paragraph prompt + an
+   `<EquationBiography>` paste, the bridge's value-add is
+   marginal — the AI is already doing the schema-to-script
+   translation in-prompt. The bridge earns its place only if
+   structured-input-driven generation is meaningfully more
+   reliable than free-form prompting.
+
+**Estimated cost.** Medium-large. The translation logic is real
+engineering work (schema parsing, Manim-AST generation,
+role-color application), probably ~2-3 weeks of focused work
+even with AI assistance. Not free.
+
+**Status.**
+- 2026-05-17 — surfaced (speculative) during the Manim program
+  brainstorm. The [Manim program doc](../design/manim-program.md#id-7-forward-looking-enables)
+  flags this as the highest-leverage forward-looking enable.
+- Promotion criteria: Phase 1 Module-1 pilot ships AND the
+  manual authoring patterns prove stable enough across subtypes
+  that a template-driven scaffold is meaningfully cheaper than
+  free-form AI prompting from the chapter source. If free-form
+  AI prompting suffices, this stays speculative indefinitely.
+
+See also:
+[Manim program](../design/manim-program.md) — the vision doc this
+speculative entry forward-references.
