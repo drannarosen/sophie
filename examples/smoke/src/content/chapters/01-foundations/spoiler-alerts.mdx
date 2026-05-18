@@ -11,8 +11,11 @@ tags: ["course-overview", "foundations"]
 
 import {
   Aside,
+  Assumption,
+  BreaksWhen,
   ChapterRef,
   CollapsibleCard,
+  CommonMisuse,
   ComprehensionGate,
   ConfidenceCheck,
   EffortLog,
@@ -20,10 +23,18 @@ import {
   FigureRef,
   GlossaryTerm,
   InteractiveCallout,
+  Intervention,
+  KeyEquation,
   LearningObjectives,
+  MultiRep,
   Objective,
+  Observable,
   Predict,
   Reflection,
+  RepEquation,
+  RepFigure,
+  RepVerbal,
+  Units,
 } from "@sophie/components";
 import ChapterGlossary from "@sophie/astro/components/ChapterGlossary.astro";
 
@@ -240,7 +251,11 @@ A third star of the same type appears **9× fainter** than the reference star. H
 *(Think first... then check: 3× farther, because $3^2 = 9$)*
 </InteractiveCallout>
 
-<KeyEquation id="inverse-square-law" title="The Inverse-Square Law">
+<KeyEquation
+  id="inverse-square-law"
+  title="The Inverse-Square Law"
+  symbols={["F", "L", "d"]}
+>
 We'll develop this properly in a later lecture, but here's the key idea.
 
 Imagine a star emitting light uniformly in all directions. That light spreads out over the surface of an expanding sphere. At distance $d$, the sphere has surface area $4\pi d^2$. The same total light is now spread over this larger area, so the **flux** (light per unit area) decreases:
@@ -248,12 +263,6 @@ Imagine a star emitting light uniformly in all directions. That light spreads ou
 $$
 F = \frac{L}{4\pi d^2}
 $$
-
-where:
-
-- $F$ = flux (what we measure, in erg s⁻¹ cm⁻²)
-- $L$ = luminosity (what the star emits, in erg s⁻¹)
-- $d$ = distance (in cm)
 
 **The key insight:** Flux falls off as $1/d^2$. Double the distance → quarter the brightness. This "inverse-square law" is why determining distances is so central to astronomy: if you know $L$ (from a "standard candle") and measure $F$, you can solve for $d$.
 
@@ -267,20 +276,59 @@ $$
 
 If you can determine $L$ independently (from pulsation period, spectral type, or explosion physics), measuring $F$ gives you $d$.
 
-**Units check (CGS):**
-
-- $L$ in erg/s
-- $d$ in cm
-- $4\pi$ is dimensionless
-- $F$ in erg s⁻¹ cm⁻² ✓
-
 **Physical intuition:**
 
 - The $4\pi$ comes from the sphere's geometry (full solid angle)
 - The $d^2$ comes from how area scales with radius
-- This is purely geometric—it doesn't depend on *what kind* of light or *what kind* of source
+- This is purely geometric — it doesn't depend on *what kind* of light or *what kind* of source
 
-**Connection to Spoiler 2:** The cosmic distance ladder (Section 1.2) is built entirely on this relationship. Every "standard candle"—Cepheids, Type Ia supernovae—works because we can determine $L$ independently and then solve for $d$.
+**Connection to Spoiler 2:** The cosmic distance ladder (Section 1.2) is built entirely on this relationship. Every "standard candle" — Cepheids, Type Ia supernovae — works because we can determine $L$ independently and then solve for $d$.
+
+  <Observable>
+    The flux $F$ received from a source at distance $d$ — the energy
+    per unit time per unit area arriving at our detector. We literally
+    count photons; their rate per unit area is the observable.
+  </Observable>
+
+  <Assumption type="isotropic-emission">
+    The source emits the same power in every direction. Beamed
+    emitters (relativistic jets, pulsar lighthouses) violate this and
+    require a directional beaming correction.
+  </Assumption>
+
+  <Assumption type="point-source">
+    The source is small enough relative to the observation distance
+    that geometric extension can be ignored. Resolved extended sources
+    (nearby galaxies, large nebulae) require integrating flux over
+    solid angle.
+  </Assumption>
+
+  <Assumption type="transparent-medium">
+    No absorption or scattering between source and observer. Dust and
+    gas along the line of sight produce extinction that dims observed
+    flux beyond the geometric $1/d^2$ fall-off.
+  </Assumption>
+
+  <Units symbol="F" unit="erg s^{-1} cm^{-2}" />
+
+  <Units symbol="L" unit="erg s^{-1}" />
+
+  <Units symbol="d" unit="cm" />
+
+  <BreaksWhen>
+    The source is beamed (relativistic jets), spatially resolved
+    (extended galaxies, nearby nebulae), or seen through a dusty /
+    absorbing medium. At cosmological distances the simple Euclidean
+    $d^2$ term is replaced by the luminosity distance, which folds in
+    redshift and time-dilation corrections.
+  </BreaksWhen>
+
+  <CommonMisuse misconception="brighter-equals-intrinsically-brighter">
+    Treating apparent brightness as a direct proxy for intrinsic
+    luminosity. Two equally luminous stars at very different distances
+    can appear at wildly different fluxes; the brightness comparison
+    says nothing about the sources until the distance term is fixed.
+  </CommonMisuse>
 </KeyEquation>
 
 <Callout variant="tip" title="Two Modes of Reading Equations">
@@ -464,6 +512,28 @@ Friedrich Bessel measured the first stellar parallax — 61 Cygni at 0.3 arcseco
 Every distance method in astronomy ultimately rests on geometric parallax. Subsequent rungs of the cosmic distance ladder (standard candles, redshift) are calibrated against parallax-measured distances of nearby objects.
 </Aside>
 
+<MultiRep concept="luminosity">
+  <RepVerbal>
+    **Luminosity** $L$ is the total radiant power a source emits — energy per unit time, summed over every direction. It's an intrinsic property of the source; nothing about $L$ depends on where you're standing. A distant Cepheid and a nearby Cepheid of the same pulsation period have identical $L$ even though they look very different to us. The whole point of a "standard candle" is to nail down $L$ independently so we can solve <EqRef slug="inverse-square-law" client:load /> for the distance.
+  </RepVerbal>
+
+  <RepEquation refKey="inverse-square-law" symbol="L" />
+
+  <RepFigure refName="standard-candles" symbolLabel="L" />
+</MultiRep>
+
+<Aside kind="misconception" name="brighter-equals-intrinsically-brighter" title="A common confusion: brighter on the sky means intrinsically more luminous">
+A natural inference from the night sky is that the *brightest* points of light are also the *most luminous* sources — Sirius outshines Vega because Sirius emits more power. The <EqRef slug="inverse-square-law" client:load /> equation shows why this fails: flux folds together luminosity *and* distance. The brightest star in the sky can be intrinsically dim and merely close; an intrinsically blazing supergiant can look ordinary because it's far away.
+
+  <Intervention type="refutation-text" addresses="this">
+    **Why the framing feels right:** Pre-scientific astronomers ranked stars by apparent brightness alone (the magnitude system inherited from Hipparchus). The ranking *does* sort what we see — it just doesn't sort what the stars *are*.
+
+    **Why it's wrong:** $F = L / 4\pi d^2$. Two stars with identical $L$ at distances differing by a factor of 10 will appear different in apparent brightness by a factor of 100. Sirius is luminous ($L \approx 25\,L_\odot$) and nearby (2.6 pc). Deneb is *enormously* luminous ($L \approx 2 \times 10^5\,L_\odot$) but ~800 pc away. Deneb is the more luminous object by four orders of magnitude; both appear at similar apparent brightness from Earth.
+
+    **Why it's tempting:** Flux is the direct observable. Until you've internalized that flux and luminosity are different quantities related through distance, "bright" has no other meaning to lean on. The fix is to keep $d$ on the table whenever you compare brightnesses.
+  </Intervention>
+</Aside>
+
 <CollapsibleCard
   client:load
   course="smoke"
@@ -534,6 +604,18 @@ Iron (Fe) is special: it's the most tightly bound nucleus. Fusion *to* iron rele
 **What do we infer?** Light contains many wavelengths simultaneously. "White" is a mixture; each color corresponds to a different wavelength.
 
 **What physics makes this legal?** Different wavelengths travel at different speeds through glass, causing them to bend by different amounts and separate spatially.
+
+<Aside kind="misconception" name="rainbows-are-decorative" title="A common confusion: rainbows are decorative">
+The instinct most students bring to a prism rainbow is that the colors are *pretty* — a visual flourish without information content. That framing makes spectroscopy look ornamental and hides why astronomers care about it.
+
+  <Intervention type="refutation-text" addresses="this">
+    **Why the framing feels right:** Rainbows show up in art, on postage stamps, and in cartoons. They look like aesthetic objects. And before the 19th century, that was essentially the scientific view too.
+
+    **Why it's wrong:** A prism doesn't *paint* the colors; it *reveals* them. The light leaving a star already contains every wavelength its sources emit. The prism just separates them spatially so we can read them off. That spread-out beam — the spectrum — is a complete inventory of which atoms are present, how hot they are, and how fast they're moving. The colors are *measurements*, not decoration.
+
+    **Why it's tempting:** Continuous rainbows look smooth; the atomic-fingerprint structure (sharp absorption / emission lines at specific wavelengths) is invisible at the resolution of an eye or a classroom prism. The information lives at finer wavelength resolution than the eye can see.
+  </Intervention>
+</Aside>
 
 <aside class="margin-note">
 **Spectroscopy** transformed astronomy from cataloging *what's there* to understanding *what it's made of* and *how it works*. It's the difference between stamp collecting and physics.
@@ -622,6 +704,20 @@ An atom with equal numbers of protons and electrons; no net charge. The contrast
 
 **Key insight:** Same object + different wavelength = different physical component revealed.
 
+<Aside kind="misconception" name="one-image-tells-the-whole-story" title="A common confusion: one image shows the whole galaxy">
+A natural assumption is that a sharp optical photo of a galaxy *shows the galaxy* — everything important must be visible there. M51 makes that view fail in plain sight.
+
+  <Intervention type="contrasting-cases" addresses="this">
+    Hold the two M51 panels next to each other.
+
+    **Case A — Optical (~500 nm).** Spiral arms threaded with hot, young blue stars and dark dust lanes. Most of what looks like "galaxy" lives inside a well-defined disk. **What you're seeing**: the surfaces of stars at thousands of K.
+
+    **Case B — Radio (21 cm).** A diffuse glow extending well beyond the optical disk, with arm structure of its own that doesn't line up with the stars. **What you're seeing**: cold (~100 K) neutral hydrogen, traced by a single quantum-mechanical transition.
+
+    **What the contrast shows.** Each wavelength selects a different *physical component* of the same galaxy. The optical-only frame doesn't just leave detail out; it leaves out the dominant gas reservoir M51 is *made* of. A "complete picture" requires multiple wavelengths, each chosen for the physics it can see.
+  </Intervention>
+</Aside>
+
 <CollapsibleCard
   client:load
   course="smoke"
@@ -655,6 +751,20 @@ This transition is "forbidden"—extremely unlikely on short timescales—but th
 </aside>
 
 **Key insight:** What you *can't see* at one wavelength might be brilliantly visible at another.
+
+<Aside kind="misconception" name="dust-means-empty" title="A common confusion: dark regions are empty">
+The Hubble pillars look like silhouettes carved into space — solid dust against bright background gas. The intuitive read is that the dark interiors are *empty* (nothing there to shine) and the bright edges are where the action is. JWST is the case study that breaks this read.
+
+  <Intervention type="contrasting-cases" addresses="this">
+    Hold the two Pillars panels side by side.
+
+    **Case A — Hubble (~500 nm optical).** Three towering dark columns silhouetted against glowing gas. The interiors look opaque and featureless. **What you're seeing**: dust grains absorbing visible light along your line of sight.
+
+    **Case B — JWST (~2 μm near-infrared).** The same columns, now *translucent*. Thousands of point sources light up inside and behind the pillars. **What you're seeing**: protostars and young stars whose IR light slips through the dust that blocked their visible glow.
+
+    **What the contrast shows.** "Dark" is a property of *how the dust interacts with the wavelength you chose*, not a property of the region. The pillars are *star nurseries*, the densest part of the molecular cloud — and the dust that makes them look empty in optical is what shields the forming stars from radiation. Visibility and existence are separate questions.
+  </Intervention>
+</Aside>
 
 **Transition:** We've seen how *one* alternative wavelength reveals hidden physics. What about combining *many* wavelengths?
 
@@ -692,7 +802,84 @@ This transition is "forbidden"—extremely unlikely on short timescales—but th
 Invisible matter detected through gravity. Outweighs visible (baryonic) matter by roughly 5:1; its presence is inferred from rotation curves, gravitational lensing, the cosmic microwave background, and large-scale structure — never (so far) from direct detection.
 </Aside>
 
-**What physics makes this legal?** Newton's law of gravity tells us that orbital speed depends on enclosed mass: $v^2 = GM/r$. Measure $v$ and $r$, solve for $M$. The math is unambiguous. The extra mass is real—we detect it through the motions it causes.
+**What physics makes this legal?** Newton's law of gravity says that orbital speed depends on the enclosed mass. Measure $v$ and $r$, solve for $M$. The math is unambiguous. The extra mass is real — we detect it through the motions it causes.
+
+<KeyEquation
+  id="orbital-mass"
+  title="Circular Orbit Mass Law"
+  symbols={["v", "M", "r"]}
+>
+For a body in a circular orbit, the speed of the orbit, the enclosed mass, and the orbital radius are tied together by Newton's gravity:
+
+$$
+v^2 = \frac{G M}{r}
+$$
+
+Rearranging gives the **enclosed mass from kinematics alone**:
+
+$$
+M = \frac{v^2 r}{G}
+$$
+
+This is the single relationship that turns a velocity measurement (from a Doppler shift) and a radius (from imaging or distance + angular scale) into an inference about mass — visible or otherwise.
+
+  <Observable>
+    The orbital speed $v$ of a tracer (a star, a gas parcel, a
+    satellite galaxy) at distance $r$ from the gravitating
+    centre — measured via Doppler shift of a known spectral line.
+  </Observable>
+
+  <Assumption type="circular-orbit">
+    The orbit is circular. Elliptical orbits replace $v^2/r$ with the
+    full vis-viva relation involving the semi-major axis.
+  </Assumption>
+
+  <Assumption type="newtonian-gravity">
+    Speeds are non-relativistic ($v \ll c$) and the gravitational field
+    is weak. Strong-field or relativistic regimes (near black holes,
+    cosmological scales) require general relativity.
+  </Assumption>
+
+  <Assumption type="spherical-mass-distribution">
+    The enclosed mass acts as if concentrated at the centre (Newton's
+    shell theorem) — the mass distribution interior to $r$ is
+    spherically symmetric and exterior mass exerts no net force.
+  </Assumption>
+
+  <Units symbol="v" unit="cm s^{-1}" />
+
+  <Units symbol="M" unit="g" />
+
+  <Units symbol="r" unit="cm" />
+
+  <BreaksWhen>
+    The orbit is highly elliptical; the system is relativistic
+    (near black holes, AGN central engines); the mass distribution is
+    not spherically symmetric (galaxy bars, triaxial halos); or
+    pressure support (in gas) competes with gravity. Galaxy rotation
+    curves are read with this equation precisely *because* its
+    breakdown — the predicted Keplerian fall-off failing to appear —
+    is the signature of dark matter.
+  </BreaksWhen>
+
+  <CommonMisuse misconception="dark-matter-is-just-hidden-normal-matter">
+    Reading "more mass than we see" as "more *baryonic* matter than
+    we see." The equation gives total enclosed mass; nothing about it
+    distinguishes luminous matter from anything else. Searches for
+    faint baryonic candidates (MACHOs, brown dwarfs, cold gas) have
+    *not* closed the gap; the missing mass is non-baryonic.
+  </CommonMisuse>
+</KeyEquation>
+
+<MultiRep concept="enclosed-mass">
+  <RepVerbal>
+    The **enclosed gravitational mass** $M$ inside a given radius is *everything that gravitates* there — visible stars, gas, and whatever else. The dark-matter inference is exactly the gap between this total and the luminous component: $M$ measured from orbital speeds via <EqRef slug="orbital-mass" client:load /> exceeds the mass inventoried by adding up starlight and detected gas by roughly a factor of six. The equation doesn't care what the matter is made of; the discrepancy is the empirical fact that drives the rest of the field.
+  </RepVerbal>
+
+  <RepEquation refKey="orbital-mass" symbol="M" />
+
+  <RepFigure refName="desi-3d-map" symbolLabel="M" />
+</MultiRep>
 
 <Figure name="desi-3d-map" />
 
@@ -715,26 +902,34 @@ Only 5% of the universe is made of the stuff we understand. The rest is dark—b
 
 1. **Galaxy rotation curves**: Stars at large radii orbit at roughly constant speed, not the declining speed expected if mass were concentrated in the visible center. This "flat **rotation curve**" implies mass extending far beyond the visible disk.
 
-2. **Galaxy cluster dynamics**: Fritz Zwicky noticed in the 1930s that galaxies in the Coma Cluster move too fast—the cluster should have flown apart long ago unless there's ~10× more mass than visible.
+2. **Galaxy cluster dynamics**: Fritz Zwicky noticed in the 1930s that galaxies in the Coma Cluster move too fast — the cluster should have flown apart long ago unless there's ~10× more mass than visible.
 
 3. **Gravitational lensing**: Massive objects bend light. The amount of bending reveals the total mass, including dark matter. Lensing maps consistently show dark matter halos extending well beyond visible galaxies.
 
 4. **Cosmic microwave background**: The pattern of temperature fluctuations in the CMB encodes information about the matter content of the early universe. The pattern requires dark matter to match observations.
 
-5. **Large-scale structure**: The cosmic web we see today—filaments, walls, voids—could only form if dark matter provided the gravitational scaffolding. Simulations without dark matter produce nothing like the observed universe.
-
-**What dark matter is NOT:**
-
-- It's not failed stars, rogue planets, or black holes (we've looked)
-- It's not ordinary matter hiding in some unseen form
-- It's not a modification of gravity (though some physicists explore this)
-
-**What it might be:** A new type of particle that interacts via gravity but not electromagnetism. Candidates include WIMPs (Weakly Interacting Massive Particles), axions, and others. Despite decades of searching, we haven't detected dark matter particles directly—yet.
+5. **Large-scale structure**: The cosmic web we see today — filaments, walls, voids — could only form if dark matter provided the gravitational scaffolding. Simulations without dark matter produce nothing like the observed universe.
 
 **Connection to Course:** Later, we'll derive galaxy rotation curves and see how dark matter changes everything we thought we knew about cosmic structure.
 </Callout>
 
-**Key insight:** Motion reveals mass. Gravity causes acceleration; we measure velocities; the math tells us how much mass is required. Most of it is invisible—but the universe is not static, and gravity is still the architect, still building today.
+<Aside kind="misconception" name="dark-matter-is-just-hidden-normal-matter" title="A common confusion: dark matter is just hidden normal matter">
+A natural way to defuse "most of the universe is invisible" is to assume the missing mass is *ordinary* matter we haven't found yet — failed stars, cold gas, rogue planets, exotic-but-baryonic stuff. The <EqRef slug="orbital-mass" client:load /> equation gives total enclosed mass; nothing in its derivation says the mass has to be baryonic. So the question is empirical, not definitional — and the searches keep coming back the same way.
+
+  <Intervention type="worked-example-contrast" addresses="this">
+    Three "obvious" candidates for the missing mass have been tested. Each is a worked example where the misconception predicts a positive detection — and each is the case that *failed*.
+
+    **Wrong worked example A — MACHOs (failed stars, rogue planets, primordial black holes).** *If* the halo were made of compact baryonic objects, microlensing surveys (MACHO, EROS, OGLE) would have seen them transit background stars. Predicted rate: thousands of events. Observed rate: a handful, far short of closing the gap.
+
+    **Wrong worked example B — Cold or warm baryonic gas.** *If* the halo were diffuse baryonic gas, it would either emit thermal radiation we could detect at some wavelength or absorb background quasar light. Sensitive X-ray and UV searches put strong upper limits well below the missing mass.
+
+    **Wrong worked example C — Modified gravity (MOND-style fixes).** *If* the equation $M = v^2 r / G$ itself needed revision rather than the matter inventory, lensing should fail the same way rotation curves do. Lensing of background galaxies and the bullet cluster's *separated* mass and gas components both pin the missing mass spatially — not where modified-gravity laws predict.
+
+    **Correct application.** The Newtonian inference is sound; the inventory term is the surprise. The missing mass is *non-baryonic* — a new class of particle (WIMPs, axions, or others) that interacts gravitationally but essentially nothing else. Direct-detection experiments have been searching for decades; the detection itself is unfinished business, but the empirical case that it isn't anything *already known* is closed.
+  </Intervention>
+</Aside>
+
+**Key insight:** Motion reveals mass. Gravity causes acceleration; we measure velocities; the math tells us how much mass is required. Most of it is invisible — but the universe is not static, and gravity is still the architect, still building today.
 
 **Transition:** Dark matter tells us that most *matter* is invisible. But there's something even stranger: most of the universe's *energy content* isn't matter at all…
 
@@ -767,6 +962,24 @@ If you know how fast galaxies are receding and how far away they are, you can "r
 The *acceleration* was discovered in 1998 by measuring Type Ia supernovae at large distances. These "standard candles" appeared fainter than expected—meaning they were farther away than a decelerating universe would predict. The universe's expansion is speeding up, not slowing down.
 
 This was not predicted—in fact, it contradicted the prevailing expectation that gravity should be *decelerating* expansion. The universe broke the model, and cosmology had to revise. That's how science works: when observations surprise us, we update.
+
+<Aside kind="misconception" name="big-bang-was-an-explosion-in-space" title="A common confusion: the Big Bang was an explosion in space">
+The popular phrase "Big Bang" strongly suggests an explosion *in* space — a fireball detonating at some point in a pre-existing void, with debris flying outward into the surrounding emptiness. That framing is not just imprecise; it's a category error. Cosmology requires an ontological shift before the equations make sense.
+
+  <Intervention type="conceptual-exchange" addresses="this">
+    **The category you're using.** "Explosion" is a *spatial* event. Material objects occupy positions; an explosion gives them outward velocities relative to the centre and they fly away through a fixed space.
+
+    **The category you need.** Cosmological expansion is a property of *the space itself*. Distances between galaxies grow because the metric (the rule for measuring distances) is changing in time — not because galaxies have peculiar velocities through a static stage.
+
+    **The walk-across.** Three diagnostic questions illustrate the shift:
+
+    - *Where did the Big Bang happen?* In the explosion-in-space frame: "at some point." In the expansion-of-space frame: **everywhere at once** — every place we now observe was, at $t \approx 0$, arbitrarily close to every other place.
+    - *What is the universe expanding into?* Explosion frame: "the surrounding emptiness." Expansion frame: **the question doesn't apply** — space isn't a container embedded in something larger; it's the metric of distances itself, and that metric is what changes.
+    - *Why do all galaxies see us recede?* Explosion frame: special location near the centre. Expansion frame: **every observer sees the same Hubble flow** because the expansion is uniform — there is no centre to be near.
+
+    **Why the old frame is sticky.** The explosion picture is concrete and physical; the metric-expansion picture is mathematical and requires general relativity. The pedagogically honest move isn't to defend the old picture as "good enough" — it's to name it explicitly as a category replacement (one ontological frame swapped for another) so the equations of cosmology stop seeming paradoxical.
+  </Intervention>
+</Aside>
 
 <Callout variant="tip">
 **The universe is 13.8 billion years old, it's expanding, and that expansion is accelerating.**
@@ -1076,7 +1289,11 @@ This hierarchy emerges from physics: hotter objects emit higher-energy (shorter-
 
 <Figure name="energy-wavelength-connection" />
 
-<KeyEquation id="wiens-law" title="Wien's Law">
+<KeyEquation
+  id="wiens-law"
+  title="Wien's Law"
+  symbols={["T", "\\lambda_{peak}"]}
+>
 The relationship between temperature and peak emission wavelength is quantified by **Wien's displacement law**:
 
 $$
@@ -1085,7 +1302,6 @@ $$
 
 where $b = 0.29$ cm·K is Wien's displacement constant.
 
-
 **Examples:**
 
 - Sun ($T \approx 5800$ K): $\lambda_{\text{peak}} \approx 500$ nm (visible)
@@ -1093,7 +1309,65 @@ where $b = 0.29$ cm·K is Wien's displacement constant.
 - Cosmic microwave background ($T = 2.7$ K): $\lambda_{\text{peak}} \approx 1$ mm
 
 This is why thermal cameras "see" people in the dark (we glow in IR) and why the early universe is visible in microwaves.
+
+  <Observable>
+    The wavelength at which a thermal source's emission spectrum peaks
+    — i.e., where the continuum is brightest — as a function of the
+    source's temperature.
+  </Observable>
+
+  <Assumption type="thermal-equilibrium">
+    The source is in local thermodynamic equilibrium, so the Planck
+    blackbody distribution governs its emission.
+  </Assumption>
+
+  <Assumption type="blackbody">
+    The source emits as an ideal blackbody — no strong spectral lines
+    or continuum absorption shaping the peak. Real stars approximate
+    this; line-rich or non-thermal sources do not.
+  </Assumption>
+
+  <Units symbol="T" unit="K" />
+
+  <Units symbol="\lambda_{peak}" unit="cm" />
+
+  <BreaksWhen>
+    Non-thermal emission (synchrotron, masers, line-dominated spectra);
+    optically-thin sources without thermal coupling; or spectra shaped
+    primarily by absorption features rather than the continuum
+    blackbody profile.
+  </BreaksWhen>
+
+  <CommonMisuse misconception="wiens-law-absorption-spectra">
+    Applying Wien's law to an absorption-line spectrum to infer the
+    source temperature. The peak position is set by the continuum, not
+    the absorption features; using a line-dominated spectrum will
+    misidentify the temperature when intervening cooler gas reshapes
+    the apparent profile.
+  </CommonMisuse>
 </KeyEquation>
+
+<MultiRep concept="peak-wavelength">
+  <RepVerbal>
+    The **peak emission wavelength** $\lambda_{\text{peak}}$ is the wavelength at which a thermal source's continuum is brightest. It collapses an entire blackbody spectrum to a single number — the colour of the source's glow — and through <EqRef slug="wiens-law" client:load /> that single number reports the temperature. Hot stars peak in the UV; sun-like stars peak in visible; cool dust peaks in IR; the cosmic microwave background peaks in the mm.
+  </RepVerbal>
+
+  <RepEquation refKey="wiens-law" symbol="\lambda_{peak}" />
+
+  <RepFigure refName="em-spectrum-temperature" symbolLabel="\lambda_{peak}" />
+</MultiRep>
+
+<Aside kind="misconception" name="wiens-law-absorption-spectra" title="A common confusion: Wien's law works on any spectrum">
+A natural extension of Wien's law is to apply it to *any* spectrum: find where the spectrum looks brightest, read off the temperature. The law only applies to the **continuum** of a thermal source, though — applying it to an absorption-line spectrum or a non-thermal source misreads what the equation is for.
+
+  <Intervention type="refutation-text" addresses="this">
+    **Why the framing feels right:** The Wien's-law procedure feels mechanical — locate the peak, divide by the constant. The procedure looks like it should work on any wavelength-vs-intensity graph.
+
+    **Why it's wrong:** Wien's law tracks the peak of a *Planck blackbody distribution*. Real astrophysical sources fold extra physics onto that continuum: absorption lines carve dark notches out of an underlying continuum (intervening cooler gas removes specific wavelengths); non-thermal sources (synchrotron, masers) emit spectra shaped by entirely different physics. Applied to a heavily-absorbed stellar spectrum, Wien's law would return the wrong temperature — the apparent "peak" reflects what survived the intervening absorber, not the source's thermal distribution.
+
+    **Why it's tempting:** Wien's law is one of the simplest temperature-from-spectrum tools in the toolkit. The temptation is to apply it as a one-step heuristic without checking whether the continuum-vs-line distinction is being respected. The fix is to ask, every time: *is this spectrum dominated by a thermal continuum, or by something else?*
+  </Intervention>
+</Aside>
 
 <InteractiveCallout
   client:load
@@ -1199,13 +1473,17 @@ Today you saw the spoilers. Now we build the tools to understand them—one infe
 
 ---
 
-<Callout variant="misconception" title="Misconception Alert">
-**"Astronomy is just looking through telescopes."**
+<Aside kind="misconception" name="astronomy-is-looking-through-telescopes" title="A common confusion: astronomers spend their time at eyepieces">
+Many imagine astronomers peering through eyepieces all night, watching the sky. Modern astronomy is almost entirely *data analysis*. Telescopes collect photons automatically; astronomers write code to analyze the resulting datasets.
 
-Many imagine astronomers peering through eyepieces all night. Modern astronomy is almost entirely *data analysis*. Telescopes collect photons automatically; astronomers write code to analyze the resulting datasets.
+  <Intervention type="refutation-text" addresses="this">
+    **Why the framing feels right:** The historical picture — Galileo with a refractor, Herschel with a hand-built reflector — is the foundational image of the field. Popular media (textbook covers, films, planetarium shows) reinforces eyepiece-as-icon.
 
-You'll spend far more time with equations, graphs, and reasoning than with eyepieces. That's where the real discovery happens.
-</Callout>
+    **Why it's wrong:** A modern professional observation is queued into a robotic scheduler, executed remotely (or autonomously) overnight, and arrives as a FITS file the next morning. Hubble and JWST have never had a human at an eyepiece; LSST/Rubin will image the entire visible sky every few nights without one. The astronomer's actual workday is reading code, fitting models to data, and arguing about systematics — not staring into glass.
+
+    **Why it's tempting:** The eyepiece picture matches the way the *idea* of looking-at-the-sky maps onto familiar tools. Replacing it with the actual workflow (pipelines, reductions, statistical inference) requires a category swap from "skill of seeing" to "skill of analyzing." This course will spend far more time on equations, graphs, and reasoning than on eyepieces — that's where modern discovery happens.
+  </Intervention>
+</Aside>
 
 ---
 

@@ -13,9 +13,138 @@
 
 version: "1"
 course: "smoke"
-last_updated: "2026-05-17"
+last_updated: "2026-05-18"
 
 concepts:
+  - id: "flux"
+    verbal_label: "flux"
+    canonical_symbol: "F"
+    latex: "F"
+    epistemic_role: "observable"
+    units: "erg s^{-1} cm^{-2}"
+    code_alias: "F_cgs"
+    common_confusions:
+      - symbol: "L"
+        meaning: "luminosity — intrinsic power output, NOT what arrives at the detector per unit area"
+        concept_ref: "luminosity"
+    introduced_in: "01-foundations/spoiler-alerts"
+    notes: >-
+      The energy per unit time per unit detector area arriving from a
+      source. Flux is the raw observable; combined with the inverse-
+      square law and an independently determined luminosity, flux
+      yields distance.
+
+  - id: "luminosity"
+    verbal_label: "luminosity"
+    canonical_symbol: "L"
+    latex: "L"
+    epistemic_role: "model"
+    units: "erg s^{-1}; L_\\odot"
+    code_alias: "L_cgs"
+    common_confusions:
+      - symbol: "F"
+        meaning: "flux — what we measure per unit area, NOT total power"
+        concept_ref: "flux"
+    introduced_in: "01-foundations/spoiler-alerts"
+    notes: >-
+      Total radiant power output of a source. Intrinsic property —
+      independent of observer distance. The inference target of the
+      cosmic distance ladder: every "standard candle" rests on
+      independently-determined L being combined with measured flux F
+      to solve the inverse-square law for distance d.
+
+  - id: "distance"
+    verbal_label: "distance"
+    canonical_symbol: "d"
+    latex: "d"
+    epistemic_role: "model"
+    units: "cm (CGS); pc, kpc, Mpc, ly (display)"
+    code_alias: "d_cm"
+    introduced_in: "01-foundations/spoiler-alerts"
+    notes: >-
+      Line-of-sight distance from observer to source. At cosmological
+      scales the simple Euclidean d is replaced by the luminosity
+      distance (folds in expansion + redshift); at solar-system scales
+      d is measured directly via radar time-of-flight.
+
+  - id: "temperature"
+    verbal_label: "temperature"
+    canonical_symbol: "T"
+    latex: "T"
+    epistemic_role: "model"
+    units: "K"
+    code_alias: "T_K"
+    introduced_in: "01-foundations/spoiler-alerts"
+    notes: >-
+      Thermodynamic temperature of a thermal source — inferred from
+      its spectrum, never measured directly. Wien's displacement law
+      ties T to peak emission wavelength; the Stefan-Boltzmann law
+      ties T to bolometric flux.
+
+  - id: "orbital-velocity"
+    verbal_label: "orbital velocity"
+    canonical_symbol: "v"
+    latex: "v"
+    epistemic_role: "observable"
+    units: "cm s^{-1}; km s^{-1} (display)"
+    code_alias: "v_cgs"
+    introduced_in: "01-foundations/spoiler-alerts"
+    notes: >-
+      Orbital speed of a tracer (star, gas parcel, satellite galaxy)
+      at a given radius — measured via Doppler shift of a known
+      spectral line. The chapter's dark-matter inference depends on
+      this observable.
+
+  - id: "orbital-radius"
+    verbal_label: "orbital radius"
+    canonical_symbol: "r"
+    latex: "r"
+    epistemic_role: "observable"
+    units: "cm (CGS); kpc, Mpc (display)"
+    code_alias: "r_cgs"
+    common_confusions:
+      - symbol: "R"
+        meaning: "stellar radius or virial radius — different physical quantity at a different scale"
+    introduced_in: "01-foundations/spoiler-alerts"
+    notes: >-
+      Distance from the gravitating centre to the tracer whose orbit
+      we measure. Combined with orbital velocity v via $M = v^2 r / G$,
+      yields the enclosed gravitational mass interior to r.
+
+  - id: "peak-wavelength"
+    verbal_label: "peak emission wavelength"
+    canonical_symbol: "\\lambda_{peak}"
+    latex: "\\lambda_{peak}"
+    epistemic_role: "observable"
+    units: "cm (CGS); nm (display)"
+    code_alias: "lambda_peak_cm"
+    common_confusions:
+      - symbol: "\\lambda"
+        meaning: "wavelength in general — the peak is a specific feature of a thermal spectrum, not a general wavelength label"
+    introduced_in: "01-foundations/spoiler-alerts"
+    notes: >-
+      The wavelength at which a thermal blackbody's emission spectrum
+      is brightest. Tied to source temperature via Wien's displacement
+      law; the chapter's EM-spectrum-as-temperature-ladder framing
+      pivots on this concept.
+
+  - id: "enclosed-mass"
+    verbal_label: "enclosed gravitational mass"
+    canonical_symbol: "M"
+    latex: "M"
+    epistemic_role: "model"
+    units: "g (CGS); M_\\odot"
+    code_alias: "M_enclosed_g"
+    common_confusions:
+      - symbol: "m"
+        meaning: "test-particle mass in orbit (or apparent magnitude), NOT the gravitating central mass"
+    introduced_in: "01-foundations/spoiler-alerts"
+    notes: >-
+      The total gravitating mass interior to a given radius, inferred
+      from a tracer's orbital speed via $M = v^2 r / G$. The chapter's
+      dark-matter inference rests on this quantity exceeding the
+      luminous-matter budget by a factor of ~6.
+
   - id: "celestial-sphere"
     verbal_label: "celestial sphere"
     canonical_symbol: "S"
