@@ -40,6 +40,7 @@ describe.each([
   ["assumption", "brand-violet", "6"],
   ["breaks-when", "status-warning", "8"],
   ["common-misuse", "status-danger", "8"],
+  ["derivation-step", "brand-violet", "6"],
 ])("tier3 label-bg: %s", (variant, accent, tintPct) => {
   test(`emits --sophie-tier3-${variant}-label-bg with color-mix(${accent} ${tintPct}%, surface-2)`, () => {
     expect(css).toMatch(
@@ -55,6 +56,7 @@ test.each([
   "assumption",
   "breaks-when",
   "common-misuse",
+  "derivation-step",
 ])("tier3 label-bg var %s is emitted exactly once (scheme-invariant)", (variant) => {
   // Sanity check: the generator places tier3LabelBgBlock() inside the
   // main `:root {}` only — NOT in [data-theme="dark"] or @media print

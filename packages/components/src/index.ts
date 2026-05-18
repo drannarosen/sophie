@@ -77,6 +77,13 @@ export {
   ConfidenceCheckPropsSchema,
   confidenceCheckContract,
 } from "./components/ConfidenceCheck/index.ts";
+export type { DerivationStepProps } from "./components/DerivationStep/index.ts";
+export {
+  DERIVATION_STEP_EPISTEMIC_ROLE,
+  DerivationStep,
+  DerivationStepPropsSchema,
+  derivationStepContract,
+} from "./components/DerivationStep/index.ts";
 export type {
   EffortLevel,
   EffortLogProps,

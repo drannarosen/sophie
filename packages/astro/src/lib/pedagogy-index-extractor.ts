@@ -7,6 +7,7 @@ import {
   type CommonMisuseEntry,
   type ContractValidationEntry,
   type DefinitionEntry,
+  type DerivationStepEntry,
   type EquationEntry,
   type FigureRegistryEntry,
   type FigureUsageEntry,
@@ -451,6 +452,7 @@ function buildBiographyFromKeyEquationChildren(
   const units: UnitsEntry[] = [];
   let breaksWhen: BreaksWhenEntry | undefined;
   const commonMisuses: CommonMisuseEntry[] = [];
+  const derivationSteps: DerivationStepEntry[] = [];
 
   for (const child of parent.children) {
     if (isWhitespaceTextNode(child)) continue;
@@ -535,9 +537,30 @@ function buildBiographyFromKeyEquationChildren(
         body,
         ...(misconception ? { misconception } : {}),
       });
+      continue;
     }
 
-    // Non-biography JSX (anything other than the five biography children
+    if (el.name === "DerivationStep") {
+      // Added per ADR 0046 §R9 (ADR 0060 brainstorm, 2026-05-18).
+      // List shape — equations typically have multiple steps; each is
+      // an entry with prose `body`, optional short `label`, and the
+      // locked `"model"` epistemic role per ADR 0058's role contract.
+      const body = renderChildrenToHtml(el.children);
+      if (body.trim().length === 0) {
+        throw new Error(
+          `transform: <DerivationStep> in ${contextLabel} has an empty body. Resolution: add prose between the opening and closing tags.`
+        );
+      }
+      const label = readStringAttr(el, "label");
+      derivationSteps.push({
+        body,
+        ...(label ? { label } : {}),
+        epistemicRole: "model",
+      });
+      continue;
+    }
+
+    // Non-biography JSX (anything other than the six biography children
     // above) is silently skipped — <KeyEquation> legitimately contains
     // other JSX in framing prose (e.g., <EqRef>, <GlossaryTerm>). The
     // audit (E7/E8/E9 in PR-δ) consumes the populated biography only;
@@ -550,7 +573,8 @@ function buildBiographyFromKeyEquationChildren(
     assumptions.length > 0 ||
     units.length > 0 ||
     breaksWhen !== undefined ||
-    commonMisuses.length > 0;
+    commonMisuses.length > 0 ||
+    derivationSteps.length > 0;
 
   if (!hasAnyBiography) return undefined;
 
@@ -560,6 +584,7 @@ function buildBiographyFromKeyEquationChildren(
     units,
     ...(breaksWhen ? { breaks_when: breaksWhen } : {}),
     common_misuses: commonMisuses,
+    derivation_steps: derivationSteps,
   };
 }
 

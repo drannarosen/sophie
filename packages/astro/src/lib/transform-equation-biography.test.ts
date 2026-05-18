@@ -469,6 +469,85 @@ describe("extractEquations — biography (PR-γ)", () => {
     );
   });
 
+  test("populates DerivationStep list with role 'model' + optional label (ADR 0046 §R9)", () => {
+    const tree = root([
+      mdxKeyEquation(
+        [jsxAttr("id", "wiens-law"), jsxAttr("title", "Wien's Law")],
+        [
+          mathBlock("\\lambda_{peak} = b T^{-1}"),
+          whitespace(),
+          mdxBiographyChild(
+            "DerivationStep",
+            [jsxAttr("label", "Start from Planck's law")],
+            [
+              para(
+                "Spectral radiance of a blackbody at temperature T as a function of wavelength."
+              ),
+            ]
+          ),
+          whitespace(),
+          mdxBiographyChild(
+            "DerivationStep",
+            [jsxAttr("label", "Differentiate and set to zero")],
+            [para("Solve for the wavelength at which the spectrum peaks.")]
+          ),
+          whitespace(),
+          // A step with no label — label is optional per the schema.
+          mdxBiographyChild(
+            "DerivationStep",
+            [],
+            [
+              para(
+                "Root of the resulting transcendental equation gives Wien's constant b."
+              ),
+            ]
+          ),
+        ]
+      ),
+    ]);
+    const [entry] = extractEquations(tree as never, "ch");
+    expect(entry?.biography?.derivation_steps).toHaveLength(3);
+    expect(entry?.biography?.derivation_steps[0]).toMatchObject({
+      label: "Start from Planck's law",
+      epistemicRole: "model",
+    });
+    expect(entry?.biography?.derivation_steps[1]?.label).toBe(
+      "Differentiate and set to zero"
+    );
+    expect(entry?.biography?.derivation_steps[1]?.epistemicRole).toBe("model");
+    // Third step omitted `label` — extractor leaves the field unset.
+    expect(entry?.biography?.derivation_steps[2]?.label).toBeUndefined();
+    expect(entry?.biography?.derivation_steps[2]?.epistemicRole).toBe("model");
+  });
+
+  test("throws on <DerivationStep> with empty body", () => {
+    const tree = root([
+      mdxKeyEquation(
+        [jsxAttr("id", "wiens-law"), jsxAttr("title", "Wien's Law")],
+        [mathBlock("x = 1"), mdxBiographyChild("DerivationStep", [], [])]
+      ),
+    ]);
+    expect(() => extractEquations(tree as never, "ch")).toThrowError(
+      /<DerivationStep>.*empty body/
+    );
+  });
+
+  test("DerivationStep list defaults to [] when no steps present (per-equation opt-in)", () => {
+    const tree = root([
+      mdxKeyEquation(
+        [jsxAttr("id", "wiens-law"), jsxAttr("title", "Wien's Law")],
+        [
+          mathBlock("x = 1"),
+          mdxBiographyChild("Observable", [], [para("Some observable.")]),
+        ]
+      ),
+    ]);
+    const [entry] = extractEquations(tree as never, "ch");
+    // Biography is populated (Observable triggers it); derivation_steps
+    // defaults to [] from BiographySchema's `.default([])`.
+    expect(entry?.biography?.derivation_steps).toEqual([]);
+  });
+
   test("multiple list-type biography children preserve source order within their slot (lists are stable, slots are canonical)", () => {
     // Within a list-type slot (assumptions, units, common_misuses),
     // source order IS preserved — readers see assumptions in the order

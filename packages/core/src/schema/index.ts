@@ -19,11 +19,25 @@ export {
   BreaksWhenEntrySchema,
   type CommonMisuseEntry,
   CommonMisuseEntrySchema,
+  type DerivationStepEntry,
+  DerivationStepEntrySchema,
   type ObservableEntry,
   ObservableEntrySchema,
   type UnitsEntry,
   UnitsEntrySchema,
 } from "./equation-biography.js";
+export {
+  type EquationConstant,
+  EquationConstantSchema,
+  type EquationRegistryEntry,
+  EquationRegistryEntrySchema,
+  type RearrangedForm,
+  RearrangedFormSchema,
+  type RelatedEquation,
+  type RelatedEquationKind,
+  RelatedEquationKindSchema,
+  RelatedEquationSchema,
+} from "./equation-registry.js";
 export { type Figure, FigureSchema } from "./figure.js";
 export {
   type InterventionDepth,
@@ -83,6 +97,7 @@ export {
   PedagogyIndexSchema,
 } from "./pedagogy-index.js";
 export { LangTag, NonEmptyString, Slug } from "./primitives.js";
+export { type RegistryBase, RegistryBaseSchema } from "./registry-base.js";
 export type { EntityType } from "./search-facet.js";
 export { type Section, SectionSchema } from "./section.js";
 export { slugify } from "./slugify.js";
