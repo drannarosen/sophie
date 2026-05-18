@@ -858,3 +858,30 @@ This revision pairs with the JSDoc deferral note in
 [`packages/astro/src/lib/pedagogy-audit.ts`](../../../packages/astro/src/lib/pedagogy-audit.ts)
 ("Not implemented in v1" block) and the AuditExtras.notationRegistry
 TODO for PR-ε's `TextbookLayout.astro` loader wire-up.
+
+**Update 2026-05-18 — R5 closed**: PR-δ'
+([PR #94](https://github.com/drannarosen/sophie/pull/94), squash-merged
+to main) shipped all three deferred invariants, plus the
+`KeyEquation.symbols: string[]` prop and `EquationEntrySchema.symbols`
+schema slot that they consume:
+
+- **NR1 WARNING** — `<KeyEquation symbols=[…]>` declares a symbol
+  not in `notation-registry.yaml` ([pedagogy-audit.ts:963](../../../packages/astro/src/lib/pedagogy-audit.ts)).
+- **NR3 ERROR** — Notation Registry symbol bound to multiple concepts
+  ([pedagogy-audit.ts:989](../../../packages/astro/src/lib/pedagogy-audit.ts)).
+- **NR4 WARNING** — `<KeyEquation symbols=[…]>` declares a symbol
+  whose registry concept has `units:` but the equation lacks a
+  `<Units symbol="…">` biography child ([pedagogy-audit.ts:1022](../../../packages/astro/src/lib/pedagogy-audit.ts)).
+
+The NR2 invariant was also modified in PR-δ' to count `KeyEquation.symbols`
+as a reference signal (in addition to the v1 `<MultiRep concept=…>`
+signal), so symbols declared on an equation but never used in a
+`<MultiRep>` no longer fire a misleading NR2 INFO. The Phase B
+Reasoning OS core audit (2026-05-17) confirmed the deferral closed
+and the audit-header docstring drift was repaired in PR-A
+([PR #95](https://github.com/drannarosen/sophie/pull/95)).
+
+The `transient: true` opt-out clause for generic per-derivation
+placeholders did NOT ship — authors opt out at v1 by simply not
+declaring those symbols on `KeyEquation.symbols`. Reserved as a v2
+schema extension if a real consumer ever needs it.
