@@ -1,57 +1,54 @@
 import { describe, expect, it } from "vitest";
 import { KeyEquationPropsSchema } from "./KeyEquation.schema.ts";
 
-describe("KeyEquationPropsSchema", () => {
+describe("KeyEquationPropsSchema (ADR 0060 registry-shaped)", () => {
   const valid = {
-    id: "wiens-law",
-    title: "Wien's Law",
-    children: null,
+    refId: "wiens-law",
   };
 
-  it("accepts the minimal valid shape", () => {
+  it("accepts the minimal valid shape (refId only)", () => {
     expect(KeyEquationPropsSchema.safeParse(valid).success).toBe(true);
   });
 
-  it("rejects empty id (hash-anchor target must be non-empty)", () => {
-    expect(KeyEquationPropsSchema.safeParse({ ...valid, id: "" }).success).toBe(
-      false
-    );
-  });
-
-  it("rejects empty title (accessible name must be non-empty)", () => {
+  it("rejects empty refId (must resolve to a registry entry)", () => {
     expect(
-      KeyEquationPropsSchema.safeParse({ ...valid, title: "" }).success
+      KeyEquationPropsSchema.safeParse({ ...valid, refId: "" }).success
     ).toBe(false);
   });
 
-  it("rejects missing id and missing title", () => {
-    const { id: _id, ...noId } = valid;
-    expect(KeyEquationPropsSchema.safeParse(noId).success).toBe(false);
-    const { title: _title, ...noTitle } = valid;
-    expect(KeyEquationPropsSchema.safeParse(noTitle).success).toBe(false);
+  it("rejects missing refId", () => {
+    const { refId: _refId, ...rest } = valid;
+    expect(KeyEquationPropsSchema.safeParse(rest).success).toBe(false);
   });
 
-  // PR-δ' bundle (ADR 0043 §R5) — author-declared symbols.
-  it("accepts the optional `symbols` array (author-declared canonical TeX-form symbols)", () => {
+  it("accepts optional showDerivation flag", () => {
     expect(
-      KeyEquationPropsSchema.safeParse({
-        ...valid,
-        symbols: ["T", "\\lambda_{peak}", "b"],
-      }).success
+      KeyEquationPropsSchema.safeParse({ ...valid, showDerivation: true })
+        .success
+    ).toBe(true);
+    expect(
+      KeyEquationPropsSchema.safeParse({ ...valid, showDerivation: false })
+        .success
     ).toBe(true);
   });
 
-  it("accepts an empty `symbols` array", () => {
+  it("accepts optional hideRelated flag", () => {
     expect(
-      KeyEquationPropsSchema.safeParse({ ...valid, symbols: [] }).success
+      KeyEquationPropsSchema.safeParse({ ...valid, hideRelated: true }).success
     ).toBe(true);
   });
 
-  it("rejects empty-string entries in `symbols` (NonEmptyString)", () => {
+  it("accepts optional children (chapter framing prose)", () => {
+    expect(
+      KeyEquationPropsSchema.safeParse({ ...valid, children: "framing" }).success
+    ).toBe(true);
+  });
+
+  it("rejects the legacy {id, title} shape (post-ADR-0060 hard rename)", () => {
     expect(
       KeyEquationPropsSchema.safeParse({
-        ...valid,
-        symbols: ["T", ""],
+        id: "wiens-law",
+        title: "Wien's Law",
       }).success
     ).toBe(false);
   });

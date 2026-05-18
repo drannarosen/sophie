@@ -1,27 +1,28 @@
 ---
-import type { EquationEntry } from "@sophie/core/schema";
+import type { EquationCitationEntry, EquationEntry } from "@sophie/core/schema";
 import { indexAccumulator } from "../lib/pedagogy-index-extractor";
 import BiographyRender from "./BiographyRender.astro";
 
-const { equations } = indexAccumulator.asPedagogyIndex();
+const { equations, equationCitations } = indexAccumulator.asPedagogyIndex();
 
 /**
  * `<ChapterEquations chapter="..." order="..." />` — Astro consumer
- * of the build-time pedagogy index (ADR 0038). Renders one chapter's
- * key equations as a `<dl>`. Mirrors `<ChapterGlossary>`'s shape:
- * alphabetical default, `order="appearance"` opt-in (per PR-C2
- * design decision #7; chapter-consumers follow the alphabetical-
- * default rule).
+ * of the build-time pedagogy index per ADR 0060.
  *
- * Bodies are pre-rendered HTML embedded via `set:html`. Pure Astro;
- * no client JS. Reads the accumulator directly per ADR 0038's
- * Revisions section (virtual-module bypass; matches
- * `<ChapterGlossary>`).
+ * Post-ADR-0060: citation-driven. Filters `equationCitations[]` by the
+ * given chapter slug; joins each citation with the corresponding
+ * `equations[]` registry entry (resolved by `refId`). Renders one
+ * `<dl>` row per citation. `order="appearance"` (default) uses the
+ * citation's per-chapter `number`; `order="alphabetical"` sorts by
+ * the registry entry's `title`.
+ *
+ * Bodies are pre-rendered HTML embedded via `set:html` from the
+ * biography. Pure Astro; no client JS.
  */
 export interface Props {
-  /** Chapter slug to filter the index by (e.g. "spoiler-alerts"). */
+  /** Chapter slug to filter equation citations by. */
   chapter: string;
-  /** Sort strategy. Default alphabetical. */
+  /** Sort strategy. Default appearance (citation order). */
   order?: "alphabetical" | "appearance";
   /** Optional heading rendered above the list. */
   heading?: string;
@@ -35,21 +36,33 @@ export interface Props {
 
 const {
   chapter,
-  order = "alphabetical",
+  order = "appearance",
   heading,
   headingLevel = 2,
 } = Astro.props;
 
 const HeadingTag = `h${headingLevel}` as const;
 
-const inChapter: EquationEntry[] = equations.filter(
-  (e) => e.chapter === chapter
-);
+interface CitationWithEntry {
+  citation: EquationCitationEntry;
+  entry: EquationEntry;
+}
+
+const declarationById = new Map(equations.map((e) => [e.id, e]));
+const citationsInChapter: CitationWithEntry[] = equationCitations
+  .filter((c) => c.chapter === chapter)
+  .map((c) => {
+    const entry = declarationById.get(c.refId);
+    return entry ? { citation: c, entry } : null;
+  })
+  .filter((x): x is CitationWithEntry => x !== null);
 
 const sorted =
   order === "alphabetical"
-    ? [...inChapter].sort((a, b) => a.title.localeCompare(b.title))
-    : [...inChapter].sort((a, b) => a.number - b.number);
+    ? [...citationsInChapter].sort((a, b) =>
+        a.entry.title.localeCompare(b.entry.title)
+      )
+    : [...citationsInChapter].sort((a, b) => a.citation.number - b.citation.number);
 ---
 
 {heading && <HeadingTag class='sophie-chapter-equations__heading'>{heading}</HeadingTag>}
@@ -60,16 +73,16 @@ const sorted =
     </p>
   ) : (
     <dl class='sophie-chapter-equations' data-sophie-chapter-equations=''>
-      {sorted.map((entry) => (
+      {sorted.map(({ citation, entry }) => (
         <Fragment>
-          <dt id={`eq-${entry.slug}`} class='sophie-chapter-equations__term'>
+          <dt id={citation.anchor} class='sophie-chapter-equations__term'>
             <span class='sophie-chapter-equations__number'>
-              Eq. {entry.number}
+              Eq. {citation.number}
             </span>
             <span class='sophie-chapter-equations__title'>{entry.title}</span>
           </dt>
           <dd class='sophie-chapter-equations__body'>
-            <div set:html={entry.body} />
+            {citation.framingHtml && <div set:html={citation.framingHtml} />}
             <BiographyRender biography={entry.biography} />
           </dd>
         </Fragment>
