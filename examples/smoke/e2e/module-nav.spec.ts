@@ -34,17 +34,19 @@ test.describe("PR 3: Module/chapter sidebar nav", () => {
     const foundations = page.locator(
       ".sophie-module[data-module='foundations'] .sophie-chapter-list a"
     );
-    // Three foundations chapters as of Intervention PR-γ: the PR-γ
-    // smoke fixture (`misconception-fixture.mdx`, order=3) pairs a
-    // misconception Aside with two literature-grounded interventions
-    // so the extractor's pedagogy-index `interventions` collection
-    // populates end-to-end.
-    await expect(foundations).toHaveCount(3);
+    // Four foundations chapters as of EquationBiography PR-γ: the
+    // PR-γ smoke fixture (`wiens-law-fixture.mdx`, order=4) exercises
+    // every biography child of `<KeyEquation>` end-to-end. The
+    // Intervention PR-γ smoke fixture (`misconception-fixture.mdx`,
+    // order=3) pairs a misconception Aside with two literature-grounded
+    // interventions.
+    await expect(foundations).toHaveCount(4);
     await expect(foundations.nth(0)).toHaveText(/Spoiler Alerts/);
     await expect(foundations.nth(1)).toHaveText(/Measuring the Sky/);
     await expect(foundations.nth(2)).toHaveText(
       /Misconceptions and Interventions/
     );
+    await expect(foundations.nth(3)).toHaveText(/Wien.s Law biography/);
 
     const stars = page.locator(
       ".sophie-module[data-module='stars'] .sophie-chapter-list a"

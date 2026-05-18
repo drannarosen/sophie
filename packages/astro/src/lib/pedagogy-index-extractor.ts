@@ -1,6 +1,10 @@
 import {
+  type AssumptionEntry,
   type AuditFinding,
+  type Biography,
+  type BreaksWhenEntry,
   type ChapterEntry,
+  type CommonMisuseEntry,
   type ContractValidationEntry,
   type DefinitionEntry,
   type EquationEntry,
@@ -15,9 +19,11 @@ import {
   type ModuleEntry,
   type MultiRepIndexEntry,
   type ObjectiveEntry,
+  type ObservableEntry,
   type PedagogyIndex,
   type SerializedRep,
   slugify,
+  type UnitsEntry,
 } from "@sophie/core/schema";
 import { valueToEstree } from "estree-util-value-to-estree";
 import { toHtml } from "hast-util-to-html";
@@ -182,6 +188,14 @@ function readAsideAttributes(node: MdxJsxFlowElement): AsideAttributes {
 interface KeyEquationAttributes {
   id?: string;
   title?: string;
+  /**
+   * Author-declared canonical TeX-form symbols per ADR 0043 §R5
+   * (`<KeyEquation symbols={["T", "\\lambda_{peak}", "b"]}>`). Optional
+   * at v1; the PR-δ NR1/NR3/NR4 audit invariants only fire when
+   * present. Parsed from the JSX array-expression attr via
+   * `readStringListAttr`.
+   */
+  symbols?: string[];
 }
 
 function readKeyEquationAttributes(
@@ -194,6 +208,8 @@ function readKeyEquationAttributes(
     if (attr.name === "id") out.id = attr.value;
     if (attr.name === "title") out.title = attr.value;
   }
+  const symbols = readStringListAttr(node, "symbols");
+  if (symbols !== undefined) out.symbols = symbols;
   return out;
 }
 
@@ -389,6 +405,165 @@ function extractFirstTex(children: ReadonlyArray<unknown>): string | null {
  *   - Two KeyEquations in the same chapter slug to the same anchor
  *     (intra-chapter slug collision; matches definitions' pattern).
  */
+/**
+ * Walk one `<KeyEquation>` parent's children and produce the
+ * `Biography` payload that `extractEquations` consumes per ADR 0046 +
+ * 2026-05-17 design hardening §"Pedagogy index entry shape".
+ *
+ * Returns `undefined` when zero biography children are present
+ * (per-equation opt-in per ADR 0046 — equations without biographies
+ * are valid; the audit's E7/E8/E9 invariants only fire when biography
+ * children exist).
+ *
+ * Whitespace text nodes between JSX siblings are skipped (mdast emits
+ * them around `<Parent>\n  <Child>` source). Non-biography children
+ * (paragraphs, math blocks, raw HTML, other JSX) are ALSO skipped —
+ * unlike `buildRepsFromMultiRepChildren` which is strict (MultiRep
+ * forbids non-Rep children), `<KeyEquation>` legitimately contains
+ * framing prose + the canonical `$$...$$` math block alongside
+ * biography children.
+ *
+ * Observable + BreaksWhen are singletons; multiple of either is an
+ * authoring error (throws). Assumption / Units / CommonMisuse are
+ * lists (any non-negative count is valid).
+ *
+ * Each role-bearing entry receives its hardcoded `epistemicRole`
+ * literal per ADR 0058 §2 pattern 3 — the schema-side `z.literal`
+ * locks the value, and the component-side `<NAME>_EPISTEMIC_ROLE`
+ * const must agree (compile-time guarantee via
+ * `as const satisfies EpistemicRole`). Surfaces the queryable
+ * epistemic layer (design §F5) without runtime role validation.
+ *
+ * Contract scope (render/audit split): this helper owns *extraction*
+ * — produces the `Biography` index entry from JSX children. The audit
+ * (E7/E8/E9 in PR-δ) consumes that populated entry. If v2 grows a
+ * biography-allowlist invariant (e.g., "warn on unknown JSX children
+ * of `<KeyEquation>`"), it lives in `pedagogy-audit.ts`, not here —
+ * the extractor must stay structurally permissive so authors can
+ * freely embed prose + cross-references inside KeyEquation bodies.
+ */
+function buildBiographyFromKeyEquationChildren(
+  parent: { children: ReadonlyArray<unknown> },
+  contextLabel: string
+): Biography | undefined {
+  let observable: ObservableEntry | undefined;
+  const assumptions: AssumptionEntry[] = [];
+  const units: UnitsEntry[] = [];
+  let breaksWhen: BreaksWhenEntry | undefined;
+  const commonMisuses: CommonMisuseEntry[] = [];
+
+  for (const child of parent.children) {
+    if (isWhitespaceTextNode(child)) continue;
+    if (!child || typeof child !== "object") continue;
+    const el = child as MdxJsxFlowElement;
+    if (el.type !== "mdxJsxFlowElement") continue;
+
+    if (el.name === "Observable") {
+      if (observable !== undefined) {
+        throw new Error(
+          `transform: ${contextLabel} contains more than one <Observable> child. Per ADR 0046, Observable is an optional singleton — combine into one block or split into separate <KeyEquation>s.`
+        );
+      }
+      const body = renderChildrenToHtml(el.children);
+      if (body.trim().length === 0) {
+        throw new Error(
+          `transform: <Observable> in ${contextLabel} has an empty body. Resolution: add prose between the opening and closing tags.`
+        );
+      }
+      observable = { body, epistemicRole: "observable" };
+      continue;
+    }
+
+    if (el.name === "Assumption") {
+      const body = renderChildrenToHtml(el.children);
+      if (body.trim().length === 0) {
+        throw new Error(
+          `transform: <Assumption> in ${contextLabel} has an empty body. Resolution: add prose between the opening and closing tags.`
+        );
+      }
+      const type = readStringAttr(el, "type");
+      assumptions.push({
+        body,
+        ...(type ? { type } : {}),
+        epistemicRole: "assumption",
+      });
+      continue;
+    }
+
+    if (el.name === "Units") {
+      const symbol = readStringAttr(el, "symbol");
+      const unit = readStringAttr(el, "unit");
+      if (!symbol) {
+        throw new Error(
+          `transform: <Units> in ${contextLabel} is missing a non-empty \`symbol\` attr.`
+        );
+      }
+      if (!unit) {
+        throw new Error(
+          `transform: <Units symbol="${symbol}"> in ${contextLabel} is missing a non-empty \`unit\` attr.`
+        );
+      }
+      units.push({ symbol, unit });
+      continue;
+    }
+
+    if (el.name === "BreaksWhen") {
+      if (breaksWhen !== undefined) {
+        throw new Error(
+          `transform: ${contextLabel} contains more than one <BreaksWhen> child. Per ADR 0046, BreaksWhen is an optional singleton.`
+        );
+      }
+      const body = renderChildrenToHtml(el.children);
+      if (body.trim().length === 0) {
+        throw new Error(
+          `transform: <BreaksWhen> in ${contextLabel} has an empty body. Resolution: add prose between the opening and closing tags.`
+        );
+      }
+      breaksWhen = { body, epistemicRole: "approximation" };
+      continue;
+    }
+
+    if (el.name === "CommonMisuse") {
+      const body = renderChildrenToHtml(el.children);
+      if (body.trim().length === 0) {
+        throw new Error(
+          `transform: <CommonMisuse> in ${contextLabel} has an empty body. Resolution: add prose between the opening and closing tags.`
+        );
+      }
+      const misconception = readStringAttr(el, "misconception");
+      commonMisuses.push({
+        body,
+        ...(misconception ? { misconception } : {}),
+      });
+      continue;
+    }
+
+    // Non-biography JSX (anything other than the five biography children
+    // above) is silently skipped — <KeyEquation> legitimately contains
+    // other JSX in framing prose (e.g., <EqRef>, <GlossaryTerm>). The
+    // audit (E7/E8/E9 in PR-δ) consumes the populated biography only;
+    // if v2 grows a biography-allowlist invariant, it lives in
+    // pedagogy-audit.ts, not here.
+  }
+
+  const hasAnyBiography =
+    observable !== undefined ||
+    assumptions.length > 0 ||
+    units.length > 0 ||
+    breaksWhen !== undefined ||
+    commonMisuses.length > 0;
+
+  if (!hasAnyBiography) return undefined;
+
+  return {
+    ...(observable ? { observable } : {}),
+    assumptions,
+    units,
+    ...(breaksWhen ? { breaks_when: breaksWhen } : {}),
+    common_misuses: commonMisuses,
+  };
+}
+
 export function extractEquations(
   tree: Root,
   chapterSlug: string
@@ -430,6 +605,11 @@ export function extractEquations(
       );
     }
 
+    const biography = buildBiographyFromKeyEquationChildren(
+      el,
+      `<KeyEquation id="${id}"> in chapter "${chapterSlug}"`
+    );
+
     counter += 1;
     out.push({
       slug,
@@ -439,7 +619,8 @@ export function extractEquations(
       body: renderChildrenToHtml(el.children),
       chapter: chapterSlug,
       anchor: slug,
-      symbols: [],
+      symbols: attrs.symbols ?? [],
+      ...(biography ? { biography } : {}),
     });
   });
 

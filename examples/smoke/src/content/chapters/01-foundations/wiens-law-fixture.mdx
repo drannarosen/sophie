@@ -1,0 +1,81 @@
+---
+title: "Lecture 4: Wien's Law biography"
+slug: "wiens-law-fixture"
+module: "foundations"
+order: 4
+status: "stable"
+lang: "en"
+description: "(smoke fixture — Wien's law with full EquationBiography per ADR 0046 + 2026-05-17 design hardening. Exercises all 5 biography children — Observable / Assumption (×2) / Units (×2) / BreaksWhen / CommonMisuse — plus the author-declared `symbols` prop per ADR 0043 §R5. Powers the PR-γ extractor end-to-end so the pedagogy-index `equations[].biography` populates from real MDX.)"
+tags: ["foundations", "equation-biography", "smoke"]
+---
+
+import {
+  Assumption,
+  BreaksWhen,
+  CommonMisuse,
+  KeyEquation,
+  Observable,
+  Units,
+} from "@sophie/components";
+
+This chapter is a **smoke fixture** for the EquationBiography PR-γ
+extractor. It wraps Wien's displacement law in a `<KeyEquation>` with
+every biography child populated so the pedagogy-index
+`equations[].biography` field and the `<EqRef>` hover summary +
+`<ChapterEquations>` / `<CourseEquations>` aggregator renders all
+exercise real data end-to-end.
+
+The smoke chapter is the suggested authoring order for
+ASTR 201 Module 1 per ADR 0046 — Wien's law is the most fully-formed
+biography case in the platform's seed content.
+
+## Wien's displacement law
+
+<KeyEquation
+  id="wiens-law-smoke"
+  title="Wien's Law (biography smoke fixture)"
+  symbols={["T", "\\lambda_{peak}", "b"]}
+>
+
+$$
+\lambda_{\text{peak}} = b \, T^{-1}
+$$
+
+Wien's displacement law relates the peak wavelength of a blackbody's
+thermal emission to its temperature: hotter sources peak at shorter
+wavelengths; cooler sources peak redder.
+
+  <Observable>
+    The wavelength at which a thermal source's emission spectrum
+    reaches maximum intensity, as a function of the source's
+    temperature.
+  </Observable>
+
+  <Assumption type="thermal-equilibrium">
+    The source is in local thermodynamic equilibrium so the Planck
+    distribution applies.
+  </Assumption>
+
+  <Assumption type="blackbody">
+    The source emits as an ideal blackbody — no spectral lines, no
+    continuum absorption shaping the peak.
+  </Assumption>
+
+  <Units symbol="T" unit="K" />
+
+  <Units symbol="\\lambda_{peak}" unit="cm" />
+
+  <BreaksWhen>
+    Non-thermal emission (synchrotron, masers, line emission);
+    optically-thin sources without thermal coupling; spectra
+    dominated by absorption features rather than the continuum.
+  </BreaksWhen>
+
+  <CommonMisuse misconception="wiens-law-absorption-spectra">
+    Applying Wien's law to identify the temperature of an
+    absorption-line spectrum. The peak position depends on the
+    continuum, not the absorption features — the law misidentifies
+    the temperature when the spectrum is shaped by intervening
+    cooler gas.
+  </CommonMisuse>
+</KeyEquation>
