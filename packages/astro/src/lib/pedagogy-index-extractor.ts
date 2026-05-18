@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import {
   type AssumptionEntry,
   type AuditFinding,
@@ -2309,36 +2310,36 @@ function isEquationRegistryFilePath(filePath: string): boolean {
 }
 
 /**
- * Read the YAML frontmatter node from an mdast Root tree, parse it,
- * and validate against `EquationRegistryEntrySchema`. Returns the
- * typed entry. Throws if:
- *   - no `yaml` node is present (registry MDX must have frontmatter)
- *   - frontmatter fails schema validation (defense in depth — Astro's
- *     content collection schema should catch this first)
+ * Read the YAML frontmatter for an equation registry MDX file and
+ * validate it against `EquationRegistryEntrySchema`. Returns the
+ * typed entry.
  *
- * The YAML node is left by `remark-frontmatter` at the top of the
- * Root.children list; Astro's MDX integration includes it in the
- * default plugin chain.
+ * Why fs-direct rather than walking the mdast `yaml` node: Astro's
+ * MDX integration runs `remark-frontmatter` + `remark-mdx-frontmatter`
+ * BEFORE our custom remark plugin sees the tree, so the YAML node is
+ * already hoisted into an `mdxjsEsm` export const and the original
+ * `yaml` node is removed from `tree.children`. Re-reading the source
+ * file directly avoids parsing the hoisted ESM AST and gives us the
+ * same YAML the content-layer schema validates against.
  */
 function readEquationRegistryFrontmatter(
-  tree: Root,
   filePath: string
 ): EquationRegistryEntry {
-  for (const child of tree.children) {
-    const node = child as { type?: string; value?: unknown };
-    if (node.type !== "yaml") continue;
-    const raw = parseYaml(typeof node.value === "string" ? node.value : "");
-    const parsed = EquationRegistryEntrySchema.safeParse(raw);
-    if (!parsed.success) {
-      throw new Error(
-        `Equation registry file "${filePath}" has invalid frontmatter. Validation errors: ${parsed.error.message}`
-      );
-    }
-    return parsed.data;
+  const source = readFileSync(filePath, "utf8");
+  const match = source.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n/);
+  if (!match) {
+    throw new Error(
+      `Equation registry file "${filePath}" is missing YAML frontmatter. Per ADR 0060, every registry MDX must declare \`id\`, \`title\`, \`tex\`, and \`symbols\` in frontmatter at the top of the file.`
+    );
   }
-  throw new Error(
-    `Equation registry file "${filePath}" is missing YAML frontmatter. Per ADR 0060, every registry MDX must declare \`id\`, \`title\`, \`tex\`, and \`symbols\` in frontmatter.`
-  );
+  const raw = parseYaml(match[1] ?? "");
+  const parsed = EquationRegistryEntrySchema.safeParse(raw);
+  if (!parsed.success) {
+    throw new Error(
+      `Equation registry file "${filePath}" has invalid frontmatter. Validation errors: ${parsed.error.message}`
+    );
+  }
+  return parsed.data;
 }
 
 export interface PedagogyIndexRemarkPluginOptions {
@@ -2382,7 +2383,7 @@ export function pedagogyIndexRemarkPlugin(
     // Registry path: assemble one EquationEntry from frontmatter + body
     // biography, replace the registry slot.
     if (isEquationRegistryFilePath(filePath)) {
-      const frontmatter = readEquationRegistryFrontmatter(tree, filePath);
+      const frontmatter = readEquationRegistryFrontmatter(filePath);
       const entry = extractEquationRegistryDeclaration(tree, frontmatter);
       indexAccumulator.addEquations([entry]);
       return;
