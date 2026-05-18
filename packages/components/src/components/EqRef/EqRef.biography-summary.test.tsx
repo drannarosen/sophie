@@ -7,6 +7,7 @@ const emptyBiography: Biography = {
   assumptions: [],
   units: [],
   common_misuses: [],
+  derivation_steps: [],
 };
 
 describe("<BiographySummary>", () => {

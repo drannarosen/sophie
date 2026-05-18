@@ -128,6 +128,7 @@ describe("cross-family composition — KeyEquation ↔ MultiRep ↔ Aside ↔ In
             misconception: "wiens-law-absorption-spectra",
           },
         ],
+        derivation_steps: [],
       },
     };
 
@@ -264,6 +265,7 @@ describe("cross-family composition — KeyEquation ↔ MultiRep ↔ Aside ↔ In
               misconception: "wiens-law-misuse",
             },
           ],
+          derivation_steps: [],
         },
       },
     ];

@@ -19,11 +19,13 @@ import { NonEmptyString, Slug } from "./primitives.js";
  * extends this base. The shared loader, audit primitives, and
  * `<RegistryRef>` reference primitive all key on the `id` field.
  */
-export const RegistryBaseSchema = z.object({
-  id: Slug,
-  title: NonEmptyString,
-  tags: z.array(NonEmptyString).optional(),
-  version: NonEmptyString.optional(),
-});
+export const RegistryBaseSchema = z
+  .object({
+    id: Slug,
+    title: NonEmptyString,
+    tags: z.array(NonEmptyString).optional(),
+    version: NonEmptyString.optional(),
+  })
+  .strict();
 
 export type RegistryBase = z.infer<typeof RegistryBaseSchema>;

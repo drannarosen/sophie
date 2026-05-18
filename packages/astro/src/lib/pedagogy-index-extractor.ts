@@ -557,7 +557,6 @@ function buildBiographyFromKeyEquationChildren(
         ...(label ? { label } : {}),
         epistemicRole: "model",
       });
-      continue;
     }
 
     // Non-biography JSX (anything other than the six biography children

@@ -67,6 +67,7 @@ function makeBiography(overrides: Partial<Biography> = {}): Biography {
     assumptions: [],
     units: [],
     common_misuses: [],
+    derivation_steps: [],
     ...overrides,
   };
 }
@@ -815,6 +816,7 @@ describe("integration — full smoke scenario", () => {
               misconception: "wiens-law-absorption-spectra",
             },
           ],
+          derivation_steps: [],
         },
       }),
     ];

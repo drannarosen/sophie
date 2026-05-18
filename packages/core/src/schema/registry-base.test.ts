@@ -65,4 +65,17 @@ describe("RegistryBaseSchema", () => {
       RegistryBaseSchema.safeParse({ ...minValid, tags: [""] }).success
     ).toBe(false);
   });
+
+  it("rejects unknown keys (.strict())", () => {
+    // Load-bearing per ADR 0060: this base is the inheritance root for
+    // every future registry. Silent stripping at the base would mask typos
+    // in any registry that extends without re-locking strict mode.
+    expect(
+      RegistryBaseSchema.safeParse({
+        ...minValid,
+        // typo: "tag" instead of "tags"
+        tag: ["thermal"],
+      }).success
+    ).toBe(false);
+  });
 });
