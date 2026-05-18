@@ -388,6 +388,55 @@ Defer.
   A8 `<OMIFlow>` graduation so the gate has something cheap to
   satisfy.
 
+## Revisions
+
+### R-greenfield — First greenfield application at scale (2026-05-18)
+
+The Reasoning OS Core Phase 1 sprint
+([ADR 0046](./0046-equation-biography.md) §R7 PR-α/β/γ/δ;
+[#91](https://github.com/drannarosen/sophie/pull/91) /
+[#92](https://github.com/drannarosen/sophie/pull/92) /
+[#93](https://github.com/drannarosen/sophie/pull/93) /
+[#94](https://github.com/drannarosen/sophie/pull/94)) shipped the first
+greenfield application of this ADR's component-side role const +
+schema-side `z.literal` pattern (§Decision "pattern 3") at scale. Three
+biography children carry `epistemicRole` via the canonical shape; two
+deliberately omit it per §"chrome":
+
+| Component | Role | Pattern applied |
+|-----------|------|-----------------|
+| `<Observable>` | `observable` | Component const `OBSERVABLE_EPISTEMIC_ROLE = "observable" as const satisfies EpistemicRole` + schema `EpistemicRoleSchema.extract(["observable"])` |
+| `<Assumption>` | `assumption` | Component const `ASSUMPTION_EPISTEMIC_ROLE` + schema `EpistemicRoleSchema.extract(["assumption"])` |
+| `<BreaksWhen>` | `approximation` (validity-domain marker) | Component const `BREAKS_WHEN_EPISTEMIC_ROLE` + schema `EpistemicRoleSchema.extract(["approximation"])` |
+| `<Units>` | — (chrome) | NO role const; schema omits `epistemicRole`; comment-documented per §"chrome" |
+| `<CommonMisuse>` | — (cross-ref carries) | NO role const; inherits linked misconception's role at audit-time via the optional `misconception:` slug field |
+
+**`EpistemicRoleSchema.extract([...])` grounds the role binding twice**
+— at compile time (TS literal narrowing) AND at parse time (Zod
+literal validation). A typo like `"observabel"` fails type-check at
+the component callsite AND fails parse when the schema runs against
+an extractor output. This double-binding is the canonical role-
+declaration shape for any future role-bearing greenfield component.
+
+**The Tier-3 chrome omission is structurally enforced**, not merely
+descriptive: every biography schema is `.strict()` (per ADR 0046 §F1),
+so a future extractor accidentally emitting
+`epistemicRole: "misconception"` on a `<Units>` or `<CommonMisuse>`
+entry now *fails parse* rather than silently shipping a drifted role.
+PR-A
+([#95](https://github.com/drannarosen/sophie/pull/95)) extended the
+same `.strict()` discipline to `MultiRep*Schema` and
+`Intervention*Schema` so all three Reasoning OS Core families share
+one schema posture.
+
+**Audit verification**: the Phase B Reasoning OS core audit
+(`docs/reviews/2026-05-17-reasoning-os-core.md` §2.4) called out
+this pattern as "the *cleanest* pattern in the codebase for greenfield
+component-role declaration" and recommended this §R-greenfield note
+back-fill as a P1 priority. Future role-bearing components (whether
+biography-family or otherwise) should follow this shape; reviewers
+should flag drift on every PR.
+
 ## References
 
 - [ADR 0003 — Zod as source of truth](./0003-zod-as-source-of-truth.md)
