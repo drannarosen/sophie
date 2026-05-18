@@ -36,9 +36,14 @@ test.describe("PR 6: <Aside> on the smoke chapter", () => {
     await page.goto(CHAPTER_URL);
     const asides = page.locator("[data-sophie-aside]");
     // PR-C1 migration added 14 definition asides + 1 converted
-    // key-insight to spoiler-alerts.mdx alongside the original 3
-    // (definition + digression + key-insight). Total: 18.
-    await expect(asides).toHaveCount(18);
+    // key-insight alongside the original 3 (definition + digression
+    // + key-insight) = 18. PR-7 chapter capstone added 8 misconception
+    // Asides (rainbows-are-decorative, one-image-tells-the-whole-story,
+    // dust-means-empty, dark-matter-is-just-hidden-normal-matter,
+    // big-bang-was-an-explosion-in-space, brighter-equals-
+    // intrinsically-brighter, wiens-law-absorption-spectra,
+    // astronomy-is-looking-through-telescopes). 18 + 8 = 26.
+    await expect(asides).toHaveCount(26);
   });
 
   test("each aside carries its kind via data-aside-kind", async ({ page }) => {
@@ -49,11 +54,10 @@ test.describe("PR 6: <Aside> on the smoke chapter", () => {
       .evaluateAll((els) =>
         els.map((el) => (el as HTMLElement).dataset.asideKind ?? "")
       );
-    // Assert distribution rather than the exact MDX order. The
-    // smoke chapter's three rolled-up kinds (per PR-C1's
-    // migration): 15 definitions + 1 digression + 2 key-insights.
-    // The ordering depends on prose flow; counts are the stable
-    // contract.
+    // Assert distribution rather than the exact MDX order. Post-
+    // PR-7 the smoke chapter has 15 definitions + 1 digression +
+    // 2 key-insights + 8 misconceptions = 26. The ordering depends
+    // on prose flow; counts are the stable contract.
     const counts = kinds.reduce<Record<string, number>>(
       (acc, k) => Object.assign(acc, { [k]: (acc[k] ?? 0) + 1 }),
       {}
@@ -62,6 +66,7 @@ test.describe("PR 6: <Aside> on the smoke chapter", () => {
       definition: 15,
       digression: 1,
       "key-insight": 2,
+      misconception: 8,
     });
   });
 

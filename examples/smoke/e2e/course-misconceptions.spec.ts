@@ -9,139 +9,100 @@ const MISCONCEPTIONS_URL = "/misconceptions";
  * Covers TDD test list row T39 from the PR-C3 design doc
  * (`docs/plans/2026-05-14-pr-c3-design.md`).
  *
- * The smoke target ships two misconceptions as of Intervention PR-γ:
+ * The smoke target ships nine misconceptions post-PR-7 chapter
+ * capstone:
  *
- *  1. `spoiler-alerts.mdx` → `<Callout variant="misconception"
- *     title="Misconception Alert">` (length="long", anchor
- *     `misconception-alert`). Original PR-C3 smoke seed.
- *  2. `misconception-fixture.mdx` → `<Aside kind="misconception"
- *     name="universe-with-a-center">` (length="short", anchor
- *     `universe-with-a-center`). Added by Intervention PR-γ as the
- *     pairing target for two literature-grounded interventions.
+ *  - `spoiler-alerts.mdx`: eight `<Aside kind="misconception">` entries
+ *    authored by PR-7's chapter rebuild (rainbows-are-decorative,
+ *    one-image-tells-the-whole-story, dust-means-empty,
+ *    dark-matter-is-just-hidden-normal-matter,
+ *    big-bang-was-an-explosion-in-space,
+ *    brighter-equals-intrinsically-brighter,
+ *    wiens-law-absorption-spectra,
+ *    astronomy-is-looking-through-telescopes — the last one converted
+ *    from the legacy `<Callout variant="misconception">`).
+ *  - `misconception-fixture.mdx`: one `<Aside kind="misconception"
+ *    name="universe-with-a-center">` (Intervention PR-γ).
  *
- * The tests below pin each entry individually so future additions
- * to either chapter don't cascade-break the suite; the test bodies
- * scope to a specific entry via its content, not via positional
- * `.first()` / `.nth()` queries.
+ * All nine are Aside-sourced post-PR-7. The Callout-sourced
+ * (`length: 'long'`) code path has no representative in the smoke
+ * target anymore — the `--long` modifier behavior is unit-tested at
+ * the component level. The architectural test would be re-enabled
+ * if a future chapter introduces a `<Callout variant="misconception">`.
  *
  * Per decision #12 (length-based visual distinction), the
- * `<CourseMisconceptions />` template emits a `--long` modifier
- * class for Callout-sourced (long) misconceptions, `--short` for
- * Aside-sourced (brief) ones.
+ * `<CourseMisconceptions />` template emits `--short` for Aside-
+ * sourced (brief) entries.
  */
 
 test.describe("PR-C3: <CourseMisconceptions /> on /misconceptions", () => {
-  test("T39: renders the page with both course misconceptions", async ({
+  test("T39: renders the page with all course misconceptions", async ({
     page,
   }) => {
     await page.goto(MISCONCEPTIONS_URL);
     const block = page.locator("[data-sophie-course-misconceptions]");
     await expect(block).toBeAttached();
     const terms = block.locator(".sophie-course-misconceptions__term");
-    // Two misconceptions:
-    //   1. Callout-sourced "Misconception Alert" (spoiler-alerts) —
-    //      anchor `misconception-alert` slugified from the title.
-    //      Rendered as the dt's DOM id.
-    //   2. Aside-sourced (misconception-fixture, added by Intervention
-    //      PR-γ) — anchor `universe-with-a-center` derived from the
-    //      `name="universe-with-a-center"` attr per Intervention
-    //      PR-δ's anchor-precedence fix that promoted `name` above
-    //      slug(title) in the misconception extractor.
-    //
-    // The user-visible <dt> text is the entry's *label* (Callout's
-    // `title` for long; "Misconception (brief)" default for short
-    // when no `label` attr is supplied — which is the fixture's
-    // case). Pin by anchor id selector rather than text — robust
-    // to label-text changes.
-    await expect(terms).toHaveCount(2);
-    await expect(page.locator("dt#misconception-alert")).toHaveCount(1);
+    // Nine misconceptions post-PR-7 (8 in spoiler-alerts + 1 in
+    // misconception-fixture). Pin by anchor id selector rather than
+    // text — robust to label-text changes.
+    await expect(terms).toHaveCount(9);
+    // Pin two specific PR-7 anchors + the legacy fixture anchor.
+    await expect(
+      page.locator("dt#dark-matter-is-just-hidden-normal-matter")
+    ).toHaveCount(1);
+    await expect(
+      page.locator("dt#astronomy-is-looking-through-telescopes")
+    ).toHaveCount(1);
     await expect(page.locator("dt#universe-with-a-center")).toHaveCount(1);
   });
 
-  test("Callout-sourced entry carries the `length: 'long'` modifier class on both <dt> and <dd>", async ({
-    page,
-  }) => {
-    // PR-C3 design decision #12: visual distinction by length —
-    // `--long` for Callout-sourced (the source primitive is a
-    // full-width block), `--short` for Aside-sourced (compact/
-    // marginal). Pin to the Callout-sourced entry by its title
-    // text so adding more misconceptions doesn't move .first()'s
-    // target.
-    await page.goto(MISCONCEPTIONS_URL);
-    const calloutTerm = page
-      .locator(".sophie-course-misconceptions__term")
-      .filter({ hasText: "Misconception Alert" });
-    await expect(calloutTerm).toHaveClass(
-      /sophie-course-misconceptions__term--long/
-    );
-    // The matching <dd> is the term's sibling. Use `xpath` instead
-    // of an index-based locator so adding more entries doesn't
-    // shift the lookup.
-    const calloutBody = calloutTerm.locator("xpath=following-sibling::dd[1]");
-    await expect(calloutBody).toHaveClass(
-      /sophie-course-misconceptions__body--long/
-    );
-    await expect(calloutTerm).not.toHaveClass(
-      /sophie-course-misconceptions__term--short/
-    );
-    await expect(calloutBody).not.toHaveClass(
-      /sophie-course-misconceptions__body--short/
-    );
+  test.skip("Callout-sourced entry carries the `length: 'long'` modifier class on both <dt> and <dd>", () => {
+    // Architectural test for the `--long` modifier behavior. After
+    // PR-7's chapter capstone, the smoke target's only Callout-
+    // sourced misconception was converted to an Aside, so no
+    // representative is on the page. The `--long` rendering is
+    // unit-tested at the component level. Re-enable when any chapter
+    // introduces a `<Callout variant="misconception">` block again.
   });
 
-  test("Aside-sourced entry carries the `length: 'short'` modifier class on both <dt> and <dd>", async ({
+  test("all Aside-sourced entries carry the `length: 'short'` modifier class on both <dt> and <dd>", async ({
     page,
   }) => {
-    // Symmetric assertion for the Aside-sourced entry added by
-    // Intervention PR-γ. The misconception-fixture chapter binds
-    // `<Aside kind="misconception" name="universe-with-a-center">`
-    // without an explicit `label`, so the rendered `<dt>` text falls
-    // back to "Misconception (brief)" (the default short-form
-    // label per ChapterMisconceptions). The anchor is
-    // `universe-with-a-center` — derived from the `name` attr per
-    // Intervention PR-δ's anchor-precedence fix. Pin by the
-    // `--short` modifier class to find the Aside-sourced entry —
-    // only one exists on the page.
     await page.goto(MISCONCEPTIONS_URL);
-    const asideTerm = page.locator(
+    // All nine misconceptions post-PR-7 are Aside-sourced.
+    const asideTerms = page.locator(
       ".sophie-course-misconceptions__term.sophie-course-misconceptions__term--short"
     );
-    await expect(asideTerm).toHaveCount(1);
-    const asideBody = asideTerm.locator("xpath=following-sibling::dd[1]");
+    await expect(asideTerms).toHaveCount(9);
+    // Spot-check one: matching <dd> sibling carries the body modifier.
+    const asideBody = asideTerms
+      .first()
+      .locator("xpath=following-sibling::dd[1]");
     await expect(asideBody).toHaveClass(
       /sophie-course-misconceptions__body--short/
     );
-    await expect(asideTerm).not.toHaveClass(
-      /sophie-course-misconceptions__term--long/
-    );
-    await expect(asideBody).not.toHaveClass(
-      /sophie-course-misconceptions__body--long/
-    );
   });
 
-  test("Callout-sourced entry has a back-link to the chapter anchor", async ({
+  test("an Aside-sourced entry has a back-link to the chapter anchor", async ({
     page,
   }) => {
-    // Anchor derivation: explicit `id` absent on the Callout, so
-    // the extractor slugifies the title "Misconception Alert" →
-    // `misconception-alert`. Back-link target:
-    // `/chapters/spoiler-alerts#misconception-alert`.
+    // Anchor derivation for Aside-sourced misconceptions: the
+    // `name="..."` attr is the anchor source (per Intervention PR-δ's
+    // anchor-precedence fix). Pin to the PR-7
+    // `dark-matter-is-just-hidden-normal-matter` entry.
     await page.goto(MISCONCEPTIONS_URL);
-    // Pin to the Callout-sourced entry via its anchor id so
-    // additions to the misconceptions index don't shift `.first()`.
     const backlink = page.locator(
-      "#misconception-alert + dd .sophie-course-misconceptions__backlink a"
+      "#dark-matter-is-just-hidden-normal-matter + dd .sophie-course-misconceptions__backlink a"
     );
     await expect(backlink).toBeAttached();
     await expect(backlink).toHaveAttribute(
       "href",
-      "/chapters/spoiler-alerts#misconception-alert"
+      "/chapters/spoiler-alerts#dark-matter-is-just-hidden-normal-matter"
     );
-    // The <dt> on the course route uses the entry's anchor directly
-    // as its DOM id (the anchor is the slugified title, no extra
-    // prefix). The chapter back-link target resolves to the same id
-    // on the chapter route via ChapterMisconceptions.
-    await expect(page.locator("#misconception-alert")).toBeAttached();
+    await expect(
+      page.locator("#dark-matter-is-just-hidden-normal-matter")
+    ).toBeAttached();
   });
 
   test("/misconceptions is axe-clean", async ({ page }) => {

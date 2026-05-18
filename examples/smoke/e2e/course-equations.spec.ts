@@ -12,15 +12,17 @@ const EQUATIONS_URL = "/equations";
  * built static target via `astro preview` (see `playwright.config.ts`);
  * the page loading at all proves T20.
  *
- * The smoke target ships three `<KeyEquation>` blocks: two in
- * `spoiler-alerts.mdx` (`inverse-square-law` Eq. 1, `wiens-law` Eq. 2)
- * and one in `wiens-law-fixture.mdx` (`wiens-law-smoke` Eq. 1 — the
- * EquationBiography PR-γ smoke fixture that exercises every biography
- * child end-to-end). `<CourseEquations />` is configured with the
- * default `order="chapter"` (per PR-C2 design decision #7: equation
- * lookup is topic/chapter-anchored — diverges from
- * `<CourseGlossary />`). Chapter sort is by slug, so `spoiler-alerts`
- * entries appear before `wiens-law-fixture` entries.
+ * The smoke target ships four `<KeyEquation>` blocks: three in
+ * `spoiler-alerts.mdx` (`inverse-square-law` Eq. 1, `wiens-law` Eq. 2,
+ * `orbital-mass` Eq. 3 — `orbital-mass` was promoted from inline prose
+ * by PR-7's chapter capstone) and one in `wiens-law-fixture.mdx`
+ * (`wiens-law-smoke` Eq. 1 — the EquationBiography PR-γ smoke fixture
+ * that exercises every biography child end-to-end).
+ * `<CourseEquations />` is configured with the default `order="chapter"`
+ * (per PR-C2 design decision #7: equation lookup is topic/chapter-
+ * anchored — diverges from `<CourseGlossary />`). Chapter sort is by
+ * slug, so `spoiler-alerts` entries appear before `wiens-law-fixture`
+ * entries.
  *
  * Note on `order="alphabetical"` (the second half of T22 in the
  * design doc): there's no URL toggle for sort order on the shipped
@@ -30,16 +32,19 @@ const EQUATIONS_URL = "/equations";
  */
 
 test.describe("PR-C2: <CourseEquations /> on /equations", () => {
-  test("renders the page with both equation entries (T20 + T22)", async ({
+  test("renders the page with all equation entries (T20 + T22)", async ({
     page,
   }) => {
     await page.goto(EQUATIONS_URL);
     const block = page.locator("[data-sophie-course-equations]");
     await expect(block).toBeAttached();
     const terms = block.locator(".sophie-course-equations__term");
-    await expect(terms).toHaveCount(3);
+    // PR-7 added `orbital-mass` (v² = GM/r) to spoiler-alerts, taking
+    // the count from 3 → 4.
+    await expect(terms).toHaveCount(4);
     await expect(block).toContainText("Inverse-Square Law");
     await expect(block).toContainText(/Wien.s Law/);
+    await expect(block).toContainText("Circular Orbit Mass Law");
     await expect(block).toContainText(/biography smoke fixture/);
   });
 
@@ -48,23 +53,27 @@ test.describe("PR-C2: <CourseEquations /> on /equations", () => {
   }) => {
     // PR-C2 design decision #7: `<CourseEquations />` default is
     // chapter-order (slug asc, then number asc within chapter).
-    // Post-PR-γ ordering:
-    //   spoiler-alerts:   inverse-square-law (Eq. 1) → wiens-law (Eq. 2)
+    // Within a chapter, equations are numbered by source-MDX order.
+    // Post-PR-7 source order in spoiler-alerts.mdx:
+    //   inverse-square-law (§1.1, line ~243) → Eq. 1
+    //   orbital-mass       (Spoiler 9, ~line 790) → Eq. 2
+    //   wiens-law          (§1.4, ~line 1090) → Eq. 3
     //   wiens-law-fixture: wiens-law-smoke (Eq. 1)
     await page.goto(EQUATIONS_URL);
     const numbers = await page
       .locator(".sophie-course-equations__number")
       .evaluateAll((els) => els.map((el) => (el.textContent ?? "").trim()));
-    expect(numbers).toEqual(["Eq. 1", "Eq. 2", "Eq. 1"]);
+    expect(numbers).toEqual(["Eq. 1", "Eq. 2", "Eq. 3", "Eq. 1"]);
 
     const titles = await page
       .locator(".sophie-course-equations__title")
       .evaluateAll((els) => els.map((el) => (el.textContent ?? "").trim()));
     expect(titles[0]).toBe("The Inverse-Square Law");
+    expect(titles[1]).toBe("Circular Orbit Mass Law");
     // Smart-quote: source MDX `Wien's Law` renders with a curly
     // apostrophe (U+2019) via remark; tolerate either via regex.
-    expect(titles[1]).toMatch(/^Wien.s Law$/);
-    expect(titles[2]).toMatch(/^Wien.s Law \(biography smoke fixture\)$/);
+    expect(titles[2]).toMatch(/^Wien.s Law$/);
+    expect(titles[3]).toMatch(/^Wien.s Law \(biography smoke fixture\)$/);
   });
 
   test("each entry carries a back-link to its source chapter anchor", async ({
@@ -72,12 +81,13 @@ test.describe("PR-C2: <CourseEquations /> on /equations", () => {
   }) => {
     await page.goto(EQUATIONS_URL);
     const backlinks = page.locator(".sophie-course-equations__backlink a");
-    await expect(backlinks).toHaveCount(3);
+    await expect(backlinks).toHaveCount(4);
     const hrefs = await backlinks.evaluateAll((els) =>
       els.map((el) => (el as HTMLAnchorElement).getAttribute("href") ?? "")
     );
     expect(hrefs).toEqual([
       "/chapters/spoiler-alerts#inverse-square-law",
+      "/chapters/spoiler-alerts#orbital-mass",
       "/chapters/spoiler-alerts#wiens-law",
       "/chapters/wiens-law-fixture#wiens-law-smoke",
     ]);
