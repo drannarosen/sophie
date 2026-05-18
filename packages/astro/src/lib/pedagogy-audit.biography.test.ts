@@ -1,0 +1,647 @@
+import type {
+  Biography,
+  EquationEntry,
+  MisconceptionEntry,
+  NotationRegistry,
+  PedagogyIndex,
+} from "@sophie/core/schema";
+import { describe, expect, it } from "vitest";
+import { runPedagogyAudit } from "./pedagogy-audit.ts";
+
+/**
+ * Tests for the EquationBiography audit invariants added in PR-δ per
+ * ADR 0046 + ADR 0043 §R5 + 2026-05-17 design hardening §"Audit
+ * invariants."
+ *
+ * Six invariants covered:
+ *   E7  (INFO)     <KeyEquation> has biography but lacks <Observable>
+ *   E8  (WARNING)  <Units symbol> not in registry  (NR-gated)
+ *   E9  (INFO)     <CommonMisuse> lacks misconception= cross-ref
+ *   NR1 (WARNING)  <KeyEquation symbols=[...]> declares unregistered symbol  (NR-gated)
+ *   NR3 (ERROR)    registry: same symbol bound to multiple concept.ids  (NR-gated)
+ *   NR4 (WARNING)  registry symbol has units; equation lacks <Units> for it  (NR-gated)
+ *
+ * Plus the NR2 modification: KeyEquation.symbols entries promote the
+ * matching concept out of orphan status.
+ *
+ * E7/E9 are universal (fire whenever biography children exist).
+ * E8/NR1/NR3/NR4 are gated on the consumer's NR opt-in
+ * (`pedagogy-contract.yaml.math_and_units_standards.notation_registry`).
+ */
+
+function emptyIndex(): PedagogyIndex {
+  return {
+    definitions: [],
+    equations: [],
+    keyInsights: [],
+    figureRegistry: [],
+    figureUsages: [],
+    misconceptions: [],
+    chapters: [],
+    modules: [],
+    objectives: [],
+    inlineRefUsages: [],
+    contractValidations: [],
+    extractorFindings: [],
+    multiReps: [],
+    interventions: [],
+  };
+}
+
+function makeEquation(overrides: Partial<EquationEntry> = {}): EquationEntry {
+  return {
+    slug: "wiens-law",
+    title: "Wien's Law",
+    number: 1,
+    tex: "\\lambda_{peak} = b T^{-1}",
+    body: "<p>body</p>",
+    chapter: "ch",
+    anchor: "wiens-law",
+    symbols: [],
+    ...overrides,
+  };
+}
+
+function makeBiography(overrides: Partial<Biography> = {}): Biography {
+  return {
+    assumptions: [],
+    units: [],
+    common_misuses: [],
+    ...overrides,
+  };
+}
+
+function makeRegistry(
+  concepts: NotationRegistry["concepts"] = []
+): NotationRegistry {
+  return {
+    version: "1",
+    course: "test",
+    last_updated: "2026-05-17",
+    concepts,
+  };
+}
+
+function makeMisconception(
+  overrides: Partial<MisconceptionEntry> = {}
+): MisconceptionEntry {
+  return {
+    body: "<p>x</p>",
+    chapter: "ch",
+    anchor: "wiens-law-absorption-spectra",
+    length: "short",
+    ...overrides,
+  };
+}
+
+// =====================================================================
+// E7 — biography children present but missing <Observable>
+// =====================================================================
+
+describe("E7 INFO — biography lacks <Observable>", () => {
+  it("fires when biography has Assumption but no Observable", () => {
+    const index = emptyIndex();
+    index.equations = [
+      makeEquation({
+        biography: makeBiography({
+          assumptions: [{ body: "LTE", epistemicRole: "assumption" }],
+        }),
+      }),
+    ];
+    const report = runPedagogyAudit(index);
+    const e7 = report.info.filter((f) => f.code === "E7");
+    expect(e7).toHaveLength(1);
+    expect(e7[0]?.message).toContain("wiens-law");
+    expect(e7[0]?.message).toContain("lacks an <Observable>");
+    expect(e7[0]?.location).toMatchObject({
+      chapter: "ch",
+      anchor: "wiens-law",
+    });
+  });
+
+  it("does NOT fire when biography includes Observable", () => {
+    const index = emptyIndex();
+    index.equations = [
+      makeEquation({
+        biography: makeBiography({
+          observable: { body: "peak", epistemicRole: "observable" },
+          assumptions: [{ body: "LTE", epistemicRole: "assumption" }],
+        }),
+      }),
+    ];
+    const report = runPedagogyAudit(index);
+    expect(report.info.filter((f) => f.code === "E7")).toHaveLength(0);
+  });
+
+  it("does NOT fire when equation has no biography at all (per-equation opt-in)", () => {
+    const index = emptyIndex();
+    index.equations = [makeEquation()];
+    const report = runPedagogyAudit(index);
+    expect(report.info.filter((f) => f.code === "E7")).toHaveLength(0);
+  });
+
+  it("fires per equation (multiple incomplete biographies)", () => {
+    const index = emptyIndex();
+    index.equations = [
+      makeEquation({
+        slug: "eq-a",
+        anchor: "eq-a",
+        biography: makeBiography({
+          units: [{ symbol: "T", unit: "K" }],
+        }),
+      }),
+      makeEquation({
+        slug: "eq-b",
+        anchor: "eq-b",
+        biography: makeBiography({
+          common_misuses: [{ body: "misuse." }],
+        }),
+      }),
+    ];
+    const report = runPedagogyAudit(index);
+    expect(report.info.filter((f) => f.code === "E7")).toHaveLength(2);
+  });
+});
+
+// =====================================================================
+// E9 — <CommonMisuse> lacks misconception= cross-ref
+// =====================================================================
+
+describe("E9 INFO — <CommonMisuse> lacks misconception= cross-ref", () => {
+  it("fires when CommonMisuse has no misconception slug", () => {
+    const index = emptyIndex();
+    index.equations = [
+      makeEquation({
+        biography: makeBiography({
+          observable: { body: "x", epistemicRole: "observable" },
+          common_misuses: [{ body: "uncrossed misuse." }],
+        }),
+      }),
+    ];
+    const report = runPedagogyAudit(index);
+    const e9 = report.info.filter((f) => f.code === "E9");
+    expect(e9).toHaveLength(1);
+    expect(e9[0]?.message).toContain("wiens-law");
+    expect(e9[0]?.message).toContain("misconception graph");
+  });
+
+  it("does NOT fire when CommonMisuse has a misconception slug", () => {
+    const index = emptyIndex();
+    index.equations = [
+      makeEquation({
+        biography: makeBiography({
+          common_misuses: [
+            {
+              body: "misuse.",
+              misconception: "wiens-law-absorption-spectra",
+            },
+          ],
+        }),
+      }),
+    ];
+    const report = runPedagogyAudit(index);
+    expect(report.info.filter((f) => f.code === "E9")).toHaveLength(0);
+  });
+
+  it("does NOT fire when equation has no biography", () => {
+    const index = emptyIndex();
+    index.equations = [makeEquation()];
+    const report = runPedagogyAudit(index);
+    expect(report.info.filter((f) => f.code === "E9")).toHaveLength(0);
+  });
+
+  it("fires per uncrossed misuse (mixed populated / unpopulated)", () => {
+    const index = emptyIndex();
+    index.equations = [
+      makeEquation({
+        biography: makeBiography({
+          common_misuses: [
+            { body: "ok.", misconception: "wiens-law-absorption-spectra" },
+            { body: "uncrossed-1." },
+            { body: "uncrossed-2." },
+          ],
+        }),
+      }),
+    ];
+    const report = runPedagogyAudit(index);
+    expect(report.info.filter((f) => f.code === "E9")).toHaveLength(2);
+  });
+});
+
+// =====================================================================
+// E8 — <Units symbol> not in registry (NR-gated)
+// =====================================================================
+
+describe("E8 WARNING — <Units symbol> not in registry (NR-gated)", () => {
+  it("fires when Units symbol has no matching registry concept", () => {
+    const index = emptyIndex();
+    index.equations = [
+      makeEquation({
+        biography: makeBiography({
+          units: [{ symbol: "Q", unit: "K" }],
+        }),
+      }),
+    ];
+    const registry = makeRegistry([
+      {
+        id: "temperature",
+        verbal_label: "temperature",
+        canonical_symbol: "T",
+        latex: "T",
+      },
+    ]);
+    const report = runPedagogyAudit(index, { notationRegistry: registry });
+    const e8 = report.warnings.filter((f) => f.code === "E8");
+    expect(e8).toHaveLength(1);
+    expect(e8[0]?.message).toContain("Q");
+    expect(e8[0]?.message).toContain("wiens-law");
+  });
+
+  it("does NOT fire when Units symbol matches a registry concept", () => {
+    const index = emptyIndex();
+    index.equations = [
+      makeEquation({
+        biography: makeBiography({
+          units: [{ symbol: "T", unit: "K" }],
+        }),
+      }),
+    ];
+    const registry = makeRegistry([
+      {
+        id: "temperature",
+        verbal_label: "temperature",
+        canonical_symbol: "T",
+        latex: "T",
+      },
+    ]);
+    const report = runPedagogyAudit(index, { notationRegistry: registry });
+    expect(report.warnings.filter((f) => f.code === "E8")).toHaveLength(0);
+  });
+
+  it("is silent when registry is not opted-in (gate)", () => {
+    const index = emptyIndex();
+    index.equations = [
+      makeEquation({
+        biography: makeBiography({
+          units: [{ symbol: "Q", unit: "K" }],
+        }),
+      }),
+    ];
+    // No registry passed → entire NR block skipped.
+    const report = runPedagogyAudit(index);
+    expect(report.warnings.filter((f) => f.code === "E8")).toHaveLength(0);
+  });
+});
+
+// =====================================================================
+// NR1 — KeyEquation.symbols declares unregistered symbol (NR-gated)
+// =====================================================================
+
+describe("NR1 WARNING — KeyEquation.symbols declares unregistered symbol (NR-gated)", () => {
+  it("fires per symbol that has no matching registry concept", () => {
+    const index = emptyIndex();
+    index.equations = [makeEquation({ symbols: ["T", "X", "Y"] })];
+    const registry = makeRegistry([
+      {
+        id: "temperature",
+        verbal_label: "temperature",
+        canonical_symbol: "T",
+        latex: "T",
+      },
+    ]);
+    const report = runPedagogyAudit(index, { notationRegistry: registry });
+    const nr1 = report.warnings.filter((f) => f.code === "NR1");
+    expect(nr1).toHaveLength(2);
+    expect(nr1.map((f) => f.message).join(" ")).toMatch(/"X"/);
+    expect(nr1.map((f) => f.message).join(" ")).toMatch(/"Y"/);
+  });
+
+  it("does NOT fire when every symbol matches a registry concept", () => {
+    const index = emptyIndex();
+    index.equations = [makeEquation({ symbols: ["T"] })];
+    const registry = makeRegistry([
+      {
+        id: "temperature",
+        verbal_label: "temperature",
+        canonical_symbol: "T",
+        latex: "T",
+      },
+    ]);
+    const report = runPedagogyAudit(index, { notationRegistry: registry });
+    expect(report.warnings.filter((f) => f.code === "NR1")).toHaveLength(0);
+  });
+
+  it("is silent when registry is not opted-in (gate)", () => {
+    const index = emptyIndex();
+    index.equations = [makeEquation({ symbols: ["UNREGISTERED"] })];
+    const report = runPedagogyAudit(index);
+    expect(report.warnings.filter((f) => f.code === "NR1")).toHaveLength(0);
+  });
+});
+
+// =====================================================================
+// NR3 — registry: same symbol bound to multiple concept.ids (NR-gated)
+// =====================================================================
+
+describe("NR3 ERROR — registry symbol-collision across concept.ids (NR-gated)", () => {
+  it("fires once per collision (two concepts sharing canonical_symbol)", () => {
+    const index = emptyIndex();
+    const registry = makeRegistry([
+      {
+        id: "orbital-radius",
+        verbal_label: "orbital radius",
+        canonical_symbol: "r",
+        latex: "r",
+      },
+      {
+        id: "stellar-radius",
+        verbal_label: "stellar radius",
+        canonical_symbol: "r",
+        latex: "R",
+      },
+    ]);
+    const report = runPedagogyAudit(index, { notationRegistry: registry });
+    const nr3 = report.errors.filter((f) => f.code === "NR3");
+    expect(nr3).toHaveLength(1);
+    expect(nr3[0]?.message).toContain('"r"');
+    expect(nr3[0]?.message).toContain("orbital-radius");
+    expect(nr3[0]?.message).toContain("stellar-radius");
+  });
+
+  it("does NOT fire when every symbol is bound to exactly one concept", () => {
+    const index = emptyIndex();
+    const registry = makeRegistry([
+      {
+        id: "orbital-radius",
+        verbal_label: "orbital radius",
+        canonical_symbol: "r",
+        latex: "r",
+      },
+      {
+        id: "temperature",
+        verbal_label: "temperature",
+        canonical_symbol: "T",
+        latex: "T",
+      },
+    ]);
+    const report = runPedagogyAudit(index, { notationRegistry: registry });
+    expect(report.errors.filter((f) => f.code === "NR3")).toHaveLength(0);
+  });
+
+  it("fires once per distinct colliding symbol (not per pair)", () => {
+    const index = emptyIndex();
+    const registry = makeRegistry([
+      // Three-way collision on "r" → still one NR3 finding.
+      {
+        id: "orbital-radius",
+        verbal_label: "orbital radius",
+        canonical_symbol: "r",
+        latex: "r",
+      },
+      {
+        id: "stellar-radius",
+        verbal_label: "stellar radius",
+        canonical_symbol: "r",
+        latex: "R",
+      },
+      {
+        id: "ratio",
+        verbal_label: "ratio",
+        canonical_symbol: "r",
+        latex: "\\rho",
+      },
+    ]);
+    const report = runPedagogyAudit(index, { notationRegistry: registry });
+    expect(report.errors.filter((f) => f.code === "NR3")).toHaveLength(1);
+  });
+
+  it("is silent when registry is not opted-in (gate)", () => {
+    const index = emptyIndex();
+    // Even though we'd "have" a colliding registry, no registry passed
+    // = NR block skipped entirely.
+    const report = runPedagogyAudit(index);
+    expect(report.errors.filter((f) => f.code === "NR3")).toHaveLength(0);
+  });
+});
+
+// =====================================================================
+// NR4 — registry symbol has units; equation lacks <Units> for it (NR-gated)
+// =====================================================================
+
+describe("NR4 WARNING — registry symbol has units; equation lacks <Units> (NR-gated)", () => {
+  it("fires when equation declares the symbol but lacks a matching <Units>", () => {
+    const index = emptyIndex();
+    index.equations = [
+      makeEquation({
+        symbols: ["T"],
+        biography: makeBiography({
+          observable: { body: "x", epistemicRole: "observable" },
+        }),
+      }),
+    ];
+    const registry = makeRegistry([
+      {
+        id: "temperature",
+        verbal_label: "temperature",
+        canonical_symbol: "T",
+        latex: "T",
+        units: "K",
+      },
+    ]);
+    const report = runPedagogyAudit(index, { notationRegistry: registry });
+    const nr4 = report.warnings.filter((f) => f.code === "NR4");
+    expect(nr4).toHaveLength(1);
+    expect(nr4[0]?.message).toContain('"T"');
+    expect(nr4[0]?.message).toContain('"K"');
+  });
+
+  it("does NOT fire when equation declares a matching <Units>", () => {
+    const index = emptyIndex();
+    index.equations = [
+      makeEquation({
+        symbols: ["T"],
+        biography: makeBiography({
+          units: [{ symbol: "T", unit: "K" }],
+        }),
+      }),
+    ];
+    const registry = makeRegistry([
+      {
+        id: "temperature",
+        verbal_label: "temperature",
+        canonical_symbol: "T",
+        latex: "T",
+        units: "K",
+      },
+    ]);
+    const report = runPedagogyAudit(index, { notationRegistry: registry });
+    expect(report.warnings.filter((f) => f.code === "NR4")).toHaveLength(0);
+  });
+
+  it("does NOT fire when the registry concept has no `units` field", () => {
+    const index = emptyIndex();
+    index.equations = [makeEquation({ symbols: ["T"] })];
+    const registry = makeRegistry([
+      {
+        id: "temperature",
+        verbal_label: "temperature",
+        canonical_symbol: "T",
+        latex: "T",
+        // No `units` — no nudge to add a <Units> child.
+      },
+    ]);
+    const report = runPedagogyAudit(index, { notationRegistry: registry });
+    expect(report.warnings.filter((f) => f.code === "NR4")).toHaveLength(0);
+  });
+
+  it("does NOT fire when symbol is unregistered (NR1 already covers that case)", () => {
+    const index = emptyIndex();
+    index.equations = [makeEquation({ symbols: ["UNREGISTERED"] })];
+    const registry = makeRegistry([
+      {
+        id: "temperature",
+        verbal_label: "temperature",
+        canonical_symbol: "T",
+        latex: "T",
+        units: "K",
+      },
+    ]);
+    const report = runPedagogyAudit(index, { notationRegistry: registry });
+    // NR1 fires; NR4 does not (duplicate nudge would be noise).
+    expect(report.warnings.filter((f) => f.code === "NR4")).toHaveLength(0);
+    expect(report.warnings.filter((f) => f.code === "NR1")).toHaveLength(1);
+  });
+});
+
+// =====================================================================
+// NR2 modification — KeyEquation.symbols promote concept out of orphan
+// =====================================================================
+
+describe("NR2 modification — KeyEquation.symbols promotes concept out of orphan (NR-gated)", () => {
+  it("does NOT fire NR2 when an equation's symbols references the registry concept", () => {
+    const index = emptyIndex();
+    index.equations = [makeEquation({ symbols: ["T"] })];
+    const registry = makeRegistry([
+      {
+        id: "temperature",
+        verbal_label: "temperature",
+        canonical_symbol: "T",
+        latex: "T",
+      },
+    ]);
+    const report = runPedagogyAudit(index, { notationRegistry: registry });
+    const nr2 = report.info.filter((f) => f.code === "NR2");
+    expect(nr2).toHaveLength(0);
+  });
+
+  it("fires NR2 when neither MultiRep nor equation symbols references the concept", () => {
+    const index = emptyIndex();
+    const registry = makeRegistry([
+      {
+        id: "temperature",
+        verbal_label: "temperature",
+        canonical_symbol: "T",
+        latex: "T",
+      },
+    ]);
+    const report = runPedagogyAudit(index, { notationRegistry: registry });
+    expect(report.info.filter((f) => f.code === "NR2")).toHaveLength(1);
+  });
+
+  it("does NOT fire NR2 when one of several concepts is referenced via symbols", () => {
+    const index = emptyIndex();
+    index.equations = [makeEquation({ symbols: ["T"] })];
+    const registry = makeRegistry([
+      {
+        id: "temperature",
+        verbal_label: "temperature",
+        canonical_symbol: "T",
+        latex: "T",
+      },
+      {
+        id: "orbital-radius",
+        verbal_label: "orbital radius",
+        canonical_symbol: "r",
+        latex: "r",
+      },
+    ]);
+    const report = runPedagogyAudit(index, { notationRegistry: registry });
+    // Only "orbital-radius" still orphan; NR2 fires once.
+    const nr2 = report.info.filter((f) => f.code === "NR2");
+    expect(nr2).toHaveLength(1);
+    expect(nr2[0]?.message).toContain("orbital-radius");
+  });
+});
+
+// =====================================================================
+// Integration — full smoke scenario exercising every invariant
+// =====================================================================
+
+describe("integration — full smoke scenario", () => {
+  it("Wien's-law-shaped equation with full biography produces no E7 nor E9; NR opt-in produces no NR1/NR4 when properly wired", () => {
+    const index = emptyIndex();
+    index.equations = [
+      makeEquation({
+        symbols: ["T", "\\lambda_{peak}"],
+        biography: {
+          observable: {
+            body: "Peak wavelength.",
+            epistemicRole: "observable",
+          },
+          assumptions: [
+            {
+              body: "LTE.",
+              type: "thermal-equilibrium",
+              epistemicRole: "assumption",
+            },
+          ],
+          units: [
+            { symbol: "T", unit: "K" },
+            { symbol: "\\lambda_{peak}", unit: "cm" },
+          ],
+          breaks_when: {
+            body: "Non-thermal emission.",
+            epistemicRole: "approximation",
+          },
+          common_misuses: [
+            {
+              body: "Absorption spectra.",
+              misconception: "wiens-law-absorption-spectra",
+            },
+          ],
+        },
+      }),
+    ];
+    index.misconceptions = [
+      makeMisconception({ anchor: "wiens-law-absorption-spectra" }),
+    ];
+    const registry = makeRegistry([
+      {
+        id: "temperature",
+        verbal_label: "temperature",
+        canonical_symbol: "T",
+        latex: "T",
+        units: "K",
+      },
+      {
+        id: "wavelength-peak",
+        verbal_label: "peak wavelength",
+        canonical_symbol: "\\lambda_{peak}",
+        latex: "\\lambda_{peak}",
+        units: "cm",
+      },
+    ]);
+    const report = runPedagogyAudit(index, { notationRegistry: registry });
+    // Biography is complete → E7/E9 silent.
+    expect(report.info.filter((f) => f.code === "E7")).toHaveLength(0);
+    expect(report.info.filter((f) => f.code === "E9")).toHaveLength(0);
+    // Symbols + Units fully aligned to registry → NR1/NR4/E8 silent.
+    expect(report.warnings.filter((f) => f.code === "NR1")).toHaveLength(0);
+    expect(report.warnings.filter((f) => f.code === "NR4")).toHaveLength(0);
+    expect(report.warnings.filter((f) => f.code === "E8")).toHaveLength(0);
+    // No symbol collisions in registry → NR3 silent.
+    expect(report.errors.filter((f) => f.code === "NR3")).toHaveLength(0);
+    // Both registry concepts referenced via symbols → no NR2 orphans.
+    expect(report.info.filter((f) => f.code === "NR2")).toHaveLength(0);
+  });
+});

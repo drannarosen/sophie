@@ -782,6 +782,21 @@ export function runPedagogyAudit(
     const conceptsById = new Map(
       notationRegistry.concepts.map((c) => [c.id, c])
     );
+    // Reverse-index: canonical symbol → concepts that declare it. Most
+    // entries are one-element arrays; multi-element entries are the
+    // NR3 collision case (the same symbol bound to multiple concept.ids
+    // — registry-author error). NR1, NR4, E8, and the NR2 modification
+    // all read through this map; NR3 walks it to emit one ERROR per
+    // collision.
+    const symbolToConcepts = new Map<
+      string,
+      typeof notationRegistry.concepts
+    >();
+    for (const concept of notationRegistry.concepts) {
+      const existing = symbolToConcepts.get(concept.canonical_symbol) ?? [];
+      existing.push(concept);
+      symbolToConcepts.set(concept.canonical_symbol, existing);
+    }
     // Filter to registry-known concepts so the set's name matches its
     // contents — otherwise typo-bound MultiReps (which MR1 already
     // flags) would silently appear here, and any future invariant
@@ -789,11 +804,27 @@ export function runPedagogyAudit(
     // via Levenshtein distance on concept ids) would pick up garbage.
     // NR2 only reads via `.has(c.id)` where `c.id` is registry-known,
     // so the filter is defensive today and load-bearing tomorrow.
-    const referencedConceptIds = new Set(
+    const referencedConceptIds = new Set<string>(
       index.multiReps
         .filter((m) => conceptsById.has(m.concept))
         .map((m) => m.concept)
     );
+    // PR-δ NR2 modification per ADR 0043 §R5 + 2026-05-17 design doc
+    // §"reference-aggregation note": KeyEquation.symbols entries also
+    // count as reference signals. Each symbol that resolves to a
+    // registered concept's canonical_symbol promotes that concept out
+    // of orphan status. (NR3 surfaces multi-concept collisions
+    // separately; here we accept any matching concept so a
+    // registry-author bug doesn't suppress legitimate references.)
+    for (const eq of index.equations) {
+      for (const symbol of eq.symbols) {
+        const concepts = symbolToConcepts.get(symbol);
+        if (!concepts) continue;
+        for (const concept of concepts) {
+          referencedConceptIds.add(concept.id);
+        }
+      }
+    }
 
     // -------------------------------------------------------------------
     // MR1 ERROR — <MultiRep concept="X"> for X not in registry
@@ -909,9 +940,112 @@ export function runPedagogyAudit(
       info.push({
         severity: "INFO",
         code: "NR2",
-        message: `NR2: Notation Registry concept "${concept.id}" (${concept.verbal_label}) is declared but no <MultiRep concept="${concept.id}"> references it. Authoring nudge — either add a binding chapter or remove the unused registry entry.`,
+        message: `NR2: Notation Registry concept "${concept.id}" (${concept.verbal_label}) is declared but no <MultiRep concept="${concept.id}"> or <KeyEquation symbols=[…]> references it. Authoring nudge — either add a binding chapter or remove the unused registry entry.`,
         location: {},
       });
+    }
+
+    // -------------------------------------------------------------------
+    // NR1 WARNING — <KeyEquation symbols=[…]> declares a symbol not in
+    //               notation-registry.yaml
+    // -------------------------------------------------------------------
+    // Per ADR 0043 §R5 + 2026-05-17 design doc §"PR-δ' bundle." Fires
+    // per (equation, symbol) pair where the author-declared symbol has
+    // no matching concept canonical_symbol in the registry. Warning
+    // (not error) because the symbol may be a deliberate course-local
+    // alias the author hasn't promoted to the registry yet; the
+    // resolution prompt nudges either direction.
+    for (const eq of index.equations) {
+      for (const symbol of eq.symbols) {
+        if (symbolToConcepts.has(symbol)) continue;
+        warnings.push({
+          severity: "WARNING",
+          code: "NR1",
+          message: `NR1: <KeyEquation id="${eq.slug}"> in chapter "${eq.chapter}" declares symbol "${symbol}" not present in notation-registry.yaml. Resolution: register the concept whose canonical_symbol is "${symbol}", or remove the symbol from the equation's \`symbols\` prop.`,
+          location: { chapter: eq.chapter, anchor: eq.anchor },
+        });
+      }
+    }
+
+    // -------------------------------------------------------------------
+    // NR3 ERROR — registry: same canonical_symbol bound to different
+    //             concept.ids (cross-concept symbol collision)
+    // -------------------------------------------------------------------
+    // Registry-author error: the same symbol "r" can't simultaneously
+    // mean "orbital radius" and "stellar radius" in the same course.
+    // ERROR (not WARNING) because every downstream invariant that
+    // resolves a symbol → concept (NR1 membership, NR2 references,
+    // NR4 units, E8 Units alignment) becomes ambiguous when the
+    // collision is present — fixing it is a precondition for the rest
+    // of the NR pass to give trustworthy findings.
+    for (const [symbol, concepts] of symbolToConcepts) {
+      if (concepts.length < 2) continue;
+      const conceptIds = concepts
+        .map((c) => c.id)
+        .sort()
+        .join(", ");
+      errors.push({
+        severity: "ERROR",
+        code: "NR3",
+        message: `NR3: Notation Registry symbol "${symbol}" is bound to multiple concepts: ${conceptIds}. Resolution: split the symbol into per-concept variants (e.g., subscripted forms), or merge the concepts if they're truly the same thing.`,
+        location: {},
+      });
+    }
+
+    // -------------------------------------------------------------------
+    // NR4 WARNING — registry symbol has explicit units; KeyEquation
+    //               declares the symbol but lacks a <Units symbol="X">
+    //               biography child for it
+    // -------------------------------------------------------------------
+    // When the registry author specified `units: "K"` for a concept
+    // and an equation lists the concept's canonical_symbol in its
+    // `symbols` prop, the equation SHOULD also declare a corresponding
+    // <Units> biography child so readers see the unit context inline.
+    // Fires per (equation, symbol-without-units) pair.
+    for (const eq of index.equations) {
+      const declaredUnitSymbols = new Set(
+        (eq.biography?.units ?? []).map((u) => u.symbol)
+      );
+      for (const symbol of eq.symbols) {
+        if (declaredUnitSymbols.has(symbol)) continue;
+        const concepts = symbolToConcepts.get(symbol);
+        if (!concepts) continue; // NR1 already fired for unknown symbols.
+        // Any registered concept with units that's bound to this symbol
+        // counts — if a collision exists (NR3), being conservative
+        // here would suppress a legitimate nudge.
+        const conceptWithUnits = concepts.find(
+          (c) => c.units !== undefined && c.units.length > 0
+        );
+        if (!conceptWithUnits) continue;
+        warnings.push({
+          severity: "WARNING",
+          code: "NR4",
+          message: `NR4: <KeyEquation id="${eq.slug}"> in chapter "${eq.chapter}" declares symbol "${symbol}" (concept "${conceptWithUnits.id}", units "${conceptWithUnits.units}") but lacks a <Units symbol="${symbol}"> biography child. Resolution: add <Units symbol="${symbol}" unit="${conceptWithUnits.units}" /> inside the <KeyEquation>.`,
+          location: { chapter: eq.chapter, anchor: eq.anchor },
+        });
+      }
+    }
+
+    // -------------------------------------------------------------------
+    // E8 WARNING — <Units symbol="X"> doesn't match any canonical_symbol
+    //              in the Notation Registry
+    // -------------------------------------------------------------------
+    // Per ADR 0046 + 2026-05-17 design doc §"Audit invariants." Fires
+    // per (equation, units-entry) pair when the author-declared Units
+    // symbol has no matching concept in the registry. Warning (not
+    // error) for the same reason as NR1 — symbols may be deliberate
+    // course-local aliases. Gated on NR opt-in (sits inside this
+    // `if (notationRegistry !== null)` block).
+    for (const eq of index.equations) {
+      for (const units of eq.biography?.units ?? []) {
+        if (symbolToConcepts.has(units.symbol)) continue;
+        warnings.push({
+          severity: "WARNING",
+          code: "E8",
+          message: `E8: <Units symbol="${units.symbol}" unit="${units.unit}"> in <KeyEquation id="${eq.slug}"> (chapter "${eq.chapter}") doesn't match any canonical_symbol in notation-registry.yaml. Resolution: register the concept whose canonical_symbol is "${units.symbol}", or rename the Units symbol to an existing registry entry.`,
+          location: { chapter: eq.chapter, anchor: eq.anchor },
+        });
+      }
     }
   }
 
@@ -1067,6 +1201,59 @@ export function runPedagogyAudit(
       message: `MG4 — Intervention depth coverage:\n  ${totalMisconceptions} misconceptions total\n  ${substantialCount} have ≥1 substantial intervention (${pct(substantialCount)})\n  ${lightOnlyCount} have only light interventions (${pct(lightOnlyCount)})\n  ${unaddressedCount} have no interventions (${pct(unaddressedCount)})  ← would fire MG3 separately`,
       location: {},
     });
+  }
+
+  // ---------------------------------------------------------------------
+  // EquationBiography invariants (ADR 0046 + 2026-05-17 design §"Audit
+  // invariants"):
+  //   E7 INFO     <KeyEquation> has biography children but lacks <Observable>
+  //   E9 INFO     <CommonMisuse> lacks misconception="<slug>" cross-ref
+  //   (E8 lives in the NR block above — gated on registry opt-in)
+  // ---------------------------------------------------------------------
+  // Both fire ONLY when at least one biography child is present on the
+  // equation — preserves ADR 0046's "universal with per-equation
+  // opt-in" property (equations without biographies are valid; the
+  // invariants don't penalize partial-authoring states).
+
+  // -------------------------------------------------------------------
+  // E7 INFO — biography children present but missing <Observable>
+  // -------------------------------------------------------------------
+  // Per ADR 0046's "structured-for-facts, prose-for-stances" principle:
+  // Observable is the *anchor* — what the equation measures. A
+  // biography with Assumptions/Units/BreaksWhen/CommonMisuse but no
+  // Observable is incomplete; INFO nudges the author toward closure
+  // without blocking the build.
+  for (const eq of index.equations) {
+    if (eq.biography === undefined) continue;
+    if (eq.biography.observable !== undefined) continue;
+    info.push({
+      severity: "INFO",
+      code: "E7",
+      message: `E7: <KeyEquation id="${eq.slug}"> in chapter "${eq.chapter}" has biography children but lacks an <Observable>. Authoring nudge — declare what the equation measures so readers can anchor the model in observation.`,
+      location: { chapter: eq.chapter, anchor: eq.anchor },
+    });
+  }
+
+  // -------------------------------------------------------------------
+  // E9 INFO — <CommonMisuse> lacks misconception="<slug>" cross-ref
+  // -------------------------------------------------------------------
+  // Per ADR 0046 + ADR 0044's misconception-graph contract: linking
+  // CommonMisuse to a declared misconception strengthens curriculum
+  // coherence (the misuse becomes navigable from the misconception
+  // graph + future cross-link rendering). The cross-ref is optional
+  // at v1 — E9 nudges toward populating it without blocking. Soft
+  // suggestion.
+  for (const eq of index.equations) {
+    if (eq.biography === undefined) continue;
+    for (const misuse of eq.biography.common_misuses) {
+      if (misuse.misconception !== undefined) continue;
+      info.push({
+        severity: "INFO",
+        code: "E9",
+        message: `E9: <CommonMisuse> in <KeyEquation id="${eq.slug}"> (chapter "${eq.chapter}") lacks a misconception="<slug>" cross-ref to the misconception graph (ADR 0044). Authoring nudge — link the misuse to a declared misconception so it surfaces in cross-link rendering.`,
+        location: { chapter: eq.chapter, anchor: eq.anchor },
+      });
+    }
   }
 
   return { errors, warnings, info };
