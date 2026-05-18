@@ -1,7 +1,7 @@
 import type { Biography } from "@sophie/core/schema";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { BiographySummary } from "./EqRef.biography-summary.tsx";
+import { BiographySummary } from "./EquationRef.biography-summary.tsx";
 
 const emptyBiography: Biography = {
   assumptions: [],

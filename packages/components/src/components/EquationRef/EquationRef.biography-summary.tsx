@@ -1,9 +1,9 @@
 import type { Biography } from "@sophie/core/schema";
-import styles from "./EqRef.module.css.js";
+import styles from "./EquationRef.module.css.js";
 
 /**
- * Compact-biography summary line for the `<EqRef>` hover popover per
- * ADR 0046 design §"Surface 1: <EqRef> hover (compact summary)".
+ * Compact-biography summary line for the `<EquationRef>` hover popover
+ * per ADR 0046 design §"Surface 1: hover (compact summary)".
  *
  * Rendered shape (varies by what's populated):
  *   "2 assumptions · 1 misuse"

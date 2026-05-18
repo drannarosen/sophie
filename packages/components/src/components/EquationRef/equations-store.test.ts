@@ -2,32 +2,24 @@ import type { EquationEntry } from "@sophie/core/schema";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 const wiensLaw: EquationEntry = {
-  slug: "wiens-law",
+  id: "wiens-law",
   title: "Wien's Law",
-  number: 2,
   tex: "\\lambda_{\\max} T = b",
-  body: "<p>Peak wavelength of blackbody emission scales inversely with temperature.</p>",
-  chapter: "spoiler-alerts",
-  anchor: "wiens-law",
-  symbols: [],
+  symbols: ["T", "\\lambda_{\\max}"],
 };
 
 const inverseSquare: EquationEntry = {
-  slug: "inverse-square-law",
+  id: "inverse-square-law",
   title: "Inverse-Square Law",
-  number: 1,
   tex: "F = \\frac{L}{4\\pi r^2}",
-  body: "<p>Flux falls off as the inverse square of the distance.</p>",
-  chapter: "spoiler-alerts",
-  anchor: "inverse-square-law",
-  symbols: [],
+  symbols: ["F", "L", "r"],
 };
 
 describe("equations-store", () => {
-  // The store keeps `equationsBySlug` and `hydratedFromScript` as
-  // module-level state. T15 (script-tag auto-hydrate on first
-  // lookup) needs a *pristine* module instance; we use
-  // `vi.resetModules()` + dynamic import to guarantee one.
+  // The store keeps `equationsById` and `hydratedFromScript` as
+  // module-level state. The script-tag auto-hydrate-on-first-lookup
+  // test needs a *pristine* module instance; we use `vi.resetModules()`
+  // + dynamic import to guarantee one.
   beforeEach(async () => {
     const { vi } = await import("vitest");
     vi.resetModules();
@@ -38,7 +30,7 @@ describe("equations-store", () => {
     document.head.innerHTML = "";
   });
 
-  it("__setEquations(entries) populates the map; lookupEquation returns the entry", async () => {
+  it("__setEquations(entries) populates the map; lookupEquation returns the entry by id", async () => {
     const { __setEquations, lookupEquation } = await import(
       "./equations-store.ts"
     );

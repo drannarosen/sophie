@@ -12,8 +12,8 @@ import { createPedagogyStore } from "../../runtime/pedagogy-store.ts";
 
 const store = createPedagogyStore<EquationEntry>({
   scriptId: "sophie-pedagogy-equations",
-  logTag: "[EqRef]",
-  keyOf: (e) => e.slug,
+  logTag: "[EquationRef]",
+  keyOf: (e) => e.id,
 });
 
 export const __setEquations = store.set;

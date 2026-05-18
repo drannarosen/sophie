@@ -19,7 +19,7 @@ import {
   ComprehensionGate,
   ConfidenceCheck,
   EffortLog,
-  EqRef,
+  EquationRef,
   FigureRef,
   GlossaryTerm,
   InteractiveCallout,
@@ -340,7 +340,7 @@ Throughout this course, equations serve two purposes:
 For now, the inverse-square law ($F = L/4\pi d^2$) is a **working equation**—you'll calculate with it soon. The wave relation ($c = \lambda\nu$) and photon energy ($E = h\nu$) are **orientation equations** for now; they become working tools once we develop atomic spectra.
 </Callout>
 
-*We'll return to <EqRef slug="inverse-square-law" client:load /> quantitatively when we build the distance ladder step by step.*
+*We'll return to <EquationRef refId="inverse-square-law" client:load /> quantitatively when we build the distance ladder step by step.*
 
 <Predict
   client:load
@@ -514,7 +514,7 @@ Every distance method in astronomy ultimately rests on geometric parallax. Subse
 
 <MultiRep concept="luminosity">
   <RepVerbal>
-    **Luminosity** $L$ is the total radiant power a source emits — energy per unit time, summed over every direction. It's an intrinsic property of the source; nothing about $L$ depends on where you're standing. A distant Cepheid and a nearby Cepheid of the same pulsation period have identical $L$ even though they look very different to us. The whole point of a "standard candle" is to nail down $L$ independently so we can solve <EqRef slug="inverse-square-law" client:load /> for the distance.
+    **Luminosity** $L$ is the total radiant power a source emits — energy per unit time, summed over every direction. It's an intrinsic property of the source; nothing about $L$ depends on where you're standing. A distant Cepheid and a nearby Cepheid of the same pulsation period have identical $L$ even though they look very different to us. The whole point of a "standard candle" is to nail down $L$ independently so we can solve <EquationRef refId="inverse-square-law" client:load /> for the distance.
   </RepVerbal>
 
   <RepEquation refKey="inverse-square-law" symbol="L" />
@@ -523,7 +523,7 @@ Every distance method in astronomy ultimately rests on geometric parallax. Subse
 </MultiRep>
 
 <Aside kind="misconception" name="brighter-equals-intrinsically-brighter" title="A common confusion: brighter on the sky means intrinsically more luminous">
-A natural inference from the night sky is that the *brightest* points of light are also the *most luminous* sources — Sirius outshines Vega because Sirius emits more power. The <EqRef slug="inverse-square-law" client:load /> equation shows why this fails: flux folds together luminosity *and* distance. The brightest star in the sky can be intrinsically dim and merely close; an intrinsically blazing supergiant can look ordinary because it's far away.
+A natural inference from the night sky is that the *brightest* points of light are also the *most luminous* sources — Sirius outshines Vega because Sirius emits more power. The <EquationRef refId="inverse-square-law" client:load /> equation shows why this fails: flux folds together luminosity *and* distance. The brightest star in the sky can be intrinsically dim and merely close; an intrinsically blazing supergiant can look ordinary because it's far away.
 
   <Intervention type="refutation-text" addresses="this">
     **Why the framing feels right:** Pre-scientific astronomers ranked stars by apparent brightness alone (the magnitude system inherited from Hipparchus). The ranking *does* sort what we see — it just doesn't sort what the stars *are*.
@@ -873,7 +873,7 @@ This is the single relationship that turns a velocity measurement (from a Dopple
 
 <MultiRep concept="enclosed-mass">
   <RepVerbal>
-    The **enclosed gravitational mass** $M$ inside a given radius is *everything that gravitates* there — visible stars, gas, and whatever else. The dark-matter inference is exactly the gap between this total and the luminous component: $M$ measured from orbital speeds via <EqRef slug="orbital-mass" client:load /> exceeds the mass inventoried by adding up starlight and detected gas by roughly a factor of six. The equation doesn't care what the matter is made of; the discrepancy is the empirical fact that drives the rest of the field.
+    The **enclosed gravitational mass** $M$ inside a given radius is *everything that gravitates* there — visible stars, gas, and whatever else. The dark-matter inference is exactly the gap between this total and the luminous component: $M$ measured from orbital speeds via <EquationRef refId="orbital-mass" client:load /> exceeds the mass inventoried by adding up starlight and detected gas by roughly a factor of six. The equation doesn't care what the matter is made of; the discrepancy is the empirical fact that drives the rest of the field.
   </RepVerbal>
 
   <RepEquation refKey="orbital-mass" symbol="M" />
@@ -914,7 +914,7 @@ Only 5% of the universe is made of the stuff we understand. The rest is dark—b
 </Callout>
 
 <Aside kind="misconception" name="dark-matter-is-just-hidden-normal-matter" title="A common confusion: dark matter is just hidden normal matter">
-A natural way to defuse "most of the universe is invisible" is to assume the missing mass is *ordinary* matter we haven't found yet — failed stars, cold gas, rogue planets, exotic-but-baryonic stuff. The <EqRef slug="orbital-mass" client:load /> equation gives total enclosed mass; nothing in its derivation says the mass has to be baryonic. So the question is empirical, not definitional — and the searches keep coming back the same way.
+A natural way to defuse "most of the universe is invisible" is to assume the missing mass is *ordinary* matter we haven't found yet — failed stars, cold gas, rogue planets, exotic-but-baryonic stuff. The <EquationRef refId="orbital-mass" client:load /> equation gives total enclosed mass; nothing in its derivation says the mass has to be baryonic. So the question is empirical, not definitional — and the searches keep coming back the same way.
 
   <Intervention type="worked-example-contrast" addresses="this">
     Three "obvious" candidates for the missing mass have been tested. Each is a worked example where the misconception predicts a positive detection — and each is the case that *failed*.
@@ -1285,7 +1285,7 @@ Combining $c = \lambda\nu$ and $E = h\nu$, we understand the EM spectrum as a **
 **Temperature ladder:** Cold things glow at long wavelengths; hot things at short wavelengths. Physics, not convention.
 </aside>
 
-This hierarchy emerges from physics: hotter objects emit higher-energy (shorter-wavelength) photons. **Different wavelengths probe different temperature regimes.** <EqRef slug="wiens-law" client:load>Wien's law</EqRef> quantifies this relationship.
+This hierarchy emerges from physics: hotter objects emit higher-energy (shorter-wavelength) photons. **Different wavelengths probe different temperature regimes.** <EquationRef refId="wiens-law" client:load>Wien's law</EquationRef> quantifies this relationship.
 
 <Figure name="energy-wavelength-connection" />
 
@@ -1349,7 +1349,7 @@ This is why thermal cameras "see" people in the dark (we glow in IR) and why the
 
 <MultiRep concept="peak-wavelength">
   <RepVerbal>
-    The **peak emission wavelength** $\lambda_{\text{peak}}$ is the wavelength at which a thermal source's continuum is brightest. It collapses an entire blackbody spectrum to a single number — the colour of the source's glow — and through <EqRef slug="wiens-law" client:load /> that single number reports the temperature. Hot stars peak in the UV; sun-like stars peak in visible; cool dust peaks in IR; the cosmic microwave background peaks in the mm.
+    The **peak emission wavelength** $\lambda_{\text{peak}}$ is the wavelength at which a thermal source's continuum is brightest. It collapses an entire blackbody spectrum to a single number — the colour of the source's glow — and through <EquationRef refId="wiens-law" client:load /> that single number reports the temperature. Hot stars peak in the UV; sun-like stars peak in visible; cool dust peaks in IR; the cosmic microwave background peaks in the mm.
   </RepVerbal>
 
   <RepEquation refKey="wiens-law" symbol="\lambda_{peak}" />
