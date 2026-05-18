@@ -67,11 +67,21 @@ import { slugify } from "@sophie/core/schema";
  *   V8  INFO     Validation block has an unknown key (extractor-layer;
  *                Zod 4 .strip() silently drops them, V8 surfaces typos
  *                like `last_validation_date`; ADR 0056 PR 3).
+ *   NR1 WARNING  `<KeyEquation symbols={…}>` declares a symbol not present
+ *                in `notation-registry.yaml` (ADR 0043 §R5; PR-δ #94).
  *   NR2 INFO     Notation Registry concept declared but no chapter
  *                references it (orphan registry entry; ADR 0043).
- *                Reference signal at v1 = MultiRep `concept=`; future
- *                also counts KeyEquation `symbols` (PR-δ') + EquationBiography
- *                `<CommonMisuse>` cross-refs.
+ *                Reference signal at v1 = MultiRep `concept=` OR
+ *                KeyEquation `symbols` (PR-δ NR2 modification, #94);
+ *                EquationBiography `<CommonMisuse>` cross-refs counted
+ *                from PR-D's E10 invariant onward.
+ *   NR3 ERROR    Notation Registry symbol bound to multiple concepts
+ *                (collision; symbol resolution ambiguous; ADR 0043 §R5;
+ *                PR-δ #94).
+ *   NR4 WARNING  `<KeyEquation symbols={…}>` declares a symbol whose
+ *                registry concept has a `units:` value, but the equation
+ *                lacks a `<Units symbol="…">` biography child (ADR 0043
+ *                §R5; PR-δ #94).
  *   MR1 ERROR    `<MultiRep concept="X">` references a concept not present
  *                in `notation-registry.yaml` (ADR 0043).
  *   MR2 WARNING  `<MultiRep><RepEquation symbol="…">` doesn't match the
@@ -84,6 +94,17 @@ import { slugify } from "@sophie/core/schema";
  *                resolve to a `<KeyEquation>` in the chapter's equation
  *                index or to another `<RepEquation>` in the same
  *                MultiRep (chapter-scoped at v1; ADR 0043 §R-MR6).
+ *   E7  INFO     `<KeyEquation>` has biography children but lacks an
+ *                `<Observable>`. Authoring nudge — declare what the
+ *                equation measures so readers can anchor the model in
+ *                observation (ADR 0046; PR-δ #94).
+ *   E8  WARNING  `<Units symbol="…" unit="…">` inside a `<KeyEquation>`
+ *                doesn't match any `canonical_symbol` in
+ *                `notation-registry.yaml` (ADR 0046 + ADR 0043; PR-δ #94).
+ *   E9  INFO     `<CommonMisuse>` in a `<KeyEquation>` lacks a
+ *                `misconception="<slug>"` cross-ref to the misconception
+ *                graph. Authoring nudge so the misuse surfaces in
+ *                cross-link rendering (ADR 0046 + ADR 0044; PR-δ #94).
  *   I1  WARNING  `<Intervention addresses="…">` references a misconception
  *                not declared anywhere in the index, OR the literal "this"
  *                survived extraction (no enclosing `<Aside kind="misconception">`
@@ -118,11 +139,6 @@ import { slugify } from "@sophie/core/schema";
  *        `move-index.ts` ships (ADR 0044 §R-I4 deferral note); the
  *        `move:` field on each `intervention-index.ts` entry is the
  *        forward-compat seam declared now.
- *   NR1, NR3, NR4 — require per-equation `symbols` metadata on
- *                   `EquationEntrySchema` (deferred to PR-δ' per the
- *                   2026-05-17 scope decision; KeyEquation doesn't yet
- *                   carry the `symbols` field). The audit's NR2 + MR-prefix
- *                   invariants ship in PR-δ against already-extracted data.
  *   MR3, MR5 — RepCode deferred per ADR 0043 §R1 (pending CodeCell, ADR 0018).
  *
  * The audit is pure: it never mutates the input index.

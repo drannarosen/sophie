@@ -88,6 +88,38 @@ describe("SerializedRepSchema (discriminated union)", () => {
     const result = SerializedRepSchema.safeParse({ kind: "verbal" });
     expect(result.success).toBe(false);
   });
+
+  it("rejects unknown keys on a verbal rep (.strict() — extractor drift guard)", () => {
+    // Mirror the EquationBiography schema-discipline posture: unknown keys
+    // fail parse rather than being silently stripped. A future extractor
+    // accidentally emitting `kind: "verbal", body: "...", refKey: "..."`
+    // (a copy-paste typo from RepEquation) must surface as a parse error.
+    const result = SerializedRepSchema.safeParse({
+      kind: "verbal",
+      body: "The orbital radius is…",
+      refKey: "kepler-3rd-law",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects unknown keys on an equation rep (.strict() — extractor drift guard)", () => {
+    const result = SerializedRepSchema.safeParse({
+      kind: "equation",
+      refKey: "kepler-3rd-law",
+      symbol: "r",
+      body: "duplicate-verbal-field-by-mistake",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects unknown keys on a figure rep (.strict() — extractor drift guard)", () => {
+    const result = SerializedRepSchema.safeParse({
+      kind: "figure",
+      refName: "orbit-geometry",
+      caption: "extra prop should not silently pass",
+    });
+    expect(result.success).toBe(false);
+  });
 });
 
 describe("MultiRepSchema (component props)", () => {
@@ -125,6 +157,17 @@ describe("MultiRepSchema (component props)", () => {
     expect(
       MultiRepSchema.safeParse({ concept: "x", layout: "tabbed" }).success
     ).toBe(false);
+  });
+
+  it("rejects unknown component props (.strict() — guards typoed prop names)", () => {
+    // A common authoring bug: typoing `concept` as `concepts`, or passing a
+    // v2-shaped prop that v1 doesn't accept yet. Without .strict() the typo
+    // is silently dropped and the MultiRep ships unbound.
+    const result = MultiRepSchema.safeParse({
+      concept: "orbital-radius",
+      conceptId: "alt-key-by-mistake",
+    });
+    expect(result.success).toBe(false);
   });
 });
 
@@ -201,5 +244,17 @@ describe("MultiRepIndexEntrySchema (pedagogy-index entry)", () => {
         false
       );
     }
+  });
+
+  it("rejects unknown top-level keys (.strict() — catches v2-slot typos)", () => {
+    // The v2-reserved slots (bindingNotes, crossChapterEquivalents,
+    // aiAuthoredBy, lastReviewedDate) are explicitly named on the schema.
+    // .strict() ensures a typo like `binding_notes` or `crossChapterEquivalent`
+    // (singular) fails parse instead of being silently dropped.
+    const result = MultiRepIndexEntrySchema.safeParse({
+      ...minValid,
+      binding_notes: "snake_case typo of bindingNotes",
+    });
+    expect(result.success).toBe(false);
   });
 });

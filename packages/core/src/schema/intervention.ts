@@ -34,6 +34,18 @@ import { NonEmptyString } from "./primitives.js";
  * (design §F2) so v2 multi-target use is non-breaking. The PR-γ
  * extractor normalizes to an array; the index entry stores the
  * normalized form so the audit (I1) walks a single shape.
+ *
+ * Both object schemas are `.strict()` — unknown keys fail parse rather
+ * than being silently stripped. The v2-reserved forward-compat slots on
+ * `InterventionLibraryEntrySchema` (`citation_doi`, `citation_bibtex`,
+ * `template_body` per design §F4/F5) are explicitly declared so they pass
+ * parse; .strict() makes a typo like `citation_DOI` (case drift) or
+ * `templateBody` (camelCase instead of snake_case) fail rather than
+ * silently drop. The `superRefine` constraint on `InterventionEntrySchema`
+ * (custom type ⇒ name required) chains *after* .strict(); both run.
+ * Mirrors the same discipline applied across `equation-biography.ts`
+ * (Phase B audit §2.1) so all three pedagogical-core families share one
+ * schema posture.
  */
 
 export const InterventionFamilySchema = z.enum([
@@ -87,6 +99,7 @@ export const InterventionEntrySchema = z
      */
     anchor: NonEmptyString,
   })
+  .strict()
   .superRefine((data, ctx) => {
     // Mirror the InterventionPropsSchema rule: type="custom" requires
     // `name`. The extractor pulls this constraint forward from the
@@ -105,39 +118,41 @@ export const InterventionEntrySchema = z
 
 export type InterventionEntry = z.infer<typeof InterventionEntrySchema>;
 
-export const InterventionLibraryEntrySchema = z.object({
-  /** Canonical slug (e.g., "contrasting-cases"). Matches `<Intervention type="…">`. */
-  name: NonEmptyString,
-  /** One of 4 cognitive-science families per ADR 0044. */
-  family: InterventionFamilySchema,
-  /** One-sentence summary surfaced in MyST reference docs + AI authoring tooltips. */
-  description: NonEmptyString,
-  /**
-   * Plain-string citation at v1 (e.g., "Bransford & Schwartz 1999").
-   * Structured DOI/bibtex slots are reserved for v2; see
-   * `citation_doi` and `citation_bibtex` below.
-   */
-  citation: NonEmptyString,
-  /**
-   * Which misconception-graph families this intervention typically
-   * targets. Free-form slugs at v1 (no platform catalog of misconception
-   * families); used as an authoring hint, not enforced by audit.
-   */
-  addresses_families: z.array(NonEmptyString),
-  /**
-   * Binding to ADR 0041's teaching-move library. Free-form slug at v1;
-   * the I4 audit invariant (verifying the move resolves to a real entry
-   * in `move-index.ts`) is deferred until move-index.ts ships — declared
-   * here as the forward-compat seam.
-   */
-  move: NonEmptyString,
-  /** v2-reserved: structured DOI citation. */
-  citation_doi: NonEmptyString.optional(),
-  /** v2-reserved: full BibTeX entry. */
-  citation_bibtex: NonEmptyString.optional(),
-  /** v2-reserved: scaffolding template body for AI authoring per ADR 0030. */
-  template_body: NonEmptyString.optional(),
-});
+export const InterventionLibraryEntrySchema = z
+  .object({
+    /** Canonical slug (e.g., "contrasting-cases"). Matches `<Intervention type="…">`. */
+    name: NonEmptyString,
+    /** One of 4 cognitive-science families per ADR 0044. */
+    family: InterventionFamilySchema,
+    /** One-sentence summary surfaced in MyST reference docs + AI authoring tooltips. */
+    description: NonEmptyString,
+    /**
+     * Plain-string citation at v1 (e.g., "Bransford & Schwartz 1999").
+     * Structured DOI/bibtex slots are reserved for v2; see
+     * `citation_doi` and `citation_bibtex` below.
+     */
+    citation: NonEmptyString,
+    /**
+     * Which misconception-graph families this intervention typically
+     * targets. Free-form slugs at v1 (no platform catalog of misconception
+     * families); used as an authoring hint, not enforced by audit.
+     */
+    addresses_families: z.array(NonEmptyString),
+    /**
+     * Binding to ADR 0041's teaching-move library. Free-form slug at v1;
+     * the I4 audit invariant (verifying the move resolves to a real entry
+     * in `move-index.ts`) is deferred until move-index.ts ships — declared
+     * here as the forward-compat seam.
+     */
+    move: NonEmptyString,
+    /** v2-reserved: structured DOI citation. */
+    citation_doi: NonEmptyString.optional(),
+    /** v2-reserved: full BibTeX entry. */
+    citation_bibtex: NonEmptyString.optional(),
+    /** v2-reserved: scaffolding template body for AI authoring per ADR 0030. */
+    template_body: NonEmptyString.optional(),
+  })
+  .strict();
 
 export type InterventionLibraryEntry = z.infer<
   typeof InterventionLibraryEntrySchema

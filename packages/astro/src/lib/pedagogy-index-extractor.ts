@@ -535,7 +535,6 @@ function buildBiographyFromKeyEquationChildren(
         body,
         ...(misconception ? { misconception } : {}),
       });
-      continue;
     }
 
     // Non-biography JSX (anything other than the five biography children
