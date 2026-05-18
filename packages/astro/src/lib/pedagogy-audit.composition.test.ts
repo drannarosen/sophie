@@ -308,5 +308,11 @@ describe("cross-family composition — KeyEquation ↔ MultiRep ↔ Aside ↔ In
     const mg3 = report.warnings.filter((f) => f.code === "MG3");
     expect(mg3).toHaveLength(1);
     expect(mg3[0]?.message).toContain("wiens-law-absorption-spectra");
+
+    // Boundary lock between E9 (missing cross-ref) and E10 (broken
+    // cross-ref): the broken-composition equation HAS a CommonMisuse
+    // with `misconception` populated (the typo), so E9 must NOT fire.
+    // Catches a future refactor that conflates the two predicates.
+    expect(report.info.filter((f) => f.code === "E9")).toHaveLength(0);
   });
 });
