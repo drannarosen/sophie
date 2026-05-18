@@ -230,7 +230,7 @@ consumers can rely on the set.
 The component contract from
 [ADR 0004](./0004-component-contract-revisions.md) governs ~17
 existing components, most of which (Aside, ChapterRef, Figure,
-FigureRef, EqRef, GlossaryTerm, Search, CollapsibleCard) are
+FigureRef, EquationRef, GlossaryTerm, Search, CollapsibleCard) are
 *chrome* — they participate in pedagogy but they don't encode a
 role. Forcing `epistemicRole` as a required field would either
 mis-classify chrome as epistemic content or balloon the role list

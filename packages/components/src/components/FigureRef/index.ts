@@ -7,5 +7,5 @@ export { FigureRef } from "./FigureRef.tsx";
 export { __setFigureRegistry } from "./figure-registry-store.ts";
 export { __setFigureUsages } from "./figure-usages-store.ts";
 // NOTE: lookup functions are internal (not re-exported), matching
-// the GlossaryTerm + EqRef precedent for lookupDefinition /
+// the GlossaryTerm + EquationRef precedent for lookupDefinition /
 // lookupEquation.

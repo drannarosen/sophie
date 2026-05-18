@@ -15,19 +15,27 @@ import { z } from "zod";
  * misuse links to misconception → misconception has role" without
  * duplicating role data at the link site.
  *
- * Authoring shape:
+ * Authoring shape (registry MDX body, per ADR 0060):
  *
  * ```mdx
- * <KeyEquation id="wiens-law" title="Wien's Law">
- *   $$\lambda_{peak} = b \, T^{-1}$$
+ * ---
+ * id: wiens-law
+ * title: "Wien's Law"
+ * tex: "\\lambda_{peak} = b \\, T^{-1}"
+ * ...
+ * ---
  *
- *   <CommonMisuse misconception="wiens-law-absorption-spectra">
- *     Applying Wien's law to identify the temperature of an
- *     absorption-line spectrum. The peak position depends on the
- *     continuum, not the absorption features.
- *   </CommonMisuse>
- * </KeyEquation>
+ * <Observable>...</Observable>
+ * <Assumption>...</Assumption>
+ *
+ * <CommonMisuse misconception="wiens-law-absorption-spectra">
+ *   Applying Wien's law to identify the temperature of an
+ *   absorption-line spectrum. The peak position depends on the
+ *   continuum, not the absorption features.
+ * </CommonMisuse>
  * ```
+ *
+ * Chapter MDX cites the registry entry via `<KeyEquation refId="wiens-law">`.
  *
  * `misconception` is optional at v1; PR-δ E9 INFO nudges authors
  * toward populating the cross-ref. When supplied, the audit (PR-δ

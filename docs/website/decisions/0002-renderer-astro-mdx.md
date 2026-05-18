@@ -81,7 +81,7 @@ eliminated**:
 - Math: `remark-math` + `rehype-katex` (server-rendered to HTML+CSS).
 - Citations: `rehype-citation` with CSL-JSON; ApJ style for ASTR.
 - Cross-references: built via React components
-  (`<ConceptRef>`, `<ChapterRef>`, `<FigureRef>`, `<EqRef>`) resolved
+  (`<ConceptRef>`, `<ChapterRef>`, `<FigureRef>`, `<EquationRef>`) resolved
   against Sophie's reference graph at build time.
 - PDF/handout export: `print` mode CSS plus Pandoc post-processing —
   Pandoc reads HTML.

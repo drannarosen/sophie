@@ -88,7 +88,7 @@ export function ResultCard({
       {isEquation ? (
         <span
           className={styles.richTail}
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: tex is rendered by katex.renderToString from extractor-captured TeX source (not user-supplied content). ADR 0038 + EqRef precedent.
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: tex is rendered by katex.renderToString from extractor-captured TeX source (not user-supplied content). ADR 0038 + EquationRef precedent.
           dangerouslySetInnerHTML={{
             __html: katex.renderToString(result.meta.tex ?? "", {
               displayMode: true,

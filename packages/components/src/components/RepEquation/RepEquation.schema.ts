@@ -8,7 +8,7 @@ import { z } from "zod";
  * elsewhere in the chapter; `symbol` declares which symbol in that
  * equation represents the bound concept. The pair feeds the MR2
  * audit (symbol must match the registry concept's `canonical_symbol`
- * or alias) and the eventual `<EqRef>` cross-reference rendering.
+ * or alias) and the eventual `<EquationRef>` cross-reference rendering.
  *
  * Optional `equivalent_to` + `via` declare variable-substitution-
  * equivalent forms (Wien's λ-form ↔ ν-form, SI ↔ CGS, dimensional ↔

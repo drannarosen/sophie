@@ -56,7 +56,7 @@ const meta = {
   // SSR→CSR script-tag transfer (ADR 0038); Storybook runs outside
   // that pipeline, so we wire both setters directly. Synchronous
   // so the trigger resolves on the first render (no
-  // useEffect-after-paint lag). Matches EqRef.stories decorator
+  // useEffect-after-paint lag). Matches EquationRef.stories decorator
   // pattern.
   decorators: [
     (Story) => {

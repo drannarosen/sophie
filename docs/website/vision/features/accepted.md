@@ -224,7 +224,7 @@ per-type literature, and cross-discipline overlap (astrophysics
 vs scientific-computing) makes a single platform catalog
 premature; v2 can promote if authoring data shows the need.
 (Q3) All three existing rendering surfaces detail-tuned —
-`<EqRef>` hover compact summary, `<ChapterEquations>` + `/equations`
+`<EquationRef>` hover compact summary, `<ChapterEquations>` + `/equations`
 full biography with `<details>` disclosure for `<CommonMisuse>`
 lists; dedicated `/equations/<slug>` page deferred to future
 "Equation Pages" ADR. (Q4) Three new E-prefix audit invariants

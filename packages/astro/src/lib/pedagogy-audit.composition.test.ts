@@ -65,10 +65,10 @@ describe("cross-family composition — KeyEquation ↔ MultiRep ↔ Aside ↔ In
     // Scenario (mirrors the wiens-law-fixture cross-cuts described in
     // audit §2.7). A single chapter contains:
     //
-    //   <KeyEquation id="wiens-law" symbols={["T", "\\lambda_{peak}"]}>
-    //     observable + assumption + units + breaks_when + common_misuse
-    //     CommonMisuse misconception="wiens-law-absorption-spectra"
-    //   </KeyEquation>
+    //   <KeyEquation refId="wiens-law">  // chapter MDX cites registry entry
+    //   // registry MDX body declares: observable + assumption + units +
+    //   //   breaks_when + common_misuse (misconception=
+    //   //   "wiens-law-absorption-spectra")
     //
     //   <MultiRep concept="peak-wavelength">
     //     <RepEquation refKey="wiens-law" symbol="\\lambda_{peak}" />

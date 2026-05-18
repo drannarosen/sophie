@@ -273,7 +273,7 @@ describe("D5 — orphan definitions (WARNING)", () => {
   });
 });
 
-describe("E4 — undefined <EqRef slug=X>", () => {
+describe("E4 — undefined <EquationRef refId=X>", () => {
   it("emits an ERROR when an eq-ref points at no equation", () => {
     const index: PedagogyIndex = {
       ...emptyIndex(),

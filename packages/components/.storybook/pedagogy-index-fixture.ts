@@ -4,7 +4,7 @@
  * @sophie/astro Vite plugin (ADR 0038) and resolves to live
  * accumulator state. Storybook runs in isolation (no astro
  * pipeline, no chapter MDX), so we provide a small fixture so
- * `<GlossaryTerm>` / `<EqRef>` stories can render against a
+ * `<GlossaryTerm>` / `<EquationRef>` stories can render against a
  * realistic index shape.
  *
  * Wired by an alias in .storybook/main.ts:

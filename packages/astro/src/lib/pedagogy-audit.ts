@@ -25,7 +25,7 @@ import { EquationEntrySchema, slugify } from "@sophie/core/schema";
  * Invariant codes implemented in this module:
  *   D4  ERROR    Undefined `<GlossaryTerm name="X">`
  *   D5  WARNING  Orphan definition (zero `<GlossaryTerm>` references)
- *   E4  ERROR    Undefined `<EqRef slug="X">`
+ *   E4  ERROR    Undefined `<EquationRef refId="X">`
  *   F1  ERROR    `<Figure name="X">` for X not in figureRegistry
  *   F2  ERROR    `<FigureRef name="X">` for X not in figureRegistry
  *   F4  WARNING  Registry figure with zero `<Figure>` AND zero `<FigureRef>` usages
@@ -263,7 +263,7 @@ export function runPedagogyAudit(
   }
 
   // ---------------------------------------------------------------------
-  // E4 — undefined <EqRef slug="X">
+  // E4 — undefined <EquationRef refId="X">
   // ---------------------------------------------------------------------
   for (const usage of index.inlineRefUsages) {
     if (usage.kind !== "eq-ref") continue;
@@ -271,7 +271,7 @@ export function runPedagogyAudit(
     errors.push({
       severity: "ERROR",
       code: "E4",
-      message: `E4: <EqRef slug="${usage.refKey}"> in chapter "${usage.chapter}" — no matching <KeyEquation> found.`,
+      message: `E4: <EquationRef refId="${usage.refKey}"> in chapter "${usage.chapter}" — no matching equation registry entry found.`,
       location: { chapter: usage.chapter },
     });
   }

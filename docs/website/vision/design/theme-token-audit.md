@@ -55,7 +55,7 @@ grep for component usage shows references to:
 
 | Referenced token | Actually defined in `theme.css`? | Used by |
 |---|---|---|
-| `--sophie-color-text` | No (correct: `--sophie-text`) | FigureRef, EqRef, ChapterRef, Search/*, GlossaryTerm |
+| `--sophie-color-text` | No (correct: `--sophie-text`) | FigureRef, EquationRef, ChapterRef, Search/*, GlossaryTerm |
 | `--sophie-color-text-muted` | No (correct: `--sophie-text-muted`) | Same |
 | `--sophie-color-surface-2` | No (correct: `--sophie-surface-2`) | Same |
 | `--sophie-color-border` | No (correct: `--sophie-border`) | Same |

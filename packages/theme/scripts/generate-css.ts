@@ -92,7 +92,7 @@ function colorBlock(scheme: Scheme): string {
     `--sophie-overlay-bg: color-mix(in oklch, ${fg} 50%, transparent);`,
     ...shadow,
     // Popover shadow stays scheme-tinted in both modes — popover surfaces
-    // are Tier-1 chrome (FigureRef / EqRef / GlossaryTerm cards) and need
+    // are Tier-1 chrome (FigureRef / EquationRef / GlossaryTerm cards) and need
     // *some* lift; in dark they sit on `surface-1` rather than the page,
     // so a paper-tinted shadow remains visible.
     `--sophie-shadow-popover: 0 4px 12px color-mix(in oklch, ${fg} 12%, transparent);`,

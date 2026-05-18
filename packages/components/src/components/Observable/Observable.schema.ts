@@ -8,21 +8,25 @@ import { z } from "zod";
  * §D1 (explicit `epistemicRole` const per biography component, ADR 0058 §2
  * pattern 3 — child-component role declaration).
  *
- * Authoring shape (inside `<KeyEquation>` as a biography child):
+ * Authoring shape (registry MDX body, per ADR 0060):
  *
  * ```mdx
- * <KeyEquation id="wiens-law" title="Wien's Law">
- *   $$\lambda_{peak} = b \, T^{-1}$$
+ * ---
+ * id: wiens-law
+ * title: "Wien's Law"
+ * tex: "\\lambda_{peak} = b \\, T^{-1}"
+ * ...
+ * ---
  *
- *   <Observable>
- *     Peak wavelength of thermal emission as a function of temperature.
- *   </Observable>
- * </KeyEquation>
+ * <Observable>
+ *   Peak wavelength of thermal emission as a function of temperature.
+ * </Observable>
  * ```
  *
  * One Observable typical per equation; PR-γ extractor enforces the
  * singleton shape into the pedagogy-index entry. Renders below the
- * equation body in the KeyEquation card.
+ * equation body in the KeyEquation card. Chapter MDX cites the registry
+ * entry via `<KeyEquation refId="wiens-law">`.
  */
 export const ObservablePropsSchema = z.object({
   children: z.custom<ReactNode>(),

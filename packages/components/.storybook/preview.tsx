@@ -15,7 +15,7 @@ import "@sophie/theme/fonts";
 // regardless.
 import "@sophie/theme/css";
 // PR-3: KaTeX inline-math sizing override. Must load AFTER any
-// katex.min.css that EqRef/KeyEquation stories import, but loading at
+// katex.min.css that EquationRef/KeyEquation stories import, but loading at
 // the preview level is fine because CSS specificity (not order) wins
 // for `.katex` overrides — the rule is selector-equivalent + later.
 import "@sophie/theme/math";

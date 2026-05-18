@@ -484,7 +484,7 @@ export function buildBiographyFromChildren(
 
     // Non-biography JSX (anything other than the six biography children
     // above) is silently skipped — <KeyEquation> legitimately contains
-    // other JSX in framing prose (e.g., <EqRef>, <GlossaryTerm>). The
+    // other JSX in framing prose (e.g., <EquationRef>, <GlossaryTerm>). The
     // audit (E7/E8/E9 in PR-δ) consumes the populated biography only;
     // if v2 grows a biography-allowlist invariant, it lives in
     // pedagogy-audit.ts, not here.
@@ -1597,7 +1597,7 @@ const INLINE_REF_TARGETS: Record<
   { kind: InlineRefKind; prop: string }
 > = {
   GlossaryTerm: { kind: "glossary-term", prop: "name" },
-  EqRef: { kind: "eq-ref", prop: "slug" },
+  EquationRef: { kind: "eq-ref", prop: "refId" },
   FigureRef: { kind: "figure-ref", prop: "name" },
   ChapterRef: { kind: "chapter-ref", prop: "slug" },
 };
@@ -1605,7 +1605,7 @@ const INLINE_REF_TARGETS: Record<
 /**
  * Pure extractor. Walks an mdast tree for BOTH `mdxJsxFlowElement` and
  * `mdxJsxTextElement` nodes whose name matches one of the four inline-
- * ref components (`<GlossaryTerm>`, `<EqRef>`, `<FigureRef>`,
+ * ref components (`<GlossaryTerm>`, `<EquationRef>`, `<FigureRef>`,
  * `<ChapterRef>`). Returns one `InlineRefUsageEntry` per match.
  *
  * Inline-refs can appear inline within prose (mdxJsxTextElement) OR

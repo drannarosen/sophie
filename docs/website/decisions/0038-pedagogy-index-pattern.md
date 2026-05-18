@@ -252,7 +252,7 @@ without a hand-rolled cache-invalidation API.
 - PR-C2 (equations index) is a near-mechanical extension:
   add `EquationEntry` type, extract from `<KeyEquation>`
   AST nodes, build `<ChapterEquations />` + `<CourseEquations />`
-  + `<EqRef />`. The pattern is established by PR-C1.
+  + `<EquationRef />`. The pattern is established by PR-C1.
 - PR-C3 (key-insights + figures + misconceptions) extends
   the same pipeline; the role-aggregation principle is
   *load-bearing* here — `<Aside kind="misconception">` and
@@ -357,7 +357,7 @@ inline references like `<GlossaryTerm>` SSR correctly but
 rerender as bare prose after React hydration.
 
 **Implication for PR-C3+**: any inline reference component
-(`<EqRef>`, `<FigureRef>`, `<ChapterRef>`) that requires
+(`<EquationRef>`, `<FigureRef>`, `<ChapterRef>`) that requires
 client-side lookup needs the same script-tag-plus-auto-hydrate
 pattern. Generalize the script tag to carry the full
 `PedagogyIndex` shape (definitions today; add equations,
@@ -375,7 +375,7 @@ href). PR-C1 ships `@radix-ui/react-hover-card@^1.1.16` for
 `<GlossaryTerm>`'s trigger.
 
 **Implication for PR-C2+ cross-ref components**: same primitive
-choice. `<EqRef>`, `<FigureRef>`, `<ChapterRef>` all want hover-
+choice. `<EquationRef>`, `<FigureRef>`, `<ChapterRef>` all want hover-
 preview semantics; HoverCard is the right Radix primitive.
 Authors mark each usage `client:load` so React hydration
 attaches the pointer handlers (consistent with `<Predict>`,
@@ -386,7 +386,7 @@ chapter MDX).
 ## Revisions (2026-05-14 — post-PR-C2 / PR-C3 / PR-C4)
 
 Five further implementation realities surfaced across the rest of
-Bucket C (PR-C2 [equations + `<EqRef>`], PR-C3 [key-insights +
+Bucket C (PR-C2 [equations + `<EquationRef>`], PR-C3 [key-insights +
 figures + misconceptions + factory refactor], the PR-C3 closeout
 audit [#39], and PR-C4 [chapters + `<ChapterRef>` + LO course
 roll-up + systematic build-time audit invariants]). They refine
@@ -594,7 +594,7 @@ but the *source* of each entry differs:
 
 The `pedagogy-index-extractor` gains a registry-collection loader
 path alongside its existing chapter-MDX walker. Consumers (audit,
-aggregators, `<EqRef>` lookup, AI authoring) read the index the same
+aggregators, `<EquationRef>` lookup, AI authoring) read the index the same
 way regardless of source.
 
 ### R2 — The two patterns coexist by design

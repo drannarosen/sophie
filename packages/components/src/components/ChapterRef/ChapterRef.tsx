@@ -8,20 +8,20 @@ import { moduleStore } from "./modules-store.ts";
 
 /**
  * `<ChapterRef slug="..." />` or `<ChapterRef slug="...">custom text</ChapterRef>`
- * — the chapter analog of `<GlossaryTerm>` / `<EqRef>` /
+ * — the chapter analog of `<GlossaryTerm>` / `<EquationRef>` /
  * `<FigureRef>`. PR-C4 first instance of the inline chapter
  * cross-reference. Renders an inline anchor; HoverCard exposes a
  * three-line preview card (module breadcrumb + chapter title +
  * optional description, per PR-C4 brainstorm Q2).
  *
  * Trigger text: when `children` is omitted, renders the chapter
- * title (per PR-C4 brainstorm Q6 — diverges from EqRef / FigureRef
+ * title (per PR-C4 brainstorm Q6 — diverges from EquationRef / FigureRef
  * ordinal-by-default because chapters reference *concepts* named by
  * title, not *positions* numbered for in-prose lookup). When
  * `children` is provided, renders the children verbatim (e.g. for
  * in-prose mentions like "the pressure-gravity balance"). Both forms
  * render the same popover (PR-C4 brainstorm Q8 — dual-mode parity
- * with EqRef / FigureRef).
+ * with EquationRef / FigureRef).
  *
  * Trigger icon: presentational `BookMarked` from `lucide-react`
  * (aria-hidden); the link text is the accessible name. `BookMarked`

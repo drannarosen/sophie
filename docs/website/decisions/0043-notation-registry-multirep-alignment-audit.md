@@ -917,7 +917,7 @@ modes.
 ### R9 — `<RegistryRef>` family wraps existing reference primitives
 
 ADR 0060's reference-primitive convention generalizes the existing
-`<EqRef>`, `<FigureRef>`, `<GlossaryTerm>`, `<ChapterRef>`,
+`<EquationRef>`, `<FigureRef>`, `<GlossaryTerm>`, `<ChapterRef>`,
 `<TDRRef>` family. Each becomes a thin wrapper over a shared
 `<RegistryRef collection refId>` base. The author-facing names and
 APIs don't change; the implementation layers a shared

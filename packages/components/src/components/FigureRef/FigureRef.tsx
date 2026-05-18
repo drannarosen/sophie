@@ -8,7 +8,7 @@ import { lookupCanonicalUsageByName } from "./figure-usages-store.ts";
 
 /**
  * `<FigureRef name="..." />` or `<FigureRef name="...">custom text</FigureRef>` —
- * the figure analog of `<GlossaryTerm>` / `<EqRef>`. PR-C3 first
+ * the figure analog of `<GlossaryTerm>` / `<EquationRef>`. PR-C3 first
  * instance of the inline figure cross-reference. Renders an inline
  * anchor; HoverCard exposes a thumbnail + caption.
  *

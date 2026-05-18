@@ -424,7 +424,7 @@ operational semantics — `misconception` traverses cross-references
 in `misconception-graph.yaml` + `<MisconceptionRef>` /
 `<Intervention addresses=…>` sites; `concept` traverses
 `notation-registry.yaml` + `<KeyEquation>` math symbols +
-`<MultiRep>` bindings; `equation` traverses `<KeyEquation id=…>`
+`<MultiRep>` bindings; `equation` traverses `<KeyEquation refId=…>` registry citations + `<EquationRef refId=…>` inline citations
 sites + biography children. Per-type subcommands let each one
 have type-specific flags (e.g., `--surviving-body` on
 `merge` makes sense for misconceptions; the analogous concept

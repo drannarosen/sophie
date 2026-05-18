@@ -125,7 +125,7 @@ points at an equation in a different module. **Design constraints:**
 figure registry per chapter (already shipping); citations via
 `rehype-citation` per [ADR 0002](../decisions/0002-renderer-astro-mdx.md);
 glossary as either a fifth content collection (likely) or
-component-managed; equation references via `<EqRef>`; cross-chapter
+component-managed; equation references via `<EquationRef>`; cross-chapter
 references resolve at build time and break the build if the target
 moves. **Open question:** glossary collection vs. component
 inventory (defer to later brainstorm).

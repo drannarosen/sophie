@@ -44,7 +44,7 @@ interface Props {
 const { figureRegistry = [] } = Astro.props;
 
 // Wire the build-time pedagogy index (ADR 0038) into the
-// @sophie/components pedagogy stores so <GlossaryTerm> and <EqRef>
+// @sophie/components pedagogy stores so <GlossaryTerm> and <EquationRef>
 // in this page's MDX content can resolve definitions and equations.
 //
 // Build-order subtlety: Astro's content-collection layer only
@@ -232,7 +232,7 @@ __setObjectives(pedagogy.objectives);
 // Serialize the same payloads into <script> tags so each role's
 // client-side store can hydrate after React mount. Server-side module
 // state doesn't survive to the wire, so without these script tags
-// <GlossaryTerm> / <EqRef> / <FigureRef> rerender as bare prose on
+// <GlossaryTerm> / <EquationRef> / <FigureRef> rerender as bare prose on
 // hydration (empty client store wins). See
 // packages/components/.../definitions-store.ts,
 // packages/components/.../equations-store.ts,
@@ -331,8 +331,8 @@ const collapsedVars = [
   type='application/json'
   set:html={pedagogyDefinitionsJson}
 />
-{/* Equation-index payload for client-side hydration of <EqRef>'s
-    equations store. See packages/components/src/components/EqRef/equations-store.ts
+{/* Equation-index payload for client-side hydration of <EquationRef>'s
+    equations store. See packages/components/src/components/EquationRef/equations-store.ts
     for why this is needed alongside the server-side __setEquations call. */}
 <script
   is:inline

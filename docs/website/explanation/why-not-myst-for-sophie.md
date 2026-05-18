@@ -119,7 +119,7 @@ Astro additionally gives Sophie:
 | MyST capability | Sophie's mitigation |
 |---|---|
 | Native `{cite}` + bibliography | `rehype-citation` plugin with CSL-JSON; ApJ default for ASTR. See [Cite with CSL-JSON](../how-to/cite-with-csl-json.md). |
-| Native `{eq}` + equation numbering | `remark-math` + `rehype-katex` for math; `<EqRef>` React component for cross-refs. Audit verifies refs resolve. |
+| Native `{eq}` + equation numbering | `remark-math` + `rehype-katex` for math; `<EquationRef>` React component for cross-refs. Audit verifies refs resolve. |
 | Native `{numref}` for figures | `<FigureRef id="...">` React component, resolved at build via Sophie's reference graph. |
 | Native definitions / glossary | MyST handles glossary in *these docs*. In Sophie chapters, `<ConceptRef>` and a separate glossary page render via React; mostly equivalent. |
 | Executable code via Thebe | Pyodide-based `<CodeCell>` with service-worker caching. Different mechanism, equivalent outcome. |

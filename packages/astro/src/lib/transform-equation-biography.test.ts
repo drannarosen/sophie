@@ -437,7 +437,7 @@ describe("extractEquations — biography (PR-γ)", () => {
     );
   });
 
-  test("ignores non-biography JSX children (framing prose + EqRef etc. don't trip the walker)", () => {
+  test("ignores non-biography JSX children (framing prose + EquationRef etc. don't trip the walker)", () => {
     const tree = root([
       mdxKeyEquation(
         [jsxAttr("id", "wiens-law"), jsxAttr("title", "Wien's Law")],
@@ -447,8 +447,8 @@ describe("extractEquations — biography (PR-γ)", () => {
           mdxBiographyChild("Observable", [], [para("Peak wavelength.")]),
           // Random non-biography JSX — should be skipped silently
           mdxBiographyChild(
-            "EqRef",
-            [jsxAttr("slug", "stefan-boltzmann")],
+            "EquationRef",
+            [jsxAttr("refId", "stefan-boltzmann")],
             [para("see also")]
           ),
         ]

@@ -26,7 +26,7 @@ validation:
     - kind: deployment
       ref: null
       date: null
-      notes: "6 biography components + render-surface updates (EqRef hover, ChapterEquations, CourseEquations) + transformEquationBiography + E7/E8/E9 audit invariants pending. v1 implementation sprint scheduled (Phase 3 per session plan)."
+      notes: "6 biography components + render-surface updates (EquationRef hover, ChapterEquations, CourseEquations) + transformEquationBiography + E7/E8/E9 audit invariants pending. v1 implementation sprint scheduled (Phase 3 per session plan)."
   notes: "Schema + reference doc stable; 2026-05-17 design hardening locks the v1 ship-shape (6 biography children with hardcoded epistemicRole const, bundled render updates in PR-β, Wien's law smoke fixture); runtime biography surface + E7/E8/E9 audit invariants land in Phase 3 sprint PRs α–δ."
 ---
 
@@ -40,8 +40,10 @@ validation:
 ## Context
 
 [PR-C2 (commit 7c6a3f3)](./0038-pedagogy-index-pattern.md) shipped
-`<KeyEquation id title>` as the source-of-truth component for the
-equations collection in the pedagogy index. The component currently
+`<KeyEquation>` as the source-of-truth component for the equations
+collection in the pedagogy index (the chapter-inline `id title` shape;
+later migrated to `<KeyEquation refId>` registry citations per
+[ADR 0060](./0060-registry-ecosystem.md)). The component currently
 captures the equation's anchor, a human title, and a single
 `$$...$$` math body block. Everything else — what the equation
 *observes*, what it *assumes*, where it *breaks*, what students
@@ -62,7 +64,7 @@ index.
 This ADR makes the equation's biography first-class. The biography
 is authored *at* the equation (children of `<KeyEquation>`) rather
 than in surrounding prose; it surfaces in the three existing
-rendering surfaces (`<EqRef>` hover, `<ChapterEquations>` end-of-
+rendering surfaces (`<EquationRef>` hover, `<ChapterEquations>` end-of-
 chapter roll-up, `<CourseEquations>` `/equations` route); and it
 adds three new E-prefix audit invariants that fire only when
 biography children are present.
@@ -161,9 +163,9 @@ All three rendering surfaces already exist for plain `<KeyEquation>`
 (per ADR 0038 / PR-C2 / PR-C4). A7 changes the *render layer* of
 each to surface biography fields at context-appropriate detail.
 
-**Surface 1: `<EqRef>` hover preview (compact).**
+**Surface 1: `<EquationRef>` hover preview (compact).**
 
-The existing `<EqRef slug="wiens-law">` hover card shows title +
+The existing `<EquationRef refId="wiens-law">` hover card shows title +
 KaTeX-rendered math (PR-C2 behavior). Post-A7, it adds a compact
 summary line below the math:
 
@@ -265,7 +267,7 @@ ADR 0040–0045 precedent. The code PR follows separately:
   `<BreaksWhen>`, `<CommonMisuse>`, plus the extension to
   `<KeyEquation>` that handles the children walk).
 - `packages/components/src/eq-ref/hover-summary.tsx` — render
-  the compact summary line in the existing `<EqRef>` hover card.
+  the compact summary line in the existing `<EquationRef>` hover card.
 - `packages/astro/src/components/ChapterEquations.astro` and
   `CourseEquations.astro` — extend to render biography sections
   with `<details>` disclosure for `<CommonMisuse>` lists.
@@ -453,7 +455,7 @@ coherent contract.
   with `serialize` separation per ADR 0004.
 - Schema extension in `packages/core/src/schema/key-equation.ts`
   adding the `biography` aggregate field.
-- Render-layer updates to `<EqRef>` hover, `<ChapterEquations>`,
+- Render-layer updates to `<EquationRef>` hover, `<ChapterEquations>`,
   `<CourseEquations>`.
 - Three new E-prefix invariants in
   `packages/astro/src/lib/pedagogy-audit.ts`.
@@ -712,7 +714,7 @@ uniform-query layer trivially at v2.
 
 The 6 biography components have no own UI — they serialize children
 into KeyEquation's pedagogy-index schema. The user-visible payoff is
-the rendering updates to three existing components: `<EqRef>` hover
+the rendering updates to three existing components: `<EquationRef>` hover
 preview (compact summary), `<ChapterEquations>` (full + `<details>`
 disclosure for misuse lists), `<CourseEquations>` (full).
 

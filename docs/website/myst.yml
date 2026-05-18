@@ -184,6 +184,7 @@ project:
         - file: decisions/0058-epistemic-component-contract.md
         - file: decisions/0059-linked-representation-state-primitive.md
         - file: decisions/0060-registry-ecosystem.md
+        - file: decisions/0061-ai-optimized-codebase-design.md
     - title: Status
       children:
         - file: status/roadmap.md

@@ -288,7 +288,7 @@ two components that make TDRs discoverable from the chapters they
 govern.
 
 **`<TDRRef num="14">`** — interactive React island (hover-preview
-pattern from PR-C2, parallel to `<EqRef>` / `<FigureRef>` /
+pattern from PR-C2, parallel to `<EquationRef>` / `<FigureRef>` /
 `<GlossaryTerm>` / `<ChapterRef>`). Renders inline as `TDR-14: <title>`
 linked to the TDR file; hover card shows title + evidence_type +
 evidence_strength + 1-line summary. Self-closing or with children for
@@ -514,7 +514,7 @@ identity is sufficient.
   the structured-pedagogy substrate TDRs sit alongside;
   `<TDRRef>` cross-references and `<ChapterTDRs>` consumers register
   with the pedagogy index via the same extractor pattern as
-  `<EqRef>` / `<ChapterEquations>`.
+  `<EquationRef>` / `<ChapterEquations>`.
 - [ADR 0042 — Pedagogy Contract + AI Contribution Ledger](0042-pedagogy-contract-and-ai-contribution-ledger.md):
   the public-facing accountability layer; TDRs are the *internal
   operational layer* that justifies the contract's claims.

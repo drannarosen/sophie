@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 // Mock the two stores BEFORE importing the component so vitest's
 // auto-hoist intercepts the resolution. Fixture covers both the
 // happy paths (registry + canonical resolve) and the miss path.
-// Mirrors the EqRef.test.tsx mocking pattern.
+// Mirrors the EquationRef.test.tsx mocking pattern.
 vi.mock("./figure-registry-store.ts", () => ({
   lookupFigureRegistry: (name: string) => {
     if (name === "cosmic-distance-ladder") {
@@ -71,7 +71,7 @@ describe("<FigureRef>", () => {
   // is covered by e2e in a real browser. Here we verify the
   // surface that matters for unit-level confidence: trigger
   // structure, render-mode branching, accessibility, and
-  // graceful-fallback behavior. Matches the EqRef.test.tsx
+  // graceful-fallback behavior. Matches the EquationRef.test.tsx
   // precedent.
 
   // T33 — trigger structure (HoverCard.Root → Trigger asChild → <a>).

@@ -117,7 +117,7 @@ boundary, so instructor skill is held approximately constant.
    `skim` clustering with `ai-primary` generation_share.
 
 6. **M6 — Cross-chapter graph density.** Average number of
-   `<EqRef>`/`<MisconceptionRef>`/`<ChapterRef>`/`<TDRRef>`
+   `<EquationRef>`/`<MisconceptionRef>`/`<ChapterRef>`/`<TDRRef>`
    resolutions per chapter. Proxy for curricular coherence.
 
 7. **M7 — Pedagogical-diff churn rate.** Frequency-weighted

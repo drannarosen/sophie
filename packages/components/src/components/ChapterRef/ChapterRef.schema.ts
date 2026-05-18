@@ -8,7 +8,7 @@ import { z } from "zod";
  * the module-breadcrumb + chapter title + (optional) description;
  * clicks navigate to `/chapters/<slug>`.
  *
- * Unlike `<EqRef>` / `<FigureRef>`, the self-closing default renders
+ * Unlike `<EquationRef>` / `<FigureRef>`, the self-closing default renders
  * the chapter *title* (not an "Eq. N" / "Fig. N" ordinal). Chapters
  * reference *concepts* (named by title); equations and figures
  * reference *positions* (numbered for in-prose lookup). Locked by
@@ -29,7 +29,7 @@ export const ChapterRefPropsSchema = z.object({
    * verbatim (e.g. `<ChapterRef slug="hydrostatic-equilibrium">the
    * pressure-gravity balance</ChapterRef>`). Both modes render the
    * same popover. Locked by PR-C4 brainstorm Q8 (dual-mode parity
-   * with EqRef / FigureRef).
+   * with EquationRef / FigureRef).
    */
   children: z.custom<ReactNode>().optional(),
 });
