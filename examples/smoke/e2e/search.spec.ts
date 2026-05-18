@@ -59,8 +59,11 @@ test.describe("Pagefind search modal (Layer 2)", () => {
     // Type a known smoke-chapter term
     await input.fill("luminosity");
 
-    // Wait for results to settle via the aria-live count region
-    const counter = dialog.getByRole("status");
+    // Wait for results to settle via the aria-live count region.
+    // Disambiguate from the misconception card's "short note" length
+    // badge (which also carries role="status" but lives inside result
+    // previews when PR-7 misconceptions are in the search index).
+    const counter = dialog.getByRole("status").filter({ hasText: /results/i });
     await expect(counter).not.toHaveText(/no results/i);
 
     // At least one result row appears
