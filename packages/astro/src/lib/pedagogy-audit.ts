@@ -216,7 +216,7 @@ export function runPedagogyAudit(
 
   // Pre-compute lookup sets we reference multiple times.
   const definitionSlugs = new Set(index.definitions.map((d) => d.slug));
-  const equationSlugs = new Set(index.equations.map((e) => e.slug));
+  const equationSlugs = new Set(index.equations.map((e) => e.id));
   const figureRegistryNames = new Set(index.figureRegistry.map((f) => f.name));
   const chapterSlugs = new Set(index.chapters.map((c) => c.slug));
 
@@ -922,11 +922,18 @@ export function runPedagogyAudit(
     // resolve to either (a) a <KeyEquation> in the same chapter's
     // equation index, or (b) another <RepEquation> in the same
     // MultiRep block. Cross-chapter resolution is a v2 audit-pass flip.
+    // Post-ADR-0060: equations are registry-sourced (no chapter on the
+    // entry). "Equations in chapter X" = equations CITED from chapter X
+    // via `equationCitations[].refId`. MR6's chapter-scoping continues
+    // to work because MultiRep ↔ KeyEquation co-residence is about
+    // chapter-side authoring intent; cross-chapter MultiRep resolution
+    // remains a v2 audit-pass flip per ADR 0043 §R-MR6.
     const equationsByChapterSlug = new Map<string, Set<string>>();
-    for (const eq of index.equations) {
-      const set = equationsByChapterSlug.get(eq.chapter) ?? new Set<string>();
-      set.add(eq.slug);
-      equationsByChapterSlug.set(eq.chapter, set);
+    for (const citation of index.equationCitations) {
+      const set =
+        equationsByChapterSlug.get(citation.chapter) ?? new Set<string>();
+      set.add(citation.refId);
+      equationsByChapterSlug.set(citation.chapter, set);
     }
     for (const mr of index.multiReps) {
       const sameMrEquationRefKeys = new Set<string>();
@@ -983,8 +990,8 @@ export function runPedagogyAudit(
         warnings.push({
           severity: "WARNING",
           code: "NR1",
-          message: `NR1: <KeyEquation id="${eq.slug}"> in chapter "${eq.chapter}" declares symbol "${symbol}" not present in notation-registry.yaml. Resolution: register the concept whose canonical_symbol is "${symbol}", or remove the symbol from the equation's \`symbols\` prop.`,
-          location: { chapter: eq.chapter, anchor: eq.anchor },
+          message: `NR1: equation registry entry "${eq.id}" declares symbol "${symbol}" not present in notation-registry.yaml. Resolution: register the concept whose canonical_symbol is "${symbol}", or remove the symbol from the equation's frontmatter \`symbols\` array.`,
+          location: { anchor: eq.id },
         });
       }
     }
@@ -1042,8 +1049,8 @@ export function runPedagogyAudit(
         warnings.push({
           severity: "WARNING",
           code: "NR4",
-          message: `NR4: <KeyEquation id="${eq.slug}"> in chapter "${eq.chapter}" declares symbol "${symbol}" (concept "${conceptWithUnits.id}", units "${conceptWithUnits.units}") but lacks a <Units symbol="${symbol}"> biography child. Resolution: add <Units symbol="${symbol}" unit="${conceptWithUnits.units}" /> inside the <KeyEquation>.`,
-          location: { chapter: eq.chapter, anchor: eq.anchor },
+          message: `NR4: equation registry entry "${eq.id}" declares symbol "${symbol}" (concept "${conceptWithUnits.id}", units "${conceptWithUnits.units}") but lacks a <Units symbol="${symbol}"> biography child. Resolution: add <Units symbol="${symbol}" unit="${conceptWithUnits.units}" /> inside the registry MDX body.`,
+          location: { anchor: eq.id },
         });
       }
     }
@@ -1064,8 +1071,8 @@ export function runPedagogyAudit(
         warnings.push({
           severity: "WARNING",
           code: "E8",
-          message: `E8: <Units symbol="${units.symbol}" unit="${units.unit}"> in <KeyEquation id="${eq.slug}"> (chapter "${eq.chapter}") doesn't match any canonical_symbol in notation-registry.yaml. Resolution: register the concept whose canonical_symbol is "${units.symbol}", or rename the Units symbol to an existing registry entry.`,
-          location: { chapter: eq.chapter, anchor: eq.anchor },
+          message: `E8: <Units symbol="${units.symbol}" unit="${units.unit}"> in equation registry entry "${eq.id}" doesn't match any canonical_symbol in notation-registry.yaml. Resolution: register the concept whose canonical_symbol is "${units.symbol}", or rename the Units symbol to an existing registry entry.`,
+          location: { anchor: eq.id },
         });
       }
     }
@@ -1251,8 +1258,8 @@ export function runPedagogyAudit(
     info.push({
       severity: "INFO",
       code: "E7",
-      message: `E7: <KeyEquation id="${eq.slug}"> in chapter "${eq.chapter}" has biography children but lacks an <Observable>. Authoring nudge — declare what the equation measures so readers can anchor the model in observation.`,
-      location: { chapter: eq.chapter, anchor: eq.anchor },
+      message: `E7: equation registry entry "${eq.id}" has biography children but lacks an <Observable>. Authoring nudge — declare what the equation measures so readers can anchor the model in observation.`,
+      location: { anchor: eq.id },
     });
   }
 
@@ -1272,8 +1279,8 @@ export function runPedagogyAudit(
       info.push({
         severity: "INFO",
         code: "E9",
-        message: `E9: <CommonMisuse> in <KeyEquation id="${eq.slug}"> (chapter "${eq.chapter}") lacks a misconception="<slug>" cross-ref to the misconception graph (ADR 0044). Authoring nudge — link the misuse to a declared misconception so it surfaces in cross-link rendering.`,
-        location: { chapter: eq.chapter, anchor: eq.anchor },
+        message: `E9: <CommonMisuse> in equation registry entry "${eq.id}" lacks a misconception="<slug>" cross-ref to the misconception graph (ADR 0044). Authoring nudge — link the misuse to a declared misconception so it surfaces in cross-link rendering.`,
+        location: { anchor: eq.id },
       });
     }
   }
@@ -1306,8 +1313,8 @@ export function runPedagogyAudit(
       warnings.push({
         severity: "WARNING",
         code: "E10",
-        message: `E10: <CommonMisuse misconception="${misuse.misconception}"> in <KeyEquation id="${eq.slug}"> (chapter "${eq.chapter}") references a misconception not declared anywhere in the course. Resolution: declare the misconception (Aside or Callout with that anchor) in some chapter, or fix the slug typo.`,
-        location: { chapter: eq.chapter, anchor: eq.anchor },
+        message: `E10: <CommonMisuse misconception="${misuse.misconception}"> in equation registry entry "${eq.id}" references a misconception not declared anywhere in the course. Resolution: declare the misconception (Aside or Callout with that anchor) in some chapter, or fix the slug typo.`,
+        location: { anchor: eq.id },
       });
     }
   }

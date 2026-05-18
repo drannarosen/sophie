@@ -33,6 +33,7 @@ function emptyIndex(): PedagogyIndex {
   return {
     definitions: [],
     equations: [],
+    equationCitations: [],
     keyInsights: [],
     figureRegistry: [],
     figureUsages: [],
@@ -48,16 +49,16 @@ function emptyIndex(): PedagogyIndex {
   };
 }
 
+// Post-ADR-0060: EquationEntry is registry-shaped (id / title / tex /
+// symbols + optional biography). The old chapter/anchor/number/body/slug
+// fields moved to EquationCitationEntry; tests use a separate fixture
+// helper for those.
 function makeEquation(overrides: Partial<EquationEntry> = {}): EquationEntry {
   return {
-    slug: "wiens-law",
+    id: "wiens-law",
     title: "Wien's Law",
-    number: 1,
     tex: "\\lambda_{peak} = b T^{-1}",
-    body: "<p>body</p>",
-    chapter: "ch",
-    anchor: "wiens-law",
-    symbols: [],
+    symbols: ["T"],
     ...overrides,
   };
 }
@@ -165,15 +166,13 @@ describe("E7 INFO — biography lacks <Observable>", () => {
     const index = emptyIndex();
     index.equations = [
       makeEquation({
-        slug: "eq-a",
-        anchor: "eq-a",
+        id: "eq-a",
         biography: makeBiography({
           units: [{ symbol: "T", unit: "K" }],
         }),
       }),
       makeEquation({
-        slug: "eq-b",
-        anchor: "eq-b",
+        id: "eq-b",
         biography: makeBiography({
           common_misuses: [{ body: "misuse." }],
         }),
@@ -297,7 +296,6 @@ describe("E10 WARNING — <CommonMisuse misconception=…> references undeclared
     const index = emptyIndex();
     index.equations = [
       makeEquation({
-        chapter: "ch-2",
         biography: makeBiography({
           common_misuses: [
             { body: "ok.", misconception: "wiens-law-absorption-spectra" },
@@ -700,8 +698,8 @@ describe("NR4 WARNING — registry symbol has units; equation lacks <Units> (NR-
     // both edit sites are visible to the author.
     const index = emptyIndex();
     index.equations = [
-      makeEquation({ slug: "eq-a", anchor: "eq-a", symbols: ["T"] }),
-      makeEquation({ slug: "eq-b", anchor: "eq-b", symbols: ["T"] }),
+      makeEquation({ id: "eq-a", symbols: ["T"] }),
+      makeEquation({ id: "eq-b", symbols: ["T"] }),
     ];
     const registry = makeRegistry([
       {

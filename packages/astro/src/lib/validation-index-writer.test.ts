@@ -30,6 +30,7 @@ function makeEmptyIndex(): PedagogyIndex {
   return {
     definitions: [],
     equations: [],
+    equationCitations: [],
     keyInsights: [],
     figureRegistry: [],
     figureUsages: [],
