@@ -249,6 +249,134 @@ describe("E9 INFO — <CommonMisuse> lacks misconception= cross-ref", () => {
 });
 
 // =====================================================================
+// E10 — <CommonMisuse misconception="…"> references undeclared slug
+// =====================================================================
+
+describe("E10 WARNING — <CommonMisuse misconception=…> references undeclared slug", () => {
+  it("fires when the cross-ref slug is not in misconceptions[]", () => {
+    const index = emptyIndex();
+    index.equations = [
+      makeEquation({
+        biography: makeBiography({
+          common_misuses: [
+            { body: "misuse.", misconception: "wiens-law-absorption-spectra" },
+          ],
+        }),
+      }),
+    ];
+    // No misconceptions declared anywhere course-wide.
+    const report = runPedagogyAudit(index);
+    const e10 = report.warnings.filter((f) => f.code === "E10");
+    expect(e10).toHaveLength(1);
+    expect(e10[0]?.message).toContain("wiens-law-absorption-spectra");
+    expect(e10[0]?.message).toContain("wiens-law");
+  });
+
+  it("does NOT fire when the cross-ref slug IS declared (same chapter)", () => {
+    const index = emptyIndex();
+    index.equations = [
+      makeEquation({
+        biography: makeBiography({
+          common_misuses: [
+            { body: "ok.", misconception: "wiens-law-absorption-spectra" },
+          ],
+        }),
+      }),
+    ];
+    index.misconceptions = [
+      makeMisconception({ anchor: "wiens-law-absorption-spectra" }),
+    ];
+    const report = runPedagogyAudit(index);
+    expect(report.warnings.filter((f) => f.code === "E10")).toHaveLength(0);
+  });
+
+  it("does NOT fire when the cross-ref slug is declared in ANOTHER chapter (course-wide set)", () => {
+    // Mirrors I1's course-wide check — a CommonMisuse can legitimately
+    // cross-link to a misconception declared elsewhere in the course.
+    const index = emptyIndex();
+    index.equations = [
+      makeEquation({
+        chapter: "ch-2",
+        biography: makeBiography({
+          common_misuses: [
+            { body: "ok.", misconception: "wiens-law-absorption-spectra" },
+          ],
+        }),
+      }),
+    ];
+    index.misconceptions = [
+      makeMisconception({
+        chapter: "ch-1",
+        anchor: "wiens-law-absorption-spectra",
+      }),
+    ];
+    const report = runPedagogyAudit(index);
+    expect(report.warnings.filter((f) => f.code === "E10")).toHaveLength(0);
+  });
+
+  it("does NOT fire when CommonMisuse has no misconception slug (E9 handles that)", () => {
+    const index = emptyIndex();
+    index.equations = [
+      makeEquation({
+        biography: makeBiography({
+          common_misuses: [{ body: "uncrossed misuse." }],
+        }),
+      }),
+    ];
+    const report = runPedagogyAudit(index);
+    expect(report.warnings.filter((f) => f.code === "E10")).toHaveLength(0);
+    // E9 fires instead (the "missing cross-ref" nudge).
+    expect(report.info.filter((f) => f.code === "E9")).toHaveLength(1);
+  });
+
+  it("does NOT fire when equation has no biography", () => {
+    const index = emptyIndex();
+    index.equations = [makeEquation()];
+    const report = runPedagogyAudit(index);
+    expect(report.warnings.filter((f) => f.code === "E10")).toHaveLength(0);
+  });
+
+  it("fires per unresolved misuse (mixed declared / undeclared)", () => {
+    const index = emptyIndex();
+    index.equations = [
+      makeEquation({
+        biography: makeBiography({
+          common_misuses: [
+            { body: "ok.", misconception: "wiens-law-absorption-spectra" },
+            { body: "broken-1.", misconception: "typo-misconception-1" },
+            { body: "broken-2.", misconception: "typo-misconception-2" },
+          ],
+        }),
+      }),
+    ];
+    index.misconceptions = [
+      makeMisconception({ anchor: "wiens-law-absorption-spectra" }),
+    ];
+    const report = runPedagogyAudit(index);
+    expect(report.warnings.filter((f) => f.code === "E10")).toHaveLength(2);
+  });
+
+  it("fires independently of E9 (broken cross-ref + missing cross-ref coexist)", () => {
+    // Mixed case: one misuse has a broken cross-ref → E10; another has
+    // no cross-ref at all → E9. Both fire, each on its respective entry.
+    const index = emptyIndex();
+    index.equations = [
+      makeEquation({
+        biography: makeBiography({
+          common_misuses: [
+            { body: "broken.", misconception: "typo-misconception" },
+            { body: "missing." }, // no cross-ref
+          ],
+        }),
+      }),
+    ];
+    const report = runPedagogyAudit(index);
+    expect(report.warnings.filter((f) => f.code === "E10")).toHaveLength(1);
+    expect(report.info.filter((f) => f.code === "E9")).toHaveLength(1);
+  });
+});
+
+// =====================================================================
 // E8 — <Units symbol> not in registry (NR-gated)
 // =====================================================================
 
@@ -721,5 +849,82 @@ describe("integration — full smoke scenario", () => {
     expect(report.errors.filter((f) => f.code === "NR3")).toHaveLength(0);
     // Both registry concepts referenced via symbols → no NR2 orphans.
     expect(report.info.filter((f) => f.code === "NR2")).toHaveLength(0);
+  });
+
+  // P3-1 — failing-case fixture exercising NR1 + NR3 + NR4 together
+  // (Phase B audit §4.3). Belt-and-suspenders complement to the
+  // synthetic-AST isolation tests above: this is the "what if a chapter
+  // ships with a deliberately-broken registry/equation combo" scenario.
+  // Mirrors the positive test's shape so the contrast is explicit.
+  it("deliberately-broken Wien's-law fixture fires NR1 + NR3 + NR4 together", () => {
+    const index = emptyIndex();
+    index.equations = [
+      makeEquation({
+        // Triggers NR1: "X_unregistered" is not in the registry.
+        // "T" IS in the registry but registry concept declares `units: "K"`
+        // and the biography below has NO <Units symbol="T"> child →
+        // triggers NR4 (registry symbol has units; equation lacks <Units>).
+        symbols: ["T", "X_unregistered"],
+        biography: makeBiography({
+          observable: {
+            body: "Peak wavelength.",
+            epistemicRole: "observable",
+          },
+          // Note: NO units entry for T (despite T being a registry symbol
+          // with units), so NR4 fires for T.
+        }),
+      }),
+    ];
+    const registry = makeRegistry([
+      // Triggers NR3: both concepts bind to canonical_symbol "T" —
+      // declaration collision; symbol resolution ambiguous.
+      {
+        id: "temperature",
+        verbal_label: "temperature",
+        canonical_symbol: "T",
+        latex: "T",
+        units: "K",
+      },
+      {
+        id: "time-of-flight",
+        verbal_label: "time of flight",
+        canonical_symbol: "T",
+        latex: "T",
+        units: "s",
+      },
+    ]);
+
+    const report = runPedagogyAudit(index, { notationRegistry: registry });
+
+    // NR1 WARNING — unregistered symbol declared on KeyEquation.
+    const nr1 = report.warnings.filter((f) => f.code === "NR1");
+    expect(nr1).toHaveLength(1);
+    expect(nr1[0]?.message).toMatch(/X_unregistered/);
+
+    // NR3 ERROR — registry symbol "T" bound to multiple concept.ids.
+    const nr3 = report.errors.filter((f) => f.code === "NR3");
+    expect(nr3).toHaveLength(1);
+    expect(nr3[0]?.message).toMatch(/"T".*multiple concepts/);
+
+    // NR4 WARNING — registry concept "T" declares units but equation
+    // lacks <Units symbol="T">. Fires once per matching registry
+    // concept; with the NR3 collision both registry concepts share "T",
+    // so NR4 fires for each — the deliberate-over-conservative shape
+    // documented in pedagogy-audit.ts ("NR3 surfaces multi-concept
+    // collisions separately; here we accept any matching concept").
+    const nr4 = report.warnings.filter((f) => f.code === "NR4");
+    expect(nr4.length).toBeGreaterThanOrEqual(1);
+    expect(nr4[0]?.message).toMatch(/"T"/);
+
+    // Sanity: NR2 doesn't ALSO fire on the collision concepts —
+    // they're promoted out of orphan because "T" matches via the
+    // KeyEquation.symbols reference path (PR-δ NR2 modification).
+    const nr2 = report.info.filter(
+      (f) =>
+        f.code === "NR2" &&
+        (f.message.includes("temperature") ||
+          f.message.includes("time-of-flight"))
+    );
+    expect(nr2).toHaveLength(0);
   });
 });

@@ -105,6 +105,12 @@ import { slugify } from "@sophie/core/schema";
  *                `misconception="<slug>"` cross-ref to the misconception
  *                graph. Authoring nudge so the misuse surfaces in
  *                cross-link rendering (ADR 0046 + ADR 0044; PR-δ #94).
+ *   E10 WARNING  `<CommonMisuse misconception="…">` references a slug
+ *                not declared anywhere course-wide (ADR 0044 graph;
+ *                PR-D Session 4 audit-fix sprint). Mirrors I1's
+ *                WARNING shape for the equation-biography side of the
+ *                cross-ref. Reuses the same `declaredMisconceptionAnchors`
+ *                set as I1 + MG3.
  *   I1  WARNING  `<Intervention addresses="…">` references a misconception
  *                not declared anywhere in the index, OR the literal "this"
  *                survived extraction (no enclosing `<Aside kind="misconception">`
@@ -1267,6 +1273,40 @@ export function runPedagogyAudit(
         severity: "INFO",
         code: "E9",
         message: `E9: <CommonMisuse> in <KeyEquation id="${eq.slug}"> (chapter "${eq.chapter}") lacks a misconception="<slug>" cross-ref to the misconception graph (ADR 0044). Authoring nudge — link the misuse to a declared misconception so it surfaces in cross-link rendering.`,
+        location: { chapter: eq.chapter, anchor: eq.anchor },
+      });
+    }
+  }
+
+  // -------------------------------------------------------------------
+  // E10 WARNING — <CommonMisuse misconception="…"> references a slug
+  //               not declared anywhere in the course (ADR 0044 graph).
+  // -------------------------------------------------------------------
+  // Mirrors I1's WARNING shape (Intervention `addresses="…"` referencing
+  // an unknown misconception) — same structural class of "unresolved
+  // cross-ref to misconception-graph node." Authors will sometimes link
+  // CommonMisuse to a misconception they intend to add to *another*
+  // chapter; we check the course-wide set, not per-chapter, so legitimate
+  // cross-chapter refs pass cleanly.
+  //
+  // Distinct from E9 (INFO) which fires when the cross-ref is *missing*;
+  // E10 fires when the cross-ref is *present but broken*. A populated
+  // CommonMisuse slot either nudges via E9 (no slug) or is verified
+  // via E10 (slug declared somewhere) or fires WARNING via E10
+  // (slug missing).
+  //
+  // Reuses `declaredMisconceptionAnchors` (built upstream for I1 + MG3)
+  // — single source of truth for "what misconception anchors does the
+  // course know about?"
+  for (const eq of index.equations) {
+    if (eq.biography === undefined) continue;
+    for (const misuse of eq.biography.common_misuses) {
+      if (misuse.misconception === undefined) continue;
+      if (declaredMisconceptionAnchors.has(misuse.misconception)) continue;
+      warnings.push({
+        severity: "WARNING",
+        code: "E10",
+        message: `E10: <CommonMisuse misconception="${misuse.misconception}"> in <KeyEquation id="${eq.slug}"> (chapter "${eq.chapter}") references a misconception not declared anywhere in the course. Resolution: declare the misconception (Aside or Callout with that anchor) in some chapter, or fix the slug typo.`,
         location: { chapter: eq.chapter, anchor: eq.anchor },
       });
     }
