@@ -50,14 +50,23 @@ describe.each([
   });
 });
 
-test("tier3 label-bg vars are emitted exactly once (scheme-invariant)", () => {
+test.each([
+  "observable",
+  "assumption",
+  "breaks-when",
+  "common-misuse",
+])("tier3 label-bg var %s is emitted exactly once (scheme-invariant)", (variant) => {
   // Sanity check: the generator places tier3LabelBgBlock() inside the
   // main `:root {}` only — NOT in [data-theme="dark"] or @media print
   // re-emits — because the values reference `--sophie-brand-violet`
-  // etc. by var, which already swap per scheme. A duplicate emit would
-  // be a regression of the scheme-invariant property.
-  const observableMatches = css.match(/--sophie-tier3-observable-label-bg:/g);
-  expect(observableMatches).toHaveLength(1);
+  // etc. by var, which already swap per scheme. A duplicate emit on
+  // ANY variant would be a regression of the scheme-invariant property;
+  // checking all 4 catches selective-re-emit refactors too (e.g., a
+  // future generator that re-emits some but not all tier3 vars).
+  const matches = css.match(
+    new RegExp(`--sophie-tier3-${variant}-label-bg:`, "g")
+  );
+  expect(matches).toHaveLength(1);
 });
 
 describe("typography tokens", () => {
