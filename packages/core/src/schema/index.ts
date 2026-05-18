@@ -75,6 +75,8 @@ export {
   ContractValidationEntrySchema,
   type DefinitionEntry,
   DefinitionEntrySchema,
+  type EquationCitationEntry,
+  EquationCitationEntrySchema,
   type EquationEntry,
   EquationEntrySchema,
   type FigureRegistryEntry,

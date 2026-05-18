@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   ChapterEntrySchema,
   DefinitionEntrySchema,
+  EquationCitationEntrySchema,
   EquationEntrySchema,
   FigureRegistryEntrySchema,
   FigureUsageEntrySchema,
@@ -52,23 +53,31 @@ describe("DefinitionEntrySchema", () => {
   });
 });
 
+// ADR 0060: post-registry, the pedagogy-index EquationEntry mirrors the
+// registry frontmatter shape (id/title/tex/symbols/constants?/rearranged_forms?/
+// related?/tags?/version?) plus the optional extracted biography. The
+// chapter-side fields (chapter, number, body, anchor, slug) live on
+// EquationCitationEntry instead — one declaration per equation, N citations
+// per equation across chapters.
 const validEquation = {
-  slug: "wiens-law",
+  id: "wiens-law",
   title: "Wien's Law",
-  number: 1,
   tex: "\\lambda_{\\text{peak}} = b T^{-1}",
-  body: "<p>where b is...</p>",
-  chapter: "spoiler-alerts",
-  anchor: "wiens-law",
+  symbols: ["T", "\\lambda_{peak}"],
 };
 
-describe("EquationEntrySchema", () => {
-  test("accepts a valid entry with all required fields", () => {
+describe("EquationEntrySchema (registry-shaped, ADR 0060)", () => {
+  test("accepts the minimal valid entry (id, title, tex, symbols)", () => {
     expect(EquationEntrySchema.safeParse(validEquation).success).toBe(true);
   });
 
-  test("rejects an entry missing number (now required)", () => {
-    const { number: _number, ...rest } = validEquation;
+  test("rejects an entry missing id", () => {
+    const { id: _id, ...rest } = validEquation;
+    expect(EquationEntrySchema.safeParse(rest).success).toBe(false);
+  });
+
+  test("rejects an entry missing tex", () => {
+    const { tex: _tex, ...rest } = validEquation;
     expect(EquationEntrySchema.safeParse(rest).success).toBe(false);
   });
 
@@ -84,13 +93,82 @@ describe("EquationEntrySchema", () => {
     ).toBe(false);
   });
 
-  test("rejects an entry with number: 0 (extractor counter is 1-indexed)", () => {
+  test("rejects an entry with empty symbols array (registry requires min 1)", () => {
     expect(
-      EquationEntrySchema.safeParse({ ...validEquation, number: 0 }).success
+      EquationEntrySchema.safeParse({ ...validEquation, symbols: [] }).success
     ).toBe(false);
   });
 
-  // EquationBiography PR-α — optional biography field per ADR 0046.
+  test("rejects empty-string entries in symbols (NonEmptyString)", () => {
+    expect(
+      EquationEntrySchema.safeParse({
+        ...validEquation,
+        symbols: ["T", ""],
+      }).success
+    ).toBe(false);
+  });
+
+  test("accepts an optional constants array (ADR 0046 §R9)", () => {
+    const result = EquationEntrySchema.safeParse({
+      ...validEquation,
+      constants: [
+        {
+          symbol: "b",
+          value: "0.29",
+          unit: "cm K",
+          name: "Wien's displacement constant",
+        },
+      ],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  test("accepts an optional rearranged_forms array (ADR 0046 §R9)", () => {
+    const result = EquationEntrySchema.safeParse({
+      ...validEquation,
+      rearranged_forms: [
+        {
+          tex: "T = b \\lambda_{peak}^{-1}",
+          solves_for: "T",
+          label: "Temperature from peak wavelength",
+        },
+      ],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  test("accepts an optional related array (ADR 0046 §R9)", () => {
+    const result = EquationEntrySchema.safeParse({
+      ...validEquation,
+      related: [{ refId: "stefan-boltzmann", kind: "see-also" }],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  test("rejects pre-ADR-0060 fields (chapter, number, body, anchor) via .strict()", () => {
+    // Load-bearing: the chapter-side data moves to EquationCitationEntry.
+    // .strict() rejection guards against extractor drift during the cutover.
+    expect(
+      EquationEntrySchema.safeParse({
+        ...validEquation,
+        chapter: "spoiler-alerts",
+      }).success
+    ).toBe(false);
+    expect(
+      EquationEntrySchema.safeParse({ ...validEquation, number: 1 }).success
+    ).toBe(false);
+    expect(
+      EquationEntrySchema.safeParse({ ...validEquation, body: "<p>...</p>" })
+        .success
+    ).toBe(false);
+    expect(
+      EquationEntrySchema.safeParse({ ...validEquation, anchor: "wiens-law" })
+        .success
+    ).toBe(false);
+  });
+
+  // EquationBiography per ADR 0046 §R8 — preserved through the registry
+  // migration; storage moves from chapter-inline to registry MDX body.
   test("accepts an entry without biography (per-equation opt-in)", () => {
     expect(EquationEntrySchema.safeParse(validEquation).success).toBe(true);
   });
@@ -124,6 +202,7 @@ describe("EquationEntrySchema", () => {
             misconception: "wiens-law-absorption-spectra",
           },
         ],
+        derivation_steps: [],
       },
     });
     expect(result.success).toBe(true);
@@ -138,33 +217,74 @@ describe("EquationEntrySchema", () => {
     });
     expect(result.success).toBe(false);
   });
+});
 
-  // PR-δ' bundle (ADR 0043 §R5) — author-declared symbols on KeyEquation.
-  test("symbols defaults to [] when absent (forward-compat with pre-PR-δ' indexes)", () => {
-    const result = EquationEntrySchema.safeParse(validEquation);
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.symbols).toEqual([]);
-    }
+const validCitation = {
+  chapter: "spoiler-alerts",
+  refId: "wiens-law",
+  anchor: "wiens-law-citation-1",
+  number: 1,
+};
+
+describe("EquationCitationEntrySchema (ADR 0060)", () => {
+  test("accepts the minimal valid citation (chapter, refId, anchor, number)", () => {
+    expect(EquationCitationEntrySchema.safeParse(validCitation).success).toBe(
+      true
+    );
   });
 
-  test("accepts a populated symbols array", () => {
-    const result = EquationEntrySchema.safeParse({
-      ...validEquation,
-      symbols: ["T", "\\lambda_{peak}", "b"],
-    });
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.symbols).toHaveLength(3);
-    }
+  test("accepts a citation with optional framingHtml", () => {
+    expect(
+      EquationCitationEntrySchema.safeParse({
+        ...validCitation,
+        framingHtml: "<p>chapter-specific framing prose</p>",
+      }).success
+    ).toBe(true);
   });
 
-  test("rejects empty-string entries in symbols (NonEmptyString)", () => {
-    const result = EquationEntrySchema.safeParse({
-      ...validEquation,
-      symbols: ["T", ""],
-    });
-    expect(result.success).toBe(false);
+  test("rejects a citation missing chapter", () => {
+    const { chapter: _chapter, ...rest } = validCitation;
+    expect(EquationCitationEntrySchema.safeParse(rest).success).toBe(false);
+  });
+
+  test("rejects a citation missing refId", () => {
+    const { refId: _refId, ...rest } = validCitation;
+    expect(EquationCitationEntrySchema.safeParse(rest).success).toBe(false);
+  });
+
+  test("rejects a citation missing anchor", () => {
+    const { anchor: _anchor, ...rest } = validCitation;
+    expect(EquationCitationEntrySchema.safeParse(rest).success).toBe(false);
+  });
+
+  test("rejects a citation missing number", () => {
+    const { number: _number, ...rest } = validCitation;
+    expect(EquationCitationEntrySchema.safeParse(rest).success).toBe(false);
+  });
+
+  test("rejects a citation with number: 0 (1-indexed per-chapter sequence)", () => {
+    expect(
+      EquationCitationEntrySchema.safeParse({ ...validCitation, number: 0 })
+        .success
+    ).toBe(false);
+  });
+
+  test("rejects a citation with non-kebab-case refId (Slug)", () => {
+    expect(
+      EquationCitationEntrySchema.safeParse({
+        ...validCitation,
+        refId: "Wien's Law",
+      }).success
+    ).toBe(false);
+  });
+
+  test("rejects unknown keys (.strict())", () => {
+    expect(
+      EquationCitationEntrySchema.safeParse({
+        ...validCitation,
+        framing: "<p>wrong key</p>",
+      }).success
+    ).toBe(false);
   });
 });
 
@@ -754,5 +874,37 @@ describe("PedagogyIndexSchema", () => {
         ],
       }).success
     ).toBe(true);
+  });
+
+  // ADR 0060 — equationCitations[] tracks chapter-side <KeyEquation refId>
+  // callsites; one declaration in equations[], N citations across chapters.
+  test("equationCitations defaults to [] when absent (forward-compat per ADR 0060)", () => {
+    const result = PedagogyIndexSchema.safeParse(emptyIndex);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.equationCitations).toEqual([]);
+    }
+  });
+
+  test("accepts a populated equationCitations array", () => {
+    const result = PedagogyIndexSchema.safeParse({
+      ...emptyIndex,
+      equationCitations: [
+        {
+          chapter: "spoiler-alerts",
+          refId: "wiens-law",
+          anchor: "wiens-law-citation-1",
+          number: 1,
+        },
+        {
+          chapter: "spoiler-alerts",
+          refId: "stefan-boltzmann",
+          anchor: "stefan-boltzmann-citation-1",
+          number: 2,
+          framingHtml: "<p>chapter framing prose</p>",
+        },
+      ],
+    });
+    expect(result.success).toBe(true);
   });
 });
