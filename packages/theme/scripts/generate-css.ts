@@ -18,6 +18,7 @@ import {
   spacings,
   status,
   textOnAccent,
+  tier3LabelBg,
   validationTints,
   weights,
 } from "../src/anchors.ts";
@@ -206,6 +207,22 @@ function calloutTitleBgBlock(scheme: Scheme): string {
     .join("\n    ");
 }
 
+// Tier-3 biography-child label-bar tints (PR-B P1-2 / Phase B audit §2.8).
+// One CSS var per variant, scheme-invariant (single `tintPct` per
+// variant in `anchors.tier3LabelBg` — preserves pre-refactor behavior;
+// see anchors.ts header comment for the rationale). Mix base is
+// `surface-2` (not `surface-1`) because Tier-3 cards sit on the muted
+// secondary surface. Each biography component rebinds
+// `--sophie-tier3-label-bg` at its root to its variant slot here.
+function tier3LabelBgBlock(): string {
+  return Object.entries(tier3LabelBg)
+    .map(
+      ([variant, { accent, tintPct }]) =>
+        `--sophie-tier3-${variant}-label-bg: color-mix(in oklch, var(--sophie-${accent}) ${tintPct}%, var(--sophie-surface-2));`
+    )
+    .join("\n  ");
+}
+
 // Validation tracker (ADR 0056). Stripes reuse the semantic status
 // palette directly; backgrounds derive `tintPct%`-tinted surfaces via
 // color-mix on `transparent` so admonitions read as subtle wash rather
@@ -266,6 +283,9 @@ export function generateCSS(): string {
 
   /* Card chrome — tier-1/tier-2 left-rule widths */
   ${cardRulesBlock()}
+
+  /* Tier-3 biography-child label-bar tints (scheme-invariant) */
+  ${tier3LabelBgBlock()}
 }
 
 [data-theme="dark"] {

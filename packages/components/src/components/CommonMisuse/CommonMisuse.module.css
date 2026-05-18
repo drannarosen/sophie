@@ -1,64 +1,36 @@
-/* CommonMisuse — Tier-3 (biography-child) chrome inside a KeyEquation.
- * See Observable.module.css for the Tier-3 design rationale.
+/* CommonMisuse — Tier-3 biography-child card. See
+ * `_shared/Tier3Card.module.css` for the chrome rationale + the
+ * per-variant `--sophie-tier3-label-bg` rebinding pattern.
  *
- * Label background uses a subtle danger/red tint (color-mix with
- * --sophie-danger) to signal "common error" without promoting
- * CommonMisuse to a danger callout — still biography metadata,
- * the misuse-warning corner of it.
+ * The accent is a subtle danger/red tint (status-danger at 8%) —
+ * signals "common error" without promoting to a full danger callout.
+ * Still biography metadata, the misuse-warning corner of it.
+ *
+ * <CommonMisuse> carries an optional `misconceptionSlug` after the
+ * main label text (the cross-ref to the misconception-graph node),
+ * so its label composes the `labelWithSeparator` shared variant
+ * (`flex-wrap: wrap`) and the file declares `.separator` +
+ * `.misconceptionSlug` (both composing the shared `.separator` +
+ * `.slug` rules).
  */
 
 .commonMisuse {
-  margin-block: var(--sophie-space-3);
-  background: var(--sophie-surface-2);
-  border: 1px solid var(--sophie-border);
-  border-radius: var(--sophie-radius-sm);
-  color: var(--sophie-text);
-  font-family: var(--sophie-font-sans);
-  font-size: var(--sophie-text-sm);
-  line-height: var(--sophie-leading-prose);
-  overflow: hidden;
+  composes: card from "../_shared/Tier3Card.module.css";
+  --sophie-tier3-label-bg: var(--sophie-tier3-common-misuse-label-bg);
 }
 
 .label {
-  display: flex;
-  align-items: center;
-  gap: var(--sophie-space-2);
-  padding: var(--sophie-space-1) var(--sophie-space-3);
-  background: color-mix(
-    in oklch,
-    var(--sophie-status-danger) 8%,
-    var(--sophie-surface-2)
-  );
-  border-bottom: 1px solid var(--sophie-border);
-  color: var(--sophie-text-muted);
-  font-family: var(--sophie-font-mono);
-  font-size: var(--sophie-text-xs);
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  flex-wrap: wrap;
+  composes: labelWithSeparator from "../_shared/Tier3Card.module.css";
 }
 
 .separator {
-  color: var(--sophie-border);
-  font-weight: 400;
+  composes: separator from "../_shared/Tier3Card.module.css";
 }
 
 .misconceptionSlug {
-  color: var(--sophie-text);
-  font-weight: 500;
-  letter-spacing: 0;
-  text-transform: none;
+  composes: slug from "../_shared/Tier3Card.module.css";
 }
 
 .body {
-  padding: var(--sophie-space-2) var(--sophie-space-3);
-}
-
-.body > :first-child {
-  margin-block-start: 0;
-}
-
-.body > :last-child {
-  margin-block-end: 0;
+  composes: body from "../_shared/Tier3Card.module.css";
 }
