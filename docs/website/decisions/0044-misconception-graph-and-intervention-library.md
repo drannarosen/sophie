@@ -817,9 +817,46 @@ The fix is **structural**, not heuristic: both sides now read from
 the same precedence ordering, and the precedence is documented in
 the inline extractor comments. Future extractors that introduce new
 cross-refs to misconception anchors (e.g., `<MisconceptionRef
-name="…">`, deferred per ADR 0044 §R1) must follow the same
-precedence to land on the same anchor.
+name="…">`, deferred per §R8 below) must follow the same precedence
+to land on the same anchor.
 
 The Phase B Reasoning OS core audit (§2.2; 2026-05-17) confirmed
 this fix was the right shape and called out the inline comment block
 as the architectural reference for the next contributor.
+
+### R8 — `<MisconceptionRef>` + misconception-store deferred to v2
+
+`<Intervention>` in its **standalone-case render** (when `addresses`
+is a non-`"this"` value — a single slug or array) currently shows a
+leading "↗ Addresses: `<slug>`" header with the raw slug text
+(e.g., `universe-with-a-center`). The v2 target is to resolve that
+slug to the misconception's authored *verbal label* (e.g.,
+"Universe with a center") via a misconception-store lookup, rendered
+inline through a future `<MisconceptionRef name="…">` component.
+
+This is deferred to v2 because **both prerequisites are out of
+Phase 1's scope**:
+
+- **`<MisconceptionRef>` component**: an inline ref to a misconception
+  graph node — structurally similar to `<EqRef>` (inline ref to a
+  KeyEquation) and `<GlossaryTerm>` (inline ref to a glossary entry).
+  Not specced in v1; will need its own ADR-or-PR conversation when
+  a real consumer asks for it.
+
+- **Misconception store**: a runtime accessor over the
+  consumer-supplied misconception graph (currently authored inline
+  in chapter MDX as `<Aside kind="misconception">` elements). v1
+  aggregates these into the `PedagogyIndex.misconceptions[]` slot at
+  build time; v2 would expose a runtime lookup table keyed by anchor
+  slug.
+
+**v1 behavior is correct, not broken**: a raw-slug "Addresses:
+`universe-with-a-center`" header is a complete-information render —
+the slug *is* the misconception identity. The v2 work is a polish
+improvement (slug → verbal label) for reader UX, not a fix.
+
+The previous `// TODO once that store exists alongside an inline
+<MisconceptionRef>` note in [`Intervention.tsx`](../../../packages/components/src/components/Intervention/Intervention.tsx)
+is replaced by a reference to this §R8 note (PR-D, Session 4
+audit-fix sprint) per CLAUDE.md "no `TODO` without an issue link"
+— this §R-note serves the same audit-trail role as a GitHub issue.
