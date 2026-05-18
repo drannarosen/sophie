@@ -34,9 +34,10 @@ import type { InterventionProps } from "./Intervention.schema.ts";
  * Standalone-case render: when `addresses` is a non-`"this"` value
  * (single slug or array), the component renders a leading
  * "↗ Addresses: <slug>" header. v1 shows the raw slug (e.g.
- * `universe-with-a-center`); v2 may resolve to the misconception's
- * verbal label via a misconception store — TODO once that store
- * exists alongside an inline `<MisconceptionRef>`.
+ * `universe-with-a-center`); the v2 plan (resolve slug → verbal
+ * label via a misconception-store lookup, rendered through an inline
+ * `<MisconceptionRef>` component) is documented in ADR 0044 §R8 —
+ * deferred until both prerequisites (the component + the store) ship.
  */
 export function Intervention({
   id,

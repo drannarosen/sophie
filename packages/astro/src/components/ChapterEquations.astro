@@ -25,9 +25,22 @@ export interface Props {
   order?: "alphabetical" | "appearance";
   /** Optional heading rendered above the list. */
   heading?: string;
+  /**
+   * Heading level for the optional `heading` (2 | 3 | 4). Default 2.
+   * Use 3 or 4 when the aggregator nests inside an existing section
+   * with its own `<h2>` (per ADR 0038's nested-section pattern).
+   */
+  headingLevel?: 2 | 3 | 4;
 }
 
-const { chapter, order = "alphabetical", heading } = Astro.props;
+const {
+  chapter,
+  order = "alphabetical",
+  heading,
+  headingLevel = 2,
+} = Astro.props;
+
+const HeadingTag = `h${headingLevel}` as const;
 
 const inChapter: EquationEntry[] = equations.filter(
   (e) => e.chapter === chapter
@@ -39,13 +52,7 @@ const sorted =
     : [...inChapter].sort((a, b) => a.number - b.number);
 ---
 
-{/*
-  TODO (PR-C4 or later): expose `headingLevel?: 2 | 3 | 4` prop to allow
-  nested-section usage. Current behavior hardcodes <h2>; promote to
-  variable-level when a real consumer needs it. Forward-looking note,
-  no API change here.
-*/}
-{heading && <h2 class='sophie-chapter-equations__heading'>{heading}</h2>}
+{heading && <HeadingTag class='sophie-chapter-equations__heading'>{heading}</HeadingTag>}
 {
   sorted.length === 0 ? (
     <p class='sophie-chapter-equations__empty'>

@@ -24,9 +24,17 @@ export interface Props {
   chapter: string;
   /** Optional heading rendered above the list. */
   heading?: string;
+  /**
+   * Heading level for the optional `heading` (2 | 3 | 4). Default 2.
+   * Use 3 or 4 when the aggregator nests inside an existing section
+   * with its own `<h2>` (per ADR 0038's nested-section pattern).
+   */
+  headingLevel?: 2 | 3 | 4;
 }
 
-const { chapter, heading } = Astro.props;
+const { chapter, heading, headingLevel = 2 } = Astro.props;
+
+const HeadingTag = `h${headingLevel}` as const;
 
 const inChapter: KeyInsightEntry[] = keyInsights.filter(
   (k) => k.chapter === chapter
@@ -34,13 +42,7 @@ const inChapter: KeyInsightEntry[] = keyInsights.filter(
 // Appearance-order sort: entries are already in source-walk order; no resort.
 ---
 
-{/*
-  TODO (PR-C4 or later): expose `headingLevel?: 2 | 3 | 4` prop to allow
-  nested-section usage. Current behavior hardcodes <h2>; promote to
-  variable-level when a real consumer needs it. Forward-looking note,
-  no API change here.
-*/}
-{heading && <h2 class='sophie-chapter-key-insights__heading'>{heading}</h2>}
+{heading && <HeadingTag class='sophie-chapter-key-insights__heading'>{heading}</HeadingTag>}
 {
   inChapter.length === 0 ? (
     <p class='sophie-chapter-key-insights__empty'>

@@ -354,7 +354,7 @@ describe("extractEquations (pure)", () => {
     ]);
 
     expect(() => extractEquations(tree as never, "ch")).toThrow(
-      /no `\$\$\.\.\.\$\$` math block/
+      /no `\$\$\.\.\.\$\$` block-math child/
     );
   });
 
@@ -367,7 +367,22 @@ describe("extractEquations (pure)", () => {
     ]);
 
     expect(() => extractEquations(tree as never, "ch")).toThrow(
-      /no `\$\$\.\.\.\$\$` math block/
+      /no `\$\$\.\.\.\$\$` block-math child/
+    );
+  });
+
+  // P2-5 — error message includes the single-line `$$...$$` inlineMath gotcha
+  // hint (PR-γ surfaced this; the wiens-law smoke fixture initially failed
+  // because `$$x$$` on a single line was parsed as inlineMath, not math).
+  test("E6 error message includes the inlineMath gotcha hint", () => {
+    const tree = root([
+      mdxKeyEquation({ id: "no-math", title: "No Math Here" }, [
+        para("Prose but no block-math child."),
+      ]),
+    ]);
+
+    expect(() => extractEquations(tree as never, "ch")).toThrow(
+      /single-line `\$\$math\$\$` is parsed by remark-math as inline math/
     );
   });
 

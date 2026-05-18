@@ -600,7 +600,7 @@ export function extractEquations(
     const tex = extractFirstTex(el.children);
     if (tex === null) {
       throw new Error(
-        `<KeyEquation id="${id}"> in chapter "${chapterSlug}" contains no \`$$...$$\` math block. Categorization error: KeyEquation must lead with the canonical equation. Resolution: add a \`$$...$$\` block as the first math content, or convert to a <Callout>.`
+        `<KeyEquation id="${id}"> in chapter "${chapterSlug}" contains no \`$$...$$\` block-math child. Categorization error: KeyEquation must lead with the canonical equation. Resolution: add a \`$$...$$\` block as the first math content, or convert to a <Callout>. Note: a single-line \`$$math$$\` is parsed by remark-math as inline math, NOT block math — block math requires the opening \`$$\` and closing \`$$\` each on their own line (remark-math / Pandoc convention).`
       );
     }
 
