@@ -27,15 +27,18 @@ Phase 0 era:
 1. **Static (Astro-rendered)** — no React hydration; render once
    server-side. Includes the primary *source* components for the
    pedagogy index (`<Aside>` for definitions / key-insights /
-   misconceptions; `<KeyEquation>` for equations; `<Figure>` for
-   figure usages; `<LearningObjectives>` containing `<Objective>` for
-   learning objectives — although `<LearningObjectives>` itself is
-   interactive).
+   misconceptions; `<KeyEquation>` for equation citations; `<Figure>`
+   for figure usages; `<LearningObjectives>` containing `<Objective>`
+   for learning objectives — although `<LearningObjectives>` itself
+   is interactive). Equation *declarations* (with biography children)
+   live in registry MDX files at `src/content/equations/<id>.mdx`
+   per [ADR 0060](../decisions/0060-registry-ecosystem.md); chapter
+   MDX cites them via `<KeyEquation refId>`.
 2. **Interactive React island** — hydrates as a React island. Either
    (a) **persistence-bearing**, owning state in IndexedDB (e.g.,
    `<Predict>`, `<LearningObjectives>`, `<InteractiveCallout>`), or
    (b) **hover-interactive** for inline cross-references over the
-   pedagogy index (`<GlossaryTerm>`, `<EqRef>`, `<FigureRef>`,
+   pedagogy index (`<GlossaryTerm>`, `<EquationRef>`, `<FigureRef>`,
    `<ChapterRef>`). Both use `client:load`.
 3. **Astro consumer (server-rendered aggregator)** — reads the
    pedagogy index server-side and renders a directory or roll-up
@@ -68,12 +71,12 @@ This page is the chapter author's quick reference.
 | `<Aside kind="note">` / `kind="digression">` | Non-indexed marginal asides; no pedagogy-index role. |
 | `<Callout>` (and `variant="key-insight"` / `variant="misconception"`) | Static variant ships pure-display; the `key-insight` and `misconception` variants ALSO feed the index (long-form). |
 | `<Figure>` | Source for `PedagogyIndex.figureUsages` (per-chapter record of where each registry figure appears). Resolves `name` against the consumer-supplied `figureRegistry`. |
-| `<KeyEquation>` | Source for `PedagogyIndex.equations`. Requires `id` (canonical anchor) and `title`; body must contain exactly one `$$...$$` block (KaTeX-rendered). |
+| `<KeyEquation refId="...">` | Chapter-side citation of a registry equation per [ADR 0060](../decisions/0060-registry-ecosystem.md). `refId` resolves to a registry MDX entry at `src/content/equations/<refId>.mdx`. Body of the registry MDX carries the biography children (Observable / Assumption / BreaksWhen / Units / CommonMisuse / DerivationStep) + frontmatter (`title`, `tex`, `symbols`, `constants`, `related`); the chapter `<KeyEquation>` block accepts optional framing prose children for chapter-specific context. Optional `showDerivation` (expand derivation steps inline) and `hideRelated` (suppress related-equations footer) flags. Citations populate `PedagogyIndex.equationCitations`; declarations populate `PedagogyIndex.equations`. |
 | `<Objective>` | Pure-display primitive. Only meaningful as a child of `<LearningObjectives>`; the remark extractor walks it during MDX parse to populate `PedagogyIndex.objectives`. |
 | `<MultiRep>` 🚧 in-progress | Children-mode source for `PedagogyIndex.multiReps` (per [ADR 0043](../decisions/0043-notation-registry-multirep-alignment-audit.md); v1 design locked in [2026-05-17 design doc](../../plans/2026-05-17-multirep-design.md)). Wraps `<RepVerbal>`, `<RepEquation refKey symbol>`, `<RepFigure refName symbolLabel>` children at v1 — one concept across multiple representational modes. Feeds the **MR1, MR2, MR4, MR6 + NR1–NR4** Representation Alignment Audit invariants. `<RepCode>` deferred until `<CodeCell>` ships (ADR 0018); `<RepIntuition>` dropped 2026-05-14 (intuition framing belongs in `<RepVerbal>`). |
 | `<RepVerbal>` / `<RepEquation>` / `<RepFigure>` 🚧 in-progress | Pure-display primitives. Only meaningful as children of `<MultiRep>`; the extractor walks them during MDX parse to populate `multiReps`. `<RepEquation>` / `<RepFigure>` carry refs that resolve against `equations` / `figureRegistry` names respectively. |
 | `<Intervention>` 🚧 in-progress | Children-mode source for `PedagogyIndex.interventions` (per [ADR 0044](../decisions/0044-misconception-graph-and-intervention-library.md); v1 design locked in [2026-05-17 design doc](../../plans/2026-05-17-intervention-design.md)). Nests inside a misconception `<Aside>` or `<Callout variant="misconception">` (`addresses="this"`) — or stands outside with an explicit `addresses="<misc-slug>"`. `type` references the 12 canonical interventions in `intervention-index.ts` or `"custom"`. Feeds the **MG3 + MG4 + I1–I3** audit invariants. (I4 deferred until ADR 0041 `move-index.ts` ships.) |
-| `<Observable>` / `<Assumption>` / `<Units>` / `<BreaksWhen>` / `<CommonMisuse>` 🚧 in-progress | Biography children of `<KeyEquation>` (per [ADR 0046](../decisions/0046-equation-biography.md); v1 design locked in [2026-05-17 design doc](../../plans/2026-05-17-equation-biography-design.md)). Make an equation's observational meaning, assumptions, units, validity domain, and common student misuses first-class structured metadata. Each component declares its `epistemicRole` as a hardcoded const (Observable→observable, Assumption→assumption, BreaksWhen→approximation, Units→none, CommonMisuse→cross-refs misconception). Feeds the **E7 + E8 + E9** audit invariants (only fire when biography children present). |
+| `<Observable>` / `<Assumption>` / `<Units>` / `<BreaksWhen>` / `<CommonMisuse>` / `<DerivationStep>` | Biography children of an equation (per [ADR 0046](../decisions/0046-equation-biography.md) + [ADR 0060](../decisions/0060-registry-ecosystem.md)). **Authored in the equation registry MDX body** at `src/content/equations/<id>.mdx`, NOT chapter-side. Make an equation's observational meaning, assumptions, units, validity domain, common student misuses, and derivation first-class structured metadata. Each declares its `epistemicRole` as a hardcoded const (Observable→observable, Assumption→assumption, BreaksWhen→approximation, Units→none, CommonMisuse→cross-refs misconception, DerivationStep→model). `<Units>` is now optional per [ADR 0046 §R10](../decisions/0046-equation-biography.md) — the notation registry resolves units by symbol; per-equation `<Units>` children only needed when a symbol isn't in the registry. Feeds the **E7 + E8 + E9** audit invariants (only fire when biography children present); the R1–R4 invariants police citation-vs-declaration cross-reference integrity. See [equation-registry-schema](equation-registry-schema.md) for the registry MDX shape. |
 
 ### Interactive React island
 
@@ -96,7 +99,7 @@ This page is the chapter author's quick reference.
 | Component | Looks up | Default rendered text | Mode |
 |---|---|---|---|
 | `<GlossaryTerm name="X">term</GlossaryTerm>` | `definitions` | The element's children (always; `name` is the lookup key) | Children-only |
-| `<EqRef slug="X" />` | `equations` | Equation title with hover preview (KaTeX-rendered tex + title) | Self-closing or children |
+| `<EquationRef refId="X" />` | `equations` (registry collection) | Equation title with hover preview (KaTeX-rendered tex + title + compact biography summary). Clicks navigate to `/equations/<refId>` registry route. | Self-closing or children |
 | `<FigureRef name="X" />` | `figureRegistry` + `figureUsages` | "Fig. N" (ordinal) with hover preview (thumbnail + caption) | Self-closing or children |
 | `<ChapterRef slug="X" />` | `chapters` + `modules` | Chapter title with hover preview (module breadcrumb + title + description) | Self-closing or children |
 | `<TDRRef num="14" />` | `tdrReferences` (Teaching Decision Records) | `TDR-N: [title]` with hover preview (title + evidence_type + evidence_strength + 1-line summary) | Self-closing or children |
@@ -163,8 +166,11 @@ A photon is a packet of light.
 
 <Figure name="hubble-deep-field" caption="A deep-field image." />
 
-<KeyEquation id="wiens-law" title="Wien's Law">
-$$\lambda_{\text{peak}} = b \, T^{-1}$$
+{/* Chapter cites the registry entry; biography lives at
+    src/content/equations/wiens-law.mdx per ADR 0060. */}
+<KeyEquation refId="wiens-law">
+This relationship matters here because we want to map peak
+wavelength to temperature for the example star below.
 </KeyEquation>
 ```
 
@@ -199,7 +205,7 @@ import {
   ComprehensionGate,
   ConfidenceCheck,
   EffortLog,
-  EqRef,
+  EquationRef,
   FigureRef,
   GlossaryTerm,
   InteractiveCallout,
@@ -233,9 +239,9 @@ underpins every distance method.
 Every persistence-bearing component takes three threading props —
 `course`, `chapter`, `id` — which compose into the IndexedDB key
 ([ADR 0027](../decisions/0027-mdx-render-boundary-prop-threading.md)).
-The four cross-reference components (`<GlossaryTerm>`, `<EqRef>`,
+The four cross-reference components (`<GlossaryTerm>`, `<EquationRef>`,
 `<FigureRef>`, `<ChapterRef>`) take only a lookup prop (`name` /
-`slug`) plus optional children for custom anchor text — no
+`slug` / `refId`) plus optional children for custom anchor text — no
 persistence keys, since they don't own state.
 
 The `client:load` directive tells Astro to hydrate the component as
@@ -302,11 +308,13 @@ see ADR 0038 §2). `id` is also required; without it, two instances
 on the same page share an IndexedDB key and clobber each other.
 
 **Referencing a name/slug that doesn't exist in the index.**
-`<GlossaryTerm name="unknown">`, `<EqRef slug="unknown">`,
+`<GlossaryTerm name="unknown">`, `<EquationRef refId="unknown">`,
 `<FigureRef name="unknown">`, `<ChapterRef slug="unknown">` all fall
-back to bare-text render + dev `console.warn`. The PR-C4 audit pass
-catches this systematically (D4, E4, F2, C1 ERRORs); fix authoring
-errors at build time, not at runtime.
+back to bare-text render + dev `console.warn`. The audit pass
+catches this systematically (D4 / E4 / F2 / C1 for chapter-side
+miss; R1–R4 for cross-reference integrity between registry
+declarations and chapter citations); fix authoring errors at build
+time, not at runtime.
 
 ## When to use each component
 
@@ -320,16 +328,16 @@ errors at build time, not at runtime.
 | A flagged key insight (1–2 sentences) | `<Aside kind="key-insight">` |
 | A flagged key insight (multi-paragraph) | `<Callout variant="key-insight">` |
 | An image with caption + credit | `<Figure>` (registry-resolved) |
-| A named equation block with anchor | `<KeyEquation>` |
+| A named equation block citing a registry entry | `<KeyEquation refId="X">` (registry-resolved per [ADR 0060](../decisions/0060-registry-ecosystem.md)) |
 | Inline reference to a defined term | `<GlossaryTerm name="X">term</GlossaryTerm>` |
-| Inline reference to an equation | `<EqRef slug="X" />` |
+| Inline reference to an equation | `<EquationRef refId="X" />` |
 | Inline reference to a figure | `<FigureRef name="X" />` |
 | Inline reference to another chapter | `<ChapterRef slug="X" />` |
 | Inline reference to a Teaching Decision Record | `<TDRRef num="14" />` (per [ADR 0040](../decisions/0040-teaching-decision-records.md)) |
 | The chapter-opening "you will be able to..." list | `<LearningObjectives>` with `<Objective>` children |
 | One concept presented across multiple representational modes (prose + equation + figure) with explicit cross-bindings | `<MultiRep>` 🚧 with `<RepVerbal>` / `<RepEquation>` / `<RepFigure>` children. `<RepCode>` deferred (pending `<CodeCell>`); intuition framing lives in `<RepVerbal>` prose. |
 | A pedagogical intervention paired with a misconception (worked example, contrasting cases, bridging analogy, etc.) | `<Intervention type="..." addresses="this">` 🚧 nested inside a misconception `<Aside>` or `<Callout>` |
-| Observational meaning / assumptions / units / validity domain / common misuses of a `<KeyEquation>` | `<Observable>` / `<Assumption>` / `<Units>` / `<BreaksWhen>` / `<CommonMisuse>` 🚧 as biography children of `<KeyEquation>` |
+| Observational meaning / assumptions / units / validity domain / common misuses / derivation of an equation | `<Observable>` / `<Assumption>` / `<Units>` / `<BreaksWhen>` / `<CommonMisuse>` / `<DerivationStep>` as biography children in the equation's registry MDX body (`src/content/equations/<id>.mdx`). See [equation-registry-schema](equation-registry-schema.md). |
 | A single checkbox for a tracked item | `<InteractiveCheckbox>` |
 | A "predict before the answer" prompt | `<Predict>` |
 | A confidence rating (1–5 or 1–7) | `<ConfidenceCheck>` |
@@ -377,7 +385,10 @@ JSDoc:
 - [ADR 0042](../decisions/0042-pedagogy-contract-and-ai-contribution-ledger.md) — Pedagogy Contract + AI Contribution Ledger (course-level YAML + per-chapter frontmatter; gates the Notation Registry opt-in).
 - [ADR 0043](../decisions/0043-notation-registry-multirep-alignment-audit.md) — Notation Registry + `<MultiRep>` + Representation Alignment Audit. v1 ships NR1–NR4 + MR1, MR2, MR4, MR6 invariants (MR3 + MR5 deferred with `<RepCode>`). See [2026-05-17 design hardening](../../plans/2026-05-17-multirep-design.md).
 - [ADR 0044](../decisions/0044-misconception-graph-and-intervention-library.md) — Misconception Graph + Intervention Library + `<Intervention>`. MG1 + MG2 already ship; v1 sprint adds MG3 + MG4 + I1–I3 (I4 deferred until `move-index.ts` ships). See [2026-05-17 design hardening](../../plans/2026-05-17-intervention-design.md).
-- [ADR 0046](../decisions/0046-equation-biography.md) — Equation Biography (6 children of `<KeyEquation>`) + E7 + E8 + E9 audit invariants. See [2026-05-17 design hardening](../../plans/2026-05-17-equation-biography-design.md).
+- [ADR 0046](../decisions/0046-equation-biography.md) — Equation Biography (now 6 children + `<DerivationStep>`) + E7 + E8 + E9 audit invariants. See [2026-05-17 design hardening](../../plans/2026-05-17-equation-biography-design.md).
 - [ADR 0058](../decisions/0058-epistemic-component-contract.md) — Epistemic Component Contract (8-role taxonomy). MultiRep binds role via Notation Registry concept declaration; EquationBiography children declare role as hardcoded const.
+- [ADR 0060](../decisions/0060-registry-ecosystem.md) — Registry Ecosystem. Equation biographies move from chapter-inline to registry MDX bodies; `<KeyEquation refId>` + `<EquationRef refId>` cite the registry; R1–R4 audit invariants police citation/declaration integrity.
+- [ADR 0061](../decisions/0061-ai-optimized-codebase-design.md) — AI-optimized codebase design (six rules including docs-atomic-with-code).
+- [equation-registry-schema](equation-registry-schema.md) — the registry MDX shape (frontmatter + biography body).
 - [Component contract](component-contract.md) — the TypeScript interface every component implements.
 - [Add a custom component](../how-to/add-a-custom-component.md) — recipe for new components.
