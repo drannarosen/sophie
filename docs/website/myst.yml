@@ -61,6 +61,7 @@ project:
         - file: how-to/author-multireps.md
         - file: how-to/pair-misconceptions-with-interventions.md
         - file: how-to/author-equation-biographies.md
+        - file: how-to/notebooklm-recipe.md
         - file: how-to/run-visual-regression-locally.md
         - file: how-to/deploy-to-github-pages.md
     - title: Reference
@@ -107,6 +108,7 @@ project:
         - file: vision/design/index.md
         - file: vision/design/visual-polish-target.md
         - file: vision/design/interactive-figure-target.md
+        - file: vision/design/multimedia-portfolio.md
         - file: vision/design/dark-mode-palette.md
         - file: vision/design/theme-token-audit.md
         - file: vision/features/index.md

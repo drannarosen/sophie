@@ -221,3 +221,203 @@ zero ongoing. The cost is attention, not engineering.
       insufficient,
   (c) Sophie hosts a course with shared instructor team where
       asynchronous engagement signal is the only viable check.
+
+---
+
+## S8. Sonification components (`<Sonification>` over time-series)
+
+**What it is.** A `<Sonification src="…" mode="pitch-mapped" />`
+source component that maps an astronomy time-series — light curve,
+radial-velocity curve, pulsar timing residuals, asteroseismic mode
+spectrum, gravitational-wave strain — to Web-Audio output. Web Audio
+API + a thin Sophie wrapper component. Students click play and
+*hear* the signal in addition to (or alongside) seeing it plotted.
+
+**Why it might matter.** Astronomy is the field where sonification
+has the deepest pedagogical precedent and the cleanest data inputs.
+Wanda Díaz Merced's pioneering work using sound to analyze
+astrophysical signals, the
+[Audio Universe](https://www.audiouniverse.org/) exoplanet-tour
+project, NASA's [Universe of Sound](https://chandra.harvard.edu/sound/)
+Chandra sonifications, and the LIGO chirp-audio clips for
+gravitational-wave events all show the same thing: periodicity,
+beat patterns, and frequency relationships are *easier to hear than
+see*. Same component primitive would serve transit detection (Module
+2), pulsar timing + asteroseismology (stellar-evolution module), and
+gravitational-wave chirps (cosmology module). The accessibility win
+for low-vision students is real but isn't the headline — the
+epistemic win is that students perceive the signal directly, on a
+modality the plot can't reach.
+
+**Why it might not.** Additional source component to author + maintain
+(extractor, audit invariant, axe-core test). Anna is not committing
+to building it in ASTR 201 fa26; nothing in the existing chapter
+list requires audio to land the concept. Risk that one-off use cases
+don't pay back the component cost.
+
+**Estimated cost.** Small — ~1-2 days for component + extractor +
+audit invariant + axe-core. Web Audio API is mature and stable;
+no novel research required.
+
+**Status.**
+- 2026-05-17 — surfaced (speculative) during the multimedia portfolio
+  brainstorm. Deferred to preserve Cottrell + CAREER bandwidth for
+  sp/fa26.
+- Promotion criteria: a specific chapter (likely transit detection
+  in Module 2 or pulsar timing in the stellar-evolution module) has
+  a documented use case where the visual representation is
+  ambiguous and audio resolves it. Build the component when the
+  first concrete chapter authoring needs it, not before.
+
+---
+
+## S9. Historical-source guided readings (`<HistoricalSource>`)
+
+**What it is.** A `<HistoricalSource year="1929" authors="Hubble">`
+source component that wraps the *original published figure*
+(extracted from NASA ADS / NED PDFs) with Anna's modern annotation
+overlay. Canonical use cases for ASTR 201: Russell 1913 HR diagram,
+Hertzsprung 1911 color-magnitude diagram, Hubble 1929 velocity-
+distance diagram, Penzias & Wilson 1965 CMB measurement, Leavitt
+1912 period-luminosity relation.
+
+**Why it might matter.** Makes the observable → assumption →
+inference chain *visible at the moment science actually made it*.
+Reasoning-OS-aligned ([ADR 0058](../../decisions/0058-epistemic-component-contract.md))
+— historical figures are an unusually clean substrate for the
+eight-role contract because the original authors had to make every
+assumption and inference explicit in a way modern textbooks elide.
+Differentiation moat against generic textbooks: no competitor
+embeds original figures with role-coded epistemic annotation.
+AI-authorable: Anna provides the citation + key claim, AI proposes
+annotation structure, Anna redlines.
+
+**Why it might not.** Authoring cost per historical source is real
+(locate clean scan via ADS, write annotation prose tying original
+data to modern values, write epistemic context bridging old notation
+to current). Cumulative across modules — a "historical source per
+chapter" cadence would be ~12-15 sources for ASTR 201. Manageable
+but not free.
+
+**Estimated cost.** Component itself is small (~3-4 days). Per-source
+authoring is ~1-2 hours each. Total commitment is the authoring
+cost, not the platform cost.
+
+**Status.**
+- 2026-05-17 — surfaced (speculative) during the multimedia portfolio
+  brainstorm.
+- Promotion criteria: one chapter is manually authored in this
+  shape — most likely Hubble 1929 in the cosmology module, where
+  the redshift-distance argument is *especially* visible in the
+  original figure — and the affordance proves epistemically
+  distinctive compared to a generic figure caption.
+
+---
+
+## S10. Astronomy-native image-tour embeds (`<SkyTour>`)
+
+**What it is.** A Sophie wrapper component around mature astronomy
+catalog/atlas tools — [Aladin Lite](https://aladin.cds.unistra.fr/),
+[ESASky](https://sky.esa.int/), and the
+[WorldWide Telescope](https://worldwidetelescope.org/) — that
+records *tour stops* (named coordinates + zoom level + caption) so
+embeds aren't just free-pan widgets. Authoring shape:
+
+```mdx
+<SkyTour provider="aladin">
+  <TourStop coords="13h29m52.7s +47°11′43″" zoom="3'" survey="HST">
+    M51 — the Whirlpool Galaxy, a classic grand-design spiral.
+  </TourStop>
+  <TourStop coords="03h32m22s +47°37′" zoom="0.5°" survey="JWST">
+    The Pillars of Creation in M16, as JWST sees them in IR.
+  </TourStop>
+</SkyTour>
+```
+
+**Why it might matter.** Solves the image-tour use case that Manim
+handles poorly. ImageMobject pans are stiff; Manim's vector-first
+DNA fights photographic imagery. These astronomy-native tools
+already work — they're embeddable today via iframe — and they use
+*real catalog data* (HST, JWST, SDSS, Gaia overlays) that updates
+without authoring effort. The Sophie value-add is the tour-stop
+authoring layer + chapter-chrome integration.
+
+**Why it might not.** Three viable upstream tools (Aladin, ESASky,
+WWT); choosing one is load-bearing because cross-tool tour-stop
+portability is non-trivial. Authoring cost per tour is real (find
+canonical objects, write captions, calibrate zoom). No ASTR 201
+chapter has a *critical* unmet need today — image tours could land
+as plain iframes pending demand.
+
+**Estimated cost.** Small-medium (~3-4 days for wrapper + tour-stop
+schema + accessibility tests). Higher if cross-provider portability
+is in scope (probably not v1).
+
+**Status.**
+- 2026-05-17 — surfaced (speculative).
+- Promotion criteria: a chapter in the galaxies or cosmology module
+  has an image-tour use case Manim cannot serve, *and* a plain
+  iframe is too low-affordance for the pedagogical job (students
+  need guided stops, not free pan).
+
+---
+
+## S11. `sophie podcast` pipeline (role-grounded NotebookLM-shape)
+
+**What it is.** A `sophie podcast <chapter>` CLI command that
+generates a NotebookLM-shape two-host conversational podcast script
+from structured chapter source (pedagogy index, role-contract
+annotations, misconception graph, equation biographies), then pipes
+to a pluggable TTS service ([ElevenLabs](https://elevenlabs.io/),
+[OpenAI gpt-4o-mini-tts](https://platform.openai.com/docs/guides/text-to-speech),
+or open-source [Coqui TTS](https://github.com/coqui-ai/TTS))
+to produce mp3. Sister speculative entry to the
+[NotebookLM how-to recipe](../../how-to/notebooklm-recipe.md)
+which is the cheap-path-today alternative.
+
+**Why it might matter.** Sophie's structured chapter source gives a
+self-hosted pipeline a substantive accuracy advantage over
+NotebookLM's prose-only grounding. NotebookLM has to infer the
+epistemic structure of a chapter from its prose surface; a Sophie-
+aware pipeline reads role-coded source directly — observable,
+model, inference, misconception are *labeled at the schema level*,
+not pattern-matched from text. Self-hostable, no Google dependency,
+useful for OSS-adopting Sophie instructors who want NotebookLM
+quality without the closed-platform reliance.
+
+**Why it might not.** [NotebookLM](https://notebooklm.google.com/)
+already covers Anna's personal use case effectively for free (Path
+1 from the brainstorm). The `sophie podcast` pipeline (Path 2) only
+earns its place if one of three triggers fires:
+
+1. NotebookLM's terms degrade (paywall, retention change, API
+   changes) such that the free workflow stops working.
+2. Sophie gains real adopting instructors who need a self-hostable
+   equivalent for institutional or licensing reasons.
+3. The role-grounded-script accuracy claim is validated against
+   NotebookLM in a controlled comparison and proves substantively
+   better — at which point the pipeline becomes a Sophie
+   differentiation claim, not just a fallback.
+
+None of these are true in 2026-05. All are plausible in 18 months.
+
+**Estimated cost.** Medium — roughly 1-2 weeks of focused work
+covering prompt design, pedagogy-index grounding, TTS pipeline, and
+audio embed chrome. Hard to justify pre-tenure while NotebookLM works.
+
+**Status.**
+- 2026-05-17 — surfaced (speculative). For ASTR 201 sp/fa26, Anna
+  will record her own voice as chapter audio (no synthetic pipeline
+  needed at small-class scale). The
+  [NotebookLM recipe](../../how-to/notebooklm-recipe.md) covers
+  students as a study-aid path and adopting instructors as a cheap
+  fallback.
+- Promotion criteria: any of (a) NotebookLM terms degrade,
+  (b) ≥1 adopting Sophie instructor explicitly needs a self-hosted
+  podcast pipeline, or (c) a controlled comparison shows the role-
+  grounded-script approach produces substantively more accurate
+  pedagogical audio than NotebookLM's prose-grounded approach.
+
+See also:
+[multimedia portfolio map](../design/multimedia-portfolio.md) — the
+brainstorm output that produced S8-S11.
