@@ -34,7 +34,7 @@ export interface Props {
 
 const { chapter, heading, headingLevel = 2 } = Astro.props;
 
-const HeadingTag = `h${headingLevel}` as "h2" | "h3" | "h4";
+const HeadingTag = `h${headingLevel}` as const;
 
 const inChapter: KeyInsightEntry[] = keyInsights.filter(
   (k) => k.chapter === chapter

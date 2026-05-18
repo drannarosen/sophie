@@ -53,7 +53,7 @@ const {
   headingLevel = 2,
 } = Astro.props;
 
-const HeadingTag = `h${headingLevel}` as "h2" | "h3" | "h4";
+const HeadingTag = `h${headingLevel}` as const;
 
 const inChapter: FigureUsageEntry[] = figureUsages.filter(
   (u) => u.chapter === chapter
