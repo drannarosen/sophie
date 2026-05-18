@@ -140,6 +140,26 @@ describe("E7 INFO — biography lacks <Observable>", () => {
     expect(report.info.filter((f) => f.code === "E7")).toHaveLength(0);
   });
 
+  it("fires when biography has ONLY <BreaksWhen> (matrix completion — every non-Observable child trips E7)", () => {
+    // Reviewer test gap 6b: the matrix tests assumptions / units /
+    // common_misuses but didn't pin the breaks_when-only case. E7
+    // fires whenever biography is defined and Observable is absent,
+    // regardless of which other slot is populated.
+    const index = emptyIndex();
+    index.equations = [
+      makeEquation({
+        biography: makeBiography({
+          breaks_when: {
+            body: "non-thermal.",
+            epistemicRole: "approximation",
+          },
+        }),
+      }),
+    ];
+    const report = runPedagogyAudit(index);
+    expect(report.info.filter((f) => f.code === "E7")).toHaveLength(1);
+  });
+
   it("fires per equation (multiple incomplete biographies)", () => {
     const index = emptyIndex();
     index.equations = [
@@ -422,6 +442,39 @@ describe("NR3 ERROR — registry symbol-collision across concept.ids (NR-gated)"
     const report = runPedagogyAudit(index);
     expect(report.errors.filter((f) => f.code === "NR3")).toHaveLength(0);
   });
+
+  it("STILL fires NR3 AND adds all colliding concepts to referencedConceptIds (no NR2 for either)", () => {
+    // Reviewer test gap 6a: lock the behavior where a collision (NR3
+    // error) doesn't suppress the NR2-promote logic. The current
+    // implementation iterates `symbolToConcepts.get(symbol)` and
+    // adds EVERY matching concept.id to referencedConceptIds — that
+    // way both concepts get the orphan-status promotion even though
+    // the collision separately fires NR3. Locks against a future
+    // "be conservative when colliding" refactor that would suppress
+    // both concepts' promotion and incorrectly emit two NR2 findings.
+    const index = emptyIndex();
+    // An equation references the colliding symbol.
+    index.equations = [makeEquation({ symbols: ["r"] })];
+    const registry = makeRegistry([
+      {
+        id: "orbital-radius",
+        verbal_label: "orbital radius",
+        canonical_symbol: "r",
+        latex: "r",
+      },
+      {
+        id: "stellar-radius",
+        verbal_label: "stellar radius",
+        canonical_symbol: "r",
+        latex: "R",
+      },
+    ]);
+    const report = runPedagogyAudit(index, { notationRegistry: registry });
+    // NR3 still fires — the collision is independent of references.
+    expect(report.errors.filter((f) => f.code === "NR3")).toHaveLength(1);
+    // Both concepts promoted out of orphan status — neither fires NR2.
+    expect(report.info.filter((f) => f.code === "NR2")).toHaveLength(0);
+  });
 });
 
 // =====================================================================
@@ -510,6 +563,31 @@ describe("NR4 WARNING — registry symbol has units; equation lacks <Units> (NR-
     // NR1 fires; NR4 does not (duplicate nudge would be noise).
     expect(report.warnings.filter((f) => f.code === "NR4")).toHaveLength(0);
     expect(report.warnings.filter((f) => f.code === "NR1")).toHaveLength(1);
+  });
+
+  it("fires per (equation, symbol) — two equations both missing <Units T> produce 2 findings", () => {
+    // Reviewer test gap 6c: pin per-instance counting. NR4 is an
+    // authoring nudge that should surface once per missing pair so
+    // both edit sites are visible to the author.
+    const index = emptyIndex();
+    index.equations = [
+      makeEquation({ slug: "eq-a", anchor: "eq-a", symbols: ["T"] }),
+      makeEquation({ slug: "eq-b", anchor: "eq-b", symbols: ["T"] }),
+    ];
+    const registry = makeRegistry([
+      {
+        id: "temperature",
+        verbal_label: "temperature",
+        canonical_symbol: "T",
+        latex: "T",
+        units: "K",
+      },
+    ]);
+    const report = runPedagogyAudit(index, { notationRegistry: registry });
+    const nr4 = report.warnings.filter((f) => f.code === "NR4");
+    expect(nr4).toHaveLength(2);
+    expect(nr4[0]?.location?.anchor).toBe("eq-a");
+    expect(nr4[1]?.location?.anchor).toBe("eq-b");
   });
 });
 
