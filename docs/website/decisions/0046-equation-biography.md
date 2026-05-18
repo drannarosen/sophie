@@ -774,3 +774,64 @@ Reserved schema slots for non-breaking v2 evolution:
 | δ  | E7 + E8 + E9 audit invariants + per-invariant tests |
 
 No PR-ε — rendering happens in existing surfaces, no aggregator needed.
+
+### R7 — Phase 1 complete (2026-05-18)
+
+All four PRs in the α → β → γ → δ cadence shipped and squash-merged to
+`main`:
+
+| PR | Shipped | Status |
+|----|---------|--------|
+| α  | [#91](https://github.com/drannarosen/sophie/pull/91) | `BiographySchema` + 5 sub-schemas + `EquationEntry.biography?` + `EquationEntry.symbols`; every schema `.strict()` per the §F1 forward-compat clause |
+| β  | [#92](https://github.com/drannarosen/sophie/pull/92) | 5 biography components (`<Observable>` / `<Assumption>` / `<Units>` / `<BreaksWhen>` / `<CommonMisuse>`) + `KeyEquation.symbols` prop + `<EqRef>` hover compact biography summary + `<ChapterEquations>` + `<CourseEquations>` full biography render via shared `BiographyRender.astro` |
+| γ  | [#93](https://github.com/drannarosen/sophie/pull/93) | `buildBiographyFromKeyEquationChildren` extractor + Wien's law smoke fixture (`examples/smoke/src/content/chapters/01-foundations/wiens-law-fixture.mdx`) |
+| δ  | [#94](https://github.com/drannarosen/sophie/pull/94) | E7 INFO + E8 WARNING + E9 INFO audit invariants + NR1/NR3/NR4 (closes ADR 0043 §R5) + NR2 modification (symbols now count as a reference signal) |
+
+**Cross-family work landed in the same sprint**:
+- ADR 0058 `EpistemicRoleSchema.extract([...])` pattern proved out at scale
+  (see ADR 0058 §R-greenfield revision note for the canonical-pattern call-out).
+- Cross-family composition (KeyEquation ↔ MultiRep ↔ Aside misconception ↔
+  Intervention) traced end-to-end in the Phase B Reasoning OS core audit
+  §2.7 (`docs/reviews/2026-05-17-reasoning-os-core.md`).
+- Audit verdict: A− (91/100); cleanup PR-A
+  ([#95](https://github.com/drannarosen/sophie/pull/95)) brought the
+  audit-header docstring + schema `.strict()` symmetry back in line.
+
+**`EpistemicRoleSchema.extract([...])` compile-time grounding** is the
+canonical role-declaration pattern for any future role-bearing
+component:
+
+```ts
+// In the schema file (@sophie/core/src/schema/):
+import { EpistemicRoleSchema } from "./epistemic-role.js";
+
+export const ObservableEntrySchema = z
+  .object({
+    body: NonEmptyString,
+    epistemicRole: EpistemicRoleSchema.extract(["observable"]),
+  })
+  .strict();
+```
+
+```ts
+// In the component file (@sophie/components/src/components/Observable/):
+import type { EpistemicRole } from "@sophie/core/schema";
+
+export const OBSERVABLE_EPISTEMIC_ROLE =
+  "observable" as const satisfies EpistemicRole;
+```
+
+`EpistemicRoleSchema.extract([...])` narrows the 8-role enum to a
+single literal at compile time AND at parse time — a typo like
+`"observabel"` fails type-check *and* runtime parse. Combined with
+`as const satisfies EpistemicRole` on the component-side const, the
+binding is grounded structurally rather than by inline strings.
+
+**Deferred to a follow-on pass** (not in scope for Phase 1):
+- Per-equation page route (out of scope — see §Alternatives considered).
+- `assumption-index.ts` catalog (§F1 forward-compat; promotes
+  `AssumptionEntrySchema.type` from free-form slug to enum once
+  recurring patterns emerge across courses).
+- E10 (and similar) misconception-graph cross-ref audit invariants
+  for `<CommonMisuse misconception="X">` — scheduled for PR-D of the
+  Session 4 audit-fix sprint (see audit §P3-2).
