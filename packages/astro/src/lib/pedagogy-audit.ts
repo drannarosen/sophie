@@ -78,10 +78,13 @@ import { EquationEntrySchema, slugify } from "@sophie/core/schema";
  *   NR3 ERROR    Notation Registry symbol bound to multiple concepts
  *                (collision; symbol resolution ambiguous; ADR 0043 §R5;
  *                PR-δ #94).
- *   NR4 WARNING  `<KeyEquation symbols={…}>` declares a symbol whose
- *                registry concept has a `units:` value, but the equation
- *                lacks a `<Units symbol="…">` biography child (ADR 0043
- *                §R5; PR-δ #94).
+ *   NR4 WARNING  Equation declares a symbol that has no units anywhere:
+ *                neither in the notation registry concept's `units` field
+ *                nor as a `<Units symbol="…">` biography child. Per ADR
+ *                0046 §R10 the registry path is preferred (one source of
+ *                truth across every citing equation); `<Units>` children
+ *                are the fallback for equation-local symbols. (ADR 0043
+ *                §R5 + ADR 0046 §R10.)
  *   MR1 ERROR    `<MultiRep concept="X">` references a concept not present
  *                in `notation-registry.yaml` (ADR 0043).
  *   MR2 WARNING  `<MultiRep><RepEquation symbol="…">` doesn't match the
@@ -1022,15 +1025,24 @@ export function runPedagogyAudit(
     }
 
     // -------------------------------------------------------------------
-    // NR4 WARNING — registry symbol has explicit units; KeyEquation
-    //               declares the symbol but lacks a <Units symbol="X">
-    //               biography child for it
+    // NR4 WARNING — equation declares a symbol with NO units anywhere
     // -------------------------------------------------------------------
-    // When the registry author specified `units: "K"` for a concept
-    // and an equation lists the concept's canonical_symbol in its
-    // `symbols` prop, the equation SHOULD also declare a corresponding
-    // <Units> biography child so readers see the unit context inline.
-    // Fires per (equation, symbol-without-units) pair.
+    // Per ADR 0046 §R10: the notation registry is the **primary source
+    // of truth** for symbol units. NR4 fires only when neither the
+    // registry concept for the symbol NOR a biography <Units> child
+    // provides units — i.e., a reader hitting this symbol would have no
+    // way to know its units. Resolution priorities (preferred → fallback):
+    //   1. Add `units` to the notation-registry concept (one place,
+    //      shared across every equation that references the concept).
+    //   2. Add <Units symbol="X" unit="..." /> in the registry MDX body
+    //      (only when the symbol is genuinely equation-local).
+    // NR4 does NOT fire when:
+    //   - The registry concept has `units` (registry IS the source of
+    //     truth; demanding a <Units> child would duplicate per §R10).
+    //   - The equation already has <Units symbol="X"> for this symbol.
+    //   - The symbol resolves to no registry concept (NR1 already
+    //     fires; piling on NR4 would be noise).
+    // Fires per (equation, symbol-without-any-units-source) pair.
     for (const eq of index.equations) {
       const declaredUnitSymbols = new Set(
         (eq.biography?.units ?? []).map((u) => u.symbol)
@@ -1039,17 +1051,20 @@ export function runPedagogyAudit(
         if (declaredUnitSymbols.has(symbol)) continue;
         const concepts = symbolToConcepts.get(symbol);
         if (!concepts) continue; // NR1 already fired for unknown symbols.
-        // Any registered concept with units that's bound to this symbol
-        // counts — if a collision exists (NR3), being conservative
-        // here would suppress a legitimate nudge.
+        // Per §R10: registry concept WITH units is itself the source.
+        // Skip NR4 if any matching concept has non-empty units.
         const conceptWithUnits = concepts.find(
           (c) => c.units !== undefined && c.units.length > 0
         );
-        if (!conceptWithUnits) continue;
+        if (conceptWithUnits) continue;
+        // Registry has concept(s) for this symbol, but none declare
+        // units, AND no <Units> biography child fills the gap.
+        const firstConcept = concepts[0];
+        if (!firstConcept) continue;
         warnings.push({
           severity: "WARNING",
           code: "NR4",
-          message: `NR4: equation registry entry "${eq.id}" declares symbol "${symbol}" (concept "${conceptWithUnits.id}", units "${conceptWithUnits.units}") but lacks a <Units symbol="${symbol}"> biography child. Resolution: add <Units symbol="${symbol}" unit="${conceptWithUnits.units}" /> inside the registry MDX body.`,
+          message: `NR4: equation registry entry "${eq.id}" declares symbol "${symbol}" (concept "${firstConcept.id}") but no units are declared anywhere — neither in the notation registry concept's \`units\` field nor as a <Units symbol="${symbol}"> biography child. Resolution: add \`units\` to the notation registry concept (preferred per ADR 0046 §R10), or add <Units symbol="${symbol}" unit="..." /> inside the registry MDX body for equation-local symbols.`,
           location: { anchor: eq.id },
         });
       }

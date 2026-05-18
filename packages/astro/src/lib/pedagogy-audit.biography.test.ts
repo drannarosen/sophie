@@ -19,7 +19,7 @@ import { runPedagogyAudit } from "./pedagogy-audit.ts";
  *   E9  (INFO)     <CommonMisuse> lacks misconception= cross-ref
  *   NR1 (WARNING)  <KeyEquation symbols=[...]> declares unregistered symbol  (NR-gated)
  *   NR3 (ERROR)    registry: same symbol bound to multiple concept.ids  (NR-gated)
- *   NR4 (WARNING)  registry symbol has units; equation lacks <Units> for it  (NR-gated)
+ *   NR4 (WARNING)  symbol has NO units anywhere (per ADR 0046 §R10)  (NR-gated)
  *
  * Plus the NR2 modification: KeyEquation.symbols entries promote the
  * matching concept out of orphan status.
@@ -608,11 +608,14 @@ describe("NR3 ERROR — registry symbol-collision across concept.ids (NR-gated)"
 });
 
 // =====================================================================
-// NR4 — registry symbol has units; equation lacks <Units> for it (NR-gated)
+// NR4 — symbol has no units anywhere (registry OR <Units>); ADR 0046 §R10
 // =====================================================================
 
-describe("NR4 WARNING — registry symbol has units; equation lacks <Units> (NR-gated)", () => {
-  it("fires when equation declares the symbol but lacks a matching <Units>", () => {
+describe("NR4 WARNING — symbol has no units anywhere (per ADR 0046 §R10) (NR-gated)", () => {
+  it("fires when registry concept lacks `units` AND equation lacks a matching <Units>", () => {
+    // Per ADR 0046 §R10: NR4 fires only when neither source of truth
+    // exists. Registry knows the concept (so NR1 stays silent) but
+    // doesn't declare units, and the equation didn't fill the gap.
     const index = emptyIndex();
     index.equations = [
       makeEquation({
@@ -628,17 +631,36 @@ describe("NR4 WARNING — registry symbol has units; equation lacks <Units> (NR-
         verbal_label: "temperature",
         canonical_symbol: "T",
         latex: "T",
-        units: "K",
+        // No `units` — and no <Units> child below — so NR4 fires.
       },
     ]);
     const report = runPedagogyAudit(index, { notationRegistry: registry });
     const nr4 = report.warnings.filter((f) => f.code === "NR4");
     expect(nr4).toHaveLength(1);
     expect(nr4[0]?.message).toContain('"T"');
-    expect(nr4[0]?.message).toContain('"K"');
+    expect(nr4[0]?.message).toMatch(/no units are declared anywhere/);
   });
 
-  it("does NOT fire when equation declares a matching <Units>", () => {
+  it("does NOT fire when the registry concept declares `units` (§R10: registry is the source of truth)", () => {
+    // Pre-§R10 NR4 nagged here ("you have units in the registry, you
+    // should ALSO add a <Units> child"). §R10 inverts this: the registry
+    // path is preferred and a duplicate <Units> child is now noise.
+    const index = emptyIndex();
+    index.equations = [makeEquation({ symbols: ["T"] })];
+    const registry = makeRegistry([
+      {
+        id: "temperature",
+        verbal_label: "temperature",
+        canonical_symbol: "T",
+        latex: "T",
+        units: "K",
+      },
+    ]);
+    const report = runPedagogyAudit(index, { notationRegistry: registry });
+    expect(report.warnings.filter((f) => f.code === "NR4")).toHaveLength(0);
+  });
+
+  it("does NOT fire when equation declares a matching <Units> (regardless of registry units)", () => {
     const index = emptyIndex();
     index.equations = [
       makeEquation({
@@ -654,23 +676,8 @@ describe("NR4 WARNING — registry symbol has units; equation lacks <Units> (NR-
         verbal_label: "temperature",
         canonical_symbol: "T",
         latex: "T",
-        units: "K",
-      },
-    ]);
-    const report = runPedagogyAudit(index, { notationRegistry: registry });
-    expect(report.warnings.filter((f) => f.code === "NR4")).toHaveLength(0);
-  });
-
-  it("does NOT fire when the registry concept has no `units` field", () => {
-    const index = emptyIndex();
-    index.equations = [makeEquation({ symbols: ["T"] })];
-    const registry = makeRegistry([
-      {
-        id: "temperature",
-        verbal_label: "temperature",
-        canonical_symbol: "T",
-        latex: "T",
-        // No `units` — no nudge to add a <Units> child.
+        // No `units` on the registry side — but the <Units> child
+        // covers it, so NR4 stays silent.
       },
     ]);
     const report = runPedagogyAudit(index, { notationRegistry: registry });
@@ -695,10 +702,10 @@ describe("NR4 WARNING — registry symbol has units; equation lacks <Units> (NR-
     expect(report.warnings.filter((f) => f.code === "NR1")).toHaveLength(1);
   });
 
-  it("fires per (equation, symbol) — two equations both missing <Units T> produce 2 findings", () => {
-    // Reviewer test gap 6c: pin per-instance counting. NR4 is an
-    // authoring nudge that should surface once per missing pair so
-    // both edit sites are visible to the author.
+  it("fires per (equation, symbol) — two equations sharing a registered-but-unitless symbol produce 2 findings", () => {
+    // Per-instance counting: NR4 should surface once per missing pair
+    // so both edit sites are visible to the author. Each fix removes
+    // one finding.
     const index = emptyIndex();
     index.equations = [
       makeEquation({ id: "eq-a", symbols: ["T"] }),
@@ -710,7 +717,7 @@ describe("NR4 WARNING — registry symbol has units; equation lacks <Units> (NR-
         verbal_label: "temperature",
         canonical_symbol: "T",
         latex: "T",
-        units: "K",
+        // No `units` — neither equation provides a <Units> child either.
       },
     ]);
     const report = runPedagogyAudit(index, { notationRegistry: registry });
@@ -859,22 +866,26 @@ describe("integration — full smoke scenario", () => {
   // synthetic-AST isolation tests above: this is the "what if a chapter
   // ships with a deliberately-broken registry/equation combo" scenario.
   // Mirrors the positive test's shape so the contrast is explicit.
+  // Post-§R10: the NR4 trigger requires registry concepts WITHOUT
+  // `units` (since registry-with-units is now the source of truth and
+  // no longer prompts NR4). The collision scenario below has neither
+  // concept declaring units.
   it("deliberately-broken Wien's-law fixture fires NR1 + NR3 + NR4 together", () => {
     const index = emptyIndex();
     index.equations = [
       makeEquation({
         // Triggers NR1: "X_unregistered" is not in the registry.
-        // "T" IS in the registry but registry concept declares `units: "K"`
-        // and the biography below has NO <Units symbol="T"> child →
-        // triggers NR4 (registry symbol has units; equation lacks <Units>).
+        // "T" IS in the registry but neither colliding concept declares
+        // `units`, and the biography below has NO <Units symbol="T">
+        // child → triggers NR4 (no source of truth for T's units).
         symbols: ["T", "X_unregistered"],
         biography: makeBiography({
           observable: {
             body: "Peak wavelength.",
             epistemicRole: "observable",
           },
-          // Note: NO units entry for T (despite T being a registry symbol
-          // with units), so NR4 fires for T.
+          // Note: NO units entry for T, and the registry doesn't
+          // declare units either → NR4 fires for T.
         }),
       }),
     ];
@@ -886,14 +897,14 @@ describe("integration — full smoke scenario", () => {
         verbal_label: "temperature",
         canonical_symbol: "T",
         latex: "T",
-        units: "K",
+        // No `units` (forces NR4 to fire per §R10).
       },
       {
         id: "time-of-flight",
         verbal_label: "time of flight",
         canonical_symbol: "T",
         latex: "T",
-        units: "s",
+        // No `units` either.
       },
     ]);
 
@@ -909,12 +920,10 @@ describe("integration — full smoke scenario", () => {
     expect(nr3).toHaveLength(1);
     expect(nr3[0]?.message).toMatch(/"T".*multiple concepts/);
 
-    // NR4 WARNING — registry concept "T" declares units but equation
-    // lacks <Units symbol="T">. Fires once per matching registry
-    // concept; with the NR3 collision both registry concepts share "T",
-    // so NR4 fires for each — the deliberate-over-conservative shape
-    // documented in pedagogy-audit.ts ("NR3 surfaces multi-concept
-    // collisions separately; here we accept any matching concept").
+    // NR4 WARNING — symbol "T" has no units anywhere (no registry
+    // units, no <Units> child). Fires once per (equation, symbol)
+    // pair — here that's one finding for the single equation +
+    // single unitless symbol "T".
     const nr4 = report.warnings.filter((f) => f.code === "NR4");
     expect(nr4.length).toBeGreaterThanOrEqual(1);
     expect(nr4[0]?.message).toMatch(/"T"/);
