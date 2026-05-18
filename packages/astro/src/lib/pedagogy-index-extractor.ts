@@ -433,6 +433,14 @@ function extractFirstTex(children: ReadonlyArray<unknown>): string | null {
  * const must agree (compile-time guarantee via
  * `as const satisfies EpistemicRole`). Surfaces the queryable
  * epistemic layer (design §F5) without runtime role validation.
+ *
+ * Contract scope (render/audit split): this helper owns *extraction*
+ * — produces the `Biography` index entry from JSX children. The audit
+ * (E7/E8/E9 in PR-δ) consumes that populated entry. If v2 grows a
+ * biography-allowlist invariant (e.g., "warn on unknown JSX children
+ * of `<KeyEquation>`"), it lives in `pedagogy-audit.ts`, not here —
+ * the extractor must stay structurally permissive so authors can
+ * freely embed prose + cross-references inside KeyEquation bodies.
  */
 function buildBiographyFromKeyEquationChildren(
   parent: { children: ReadonlyArray<unknown> },

@@ -417,6 +417,93 @@ describe("extractEquations — biography (PR-γ)", () => {
     expect(entry?.symbols).toEqual([]);
     expect(entry?.biography).toBeUndefined();
   });
+
+  test("biography children authored in any source order populate canonical slots correctly (order-independence)", () => {
+    // Per ADR 0046's authoring rules: "Biography children in any order;
+    // `<KeyEquation>` walker handles serialization." The schema imposes
+    // canonical field ordering (observable / assumptions / units /
+    // breaks_when / common_misuses); the source-doc order is not
+    // load-bearing. This test locks the walker against a future refactor
+    // that accidentally introduces order-dependence.
+    const tree = root([
+      mdxKeyEquation(
+        [jsxAttr("id", "wiens-law"), jsxAttr("title", "Wien's Law")],
+        [
+          mathBlock("x = 1"),
+          // Source order: BreaksWhen → CommonMisuse → Units → Assumption → Observable
+          // (reverse of canonical slot order)
+          mdxBiographyChild("BreaksWhen", [], [para("Breaks-when body.")]),
+          whitespace(),
+          mdxBiographyChild(
+            "CommonMisuse",
+            [jsxAttr("misconception", "some-misc")],
+            [para("Misuse body.")]
+          ),
+          whitespace(),
+          mdxBiographyChild("Units", [
+            jsxAttr("symbol", "T"),
+            jsxAttr("unit", "K"),
+          ]),
+          whitespace(),
+          mdxBiographyChild(
+            "Assumption",
+            [jsxAttr("type", "thermal-equilibrium")],
+            [para("LTE.")]
+          ),
+          whitespace(),
+          mdxBiographyChild("Observable", [], [para("Peak wavelength.")]),
+        ]
+      ),
+    ]);
+    const [entry] = extractEquations(tree as never, "ch");
+    // All five slots populate regardless of source order.
+    expect(entry?.biography?.observable?.epistemicRole).toBe("observable");
+    expect(entry?.biography?.assumptions).toHaveLength(1);
+    expect(entry?.biography?.assumptions[0]?.type).toBe("thermal-equilibrium");
+    expect(entry?.biography?.units).toHaveLength(1);
+    expect(entry?.biography?.units[0]?.symbol).toBe("T");
+    expect(entry?.biography?.breaks_when?.epistemicRole).toBe("approximation");
+    expect(entry?.biography?.common_misuses).toHaveLength(1);
+    expect(entry?.biography?.common_misuses[0]?.misconception).toBe(
+      "some-misc"
+    );
+  });
+
+  test("multiple list-type biography children preserve source order within their slot (lists are stable, slots are canonical)", () => {
+    // Within a list-type slot (assumptions, units, common_misuses),
+    // source order IS preserved — readers see assumptions in the order
+    // the author wrote them. Across slots, canonical order applies (per
+    // BiographyRender.astro). Lock the list-stable contract here.
+    const tree = root([
+      mdxKeyEquation(
+        [jsxAttr("id", "wiens-law"), jsxAttr("title", "Wien's Law")],
+        [
+          mathBlock("x = 1"),
+          mdxBiographyChild(
+            "Assumption",
+            [jsxAttr("type", "first")],
+            [para("First.")]
+          ),
+          mdxBiographyChild(
+            "Assumption",
+            [jsxAttr("type", "second")],
+            [para("Second.")]
+          ),
+          mdxBiographyChild(
+            "Assumption",
+            [jsxAttr("type", "third")],
+            [para("Third.")]
+          ),
+        ]
+      ),
+    ]);
+    const [entry] = extractEquations(tree as never, "ch");
+    expect(entry?.biography?.assumptions.map((a) => a.type)).toEqual([
+      "first",
+      "second",
+      "third",
+    ]);
+  });
 });
 
 describe("extractEquations — symbols (PR-δ' bundle per ADR 0043 §R5)", () => {
@@ -439,6 +526,34 @@ describe("extractEquations — symbols (PR-δ' bundle per ADR 0043 §R5)", () =>
     const tree = root([
       mdxKeyEquation(
         [jsxAttr("id", "wiens-law"), jsxAttr("title", "Wien's Law")],
+        [mathBlock("x = 1")]
+      ),
+    ]);
+    const [entry] = extractEquations(tree as never, "ch");
+    expect(entry?.symbols).toEqual([]);
+  });
+
+  test("symbols defaults to [] when the prop value is malformed JSON (parse-failure path)", () => {
+    // readStringListAttr's `try { JSON.parse(...) } catch { continue; }`
+    // returns undefined when the expression doesn't parse to an array of
+    // strings; the extractor then defaults via `attrs.symbols ?? []`. This
+    // is the resilience path — extractor doesn't throw on author typos
+    // (the audit-time NR invariants would surface the empty symbols list
+    // as a missing-declaration finding in PR-δ).
+    const tree = root([
+      mdxKeyEquation(
+        [
+          jsxAttr("id", "wiens-law"),
+          jsxAttr("title", "Wien's Law"),
+          {
+            type: "mdxJsxAttribute",
+            name: "symbols",
+            value: {
+              type: "mdxJsxAttributeValueExpression",
+              value: "not-valid-json",
+            },
+          },
+        ],
         [mathBlock("x = 1")]
       ),
     ]);
