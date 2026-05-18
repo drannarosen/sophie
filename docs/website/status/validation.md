@@ -25,10 +25,10 @@ block (ADR 0056). Regenerated on every build; suppressed when
 |---|---|
 | Validated | 14 |
 | In progress | 8 |
-| Unvalidated | 60 |
+| Unvalidated | 61 |
 | Re-validation needed | 0 |
 | Missing block | 0 |
-| Total | 82 |
+| Total | 83 |
 
 ## Evidence kinds
 
@@ -109,6 +109,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0057-visual-regression-baseline.md](/visual-regression-baseline/) | unvalidated | — | — |  |
 | [docs/website/decisions/0058-epistemic-component-contract.md](/epistemic-component-contract/) | unvalidated | — | — |  |
 | [docs/website/decisions/0059-linked-representation-state-primitive.md](/linked-representation-state-primitive/) | unvalidated | — | — |  |
+| [docs/website/decisions/0060-registry-ecosystem.md](/registry-ecosystem/) | unvalidated | — | — |  |
 
 ### Reference docs
 
