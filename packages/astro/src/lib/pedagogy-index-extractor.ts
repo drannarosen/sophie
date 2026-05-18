@@ -527,10 +527,15 @@ function buildBiographyFromKeyEquationChildren(
         body,
         ...(misconception ? { misconception } : {}),
       });
+      continue;
     }
 
-    // Non-biography JSX children are valid (e.g., <EqRef>, <Aside>, etc.
-    // could legitimately appear in framing prose). Skip silently.
+    // Non-biography JSX (anything other than the five biography children
+    // above) is silently skipped — <KeyEquation> legitimately contains
+    // other JSX in framing prose (e.g., <EqRef>, <GlossaryTerm>). The
+    // audit (E7/E8/E9 in PR-δ) consumes the populated biography only;
+    // if v2 grows a biography-allowlist invariant, it lives in
+    // pedagogy-audit.ts, not here.
   }
 
   const hasAnyBiography =
