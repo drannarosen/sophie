@@ -13,6 +13,7 @@ import {
   Assumption,
   BreaksWhen,
   CommonMisuse,
+  EqRef,
   KeyEquation,
   Observable,
   Units,
@@ -79,3 +80,13 @@ wavelengths; cooler sources peak redder.
     cooler gas.
   </CommonMisuse>
 </KeyEquation>
+
+## Cross-reference exercise
+
+Hovering <EqRef slug="wiens-law-smoke" client:load>Wien's law</EqRef>
+opens the compact-biography summary popover — assumption + misuse
+counts plus the validity-domain slug. This in-page self-cite exists
+so the Playwright e2e suite
+(`examples/smoke/e2e/eq-ref-biography.spec.ts`) can exercise the full
+popover-open + biography-summary render path against real fixture
+data per ADR 0046 design §"Surface 1" + Phase B audit P2-2.
