@@ -70,25 +70,27 @@ import { KeyEquation } from "./KeyEquation.tsx";
 
 describe("<KeyEquation> (ADR 0060 registry-shaped)", () => {
   it("renders the registry entry's title as the section landmark name", () => {
-    render(<KeyEquation refId="wiens-law" />);
+    render(<KeyEquation refId='wiens-law' />);
     const region = screen.getByRole("region", { name: "Wien's Law" });
     expect(region).toBeInTheDocument();
   });
 
   it("sets the outer DOM id to the registry entry id (hash-anchor support)", () => {
-    const { container } = render(<KeyEquation refId="wiens-law" />);
+    const { container } = render(<KeyEquation refId='wiens-law' />);
     expect(container.querySelector("#wiens-law")).not.toBeNull();
   });
 
   it("renders biography Observable / Assumption / CommonMisuse cards from the registry entry", () => {
-    render(<KeyEquation refId="wiens-law" />);
+    render(<KeyEquation refId='wiens-law' />);
     expect(screen.getByText(/Observable\./)).toBeInTheDocument();
-    expect(screen.getByText(/Assumption \(thermal-equilibrium\)\./)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Assumption \(thermal-equilibrium\)\./)
+    ).toBeInTheDocument();
     expect(screen.getByText(/Common misuse\./)).toBeInTheDocument();
   });
 
   it("renders the derivation accordion COLLAPSED by default", () => {
-    const { container } = render(<KeyEquation refId="wiens-law" />);
+    const { container } = render(<KeyEquation refId='wiens-law' />);
     const details = container.querySelector("details");
     expect(details).not.toBeNull();
     expect(details?.hasAttribute("open")).toBe(false);
@@ -96,32 +98,32 @@ describe("<KeyEquation> (ADR 0060 registry-shaped)", () => {
 
   it("renders the derivation accordion EXPANDED when showDerivation is true", () => {
     const { container } = render(
-      <KeyEquation refId="wiens-law" showDerivation />
+      <KeyEquation refId='wiens-law' showDerivation />
     );
     const details = container.querySelector("details");
     expect(details?.hasAttribute("open")).toBe(true);
   });
 
   it("renders related-equations footer by default", () => {
-    render(<KeyEquation refId="with-related" />);
+    render(<KeyEquation refId='with-related' />);
     expect(screen.getByText(/Related:/)).toBeInTheDocument();
     expect(screen.getByText("stefan-boltzmann")).toBeInTheDocument();
   });
 
   it("suppresses related-equations footer when hideRelated is set", () => {
-    render(<KeyEquation refId="with-related" hideRelated />);
+    render(<KeyEquation refId='with-related' hideRelated />);
     expect(screen.queryByText(/Related:/)).not.toBeInTheDocument();
   });
 
   it("renders constants strip from frontmatter when present", () => {
-    render(<KeyEquation refId="with-constants" />);
+    render(<KeyEquation refId='with-constants' />);
     expect(screen.getByText("g")).toBeInTheDocument();
     expect(screen.getByText(/9\.81 m\/s\^2/)).toBeInTheDocument();
   });
 
   it("renders chapter framing prose at the top when children are provided", () => {
     render(
-      <KeyEquation refId="wiens-law">
+      <KeyEquation refId='wiens-law'>
         <p>Chapter-specific framing prose for this equation.</p>
       </KeyEquation>
     );
@@ -133,7 +135,7 @@ describe("<KeyEquation> (ADR 0060 registry-shaped)", () => {
   it("miss fallback: renders framing prose only when refId doesn't resolve", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     render(
-      <KeyEquation refId="nonexistent">
+      <KeyEquation refId='nonexistent'>
         <p>fallback content</p>
       </KeyEquation>
     );
@@ -146,7 +148,7 @@ describe("<KeyEquation> (ADR 0060 registry-shaped)", () => {
   });
 
   it("is axe-clean for the full Wien's-law render", async () => {
-    const { container } = render(<KeyEquation refId="wiens-law" />);
+    const { container } = render(<KeyEquation refId='wiens-law' />);
     expect((await axe(container)).violations).toEqual([]);
   });
 });

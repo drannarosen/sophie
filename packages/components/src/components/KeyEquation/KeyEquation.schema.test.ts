@@ -40,7 +40,8 @@ describe("KeyEquationPropsSchema (ADR 0060 registry-shaped)", () => {
 
   it("accepts optional children (chapter framing prose)", () => {
     expect(
-      KeyEquationPropsSchema.safeParse({ ...valid, children: "framing" }).success
+      KeyEquationPropsSchema.safeParse({ ...valid, children: "framing" })
+        .success
     ).toBe(true);
   });
 

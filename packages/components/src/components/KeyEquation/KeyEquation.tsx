@@ -73,11 +73,7 @@ export function KeyEquation({
   const biography = entry.biography;
 
   return (
-    <section
-      id={entry.id}
-      aria-labelledby={titleId}
-      className={styles.section}
-    >
+    <section id={entry.id} aria-labelledby={titleId} className={styles.section}>
       {children !== undefined && children !== null ? (
         <div className={styles.framing}>{children}</div>
       ) : null}
@@ -95,7 +91,7 @@ export function KeyEquation({
         />
 
         {entry.constants && entry.constants.length > 0 && (
-          <dl className={styles.constants} aria-label="Constants">
+          <dl className={styles.constants} aria-label='Constants'>
             {entry.constants.map((c) => (
               <div key={c.symbol} className={styles.constantRow}>
                 <dt className={styles.constantSymbol}>{c.symbol}</dt>
@@ -110,9 +106,9 @@ export function KeyEquation({
         )}
 
         {biography?.observable ? (
-          <aside
+          <div
             className={styles.bioCard}
-            data-epistemic-role="observable"
+            data-epistemic-role='observable'
             // biome-ignore lint/security/noDangerouslySetInnerHtml: body is pre-rendered HTML from the extractor (registry MDX body) — not user input.
             dangerouslySetInnerHTML={{
               __html: `<strong>Observable.</strong> ${biography.observable.body}`,
@@ -121,11 +117,11 @@ export function KeyEquation({
         ) : null}
 
         {biography?.assumptions?.map((a, i) => (
-          <aside
+          <div
             // biome-ignore lint/suspicious/noArrayIndexKey: stable order from extractor; entries have no unique id.
             key={`assumption-${i}`}
             className={styles.bioCard}
-            data-epistemic-role="assumption"
+            data-epistemic-role='assumption'
             data-assumption-type={a.type}
             // biome-ignore lint/security/noDangerouslySetInnerHtml: body is pre-rendered HTML from the registry MDX body.
             dangerouslySetInnerHTML={{
@@ -135,9 +131,9 @@ export function KeyEquation({
         ))}
 
         {biography?.breaks_when ? (
-          <aside
+          <div
             className={styles.bioCard}
-            data-epistemic-role="approximation"
+            data-epistemic-role='approximation'
             // biome-ignore lint/security/noDangerouslySetInnerHtml: body is pre-rendered HTML from the registry MDX body.
             dangerouslySetInnerHTML={{
               __html: `<strong>Breaks when.</strong> ${biography.breaks_when.body}`,
@@ -146,7 +142,7 @@ export function KeyEquation({
         ) : null}
 
         {biography?.common_misuses?.map((m, i) => (
-          <aside
+          <div
             // biome-ignore lint/suspicious/noArrayIndexKey: stable order from extractor.
             key={`misuse-${i}`}
             className={styles.bioCard}
@@ -177,7 +173,7 @@ export function KeyEquation({
         )}
 
         {!hideRelated && entry.related && entry.related.length > 0 && (
-          <footer className={styles.related} aria-label="Related equations">
+          <nav className={styles.related} aria-label='Related equations'>
             <span className={styles.relatedLabel}>Related:</span>
             <ul className={styles.relatedList}>
               {entry.related.map((r) => (
@@ -194,7 +190,7 @@ export function KeyEquation({
                 </li>
               ))}
             </ul>
-          </footer>
+          </nav>
         )}
 
         {biography?.derivation_steps &&

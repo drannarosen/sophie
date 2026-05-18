@@ -157,6 +157,15 @@ describe("runPedagogyAudit — clean index", () => {
       ...emptyIndex(),
       definitions: [photonDef],
       equations: [isq],
+      // Cite the registry entry from a chapter so R2 (orphan) stays silent.
+      equationCitations: [
+        {
+          chapter: "spoiler-alerts",
+          refId: "inverse-square-law",
+          anchor: "inverse-square-law-citation-1",
+          number: 1,
+        },
+      ],
       keyInsights: [ki, kiFoundations],
       figureRegistry: [fig],
       figureUsages: [figUse],
