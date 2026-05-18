@@ -113,6 +113,23 @@ describe("InterventionEntrySchema (pedagogy-index entry)", () => {
       expect(issue?.message).toMatch(/name.*required.*custom/i);
     }
   });
+
+  it("rejects unknown keys (.strict() — guards extractor drift like singular `address`)", () => {
+    // A plausible extractor typo: writing `address` (singular) instead of
+    // `addresses` (plural). .strict() catches this before it reaches the
+    // audit's I1 invariant, which would otherwise see an empty addresses
+    // array and fire a misleading WARNING.
+    const result = InterventionEntrySchema.safeParse({
+      type: "contrasting-cases",
+      address: "universe-with-a-center",
+      addresses: ["universe-with-a-center"],
+      body: "body",
+      depth: "light",
+      chapter: "ch",
+      anchor: "a",
+    });
+    expect(result.success).toBe(false);
+  });
 });
 
 describe("InterventionLibraryEntrySchema (intervention-index.ts entry)", () => {
@@ -154,6 +171,23 @@ describe("InterventionLibraryEntrySchema (intervention-index.ts entry)", () => {
       citation: "c",
       addresses_families: [],
       move: "m",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects unknown keys (.strict() — guards v2-reserved-slot typos)", () => {
+    // citation_doi / citation_bibtex / template_body are the declared
+    // v2-reserved slots. .strict() catches a typo like `citation_DOI`
+    // (case drift) or `templateBody` (camelCase instead of snake_case)
+    // before it ships as a silently-dropped library-entry field.
+    const result = InterventionLibraryEntrySchema.safeParse({
+      name: "contrasting-cases",
+      family: "confrontation",
+      description: "d",
+      citation: "c",
+      addresses_families: [],
+      move: "m",
+      citation_DOI: "10.1234/typo",
     });
     expect(result.success).toBe(false);
   });

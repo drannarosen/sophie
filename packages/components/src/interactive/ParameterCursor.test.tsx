@@ -18,7 +18,7 @@ describe("<ParameterCursor>", () => {
         unit='K'
       />
     );
-    expect(useParameterStore.getState().parameters["T"]).toMatchObject({
+    expect(useParameterStore.getState().parameters.T).toMatchObject({
       name: "T",
       min: 1000,
       max: 50000,
@@ -33,9 +33,9 @@ describe("<ParameterCursor>", () => {
     const { unmount } = render(
       <ParameterCursor name='T' min={1000} max={50000} default={5772} />
     );
-    expect(useParameterStore.getState().parameters["T"]).toBeDefined();
+    expect(useParameterStore.getState().parameters.T).toBeDefined();
     unmount();
-    expect(useParameterStore.getState().parameters["T"]).toBeUndefined();
+    expect(useParameterStore.getState().parameters.T).toBeUndefined();
   });
 
   test("section scope (default) prefixes name with the nearest section[id]", () => {
@@ -47,7 +47,7 @@ describe("<ParameterCursor>", () => {
     expect(
       useParameterStore.getState().parameters["blackbody:T"]
     ).toBeDefined();
-    expect(useParameterStore.getState().parameters["T"]).toBeUndefined();
+    expect(useParameterStore.getState().parameters.T).toBeUndefined();
   });
 
   test("section scope walks up to find article[id] when no section[id]", () => {
@@ -82,7 +82,7 @@ describe("<ParameterCursor>", () => {
 
   test("section scope falls back to unprefixed name when no scopable ancestor exists", () => {
     render(<ParameterCursor name='T' min={1000} max={50000} default={5772} />);
-    expect(useParameterStore.getState().parameters["T"]).toBeDefined();
+    expect(useParameterStore.getState().parameters.T).toBeDefined();
   });
 
   test("scope='page' produces no prefix even inside a section[id]", () => {
@@ -97,7 +97,7 @@ describe("<ParameterCursor>", () => {
         />
       </section>
     );
-    expect(useParameterStore.getState().parameters["T"]).toBeDefined();
+    expect(useParameterStore.getState().parameters.T).toBeDefined();
     expect(
       useParameterStore.getState().parameters["blackbody:T"]
     ).toBeUndefined();
