@@ -9,16 +9,26 @@ import { z } from "zod";
  * notation against the registry (PR-δ NR-prefix audits), but the entry
  * itself encodes no inference, model, or assumption.
  *
- * Authoring shape (self-closing, one entry per symbol):
+ * Authoring shape (self-closing, one entry per symbol; registry MDX body
+ * per ADR 0060):
  *
  * ```mdx
- * <KeyEquation id="wiens-law" title="Wien's Law">
- *   $$\lambda_{peak} = b \, T^{-1}$$
+ * ---
+ * id: wiens-law
+ * title: "Wien's Law"
+ * tex: "\\lambda_{peak} = b \\, T^{-1}"
+ * symbols: ["T", "\\lambda_{peak}"]
+ * ...
+ * ---
  *
- *   <Units symbol="T" unit="K" />
- *   <Units symbol="\\lambda_{peak}" unit="cm" />
- * </KeyEquation>
+ * <Units symbol="T" unit="K" />
+ * <Units symbol="\\lambda_{peak}" unit="cm" />
  * ```
+ *
+ * Note: per ADR 0046 §R10, unit information is preferentially resolved
+ * from the notation registry by symbol; per-equation `<Units>` children
+ * are now optional, used only when the notation registry doesn't cover
+ * a symbol.
  *
  * `symbol` is TeX-form (e.g., `\lambda_{peak}`) — not slug, not unit.
  * `unit` is a unit string in any standard form (e.g., `K`, `cm`,

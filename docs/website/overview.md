@@ -434,7 +434,7 @@ The aesthetic ports Anna's existing course design tokens
 - **Glossary popovers** — hover/tap glossary term → definition;
   first-use inline footnote via remark-plugin extension (PR 10).
 - **Cross-reference previews** — hover chapter/figure/equation link
-  → preview popover (`<ChapterRef>`, `<EqRef>`, `<FigureRef>`).
+  → preview popover (`<ChapterRef>`, `<EquationRef>`, `<FigureRef>`).
 - **Reading-position indicator** — scroll-position bar; descriptive,
   not normative.
 - **Persistent prev/next navigation** — always visible at chapter

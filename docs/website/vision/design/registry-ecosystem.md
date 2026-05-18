@@ -117,7 +117,7 @@ so adding a future registry is mechanical.
    for interventions) layer on top.
 
 5. **Reference primitive** — every registry has an `<XxxRef refId>`
-   component for in-prose citation. The existing `<EqRef>`,
+   component for in-prose citation. The existing `<EquationRef>`,
    `<FigureRef>`, `<GlossaryTerm>`, `<ChapterRef>`, `<TDRRef>`
    family becomes thin wrappers around a shared `<RegistryRef
    collection refId>` base. Hover popover + click-to-anchor

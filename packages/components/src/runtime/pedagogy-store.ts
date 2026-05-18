@@ -1,6 +1,6 @@
 /**
  * Factory that produces the SSR→CSR-aware role-store shape used by
- * `<GlossaryTerm>`, `<EqRef>`, `<FigureRef>` (and future inline-ref
+ * `<GlossaryTerm>`, `<EquationRef>`, `<FigureRef>` (and future inline-ref
  * components). Each role's store is a typed instance with:
  *
  *   - `set(entries)`: SSR-side setter (called by TextbookLayout)
@@ -29,7 +29,7 @@
 export interface PedagogyStoreOptions<T> {
   /** DOM id of the SSR-emitted <script type="application/json"> tag. */
   scriptId: string;
-  /** Tag prefix for dev-only console.error logs. e.g. "[EqRef]" or "[FigureRef:registry]". */
+  /** Tag prefix for dev-only console.error logs. e.g. "[EquationRef]" or "[FigureRef:registry]". */
   logTag: string;
   /** Function that returns the lookup key for an entry (typically the slug or name). */
   keyOf: (entry: T) => string;

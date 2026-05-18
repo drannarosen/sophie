@@ -276,7 +276,7 @@ export type ObjectiveEntry = z.infer<typeof ObjectiveEntrySchema>;
 
 /**
  * Kind discriminator for inline-ref callsites. Mirrors the four
- * inline cross-ref components: `<GlossaryTerm>`, `<EqRef>`,
+ * inline cross-ref components: `<GlossaryTerm>`, `<EquationRef>`,
  * `<FigureRef>`, `<ChapterRef>`. The audit pass uses these to
  * detect undefined targets (D4, E4, F2, C1).
  */
@@ -297,7 +297,7 @@ export type InlineRefKind = z.infer<typeof InlineRefKindSchema>;
  *
  * `refKey` is the looked-up identifier:
  *   - `glossary-term` → `<GlossaryTerm name="X">` → `X`
- *   - `eq-ref`        → `<EqRef slug="X">`       → `X`
+ *   - `eq-ref`        → `<EquationRef refId="X">` → `X`
  *   - `figure-ref`    → `<FigureRef name="X">`   → `X`
  *   - `chapter-ref`   → `<ChapterRef slug="X">`  → `X`
  */

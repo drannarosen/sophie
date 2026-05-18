@@ -16,7 +16,7 @@ import { __setModules, moduleStore } from "./modules-store.ts";
  * both the closed-state DOM and (for U3/U4) the popover content
  * rendered via the un-portalled render path.
  *
- * Unlike EqRef/FigureRef (which `vi.mock(...)` their stores), we
+ * Unlike EquationRef/FigureRef (which `vi.mock(...)` their stores), we
  * seed the real stores via `__setChapters` / `__setModules` in
  * `beforeEach`. The stores' SSR-setter API is the production
  * contract; the factory tests already cover the script-tag

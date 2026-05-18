@@ -8,18 +8,23 @@ import { z } from "zod";
  * equation typical); marks the equation's validity-domain boundary —
  * the conditions under which it stops being a useful approximation.
  *
- * Authoring shape:
+ * Authoring shape (registry MDX body, per ADR 0060):
  *
  * ```mdx
- * <KeyEquation id="wiens-law" title="Wien's Law">
- *   $$\lambda_{peak} = b \, T^{-1}$$
+ * ---
+ * id: wiens-law
+ * title: "Wien's Law"
+ * tex: "\\lambda_{peak} = b \\, T^{-1}"
+ * ...
+ * ---
  *
- *   <BreaksWhen>
- *     Non-thermal emission (synchrotron, masers, line emission);
- *     optically-thin sources without thermal coupling.
- *   </BreaksWhen>
- * </KeyEquation>
+ * <BreaksWhen>
+ *   Non-thermal emission (synchrotron, masers, line emission);
+ *   optically-thin sources without thermal coupling.
+ * </BreaksWhen>
  * ```
+ *
+ * Chapter MDX cites the registry entry via `<KeyEquation refId="wiens-law">`.
  *
  * Role `"approximation"` per ADR 0058 — `<BreaksWhen>` marks a domain
  * boundary, which is exactly the approximation contract: the equation

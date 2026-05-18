@@ -838,7 +838,7 @@ This is deferred to v2 because **both prerequisites are out of
 Phase 1's scope**:
 
 - **`<MisconceptionRef>` component**: an inline ref to a misconception
-  graph node — structurally similar to `<EqRef>` (inline ref to a
+  graph node — structurally similar to `<EquationRef>` (inline ref to a
   KeyEquation) and `<GlossaryTerm>` (inline ref to a glossary entry).
   Not specced in v1; will need its own ADR-or-PR conversation when
   a real consumer asks for it.

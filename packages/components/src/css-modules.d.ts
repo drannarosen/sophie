@@ -4,7 +4,7 @@ declare module "*.module.css.js" {
 }
 
 // KaTeX ships its stylesheet at a bare-CSS path; the import is
-// side-effect-only (no exported value). Used by EqRef.stories so
+// side-effect-only (no exported value). Used by EquationRef.stories so
 // the rendered display math in HoverCard popovers picks up
 // KaTeX's spacing rules.
 declare module "katex/dist/katex.min.css";

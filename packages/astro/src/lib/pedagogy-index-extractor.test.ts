@@ -2158,7 +2158,7 @@ describe("indexAccumulator setChapters / setModules", () => {
 
 /**
  * PR-C4 Task 2 — inline-ref usage fixtures. Inline cross-refs
- * (`<GlossaryTerm>`, `<EqRef>`, `<FigureRef>`, `<ChapterRef>`) appear
+ * (`<GlossaryTerm>`, `<EquationRef>`, `<FigureRef>`, `<ChapterRef>`) appear
  * both as block elements (mdxJsxFlowElement) and inline within prose
  * (mdxJsxTextElement). The extractor walks BOTH node types.
  */
@@ -2178,7 +2178,7 @@ const mdxInlineJsx = (
 });
 
 describe("extractInlineRefUsages (pure)", () => {
-  test("produces one entry per <GlossaryTerm>, <EqRef>, <FigureRef>, <ChapterRef>", () => {
+  test("produces one entry per <GlossaryTerm>, <EquationRef>, <FigureRef>, <ChapterRef>", () => {
     const tree = root([
       {
         type: "paragraph",
@@ -2186,7 +2186,7 @@ describe("extractInlineRefUsages (pure)", () => {
           { type: "text", value: "See " },
           mdxInlineJsx("GlossaryTerm", { name: "Parallax" }),
           { type: "text", value: " and " },
-          mdxInlineJsx("EqRef", { slug: "wiens-law" }),
+          mdxInlineJsx("EquationRef", { refId: "wiens-law" }),
           { type: "text", value: " and " },
           mdxInlineJsx("FigureRef", { name: "hr-diagram" }),
           { type: "text", value: " and " },
@@ -2249,7 +2249,7 @@ describe("extractInlineRefUsages (pure)", () => {
         type: "paragraph",
         children: [
           mdxInlineJsx("GlossaryTerm", {}), // missing name
-          mdxInlineJsx("EqRef", { slug: "" }), // empty slug
+          mdxInlineJsx("EquationRef", { refId: "" }), // empty refId
           mdxInlineJsx("FigureRef", { name: "valid" }),
         ],
       },
@@ -2386,7 +2386,7 @@ describe("pedagogyIndexRemarkPlugin (objectives + inline-ref usages)", () => {
           { type: "text", value: "see " },
           mdxInlineJsx("GlossaryTerm", { name: "Parallax" }),
           { type: "text", value: " " },
-          mdxInlineJsx("EqRef", { slug: "wiens-law" }),
+          mdxInlineJsx("EquationRef", { refId: "wiens-law" }),
         ],
       },
     ]);

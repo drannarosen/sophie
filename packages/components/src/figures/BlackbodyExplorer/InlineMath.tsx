@@ -40,7 +40,7 @@ export function InlineMath({ children }: InlineMathProps) {
 
   return (
     <span
-      // biome-ignore lint/security/noDangerouslySetInnerHtml: tex is rendered by katex.renderToString from author-controlled component-internal LaTeX source (not user-supplied content). See EqRef/Search precedent + ADR 0030.
+      // biome-ignore lint/security/noDangerouslySetInnerHtml: tex is rendered by katex.renderToString from author-controlled component-internal LaTeX source (not user-supplied content). See EquationRef/Search precedent + ADR 0030.
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );

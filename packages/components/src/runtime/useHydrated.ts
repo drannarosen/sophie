@@ -10,7 +10,7 @@ import { useEffect, useState } from "react";
  * lifetime of the component.
  *
  * Background (followup #10, PR-C3 closeout audit): Radix HoverCard
- * consumers (`<GlossaryTerm>`, `<EqRef>`, `<FigureRef>`) were ~33%
+ * consumers (`<GlossaryTerm>`, `<EquationRef>`, `<FigureRef>`) were ~33%
  * flaky in full-suite Playwright runs. Specs waited on
  * `page.waitForLoadState("networkidle")` before hovering, but
  * `networkidle` is a network-level signal — it fires before React

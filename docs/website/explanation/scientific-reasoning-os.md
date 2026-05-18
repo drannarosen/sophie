@@ -103,7 +103,7 @@ consumers see a uniform read.
 | `<InteractiveCheckbox>`                      | (none)            | teaching-move chrome                             |
 | `<EffortLog>`                                | (none)            | metacognition / metric chrome                    |
 | `<GlossaryTerm>`                             | (none)            | reference chrome                                 |
-| `<ChapterRef>` / `<EqRef>` / `<FigureRef>`   | (none)            | reference chrome                                 |
+| `<ChapterRef>` / `<EquationRef>` / `<FigureRef>` | (none)            | reference chrome                                 |
 | `<Search>`                                   | (none)            | site chrome                                      |
 | Chapter `framing: 'OMI'`                     | section-level     | the section has slots `observable` → `model` → `inference` even if not yet rendered via `<OMIFlow>` |
 | Chapter `framing: 'PMI'`                     | section-level     | the section's `problem`/`model`/`implementation`/`interpretation` arc; PMI roles are not directly the epistemic eight |
@@ -145,7 +145,7 @@ chrome components (future code PR enforcement).
 
 ```mdx
 <!-- WRONG -->
-<KeyEquation id="wiens-law" epistemicRole="model" title="Wien's Law">
+<KeyEquation refId="wiens-law" epistemicRole="model">
   $$\lambda_{peak} = b T^{-1}$$
 </KeyEquation>
 ```
@@ -162,7 +162,7 @@ carry it.
 
 ```mdx
 <!-- WRONG -->
-<KeyEquation id="small-angle">
+<KeyEquation refId="small-angle">
   $$\sin\theta \approx \theta$$
 
   <Assumption>Small angle: θ ≪ 1 radian.</Assumption>
@@ -176,7 +176,7 @@ implicit-role table maps to `approximation`):
 
 ```mdx
 <!-- RIGHT -->
-<KeyEquation id="small-angle">
+<KeyEquation refId="small-angle">
   $$\sin\theta \approx \theta$$
 
   <BreaksWhen>

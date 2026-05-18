@@ -58,7 +58,7 @@ multirep), and **MG / I** (misconception graph + interventions).
 What that foundation does not yet do: **report on how the
 PedagogyIndex changes across revisions.** Today's `git diff` shows
 text changes; it can't tell a reviewer that a PR added two
-misconceptions, removed one learning objective, broke an `<EqRef>`,
+misconceptions, removed one learning objective, broke an `<EquationRef>`,
 or introduced a new MR2 WARNING. Each invariant fires against a
 *single snapshot*; reviewers infer "what changed" by eye.
 
@@ -179,7 +179,7 @@ every pedagogical change as a two-axis record:
     (definition body, equation body, misconception text, intervention
     text, LO description).
   - `relational` — a cross-reference resolution changed (an
-    `<EqRef>` newly resolves, was newly broken, or moved targets;
+    `<EquationRef>` newly resolves, was newly broken, or moved targets;
     similarly for `<FigureRef>`, `<GlossaryTerm>`, `<ChapterRef>`,
     misconception `prerequisite_misconceptions`, `concept_refs`).
   - `conformance` — the audit-warning set changed vs base (new
@@ -240,13 +240,13 @@ Example: a TDR removes the Drake equation from ch3 and lists
 Without the TDR, `sophie diff` would emit:
 
 ```text
-breaking: <EqRef slug="drake-equation"> broken (eq removed)
+breaking: <EquationRef refId="drake-equation"> broken (eq removed)
 ```
 
 With the TDR, it emits:
 
 ```text
-substantive: <EqRef slug="drake-equation"> broken
+substantive: <EquationRef refId="drake-equation"> broken
   (intentional, see TDR-007)
 ```
 

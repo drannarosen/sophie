@@ -102,7 +102,7 @@ MDX (collection pattern).
    E7–E10, I1–I3) layer on top.
 5. **Reference primitive** — every registry has an `<XxxRef refId>`
    component for in-prose citation, with hover popover + click-to-
-   anchor. The existing `<EqRef>`, `<FigureRef>`, `<GlossaryTerm>`,
+   anchor. The existing `<EquationRef>`, `<FigureRef>`, `<GlossaryTerm>`,
    `<ChapterRef>`, `<TDRRef>` family becomes thin wrappers around a
    shared `<RegistryRef collection refId>` base.
 6. **Aggregators** — every registry has `<ChapterXxx>` + `<CourseXxx>`

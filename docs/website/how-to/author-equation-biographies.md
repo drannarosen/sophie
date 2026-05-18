@@ -19,7 +19,7 @@ The 6 biography components are in active implementation per the
 [2026-05-17 design hardening](../../plans/2026-05-17-equation-biography-design.md).
 v1 ships `<Observable>`, `<Assumption>`, `<Units>`, `<BreaksWhen>`,
 `<CommonMisuse>` as children of `<KeyEquation>` with rendering updates
-to `<EqRef>` hover, `<ChapterEquations>`, and `<CourseEquations>`.
+to `<EquationRef>` hover, `<ChapterEquations>`, and `<CourseEquations>`.
 :::
 
 ## When to author a biography
@@ -131,7 +131,7 @@ every `assumption` declared in Module 4" become trivial.
 
 ### Hover (compact summary)
 
-`<EqRef slug="wiens-law">` hover preview adds a compact summary line
+`<EquationRef refId="wiens-law">` hover preview adds a compact summary line
 below the math:
 
 ```

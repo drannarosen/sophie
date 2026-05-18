@@ -32,7 +32,7 @@ describe("<InlineMath>", () => {
 
   test("emits KaTeX MathML annotation for screen readers (not aria-label)", () => {
     // KaTeX `output: "html"` emits both a visual `.katex-html` block and a
-    // hidden `.katex-mathml` block consumed by AT. Per ADR 0004 + EqRef
+    // hidden `.katex-mathml` block consumed by AT. Per ADR 0004 + EquationRef
     // precedent, we let MathML do the screen-reader work — adding aria-label
     // on a bare <span> with no role is prohibited by WAI-ARIA (axe-core
     // aria-prohibited-attr) and would shadow the richer MathML structure.
