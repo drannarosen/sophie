@@ -52,6 +52,7 @@ function emptyIndexShape(): PedagogyIndex {
     keyInsights: [],
     definitions: [],
     equations: [],
+    equationCitations: [],
     figureRegistry: [],
     figureUsages: [],
     inlineRefUsages: [],

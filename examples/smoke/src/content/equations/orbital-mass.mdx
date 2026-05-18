@@ -1,0 +1,88 @@
+---
+id: orbital-mass
+title: "Circular Orbit Mass Law"
+tex: "v^2 = \\frac{G \\, M}{r}"
+symbols: ["v", "M", "r"]
+constants:
+  - symbol: "G"
+    value: "6.67430 \\times 10^{-8}"
+    unit: "cm^3 g^{-1} s^{-2}"
+    name: "Newton's gravitational constant (CGS)"
+rearranged_forms:
+  - tex: "M = \\frac{v^2 \\, r}{G}"
+    solves_for: "M"
+    label: "Enclosed mass from orbital kinematics"
+  - tex: "v = \\sqrt{\\frac{G \\, M}{r}}"
+    solves_for: "v"
+    label: "Circular orbital speed"
+tags: ["gravity", "kinematics", "dynamics", "dark-matter"]
+version: "1"
+---
+
+import {
+  Assumption,
+  BreaksWhen,
+  CommonMisuse,
+  DerivationStep,
+  Observable,
+} from "@sophie/components";
+
+<Observable>
+  The orbital speed $v$ of a tracer (a star, a gas parcel, a
+  satellite galaxy) at distance $r$ from the gravitating
+  centre — measured via Doppler shift of a known spectral line.
+</Observable>
+
+<Assumption type="circular-orbit">
+  The orbit is circular. Elliptical orbits replace $v^2/r$ with the
+  full vis-viva relation involving the semi-major axis.
+</Assumption>
+
+<Assumption type="newtonian-gravity">
+  Speeds are non-relativistic ($v \ll c$) and the gravitational field
+  is weak. Strong-field or relativistic regimes (near black holes,
+  cosmological scales) require general relativity.
+</Assumption>
+
+<Assumption type="spherical-mass-distribution">
+  The enclosed mass acts as if concentrated at the centre (Newton's
+  shell theorem) — the mass distribution interior to $r$ is
+  spherically symmetric and exterior mass exerts no net force.
+</Assumption>
+
+<BreaksWhen>
+  The orbit is highly elliptical; the system is relativistic
+  (near black holes, AGN central engines); the mass distribution is
+  not spherically symmetric (galaxy bars, triaxial halos); or
+  pressure support (in gas) competes with gravity. Galaxy rotation
+  curves are read with this equation precisely *because* its
+  breakdown — the predicted Keplerian fall-off failing to appear —
+  is the signature of dark matter.
+</BreaksWhen>
+
+<CommonMisuse misconception="dark-matter-is-just-hidden-normal-matter">
+  Reading "more mass than we see" as "more *baryonic* matter than
+  we see." The equation gives total enclosed mass; nothing about it
+  distinguishes luminous matter from anything else. Searches for
+  faint baryonic candidates (MACHOs, brown dwarfs, cold gas) have
+  *not* closed the gap; the missing mass is non-baryonic.
+</CommonMisuse>
+
+<DerivationStep label="Balance gravity against centripetal acceleration">
+  For a tracer of mass $m$ on a circular orbit, Newton's second law
+  with centripetal acceleration gives
+  $m v^2 / r = G M m / r^2$ — gravitational attraction provides the
+  centripetal force.
+</DerivationStep>
+
+<DerivationStep label="Cancel the tracer mass">
+  The tracer mass $m$ appears on both sides and cancels:
+  $v^2 / r = G M / r^2$. The orbital speed depends only on the
+  enclosed mass $M$ and radius $r$, not on the tracer's mass —
+  Galileo's principle in disguise.
+</DerivationStep>
+
+<DerivationStep label="Multiply through by $r$">
+  Result: $v^2 = G M / r$. Rearranged for mass:
+  $M = v^2 r / G$.
+</DerivationStep>

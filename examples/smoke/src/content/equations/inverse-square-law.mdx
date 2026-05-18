@@ -1,0 +1,81 @@
+---
+id: inverse-square-law
+title: "The Inverse-Square Law"
+tex: "F = \\frac{L}{4\\pi d^2}"
+symbols: ["F", "L", "d"]
+rearranged_forms:
+  - tex: "d = \\sqrt{\\frac{L}{4\\pi F}}"
+    solves_for: "d"
+    label: "Distance from luminosity and measured flux"
+  - tex: "L = 4\\pi d^2 F"
+    solves_for: "L"
+    label: "Luminosity from distance and measured flux"
+tags: ["radiation", "distance", "geometry"]
+version: "1"
+---
+
+import {
+  Assumption,
+  BreaksWhen,
+  CommonMisuse,
+  DerivationStep,
+  Observable,
+} from "@sophie/components";
+
+<Observable>
+  The flux $F$ received from a source at distance $d$ — the energy
+  per unit time per unit area arriving at our detector. We literally
+  count photons; their rate per unit area is the observable.
+</Observable>
+
+<Assumption type="isotropic-emission">
+  The source emits the same power in every direction. Beamed
+  emitters (relativistic jets, pulsar lighthouses) violate this and
+  require a directional beaming correction.
+</Assumption>
+
+<Assumption type="point-source">
+  The source is small enough relative to the observation distance
+  that geometric extension can be ignored. Resolved extended sources
+  (nearby galaxies, large nebulae) require integrating flux over
+  solid angle.
+</Assumption>
+
+<Assumption type="transparent-medium">
+  No absorption or scattering between source and observer. Dust and
+  gas along the line of sight produce extinction that dims observed
+  flux beyond the geometric $1/d^2$ fall-off.
+</Assumption>
+
+<BreaksWhen>
+  The source is beamed (relativistic jets), spatially resolved
+  (extended galaxies, nearby nebulae), or seen through a dusty /
+  absorbing medium. At cosmological distances the simple Euclidean
+  $d^2$ term is replaced by the luminosity distance, which folds in
+  redshift and time-dilation corrections.
+</BreaksWhen>
+
+<CommonMisuse misconception="brighter-equals-intrinsically-brighter">
+  Treating apparent brightness as a direct proxy for intrinsic
+  luminosity. Two equally luminous stars at very different distances
+  can appear at wildly different fluxes; the brightness comparison
+  says nothing about the sources until the distance term is fixed.
+</CommonMisuse>
+
+<DerivationStep label="Set up the emitting sphere">
+  Imagine a source of total luminosity $L$ (energy per unit time)
+  radiating uniformly in all directions. Consider an imaginary
+  sphere of radius $d$ centred on the source.
+</DerivationStep>
+
+<DerivationStep label="Conservation of energy on the sphere">
+  Every photon emitted crosses this sphere exactly once. The total
+  power passing through the sphere equals $L$; spread it over the
+  sphere's surface area $4\pi d^2$.
+</DerivationStep>
+
+<DerivationStep label="Divide power by area">
+  Flux is power per unit area at the detector:
+  $F = L / (4\pi d^2)$. Purely geometric — no dependence on
+  wavelength or source physics beyond isotropy.
+</DerivationStep>

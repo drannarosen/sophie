@@ -19,7 +19,7 @@ import {
   ComprehensionGate,
   ConfidenceCheck,
   EffortLog,
-  EqRef,
+  EquationRef,
   FigureRef,
   GlossaryTerm,
   InteractiveCallout,
@@ -251,84 +251,12 @@ A third star of the same type appears **9× fainter** than the reference star. H
 *(Think first... then check: 3× farther, because $3^2 = 9$)*
 </InteractiveCallout>
 
-<KeyEquation
-  id="inverse-square-law"
-  title="The Inverse-Square Law"
-  symbols={["F", "L", "d"]}
->
+<KeyEquation refId="inverse-square-law" client:load>
+
 We'll develop this properly in a later lecture, but here's the key idea.
 
-Imagine a star emitting light uniformly in all directions. That light spreads out over the surface of an expanding sphere. At distance $d$, the sphere has surface area $4\pi d^2$. The same total light is now spread over this larger area, so the **flux** (light per unit area) decreases:
+Imagine a star emitting light uniformly in all directions. That light spreads out over the surface of an expanding sphere. At distance $d$, the sphere has surface area $4\pi d^2$. The same total light is now spread over this larger area, so the **flux** (light per unit area) decreases as $1/d^2$ — double the distance, quarter the brightness. This is why "standard candles" matter: if you know $L$ independently, measuring $F$ gives you $d$.
 
-$$
-F = \frac{L}{4\pi d^2}
-$$
-
-**The key insight:** Flux falls off as $1/d^2$. Double the distance → quarter the brightness. This "inverse-square law" is why determining distances is so central to astronomy: if you know $L$ (from a "standard candle") and measure $F$, you can solve for $d$.
-
-**Why it matters:** Almost every distance measurement beyond our solar system relies on some version of this relationship. The entire cosmic distance ladder is built on calibrating objects whose luminosity $L$ we think we understand.
-
-**Rearranging for distance:**
-
-$$
-d = \sqrt{\frac{L}{4\pi F}}
-$$
-
-If you can determine $L$ independently (from pulsation period, spectral type, or explosion physics), measuring $F$ gives you $d$.
-
-**Physical intuition:**
-
-- The $4\pi$ comes from the sphere's geometry (full solid angle)
-- The $d^2$ comes from how area scales with radius
-- This is purely geometric — it doesn't depend on *what kind* of light or *what kind* of source
-
-**Connection to Spoiler 2:** The cosmic distance ladder (Section 1.2) is built entirely on this relationship. Every "standard candle" — Cepheids, Type Ia supernovae — works because we can determine $L$ independently and then solve for $d$.
-
-  <Observable>
-    The flux $F$ received from a source at distance $d$ — the energy
-    per unit time per unit area arriving at our detector. We literally
-    count photons; their rate per unit area is the observable.
-  </Observable>
-
-  <Assumption type="isotropic-emission">
-    The source emits the same power in every direction. Beamed
-    emitters (relativistic jets, pulsar lighthouses) violate this and
-    require a directional beaming correction.
-  </Assumption>
-
-  <Assumption type="point-source">
-    The source is small enough relative to the observation distance
-    that geometric extension can be ignored. Resolved extended sources
-    (nearby galaxies, large nebulae) require integrating flux over
-    solid angle.
-  </Assumption>
-
-  <Assumption type="transparent-medium">
-    No absorption or scattering between source and observer. Dust and
-    gas along the line of sight produce extinction that dims observed
-    flux beyond the geometric $1/d^2$ fall-off.
-  </Assumption>
-
-  <Units symbol="F" unit="erg s^{-1} cm^{-2}" />
-
-  <Units symbol="L" unit="erg s^{-1}" />
-
-  <Units symbol="d" unit="cm" />
-
-  <BreaksWhen>
-    The source is beamed (relativistic jets), spatially resolved
-    (extended galaxies, nearby nebulae), or seen through a dusty /
-    absorbing medium. At cosmological distances the simple Euclidean
-    $d^2$ term is replaced by the luminosity distance, which folds in
-    redshift and time-dilation corrections.
-  </BreaksWhen>
-
-  <CommonMisuse misconception="brighter-equals-intrinsically-brighter">
-    Treating apparent brightness as a direct proxy for intrinsic
-    luminosity. Two equally luminous stars at very different distances
-    can appear at wildly different fluxes; the brightness comparison
-    says nothing about the sources until the distance term is fixed.
-  </CommonMisuse>
 </KeyEquation>
 
 <Callout variant="tip" title="Two Modes of Reading Equations">
@@ -340,7 +268,7 @@ Throughout this course, equations serve two purposes:
 For now, the inverse-square law ($F = L/4\pi d^2$) is a **working equation**—you'll calculate with it soon. The wave relation ($c = \lambda\nu$) and photon energy ($E = h\nu$) are **orientation equations** for now; they become working tools once we develop atomic spectra.
 </Callout>
 
-*We'll return to <EqRef slug="inverse-square-law" client:load /> quantitatively when we build the distance ladder step by step.*
+*We'll return to <EquationRef refId="inverse-square-law" client:load /> quantitatively when we build the distance ladder step by step.*
 
 <Predict
   client:load
@@ -514,7 +442,7 @@ Every distance method in astronomy ultimately rests on geometric parallax. Subse
 
 <MultiRep concept="luminosity">
   <RepVerbal>
-    **Luminosity** $L$ is the total radiant power a source emits — energy per unit time, summed over every direction. It's an intrinsic property of the source; nothing about $L$ depends on where you're standing. A distant Cepheid and a nearby Cepheid of the same pulsation period have identical $L$ even though they look very different to us. The whole point of a "standard candle" is to nail down $L$ independently so we can solve <EqRef slug="inverse-square-law" client:load /> for the distance.
+    **Luminosity** $L$ is the total radiant power a source emits — energy per unit time, summed over every direction. It's an intrinsic property of the source; nothing about $L$ depends on where you're standing. A distant Cepheid and a nearby Cepheid of the same pulsation period have identical $L$ even though they look very different to us. The whole point of a "standard candle" is to nail down $L$ independently so we can solve <EquationRef refId="inverse-square-law" client:load /> for the distance.
   </RepVerbal>
 
   <RepEquation refKey="inverse-square-law" symbol="L" />
@@ -523,7 +451,7 @@ Every distance method in astronomy ultimately rests on geometric parallax. Subse
 </MultiRep>
 
 <Aside kind="misconception" name="brighter-equals-intrinsically-brighter" title="A common confusion: brighter on the sky means intrinsically more luminous">
-A natural inference from the night sky is that the *brightest* points of light are also the *most luminous* sources — Sirius outshines Vega because Sirius emits more power. The <EqRef slug="inverse-square-law" client:load /> equation shows why this fails: flux folds together luminosity *and* distance. The brightest star in the sky can be intrinsically dim and merely close; an intrinsically blazing supergiant can look ordinary because it's far away.
+A natural inference from the night sky is that the *brightest* points of light are also the *most luminous* sources — Sirius outshines Vega because Sirius emits more power. The <EquationRef refId="inverse-square-law" client:load /> equation shows why this fails: flux folds together luminosity *and* distance. The brightest star in the sky can be intrinsically dim and merely close; an intrinsically blazing supergiant can look ordinary because it's far away.
 
   <Intervention type="refutation-text" addresses="this">
     **Why the framing feels right:** Pre-scientific astronomers ranked stars by apparent brightness alone (the magnitude system inherited from Hipparchus). The ranking *does* sort what we see — it just doesn't sort what the stars *are*.
@@ -804,76 +732,15 @@ Invisible matter detected through gravity. Outweighs visible (baryonic) matter b
 
 **What physics makes this legal?** Newton's law of gravity says that orbital speed depends on the enclosed mass. Measure $v$ and $r$, solve for $M$. The math is unambiguous. The extra mass is real — we detect it through the motions it causes.
 
-<KeyEquation
-  id="orbital-mass"
-  title="Circular Orbit Mass Law"
-  symbols={["v", "M", "r"]}
->
-For a body in a circular orbit, the speed of the orbit, the enclosed mass, and the orbital radius are tied together by Newton's gravity:
+<KeyEquation refId="orbital-mass" client:load>
 
-$$
-v^2 = \frac{G M}{r}
-$$
+For a body in a circular orbit, the orbital speed, enclosed mass, and orbital radius are linked by Newton's gravity. Rearranging the registry-locked form gives the **enclosed mass from kinematics alone** — the single relationship that turns a velocity measurement (from a Doppler shift) and a radius (from imaging) into a mass inference, *whatever the matter is made of*.
 
-Rearranging gives the **enclosed mass from kinematics alone**:
-
-$$
-M = \frac{v^2 r}{G}
-$$
-
-This is the single relationship that turns a velocity measurement (from a Doppler shift) and a radius (from imaging or distance + angular scale) into an inference about mass — visible or otherwise.
-
-  <Observable>
-    The orbital speed $v$ of a tracer (a star, a gas parcel, a
-    satellite galaxy) at distance $r$ from the gravitating
-    centre — measured via Doppler shift of a known spectral line.
-  </Observable>
-
-  <Assumption type="circular-orbit">
-    The orbit is circular. Elliptical orbits replace $v^2/r$ with the
-    full vis-viva relation involving the semi-major axis.
-  </Assumption>
-
-  <Assumption type="newtonian-gravity">
-    Speeds are non-relativistic ($v \ll c$) and the gravitational field
-    is weak. Strong-field or relativistic regimes (near black holes,
-    cosmological scales) require general relativity.
-  </Assumption>
-
-  <Assumption type="spherical-mass-distribution">
-    The enclosed mass acts as if concentrated at the centre (Newton's
-    shell theorem) — the mass distribution interior to $r$ is
-    spherically symmetric and exterior mass exerts no net force.
-  </Assumption>
-
-  <Units symbol="v" unit="cm s^{-1}" />
-
-  <Units symbol="M" unit="g" />
-
-  <Units symbol="r" unit="cm" />
-
-  <BreaksWhen>
-    The orbit is highly elliptical; the system is relativistic
-    (near black holes, AGN central engines); the mass distribution is
-    not spherically symmetric (galaxy bars, triaxial halos); or
-    pressure support (in gas) competes with gravity. Galaxy rotation
-    curves are read with this equation precisely *because* its
-    breakdown — the predicted Keplerian fall-off failing to appear —
-    is the signature of dark matter.
-  </BreaksWhen>
-
-  <CommonMisuse misconception="dark-matter-is-just-hidden-normal-matter">
-    Reading "more mass than we see" as "more *baryonic* matter than
-    we see." The equation gives total enclosed mass; nothing about it
-    distinguishes luminous matter from anything else. Searches for
-    faint baryonic candidates (MACHOs, brown dwarfs, cold gas) have
-    *not* closed the gap; the missing mass is non-baryonic.
-  </CommonMisuse>
 </KeyEquation>
 
 <MultiRep concept="enclosed-mass">
   <RepVerbal>
-    The **enclosed gravitational mass** $M$ inside a given radius is *everything that gravitates* there — visible stars, gas, and whatever else. The dark-matter inference is exactly the gap between this total and the luminous component: $M$ measured from orbital speeds via <EqRef slug="orbital-mass" client:load /> exceeds the mass inventoried by adding up starlight and detected gas by roughly a factor of six. The equation doesn't care what the matter is made of; the discrepancy is the empirical fact that drives the rest of the field.
+    The **enclosed gravitational mass** $M$ inside a given radius is *everything that gravitates* there — visible stars, gas, and whatever else. The dark-matter inference is exactly the gap between this total and the luminous component: $M$ measured from orbital speeds via <EquationRef refId="orbital-mass" client:load /> exceeds the mass inventoried by adding up starlight and detected gas by roughly a factor of six. The equation doesn't care what the matter is made of; the discrepancy is the empirical fact that drives the rest of the field.
   </RepVerbal>
 
   <RepEquation refKey="orbital-mass" symbol="M" />
@@ -914,7 +781,7 @@ Only 5% of the universe is made of the stuff we understand. The rest is dark—b
 </Callout>
 
 <Aside kind="misconception" name="dark-matter-is-just-hidden-normal-matter" title="A common confusion: dark matter is just hidden normal matter">
-A natural way to defuse "most of the universe is invisible" is to assume the missing mass is *ordinary* matter we haven't found yet — failed stars, cold gas, rogue planets, exotic-but-baryonic stuff. The <EqRef slug="orbital-mass" client:load /> equation gives total enclosed mass; nothing in its derivation says the mass has to be baryonic. So the question is empirical, not definitional — and the searches keep coming back the same way.
+A natural way to defuse "most of the universe is invisible" is to assume the missing mass is *ordinary* matter we haven't found yet — failed stars, cold gas, rogue planets, exotic-but-baryonic stuff. The <EquationRef refId="orbital-mass" client:load /> equation gives total enclosed mass; nothing in its derivation says the mass has to be baryonic. So the question is empirical, not definitional — and the searches keep coming back the same way.
 
   <Intervention type="worked-example-contrast" addresses="this">
     Three "obvious" candidates for the missing mass have been tested. Each is a worked example where the misconception predicts a positive detection — and each is the case that *failed*.
@@ -1285,24 +1152,13 @@ Combining $c = \lambda\nu$ and $E = h\nu$, we understand the EM spectrum as a **
 **Temperature ladder:** Cold things glow at long wavelengths; hot things at short wavelengths. Physics, not convention.
 </aside>
 
-This hierarchy emerges from physics: hotter objects emit higher-energy (shorter-wavelength) photons. **Different wavelengths probe different temperature regimes.** <EqRef slug="wiens-law" client:load>Wien's law</EqRef> quantifies this relationship.
+This hierarchy emerges from physics: hotter objects emit higher-energy (shorter-wavelength) photons. **Different wavelengths probe different temperature regimes.** <EquationRef refId="wiens-law" client:load>Wien's law</EquationRef> quantifies this relationship.
 
 <Figure name="energy-wavelength-connection" />
 
-<KeyEquation
-  id="wiens-law"
-  title="Wien's Law"
-  symbols={["T", "\\lambda_{peak}"]}
->
-The relationship between temperature and peak emission wavelength is quantified by **Wien's displacement law**:
+<KeyEquation refId="wiens-law" client:load>
 
-$$
-\lambda_{\text{peak}} = b T^{-1}
-$$
-
-where $b = 0.29$ cm·K is Wien's displacement constant.
-
-**Examples:**
+The relationship between temperature and peak emission wavelength is quantified by **Wien's displacement law**. A few illustrative regimes anchor the intuition:
 
 - Sun ($T \approx 5800$ K): $\lambda_{\text{peak}} \approx 500$ nm (visible)
 - Human body ($T \approx 300$ K): $\lambda_{\text{peak}} \approx 10$ μm (infrared)
@@ -1310,46 +1166,11 @@ where $b = 0.29$ cm·K is Wien's displacement constant.
 
 This is why thermal cameras "see" people in the dark (we glow in IR) and why the early universe is visible in microwaves.
 
-  <Observable>
-    The wavelength at which a thermal source's emission spectrum peaks
-    — i.e., where the continuum is brightest — as a function of the
-    source's temperature.
-  </Observable>
-
-  <Assumption type="thermal-equilibrium">
-    The source is in local thermodynamic equilibrium, so the Planck
-    blackbody distribution governs its emission.
-  </Assumption>
-
-  <Assumption type="blackbody">
-    The source emits as an ideal blackbody — no strong spectral lines
-    or continuum absorption shaping the peak. Real stars approximate
-    this; line-rich or non-thermal sources do not.
-  </Assumption>
-
-  <Units symbol="T" unit="K" />
-
-  <Units symbol="\lambda_{peak}" unit="cm" />
-
-  <BreaksWhen>
-    Non-thermal emission (synchrotron, masers, line-dominated spectra);
-    optically-thin sources without thermal coupling; or spectra shaped
-    primarily by absorption features rather than the continuum
-    blackbody profile.
-  </BreaksWhen>
-
-  <CommonMisuse misconception="wiens-law-absorption-spectra">
-    Applying Wien's law to an absorption-line spectrum to infer the
-    source temperature. The peak position is set by the continuum, not
-    the absorption features; using a line-dominated spectrum will
-    misidentify the temperature when intervening cooler gas reshapes
-    the apparent profile.
-  </CommonMisuse>
 </KeyEquation>
 
 <MultiRep concept="peak-wavelength">
   <RepVerbal>
-    The **peak emission wavelength** $\lambda_{\text{peak}}$ is the wavelength at which a thermal source's continuum is brightest. It collapses an entire blackbody spectrum to a single number — the colour of the source's glow — and through <EqRef slug="wiens-law" client:load /> that single number reports the temperature. Hot stars peak in the UV; sun-like stars peak in visible; cool dust peaks in IR; the cosmic microwave background peaks in the mm.
+    The **peak emission wavelength** $\lambda_{\text{peak}}$ is the wavelength at which a thermal source's continuum is brightest. It collapses an entire blackbody spectrum to a single number — the colour of the source's glow — and through <EquationRef refId="wiens-law" client:load /> that single number reports the temperature. Hot stars peak in the UV; sun-like stars peak in visible; cool dust peaks in IR; the cosmic microwave background peaks in the mm.
   </RepVerbal>
 
   <RepEquation refKey="wiens-law" symbol="\lambda_{peak}" />

@@ -8,21 +8,20 @@ const ctx = {
   moduleSlug: "02-stars",
 };
 
+// Post-ADR-0060: registry-shaped EquationEntry. URL is `/equations/<id>`
+// (registry route), not `/chapters/X#anchor`. Content aggregates title +
+// tex + biography prose stripped to text.
 const fixture: EquationEntry = {
-  slug: "stefan-boltzmann-luminosity",
+  id: "stefan-boltzmann-luminosity",
   title: "Stefan-Boltzmann luminosity",
-  number: 12,
   tex: "L = 4\\pi R^2 \\sigma T^4",
-  body: "<p>The Stefan-Boltzmann law for stellar luminosity.</p>",
-  chapter: "stellar-radiation",
-  anchor: "stefan-boltzmann-luminosity",
-  symbols: [],
+  symbols: ["L", "R", "T"],
 };
 
 describe("toEquationRecord", () => {
-  test("emits url with anchor", () => {
+  test("emits url at the registry route (/equations/<id>)", () => {
     expect(toEquationRecord(fixture, ctx).url).toBe(
-      "/chapters/stellar-radiation#stefan-boltzmann-luminosity"
+      "/equations/stefan-boltzmann-luminosity"
     );
   });
 
@@ -42,8 +41,10 @@ describe("toEquationRecord", () => {
     );
   });
 
-  test("meta.number carries the per-chapter sequence number", () => {
-    expect(toEquationRecord(fixture, ctx).meta.number).toBe("12");
+  test("meta.slug carries the equation id (registry key)", () => {
+    expect(toEquationRecord(fixture, ctx).meta.slug).toBe(
+      "stefan-boltzmann-luminosity"
+    );
   });
 
   test("content includes the equation title (so prose-text search hits)", () => {
@@ -52,10 +53,21 @@ describe("toEquationRecord", () => {
     );
   });
 
-  test("strips HTML tags from body in content", () => {
-    const html = '<p>foo <span class="katex"><span>bar</span></span> baz</p>';
-    const htmlFixture: EquationEntry = { ...fixture, body: html };
-    const record = toEquationRecord(htmlFixture, ctx);
+  test("strips HTML tags from biography prose in content", () => {
+    const fixtureWithBiography: EquationEntry = {
+      ...fixture,
+      biography: {
+        observable: {
+          body: '<p>foo <span class="katex"><span>bar</span></span> baz</p>',
+          epistemicRole: "observable",
+        },
+        assumptions: [],
+        units: [],
+        common_misuses: [],
+        derivation_steps: [],
+      },
+    };
+    const record = toEquationRecord(fixtureWithBiography, ctx);
     expect(record.content).toContain("foo");
     expect(record.content).toContain("bar");
     expect(record.content).toContain("baz");

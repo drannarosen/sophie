@@ -1,95 +1,154 @@
 import { render, screen } from "@testing-library/react";
 import { axe } from "jest-axe";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+// Mock the registry store BEFORE importing the component. Mirrors the
+// EquationRef.test pattern; KeyEquation now resolves entry data via
+// `lookupEquation(refId)` at render time.
+vi.mock("../EquationRef/equations-store.ts", () => ({
+  lookupEquation: (refId: string) => {
+    if (refId === "wiens-law") {
+      return {
+        id: "wiens-law",
+        title: "Wien's Law",
+        tex: "\\lambda_{peak} = b T^{-1}",
+        symbols: ["T", "\\lambda_{peak}"],
+        biography: {
+          observable: {
+            body: "Peak wavelength of thermal emission.",
+            epistemicRole: "observable",
+          },
+          assumptions: [
+            {
+              body: "LTE applies.",
+              type: "thermal-equilibrium",
+              epistemicRole: "assumption",
+            },
+          ],
+          units: [],
+          common_misuses: [
+            {
+              body: "Absorption-line spectra.",
+              misconception: "wiens-law-absorption-spectra",
+            },
+          ],
+          derivation_steps: [
+            { body: "Start from Planck's law.", epistemicRole: "model" },
+          ],
+        },
+      };
+    }
+    if (refId === "with-related") {
+      return {
+        id: "with-related",
+        title: "Equation With Related",
+        tex: "x = 1",
+        symbols: ["x"],
+        related: [
+          {
+            refId: "stefan-boltzmann",
+            kind: "see-also",
+            description: "Companion thermal law.",
+          },
+        ],
+      };
+    }
+    if (refId === "with-constants") {
+      return {
+        id: "with-constants",
+        title: "Equation With Constants",
+        tex: "F = m a",
+        symbols: ["F", "m", "a"],
+        constants: [{ symbol: "g", value: "9.81", unit: "m/s^2" }],
+      };
+    }
+    return undefined;
+  },
+}));
+
 import { KeyEquation } from "./KeyEquation.tsx";
 
-describe("<KeyEquation>", () => {
-  it("renders the title as visible text and as an aria-labelledby region", () => {
-    render(
-      <KeyEquation id='wiens-law' title="Wien's Law">
-        Body content
-      </KeyEquation>
-    );
+describe("<KeyEquation> (ADR 0060 registry-shaped)", () => {
+  it("renders the registry entry's title as the section landmark name", () => {
+    render(<KeyEquation refId='wiens-law' />);
     const region = screen.getByRole("region", { name: "Wien's Law" });
     expect(region).toBeInTheDocument();
-    // The title is visible (not hidden inside aria-label only).
-    expect(screen.getByText("Wien's Law")).toBeInTheDocument();
   });
 
-  it("sets the outer DOM id to the prop value (hash-anchor support)", () => {
+  it("sets the outer DOM id to the registry entry id (hash-anchor support)", () => {
+    const { container } = render(<KeyEquation refId='wiens-law' />);
+    expect(container.querySelector("#wiens-law")).not.toBeNull();
+  });
+
+  it("renders biography Observable / Assumption / CommonMisuse cards from the registry entry", () => {
+    render(<KeyEquation refId='wiens-law' />);
+    expect(screen.getByText(/Observable\./)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Assumption \(thermal-equilibrium\)\./)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Common misuse\./)).toBeInTheDocument();
+  });
+
+  it("renders the derivation accordion COLLAPSED by default", () => {
+    const { container } = render(<KeyEquation refId='wiens-law' />);
+    const details = container.querySelector("details");
+    expect(details).not.toBeNull();
+    expect(details?.hasAttribute("open")).toBe(false);
+  });
+
+  it("renders the derivation accordion EXPANDED when showDerivation is true", () => {
     const { container } = render(
-      <KeyEquation id='inverse-square-law' title='Inverse-Square Law'>
-        Body
-      </KeyEquation>
+      <KeyEquation refId='wiens-law' showDerivation />
     );
-    // The outer element carries the author-supplied id so `#inverse-square-law`
-    // hash navigation lands on this block.
-    expect(container.querySelector("#inverse-square-law")).not.toBeNull();
+    const details = container.querySelector("details");
+    expect(details?.hasAttribute("open")).toBe(true);
   });
 
-  it("renders children verbatim, including math-block markup", () => {
+  it("renders related-equations footer by default", () => {
+    render(<KeyEquation refId='with-related' />);
+    expect(screen.getByText(/Related:/)).toBeInTheDocument();
+    expect(screen.getByText("stefan-boltzmann")).toBeInTheDocument();
+  });
+
+  it("suppresses related-equations footer when hideRelated is set", () => {
+    render(<KeyEquation refId='with-related' hideRelated />);
+    expect(screen.queryByText(/Related:/)).not.toBeInTheDocument();
+  });
+
+  it("renders constants strip from frontmatter when present", () => {
+    render(<KeyEquation refId='with-constants' />);
+    expect(screen.getByText("g")).toBeInTheDocument();
+    expect(screen.getByText(/9\.81 m\/s\^2/)).toBeInTheDocument();
+  });
+
+  it("renders chapter framing prose at the top when children are provided", () => {
     render(
-      <KeyEquation id='wiens-law' title="Wien's Law">
-        <p>Framing prose</p>
-        <span className='katex-display' data-testid='math'>
-          λ_peak = b T⁻¹
-        </span>
-        <p>
-          where <strong>b</strong> = 0.29 cm·K
-        </p>
+      <KeyEquation refId='wiens-law'>
+        <p>Chapter-specific framing prose for this equation.</p>
       </KeyEquation>
     );
-    expect(screen.getByText("Framing prose")).toBeInTheDocument();
-    expect(screen.getByTestId("math")).toHaveTextContent("λ_peak");
-    expect(screen.getByText("b")).toBeInTheDocument();
+    expect(
+      screen.getByText("Chapter-specific framing prose for this equation.")
+    ).toBeInTheDocument();
   });
 
-  it("uses <section role='region'>, not role='note' (substantive content landmark)", () => {
+  it("miss fallback: renders framing prose only when refId doesn't resolve", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     render(
-      <KeyEquation id='kep' title="Kepler's Third Law">
-        Body
+      <KeyEquation refId='nonexistent'>
+        <p>fallback content</p>
       </KeyEquation>
     );
-    // role=region is asserted by the getByRole above (cycle 1), but make
-    // the no-role-note assertion explicit so future refactors can't
-    // silently downgrade the landmark.
-    expect(screen.queryByRole("note")).not.toBeInTheDocument();
-    expect(screen.getByRole("region")).toBeInTheDocument();
+    expect(screen.getByText("fallback content")).toBeInTheDocument();
+    expect(screen.queryByRole("region")).not.toBeInTheDocument();
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringMatching(/keyequation.*nonexistent/i)
+    );
+    warn.mockRestore();
   });
 
-  it("isolates DOM ids between two instances (no cross-talk)", () => {
-    const { container } = render(
-      <>
-        <KeyEquation id='alpha' title='Equation Alpha'>
-          A
-        </KeyEquation>
-        <KeyEquation id='beta' title='Equation Beta'>
-          B
-        </KeyEquation>
-      </>
-    );
-    expect(container.querySelector("#alpha")).not.toBeNull();
-    expect(container.querySelector("#beta")).not.toBeNull();
-    // The aria-labelledby ids are stable per-instance (useId) and do
-    // NOT collide with each other.
-    const alpha = container.querySelector("#alpha");
-    const beta = container.querySelector("#beta");
-    const alphaLabelId = alpha?.getAttribute("aria-labelledby");
-    const betaLabelId = beta?.getAttribute("aria-labelledby");
-    expect(alphaLabelId).toBeTruthy();
-    expect(betaLabelId).toBeTruthy();
-    expect(alphaLabelId).not.toBe(betaLabelId);
-  });
-
-  it("has no axe-core accessibility violations", async () => {
-    const { container } = render(
-      <KeyEquation id='axe-check' title='Axe Check'>
-        <p>Body content</p>
-        <p>
-          where <strong>X</strong> is something
-        </p>
-      </KeyEquation>
-    );
+  it("is axe-clean for the full Wien's-law render", async () => {
+    const { container } = render(<KeyEquation refId='wiens-law' />);
     expect((await axe(container)).violations).toEqual([]);
   });
 });

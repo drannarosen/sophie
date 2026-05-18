@@ -32,9 +32,16 @@ test.describe("Phase 0 vertical-slice acceptance — spoiler-alerts chapter", ()
     //   −1 from removing the legacy `<Callout variant="misconception"
     //      title="Misconception Alert">` (converted to a misconception
     //      Aside which renders as <details>, not role=note).
-    // Net delta: +24. 29 + 24 = 53. See examples/smoke/e2e/key-equation.spec.ts
-    // for KeyEquation-specific coverage.
-    await expect(page.locator("[role='note']")).toHaveCount(53);
+    // Net delta: +24. 29 + 24 = 53.
+    // PR-A registry rewrite (ADR 0060): −17 from the 3 KeyEquations'
+    //   biography children — <KeyEquation refId> resolves biography
+    //   from the registry into a Radix Collapsible popover, which
+    //   lazy-renders the asides only when the trigger is activated.
+    //   In the static DOM at chapter load, the biography children are
+    //   gone. The +8 Intervention asides remain (they still render
+    //   inline). Final: 53 − 17 = 36. See examples/smoke/e2e/key-equation.spec.ts
+    //   for KeyEquation-specific coverage.
+    await expect(page.locator("[role='note']")).toHaveCount(36);
     // 19 → 18 in Trio 3 #1 — one figure ("standard-candles") lives inside
     // the "Deep Dive: How the Distance Ladder Works" CollapsibleCard,
     // which is collapsed by default. Radix Collapsible unmounts content

@@ -5,143 +5,140 @@
 // rehype-katex output rather than hand-mocked markup.
 import "katex/dist/katex.min.css";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import katex from "katex";
+import { __setEquations } from "../EquationRef/equations-store.ts";
 import { KeyEquation } from "./KeyEquation.tsx";
 
-/**
- * Render TeX via KaTeX. Stories use this to mirror what production
- * gets through rehype-katex in the MDX pipeline (ADR 0002), so VR
- * baselines reflect real chapter rendering rather than mocked
- * `<em>`/`<sup>` markup.
- *
- * `display=true` emits the `.katex-display` block wrapper KaTeX
- * uses for set-off equations; `display=false` (default) emits the
- * inline `.katex` span suitable for in-prose math.
- */
-function TeX({ tex, display = false }: { tex: string; display?: boolean }) {
-  const html = katex.renderToString(tex, {
-    displayMode: display,
-    throwOnError: false,
-  });
-  // katex.renderToString returns trusted HTML built from a fixed TeX
-  // literal in the story args (no user input); the inner-HTML escape
-  // is required to preserve KaTeX's nested span/MathML structure.
-  return display ? (
-    // biome-ignore lint/security/noDangerouslySetInnerHtml: KaTeX output is trusted; story-only TeX input.
-    <div dangerouslySetInnerHTML={{ __html: html }} />
-  ) : (
-    // biome-ignore lint/security/noDangerouslySetInnerHtml: KaTeX output is trusted; story-only TeX input.
-    <span dangerouslySetInnerHTML={{ __html: html }} />
-  );
-}
+// Story-level registry fixture. Post-ADR-0060: KeyEquation resolves
+// content via `refId` lookup against the equations store. Storybook
+// seeds the store directly via __setEquations (production wires this
+// from the pedagogy index at TextbookLayout SSR-merge time).
+const fixture = [
+  {
+    id: "wiens-law",
+    title: "Wien's Law",
+    tex: "\\lambda_{\\text{peak}} = b \\, T^{-1}",
+    symbols: ["T", "\\lambda_{\\text{peak}}"],
+    constants: [
+      {
+        symbol: "b",
+        value: "0.29",
+        unit: "cm K",
+        name: "Wien's displacement constant",
+      },
+    ],
+    biography: {
+      observable: {
+        body: "Peak wavelength of thermal emission as a function of temperature.",
+        epistemicRole: "observable" as const,
+      },
+      assumptions: [
+        {
+          body: "Source is in local thermodynamic equilibrium so the Planck distribution applies.",
+          type: "thermal-equilibrium",
+          epistemicRole: "assumption" as const,
+        },
+        {
+          body: "Source emits as an ideal blackbody — no spectral lines, no continuum absorption shaping the peak.",
+          type: "blackbody",
+          epistemicRole: "assumption" as const,
+        },
+      ],
+      units: [],
+      breaks_when: {
+        body: "Non-thermal emission (synchrotron, masers, line emission).",
+        epistemicRole: "approximation" as const,
+      },
+      common_misuses: [
+        {
+          body: "Applying Wien's law to identify the temperature of an absorption-line spectrum.",
+          misconception: "wiens-law-absorption-spectra",
+        },
+      ],
+      derivation_steps: [
+        {
+          body: "Start from Planck's law for blackbody emission.",
+          label: "Start from Planck's law",
+          epistemicRole: "model" as const,
+        },
+        {
+          body: "Differentiate with respect to wavelength; set to zero to find the peak.",
+          label: "Differentiate and set to zero",
+          epistemicRole: "model" as const,
+        },
+      ],
+    },
+    related: [
+      {
+        refId: "stefan-boltzmann",
+        kind: "see-also" as const,
+        description: "Both connect blackbody temperature to its emission.",
+      },
+    ],
+  },
+];
 
 const meta = {
   title: "Components/KeyEquation",
   component: KeyEquation,
   parameters: { layout: "padded" },
+  decorators: [
+    (Story) => {
+      __setEquations(fixture);
+      return <Story />;
+    },
+  ],
 } satisfies Meta<typeof KeyEquation>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const ShortForm: Story = {
+/** Default: collapsed derivation, related footer visible. */
+export const Default: Story = {
   args: {
-    id: "wiens-law",
-    title: "Wien's Law",
-    children: (
-      <>
-        <p>
-          The relationship between temperature and peak emission wavelength is
-          quantified by <strong>Wien's displacement law</strong>:
-        </p>
-        <p>
-          <TeX tex='\lambda_{\text{peak}} = b \, T^{-1}' />
-        </p>
-        <p>
-          where <strong>b</strong> = 0.29 cm·K is Wien's displacement constant.
-        </p>
-      </>
-    ),
+    refId: "wiens-law",
   },
 };
 
-export const LongForm: Story = {
+/** Force-expand the derivation accordion via `showDerivation`. */
+export const WithDerivationExpanded: Story = {
   args: {
-    id: "inverse-square-law",
-    title: "The Inverse-Square Law",
-    children: (
-      <>
-        <p>
-          We'll develop this properly in a later lecture, but here's the key
-          idea.
-        </p>
-        <p>
-          Imagine a star emitting light uniformly in all directions. That light
-          spreads out over the surface of an expanding sphere. At distance{" "}
-          <TeX tex='d' />, the sphere has surface area 4π
-          <TeX tex='d^2' />. The same total light is now spread over this larger
-          area, so the <strong>flux</strong> (light per unit area) decreases:
-        </p>
-        <TeX tex='F = \dfrac{L}{4\pi d^2}' display />
-        <p>where:</p>
-        <ul>
-          <li>
-            <strong>F</strong> = flux (erg s⁻¹ cm⁻²)
-          </li>
-          <li>
-            <strong>L</strong> = luminosity (erg s⁻¹)
-          </li>
-          <li>
-            <strong>d</strong> = distance (cm)
-          </li>
-        </ul>
-        <p>
-          <strong>The key insight:</strong> Flux falls off as{" "}
-          <TeX tex='1/d^2' />. Double the distance → quarter the brightness.
-        </p>
-      </>
-    ),
+    refId: "wiens-law",
+    showDerivation: true,
   },
 };
 
-export const EquationFirst: Story = {
+/** Suppress the related-equations footer. */
+export const HideRelated: Story = {
   args: {
-    id: "kepler-third",
-    title: "Kepler's Third Law",
-    children: (
-      <>
-        <TeX tex='T^2 = a^3' display />
-        <p>
-          Period squared (in years) equals semi-major axis cubed (in AU) for any
-          solar-system orbit. The constant is hidden in the units.
-        </p>
-      </>
-    ),
+    refId: "wiens-law",
+    hideRelated: true,
   },
 };
 
-export const WithBlockMath: Story = {
+/** Chapter-specific framing prose renders at the TOP, before the title bar. */
+export const WithChapterFramingProse: Story = {
   args: {
-    id: "stefan-boltzmann",
-    title: "Stefan–Boltzmann Law",
-    children: (
-      <>
-        <p>
-          The total luminosity of a blackbody radiator is set by surface area
-          and temperature:
-        </p>
-        {/* `data-testid='math'` is preserved on a wrapping div for the
-         *   "renders children verbatim, including math-block markup" unit
-         *   test (KeyEquation.test.tsx). The real .katex-display wrapper
-         *   is emitted by KaTeX itself via display=true. */}
-        <div data-testid='math'>
-          <TeX tex='L = 4\pi R^2 \sigma T^4' display />
-        </div>
-        <p>
-          where <strong>σ</strong> is the Stefan–Boltzmann constant.
-        </p>
-      </>
-    ),
+    refId: "wiens-law",
   },
+  render: (args) => (
+    <KeyEquation {...args}>
+      <p>
+        We've seen Wien's law in the broader thermal-emission survey; in this
+        chapter we apply it specifically to dust thermal emission.
+      </p>
+    </KeyEquation>
+  ),
+};
+
+/** Miss fallback: refId doesn't resolve, framing prose renders alone. */
+export const MissFallback: Story = {
+  args: {
+    refId: "not-in-registry",
+  },
+  render: (args) => (
+    <KeyEquation {...args}>
+      <p>Framing prose for an equation that isn't in the registry.</p>
+    </KeyEquation>
+  ),
 };

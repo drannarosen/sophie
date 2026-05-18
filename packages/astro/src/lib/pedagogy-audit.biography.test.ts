@@ -33,6 +33,7 @@ function emptyIndex(): PedagogyIndex {
   return {
     definitions: [],
     equations: [],
+    equationCitations: [],
     keyInsights: [],
     figureRegistry: [],
     figureUsages: [],
@@ -48,16 +49,16 @@ function emptyIndex(): PedagogyIndex {
   };
 }
 
+// Post-ADR-0060: EquationEntry is registry-shaped (id / title / tex /
+// symbols + optional biography). The old chapter/anchor/number/body/slug
+// fields moved to EquationCitationEntry; tests use a separate fixture
+// helper for those.
 function makeEquation(overrides: Partial<EquationEntry> = {}): EquationEntry {
   return {
-    slug: "wiens-law",
+    id: "wiens-law",
     title: "Wien's Law",
-    number: 1,
     tex: "\\lambda_{peak} = b T^{-1}",
-    body: "<p>body</p>",
-    chapter: "ch",
-    anchor: "wiens-law",
-    symbols: [],
+    symbols: ["T"],
     ...overrides,
   };
 }
@@ -67,6 +68,7 @@ function makeBiography(overrides: Partial<Biography> = {}): Biography {
     assumptions: [],
     units: [],
     common_misuses: [],
+    derivation_steps: [],
     ...overrides,
   };
 }
@@ -113,10 +115,13 @@ describe("E7 INFO — biography lacks <Observable>", () => {
     expect(e7).toHaveLength(1);
     expect(e7[0]?.message).toContain("wiens-law");
     expect(e7[0]?.message).toContain("lacks an <Observable>");
+    // Post-ADR-0060: registry-sourced equation; location points at the
+    // registry route via `anchor: eq.id` with no chapter (the entry
+    // lives in the global registry, not a specific chapter).
     expect(e7[0]?.location).toMatchObject({
-      chapter: "ch",
       anchor: "wiens-law",
     });
+    expect(e7[0]?.location?.chapter).toBeUndefined();
   });
 
   it("does NOT fire when biography includes Observable", () => {
@@ -164,15 +169,13 @@ describe("E7 INFO — biography lacks <Observable>", () => {
     const index = emptyIndex();
     index.equations = [
       makeEquation({
-        slug: "eq-a",
-        anchor: "eq-a",
+        id: "eq-a",
         biography: makeBiography({
           units: [{ symbol: "T", unit: "K" }],
         }),
       }),
       makeEquation({
-        slug: "eq-b",
-        anchor: "eq-b",
+        id: "eq-b",
         biography: makeBiography({
           common_misuses: [{ body: "misuse." }],
         }),
@@ -296,7 +299,6 @@ describe("E10 WARNING — <CommonMisuse misconception=…> references undeclared
     const index = emptyIndex();
     index.equations = [
       makeEquation({
-        chapter: "ch-2",
         biography: makeBiography({
           common_misuses: [
             { body: "ok.", misconception: "wiens-law-absorption-spectra" },
@@ -699,8 +701,8 @@ describe("NR4 WARNING — registry symbol has units; equation lacks <Units> (NR-
     // both edit sites are visible to the author.
     const index = emptyIndex();
     index.equations = [
-      makeEquation({ slug: "eq-a", anchor: "eq-a", symbols: ["T"] }),
-      makeEquation({ slug: "eq-b", anchor: "eq-b", symbols: ["T"] }),
+      makeEquation({ id: "eq-a", symbols: ["T"] }),
+      makeEquation({ id: "eq-b", symbols: ["T"] }),
     ];
     const registry = makeRegistry([
       {
@@ -815,6 +817,7 @@ describe("integration — full smoke scenario", () => {
               misconception: "wiens-law-absorption-spectra",
             },
           ],
+          derivation_steps: [],
         },
       }),
     ];

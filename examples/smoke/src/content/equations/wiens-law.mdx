@@ -1,0 +1,76 @@
+---
+id: wiens-law
+title: "Wien's Law"
+tex: "\\lambda_{peak} = b \\, T^{-1}"
+symbols: ["T", "\\lambda_{peak}"]
+constants:
+  - symbol: "b"
+    value: "0.29"
+    unit: "cm K"
+    name: "Wien's displacement constant"
+rearranged_forms:
+  - tex: "T = b \\, \\lambda_{peak}^{-1}"
+    solves_for: "T"
+    label: "Temperature from peak wavelength"
+tags: ["thermal", "spectroscopy", "blackbody"]
+version: "1"
+---
+
+import {
+  Assumption,
+  BreaksWhen,
+  CommonMisuse,
+  DerivationStep,
+  Observable,
+} from "@sophie/components";
+
+<Observable>
+  The wavelength at which a thermal source's emission spectrum peaks
+  — i.e., where the continuum is brightest — as a function of the
+  source's temperature.
+</Observable>
+
+<Assumption type="thermal-equilibrium">
+  The source is in local thermodynamic equilibrium, so the Planck
+  blackbody distribution governs its emission.
+</Assumption>
+
+<Assumption type="blackbody">
+  The source emits as an ideal blackbody — no strong spectral lines
+  or continuum absorption shaping the peak. Real stars approximate
+  this; line-rich or non-thermal sources do not.
+</Assumption>
+
+<BreaksWhen>
+  Non-thermal emission (synchrotron, masers, line-dominated spectra);
+  optically-thin sources without thermal coupling; or spectra shaped
+  primarily by absorption features rather than the continuum
+  blackbody profile.
+</BreaksWhen>
+
+<CommonMisuse misconception="wiens-law-absorption-spectra">
+  Applying Wien's law to an absorption-line spectrum to infer the
+  source temperature. The peak position is set by the continuum, not
+  the absorption features; using a line-dominated spectrum will
+  misidentify the temperature when intervening cooler gas reshapes
+  the apparent profile.
+</CommonMisuse>
+
+<DerivationStep label="Start from Planck's law">
+  The Planck distribution for blackbody spectral radiance is
+  $B_\lambda(T) = (2hc^2 / \lambda^5) \cdot 1 / (e^{hc/\lambda k_B T} - 1)$
+  — the spectral energy density per unit wavelength at temperature
+  $T$.
+</DerivationStep>
+
+<DerivationStep label="Differentiate and set to zero">
+  Take $\partial B_\lambda / \partial \lambda = 0$ to find the peak.
+  The maximum sits at the wavelength where the spectral density's
+  slope vanishes.
+</DerivationStep>
+
+<DerivationStep label="Solve the transcendental equation">
+  The resulting transcendental equation has root
+  $hc / \lambda_{peak} k_B T \approx 4.965$, giving
+  $b = hc / (4.965 \, k_B) \approx 0.29$ cm·K.
+</DerivationStep>

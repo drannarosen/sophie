@@ -25,10 +25,10 @@ block (ADR 0056). Regenerated on every build; suppressed when
 |---|---|
 | Validated | 14 |
 | In progress | 8 |
-| Unvalidated | 61 |
+| Unvalidated | 62 |
 | Re-validation needed | 0 |
 | Missing block | 0 |
-| Total | 83 |
+| Total | 84 |
 
 ## Evidence kinds
 
@@ -122,6 +122,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/reference/content-schema.md](/content-schema/) | unvalidated | — | — |  |
 | [docs/website/reference/course-schedule.md](/course-schedule/) | unvalidated | — | — |  |
 | [docs/website/reference/equation-biography-schema.md](/equation-biography-schema/) | unvalidated | — | — |  |
+| [docs/website/reference/equation-registry-schema.md](/equation-registry-schema/) | unvalidated | — | — |  |
 | [docs/website/reference/glossary.md](/glossary/) | unvalidated | — | — |  |
 | [docs/website/reference/intervention-library.md](/intervention-library/) | unvalidated | — | — |  |
 | [docs/website/reference/misconception-graph-schema.md](/misconception-graph-schema/) | unvalidated | — | — |  |

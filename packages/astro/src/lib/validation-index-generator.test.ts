@@ -21,6 +21,7 @@ function makeIndex(partial: Partial<PedagogyIndex> = {}): PedagogyIndex {
   return {
     definitions: [],
     equations: [],
+    equationCitations: [],
     keyInsights: [],
     figureRegistry: [],
     figureUsages: [],

@@ -1,0 +1,33 @@
+/* DerivationStep — Tier-3 biography-child card. See
+ * `_shared/Tier3Card.module.css` for the chrome rationale + the
+ * per-variant `--sophie-tier3-label-bg` rebinding pattern.
+ *
+ * Shares Observable + Assumption's brand-violet at 6% — DerivationStep
+ * is part of the model-construction family epistemically (role:
+ * "model"), so it reads "in family" with the outer KeyEquation card.
+ *
+ * Optional `label` slot uses the `labelWithSeparator` shared variant
+ * (mirrors Assumption's `typeSlug` pattern) so author-supplied step
+ * titles render next to the "Step" marker with a · separator.
+ */
+
+.derivationStep {
+  composes: card from "../_shared/Tier3Card.module.css";
+  --sophie-tier3-label-bg: var(--sophie-tier3-derivation-step-label-bg);
+}
+
+.label {
+  composes: labelWithSeparator from "../_shared/Tier3Card.module.css";
+}
+
+.separator {
+  composes: separator from "../_shared/Tier3Card.module.css";
+}
+
+.stepLabel {
+  composes: slug from "../_shared/Tier3Card.module.css";
+}
+
+.body {
+  composes: body from "../_shared/Tier3Card.module.css";
+}

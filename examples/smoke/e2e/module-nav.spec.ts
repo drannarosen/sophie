@@ -34,19 +34,18 @@ test.describe("PR 3: Module/chapter sidebar nav", () => {
     const foundations = page.locator(
       ".sophie-module[data-module='foundations'] .sophie-chapter-list a"
     );
-    // Four foundations chapters as of EquationBiography PR-γ: the
-    // PR-γ smoke fixture (`wiens-law-fixture.mdx`, order=4) exercises
-    // every biography child of `<KeyEquation>` end-to-end. The
-    // Intervention PR-γ smoke fixture (`misconception-fixture.mdx`,
-    // order=3) pairs a misconception Aside with two literature-grounded
-    // interventions.
-    await expect(foundations).toHaveCount(4);
+    // Three foundations chapters post-ADR-0060: the EquationBiography
+    // PR-γ inline-fixture chapter (`wiens-law-fixture.mdx`, order=4)
+    // was deleted in Batch 6 — biographies live in the registry now
+    // (examples/smoke/src/content/equations/), so the inline-biography
+    // chapter test case is obsolete. The Intervention PR-γ smoke
+    // fixture (`misconception-fixture.mdx`, order=3) remains.
+    await expect(foundations).toHaveCount(3);
     await expect(foundations.nth(0)).toHaveText(/Spoiler Alerts/);
     await expect(foundations.nth(1)).toHaveText(/Measuring the Sky/);
     await expect(foundations.nth(2)).toHaveText(
       /Misconceptions and Interventions/
     );
-    await expect(foundations.nth(3)).toHaveText(/Wien.s Law biography/);
 
     const stars = page.locator(
       ".sophie-module[data-module='stars'] .sophie-chapter-list a"

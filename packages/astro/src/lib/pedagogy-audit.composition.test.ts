@@ -44,6 +44,7 @@ function emptyIndex(): PedagogyIndex {
   return {
     definitions: [],
     equations: [],
+    equationCitations: [],
     keyInsights: [],
     figureRegistry: [],
     figureUsages: [],
@@ -94,13 +95,9 @@ describe("cross-family composition — KeyEquation ↔ MultiRep ↔ Aside ↔ In
     const chapter = "01-foundations/wiens-law-fixture";
 
     const wiensLaw: EquationEntry = {
-      slug: "wiens-law",
+      id: "wiens-law",
       title: "Wien's Law",
-      number: 1,
       tex: "\\lambda_{peak} = b T^{-1}",
-      body: "<p>body</p>",
-      chapter,
-      anchor: "wiens-law",
       symbols: ["T", "\\lambda_{peak}"],
       biography: {
         observable: {
@@ -128,6 +125,7 @@ describe("cross-family composition — KeyEquation ↔ MultiRep ↔ Aside ↔ In
             misconception: "wiens-law-absorption-spectra",
           },
         ],
+        derivation_steps: [],
       },
     };
 
@@ -187,6 +185,17 @@ describe("cross-family composition — KeyEquation ↔ MultiRep ↔ Aside ↔ In
 
     const index = emptyIndex();
     index.equations = [wiensLaw];
+    // Post-ADR-0060: MR6 chapter-scoping reads equationCitations (not the
+    // declaration's chapter). Cite wiens-law from the test chapter so the
+    // MultiRep's refKey="wiens-law" resolves silent.
+    index.equationCitations = [
+      {
+        chapter,
+        refId: "wiens-law",
+        anchor: "wiens-law-citation-1",
+        number: 1,
+      },
+    ];
     index.multiReps = [peakWavelengthMultiRep];
     index.misconceptions = [misconception];
     index.interventions = [intervention];
@@ -247,14 +256,10 @@ describe("cross-family composition — KeyEquation ↔ MultiRep ↔ Aside ↔ In
     const index = emptyIndex();
     index.equations = [
       {
-        slug: "wiens-law",
+        id: "wiens-law",
         title: "Wien's Law",
-        number: 1,
         tex: "\\lambda_{peak} = b T^{-1}",
-        body: "<p>body</p>",
-        chapter,
-        anchor: "wiens-law",
-        symbols: [],
+        symbols: ["T"],
         biography: {
           assumptions: [],
           units: [],
@@ -264,7 +269,16 @@ describe("cross-family composition — KeyEquation ↔ MultiRep ↔ Aside ↔ In
               misconception: "wiens-law-misuse",
             },
           ],
+          derivation_steps: [],
         },
+      },
+    ];
+    index.equationCitations = [
+      {
+        chapter,
+        refId: "wiens-law",
+        anchor: "wiens-law-citation-1",
+        number: 1,
       },
     ];
     index.misconceptions = [

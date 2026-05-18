@@ -89,7 +89,21 @@ export async function buildPagefindIndex(distPath: string): Promise<void> {
     const entities = pedagogyIndex[entitySource] ?? [];
     const converter = converters[entitySource];
     for (const entity of entities) {
-      const chapter = chapterBySlug.get(entity.chapter);
+      // Post-ADR-0060: equations are registry-sourced (no `chapter` on
+      // the entry). Look up the first citation to derive the module
+      // context for the locator string; skip orphan declarations.
+      let entityChapterSlug: string | undefined;
+      if (entitySource === "equations") {
+        const eq = entity as { id: string };
+        entityChapterSlug = pedagogyIndex.equationCitations.find(
+          (c) => c.refId === eq.id
+        )?.chapter;
+      } else {
+        entityChapterSlug = (entity as { chapter?: string }).chapter;
+      }
+      const chapter = entityChapterSlug
+        ? chapterBySlug.get(entityChapterSlug)
+        : undefined;
       const module = chapter ? moduleBySlug.get(chapter.module) : undefined;
       if (!chapter || !module) continue;
       const ctx = {

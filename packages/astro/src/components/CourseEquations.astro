@@ -7,36 +7,34 @@ const { equations } = indexAccumulator.asPedagogyIndex();
 
 /**
  * `<CourseEquations order="..." />` — Astro consumer that lists every
- * key equation across the whole textbook with a back-link to the
- * source chapter + anchor.
+ * registry-declared equation across the whole textbook with a link
+ * to the registry page at `/equations/<id>`.
  *
- * **Sort defaults diverge from `<CourseGlossary />`** per PR-C2
- * design decision #7: chapter-order default + `order="alphabetical"`
- * opt-in. Rationale: equation lookup is topic/chapter-anchored
- * (matches print-textbook "Index of Equations" convention),
- * whereas glossary lookup is term-name-anchored (alphabetical-only).
+ * Post-ADR-0060: declaration-driven (reads `equations[]` directly).
+ * Default sort is alphabetical (per ADR 0038's course-side rule for
+ * the registry-ecosystem aggregators). The pre-ADR-0060 chapter-order
+ * default no longer applies — equations have no chapter on the
+ * declaration; cross-chapter ordering would have to traverse
+ * `equationCitations[]`, which `<ChapterEquations>` covers.
  *
- * Bodies are pre-rendered HTML embedded via `set:html`. Pure Astro;
- * no client JS. Reads the accumulator directly per ADR 0038's
- * Revisions section.
+ * Bodies are pre-rendered HTML embedded via `set:html` from the
+ * biography. Pure Astro; no client JS.
  */
 export interface Props {
-  /** Sort strategy. Default chapter-order (slug asc, then number asc). */
-  order?: "chapter" | "alphabetical";
+  /** Sort strategy. Default alphabetical. */
+  order?: "alphabetical";
   /** Optional heading rendered above the list. */
   heading?: string;
 }
 
-const { order = "chapter", heading } = Astro.props;
+const { order = "alphabetical", heading } = Astro.props;
 
-const sorted: EquationEntry[] =
-  order === "alphabetical"
-    ? [...equations].sort((a, b) => a.title.localeCompare(b.title))
-    : [...equations].sort((a, b) =>
-        a.chapter === b.chapter
-          ? a.number - b.number
-          : a.chapter.localeCompare(b.chapter)
-      );
+const sorted: EquationEntry[] = [...equations].sort((a, b) =>
+  a.title.localeCompare(b.title)
+);
+// `order` parameter currently has one valid value; kept for forward-
+// compatibility with a future tag-grouped or domain-grouped sort.
+void order;
 ---
 
 {heading && <h1 class='sophie-course-equations__heading'>{heading}</h1>}
@@ -49,19 +47,15 @@ const sorted: EquationEntry[] =
     <dl class='sophie-course-equations' data-sophie-course-equations=''>
       {sorted.map((entry) => (
         <Fragment>
-          <dt id={`eq-${entry.slug}`} class='sophie-course-equations__term'>
-            <span class='sophie-course-equations__number'>
-              Eq. {entry.number}
-            </span>
+          <dt id={`eq-${entry.id}`} class='sophie-course-equations__term'>
             <span class='sophie-course-equations__title'>{entry.title}</span>
           </dt>
           <dd class='sophie-course-equations__body'>
-            <div set:html={entry.body} />
             <BiographyRender biography={entry.biography} />
             <p class='sophie-course-equations__backlink'>
-              defined in{" "}
-              <a href={`/chapters/${entry.chapter}#${entry.anchor}`}>
-                <code>{entry.chapter}</code>
+              registry entry at{" "}
+              <a href={`/equations/${entry.id}`}>
+                <code>/equations/{entry.id}</code>
               </a>
             </p>
           </dd>

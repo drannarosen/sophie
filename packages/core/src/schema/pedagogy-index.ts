@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { AuditFindingSchema } from "./audit.ts";
 import { BiographySchema } from "./equation-biography.ts";
+import { EquationRegistryEntrySchema } from "./equation-registry.ts";
 import { InterventionEntrySchema } from "./intervention.ts";
 import { MultiRepIndexEntrySchema } from "./multirep.ts";
 import { NonEmptyString, Slug } from "./primitives.ts";
@@ -55,42 +56,55 @@ export const DefinitionEntrySchema = z.object({
 export type DefinitionEntry = z.infer<typeof DefinitionEntrySchema>;
 
 /**
- * An equation lifted from `<KeyEquation>` blocks (PR-C2). Shape
- * locked here so consumers can declare their `equations` slot;
- * the extractor is implemented in PR-C2.
+ * An equation entry in the pedagogy index per ADR 0060. Mirrors the
+ * registry frontmatter contract (`EquationRegistryEntrySchema`) — one
+ * declaration per equation, sourced from `src/content/equations/<id>.mdx`.
+ * Chapter-side data (which chapter cites this equation, in what order,
+ * with what framing prose) lives on `EquationCitationEntrySchema` instead.
+ *
+ * The optional `biography` field is populated by the registry-body walker
+ * (ADR 0046 §R8). Pre-ADR-0060, biographies were authored inline at
+ * chapter `<KeyEquation>` callsites; post-ADR-0060, biographies live in
+ * the registry MDX body and are extracted once per equation.
  */
-export const EquationEntrySchema = z.object({
-  /** Canonical slug = KeyEquation.id prop. Author-explicit, no auto-derivation. */
-  slug: Slug,
-  /** Human-readable name = KeyEquation.title prop. */
-  title: NonEmptyString,
-  /** Per-chapter sequential number, assigned by the extractor at appearance order. REQUIRED. */
-  number: z.number().int().positive(),
-  /** Raw TeX source of the FIRST $$...$$ block in the KeyEquation body. Powers EqRef KaTeX popover, LaTeX export, symbol search, AI dim-analysis. */
-  tex: NonEmptyString,
-  /** Pre-rendered HTML of the full KeyEquation body (matches DefinitionEntry.body shape). Consumers embed via `set:html`. */
-  body: z.string(),
-  /** Chapter slug containing the source KeyEquation. */
-  chapter: Slug,
-  /** DOM id on the source <section>; back-link target. Invariant: anchor === slug for equations. */
-  anchor: NonEmptyString,
+export const EquationEntrySchema = EquationRegistryEntrySchema.extend({
   /**
    * Optional EquationBiography per ADR 0046 + 2026-05-17 design hardening.
-   * Per-equation opt-in; audit invariants E7/E8/E9 (PR-δ) only fire when
+   * Per-equation opt-in; audit invariants E7/E8/E9 only fire when
    * biography children are present. Surfaces the queryable epistemic layer
    * (`epistemicRole` on every prose sub-entry) that ADR 0058 §2 underwrites.
+   * Storage moves from chapter-inline to registry MDX body per ADR 0046 §R8.
    */
   biography: BiographySchema.optional(),
-  /**
-   * Author-declared canonical symbols appearing in this equation (ADR 0043
-   * §R5 → PR-δ' bundle). Surfaces the registry-alignment hook NR1/NR3/NR4
-   * (PR-δ) and the NR2 reference-signal aggregation. Defaults to `[]` so
-   * pre-bundle indexes remain valid; symbols are author-declared, not
-   * heuristic-extracted from TeX.
-   */
-  symbols: z.array(NonEmptyString).default([]),
-});
+}).strict();
 export type EquationEntry = z.infer<typeof EquationEntrySchema>;
+
+/**
+ * A chapter-side citation of an equation registry entry per ADR 0060.
+ * One entry per `<KeyEquation refId="..." />` callsite in chapter MDX.
+ * Multiple citations of the same equation across chapters produce N entries;
+ * the per-chapter `number` is assigned by the extractor at appearance order.
+ *
+ * The `framingHtml` field carries optional chapter-specific framing prose
+ * from `<KeyEquation refId="...">` children — pre-rendered so the aggregator
+ * can embed via `set:html`. The biography itself never lives on a citation;
+ * it's resolved from the registry entry at render time via `refId`.
+ */
+export const EquationCitationEntrySchema = z
+  .object({
+    /** Chapter slug containing the citation. */
+    chapter: Slug,
+    /** Registry entry id this citation resolves to (R1 audit target). */
+    refId: Slug,
+    /** DOM id on the chapter-side `<section>`; back-link target. */
+    anchor: NonEmptyString,
+    /** Per-chapter sequential number, extractor-assigned at appearance order. */
+    number: z.number().int().positive(),
+    /** Pre-rendered chapter-specific framing prose from `<KeyEquation>` children. */
+    framingHtml: z.string().optional(),
+  })
+  .strict();
+export type EquationCitationEntry = z.infer<typeof EquationCitationEntrySchema>;
 
 /**
  * A key-insight aside (`<Aside kind="key-insight">`) — extracted in
@@ -337,6 +351,18 @@ export type ContractValidationEntry = z.infer<
 export const PedagogyIndexSchema = z.object({
   definitions: z.array(DefinitionEntrySchema).readonly(),
   equations: z.array(EquationEntrySchema).readonly(),
+  /**
+   * Per-chapter `<KeyEquation refId="..." />` citation entries per ADR 0060.
+   * One entry per chapter-side callsite; the declaration data lives on
+   * `equations[]`. Audit invariants R1 (dangling refId) and R2 (orphan
+   * declaration) consume the citation/declaration cross-product. Defaults
+   * to `[]` so consumer apps on the pre-registry path keep working through
+   * the cutover.
+   */
+  equationCitations: z
+    .array(EquationCitationEntrySchema)
+    .readonly()
+    .default([]),
   keyInsights: z.array(KeyInsightEntrySchema).readonly(),
   /** Consumer-app-owned asset data, forwarded into the index at SSR-merge time. */
   figureRegistry: z.array(FigureRegistryEntrySchema).readonly(),

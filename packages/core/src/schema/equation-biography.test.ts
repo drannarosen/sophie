@@ -4,6 +4,7 @@ import {
   BiographySchema,
   BreaksWhenEntrySchema,
   CommonMisuseEntrySchema,
+  DerivationStepEntrySchema,
   ObservableEntrySchema,
   UnitsEntrySchema,
 } from "./equation-biography.ts";
@@ -280,6 +281,54 @@ describe("CommonMisuseEntrySchema", () => {
   });
 });
 
+describe("DerivationStepEntrySchema (ADR 0046 §R9)", () => {
+  it("accepts a minimum-valid step (body + role literal)", () => {
+    const result = DerivationStepEntrySchema.safeParse({
+      body: "Start from Planck's law and differentiate with respect to wavelength.",
+      epistemicRole: "model",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts an optional label", () => {
+    const result = DerivationStepEntrySchema.safeParse({
+      body: "Set ∂B/∂λ = 0 to find the peak.",
+      label: "Differentiate and set to zero",
+      epistemicRole: "model",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects empty body", () => {
+    expect(
+      DerivationStepEntrySchema.safeParse({
+        body: "",
+        epistemicRole: "model",
+      }).success
+    ).toBe(false);
+  });
+
+  it("rejects wrong epistemicRole", () => {
+    expect(
+      DerivationStepEntrySchema.safeParse({
+        body: "x",
+        epistemicRole: "observable",
+      }).success
+    ).toBe(false);
+  });
+
+  it("rejects unknown keys (.strict())", () => {
+    expect(
+      DerivationStepEntrySchema.safeParse({
+        body: "x",
+        epistemicRole: "model",
+        // typo
+        labels: "Step 1",
+      }).success
+    ).toBe(false);
+  });
+});
+
 describe("BiographySchema (aggregate)", () => {
   it("accepts an empty biography — all fields optional or defaulted (per-equation opt-in per ADR 0046)", () => {
     const result = BiographySchema.safeParse({});
@@ -290,6 +339,7 @@ describe("BiographySchema (aggregate)", () => {
       expect(result.data.assumptions).toEqual([]);
       expect(result.data.units).toEqual([]);
       expect(result.data.common_misuses).toEqual([]);
+      expect(result.data.derivation_steps).toEqual([]);
       expect(result.data.observable).toBeUndefined();
       expect(result.data.breaks_when).toBeUndefined();
     }

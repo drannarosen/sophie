@@ -1,15 +1,15 @@
+import type { EquationEntry } from "@sophie/core/schema";
 import { describe, expect, test } from "vitest";
-import { extractEquations } from "./pedagogy-index-extractor.ts";
+import { extractEquationRegistryDeclaration } from "./pedagogy-index-extractor.ts";
 
 /**
- * Tests over synthetic mdast trees, matching the convention in
- * `pedagogy-index-extractor.test.ts` + `transform-multirep.test.ts`.
- * We don't parse real MDX here; the unified pipeline does that in the
- * integration tests below. Each test builds the minimum AST shape
- * `extractEquations` consumes (KeyEquation + biography children) and
- * asserts the populated `EquationEntry.biography` shape, plus the
- * `symbols` array harvested from the `<KeyEquation symbols={[...]}>`
- * prop per ADR 0043 §R5.
+ * Tests over synthetic mdast trees, exercising the biography walker.
+ * Post-ADR-0060, biographies live in registry MDX bodies (extracted by
+ * `extractEquationRegistryDeclaration`). These tests use a thin
+ * test-local shim that unwraps an old-shape `<KeyEquation>` synthetic
+ * tree into the registry walker's (frontmatter, body-tree) inputs —
+ * preserves the biography-edge-case coverage built up across PR-β/γ
+ * without rewriting every assertion.
  *
  * Authoritative design:
  * `docs/plans/2026-05-17-equation-biography-design.md`.
@@ -55,15 +55,6 @@ const jsxAttr = (name: string, value: string): MdxAttribute => ({
   value,
 });
 
-const jsxArrayAttr = (name: string, items: string[]): MdxAttribute => ({
-  type: "mdxJsxAttribute",
-  name,
-  value: {
-    type: "mdxJsxAttributeValueExpression",
-    value: JSON.stringify(items),
-  },
-});
-
 const mdxKeyEquation = (
   attrs: MdxAttribute[],
   children: ReadonlyArray<MdastChild>
@@ -84,6 +75,68 @@ const mdxBiographyChild = (
   attributes: attrs,
   children,
 });
+
+/**
+ * Test-local shim: extracts a single `EquationEntry` from a synthetic
+ * tree containing one `<KeyEquation>` wrapper. Post-ADR-0060 the
+ * production extractor is `extractEquationRegistryDeclaration(tree,
+ * frontmatter)` — this shim unwraps the legacy KeyEquation-as-body
+ * test fixtures by lifting `id`/`title`/`symbols` props to frontmatter
+ * and treating KeyEquation's children as the registry body's children.
+ * Returns an array (length 0 or 1) so the legacy `const [entry] = ...`
+ * destructuring still works.
+ */
+function extractEquations(tree: Root, _chapterSlug: string): EquationEntry[] {
+  for (const child of tree.children) {
+    const el = child as MdxJsxFlowElement;
+    if (el.type !== "mdxJsxFlowElement" || el.name !== "KeyEquation") continue;
+    const idAttr = el.attributes.find((a) => a.name === "id");
+    const titleAttr = el.attributes.find((a) => a.name === "title");
+    const symbolsAttr = el.attributes.find((a) => a.name === "symbols");
+    const id = typeof idAttr?.value === "string" ? idAttr.value : "fixture";
+    const title =
+      typeof titleAttr?.value === "string" ? titleAttr.value : "Fixture";
+    let symbols: string[] = ["fixture-symbol"];
+    if (
+      symbolsAttr &&
+      typeof symbolsAttr.value === "object" &&
+      symbolsAttr.value !== null
+    ) {
+      const expr = symbolsAttr.value as { value?: string };
+      if (typeof expr.value === "string") {
+        try {
+          const parsed = JSON.parse(expr.value);
+          if (
+            Array.isArray(parsed) &&
+            parsed.length > 0 &&
+            parsed.every((s) => typeof s === "string" && s.length > 0)
+          ) {
+            symbols = parsed;
+          }
+        } catch {
+          /* keep default symbols */
+        }
+      }
+    }
+    let tex = "x = 1";
+    for (const c of el.children) {
+      if (
+        (c as { type?: string }).type === "math" &&
+        typeof (c as { value?: string }).value === "string"
+      ) {
+        const v = (c as { value: string }).value;
+        if (v.trim().length > 0) {
+          tex = v;
+          break;
+        }
+      }
+    }
+    const frontmatter = { id, title, tex, symbols };
+    const bodyTree = { type: "root", children: el.children };
+    return [extractEquationRegistryDeclaration(bodyTree as never, frontmatter)];
+  }
+  return [];
+}
 
 describe("extractEquations — biography (PR-γ)", () => {
   test("returns an EquationEntry with `biography: undefined` when no biography children present (per-equation opt-in)", () => {
@@ -406,7 +459,7 @@ describe("extractEquations — biography (PR-γ)", () => {
     expect(entry?.biography?.observable).toBeDefined();
   });
 
-  test("KeyEquation without biography is still a valid entry — `symbols` defaults to []", () => {
+  test("registry entry without biography children is valid (per-equation opt-in per ADR 0046 §R8)", () => {
     const tree = root([
       mdxKeyEquation(
         [jsxAttr("id", "wiens-law"), jsxAttr("title", "Wien's Law")],
@@ -414,7 +467,6 @@ describe("extractEquations — biography (PR-γ)", () => {
       ),
     ]);
     const [entry] = extractEquations(tree as never, "ch");
-    expect(entry?.symbols).toEqual([]);
     expect(entry?.biography).toBeUndefined();
   });
 
@@ -469,6 +521,85 @@ describe("extractEquations — biography (PR-γ)", () => {
     );
   });
 
+  test("populates DerivationStep list with role 'model' + optional label (ADR 0046 §R9)", () => {
+    const tree = root([
+      mdxKeyEquation(
+        [jsxAttr("id", "wiens-law"), jsxAttr("title", "Wien's Law")],
+        [
+          mathBlock("\\lambda_{peak} = b T^{-1}"),
+          whitespace(),
+          mdxBiographyChild(
+            "DerivationStep",
+            [jsxAttr("label", "Start from Planck's law")],
+            [
+              para(
+                "Spectral radiance of a blackbody at temperature T as a function of wavelength."
+              ),
+            ]
+          ),
+          whitespace(),
+          mdxBiographyChild(
+            "DerivationStep",
+            [jsxAttr("label", "Differentiate and set to zero")],
+            [para("Solve for the wavelength at which the spectrum peaks.")]
+          ),
+          whitespace(),
+          // A step with no label — label is optional per the schema.
+          mdxBiographyChild(
+            "DerivationStep",
+            [],
+            [
+              para(
+                "Root of the resulting transcendental equation gives Wien's constant b."
+              ),
+            ]
+          ),
+        ]
+      ),
+    ]);
+    const [entry] = extractEquations(tree as never, "ch");
+    expect(entry?.biography?.derivation_steps).toHaveLength(3);
+    expect(entry?.biography?.derivation_steps[0]).toMatchObject({
+      label: "Start from Planck's law",
+      epistemicRole: "model",
+    });
+    expect(entry?.biography?.derivation_steps[1]?.label).toBe(
+      "Differentiate and set to zero"
+    );
+    expect(entry?.biography?.derivation_steps[1]?.epistemicRole).toBe("model");
+    // Third step omitted `label` — extractor leaves the field unset.
+    expect(entry?.biography?.derivation_steps[2]?.label).toBeUndefined();
+    expect(entry?.biography?.derivation_steps[2]?.epistemicRole).toBe("model");
+  });
+
+  test("throws on <DerivationStep> with empty body", () => {
+    const tree = root([
+      mdxKeyEquation(
+        [jsxAttr("id", "wiens-law"), jsxAttr("title", "Wien's Law")],
+        [mathBlock("x = 1"), mdxBiographyChild("DerivationStep", [], [])]
+      ),
+    ]);
+    expect(() => extractEquations(tree as never, "ch")).toThrowError(
+      /<DerivationStep>.*empty body/
+    );
+  });
+
+  test("DerivationStep list defaults to [] when no steps present (per-equation opt-in)", () => {
+    const tree = root([
+      mdxKeyEquation(
+        [jsxAttr("id", "wiens-law"), jsxAttr("title", "Wien's Law")],
+        [
+          mathBlock("x = 1"),
+          mdxBiographyChild("Observable", [], [para("Some observable.")]),
+        ]
+      ),
+    ]);
+    const [entry] = extractEquations(tree as never, "ch");
+    // Biography is populated (Observable triggers it); derivation_steps
+    // defaults to [] from BiographySchema's `.default([])`.
+    expect(entry?.biography?.derivation_steps).toEqual([]);
+  });
+
   test("multiple list-type biography children preserve source order within their slot (lists are stable, slots are canonical)", () => {
     // Within a list-type slot (assumptions, units, common_misuses),
     // source order IS preserved — readers see assumptions in the order
@@ -506,77 +637,10 @@ describe("extractEquations — biography (PR-γ)", () => {
   });
 });
 
-describe("extractEquations — symbols (PR-δ' bundle per ADR 0043 §R5)", () => {
-  test("harvests the `symbols` JSX array attr into EquationEntry.symbols", () => {
-    const tree = root([
-      mdxKeyEquation(
-        [
-          jsxAttr("id", "wiens-law"),
-          jsxAttr("title", "Wien's Law"),
-          jsxArrayAttr("symbols", ["T", "\\lambda_{peak}", "b"]),
-        ],
-        [mathBlock("\\lambda_{peak} = b T^{-1}")]
-      ),
-    ]);
-    const [entry] = extractEquations(tree as never, "ch");
-    expect(entry?.symbols).toEqual(["T", "\\lambda_{peak}", "b"]);
-  });
-
-  test("symbols defaults to [] when the prop is absent (forward-compat)", () => {
-    const tree = root([
-      mdxKeyEquation(
-        [jsxAttr("id", "wiens-law"), jsxAttr("title", "Wien's Law")],
-        [mathBlock("x = 1")]
-      ),
-    ]);
-    const [entry] = extractEquations(tree as never, "ch");
-    expect(entry?.symbols).toEqual([]);
-  });
-
-  test("symbols defaults to [] when the prop value is malformed JSON (parse-failure path)", () => {
-    // readStringListAttr's `try { JSON.parse(...) } catch { continue; }`
-    // returns undefined when the expression doesn't parse to an array of
-    // strings; the extractor then defaults via `attrs.symbols ?? []`. This
-    // is the resilience path — extractor doesn't throw on author typos
-    // (the audit-time NR invariants would surface the empty symbols list
-    // as a missing-declaration finding in PR-δ).
-    const tree = root([
-      mdxKeyEquation(
-        [
-          jsxAttr("id", "wiens-law"),
-          jsxAttr("title", "Wien's Law"),
-          {
-            type: "mdxJsxAttribute",
-            name: "symbols",
-            value: {
-              type: "mdxJsxAttributeValueExpression",
-              value: "not-valid-json",
-            },
-          },
-        ],
-        [mathBlock("x = 1")]
-      ),
-    ]);
-    const [entry] = extractEquations(tree as never, "ch");
-    expect(entry?.symbols).toEqual([]);
-  });
-
-  test("symbols composes with biography — both fields populated", () => {
-    const tree = root([
-      mdxKeyEquation(
-        [
-          jsxAttr("id", "wiens-law"),
-          jsxAttr("title", "Wien's Law"),
-          jsxArrayAttr("symbols", ["T", "\\lambda_{peak}"]),
-        ],
-        [
-          mathBlock("\\lambda_{peak} = b T^{-1}"),
-          mdxBiographyChild("Observable", [], [para("Peak wavelength.")]),
-        ]
-      ),
-    ]);
-    const [entry] = extractEquations(tree as never, "ch");
-    expect(entry?.symbols).toEqual(["T", "\\lambda_{peak}"]);
-    expect(entry?.biography?.observable).toBeDefined();
-  });
-});
+// Symbols-extraction tests (PR-δ' bundle) removed in Batch 4 per ADR
+// 0060: `<KeyEquation symbols={[...]}>` is no longer the source of
+// truth for symbol declarations. Symbols now come from frontmatter on
+// the registry MDX file (`src/content/equations/<id>.mdx`); the JSX-
+// array-attr extraction path is dead. Test coverage for the new
+// frontmatter-symbols path lives in pedagogy-index.test.ts (via
+// EquationRegistryEntrySchema's `symbols: z.array(NonEmptyString).min(1)`).

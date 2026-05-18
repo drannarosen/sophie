@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import {
   type AssumptionEntry,
   type AuditFinding,
@@ -7,7 +8,11 @@ import {
   type CommonMisuseEntry,
   type ContractValidationEntry,
   type DefinitionEntry,
+  type DerivationStepEntry,
+  type EquationCitationEntry,
   type EquationEntry,
+  type EquationRegistryEntry,
+  EquationRegistryEntrySchema,
   type FigureRegistryEntry,
   type FigureUsageEntry,
   type InlineRefKind,
@@ -30,6 +35,7 @@ import { toHtml } from "hast-util-to-html";
 import type { Root } from "mdast";
 import { toHast } from "mdast-util-to-hast";
 import { visit } from "unist-util-visit";
+import { parse as parseYaml } from "yaml";
 
 /**
  * Pedagogy index extractor — the load-bearing primitive declared
@@ -182,34 +188,6 @@ function readAsideAttributes(node: MdxJsxFlowElement): AsideAttributes {
     if (attr.name === "name") out.name = attr.value;
   }
   Object.assign(out, readMisconceptionGraphFields(node));
-  return out;
-}
-
-interface KeyEquationAttributes {
-  id?: string;
-  title?: string;
-  /**
-   * Author-declared canonical TeX-form symbols per ADR 0043 §R5
-   * (`<KeyEquation symbols={["T", "\\lambda_{peak}", "b"]}>`). Optional
-   * at v1; the PR-δ NR1/NR3/NR4 audit invariants only fire when
-   * present. Parsed from the JSX array-expression attr via
-   * `readStringListAttr`.
-   */
-  symbols?: string[];
-}
-
-function readKeyEquationAttributes(
-  node: MdxJsxFlowElement
-): KeyEquationAttributes {
-  const out: KeyEquationAttributes = {};
-  for (const attr of node.attributes ?? []) {
-    if (attr.type !== "mdxJsxAttribute") continue;
-    if (typeof attr.value !== "string") continue;
-    if (attr.name === "id") out.id = attr.value;
-    if (attr.name === "title") out.title = attr.value;
-  }
-  const symbols = readStringListAttr(node, "symbols");
-  if (symbols !== undefined) out.symbols = symbols;
   return out;
 }
 
@@ -366,83 +344,29 @@ export function extractDefinitions(
 }
 
 /**
- * Extract the raw TeX source of the FIRST `$$...$$` math block in a
- * KeyEquation's children. Walks the children subtree via
- * `unist-util-visit` and returns the `value` of the first `math` node
- * (display math; the mdast node type produced by `remark-math` for
- * `$$...$$` blocks). Returns `null` when no math node exists —
- * callers treat this as the E6 categorization error.
+ * Walks any mdast container's children and extracts biography entries
+ * (Observable / Assumption / Units / BreaksWhen / CommonMisuse /
+ * DerivationStep). Used by the registry walker
+ * (`extractEquationRegistryDeclaration`) which walks `Root.children`
+ * of `src/content/equations/<id>.mdx` files.
  *
- * `inlineMath` (the `$x$` AST node type) is deliberately ignored:
- * only display math counts as the canonical-form equation tex.
- */
-function extractFirstTex(children: ReadonlyArray<unknown>): string | null {
-  let found: string | null = null;
-  const synthetic = { type: "root" as const, children: children as never };
-  visit(synthetic, "math", (node: { value?: string }) => {
-    if (found !== null) return false;
-    if (typeof node.value === "string" && node.value.trim().length > 0) {
-      found = node.value;
-      return false;
-    }
-    return undefined;
-  });
-  return found;
-}
-
-/**
- * Pure extractor. Walks an mdast tree, finds JSX elements named
- * "KeyEquation", returns one EquationEntry per match with
- * extractor-assigned `number` (per-chapter sequential, starting at
- * 1, in source order). Throws when:
- *
- *   - A KeyEquation is missing a non-empty `id` or `title` (the
- *     KeyEquation Zod props schema already catches this at the
- *     component layer; this is defense in depth inside the
- *     extractor — mirrors `extractDefinitions`'s explicit guard).
- *   - A KeyEquation contains zero `$$` math blocks (E6
- *     categorization error: should be a Callout, not a KeyEquation).
- *   - Two KeyEquations in the same chapter slug to the same anchor
- *     (intra-chapter slug collision; matches definitions' pattern).
- */
-/**
- * Walk one `<KeyEquation>` parent's children and produce the
- * `Biography` payload that `extractEquations` consumes per ADR 0046 +
- * 2026-05-17 design hardening §"Pedagogy index entry shape".
- *
- * Returns `undefined` when zero biography children are present
- * (per-equation opt-in per ADR 0046 — equations without biographies
- * are valid; the audit's E7/E8/E9 invariants only fire when biography
- * children exist).
- *
- * Whitespace text nodes between JSX siblings are skipped (mdast emits
- * them around `<Parent>\n  <Child>` source). Non-biography children
- * (paragraphs, math blocks, raw HTML, other JSX) are ALSO skipped —
- * unlike `buildRepsFromMultiRepChildren` which is strict (MultiRep
- * forbids non-Rep children), `<KeyEquation>` legitimately contains
- * framing prose + the canonical `$$...$$` math block alongside
- * biography children.
+ * Returns `undefined` when zero biography children are present (per-
+ * equation opt-in per ADR 0046 §R8). Whitespace text nodes between
+ * JSX siblings are skipped. Non-biography children (paragraphs, math
+ * blocks, raw HTML, other JSX) are ALSO skipped — registry MDX files
+ * may include framing prose between biography children.
  *
  * Observable + BreaksWhen are singletons; multiple of either is an
- * authoring error (throws). Assumption / Units / CommonMisuse are
- * lists (any non-negative count is valid).
+ * authoring error (throws). Assumption / Units / CommonMisuse /
+ * DerivationStep are lists (any non-negative count is valid).
  *
  * Each role-bearing entry receives its hardcoded `epistemicRole`
- * literal per ADR 0058 §2 pattern 3 — the schema-side `z.literal`
- * locks the value, and the component-side `<NAME>_EPISTEMIC_ROLE`
- * const must agree (compile-time guarantee via
- * `as const satisfies EpistemicRole`). Surfaces the queryable
- * epistemic layer (design §F5) without runtime role validation.
- *
- * Contract scope (render/audit split): this helper owns *extraction*
- * — produces the `Biography` index entry from JSX children. The audit
- * (E7/E8/E9 in PR-δ) consumes that populated entry. If v2 grows a
- * biography-allowlist invariant (e.g., "warn on unknown JSX children
- * of `<KeyEquation>`"), it lives in `pedagogy-audit.ts`, not here —
- * the extractor must stay structurally permissive so authors can
- * freely embed prose + cross-references inside KeyEquation bodies.
+ * literal per ADR 0058 §2 pattern 3 — the schema-side
+ * `EpistemicRoleSchema.extract` locks the value, and the component-
+ * side `<NAME>_EPISTEMIC_ROLE` const must agree (compile-time
+ * guarantee via `as const satisfies EpistemicRole`).
  */
-function buildBiographyFromKeyEquationChildren(
+export function buildBiographyFromChildren(
   parent: { children: ReadonlyArray<unknown> },
   contextLabel: string
 ): Biography | undefined {
@@ -451,6 +375,7 @@ function buildBiographyFromKeyEquationChildren(
   const units: UnitsEntry[] = [];
   let breaksWhen: BreaksWhenEntry | undefined;
   const commonMisuses: CommonMisuseEntry[] = [];
+  const derivationSteps: DerivationStepEntry[] = [];
 
   for (const child of parent.children) {
     if (isWhitespaceTextNode(child)) continue;
@@ -535,9 +460,29 @@ function buildBiographyFromKeyEquationChildren(
         body,
         ...(misconception ? { misconception } : {}),
       });
+      continue;
     }
 
-    // Non-biography JSX (anything other than the five biography children
+    if (el.name === "DerivationStep") {
+      // Added per ADR 0046 §R9 (ADR 0060 brainstorm, 2026-05-18).
+      // List shape — equations typically have multiple steps; each is
+      // an entry with prose `body`, optional short `label`, and the
+      // locked `"model"` epistemic role per ADR 0058's role contract.
+      const body = renderChildrenToHtml(el.children);
+      if (body.trim().length === 0) {
+        throw new Error(
+          `transform: <DerivationStep> in ${contextLabel} has an empty body. Resolution: add prose between the opening and closing tags.`
+        );
+      }
+      const label = readStringAttr(el, "label");
+      derivationSteps.push({
+        body,
+        ...(label ? { label } : {}),
+        epistemicRole: "model",
+      });
+    }
+
+    // Non-biography JSX (anything other than the six biography children
     // above) is silently skipped — <KeyEquation> legitimately contains
     // other JSX in framing prose (e.g., <EqRef>, <GlossaryTerm>). The
     // audit (E7/E8/E9 in PR-δ) consumes the populated biography only;
@@ -550,7 +495,8 @@ function buildBiographyFromKeyEquationChildren(
     assumptions.length > 0 ||
     units.length > 0 ||
     breaksWhen !== undefined ||
-    commonMisuses.length > 0;
+    commonMisuses.length > 0 ||
+    derivationSteps.length > 0;
 
   if (!hasAnyBiography) return undefined;
 
@@ -560,70 +506,81 @@ function buildBiographyFromKeyEquationChildren(
     units,
     ...(breaksWhen ? { breaks_when: breaksWhen } : {}),
     common_misuses: commonMisuses,
+    derivation_steps: derivationSteps,
   };
 }
 
-export function extractEquations(
+/**
+ * Pure chapter walker per ADR 0060. Walks an mdast tree for
+ * `<KeyEquation refId="X" />` callsites; returns one
+ * `EquationCitationEntry` per callsite with extractor-assigned per-
+ * chapter `number` (1-indexed, source order). Optional children render
+ * to `framingHtml` for chapter-specific framing prose; absent children
+ * → `framingHtml` is unset.
+ *
+ * Throws when:
+ *   - A `<KeyEquation>` is missing the `refId` attr (the registry
+ *     contract requires a target id).
+ */
+export function extractEquationCitations(
   tree: Root,
   chapterSlug: string
-): EquationEntry[] {
-  const out: EquationEntry[] = [];
-  const seenSlugs = new Set<string>();
+): EquationCitationEntry[] {
+  const out: EquationCitationEntry[] = [];
   let counter = 0;
 
   visit(tree, "mdxJsxFlowElement", (node: unknown) => {
     const el = node as MdxJsxFlowElement;
     if (el.name !== "KeyEquation") return;
-    const attrs = readKeyEquationAttributes(el);
 
-    const id = attrs.id?.trim();
-    const title = attrs.title?.trim();
-    if (!id) {
+    const refId = readStringAttr(el, "refId");
+    if (!refId) {
       throw new Error(
-        `<KeyEquation> in chapter "${chapterSlug}" is missing a non-empty \`id\`.`
+        `<KeyEquation> in chapter "${chapterSlug}" is missing a non-empty \`refId\` attr. Post-ADR-0060, every chapter-side <KeyEquation> must cite a registry entry via \`refId\`.`
       );
     }
-    if (!title) {
-      throw new Error(
-        `<KeyEquation id="${id}"> in chapter "${chapterSlug}" is missing a non-empty \`title\`.`
-      );
-    }
-
-    const slug = slugify(id);
-    if (seenSlugs.has(slug)) {
-      throw new Error(
-        `Intra-chapter slug collision in chapter "${chapterSlug}": slug "${slug}" is generated by more than one <KeyEquation>. Resolution: change one of the \`id\` props.`
-      );
-    }
-    seenSlugs.add(slug);
-
-    const tex = extractFirstTex(el.children);
-    if (tex === null) {
-      throw new Error(
-        `<KeyEquation id="${id}"> in chapter "${chapterSlug}" contains no \`$$...$$\` block-math child. Categorization error: KeyEquation must lead with the canonical equation. Resolution: add a \`$$...$$\` block as the first math content, or convert to a <Callout>. Note: a single-line \`$$math$$\` is parsed by remark-math as inline math, NOT block math — block math requires the opening \`$$\` and closing \`$$\` each on their own line (remark-math / Pandoc convention).`
-      );
-    }
-
-    const biography = buildBiographyFromKeyEquationChildren(
-      el,
-      `<KeyEquation id="${id}"> in chapter "${chapterSlug}"`
-    );
 
     counter += 1;
+    const framingHtml = renderChildrenToHtml(el.children).trim();
+    const anchor = `${slugify(refId)}-citation-${counter}`;
     out.push({
-      slug,
-      title,
-      number: counter,
-      tex,
-      body: renderChildrenToHtml(el.children),
       chapter: chapterSlug,
-      anchor: slug,
-      symbols: attrs.symbols ?? [],
-      ...(biography ? { biography } : {}),
+      refId: slugify(refId),
+      anchor,
+      number: counter,
+      ...(framingHtml.length > 0 ? { framingHtml } : {}),
     });
   });
 
   return out;
+}
+
+/**
+ * Pure registry walker per ADR 0060. Combines validated frontmatter
+ * (from Astro's content collection schema) with the biography extracted
+ * from the registry MDX body's `Root.children`. Returns the assembled
+ * `EquationEntry` — the registry-source contract on
+ * `PedagogyIndex.equations[]`.
+ *
+ * Frontmatter shape is `EquationRegistryEntrySchema`; biography children
+ * (Observable / Assumption / Units / BreaksWhen / CommonMisuse /
+ * DerivationStep) are walked via the shared
+ * `buildBiographyFromChildren` helper. The biography is optional —
+ * registry MDX files without biography children produce entries
+ * without the `biography` field.
+ */
+export function extractEquationRegistryDeclaration(
+  tree: Root,
+  frontmatter: EquationRegistryEntry
+): EquationEntry {
+  const biography = buildBiographyFromChildren(
+    tree,
+    `equation registry entry "${frontmatter.id}"`
+  );
+  return {
+    ...frontmatter,
+    ...(biography ? { biography } : {}),
+  };
 }
 
 /**
@@ -1768,7 +1725,20 @@ const GLOBAL_KEY = "__sophiePedagogyIndex";
 
 interface GlobalIndexState {
   definitions: Map<string, DefinitionEntry>;
+  /**
+   * Registry-sourced equation declarations per ADR 0060. Keyed by
+   * equation `id` (one entry per `src/content/equations/<id>.mdx`
+   * file). NOT chapter-keyed — equations are registry-sourced post-
+   * ADR-0060; chapter-side `<KeyEquation refId>` callsites live in
+   * `equationCitations` instead.
+   */
   equations: Map<string, EquationEntry>;
+  /**
+   * Per-chapter `<KeyEquation refId>` citation callsites per ADR 0060.
+   * Append-only array (mirrors `inlineRefUsages`); `clearChapterCitations`
+   * filters out entries with the cleared chapter slug.
+   */
+  equationCitations: EquationCitationEntry[];
   keyInsights: Map<string, KeyInsightEntry>;
   figureUsages: Map<string, FigureUsageEntry>;
   misconceptions: Map<string, MisconceptionEntry>;
@@ -1850,6 +1820,7 @@ function getGlobalState(): GlobalIndexState {
     g[GLOBAL_KEY] = {
       definitions: new Map(),
       equations: new Map(),
+      equationCitations: [],
       keyInsights: new Map(),
       figureUsages: new Map(),
       misconceptions: new Map(),
@@ -1880,11 +1851,14 @@ class IndexAccumulator {
         state.definitions.delete(slug);
       }
     }
-    for (const [slug, entry] of state.equations) {
-      if (entry.chapter === chapterSlug) {
-        state.equations.delete(slug);
-      }
-    }
+    // Post-ADR-0060: equations are registry-sourced (one declaration per
+    // `src/content/equations/<id>.mdx`), NOT chapter-keyed. The chapter-
+    // clear pass drops the chapter's citations instead — declarations
+    // are managed by `clearEquations` (full registry reset) or by
+    // re-running the registry walker which overwrites by `id`.
+    state.equationCitations = state.equationCitations.filter(
+      (c) => c.chapter !== chapterSlug
+    );
     for (const [key, entry] of state.keyInsights) {
       if (entry.chapter === chapterSlug) {
         state.keyInsights.delete(key);
@@ -1948,25 +1922,52 @@ class IndexAccumulator {
   }
 
   /**
-   * Add a chapter's extracted equations. Throws on cross-chapter
-   * slug collision (audit invariant E1; defense in depth in PR-C2,
-   * matches `addDefinitions`'s pattern). Two-pass shape: validate
-   * the whole batch BEFORE mutating, so a collision in entry N
-   * leaves entries 0..N-1 unwritten.
+   * Add registry-sourced equation declarations per ADR 0060. One entry
+   * per `src/content/equations/<id>.mdx` file. Keyed by `id`; last-write-
+   * wins (re-parsing the same registry MDX overwrites). No cross-chapter
+   * collision check because equations are no longer chapter-keyed —
+   * each registry file's `id` is the canonical identifier.
    */
   addEquations(entries: ReadonlyArray<EquationEntry>): void {
     const state = getGlobalState();
     for (const entry of entries) {
-      const existing = state.equations.get(entry.slug);
-      if (existing && existing.chapter !== entry.chapter) {
-        throw new Error(
-          `Equation "${entry.title}" (slug "${entry.slug}") is defined in multiple chapters: "${existing.chapter}" and "${entry.chapter}". Resolution: change one of the \`id\` props.`
-        );
-      }
+      state.equations.set(entry.id, entry);
     }
+  }
+
+  /**
+   * Drop ALL registry-sourced equation declarations (full reset). Called
+   * when the equation registry is re-loaded wholesale (e.g., during HMR
+   * after a registry-file deletion). Distinct from `clearChapter`, which
+   * does NOT touch `equations` post-ADR-0060.
+   */
+  clearEquations(): void {
+    const state = getGlobalState();
+    state.equations.clear();
+  }
+
+  /**
+   * Add a chapter's extracted `<KeyEquation refId>` citation entries per
+   * ADR 0060. Append-only; the per-chapter clear path is
+   * `clearChapterCitations(chapterSlug)`.
+   */
+  addEquationCitations(entries: ReadonlyArray<EquationCitationEntry>): void {
+    const state = getGlobalState();
     for (const entry of entries) {
-      state.equations.set(entry.slug, entry);
+      state.equationCitations.push(entry);
     }
+  }
+
+  /**
+   * Drop a chapter's `<KeyEquation refId>` citations. Called by the
+   * remark plugin's chapter pass before re-extracting (mirrors
+   * `inlineRefUsages` clearing semantics).
+   */
+  clearChapterCitations(chapterSlug: string): void {
+    const state = getGlobalState();
+    state.equationCitations = state.equationCitations.filter(
+      (c) => c.chapter !== chapterSlug
+    );
   }
 
   /**
@@ -2225,6 +2226,7 @@ class IndexAccumulator {
     return {
       definitions: Array.from(state.definitions.values()),
       equations: Array.from(state.equations.values()),
+      equationCitations: state.equationCitations.slice(),
       keyInsights: Array.from(state.keyInsights.values()),
       figureRegistry: state.figureRegistry,
       figureUsages: Array.from(state.figureUsages.values()),
@@ -2256,6 +2258,7 @@ export function resetIndexAccumulator(): void {
   const state = getGlobalState();
   state.definitions.clear();
   state.equations.clear();
+  state.equationCitations = [];
   state.keyInsights.clear();
   state.figureUsages.clear();
   state.misconceptions.clear();
@@ -2288,6 +2291,57 @@ function defaultGetChapterSlug(filePath: string): string | undefined {
   return match[1];
 }
 
+/**
+ * Path-detection helpers per ADR 0060. The remark plugin routes
+ * `content/chapters/**` and `content/equations/**` to different
+ * walkers (chapter citations vs registry declarations); other paths
+ * are skipped. Pattern matches both POSIX (`/`) and Windows (`\\`)
+ * separators.
+ */
+const CHAPTER_PATH_RE = /[/\\]content[/\\]chapters[/\\]/;
+const EQUATION_REGISTRY_PATH_RE = /[/\\]content[/\\]equations[/\\]/;
+
+function isChapterFilePath(filePath: string): boolean {
+  return CHAPTER_PATH_RE.test(filePath);
+}
+
+function isEquationRegistryFilePath(filePath: string): boolean {
+  return EQUATION_REGISTRY_PATH_RE.test(filePath);
+}
+
+/**
+ * Read the YAML frontmatter for an equation registry MDX file and
+ * validate it against `EquationRegistryEntrySchema`. Returns the
+ * typed entry.
+ *
+ * Why fs-direct rather than walking the mdast `yaml` node: Astro's
+ * MDX integration runs `remark-frontmatter` + `remark-mdx-frontmatter`
+ * BEFORE our custom remark plugin sees the tree, so the YAML node is
+ * already hoisted into an `mdxjsEsm` export const and the original
+ * `yaml` node is removed from `tree.children`. Re-reading the source
+ * file directly avoids parsing the hoisted ESM AST and gives us the
+ * same YAML the content-layer schema validates against.
+ */
+function readEquationRegistryFrontmatter(
+  filePath: string
+): EquationRegistryEntry {
+  const source = readFileSync(filePath, "utf8");
+  const match = source.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n/);
+  if (!match) {
+    throw new Error(
+      `Equation registry file "${filePath}" is missing YAML frontmatter. Per ADR 0060, every registry MDX must declare \`id\`, \`title\`, \`tex\`, and \`symbols\` in frontmatter at the top of the file.`
+    );
+  }
+  const raw = parseYaml(match[1] ?? "");
+  const parsed = EquationRegistryEntrySchema.safeParse(raw);
+  if (!parsed.success) {
+    throw new Error(
+      `Equation registry file "${filePath}" has invalid frontmatter. Validation errors: ${parsed.error.message}`
+    );
+  }
+  return parsed.data;
+}
+
 export interface PedagogyIndexRemarkPluginOptions {
   /** Derive a chapter slug from the source file path. Defaults to the
    * standard Astro content-collection layout (see defaultGetChapterSlug). */
@@ -2301,46 +2355,60 @@ interface VFileLike {
 /**
  * Remark plugin that wires the pure extractors + `indexAccumulator`
  * into the unified MDX pipeline. Add to `remarkPlugins` in your
- * MDX integration config; runs once per chapter parse.
+ * MDX integration config.
  *
- * On each chapter parse:
- *   1. Derive the chapter slug from the vfile path.
- *   2. `indexAccumulator.clearChapter(slug)` so re-parses don't
- *      accumulate stale entries.
- *   3. `extractDefinitions(tree, slug)` + `extractEquations(tree,
- *      slug)` + `extractKeyInsights(tree, slug)` + `extractFigures(
- *      tree, slug)` + `extractMisconceptions(tree, slug)` return
- *      this chapter's entries.
- *   4. `indexAccumulator.addDefinitions(entries)` +
- *      `addEquations(entries)` + `addKeyInsights(entries)` +
- *      `addFigureUsages(entries)` + `addMisconceptions(entries)`
- *      aggregate; throw on cross-chapter slug collision (audit
- *      invariant #1) for definitions and equations, on F3 (multiple-
- *      canonical-per-name) for figures, and on M2 (cross-chapter
- *      explicit-id collision) for misconceptions. Key-insights are
- *      chapter-local; misconception auto-anchors (`misc-N`)
- *      are also chapter-local and skip the M2 check.
+ * Path-detected per ADR 0060:
+ *   - `content/chapters/**\/*.mdx` → chapter pass: clear chapter state,
+ *     run definition/equation-citation/key-insight/figure/misconception/
+ *     objective/inline-ref/multirep/intervention extractors, run the
+ *     terminal transform passes (LO/MultiRep/Intervention/markFirstUse).
+ *   - `content/equations/**\/*.mdx` → registry pass: parse + validate
+ *     frontmatter, walk body for biography children via
+ *     `buildBiographyFromChildren`, assemble `EquationEntry`, replace
+ *     the registry slot via `addEquations` (keyed by `id`).
+ *   - Other paths → skip.
  *
- * The plugin runs read-only extraction passes first (defs/equations/
- * key insights/figures/misconceptions/objectives/inline refs), then a
- * terminal `transformLearningObjectives` rewrite that mutates
- * `<LearningObjectives>` flow elements — see that function's docstring
- * for the rewrite contract.
+ * The plugin runs read-only extraction passes first (chapter pass) or
+ * a single registry-walker pass (registry path). Terminal transforms
+ * fire only on the chapter pass; registry MDX bodies are static
+ * biography content with no LO/MultiRep/Intervention components.
  */
 export function pedagogyIndexRemarkPlugin(
   options: PedagogyIndexRemarkPluginOptions = {}
 ): (tree: Root, file: VFileLike) => void {
-  const getChapterSlug = options.getChapterSlug ?? defaultGetChapterSlug;
-
   return (tree: Root, file: VFileLike) => {
     const filePath = file.path;
     if (!filePath) return;
-    const chapterSlug = getChapterSlug(filePath);
+
+    // Registry path: assemble one EquationEntry from frontmatter + body
+    // biography, replace the registry slot.
+    if (isEquationRegistryFilePath(filePath)) {
+      const frontmatter = readEquationRegistryFrontmatter(filePath);
+      const entry = extractEquationRegistryDeclaration(tree, frontmatter);
+      indexAccumulator.addEquations([entry]);
+      return;
+    }
+
+    // Chapter pass. Two routes to chapterSlug:
+    //   1. Caller-provided `options.getChapterSlug` — consumer apps with
+    //      non-standard layouts (e.g. tests passing arbitrary paths)
+    //      assert "treat this file as a chapter MDX and use slug X."
+    //   2. Default basename-from-path + `content/chapters/**` filter —
+    //      avoids mis-typed extraction on `examples/` sandbox files or
+    //      docs MDX that aren't part of any chapter collection.
+    let chapterSlug: string | undefined;
+    if (options.getChapterSlug) {
+      chapterSlug = options.getChapterSlug(filePath);
+    } else if (isChapterFilePath(filePath)) {
+      chapterSlug = defaultGetChapterSlug(filePath);
+    }
     if (!chapterSlug) return;
 
     indexAccumulator.clearChapter(chapterSlug);
     indexAccumulator.addDefinitions(extractDefinitions(tree, chapterSlug));
-    indexAccumulator.addEquations(extractEquations(tree, chapterSlug));
+    indexAccumulator.addEquationCitations(
+      extractEquationCitations(tree, chapterSlug)
+    );
     indexAccumulator.addKeyInsights(extractKeyInsights(tree, chapterSlug));
     indexAccumulator.addFigureUsages(extractFigures(tree, chapterSlug));
     indexAccumulator.addMisconceptions(

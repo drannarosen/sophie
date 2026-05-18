@@ -40,6 +40,7 @@ function emptyIndex(): PedagogyIndex {
   return {
     definitions: [],
     equations: [],
+    equationCitations: [],
     keyInsights: [],
     figureRegistry: [],
     figureUsages: [],
@@ -93,14 +94,10 @@ describe("runPedagogyAudit — clean index", () => {
       anchor: "photon",
     };
     const isq: EquationEntry = {
-      slug: "inverse-square-law",
+      id: "inverse-square-law",
       title: "Inverse-Square Law",
-      number: 1,
       tex: "F = L / (4 \\pi r^2)",
-      body: "",
-      chapter: "spoiler-alerts",
-      anchor: "inverse-square-law",
-      symbols: [],
+      symbols: ["F"],
     };
     const fig: FigureRegistryEntry = {
       name: "three-big-questions",
@@ -160,6 +157,15 @@ describe("runPedagogyAudit — clean index", () => {
       ...emptyIndex(),
       definitions: [photonDef],
       equations: [isq],
+      // Cite the registry entry from a chapter so R2 (orphan) stays silent.
+      equationCitations: [
+        {
+          chapter: "spoiler-alerts",
+          refId: "inverse-square-law",
+          anchor: "inverse-square-law-citation-1",
+          number: 1,
+        },
+      ],
       keyInsights: [ki, kiFoundations],
       figureRegistry: [fig],
       figureUsages: [figUse],
@@ -289,16 +295,12 @@ describe("E4 — undefined <EqRef slug=X>", () => {
     expect(report.errors[0]?.message).toContain("inverse-square-law");
   });
 
-  it("does not flag an eq-ref that matches an equation slug", () => {
+  it("does not flag an eq-ref that matches an equation id", () => {
     const eq: EquationEntry = {
-      slug: "wiens-law",
+      id: "wiens-law",
       title: "Wien's Law",
-      number: 1,
       tex: "\\lambda_{max} T = b",
-      body: "",
-      chapter: "spoiler-alerts",
-      anchor: "wiens-law",
-      symbols: [],
+      symbols: ["T"],
     };
     const index: PedagogyIndex = {
       ...emptyIndex(),

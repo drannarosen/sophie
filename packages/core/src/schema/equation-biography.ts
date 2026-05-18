@@ -108,12 +108,37 @@ export const CommonMisuseEntrySchema = z
 export type CommonMisuseEntry = z.infer<typeof CommonMisuseEntrySchema>;
 
 /**
- * Aggregate per-equation biography. Observable/BreaksWhen modeled as
- * optional singletons (one each typical); Assumption/Units/CommonMisuse
- * modeled as arrays with `[]` defaults so consumers (audit, render) walk
- * a uniform shape without optional-chain noise.
+ * `<DerivationStep>` biography child per ADR 0046 §R9 (added by the
+ * ADR 0060 registry-ecosystem brainstorm, 2026-05-18). Each step in
+ * an equation's derivation is one entry — author-supplied prose body
+ * plus optional short `label` (e.g., "Differentiate and set to zero").
  *
- * All five slots optional — incremental authoring supported per ADR 0046
+ * Role `"model"` per ADR 0046 §R9 — the derivation IS the
+ * model-construction trace; each step extends the model toward its
+ * final form. Locked rather than left implicit so the queryable
+ * epistemic surface can answer "show me every model-construction
+ * step across the course" trivially.
+ *
+ * Renders collapsible-by-default at the consumer end; chapter authors
+ * force-expand via `<KeyEquation refId="..." showDerivation />`.
+ */
+export const DerivationStepEntrySchema = z
+  .object({
+    body: NonEmptyString,
+    label: NonEmptyString.optional(),
+    epistemicRole: EpistemicRoleSchema.extract(["model"]),
+  })
+  .strict();
+
+export type DerivationStepEntry = z.infer<typeof DerivationStepEntrySchema>;
+
+/**
+ * Aggregate per-equation biography. Observable/BreaksWhen modeled as
+ * optional singletons (one each typical); Assumption/Units/CommonMisuse/
+ * DerivationStep modeled as arrays with `[]` defaults so consumers
+ * (audit, render) walk a uniform shape without optional-chain noise.
+ *
+ * All six slots optional — incremental authoring supported per ADR 0046
  * (E7 INFO nudges toward Observable when biography children exist).
  *
  * `.strict()` catches singular-vs-plural typos (e.g., `assumption` instead
@@ -126,6 +151,7 @@ export const BiographySchema = z
     units: z.array(UnitsEntrySchema).default([]),
     breaks_when: BreaksWhenEntrySchema.optional(),
     common_misuses: z.array(CommonMisuseEntrySchema).default([]),
+    derivation_steps: z.array(DerivationStepEntrySchema).default([]),
   })
   .strict();
 

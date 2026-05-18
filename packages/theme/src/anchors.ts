@@ -253,6 +253,10 @@ export const tier3LabelBg = {
   assumption: { accent: "brand-violet", tintPct: 6 },
   "breaks-when": { accent: "status-warning", tintPct: 8 },
   "common-misuse": { accent: "status-danger", tintPct: 8 },
+  // DerivationStep per ADR 0046 §R9 / ADR 0060: shares Observable +
+  // Assumption's brand-violet at 6% because the derivation IS part of
+  // the model-construction family epistemically (role: "model").
+  "derivation-step": { accent: "brand-violet", tintPct: 6 },
 } as const;
 
 // Validation tracker tint percentages (ADR 0056). Stripes reuse the

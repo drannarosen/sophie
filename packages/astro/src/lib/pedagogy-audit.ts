@@ -7,7 +7,7 @@ import type {
   NotationRegistry,
   PedagogyIndex,
 } from "@sophie/core/schema";
-import { slugify } from "@sophie/core/schema";
+import { EquationEntrySchema, slugify } from "@sophie/core/schema";
 
 /**
  * Systematic build-time pedagogy audit pass (PR-C4 Task 8). Reads a
@@ -216,7 +216,7 @@ export function runPedagogyAudit(
 
   // Pre-compute lookup sets we reference multiple times.
   const definitionSlugs = new Set(index.definitions.map((d) => d.slug));
-  const equationSlugs = new Set(index.equations.map((e) => e.slug));
+  const equationSlugs = new Set(index.equations.map((e) => e.id));
   const figureRegistryNames = new Set(index.figureRegistry.map((f) => f.name));
   const chapterSlugs = new Set(index.chapters.map((c) => c.slug));
 
@@ -922,11 +922,18 @@ export function runPedagogyAudit(
     // resolve to either (a) a <KeyEquation> in the same chapter's
     // equation index, or (b) another <RepEquation> in the same
     // MultiRep block. Cross-chapter resolution is a v2 audit-pass flip.
+    // Post-ADR-0060: equations are registry-sourced (no chapter on the
+    // entry). "Equations in chapter X" = equations CITED from chapter X
+    // via `equationCitations[].refId`. MR6's chapter-scoping continues
+    // to work because MultiRep ↔ KeyEquation co-residence is about
+    // chapter-side authoring intent; cross-chapter MultiRep resolution
+    // remains a v2 audit-pass flip per ADR 0043 §R-MR6.
     const equationsByChapterSlug = new Map<string, Set<string>>();
-    for (const eq of index.equations) {
-      const set = equationsByChapterSlug.get(eq.chapter) ?? new Set<string>();
-      set.add(eq.slug);
-      equationsByChapterSlug.set(eq.chapter, set);
+    for (const citation of index.equationCitations) {
+      const set =
+        equationsByChapterSlug.get(citation.chapter) ?? new Set<string>();
+      set.add(citation.refId);
+      equationsByChapterSlug.set(citation.chapter, set);
     }
     for (const mr of index.multiReps) {
       const sameMrEquationRefKeys = new Set<string>();
@@ -983,8 +990,8 @@ export function runPedagogyAudit(
         warnings.push({
           severity: "WARNING",
           code: "NR1",
-          message: `NR1: <KeyEquation id="${eq.slug}"> in chapter "${eq.chapter}" declares symbol "${symbol}" not present in notation-registry.yaml. Resolution: register the concept whose canonical_symbol is "${symbol}", or remove the symbol from the equation's \`symbols\` prop.`,
-          location: { chapter: eq.chapter, anchor: eq.anchor },
+          message: `NR1: equation registry entry "${eq.id}" declares symbol "${symbol}" not present in notation-registry.yaml. Resolution: register the concept whose canonical_symbol is "${symbol}", or remove the symbol from the equation's frontmatter \`symbols\` array.`,
+          location: { anchor: eq.id },
         });
       }
     }
@@ -1042,8 +1049,8 @@ export function runPedagogyAudit(
         warnings.push({
           severity: "WARNING",
           code: "NR4",
-          message: `NR4: <KeyEquation id="${eq.slug}"> in chapter "${eq.chapter}" declares symbol "${symbol}" (concept "${conceptWithUnits.id}", units "${conceptWithUnits.units}") but lacks a <Units symbol="${symbol}"> biography child. Resolution: add <Units symbol="${symbol}" unit="${conceptWithUnits.units}" /> inside the <KeyEquation>.`,
-          location: { chapter: eq.chapter, anchor: eq.anchor },
+          message: `NR4: equation registry entry "${eq.id}" declares symbol "${symbol}" (concept "${conceptWithUnits.id}", units "${conceptWithUnits.units}") but lacks a <Units symbol="${symbol}"> biography child. Resolution: add <Units symbol="${symbol}" unit="${conceptWithUnits.units}" /> inside the registry MDX body.`,
+          location: { anchor: eq.id },
         });
       }
     }
@@ -1064,8 +1071,8 @@ export function runPedagogyAudit(
         warnings.push({
           severity: "WARNING",
           code: "E8",
-          message: `E8: <Units symbol="${units.symbol}" unit="${units.unit}"> in <KeyEquation id="${eq.slug}"> (chapter "${eq.chapter}") doesn't match any canonical_symbol in notation-registry.yaml. Resolution: register the concept whose canonical_symbol is "${units.symbol}", or rename the Units symbol to an existing registry entry.`,
-          location: { chapter: eq.chapter, anchor: eq.anchor },
+          message: `E8: <Units symbol="${units.symbol}" unit="${units.unit}"> in equation registry entry "${eq.id}" doesn't match any canonical_symbol in notation-registry.yaml. Resolution: register the concept whose canonical_symbol is "${units.symbol}", or rename the Units symbol to an existing registry entry.`,
+          location: { anchor: eq.id },
         });
       }
     }
@@ -1251,8 +1258,8 @@ export function runPedagogyAudit(
     info.push({
       severity: "INFO",
       code: "E7",
-      message: `E7: <KeyEquation id="${eq.slug}"> in chapter "${eq.chapter}" has biography children but lacks an <Observable>. Authoring nudge — declare what the equation measures so readers can anchor the model in observation.`,
-      location: { chapter: eq.chapter, anchor: eq.anchor },
+      message: `E7: equation registry entry "${eq.id}" has biography children but lacks an <Observable>. Authoring nudge — declare what the equation measures so readers can anchor the model in observation.`,
+      location: { anchor: eq.id },
     });
   }
 
@@ -1272,8 +1279,8 @@ export function runPedagogyAudit(
       info.push({
         severity: "INFO",
         code: "E9",
-        message: `E9: <CommonMisuse> in <KeyEquation id="${eq.slug}"> (chapter "${eq.chapter}") lacks a misconception="<slug>" cross-ref to the misconception graph (ADR 0044). Authoring nudge — link the misuse to a declared misconception so it surfaces in cross-link rendering.`,
-        location: { chapter: eq.chapter, anchor: eq.anchor },
+        message: `E9: <CommonMisuse> in equation registry entry "${eq.id}" lacks a misconception="<slug>" cross-ref to the misconception graph (ADR 0044). Authoring nudge — link the misuse to a declared misconception so it surfaces in cross-link rendering.`,
+        location: { anchor: eq.id },
       });
     }
   }
@@ -1306,8 +1313,88 @@ export function runPedagogyAudit(
       warnings.push({
         severity: "WARNING",
         code: "E10",
-        message: `E10: <CommonMisuse misconception="${misuse.misconception}"> in <KeyEquation id="${eq.slug}"> (chapter "${eq.chapter}") references a misconception not declared anywhere in the course. Resolution: declare the misconception (Aside or Callout with that anchor) in some chapter, or fix the slug typo.`,
-        location: { chapter: eq.chapter, anchor: eq.anchor },
+        message: `E10: <CommonMisuse misconception="${misuse.misconception}"> in equation registry entry "${eq.id}" references a misconception not declared anywhere in the course. Resolution: declare the misconception (Aside or Callout with that anchor) in some chapter, or fix the slug typo.`,
+        location: { anchor: eq.id },
+      });
+    }
+  }
+
+  // =====================================================================
+  // R1–R4 — Registry-ecosystem audit invariants per ADR 0060.
+  //
+  // R1 (ERROR)   — chapter cites <KeyEquation refId="X"> but no registry
+  //                entry with id="X" exists.
+  // R2 (WARNING) — registry declares an equation but no chapter cites it
+  //                (orphan declaration — common during in-flight authoring,
+  //                so WARNING not ERROR).
+  // R3 (ERROR)   — registry entry fails EquationRegistryEntrySchema-shape
+  //                validation. The extractor's content-layer validation
+  //                catches this at parse time; R3 is defense-in-depth for
+  //                index entries that reached the audit somehow malformed.
+  // R4 (WARNING) — equation entry's `related[].refId` points at a non-
+  //                existent registry entry. Authoring slip-up; surface as
+  //                warning rather than error so in-flight cross-refs land.
+  // =====================================================================
+
+  const registeredEquationIds = new Set(index.equations.map((e) => e.id));
+
+  // -------------------------------------------------------------------
+  // R1 ERROR — citation references a refId not in the registry.
+  // -------------------------------------------------------------------
+  for (const citation of index.equationCitations) {
+    if (registeredEquationIds.has(citation.refId)) continue;
+    errors.push({
+      severity: "ERROR",
+      code: "R1",
+      message: `R1: <KeyEquation refId="${citation.refId}"> in chapter "${citation.chapter}" references an equation not declared in the registry. Resolution: create \`examples/smoke/src/content/equations/${citation.refId}.mdx\` (or fix the refId).`,
+      location: { chapter: citation.chapter, anchor: citation.anchor },
+    });
+  }
+
+  // -------------------------------------------------------------------
+  // R2 WARNING — registry entry has zero citations.
+  // -------------------------------------------------------------------
+  const citedRefIds = new Set(index.equationCitations.map((c) => c.refId));
+  for (const eq of index.equations) {
+    if (citedRefIds.has(eq.id)) continue;
+    warnings.push({
+      severity: "WARNING",
+      code: "R2",
+      message: `R2: equation registry entry "${eq.id}" is declared but no chapter cites it via <KeyEquation refId="${eq.id}">. Either reference it from a chapter or remove the registry file.`,
+      location: { anchor: eq.id },
+    });
+  }
+
+  // -------------------------------------------------------------------
+  // R3 ERROR — registry entry violates EquationEntrySchema shape.
+  // -------------------------------------------------------------------
+  // Defense in depth — the extractor already validates frontmatter via
+  // EquationRegistryEntrySchema.safeParse and throws on failure. R3
+  // catches the case where a future code path skips that validation
+  // and pushes a malformed entry into the index.
+  for (const eq of index.equations) {
+    const parsed = EquationEntrySchema.safeParse(eq);
+    if (parsed.success) continue;
+    errors.push({
+      severity: "ERROR",
+      code: "R3",
+      message: `R3: equation registry entry "${eq.id ?? "(unknown)"}" failed schema validation. ${parsed.error.message}`,
+      location: typeof eq.id === "string" ? { anchor: eq.id } : {},
+    });
+  }
+
+  // -------------------------------------------------------------------
+  // R4 WARNING — related[].refId points at a non-existent equation.
+  // -------------------------------------------------------------------
+  for (const eq of index.equations) {
+    if (!eq.related || eq.related.length === 0) continue;
+    for (const rel of eq.related) {
+      if (registeredEquationIds.has(rel.refId)) continue;
+      warnings.push({
+        severity: "WARNING",
+        code: "R4",
+        message: `R4: equation "${eq.id}" declares related[].refId="${rel.refId}" but no registry entry with that id exists. Either add the registry file or remove the cross-reference.`,
+        location: { anchor: eq.id },
       });
     }
   }
