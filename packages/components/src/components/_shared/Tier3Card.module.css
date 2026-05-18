@@ -1,0 +1,103 @@
+/* Tier-3 biography-child shared chrome (CSS Modules partial).
+ *
+ * Consumed via `composes:` from the four EquationBiography children
+ * that render as Tier-3 cards inside a `<KeyEquation>`:
+ *
+ *   - <Observable>     (Observable.module.css)
+ *   - <Assumption>     (Assumption.module.css)
+ *   - <BreaksWhen>     (BreaksWhen.module.css)
+ *   - <CommonMisuse>   (CommonMisuse.module.css)
+ *
+ * Visual hierarchy: subordinate to KeyEquation's Tier-1 card (which
+ * uses --sophie-brand-violet for its title bar + 4px left rule).
+ * Biography children share a unified Tier-3 footprint — muted surface
+ * tint, small uppercase label, no left rule, no drop shadow — so they
+ * read as metadata rather than competing chrome.
+ *
+ * Per-variant customization seam: each consumer sets
+ * `--sophie-tier3-label-bg` at its root class to the per-variant
+ * label-tint token emitted by `tier3LabelBgBlock` in
+ * `@sophie/theme/scripts/generate-css.ts`:
+ *
+ *   - Observable     → --sophie-tier3-observable-label-bg
+ *                       (brand-violet 6% on surface-2)
+ *   - Assumption     → --sophie-tier3-assumption-label-bg
+ *                       (brand-violet 6% on surface-2)
+ *   - BreaksWhen     → --sophie-tier3-breaks-when-label-bg
+ *                       (status-warning 8% on surface-2)
+ *   - CommonMisuse   → --sophie-tier3-common-misuse-label-bg
+ *                       (status-danger 8% on surface-2)
+ *
+ * This mirrors the Callout precedent (Callout.module.css + calloutTitleBg
+ * in anchors.ts) — the shared chrome rule lives in one place; the
+ * per-variant tint is the only thing each consumer rebinds.
+ *
+ * Per ADR 0005, no hex/rgb literals — all colors through @sophie/theme
+ * tokens. The Phase B Reasoning OS core audit §2.8 + P1-2 backlog item
+ * named this DRY extraction as a pre-PR-7 priority.
+ */
+
+.card {
+  margin-block: var(--sophie-space-3);
+  background: var(--sophie-surface-2);
+  border: 1px solid var(--sophie-border);
+  border-radius: var(--sophie-radius-sm);
+  color: var(--sophie-text);
+  font-family: var(--sophie-font-sans);
+  font-size: var(--sophie-text-sm);
+  line-height: var(--sophie-leading-prose);
+  overflow: hidden;
+}
+
+.label {
+  display: flex;
+  align-items: center;
+  gap: var(--sophie-space-2);
+  padding: var(--sophie-space-1) var(--sophie-space-3);
+  background: var(--sophie-tier3-label-bg);
+  border-bottom: 1px solid var(--sophie-border);
+  color: var(--sophie-text-muted);
+  font-family: var(--sophie-font-mono);
+  font-size: var(--sophie-text-xs);
+  font-weight: var(--sophie-weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Variant of .label used by <Assumption> + <CommonMisuse> which carry
+ * a slug + separator after the main label text — `flex-wrap: wrap` so
+ * the slug wraps to a second line on narrow viewports instead of
+ * overflowing the card. */
+.labelWithSeparator {
+  composes: label;
+  flex-wrap: wrap;
+}
+
+.body {
+  padding: var(--sophie-space-2) var(--sophie-space-3);
+}
+
+.body > :first-child {
+  margin-block-start: 0;
+}
+
+.body > :last-child {
+  margin-block-end: 0;
+}
+
+/* Shared by <Assumption typeSlug> + <CommonMisuse misconceptionSlug>
+ * — the muted dot separator between the main label and the slug. */
+.separator {
+  color: var(--sophie-border);
+  font-weight: var(--sophie-weight-normal);
+}
+
+/* Shared by <Assumption typeSlug> + <CommonMisuse misconceptionSlug>
+ * — the trailing slug rendering. Lowercase + lighter weight than the
+ * main label so it reads as supplementary metadata. */
+.slug {
+  color: var(--sophie-text);
+  font-weight: var(--sophie-weight-medium);
+  letter-spacing: 0;
+  text-transform: none;
+}

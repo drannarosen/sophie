@@ -1,51 +1,22 @@
-/* BreaksWhen — Tier-3 (biography-child) chrome inside a KeyEquation.
- * See Observable.module.css for the Tier-3 design rationale.
+/* BreaksWhen — Tier-3 biography-child card. See
+ * `_shared/Tier3Card.module.css` for the chrome rationale + the
+ * per-variant `--sophie-tier3-label-bg` rebinding pattern.
  *
- * Label background uses a subtle amber tint (color-mix with
- * --sophie-warning) to visually signal "boundary marker" without
- * promoting BreaksWhen to a warning callout — it's still biography
- * metadata, just the validity-limit corner of it.
+ * The accent is a subtle amber tint (status-warning at 8%) — signals
+ * "validity-limit / boundary marker" without promoting BreaksWhen to a
+ * full warning callout. Still biography metadata, just the validity-
+ * limit corner of it.
  */
 
 .breaksWhen {
-  margin-block: var(--sophie-space-3);
-  background: var(--sophie-surface-2);
-  border: 1px solid var(--sophie-border);
-  border-radius: var(--sophie-radius-sm);
-  color: var(--sophie-text);
-  font-family: var(--sophie-font-sans);
-  font-size: var(--sophie-text-sm);
-  line-height: var(--sophie-leading-prose);
-  overflow: hidden;
+  composes: card from "../_shared/Tier3Card.module.css";
+  --sophie-tier3-label-bg: var(--sophie-tier3-breaks-when-label-bg);
 }
 
 .label {
-  display: flex;
-  align-items: center;
-  gap: var(--sophie-space-2);
-  padding: var(--sophie-space-1) var(--sophie-space-3);
-  background: color-mix(
-    in oklch,
-    var(--sophie-status-warning) 8%,
-    var(--sophie-surface-2)
-  );
-  border-bottom: 1px solid var(--sophie-border);
-  color: var(--sophie-text-muted);
-  font-family: var(--sophie-font-mono);
-  font-size: var(--sophie-text-xs);
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  composes: label from "../_shared/Tier3Card.module.css";
 }
 
 .body {
-  padding: var(--sophie-space-2) var(--sophie-space-3);
-}
-
-.body > :first-child {
-  margin-block-start: 0;
-}
-
-.body > :last-child {
-  margin-block-end: 0;
+  composes: body from "../_shared/Tier3Card.module.css";
 }

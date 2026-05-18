@@ -223,6 +223,38 @@ export const calloutTitleBg = {
   roadmap: { accent: "status-neutral", tintPctLight: 8, tintPctDark: 12 },
 } as const;
 
+// Tier-3 biography-child label-bar tints (PR-B P1-2; Phase B audit §2.8).
+// Each EquationBiography child (<Observable>, <Assumption>, <BreaksWhen>,
+// <CommonMisuse>) renders as a Tier-3 card with a subtle label-bar tint
+// on top. The chrome itself is structurally shared via
+// `packages/components/src/components/_shared/Tier3Card.module.css`;
+// this map defines the per-variant accent + mix percentage so the
+// generator emits one `--sophie-tier3-<variant>-label-bg` CSS var per
+// variant — each biography component rebinds `--sophie-tier3-label-bg`
+// at its root to point at its variant's slot.
+//
+// Shape mirrors `calloutTitleBg` but with a single `tintPct` (not split
+// light/dark). The pre-DRY-refactor stylesheets used a single percentage
+// across both schemes; preserving that here keeps PR-B a pure DRY
+// refactor with zero visual change. If dark-mode tint legibility ever
+// reads off, split into `{tintPctLight, tintPctDark}` per the
+// calloutTitleBg precedent (+4 on dark) in a follow-on visual-polish PR.
+//
+// Mix base is `surface-2` (not `surface-1` like callouts) — Tier-3
+// cards sit on the muted secondary surface, never on the page bg.
+//
+// Observable + Assumption both bind to brand-violet because they share
+// the epistemic-role family with KeyEquation's Tier-1 chrome (which
+// also uses brand-violet); BreaksWhen + CommonMisuse bind to
+// status-warning + status-danger to signal validity-limit + misuse
+// without promoting to a full warning/danger callout.
+export const tier3LabelBg = {
+  observable: { accent: "brand-violet", tintPct: 6 },
+  assumption: { accent: "brand-violet", tintPct: 6 },
+  "breaks-when": { accent: "status-warning", tintPct: 8 },
+  "common-misuse": { accent: "status-danger", tintPct: 8 },
+} as const;
+
 // Validation tracker tint percentages (ADR 0056). Stripes reuse the
 // semantic status palette directly; backgrounds derive `tintPct%`-tinted
 // surfaces via color-mix on `transparent` so admonitions read as subtle
