@@ -190,34 +190,6 @@ function readAsideAttributes(node: MdxJsxFlowElement): AsideAttributes {
   return out;
 }
 
-interface KeyEquationAttributes {
-  id?: string;
-  title?: string;
-  /**
-   * Author-declared canonical TeX-form symbols per ADR 0043 §R5
-   * (`<KeyEquation symbols={["T", "\\lambda_{peak}", "b"]}>`). Optional
-   * at v1; the PR-δ NR1/NR3/NR4 audit invariants only fire when
-   * present. Parsed from the JSX array-expression attr via
-   * `readStringListAttr`.
-   */
-  symbols?: string[];
-}
-
-function readKeyEquationAttributes(
-  node: MdxJsxFlowElement
-): KeyEquationAttributes {
-  const out: KeyEquationAttributes = {};
-  for (const attr of node.attributes ?? []) {
-    if (attr.type !== "mdxJsxAttribute") continue;
-    if (typeof attr.value !== "string") continue;
-    if (attr.name === "id") out.id = attr.value;
-    if (attr.name === "title") out.title = attr.value;
-  }
-  const symbols = readStringListAttr(node, "symbols");
-  if (symbols !== undefined) out.symbols = symbols;
-  return out;
-}
-
 interface FigureAttributes {
   name?: string;
   caption?: string;
@@ -368,31 +340,6 @@ export function extractDefinitions(
   });
 
   return out;
-}
-
-/**
- * Extract the raw TeX source of the FIRST `$$...$$` math block in a
- * KeyEquation's children. Walks the children subtree via
- * `unist-util-visit` and returns the `value` of the first `math` node
- * (display math; the mdast node type produced by `remark-math` for
- * `$$...$$` blocks). Returns `null` when no math node exists —
- * callers treat this as the E6 categorization error.
- *
- * `inlineMath` (the `$x$` AST node type) is deliberately ignored:
- * only display math counts as the canonical-form equation tex.
- */
-function extractFirstTex(children: ReadonlyArray<unknown>): string | null {
-  let found: string | null = null;
-  const synthetic = { type: "root" as const, children: children as never };
-  visit(synthetic, "math", (node: { value?: string }) => {
-    if (found !== null) return false;
-    if (typeof node.value === "string" && node.value.trim().length > 0) {
-      found = node.value;
-      return false;
-    }
-    return undefined;
-  });
-  return found;
 }
 
 /**
@@ -2428,8 +2375,6 @@ interface VFileLike {
 export function pedagogyIndexRemarkPlugin(
   options: PedagogyIndexRemarkPluginOptions = {}
 ): (tree: Root, file: VFileLike) => void {
-  const getChapterSlug = options.getChapterSlug ?? defaultGetChapterSlug;
-
   return (tree: Root, file: VFileLike) => {
     const filePath = file.path;
     if (!filePath) return;
@@ -2443,14 +2388,19 @@ export function pedagogyIndexRemarkPlugin(
       return;
     }
 
-    // Chapter path: full chapter-extraction pass. The default
-    // getChapterSlug deriver works for chapter paths under any
-    // `content/chapters/**` layout (Astro 6's default basename id).
-    // Non-chapter paths (excluding registry paths handled above) are
-    // skipped to avoid mis-typed extraction (e.g., an `examples/`
-    // sandbox MDX file that's not part of any collection).
-    if (!isChapterFilePath(filePath)) return;
-    const chapterSlug = getChapterSlug(filePath);
+    // Chapter pass. Two routes to chapterSlug:
+    //   1. Caller-provided `options.getChapterSlug` — consumer apps with
+    //      non-standard layouts (e.g. tests passing arbitrary paths)
+    //      assert "treat this file as a chapter MDX and use slug X."
+    //   2. Default basename-from-path + `content/chapters/**` filter —
+    //      avoids mis-typed extraction on `examples/` sandbox files or
+    //      docs MDX that aren't part of any chapter collection.
+    let chapterSlug: string | undefined;
+    if (options.getChapterSlug) {
+      chapterSlug = options.getChapterSlug(filePath);
+    } else if (isChapterFilePath(filePath)) {
+      chapterSlug = defaultGetChapterSlug(filePath);
+    }
     if (!chapterSlug) return;
 
     indexAccumulator.clearChapter(chapterSlug);

@@ -27,6 +27,7 @@ function emptyIndex(): PedagogyIndex {
   return {
     definitions: [],
     equations: [],
+    equationCitations: [],
     keyInsights: [],
     figureRegistry: [],
     figureUsages: [],
@@ -369,16 +370,21 @@ describe("MR6 — equivalent_to doesn't resolve", () => {
   it("resolves to a <KeyEquation> in the same chapter", () => {
     const index = emptyIndex();
     const kepler: EquationEntry = {
-      slug: "kepler-3rd-law",
+      id: "kepler-3rd-law",
       title: "Kepler's 3rd Law",
-      number: 1,
       tex: "T^2 = a^3",
-      body: "<p>body</p>",
-      chapter: "ch",
-      anchor: "kepler-3rd-law",
-      symbols: [],
+      symbols: ["T"],
     };
     index.equations = [kepler];
+    // Post-ADR-0060: MR6 reads citations to derive chapter-scope.
+    index.equationCitations = [
+      {
+        chapter: "ch",
+        refId: "kepler-3rd-law",
+        anchor: "kepler-3rd-law-citation-1",
+        number: 1,
+      },
+    ];
     index.multiReps = [
       {
         concept: "orbital-radius",
@@ -428,17 +434,23 @@ describe("MR6 — equivalent_to doesn't resolve", () => {
 
   it("does NOT resolve cross-chapter (chapter-scoped at v1 per design §D6)", () => {
     const index = emptyIndex();
-    // Equation in a DIFFERENT chapter.
+    // Equation declared in registry (post-ADR-0060) but cited only from
+    // a DIFFERENT chapter. MR6 scopes by citation chapter, not by
+    // declaration; this exercises the cross-chapter-non-resolution path.
     index.equations = [
       {
-        slug: "kepler-3rd-law",
+        id: "kepler-3rd-law",
         title: "Kepler",
-        number: 1,
         tex: "T",
-        body: "<p>x</p>",
+        symbols: ["T"],
+      },
+    ];
+    index.equationCitations = [
+      {
         chapter: "other-chapter",
-        anchor: "kepler-3rd-law",
-        symbols: [],
+        refId: "kepler-3rd-law",
+        anchor: "kepler-3rd-law-citation-1",
+        number: 1,
       },
     ];
     index.multiReps = [

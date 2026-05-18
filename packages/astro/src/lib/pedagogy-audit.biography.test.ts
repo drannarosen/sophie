@@ -115,10 +115,13 @@ describe("E7 INFO — biography lacks <Observable>", () => {
     expect(e7).toHaveLength(1);
     expect(e7[0]?.message).toContain("wiens-law");
     expect(e7[0]?.message).toContain("lacks an <Observable>");
+    // Post-ADR-0060: registry-sourced equation; location points at the
+    // registry route via `anchor: eq.id` with no chapter (the entry
+    // lives in the global registry, not a specific chapter).
     expect(e7[0]?.location).toMatchObject({
-      chapter: "ch",
       anchor: "wiens-law",
     });
+    expect(e7[0]?.location?.chapter).toBeUndefined();
   });
 
   it("does NOT fire when biography includes Observable", () => {

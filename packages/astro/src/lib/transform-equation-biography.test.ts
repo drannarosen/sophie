@@ -133,9 +133,7 @@ function extractEquations(tree: Root, _chapterSlug: string): EquationEntry[] {
     }
     const frontmatter = { id, title, tex, symbols };
     const bodyTree = { type: "root", children: el.children };
-    return [
-      extractEquationRegistryDeclaration(bodyTree as never, frontmatter),
-    ];
+    return [extractEquationRegistryDeclaration(bodyTree as never, frontmatter)];
   }
   return [];
 }

@@ -1,6 +1,8 @@
 import type {
   ChapterEntry,
+  EquationCitationEntry,
   EquationEntry,
+  EquationRegistryEntry,
   FigureRegistryEntry,
   FigureUsageEntry,
   InlineRefUsageEntry,
@@ -12,7 +14,8 @@ import type {
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import {
   extractDefinitions,
-  extractEquations,
+  extractEquationCitations,
+  extractEquationRegistryDeclaration,
   extractFigures,
   extractInlineRefUsages,
   extractKeyInsights,
@@ -222,191 +225,87 @@ describe("extractDefinitions (pure)", () => {
   });
 });
 
-const mdxKeyEquation = (
-  attrs: Record<string, string>,
+// Synthetic <KeyEquation refId="X" /> citation node — post-ADR-0060
+// chapter walker shape.
+const mdxKeyEquationCitation = (
+  refId: string,
   children: ReadonlyArray<Record<string, unknown>> = []
 ) => ({
   type: "mdxJsxFlowElement",
   name: "KeyEquation",
-  attributes: Object.entries(attrs).map(([name, value]) => ({
-    type: "mdxJsxAttribute",
-    name,
-    value,
-  })),
+  attributes: [{ type: "mdxJsxAttribute", name: "refId", value: refId }],
   children,
 });
 
-const mathBlock = (value: string) => ({ type: "math", value });
-
-const inlineMath = (value: string) => ({ type: "inlineMath", value });
-
-describe("extractEquations (pure)", () => {
-  // T5
-  test("returns one EquationEntry for one KeyEquation (number=1, slug/title/tex/body/chapter/anchor)", () => {
-    const tree = root([
-      mdxKeyEquation({ id: "wiens-law", title: "Wien's Law" }, [
-        mathBlock("\\lambda_{\\text{peak}} = b T^{-1}"),
-        para("Wien's displacement law relates peak wavelength to temperature."),
-      ]),
-    ]);
-
-    const entries = extractEquations(tree as never, "ch");
-
-    expect(entries).toHaveLength(1);
-    expect(entries[0]).toMatchObject({
-      slug: "wiens-law",
-      title: "Wien's Law",
+describe("extractEquationCitations (pure, chapter walker)", () => {
+  test("returns one EquationCitationEntry for a self-closing <KeyEquation refId>", () => {
+    const tree = root([mdxKeyEquationCitation("wiens-law")]);
+    const citations = extractEquationCitations(tree as never, "spoiler-alerts");
+    expect(citations).toHaveLength(1);
+    expect(citations[0]).toMatchObject({
+      chapter: "spoiler-alerts",
+      refId: "wiens-law",
+      anchor: "wiens-law-citation-1",
       number: 1,
-      tex: "\\lambda_{\\text{peak}} = b T^{-1}",
-      chapter: "ch",
-      anchor: "wiens-law",
     });
-    // anchor === slug invariant
-    expect(entries[0]?.anchor).toBe(entries[0]?.slug);
-    // body contains the rendered prose
-    expect(entries[0]?.body).toContain(
-      "Wien's displacement law relates peak wavelength to temperature."
-    );
+    expect(citations[0]?.framingHtml).toBeUndefined();
   });
 
-  // T6
-  test("extracts `tex` from the FIRST `$$` block when the body has multiple math blocks; subsequent forms stay in `body`", () => {
+  test("renders chapter framing prose children to framingHtml", () => {
     const tree = root([
-      mdxKeyEquation(
-        { id: "inverse-square-law", title: "Inverse-Square Law" },
-        [
-          mathBlock("F = \\frac{L}{4\\pi d^2}"),
-          para("Equivalently:"),
-          mathBlock("L = 4\\pi d^2 F"),
-        ]
-      ),
-    ]);
-
-    const entries = extractEquations(tree as never, "ch");
-
-    expect(entries).toHaveLength(1);
-    // tex is the FIRST math block
-    expect(entries[0]?.tex).toBe("F = \\frac{L}{4\\pi d^2}");
-    // body contains the rendered output for BOTH math blocks
-    expect(entries[0]?.body).toContain("F = \\frac{L}{4\\pi d^2}");
-    expect(entries[0]?.body).toContain("L = 4\\pi d^2 F");
-  });
-
-  // T6 supplementary — inlineMath must be ignored when picking the first tex
-  test("ignores inlineMath ($x$) when picking the first tex (only $$ display math counts)", () => {
-    const tree = root([
-      mdxKeyEquation({ id: "stefan-boltzmann", title: "Stefan–Boltzmann" }, [
-        {
-          type: "paragraph",
-          children: [
-            { type: "text", value: "Recall " },
-            inlineMath("T"),
-            { type: "text", value: " is temperature." },
-          ],
-        },
-        mathBlock("L = 4\\pi R^2 \\sigma T^4"),
+      mdxKeyEquationCitation("wiens-law", [
+        para("We've seen Wien's law before; here we apply it to dust."),
       ]),
     ]);
-
-    const entries = extractEquations(tree as never, "ch");
-    expect(entries[0]?.tex).toBe("L = 4\\pi R^2 \\sigma T^4");
+    const citations = extractEquationCitations(tree as never, "spoiler-alerts");
+    expect(citations[0]?.framingHtml).toContain("We've seen Wien's law before");
   });
 
-  // T7
-  test("assigns per-chapter `number` 1, 2, 3 in source order across three KeyEquations", () => {
+  test("assigns per-chapter number 1, 2, 3 in source order across three citations", () => {
     const tree = root([
-      mdxKeyEquation({ id: "eq-a", title: "Equation A" }, [mathBlock("a = 1")]),
-      mdxKeyEquation({ id: "eq-b", title: "Equation B" }, [mathBlock("b = 2")]),
-      mdxKeyEquation({ id: "eq-c", title: "Equation C" }, [mathBlock("c = 3")]),
+      mdxKeyEquationCitation("wiens-law"),
+      mdxKeyEquationCitation("stefan-boltzmann"),
+      mdxKeyEquationCitation("planck-distribution"),
     ]);
-
-    const entries = extractEquations(tree as never, "ch");
-    expect(entries).toHaveLength(3);
-    expect(entries.map((e) => e.number)).toEqual([1, 2, 3]);
-    expect(entries.map((e) => e.slug)).toEqual(["eq-a", "eq-b", "eq-c"]);
+    const citations = extractEquationCitations(tree as never, "ch");
+    expect(citations).toHaveLength(3);
+    expect(citations.map((c) => c.number)).toEqual([1, 2, 3]);
+    expect(citations.map((c) => c.refId)).toEqual([
+      "wiens-law",
+      "stefan-boltzmann",
+      "planck-distribution",
+    ]);
   });
 
-  // T8
-  test("throws on intra-chapter slug collision (two KeyEquations with the same `id`)", () => {
+  test("two citations of the same refId in one chapter get distinct anchors", () => {
+    // Important for valid DOM ids when an author cites the same equation
+    // twice in different sections of a chapter.
     const tree = root([
-      mdxKeyEquation({ id: "wiens-law", title: "Wien's Law" }, [
-        mathBlock("\\lambda = b/T"),
-      ]),
-      mdxKeyEquation({ id: "wiens-law", title: "Wien's Law (alt)" }, [
-        mathBlock("\\lambda T = b"),
-      ]),
+      mdxKeyEquationCitation("wiens-law"),
+      mdxKeyEquationCitation("wiens-law"),
     ]);
-
-    expect(() => extractEquations(tree as never, "ch")).toThrow(
-      /collision|duplicate/i
-    );
-    // Error message cites the chapter + slug
-    expect(() => extractEquations(tree as never, "ch")).toThrow(/ch/);
-    expect(() => extractEquations(tree as never, "ch")).toThrow(/wiens-law/);
+    const citations = extractEquationCitations(tree as never, "ch");
+    expect(citations).toHaveLength(2);
+    expect(citations[0]?.anchor).toBe("wiens-law-citation-1");
+    expect(citations[1]?.anchor).toBe("wiens-law-citation-2");
+    expect(citations[0]?.anchor).not.toBe(citations[1]?.anchor);
   });
 
-  // T9
-  test("throws E6 categorization error when a KeyEquation has no `$$` math block", () => {
+  test("throws when <KeyEquation> is missing refId", () => {
     const tree = root([
-      mdxKeyEquation({ id: "no-math", title: "No Math Here" }, [
-        para("This KeyEquation has prose but no $$ block."),
-      ]),
+      {
+        type: "mdxJsxFlowElement",
+        name: "KeyEquation",
+        attributes: [],
+        children: [],
+      },
     ]);
-
-    expect(() => extractEquations(tree as never, "ch")).toThrow(
-      /no `\$\$\.\.\.\$\$` block-math child/
+    expect(() => extractEquationCitations(tree as never, "ch")).toThrow(
+      /refId/
     );
   });
 
-  test("throws E6 when the only `$$` block contains whitespace-only TeX", () => {
-    // extractFirstTex trims; whitespace-only `$$` is treated as "no math content".
-    const tree = root([
-      mdxKeyEquation({ id: "ws-math", title: "Whitespace Math" }, [
-        mathBlock("   "),
-      ]),
-    ]);
-
-    expect(() => extractEquations(tree as never, "ch")).toThrow(
-      /no `\$\$\.\.\.\$\$` block-math child/
-    );
-  });
-
-  // P2-5 — error message includes the single-line `$$...$$` inlineMath gotcha
-  // hint (PR-γ surfaced this; the wiens-law smoke fixture initially failed
-  // because `$$x$$` on a single line was parsed as inlineMath, not math).
-  test("E6 error message includes the inlineMath gotcha hint", () => {
-    const tree = root([
-      mdxKeyEquation({ id: "no-math", title: "No Math Here" }, [
-        para("Prose but no block-math child."),
-      ]),
-    ]);
-
-    expect(() => extractEquations(tree as never, "ch")).toThrow(
-      /single-line `\$\$math\$\$` is parsed by remark-math as inline math/
-    );
-  });
-
-  // Defense-in-depth: missing id and missing title
-  test("throws when a KeyEquation is missing a non-empty `id`", () => {
-    const tree = root([
-      mdxKeyEquation({ title: "Some Title" }, [mathBlock("x = 1")]),
-    ]);
-    expect(() => extractEquations(tree as never, "ch")).toThrow(
-      /missing.*`id`/i
-    );
-  });
-
-  test("throws when a KeyEquation is missing a non-empty `title`", () => {
-    const tree = root([
-      mdxKeyEquation({ id: "some-id" }, [mathBlock("x = 1")]),
-    ]);
-    expect(() => extractEquations(tree as never, "ch")).toThrow(
-      /missing.*`title`/i
-    );
-  });
-
-  // Skips non-KeyEquation JSX elements
-  test("skips JSX elements that aren't named 'KeyEquation'", () => {
+  test("skips non-KeyEquation JSX elements", () => {
     const tree = root([
       {
         type: "mdxJsxFlowElement",
@@ -414,18 +313,102 @@ describe("extractEquations (pure)", () => {
         attributes: [
           { type: "mdxJsxAttribute", name: "variant", value: "info" },
         ],
-        children: [para("not a KeyEquation"), mathBlock("z = 0")],
+        children: [para("not a KeyEquation")],
       },
-      mdxKeyEquation({ id: "real-eq", title: "Real Equation" }, [
-        mathBlock("y = mx + b"),
-      ]),
+      mdxKeyEquationCitation("real-eq"),
     ]);
-
-    const entries = extractEquations(tree as never, "ch");
-    expect(entries).toHaveLength(1);
-    expect(entries[0]?.slug).toBe("real-eq");
+    const citations = extractEquationCitations(tree as never, "ch");
+    expect(citations).toHaveLength(1);
+    expect(citations[0]?.refId).toBe("real-eq");
   });
 });
+
+describe("extractEquationRegistryDeclaration (pure, registry walker)", () => {
+  const validFrontmatter: EquationRegistryEntry = {
+    id: "wiens-law",
+    title: "Wien's Law",
+    tex: "\\lambda_{peak} = b T^{-1}",
+    symbols: ["T", "\\lambda_{peak}"],
+  };
+
+  test("returns the frontmatter unchanged when body has no biography children", () => {
+    const tree = root([para("Some prose without biography children.")]);
+    const entry = extractEquationRegistryDeclaration(
+      tree as never,
+      validFrontmatter
+    );
+    expect(entry.id).toBe("wiens-law");
+    expect(entry.title).toBe("Wien's Law");
+    expect(entry.tex).toBe("\\lambda_{peak} = b T^{-1}");
+    expect(entry.symbols).toEqual(["T", "\\lambda_{peak}"]);
+    expect(entry.biography).toBeUndefined();
+  });
+
+  test("walks Root.children for biography (no <KeyEquation> wrapper required)", () => {
+    const tree = root([
+      {
+        type: "mdxJsxFlowElement",
+        name: "Observable",
+        attributes: [],
+        children: [para("Peak wavelength of thermal emission.")],
+      },
+      {
+        type: "mdxJsxFlowElement",
+        name: "Assumption",
+        attributes: [
+          {
+            type: "mdxJsxAttribute",
+            name: "type",
+            value: "thermal-equilibrium",
+          },
+        ],
+        children: [para("LTE.")],
+      },
+      {
+        type: "mdxJsxFlowElement",
+        name: "BreaksWhen",
+        attributes: [],
+        children: [para("Non-thermal emission.")],
+      },
+    ]);
+    const entry = extractEquationRegistryDeclaration(
+      tree as never,
+      validFrontmatter
+    );
+    expect(entry.biography).toBeDefined();
+    expect(entry.biography?.observable?.epistemicRole).toBe("observable");
+    expect(entry.biography?.assumptions).toHaveLength(1);
+    expect(entry.biography?.assumptions[0]?.type).toBe("thermal-equilibrium");
+    expect(entry.biography?.breaks_when?.epistemicRole).toBe("approximation");
+  });
+
+  test("composes constants/rearranged_forms/related from frontmatter through to entry", () => {
+    const frontmatter: EquationRegistryEntry = {
+      ...validFrontmatter,
+      constants: [{ symbol: "b", value: "0.29", unit: "cm K" }],
+      rearranged_forms: [
+        { tex: "T = b \\lambda_{peak}^{-1}", solves_for: "T" },
+      ],
+      related: [{ refId: "stefan-boltzmann", kind: "see-also" }],
+    };
+    const tree = root([]);
+    const entry = extractEquationRegistryDeclaration(
+      tree as never,
+      frontmatter
+    );
+    expect(entry.constants).toHaveLength(1);
+    expect(entry.rearranged_forms).toHaveLength(1);
+    expect(entry.related).toHaveLength(1);
+  });
+});
+
+// Legacy extractEquations tests preserved indirectly via the new walker
+// describe blocks above; full biography-edge-case coverage lives in
+// `transform-equation-biography.test.ts`. Tex-extraction tests (E6
+// categorization errors) belong on the registry walker but are
+// deferred — the registry walker doesn't yet enforce E6-style "first
+// math block is non-empty" because the tex comes from frontmatter,
+// not from a body math block. ADR 0046 §R8 acknowledges this shift.
 
 describe("indexAccumulator (cross-chapter)", () => {
   // Top-level beforeEach wipes accumulator state before each test.
@@ -630,16 +613,16 @@ describe("pedagogyIndexRemarkPlugin", () => {
     ).toBeUndefined();
   });
 
-  // T13
-  test("populates BOTH definitions AND equations from one parsed chapter", () => {
+  // T13 (post-ADR-0060) — chapter parse populates definitions +
+  // equationCitations; the registry slot stays untouched on a chapter
+  // pass. Registry declarations come from the registry-path branch.
+  test("chapter parse populates definitions AND equationCitations", () => {
     const plugin = pedagogyIndexRemarkPlugin();
     const tree = root([
       mdxAside({ kind: "definition", title: "Standard candle" }, [
         para("An object whose intrinsic luminosity is known."),
       ]),
-      mdxKeyEquation({ id: "wiens-law", title: "Wien's Law" }, [
-        mathBlock("\\lambda_{\\text{peak}} = b T^{-1}"),
-      ]),
+      mdxKeyEquationCitation("wiens-law"),
     ]);
 
     plugin(tree as never, {
@@ -648,143 +631,128 @@ describe("pedagogyIndexRemarkPlugin", () => {
 
     const index = indexAccumulator.asPedagogyIndex();
     const def = index.definitions.find((d) => d.term === "Standard candle");
-    const eq = index.equations.find((e) => e.slug === "wiens-law");
     expect(def).toBeDefined();
     expect(def?.chapter).toBe("dual-test");
-    expect(eq).toBeDefined();
-    expect(eq?.chapter).toBe("dual-test");
-    expect(eq?.title).toBe("Wien's Law");
+
+    const citation = index.equationCitations.find(
+      (c) => c.refId === "wiens-law" && c.chapter === "dual-test"
+    );
+    expect(citation).toBeDefined();
+    expect(citation?.number).toBe(1);
+    expect(citation?.anchor).toBe("wiens-law-citation-1");
   });
 });
 
-describe("indexAccumulator equations (cross-chapter)", () => {
-  // Top-level beforeEach wipes accumulator state before each test.
-
-  const eq = (overrides: Partial<EquationEntry> = {}): EquationEntry => ({
-    slug: "default-slug",
+describe("indexAccumulator equations (registry-sourced per ADR 0060)", () => {
+  const makeEq = (overrides: Partial<EquationEntry> = {}): EquationEntry => ({
+    id: "default-id",
     title: "Default Title",
-    number: 1,
     tex: "x = 1",
-    body: "",
-    chapter: "ch-a",
-    anchor: "default-slug",
-    symbols: [],
+    symbols: ["x"],
     ...overrides,
   });
 
-  // T10
-  test("addEquations validates the whole batch BEFORE mutating (cross-chapter collision in entry 2 leaves entry 1 unwritten)", () => {
-    // Seed: chapter "ch-a" already has equation slug "shared".
-    indexAccumulator.addEquations([
-      eq({
-        slug: "shared",
-        title: "Shared",
-        chapter: "ch-a",
-        anchor: "shared",
-      }),
-    ]);
-
-    // Batch: entry 1 is a valid NEW slug for chapter "ch-b"; entry 2
-    // collides with "shared" across chapters. Whole batch must throw
-    // before entry 1 is written.
-    expect(() =>
-      indexAccumulator.addEquations([
-        eq({
-          slug: "fresh-eq",
-          title: "Fresh Eq",
-          chapter: "ch-b",
-          anchor: "fresh-eq",
-        }),
-        eq({
-          slug: "shared",
-          title: "Shared (alt)",
-          chapter: "ch-b",
-          anchor: "shared",
-        }),
-      ])
-    ).toThrow(/multiple chapters|duplicate/i);
-
+  test("addEquations stores entries keyed by id (registry-sourced; last-write-wins)", () => {
+    indexAccumulator.addEquations([makeEq({ id: "alpha", title: "Alpha" })]);
+    indexAccumulator.addEquations([makeEq({ id: "beta", title: "Beta" })]);
     const index = indexAccumulator.asPedagogyIndex();
-    // Entry 1 ("fresh-eq" in ch-b) must NOT have been written.
-    expect(index.equations.find((e) => e.slug === "fresh-eq")).toBeUndefined();
-    // The pre-existing ch-a entry is intact.
-    expect(index.equations.find((e) => e.slug === "shared")?.chapter).toBe(
-      "ch-a"
-    );
+    expect(index.equations).toHaveLength(2);
+    const ids = index.equations.map((e) => e.id).sort();
+    expect(ids).toEqual(["alpha", "beta"]);
   });
 
-  // T11
-  test("clearChapter removes BOTH definitions AND equations for the given chapter; entries from other chapters stay", () => {
-    indexAccumulator.addDefinitions([
-      {
-        term: "Def A",
-        slug: "def-a",
-        body: "",
-        chapter: "ch-a",
-        anchor: "def-a",
-      },
-      {
-        term: "Def B",
-        slug: "def-b",
-        body: "",
-        chapter: "ch-b",
-        anchor: "def-b",
-      },
+  test("re-adding an entry with the same id overwrites (last-write-wins)", () => {
+    indexAccumulator.addEquations([
+      makeEq({ id: "wiens-law", title: "First" }),
     ]);
     indexAccumulator.addEquations([
-      eq({
-        slug: "eq-a",
-        title: "Eq A",
-        chapter: "ch-a",
-        anchor: "eq-a",
-      }),
-      eq({
-        slug: "eq-b",
-        title: "Eq B",
-        chapter: "ch-b",
-        anchor: "eq-b",
-      }),
+      makeEq({ id: "wiens-law", title: "Second" }),
     ]);
-
-    indexAccumulator.clearChapter("ch-a");
-
     const index = indexAccumulator.asPedagogyIndex();
-    expect(index.definitions.filter((d) => d.chapter === "ch-a")).toHaveLength(
-      0
-    );
-    expect(index.equations.filter((e) => e.chapter === "ch-a")).toHaveLength(0);
-    // ch-b survives in both collections.
-    expect(index.definitions.find((d) => d.chapter === "ch-b")?.term).toBe(
-      "Def B"
-    );
-    expect(index.equations.find((e) => e.chapter === "ch-b")?.title).toBe(
-      "Eq B"
-    );
+    expect(index.equations).toHaveLength(1);
+    expect(index.equations[0]?.title).toBe("Second");
   });
 
-  // T12
-  test("asPedagogyIndex returns populated `equations` array (was empty `[]` in PR-C1)", () => {
-    indexAccumulator.addEquations([
-      eq({
-        slug: "alpha",
-        title: "Alpha",
+  test("clearEquations() wipes the registry slot wholesale", () => {
+    indexAccumulator.addEquations([makeEq({ id: "a" }), makeEq({ id: "b" })]);
+    indexAccumulator.clearEquations();
+    const index = indexAccumulator.asPedagogyIndex();
+    expect(index.equations).toEqual([]);
+  });
+
+  test("clearChapter does NOT touch the registry equations slot", () => {
+    // Post-ADR-0060: equations are registry-global; chapter clears only
+    // touch chapter-keyed collections + equationCitations.
+    indexAccumulator.addEquations([makeEq({ id: "wiens-law" })]);
+    indexAccumulator.clearChapter("any-chapter");
+    const index = indexAccumulator.asPedagogyIndex();
+    expect(index.equations).toHaveLength(1);
+  });
+});
+
+describe("indexAccumulator equationCitations (per-chapter)", () => {
+  const makeCitation = (
+    overrides: Partial<EquationCitationEntry> = {}
+  ): EquationCitationEntry => ({
+    chapter: "ch-a",
+    refId: "wiens-law",
+    anchor: "wiens-law-citation-1",
+    number: 1,
+    ...overrides,
+  });
+
+  test("addEquationCitations appends citations from any chapter", () => {
+    indexAccumulator.addEquationCitations([
+      makeCitation({ chapter: "ch-a", refId: "wiens-law" }),
+    ]);
+    indexAccumulator.addEquationCitations([
+      makeCitation({ chapter: "ch-b", refId: "stefan-boltzmann", number: 1 }),
+    ]);
+    const index = indexAccumulator.asPedagogyIndex();
+    expect(index.equationCitations).toHaveLength(2);
+  });
+
+  test("clearChapterCitations removes only that chapter's citations", () => {
+    indexAccumulator.addEquationCitations([
+      makeCitation({ chapter: "ch-a", refId: "alpha" }),
+      makeCitation({
         chapter: "ch-a",
-        anchor: "alpha",
-      }),
-      eq({
-        slug: "beta",
-        title: "Beta",
+        refId: "beta",
         number: 2,
-        chapter: "ch-a",
-        anchor: "beta",
+        anchor: "beta-citation-2",
+      }),
+    ]);
+    indexAccumulator.addEquationCitations([
+      makeCitation({
+        chapter: "ch-b",
+        refId: "gamma",
+        anchor: "gamma-citation-1",
       }),
     ]);
 
+    indexAccumulator.clearChapterCitations("ch-a");
     const index = indexAccumulator.asPedagogyIndex();
-    const inChA = index.equations.filter((e) => e.chapter === "ch-a");
-    expect(inChA).toHaveLength(2);
-    const slugs = inChA.map((e) => e.slug).sort();
-    expect(slugs).toEqual(["alpha", "beta"]);
+    expect(index.equationCitations).toHaveLength(1);
+    expect(index.equationCitations[0]?.chapter).toBe("ch-b");
+  });
+
+  test("clearChapter also clears that chapter's citations", () => {
+    indexAccumulator.addEquationCitations([
+      makeCitation({ chapter: "ch-a", refId: "alpha" }),
+      makeCitation({
+        chapter: "ch-b",
+        refId: "beta",
+        anchor: "beta-citation-1",
+      }),
+    ]);
+    indexAccumulator.clearChapter("ch-a");
+    const index = indexAccumulator.asPedagogyIndex();
+    expect(
+      index.equationCitations.filter((c) => c.chapter === "ch-a")
+    ).toHaveLength(0);
+    expect(
+      index.equationCitations.filter((c) => c.chapter === "ch-b")
+    ).toHaveLength(1);
   });
 });
 

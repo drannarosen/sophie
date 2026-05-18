@@ -69,14 +69,18 @@ describe("buildPagefindIndex (Layer 1.6)", () => {
     ]);
     indexAccumulator.addEquations([
       {
-        slug: "stefan-boltzmann",
+        id: "stefan-boltzmann",
         title: "Stefan-Boltzmann",
-        number: 1,
         tex: "L = 4\\pi R^2 \\sigma T^4",
-        body: "<p>Stefan-Boltzmann luminosity.</p>",
+        symbols: ["L", "R", "T"],
+      },
+    ]);
+    indexAccumulator.addEquationCitations([
+      {
         chapter: "ch",
-        anchor: "stefan-boltzmann",
-        symbols: [],
+        refId: "stefan-boltzmann",
+        anchor: "stefan-boltzmann-citation-1",
+        number: 1,
       },
     ]);
     indexAccumulator.addKeyInsights([
