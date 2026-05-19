@@ -26,6 +26,7 @@
     "test:e2e:install": "playwright install --with-deps chromium",
     "test:storybook": "pnpm --filter @sophie/components test:storybook",
     "lint": "biome check .",
+    "lint:loc": "tsx scripts/loc-budget.ts",
     "format": "biome format --write .",
     "typecheck": "turbo run typecheck"
   },
