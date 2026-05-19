@@ -166,16 +166,6 @@ describe("<Aside>", () => {
     expect(details?.id).toBe("custom-anchor");
   });
 
-  it("omits the DOM id for kinds other than 'definition' unless explicitly provided", () => {
-    render(
-      <Aside kind='note' title='A note'>
-        body
-      </Aside>
-    );
-    const details = document.querySelector("details");
-    expect(details?.hasAttribute("id")).toBe(false);
-  });
-
   it("honors an explicit `id` even for non-definition kinds", () => {
     render(
       <Aside kind='key-insight' id='my-insight'>
@@ -184,5 +174,83 @@ describe("<Aside>", () => {
     );
     const details = document.querySelector("details");
     expect(details?.id).toBe("my-insight");
+  });
+
+  // ─── Unified anchor convention (2026-05-19 P1 PR) ───
+  //
+  // The renderer now mirrors the extractors' anchor-precedence chain
+  // (id > name (misconception) > slug(title)) via the shared
+  // `deriveAsideAnchor` helper in `@sophie/core`. These tests pin the
+  // policy:
+  //
+  //   - any Aside with a title auto-derives id={slugify(title)};
+  //   - misconception with `name` prefers name over title;
+  //   - untitled tracked-kind Asides emit no id (extractor's positional
+  //     fallback `ki-N`/`misc-N` is internal-only).
+
+  it("auto-derives id from title for key-insight", () => {
+    render(
+      <Aside kind='key-insight' title='Color is encoded physics'>
+        body
+      </Aside>
+    );
+    const details = document.querySelector("details");
+    expect(details?.id).toBe("color-is-encoded-physics");
+  });
+
+  it("auto-derives id from title for misconception (no name)", () => {
+    render(
+      <Aside kind='misconception' title='A common confusion'>
+        body
+      </Aside>
+    );
+    const details = document.querySelector("details");
+    expect(details?.id).toBe("a-common-confusion");
+  });
+
+  it("prefers `name` over title for misconception (ADR 0044)", () => {
+    render(
+      <Aside
+        kind='misconception'
+        name='brighter-equals-intrinsically-brighter'
+        title='A common confusion about brightness'
+      >
+        body
+      </Aside>
+    );
+    const details = document.querySelector("details");
+    expect(details?.id).toBe("brighter-equals-intrinsically-brighter");
+  });
+
+  it("ignores `name` on non-misconception kinds", () => {
+    render(
+      <Aside kind='key-insight' name='ignored' title='Real Title'>
+        body
+      </Aside>
+    );
+    const details = document.querySelector("details");
+    expect(details?.id).toBe("real-title");
+  });
+
+  it("auto-derives id from title for digression", () => {
+    render(
+      <Aside kind='digression' title='Historical aside'>
+        body
+      </Aside>
+    );
+    const details = document.querySelector("details");
+    expect(details?.id).toBe("historical-aside");
+  });
+
+  it("omits id when no title, no explicit id, no name (renderer path)", () => {
+    render(<Aside kind='key-insight'>body</Aside>);
+    const details = document.querySelector("details");
+    expect(details?.hasAttribute("id")).toBe(false);
+  });
+
+  it("omits id for kind='note' without title (narration, untracked)", () => {
+    render(<Aside kind='note'>body</Aside>);
+    const details = document.querySelector("details");
+    expect(details?.hasAttribute("id")).toBe(false);
   });
 });

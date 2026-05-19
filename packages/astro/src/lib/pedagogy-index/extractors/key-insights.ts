@@ -1,4 +1,4 @@
-import { type KeyInsightEntry, slugify } from "@sophie/core/schema";
+import { deriveAsideAnchor, type KeyInsightEntry } from "@sophie/core/schema";
 import type { Root } from "mdast";
 import { visit } from "unist-util-visit";
 import {
@@ -34,9 +34,19 @@ export function extractKeyInsights(
     if (attrs.kind !== "key-insight") return;
 
     counter += 1;
-    const titleSlug = attrs.title?.trim() ? slugify(attrs.title.trim()) : null;
-    const explicitId = attrs.id?.trim() ? slugify(attrs.id.trim()) : null;
-    const anchor = explicitId ?? titleSlug ?? `ki-${counter}`;
+    // Route through @sophie/core's `deriveAsideAnchor` — same helper
+    // the renderer uses, so anchor strings can never disagree between
+    // the rendered DOM and the index (2026-05-19 unified-anchor PR).
+    // The positional `ki-${counter}` fallback stays here (extractor
+    // knows the position; renderer doesn't and emits no id when no
+    // other source is available).
+    const anchor =
+      deriveAsideAnchor({
+        kind: "key-insight",
+        id: attrs.id,
+        title: attrs.title,
+        fallback: `ki-${counter}`,
+      }) ?? `ki-${counter}`;
 
     if (seenAnchors.has(anchor)) {
       throw new Error(

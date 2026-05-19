@@ -1,4 +1,7 @@
-import { type MisconceptionEntry, slugify } from "@sophie/core/schema";
+import {
+  deriveAsideAnchor,
+  type MisconceptionEntry,
+} from "@sophie/core/schema";
 import type { Root } from "mdast";
 import { visit } from "unist-util-visit";
 import {
@@ -85,19 +88,23 @@ export function extractMisconceptions(
     }
 
     counter += 1;
-    const titleSlug = attrs.title?.trim() ? slugify(attrs.title.trim()) : null;
-    const explicitId = attrs.id?.trim() ? slugify(attrs.id.trim()) : null;
-    // `name` is the canonical misconception-graph identifier per
-    // ADR 0044 (used in `prerequisite_misconceptions` /
-    // `related_misconceptions` / `<Intervention addresses="…">`).
-    // Anchor precedence places `name` ABOVE `slug(title)` so an
-    // Aside with both `name=` and `title=` resolves to the `name`,
-    // and the Intervention extractor's `addresses="this"`
-    // resolution lands cleanly on the matching `MisconceptionEntry.anchor`
-    // at audit time (closes the PR-γ → PR-δ coupling gap surfaced
-    // during PR-δ scoping).
-    const nameSlug = attrs.name?.trim() ? slugify(attrs.name.trim()) : null;
-    const anchor = explicitId ?? nameSlug ?? titleSlug ?? `misc-${counter}`;
+    // Route through @sophie/core's `deriveAsideAnchor` — same helper
+    // the renderer uses, so anchor strings can never disagree between
+    // the rendered DOM and the index (2026-05-19 unified-anchor PR).
+    // The helper implements the misconception precedence
+    // (id > name > slug(title)) per ADR 0044; the positional
+    // `misc-${counter}` fallback stays here (extractor knows the
+    // position; renderer doesn't and emits no id when no other source
+    // is available). Closes the PR-γ → PR-δ coupling gap originally
+    // surfaced during PR-δ scoping.
+    const anchor =
+      deriveAsideAnchor({
+        kind: "misconception",
+        id: attrs.id,
+        name: attrs.name,
+        title: attrs.title,
+        fallback: `misc-${counter}`,
+      }) ?? `misc-${counter}`;
 
     if (seenAnchors.has(anchor)) {
       throw new Error(
