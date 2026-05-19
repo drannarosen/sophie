@@ -28,8 +28,14 @@
 
 import { resolve } from "node:path";
 import type { PedagogyIndex } from "@sophie/core/schema";
-import { extractContractValidations } from "../packages/astro/src/lib/validation/extractor.ts";
-import { writeValidationIndexMarkdown } from "../packages/astro/src/lib/validation/index-writer.ts";
+// Import through the validation cluster's barrel (ADR 0061 C5 +
+// validation/index.ts docstring) rather than deep file paths. Bucket
+// D's fix-up commit had to chase the C5 file move; routing through
+// the barrel defends against the next within-cluster restructure.
+import {
+  extractContractValidations,
+  writeValidationIndexMarkdown,
+} from "../packages/astro/src/lib/validation/index.ts";
 
 const repoRoot = resolve(import.meta.dirname, "..");
 
