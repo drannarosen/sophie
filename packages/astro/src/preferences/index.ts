@@ -4,6 +4,8 @@ export type {
   PreferenceOptions,
 } from "./define";
 export { definePreference } from "./define";
+export type { DisclosuresStored } from "./disclosures";
+export { disclosuresPref, nextDisclosures } from "./disclosures";
 export type { SidebarStored } from "./sidebar";
 export { sidebarPref } from "./sidebar";
 export type { ThemeAttr, ThemeStored } from "./theme";
