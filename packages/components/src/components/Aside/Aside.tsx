@@ -1,4 +1,4 @@
-import { slugify } from "@sophie/core/schema";
+import { deriveAsideAnchor } from "@sophie/core/schema";
 import styles from "./Aside.module.css.js";
 import type { AsideKind, AsideProps } from "./Aside.schema.ts";
 
@@ -26,7 +26,13 @@ import type { AsideKind, AsideProps } from "./Aside.schema.ts";
  * No persistence; this is a static content component (no
  * `useInteractive`, no IndexedDB).
  */
-export function Aside({ kind = "note", title, id, children }: AsideProps) {
+export function Aside({
+  kind = "note",
+  title,
+  id,
+  name,
+  children,
+}: AsideProps) {
   // Definition variant: defined term IS the label. Bolded title
   // carries the variant signal; no separate "DEFINITION" marker.
   // Other variants: small-caps kind label, optionally followed by a
@@ -36,12 +42,15 @@ export function Aside({ kind = "note", title, id, children }: AsideProps) {
 
   const className = ["sophie-aside", styles.aside].join(" ");
 
-  // Auto-anchor for definition kind: id={slugify(title)} unless an
-  // explicit `id` prop overrides. The pedagogy-index extractor reads
-  // the same field (ADR 0038); back-links from <CourseGlossary> and
-  // <GlossaryTerm> target this DOM id.
-  const resolvedId =
-    id ?? (kind === "definition" && title ? slugify(title) : undefined);
+  // Unified anchor convention (2026-05-19 P1 PR): route through the
+  // shared `deriveAsideAnchor` helper in `@sophie/core/schema`. Same
+  // precedence chain the extractors use (id > name (misconception) >
+  // slug(title)); single source of truth so the renderer and the
+  // pedagogy-index never disagree on anchors. The pedagogy-index
+  // extractor reads the same fields (ADR 0038); back-links from
+  // <CourseGlossary> + <GlossaryTerm> + the validation dashboard
+  // target this DOM id.
+  const resolvedId = deriveAsideAnchor({ kind, id, name, title });
 
   return (
     <details

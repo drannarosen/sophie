@@ -1,4 +1,9 @@
 export {
+  type AsideAnchorKind,
+  type DeriveAsideAnchorInput,
+  deriveAsideAnchor,
+} from "./aside-anchor.js";
+export {
   type AuditFinding,
   AuditFindingSchema,
   type AuditSeverity,

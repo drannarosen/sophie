@@ -127,14 +127,37 @@ test.describe("Phase 0 vertical-slice acceptance — spoiler-alerts chapter", ()
       `Index lists ${chapterEntries.misconceptions.length} misconceptions for this chapter`
     ).toHaveCount(chapterEntries.misconceptions.length);
 
-    // Per-intervention existence (the one kind where the renderer
-    // emits anchor as DOM id today). For each intervention in the
-    // index, assert its rendered anchor is present. This is the
-    // strongest function-of-content shape — "every entry has a
-    // rendered correspondence" per the audit's full vision.
-    // Extending to other kinds requires renderer-consistency work
-    // (each Aside variant needs to emit id={anchor}); tracked
-    // separately as a future renderer follow-up.
+    // Per-entry existence assertions (the audit's "every entry has a
+    // rendered correspondence" full vision, 2026-05-19 unified-anchor
+    // PR). Three kinds now have anchor→DOM-id mapping via the shared
+    // `deriveAsideAnchor` helper in `@sophie/core` — renderer and
+    // extractor agree on anchors by construction.
+    //
+    // - definitions: id from slugify(title) (definition kind requires
+    //   title per the schema, so every definition always has an id).
+    // - misconceptions: id from name (preferred) or slug(title). The
+    //   smoke chapter's 8 misconceptions all carry `name=`.
+    // - interventions: id from the intervention's own anchor scheme
+    //   (separate component, predates the unification).
+    //
+    // Key-insights are NOT asserted per-entry here: the smoke chapter
+    // currently has 2 untitled key-insights, so they fall through to
+    // the extractor's positional `ki-N` fallback (index-only, no DOM
+    // id). When a key-insight gains a title, the helper will emit
+    // id={slug(title)} automatically and this loop can extend to
+    // include key-insights without any change to the renderer.
+    for (const def of chapterEntries.definitions) {
+      await expect(
+        page.locator(`#${def.anchor}`),
+        `Definition "${def.slug}" should be rendered in DOM at #${def.anchor}`
+      ).toHaveCount(1);
+    }
+    for (const m of chapterEntries.misconceptions) {
+      await expect(
+        page.locator(`#${m.anchor}`),
+        `Misconception should be rendered in DOM at #${m.anchor}`
+      ).toHaveCount(1);
+    }
     for (const iv of chapterEntries.interventions) {
       await expect(
         page.locator(`#${iv.anchor}`),

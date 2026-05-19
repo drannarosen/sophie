@@ -55,6 +55,18 @@ export const AsidePropsSchema = z
     kind: AsideKind.optional(),
     title: z.string().optional(),
     id: z.string().optional(),
+    /**
+     * Misconception-graph identifier (ADR 0044). Only meaningful
+     * when `kind === "misconception"`; ignored on other kinds. The
+     * extractor's anchor-precedence is `id > name > slug(title)`, so
+     * authors who want stable misconception URLs across title edits
+     * write `<Aside kind="misconception" name="big-bang-explosion"
+     * title="A common confusion: …">`. The unified renderer (since
+     * the 2026-05-19 anchor PR) also emits this as the DOM `id` for
+     * misconception kind, so the index and the rendered chapter
+     * agree.
+     */
+    name: z.string().optional(),
     children: z.custom<ReactNode>(),
     /**
      * ADR 0044 misconception-graph fields. Only meaningful when
