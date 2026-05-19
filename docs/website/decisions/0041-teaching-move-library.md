@@ -7,6 +7,7 @@ tags:
   - taxonomy
   - components
   - lds
+status: accepted-design
 validation:
   status: in-progress
   last_validated_date: "2026-05-16"

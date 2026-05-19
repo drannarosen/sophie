@@ -6,6 +6,7 @@ tags:
   - performance
   - astro
   - react
+status: shipped
 validation:
   status: unvalidated
   last_validated_date: null

@@ -6,6 +6,7 @@ tags:
   - css
   - tailwind
   - phase-0
+status: shipped
 validation:
   status: unvalidated
   last_validated_date: null

@@ -5,6 +5,7 @@ tags:
   - components
   - astro
   - api-design
+status: shipped
 validation:
   status: unvalidated
   last_validated_date: null

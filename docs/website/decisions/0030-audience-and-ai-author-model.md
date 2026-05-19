@@ -5,6 +5,7 @@ tags:
   - audience
   - authoring-model
   - ai-authoring
+status: shipped
 validation:
   status: unvalidated
   last_validated_date: null
