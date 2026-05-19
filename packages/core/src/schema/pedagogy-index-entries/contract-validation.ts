@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PageStatusSchema } from "../page-status.ts";
 import { NonEmptyString } from "../primitives.ts";
 import { ValidationSchema } from "../validation.ts";
 
@@ -37,6 +38,17 @@ export const ContractValidationEntrySchema = z.object({
   path: NonEmptyString,
   /** Parsed validation block; undefined when the doc has no `validation:` frontmatter (V1/V2 fire). */
   validation: ValidationSchema.optional(),
+  /**
+   * Page-level lifecycle status (ADR 0062). Orthogonal to the validation
+   * block's `status:` subkey: this field describes whether the contract
+   * documented on the page is implemented (`shipped`), spec-locked but
+   * unimplemented (`accepted-design` / `future-package-split`), or
+   * partial (`mixed`). Undefined when the doc has no `status:` frontmatter
+   * — rollout incompleteness is observability, not a defect (see
+   * `scripts/lint-status.ts`). Parse failures surface as `S0` extractor
+   * findings, not silent fallthrough.
+   */
+  status: PageStatusSchema.optional(),
   /** Most recent Revisions-section ISO date, or null if no Revisions section. */
   lastRevisedDate: z.string().nullable(),
 });

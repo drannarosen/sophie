@@ -4,7 +4,7 @@ import type {
   AuditFinding,
   ContractValidationEntry,
 } from "@sophie/core/schema";
-import { ValidationSchema } from "@sophie/core/schema";
+import { PageStatusSchema, ValidationSchema } from "@sophie/core/schema";
 import matter from "gray-matter";
 import { extractLastRevisedDate } from "../last-revised-date.ts";
 
@@ -36,7 +36,16 @@ import { extractLastRevisedDate } from "../last-revised-date.ts";
  *      Severity is INFO so it never breaks CI (auditExitCode treats
  *      only ERROR as failure).
  *
- * Layer split (per the PR 3 hardening review): V0 + V8 live HERE
+ *   4. **S0 — page-status parse failure (INFO).** When the page-level
+ *      `status:` frontmatter (ADR 0062) is present but
+ *      `PageStatusSchema.safeParse` rejects it, emit one S0 INFO
+ *      finding per failing file. Severity is INFO (not ERROR) because
+ *      the field is optional during rollout and a typo's blast radius
+ *      is limited to silently rendering the bad value in the dashboard
+ *      — observability beats blocking until every page has been
+ *      audited. Pages with no `status:` field produce no S0 finding.
+ *
+ * Layer split (per the PR 3 hardening review): V0 + V8 + S0 live HERE
  * because they need raw `Record<string, unknown>` access to detect
  * schema rejection and stripped keys. V1–V7 — which operate on
  * already-typed `Validation` blocks — live in `pedagogy-audit.ts`.
@@ -116,8 +125,29 @@ export async function extractContractValidations(
       const parsed = matter(source);
       const data = parsed.data as Record<string, unknown>;
       const rawBlock = data.validation as Record<string, unknown> | undefined;
+      const rawStatus = data.status;
 
       let validation: ContractValidationEntry["validation"];
+      let status: ContractValidationEntry["status"];
+
+      if (rawStatus !== undefined && rawStatus !== null) {
+        // S0 — page-status parse failure (ADR 0062). Severity INFO
+        // matches V8's "observability not gatekeeping" stance during
+        // rollout. The field is documented in
+        // docs/website/decisions/0062-page-status-frontmatter-enum.md.
+        const statusResult = PageStatusSchema.safeParse(rawStatus);
+        if (statusResult.success) {
+          status = statusResult.data;
+        } else {
+          findings.push({
+            severity: "INFO",
+            code: "S0",
+            message: `S0: ${relPath}: page-level 'status:' field has unknown value (got: ${JSON.stringify(rawStatus)}; expected one of: shipped, accepted-design, mixed, future-package-split).`,
+            location: { path: relPath },
+          });
+          status = undefined;
+        }
+      }
 
       if (rawBlock !== undefined && rawBlock !== null) {
         const result = ValidationSchema.safeParse(rawBlock);
@@ -174,6 +204,7 @@ export async function extractContractValidations(
       entries.push({
         path: relPath,
         validation,
+        status,
         lastRevisedDate: extractLastRevisedDate(source),
       });
     }
