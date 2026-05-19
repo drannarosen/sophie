@@ -207,8 +207,7 @@ function renderExtractorFindings(findings: readonly AuditFinding[]): string {
     // carry location.path. Prefer the more-specific present field; fall
     // back to em-dash when the finding is global (no location at all,
     // e.g. F4 "registry figure with zero usages anywhere"). Issue #121.
-    const location =
-      f.location?.chapter ?? f.location?.path ?? "—";
+    const location = f.location?.chapter ?? f.location?.path ?? "—";
     parts.push(`- **${f.severity} ${f.code}** — ${f.message} (${location})`);
   }
   return parts.join("\n");
