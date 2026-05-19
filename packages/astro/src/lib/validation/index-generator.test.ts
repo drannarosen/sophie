@@ -159,6 +159,38 @@ describe("generateValidationIndex", () => {
     expect(md).toMatch(/\|\s*manual\s*\|\s*0\s*\|/);
   });
 
+  test("renders contract findings' file path from location.path (issue #121)", () => {
+    // Contract-scoped findings (V0/V8/S0 per ADRs 0056 + 0062) populate
+    // location.path, NOT location.chapter — see audit.ts schema docstring.
+    // The findings listing must surface that path in the rendered cell.
+    const md = generateValidationIndex(
+      makeIndex({
+        extractorFindings: [
+          {
+            severity: "ERROR",
+            code: "V0",
+            message: "ValidationSchema rejected the block",
+            location: { path: "docs/website/decisions/0099-broken.md" },
+          },
+          {
+            severity: "INFO",
+            code: "S0",
+            message: "page-level 'status:' field has unknown value",
+            location: { path: "docs/website/reference/typo.md" },
+          },
+        ],
+      })
+    );
+    // Per-finding listing must mention each file path (the parenthesized
+    // location cell at the end of the bullet).
+    expect(md).toMatch(/V0[^\n]*docs\/website\/decisions\/0099-broken\.md/);
+    expect(md).toMatch(/S0[^\n]*docs\/website\/reference\/typo\.md/);
+    // Defensive: should not silently render an em-dash for findings
+    // that carry a non-undefined location.path.
+    expect(md).not.toMatch(/V0[^\n]*\(—\)/);
+    expect(md).not.toMatch(/S0[^\n]*\(—\)/);
+  });
+
   test("renders extractor-findings summary with V0 + V8 counts", () => {
     const md = generateValidationIndex(
       makeIndex({

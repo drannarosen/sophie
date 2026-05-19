@@ -202,7 +202,12 @@ function renderExtractorFindings(findings: readonly AuditFinding[]): string {
 
   parts.push("", "### Findings list", "");
   for (const f of findings) {
-    const location = f.location?.chapter ?? "—";
+    // Two distinct address shapes per audit.ts (ADR 0056): chapter-scoped
+    // findings carry location.chapter; contract-scoped findings (V0/V8/S0)
+    // carry location.path. Prefer the more-specific present field; fall
+    // back to em-dash when the finding is global (no location at all,
+    // e.g. F4 "registry figure with zero usages anywhere"). Issue #121.
+    const location = f.location?.chapter ?? f.location?.path ?? "—";
     parts.push(`- **${f.severity} ${f.code}** — ${f.message} (${location})`);
   }
   return parts.join("\n");
