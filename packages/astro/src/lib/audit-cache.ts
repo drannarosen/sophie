@@ -22,13 +22,9 @@
  * component.
  */
 import type { PedagogyIndex } from "@sophie/core/schema";
-import {
-  type AuditExtras,
-  type AuditReport,
-  auditExitCode,
-  formatAuditReport,
-  runPedagogyAudit,
-} from "./pedagogy-audit.ts";
+import { auditExitCode, formatAuditReport } from "./pedagogy-audit/format.ts";
+import { runPedagogyAudit } from "./pedagogy-audit/runner.ts";
+import type { AuditExtras, AuditReport } from "./pedagogy-audit/types.ts";
 
 interface CacheSlot {
   __sophiePedagogyAuditDone?: boolean;

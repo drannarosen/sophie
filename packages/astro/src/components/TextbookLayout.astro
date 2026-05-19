@@ -130,7 +130,7 @@ const pedagogy = indexAccumulator.asPedagogyIndex();
 // PR-C4: run the systematic build-time audit pass once per build,
 // after the index is fully populated. Errors fail the build; warnings
 // + info print but allow the build to continue. See
-// packages/astro/src/lib/pedagogy-audit.ts for the invariant list.
+// packages/astro/src/lib/pedagogy-audit/ for the invariant list.
 //
 // The cache decision (run once in prod, every render in dev) lives in
 // `runAuditOncePerProcess` (lib/audit-cache.ts). This caller only does

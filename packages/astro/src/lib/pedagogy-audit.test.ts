@@ -21,7 +21,7 @@ import {
   auditExitCode,
   formatAuditReport,
   runPedagogyAudit,
-} from "./pedagogy-audit.ts";
+} from "./pedagogy-audit/index.ts";
 
 /**
  * Tests for the systematic build-time pedagogy audit pass (PR-C4 Task
