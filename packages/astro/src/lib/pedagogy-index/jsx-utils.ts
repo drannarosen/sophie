@@ -229,13 +229,25 @@ export function renderChildrenToHtml(children: ReadonlyArray<unknown>): string {
   // Wrap in a synthetic root so mdast-util-to-hast can process the
   // body as a top-level subtree. Returns the empty string when no
   // children (definitions are allowed to be header-only).
+  //
+  // Per 2026-05-19 architecture audit P2 #8: throw when toHast bails
+  // on a non-empty subtree. The previous silent-fallback `return ""`
+  // co-mingled "subtree malformed" with "author intentionally left
+  // body empty" — both produced the same dev warning from the
+  // pedagogy extractors (D3 / M3 / K3). Throwing makes the empty-body
+  // warning load-bearing: empty body in the index = author intent;
+  // hast-conversion failure = surface to the build immediately.
   if (children.length === 0) return "";
   const synthetic = {
     type: "root" as const,
     children: children as never,
   };
   const hast = toHast(synthetic);
-  if (!hast) return "";
+  if (!hast) {
+    throw new Error(
+      `renderChildrenToHtml: mdast-util-to-hast returned null for a ${children.length}-child subtree. This indicates a malformed mdast subtree the extractor pipeline cannot serialize. (Audit P2 #8.)`
+    );
+  }
   return toHtml(hast);
 }
 
