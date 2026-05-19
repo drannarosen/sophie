@@ -15,6 +15,7 @@ validation:
   status: unvalidated
   last_validated_date: null
   evidence: []
+status: shipped
 ---
 
 # Teaching Move Library
@@ -315,7 +316,7 @@ steps unsupported. The fading sequence is the move; a one-shot worked
 example without fading is incomplete.
 
 **Sophie components**: `<WorkedExample>` (component forthcoming; per
-[ADR 0023 vertical-slice-first](./0023-vertical-slice-build-order.md)
+[ADR 0023 vertical-slice-first](../decisions/0023-vertical-slice-build-order.md)
 this component lands when a chapter authoring need surfaces it).
 Sequence: full worked example → partially-faded version → student
 practice problem.

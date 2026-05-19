@@ -251,9 +251,9 @@ declares the chapter-level anchors this TDR claims to affect
 **`affects_versions` (optional, list of course version strings)** —
 declares which course versions this TDR spans (e.g.,
 `["1.0.0", "1.1.0"]`). Auto-populated by `sophie refactor`
-([ADR 0049](0049-sophie-refactor-cli-family.md)) with
+([ADR 0049](0049-sophie-refactor-cli.md)) with
 `[<current_version>]` based on the pedagogy contract's
-`course_version` ([ADR 0051](0051-chapter-status-and-course-versioning.md)).
+`course_version` ([ADR 0051](0051-chapter-status-course-versioning.md)).
 Author can edit if the decision genuinely spans multiple versions.
 
 The full canonical template — with one fully-worked example — lives
@@ -304,7 +304,7 @@ Single anchor source (`num=` only; no parallel `slug=` system). TDRs
 are numbered per ADR 0040's folder-scoped numbering; renumbering
 should be rare-to-never, and renumbering on commit can be done with
 `sophie refactor tdr renumber`
-([ADR 0049](0049-sophie-refactor-cli-family.md)) when needed.
+([ADR 0049](0049-sophie-refactor-cli.md)) when needed.
 
 **`<ChapterTDRs chapter="X">`** — Astro consumer (server-rendered
 aggregator, parallel to `<ChapterEquations>` / `<ChapterMisconceptions>`).
@@ -432,7 +432,7 @@ This ADR ships **TDR-1** (course-level coverage WARNING) and
 **TDR-2** (INFO on `affects_anchors` resolution) as part of the
 foundation. Their full specifications appear in the *Audit
 invariants* section above; the audit pass that fires them is
-registered in `packages/astro/src/lib/pedagogy-audit.ts` in the
+registered in `packages/astro/src/lib/pedagogy-audit/runner.ts` in the
 follow-up code PR. Future ADRs may add additional TDR-prefix
 invariants as authoring data shows the need; v1 ships these two.
 
@@ -523,10 +523,10 @@ identity is sufficient.
 - [ADR 0045 — Pedagogical Diff + Curriculum CI](0045-pedagogical-diff-curriculum-ci.md):
   the `affects_anchors` field on TDRs feeds the diff classifier's
   intentional-change demotion.
-- [ADR 0049 — `sophie refactor` CLI Family](0049-sophie-refactor-cli-family.md):
+- [ADR 0049 — `sophie refactor` CLI Family](0049-sophie-refactor-cli.md):
   refactor commands auto-generate TDR-seed stubs with
   `affects_anchors` and `affects_versions` pre-populated.
-- [ADR 0051 — Chapter Status + Course Versioning](0051-chapter-status-and-course-versioning.md):
+- [ADR 0051 — Chapter Status + Course Versioning](0051-chapter-status-course-versioning.md):
   the `affects_versions` field on TDRs maps to the course-level
   semver declared in the pedagogy contract.
 - [ADR 0053 — Conformance Failure Modes](0053-conformance-failure-modes.md):

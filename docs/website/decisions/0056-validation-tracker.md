@@ -47,7 +47,7 @@ validation:
       date: "2026-05-15"
       notes: "Writer env-flag + I/O wrapper tests (PR #52)."
     - kind: audit
-      ref: packages/astro/src/lib/pedagogy-audit.ts
+      ref: packages/astro/src/lib/pedagogy-audit/runner.ts
       date: "2026-05-16"
       notes: "Audit invariants V0–V8 live; V1+V2 ERROR-grade post PR 6."
     - kind: manual

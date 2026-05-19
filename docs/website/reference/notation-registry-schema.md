@@ -17,6 +17,7 @@ validation:
   status: unvalidated
   last_validated_date: null
   evidence: []
+status: shipped
 ---
 
 # Notation Registry schema
@@ -64,7 +65,7 @@ Single file at repo root. Parallels ADR 0042's
 
 Per the 2026-05-14 hardening, the per-course `notation-registry.yaml`
 shape is forward-compatible with platform-level catalog
-inheritance. When [ADR 0048 Sophie LDS Content Plugin System](../decisions/0048-sophie-lds-content-plugin-system.md)
+inheritance. When [ADR 0048 Sophie LDS Content Plugin System](../decisions/0048-sophie-lds-content-plugins.md)
 populates discipline plugins (e.g., `@sophie/discipline-astronomy`),
 this registry will gain an `inherits_from` field declaring which
 upstream catalogs the course extends:

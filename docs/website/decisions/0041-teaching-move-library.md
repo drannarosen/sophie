@@ -147,7 +147,7 @@ move.
 
 ### Hardening additions (2026-05-14)
 
-Per the [foundation review](/Users/anna/Teaching/sophie/docs/reviews/2026-05-14-adrs-0040-0045-foundation-review.md),
+Per the [foundation review](../../reviews/2026-05-14-adrs-0040-0045-foundation-review.md),
 the original `move-index.ts` shape was extended with four
 coordinated refinements. All ship as part of the v1 platform-docs +
 follow-up code PR; together they resolve the Move/Intervention
@@ -510,7 +510,7 @@ the *floor*, not the ceiling.
 - [ADR 0047 — Empirical Validation Plan](./0047-empirical-validation-plan.md)
   — move-usage aggregation feeds the eight-metric headline set;
   `validated_in` tagging surfaces in the validation summary.
-- [ADR 0049 — `sophie refactor` CLI Family](./0049-sophie-refactor-cli-family.md)
+- [ADR 0049 — `sophie refactor` CLI Family](./0049-sophie-refactor-cli.md)
   — refactor commands may touch move-index entries when a move is
   renamed or merged.
 - [`reference/intervention-library.md`](../reference/intervention-library.md)

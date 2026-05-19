@@ -84,7 +84,7 @@ revisions.
 ### Foundation hardening + cross-cutting ADRs (2026-05-15)
 
 Following the 2026-05-14
-[expert review](/Users/anna/Teaching/sophie/docs/reviews/2026-05-14-adrs-0040-0045-foundation-review.md)
+[expert review](../../reviews/2026-05-14-adrs-0040-0045-foundation-review.md)
 of the foundation tranche, a hardening pass landed:
 
 - **In-place revisions to ADRs 0040–0046** under Anna's explicit

@@ -458,7 +458,7 @@ have).
     excludes time-gated chapters; component-level slot-collapse
     pattern (per ADR 0034) for unlocked components.
   - Audit: implement SP1–SP4 in
-    `packages/astro/src/lib/pedagogy-audit.ts`.
+    `packages/astro/src/lib/pedagogy-audit/runner.ts`.
   - CLI: `sophie publish-state` + `sophie publish-schedule list`
     in `packages/cli/`.
 - Workflow template:

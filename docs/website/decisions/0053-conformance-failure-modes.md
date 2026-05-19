@@ -433,7 +433,7 @@ This avoids two places of truth.
   - Schema: add `audit_overrides` array field to chapter
     frontmatter Zod.
   - Audit: implement CF1, CF2, CF3 in
-    `packages/astro/src/lib/pedagogy-audit.ts`. CF4 is build-
+    `packages/astro/src/lib/pedagogy-audit/runner.ts`. CF4 is build-
     pipeline behavior, not an audit invariant. CF5 is runtime
     behavior in `@sophie/components/runtime`.
   - Cross-reference: every other invariant family's audit

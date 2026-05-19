@@ -81,7 +81,7 @@ Two constraints shape every decision in this section:
    expensive.
 
 2. **HITL mandate.** Per the project's
-   [HITL mandate](../../../../CLAUDE.md), strategic decisions are
+   [HITL mandate](../../../CLAUDE.md), strategic decisions are
    collaborative; this section captures decisions Anna has approved,
    not autonomous proposals. Open questions are surfaced explicitly
    throughout.

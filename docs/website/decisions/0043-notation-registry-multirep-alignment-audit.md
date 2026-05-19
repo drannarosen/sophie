@@ -305,7 +305,7 @@ schema enforcement code lands in a follow-up PR:
   pedagogy-index extractor (children-mode, per
   [PR-C4 precedent](./0038-pedagogy-index-pattern.md)).
 - **10** new audit invariants added to
-  `packages/astro/src/lib/pedagogy-audit.ts` (was 8; MR5 + MR6
+  `packages/astro/src/lib/pedagogy-audit/runner.ts` (was 8; MR5 + MR6
   added in 2026-05-14 hardening).
 - A `<MultiRepRenderer>` UI that lets the reader toggle between
   representations (or view them side-by-side); design TBD in the
@@ -677,7 +677,7 @@ follow real authoring experience.
 - [ADR 0046 — Equation Biography](./0046-equation-biography.md) —
   the `<Units>` biography child uses structured form (symbol +
   unit) following the principle declared in this ADR's Rationale.
-- [ADR 0048 — Sophie LDS Content Plugin System](./0048-sophie-lds-content-plugin-system.md)
+- [ADR 0048 — Sophie LDS Content Plugin System](./0048-sophie-lds-content-plugins.md)
   — future cross-course catalog inheritance; v1 ships the seam
   empty, populated as ASTR 201 + COMP 521 reveal real recurrence
   patterns.
@@ -855,7 +855,7 @@ chapter equations) so it could technically ship in PR-δ — but the
 into PR-δ' for coherence with the `symbols`-metadata deliverable.
 
 This revision pairs with the JSDoc deferral note in
-[`packages/astro/src/lib/pedagogy-audit.ts`](../../../packages/astro/src/lib/pedagogy-audit.ts)
+[`packages/astro/src/lib/pedagogy-audit/runner.ts`](../../../packages/astro/src/lib/pedagogy-audit/runner.ts)
 ("Not implemented in v1" block) and the AuditExtras.notationRegistry
 TODO for PR-ε's `TextbookLayout.astro` loader wire-up.
 
@@ -866,12 +866,12 @@ to main) shipped all three deferred invariants, plus the
 schema slot that they consume:
 
 - **NR1 WARNING** — `<KeyEquation symbols=[…]>` declares a symbol
-  not in `notation-registry.yaml` ([pedagogy-audit.ts:963](../../../packages/astro/src/lib/pedagogy-audit.ts)).
+  not in `notation-registry.yaml` ([pedagogy-audit.ts:963](../../../packages/astro/src/lib/pedagogy-audit/runner.ts)).
 - **NR3 ERROR** — Notation Registry symbol bound to multiple concepts
-  ([pedagogy-audit.ts:989](../../../packages/astro/src/lib/pedagogy-audit.ts)).
+  ([pedagogy-audit.ts:989](../../../packages/astro/src/lib/pedagogy-audit/runner.ts)).
 - **NR4 WARNING** — `<KeyEquation symbols=[…]>` declares a symbol
   whose registry concept has `units:` but the equation lacks a
-  `<Units symbol="…">` biography child ([pedagogy-audit.ts:1022](../../../packages/astro/src/lib/pedagogy-audit.ts)).
+  `<Units symbol="…">` biography child ([pedagogy-audit.ts:1022](../../../packages/astro/src/lib/pedagogy-audit/runner.ts)).
 
 The NR2 invariant was also modified in PR-δ' to count `KeyEquation.symbols`
 as a reference signal (in addition to the v1 `<MultiRep concept=…>`

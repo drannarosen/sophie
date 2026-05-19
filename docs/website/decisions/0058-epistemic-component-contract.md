@@ -188,13 +188,13 @@ section + one explanation page + a CLAUDE.md amendment. The cost of
 re-invents the role vocabulary, and the four AI-authoring roles
 in ADR 0030 keep reasoning about types instead of roles. Naming the
 shape before the components that consume it is the
-[ADR 0023 vertical-slice-first](./0023-build-order-vertical-slice-first.md)-
+[ADR 0023 vertical-slice-first](./0023-vertical-slice-build-order.md)-
 compatible way to build a contract: lean Phase 0, refactor outward
 *around a known interface*. Without the interface, "refactor outward"
 becomes "rewrite each time."
 
 This is also the canonical instance of the
-[engineering principle](../CLAUDE.md) *"build the best now, plan
+[engineering principle](../../../CLAUDE.md) *"build the best now, plan
 ahead — not what's simple now causing more work later."* The naive
 alternative — let each future component re-coin its own role
 vocabulary — would not break v1, but it would leave 0044, 0046, and
@@ -378,7 +378,7 @@ Defer.
   canonical compound primitive that proves the contract works
   end-to-end); A11 ADR defining the cross-component linked-
   representation state primitive (architecturally distinct from
-  [`useInteractive`](./0007-persistence-and-state.md), which is
+  [`useInteractive`](./0007-persistence-indexeddb.md), which is
   per-component persistence); a future ADR extending
   [ADR 0005](./0005-theming-three-layers.md) with epistemic theme-
   token slots.

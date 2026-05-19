@@ -32,6 +32,12 @@ jobs:
         # Fails CI on a non-exempt ERROR breach; warnings/infos are
         # surfaced in the log without blocking.
         run: pnpm lint:loc
+      - name: Markdown link check (Codex P1.2 / E3b)
+        # Scans docs/website/**/*.md{,x} for unresolved local links,
+        # MyST-slug-aware. Informational only — does not fail CI per
+        # the E3b decision; the signal is surfaced in the log so
+        # future sweep PRs can target it.
+        run: pnpm lint:links
 
   typecheck:
     name: typecheck

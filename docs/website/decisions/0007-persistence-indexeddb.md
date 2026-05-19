@@ -194,7 +194,7 @@ fallback behavior.
 - [ADR 0004](0004-component-contract-revisions.md) —
   `useInteractive` hook context.
 - [`idb` library](https://github.com/jakearchibald/idb).
-- [ADR 0029](0029-broadcastchannel-lww.md) — BroadcastChannel
+- [ADR 0029](0029-broadcast-channel-last-write-wins.md) — BroadcastChannel
   last-write-wins refinement.
 - [ADR 0053](0053-conformance-failure-modes.md) §CF5 — runtime
   fallback semantics formalized.

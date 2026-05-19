@@ -738,11 +738,11 @@ audit per coherent contract.
 - [ADR 0044 — Misconception Graph + Intervention Library](./0044-misconception-graph-and-intervention-library.md)
   — MG1–MG4 + I1–I4 invariants surface in `conformance` axis;
   prerequisite-cycle introduction is a `breaking` item.
-- [ADR 0049 — `sophie refactor` CLI Family](./0049-sophie-refactor-cli-family.md)
+- [ADR 0049 — `sophie refactor` CLI Family](./0049-sophie-refactor-cli.md)
   — refactor commands auto-generate TDR-seed stubs with
   `affects_anchors` pre-populated; intentional-change demotion
   flows from refactor → TDR → diff.
-- [ADR 0051 — Chapter Status + Course Versioning](./0051-chapter-status-and-course-versioning.md)
+- [ADR 0051 — Chapter Status + Course Versioning](./0051-chapter-status-course-versioning.md)
   — `--semester=<id>` flag resolves to `<course>-<semester>-start`
   tag per ADR 0051's git-tag convention; diff can plot across
   course versions.

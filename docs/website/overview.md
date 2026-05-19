@@ -417,7 +417,7 @@ All three modes shipped in Bucket B PR 10 (2026-05-15) alongside
 `@media print` forced-light tokens, chrome reset, view-mode-Wide
 print override, page-break protection, and interactive-to-static
 expansion. Sidebar visibility, ToC visibility, theme, and view mode
-all persist via `localStorage` ([ADR 0032](decisions/0032-localstorage-for-preferences.md));
+all persist via `localStorage` ([ADR 0032](decisions/0032-vanilla-js-chrome-state.md));
 cross-tab sync is via the `storage` event.
 
 The aesthetic ports Anna's existing course design tokens
@@ -568,7 +568,7 @@ it does not surveil or nudge them through content.*
 Sophie has shipped **Phases 0–2** plus **Buckets B + C** of chrome +
 pedagogy-index infrastructure, plus the **LDS conformance foundation
 docs**. The platform is grade **A (94/100)** at the most recent
-[Bucket B + C architecture audit](reviews/2026-05-15-bucket-b-c-architecture-audit.md).
+[Bucket B + C architecture audit](../reviews/2026-05-15-bucket-b-c-architecture-audit.md).
 
 **Shipped (code):**
 

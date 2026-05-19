@@ -186,5 +186,5 @@ border weight, not shadow*.
 - [`packages/astro/src/preferences/theme.ts`](https://github.com/drannarosen/sophie/tree/main/packages/astro/src/preferences/theme.ts) — the `data-theme` toggle infra that this palette plugs into.
 - [ADR 0005 — Three-layer theming](../../decisions/0005-theming-three-layers.md) — TS tokens → CSS vars → Tailwind preset; dark mode is a token-layer change.
 - [ADR 0039 — Lucide-two adapter convention](../../decisions/0039-lucide-two-adapter-convention.md) — icon-fill colors consume the brand `fill` values.
-- [ADR 0057 — VR baseline self-hosting](../../decisions/0057-vr-baseline-self-hosting.md) — the infrastructure used to lock dark-mode visual evidence per-component.
+- [ADR 0057 — VR baseline self-hosting](../../decisions/0057-visual-regression-baseline.md) — the infrastructure used to lock dark-mode visual evidence per-component.
 - [WS3 completion audit § Section 7 (Backlog P2-1)](../../../reviews/2026-05-16-workstream-3-completion-audit.md) — the audit that surfaced the dark-mode-parity gap this spec closes.

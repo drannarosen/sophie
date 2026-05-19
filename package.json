@@ -27,6 +27,7 @@
     "test:storybook": "pnpm --filter @sophie/components test:storybook",
     "lint": "biome check .",
     "lint:loc": "tsx scripts/loc-budget.ts",
+    "lint:links": "tsx scripts/link-check.ts",
     "format": "biome format --write .",
     "typecheck": "turbo run typecheck"
   },

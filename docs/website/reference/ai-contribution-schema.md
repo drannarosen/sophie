@@ -17,6 +17,7 @@ validation:
   status: unvalidated
   last_validated_date: null
   evidence: []
+status: accepted-design
 ---
 
 # AI Contribution schema

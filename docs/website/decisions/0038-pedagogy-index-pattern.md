@@ -28,7 +28,7 @@ validation:
       date: "2026-05-14"
       notes: "1347-line real chapter populates the pedagogy index end-to-end (definitions + equations + key insights + objectives + inline-refs) via the smoke build."
     - kind: audit
-      ref: packages/astro/src/lib/pedagogy-audit.ts
+      ref: packages/astro/src/lib/pedagogy-audit/runner.ts
       date: "2026-05-15"
       notes: "Audit invariants V0–V8 (this ADR's pattern extended for ADR 0056)."
     - kind: review
@@ -160,7 +160,7 @@ prose specification.
    structured component.
 2. An entry type in `packages/core/src/schema/pedagogy-index.ts`.
 3. Extractor logic in
-   `packages/astro/src/lib/pedagogy-index-extractor.ts` —
+   `packages/astro/src/lib/pedagogy-index/orchestrator.ts` —
    typically ~20 LOC matching AST shape + extracting fields.
 4. Chapter + (optionally) course consumer components,
    inline reference component, audit invariants. Some roles
@@ -564,7 +564,7 @@ production bugs that simple timing patterns hide.
   first indexed source.
 - [`packages/core/src/schema/pedagogy-index.ts`](../../../packages/core/src/schema/pedagogy-index.ts)
   — the schema (materialized in PR-C1).
-- [`packages/astro/src/lib/pedagogy-index-extractor.ts`](../../../packages/astro/src/lib/pedagogy-index-extractor.ts)
+- [`packages/astro/src/lib/pedagogy-index/orchestrator.ts`](../../../packages/astro/src/lib/pedagogy-index/orchestrator.ts)
   — the remark plugin (materialized in PR-C1).
 
 ## Revisions (2026-05-18 — Registry ecosystem amendment)
