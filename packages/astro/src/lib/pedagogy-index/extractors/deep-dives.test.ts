@@ -1,10 +1,5 @@
 import { beforeEach, describe, expect, test } from "vitest";
-import {
-  mdxAside,
-  mdxCallout,
-  para,
-  root,
-} from "../_test-helpers.ts";
+import { mdxAside, mdxCallout, para, root } from "../_test-helpers.ts";
 import { extractDeepDives, resetIndexAccumulator } from "../index.ts";
 
 beforeEach(() => {
@@ -56,10 +51,9 @@ describe("extractDeepDives (pure)", () => {
 
   test("anchor precedence — slug(title) when no id", () => {
     const tree = root([
-      mdxCallout(
-        { variant: "deep-dive", title: "How It Works" },
-        [para("body")]
-      ),
+      mdxCallout({ variant: "deep-dive", title: "How It Works" }, [
+        para("body"),
+      ]),
     ]);
     expect(extractDeepDives(tree as never, "ch")[0]?.anchor).toBe(
       "how-it-works"
