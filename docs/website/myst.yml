@@ -265,11 +265,20 @@ project:
         - file: contributing/docs-style-guide.md
         - file: contributing/coding-standards.md
   # Local JS plugins (loaded by mystmd from `.mjs` files at build).
+  #
   # The validation-admonition plugin renders ADR 0056's per-contract
   # admonition at the top of each ADR + reference doc; gated behind
   # SOPHIE_DOCS_INCLUDE_VALIDATION=0 for the private pre-launch build.
+  #
+  # The spec-banner plugin (ADR 0062) injects a "Forward-looking
+  # specification" admonition on every page with
+  # `status: future-package-split`; gated behind
+  # SOPHIE_DOCS_INCLUDE_SPEC_BANNERS=0. Placement algorithm matches the
+  # validation-admonition plugin so the two admonitions stack
+  # deterministically when both fire on the same page.
   plugins:
     - scripts/validation-admonition-plugin.mjs
+    - scripts/spec-banner-plugin.mjs
 site:
   template: book-theme
   options:
