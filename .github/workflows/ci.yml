@@ -41,10 +41,18 @@ jobs:
       - name: Page-status check (ADR 0062 / Codex P2)
         # Reports the page-status distribution + rollout gaps + any
         # unknown status values across docs/website/**/*.md{,x}.
-        # Informational only — does not fail CI per ADR 0062. Promote
-        # to blocking once the rollout reaches every page (the
-        # extractor's S0 finding catches contract-page failures
-        # eagerly already).
+        # BLOCKING since 2026-05-19 (after the ADR 0062 + PR #126
+        # rollout reached 100% on decisions/ + reference/). Hard-fail
+        # surfaces:
+        #   1. any page with a status: value outside PageStatusSchema
+        #      (typo catch — should never occur once extractor S0
+        #      runs on contract pages, but covers non-contract pages
+        #      that bypass the extractor);
+        #   2. any ADR or reference page missing status: (catches
+        #      rollout-regression — a new ADR landing without status
+        #      would silently render no-status in the dashboard).
+        # The validation-block-without-status rollout-gap signal
+        # remains informational (future explanation/vision sweep).
         run: pnpm lint:status
 
   typecheck:

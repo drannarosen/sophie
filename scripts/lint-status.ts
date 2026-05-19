@@ -77,6 +77,30 @@ function scanFile(absPath: string): PageRecord {
   };
 }
 
+/**
+ * Pages where `status:` is REQUIRED to be present (and a valid
+ * PageStatusSchema value). After PR #126's ADR rollout + PR #120's
+ * E3b reference-page coverage, both directories are 100% tagged;
+ * this set turns that into a CI gate.
+ *
+ * Other directories (explanation/ vision/ strategy/ how-to/ etc.)
+ * remain optional today; `status:` is welcome but not required.
+ * When their rollout is decided, add them here.
+ */
+const REQUIRED_DIRS: ReadonlyArray<string> = [
+  "docs/website/decisions/",
+  "docs/website/reference/",
+];
+
+function isRequiredPath(repoRelPath: string): boolean {
+  // `decisions/template.md` is excluded — it's a scaffold, not a
+  // contract. The pedagogy-index extractor also skips it.
+  if (repoRelPath.endsWith("docs/website/decisions/template.md")) {
+    return false;
+  }
+  return REQUIRED_DIRS.some((dir) => repoRelPath.includes(dir));
+}
+
 function main(): void {
   const files = listMarkdown(DOCS_ROOT);
   const records = files.map(scanFile);
@@ -100,7 +124,7 @@ function main(): void {
   }
   console.log("");
 
-  // 2. Pages with validation block but no status.
+  // 2. Pages with validation block but no status (rollout-gap signal).
   const gapPages = records
     .filter((r) => r.hasValidationBlock && r.status === undefined)
     .map((r) => r.path)
@@ -120,7 +144,8 @@ function main(): void {
   }
   console.log("");
 
-  // 3. Pages with unknown status value.
+  // 3. Pages with unknown status value (BLOCKING — typos must not
+  // silently render in the dashboard).
   const unknownPages = records
     .filter((r) => r.status !== undefined && !PAGE_STATUS_VALUES.has(r.status))
     .map((r) => ({ path: r.path, value: r.status as string }))
@@ -137,8 +162,41 @@ function main(): void {
   }
   console.log("");
 
+  // 4. Required-directory pages missing `status:` (BLOCKING —
+  // ADR + reference pages must carry a lifecycle status per the
+  // ADR 0062 + PR #126 rollout discipline).
+  const missingRequired = records
+    .filter((r) => isRequiredPath(r.path) && r.status === undefined)
+    .map((r) => r.path)
+    .sort();
   console.log(
-    "Informational only — does not fail CI. Promote to blocking once every page carries a status: field."
+    `Required-directory pages without status: (${missingRequired.length}, expected 0):`
+  );
+  if (missingRequired.length === 0) {
+    console.log("  (none — every ADR + reference page carries status)");
+  } else {
+    for (const p of missingRequired.slice(0, 20)) {
+      console.log(`  ${p}`);
+    }
+    if (missingRequired.length > 20) {
+      console.log(`  …and ${missingRequired.length - 20} more.`);
+    }
+  }
+  console.log("");
+
+  // Exit non-zero on hard failures (unknown values + missing-required).
+  // gap-without-validation-block stays informational (it's a rollout
+  // signal for the future explanation/vision sweep).
+  const hardFailures = unknownPages.length + missingRequired.length;
+  if (hardFailures > 0) {
+    console.log(
+      `FAIL: ${hardFailures} blocking issue${hardFailures === 1 ? "" : "s"} ` +
+        `(${unknownPages.length} unknown-value, ${missingRequired.length} missing-required).`
+    );
+    process.exit(1);
+  }
+  console.log(
+    "PASS: every ADR + reference page carries a valid status; no unknown values across the docs tree."
   );
 }
 
