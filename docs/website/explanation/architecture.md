@@ -53,11 +53,11 @@ multimedia (video, podcast).
 
 ```{mermaid}
 flowchart TD
-    Schema["Schema layer<br/>(@sophie/schema)<br/>Zod schemas → TS types → JSON Schema"]
+    Schema["Schema layer<br/>(@sophie/core)<br/>Zod schemas → TS types"]
     Authoring["Authoring layer<br/>(MDX + @sophie/components)<br/>OMI, PMI, Prediction, UnitCheck, ..."]
     Assets["Asset pipeline<br/>Math (KaTeX), Code (Pyodide), Figures, Manim, Video, Audio, Transcripts"]
     Renderer["Renderer layer<br/>@sophie/astro (default)<br/>+ adapters for Reveal.js, Canvas, Pagefind"]
-    AI["AI authoring kit<br/>@sophie/audit emits prompts<br/>Claude Code / Codex consume"]
+    AI["AI authoring kit<br/>@sophie/astro audit emits findings<br/>Claude Code / Codex consume"]
 
     Schema --> Authoring
     Authoring --> Renderer
@@ -99,7 +99,7 @@ flowchart TD
 
 | Layer | Choice | Rationale |
 |---|---|---|
-| Framework | Astro 5 | Static-first with islands of interactivity; good for content-heavy pages. [ADR 0002](../decisions/0002-renderer-astro-mdx.md) |
+| Framework | Astro 6 | Static-first with islands of interactivity; good for content-heavy pages. [ADR 0002](../decisions/0002-renderer-astro-mdx.md) (upgraded from Astro 5 per ADR 0002 revision note) |
 | Authoring | MDX | Markdown + custom React components for pedagogy. [ADR 0002](../decisions/0002-renderer-astro-mdx.md) |
 | Language | TypeScript | Schema-as-code; reusable tooling. |
 | Schema | Zod | Source of truth; TS types inferred; JSON Schema generated. [ADR 0003](../decisions/0003-zod-as-source-of-truth.md) |
@@ -245,27 +245,44 @@ depend on `@sophie/*`.** See
 
 ### Platform repo — `drannarosen/sophie`
 
+**Shipped today** (5 packages):
+
 ```text
 sophie/
   packages/
-    @sophie/schema/              # Zod schemas, inferred TS types, JSON Schema gen
-    @sophie/components/          # Framework-pure React + Zod + CSS Modules
-    @sophie/theme/               # tokens.ts → CSS vars + Tailwind preset
-    @sophie/audit/               # MDX AST walker, Tier 1/2 checks, Tier 3 prompt emitter
-    @sophie/cli/                 # `sophie` command (build / audit / eval / validate / fmt / create / upgrade)
-    @sophie/renderer-contract/   # SophieRendererAdapter interface
-    @sophie/astro/               # The only Astro-coupled package
-    @sophie/cosmic-playground/   # <Demo> manifest + postMessage adapter
-  apps/
-    docs/                        # Sophie docs site, eventually self-hosted on Sophie
-    example-textbook/            # 4-chapter reference textbook for e2e tests
-  templates/
-    starter-textbook/            # `sophie create textbook` scaffolds this
-    starter-course/              # `sophie create course` scaffolds this
-  e2e/                           # Playwright tests against example-textbook
-  .changeset/                    # SemVer + release notes
-  .github/workflows/             # CI: test, build, deploy docs, publish
+    @sophie/core/                # Zod schemas (pedagogy-index, equation-registry,
+                                 # notation-registry, multirep, intervention,
+                                 # equation-biography, registry-base, validation,
+                                 # audit), inferred TS types
+    @sophie/components/          # Framework-pure React + Zod + CSS Modules + axe
+    @sophie/astro/               # The only Astro-coupled package: integration,
+                                 # layout, pedagogy-index extractor + audit,
+                                 # validation extractor, virtual modules
+    @sophie/cli/                 # `sophie start / dev / preview / audit` (file mode)
+    @sophie/theme/               # tokens.ts → CSS vars + Tailwind preset + math
+                                 # + fonts; WCAG AA contrast checks
+  examples/
+    smoke/                       # Working vertical-slice consumer course
+  docs/website/                  # MyST-built design docs (transitional;
+                                 # eventually self-hosted on Sophie itself)
+  e2e/                           # Playwright tests (currently under examples/smoke/e2e/)
+  .github/workflows/             # CI: typecheck, build, unit, lint, e2e,
+                                 # storybook, visual-regression
 ```
+
+**Designed-but-not-shipped** packages (kept here for design-record
+continuity; subject to revision before implementation):
+
+- `@sophie/cosmic-playground` — `<Demo>` manifest + postMessage adapter (ADR 0008).
+- `@sophie/renderer-contract` — `SophieRendererAdapter` interface for non-Astro consumers.
+- Templates: `templates/starter-textbook/` + `templates/starter-course/` would be
+  scaffolded by a future `sophie create` (the command itself is Designed; see
+  [CLI reference](../reference/cli.md)).
+- A pre-PR-A architectural sketch split out `@sophie/schema` (Zod) + `@sophie/audit`
+  (MDX walker) as separate packages. That split was rolled back when ADR 0001
+  consolidated schemas into `@sophie/core` and PR-C1 placed the extractor + audit
+  inside `@sophie/astro` rather than as a separate package. The current layout
+  above is canonical.
 
 Note: `apps/` here is *consumer* dogfood, not course content. The docs
 site and the reference example textbook are Sophie's first

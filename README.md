@@ -22,14 +22,20 @@ npx mystmd start          # http://localhost:3000
 ## For contributors and AI tools
 
 Read [`CLAUDE.md`](CLAUDE.md) before working in this repo. It captures the
-human-in-the-loop mandate, the locked architectural decisions (ADRs 0001–0023
-plus 0024–0026 once Phase 0 ships), the conventions, and the working style.
+human-in-the-loop mandate, the locked architectural decisions (ADRs 0001–0061
+at last count), the conventions, and the working style.
 
-The current implementation phase is Phase 0 (foundation). See
+Sophie is in the **post-Phase-0 vertical-slice state**: five `@sophie/*`
+packages ship (`core`, `components`, `astro`, `cli`, `theme`), the smoke
+target at `examples/smoke/` is a working consumer course, and CI runs
+typecheck / unit / lint / e2e / Storybook / visual-regression on every
+PR. See
 [`docs/website/decisions/0023-vertical-slice-build-order.md`](docs/website/decisions/0023-vertical-slice-build-order.md)
-for the build-order decision and
-[`docs/website/status/roadmap.md`](docs/website/status/roadmap.md) for the
-broader phase plan.
+for the build-order decision,
+[`docs/website/status/roadmap.md`](docs/website/status/roadmap.md) for
+the phase plan, and
+[`docs/website/status/validation.md`](docs/website/status/validation.md)
+for the per-ADR validation tracker.
 
 ## License
 
@@ -37,7 +43,7 @@ Sophie is released under the [GNU Affero General Public License v3.0
 (or later)](LICENSE). The AGPL preserves Sophie as truly open source while
 preventing closed-source commercial forks via its copyleft and network-use
 clauses; rationale is documented in
-[ADR 0024](docs/website/decisions/) (forthcoming during Phase 0).
+[ADR 0024](docs/website/decisions/0024-license-agpl.md).
 
 Textbook content authored using Sophie lives in *separate* consumer
 repositories and is licensed independently (the recommended content license

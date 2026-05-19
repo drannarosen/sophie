@@ -48,7 +48,7 @@ A **three-layer dev workflow**:
 
 1. **Layer 1 — `sophie dev`** wraps `astro dev` with Sophie-specific
    conveniences:
-   - Astro 5's HMR (Vite-powered, <100 ms).
+   - Astro 6's HMR (Vite-powered, <100 ms).
    - `@sophie/audit` running in watch mode; Tier 1+2 issues surface
      in the terminal as the author types.
    - PROFILE switching mid-session (`sophie dev --profile=instructor`).
