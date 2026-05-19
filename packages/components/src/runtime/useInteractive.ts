@@ -5,9 +5,11 @@ import {
   chapterChannelName,
   createBroadcastChannel,
 } from "./BroadcastChannel.ts";
-import { IndexedDBResponseStore } from "./IndexedDBResponseStore.ts";
+import {
+  FallbackResponseStore,
+  type PersistenceMode,
+} from "./FallbackResponseStore.ts";
 import { useProfile } from "./ProfileContext.tsx";
-import type { ResponseStore } from "./ResponseStore.ts";
 import { compositeKey } from "./ResponseStore.ts";
 
 export type InteractiveStatus = "loading" | "ready" | "error";
@@ -47,15 +49,32 @@ export interface UseInteractiveResult<T> {
    * `aria-busy` to `true` while loading, `false` when hydrated.
    */
   controlProps: InteractiveControlProps;
+  /**
+   * Current persistence mode per ADR 0007 + ADR 0053 (CF5).
+   *
+   * - `"persistent"`: IndexedDB is healthy; state survives reload,
+   *   tab close, and browser restart.
+   * - `"session"`: `FallbackResponseStore` engaged its in-memory
+   *   fallback because IDB is unavailable (Safari private mode,
+   *   quota-exhausted storage, IDB disabled by extension or policy).
+   *   State survives within the current JS process only — it is lost
+   *   on reload. Components SHOULD surface this to students (e.g.,
+   *   a "your progress won't be saved" banner near the control).
+   *
+   * Initialized as `"persistent"`; flips to `"session"` if the first
+   * IDB operation fails. The hook then never flips back for this
+   * mounted instance — once degraded, stays degraded.
+   */
+  persistence: PersistenceMode;
 }
 
-const stores = new Map<string, ResponseStore>();
+const stores = new Map<string, FallbackResponseStore>();
 const channels = new Map<string, BroadcastChannelLayer>();
 
-function getStore(course: string): ResponseStore {
+function getStore(course: string): FallbackResponseStore {
   let store = stores.get(course);
   if (store === undefined) {
-    store = new IndexedDBResponseStore(course);
+    store = new FallbackResponseStore(course);
     stores.set(course, store);
   }
   return store;
@@ -113,6 +132,14 @@ export function useInteractive<T>(
   const [value, setLocalValue] = useState<T>(initial);
   const [status, setStatus] = useState<InteractiveStatus>("loading");
   const [error, setError] = useState<Error | null>(null);
+  // Persistence mode per ADR 0007 + ADR 0053 (CF5). Initialized to the
+  // store's current mode (typically `"persistent"`); flips to
+  // `"session"` if the FallbackResponseStore wrapper engages its
+  // in-memory fallback. The hook subscribes to mode changes so a
+  // mid-session downgrade (rare but possible) surfaces immediately.
+  const [persistence, setPersistence] = useState<PersistenceMode>(() =>
+    getStore(course).getPersistence()
+  );
 
   // Counter of in-flight IDB writes. Increments at setValue entry,
   // decrements when the write settles (success or error). Surfaced
@@ -154,10 +181,22 @@ export function useInteractive<T>(
     // changes — different key means a different value lineage; the
     // previous tuple's ts has no causal relation here.
     tsRef.current = 0;
+    // Subscribe to fallback-engagement events so a mid-session
+    // downgrade (e.g., first hydration call succeeds via IDB, later
+    // write hits a quota exception) reflects on the component.
+    const unsubscribePersistence = store.subscribePersistenceChange((mode) => {
+      if (cancelled) return;
+      setPersistence(mode);
+    });
     store
       .get<T>(profile, chapter, componentKey)
       .then((persisted) => {
         if (cancelled) return;
+        // After the first round-trip the store's mode is settled
+        // (FallbackResponseStore flips it during the .get() if IDB
+        // failed). Sync the hook's state to the store's authoritative
+        // mode.
+        setPersistence(store.getPersistence());
         // Reset to initial when the new key has no stored value — otherwise
         // the previous key's state lingers across (course, chapter, profile,
         // key) changes. Caught in code review 2026-05-09.
@@ -176,6 +215,7 @@ export function useInteractive<T>(
       });
     return () => {
       cancelled = true;
+      unsubscribePersistence();
     };
   }, [course, chapter, profile, componentKey, initial]);
 
@@ -234,5 +274,13 @@ export function useInteractive<T>(
     "data-sophie-write-pending": writesPending > 0,
   };
 
-  return { value, setValue, status, error, hydrated, controlProps };
+  return {
+    value,
+    setValue,
+    status,
+    error,
+    hydrated,
+    controlProps,
+    persistence,
+  };
 }

@@ -7,12 +7,20 @@ tags:
   - ferpa
 validation:
   status: validated
-  last_validated_date: "2026-05-16"
+  last_validated_date: "2026-05-18"
   evidence:
     - kind: test
       ref: packages/components/src/runtime/useInteractive.test.tsx
       date: "2026-05-12"
-      notes: "Covers IndexedDB write/read cycle, MemoryResponseStore fallback, BroadcastChannel LWW (per ADR 0029 refinement)."
+      notes: "Covers IndexedDB write/read cycle, hydration, profile/course namespacing, BroadcastChannel LWW (per ADR 0029 refinement). 2026-05-18 update (E1 PR): adds the `persistence` field happy-path test alongside the existing IDB-healthy assertions."
+    - kind: test
+      ref: packages/components/src/runtime/FallbackResponseStore.test.ts
+      date: "2026-05-18"
+      notes: "Wrapper-level contract for the IDB→memory downgrade per ADR 0007 + ADR 0053 CF5. Exercises engagement-on-first-failure, one-time console.warn, subscriber notification, and post-engagement memory-only routing. 13 test cases."
+    - kind: test
+      ref: packages/components/src/runtime/MemoryResponseStore.test.ts
+      date: "2026-05-18"
+      notes: "`MemoryResponseStore` unit tests — profile/chapter namespacing, delete, clearChapter scoping. 8 test cases."
     - kind: chapter
       ref: examples/smoke/src/content/chapters/01-foundations/spoiler-alerts.mdx
       date: "2026-05-14"

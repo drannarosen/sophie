@@ -24,8 +24,8 @@ block (ADR 0056). Regenerated on every build; suppressed when
 | Status | Count |
 |---|---|
 | Validated | 14 |
-| In progress | 8 |
-| Unvalidated | 63 |
+| In progress | 9 |
+| Unvalidated | 62 |
 | Re-validation needed | 0 |
 | Missing block | 0 |
 | Total | 85 |
@@ -34,9 +34,9 @@ block (ADR 0056). Regenerated on every build; suppressed when
 
 | Kind | Count |
 |---|---|
-| test | 26 |
+| test | 30 |
 | chapter | 4 |
-| review | 16 |
+| review | 17 |
 | deployment | 12 |
 | audit | 5 |
 | manual | 23 |
@@ -57,7 +57,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0004-component-contract-revisions.md](/component-contract-revisions/) | validated | 2026-05-16 | chapter, review, test | Component contract (serialize separate from render, axe-core mandatory, useInteractive for persistence, composition rules) confirmed across every shipped component as of the bucket B+C audit. |
 | [docs/website/decisions/0005-theming-three-layers.md](/theming-three-layers/) | unvalidated | — | — |  |
 | [docs/website/decisions/0006-slides-revealjs.md](/slides-revealjs/) | unvalidated | — | — |  |
-| [docs/website/decisions/0007-persistence-indexeddb.md](/persistence-indexeddb/) | validated | 2026-05-16 | chapter, deployment, review, test | Build-time + smoke-environment validation complete; multi-cohort outcomes deferred to ASTR 201 fa26. |
+| [docs/website/decisions/0007-persistence-indexeddb.md](/persistence-indexeddb/) | validated | 2026-05-18 | chapter, deployment, review, test | Build-time + smoke-environment validation complete; multi-cohort outcomes deferred to ASTR 201 fa26. |
 | [docs/website/decisions/0008-cosmic-playground-protocol.md](/cosmic-playground-protocol/) | unvalidated | — | — |  |
 | [docs/website/decisions/0009-i18n-deferred.md](/i18n-deferred/) | unvalidated | — | — |  |
 | [docs/website/decisions/0010-myst-for-design-docs.md](/myst-for-design-docs/) | unvalidated | — | — |  |
@@ -102,7 +102,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0049-sophie-refactor-cli.md](/sophie-refactor-cli/) | unvalidated | — | — |  |
 | [docs/website/decisions/0051-chapter-status-course-versioning.md](/chapter-status-course-versioning/) | validated | 2026-05-16 | audit, test | Chapter status shipped end-to-end (PR #49: feat(core,astro): chapter.status frontmatter + draft-exclusion). Sibling status surface to ADR 0056 validation status — see reference/validation-tracker.md \`See also\` block. |
 | [docs/website/decisions/0052-scheduled-publication-visibility.md](/scheduled-publication-visibility/) | unvalidated | — | — |  |
-| [docs/website/decisions/0053-conformance-failure-modes.md](/conformance-failure-modes/) | unvalidated | — | — |  |
+| [docs/website/decisions/0053-conformance-failure-modes.md](/conformance-failure-modes/) | in progress | 2026-05-18 | review, test |  |
 | [docs/website/decisions/0054-course-schedule-calendar.md](/course-schedule-calendar/) | unvalidated | — | — |  |
 | [docs/website/decisions/0055-squash-merge-for-code-prs.md](/squash-merge-for-code-prs/) | validated | 2026-05-16 | deployment, manual | Status promoted from in-progress → validated on 2026-05-16 after the squash-merge-guard CI workflow + repo-settings change both landed. Two layers are required: settings prevent UI accidents (the \`Create a merge commit\` and \`Rebase and merge\` buttons are gone); the CI workflow catches API-level bypass of the merge-commit shape. Together they cover all three GitHub merge strategies. |
 | [docs/website/decisions/0056-validation-tracker.md](/validation-tracker/) | validated | 2026-05-16 | audit, deployment, manual, review, test | All six PRs (#43 schema, #44 bulk migration, #50 admonition, #51 audit, #52 index, this PR curated-pass + reference doc + V1/V2 promotion) shipped. Self-referential validation complete; tracker is the source of truth for every ADR + reference doc's validation state as of 2026-05-16. |
