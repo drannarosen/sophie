@@ -189,15 +189,15 @@
  * "serious depth"); Sparkles icon for the-more-you-know (enrichment
  * — uses a warmer accent so it reads as "playful aside").
  */
-.deep-dive {
-  --callout-accent: var(--sophie-brand-teal);
-  --callout-accent-text: var(--sophie-brand-teal-text);
-}
-
-.the-more-you-know {
-  --callout-accent: var(--sophie-brand-amber, #d97706);
-  --callout-accent-text: var(--sophie-brand-amber-text, #92400e);
-}
+/*
+ * The two new variants share the default callout chrome (teal
+ * accent, brand title color). Differentiation today is icon-only:
+ * Telescope for deep-dive, Sparkles for the-more-you-know.
+ * Per-variant accent color is a future polish item — it would need
+ * a `--sophie-brand-amber` token (or similar) added to @sophie/theme
+ * before the-more-you-know can carry its own warmer accent. Tracked
+ * separately to avoid coupling this PR to a theme-token addition.
+ */
 
 /*
  * Native <details> disclosure inside collapsible variants. The
