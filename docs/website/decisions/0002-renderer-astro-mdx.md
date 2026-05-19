@@ -151,6 +151,35 @@ eliminated**:
   ([ADR 0008](0008-cosmic-playground-protocol.md)) keeps demos
   decoupled from Astro's release cadence.
 
+## Revisions
+
+### R-plugin-scope — Citation + autolink-headings plugins deferred (2026-05-19)
+
+The §Decision list named `rehype-citation` and
+`rehype-autolink-headings` alongside `remark-math + rehype-katex` as
+part of the Sophie MDX pipeline. The 2026-05-19 architecture audit
+flagged that only `remark-math` and `rehype-katex` are actually
+installed in `packages/astro/package.json`.
+
+**Resolved posture**: the two unlanded plugins are deferred, not
+abandoned. Trigger conditions:
+
+- `rehype-citation` lands when the first chapter ships a real
+  references section. Today every chapter cites prose-inline (e.g.
+  "Bruno Gilli / ESO" credits, ADR references) or via the smoke
+  target's per-page `<sup>` references; no chapter needs BibTeX-
+  driven citation rendering yet.
+- `rehype-autolink-headings` lands when the docs site or a chapter
+  surfaces user-shareable headings beyond what MyST already
+  provides for the docs tree. Today the docs site uses MyST's
+  built-in heading anchors (`docs/website/` is MyST-rendered, not
+  Astro-MDX-rendered); the smoke target chapters don't yet need
+  per-heading deep-link UI.
+
+Neither absence affects the renderer's `status: shipped` posture —
+Astro 6 + MDX itself is fully shipped (validated 2026-05-13). The
+plugin list was aspirational; the renderer is real.
+
 ## References
 
 - Brainstorming session Q1 (May 2026): "Renderer: MyST vs. Astro+MDX"

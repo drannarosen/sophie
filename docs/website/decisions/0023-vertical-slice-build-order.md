@@ -193,6 +193,28 @@ abandoned):
 - The HITL mandate in CLAUDE.md is unchanged and applies to lean
   Phase 0 implementation just as it did to the larger one.
 
+## Revisions
+
+### R-0061 — Amended by ADR 0061 (AI-optimized codebase design, 2026-05-18)
+
+[ADR 0061](0061-ai-optimized-codebase-design.md) amends the
+vertical-slice-first principle with six concrete rules for
+AI-authored platform code: focused files, Write-over-Edit,
+LOC budget (300/500/800), filename-as-routing, atomic docs, tests
+split with source. The "lean Phase 0, refactor outward" shape
+from this ADR is preserved — ADR 0061 specifies *what shape* the
+refactor-outward step should take so the second-PR pattern lands
+on a known target rather than each subsequent PR re-inventing
+file organization.
+
+The 2026-05-19 Session 10 architecture audit confirmed the
+combination works: PR-B (PR #133, deep-dive pedagogy-tracking)
+extended the pedagogy-index pipeline by ~50 LOC across a focused-
+file refactor pattern that took ~3 hours from amendment to merged
+PR. The vertical slice (extractor → schema → accumulator → e2e)
+followed the established misconception-shape template per ADR 0061
+Rule 4 (filename-as-discovery-key).
+
 ## References
 
 - Late-session honesty check (May 2026): "is this the best way to

@@ -123,6 +123,49 @@ mental model that no longer matches the codebase.
 - Phase 1 SCSS port (Phase 1 scope) follows the v4 CSS-first
   pattern.
 
+## Revisions
+
+### R-no-runtime — Tailwind runtime not installed; @theme syntax used as CSS-vars sugar (2026-05-19)
+
+The 2026-05-19 architecture audit flagged that this ADR's status
+was `shipped` but zero packages have `tailwindcss` installed and
+zero Tailwind utility classes appear in any `packages/components/src/components/*`
+source. The audit's question: is the runtime missing, or is the
+posture different from what the ADR declares?
+
+**Resolved posture**: the implementation is **`@theme` syntax used
+as CSS-vars-with-Tailwind-v4-syntactic-sugar, without the Tailwind
+runtime**. `@sophie/theme` generates `theme.css` via its own
+`scripts/generate-css.ts` (no PostCSS-Tailwind chain); the file
+emits standard CSS `--token-name: value;` declarations inside
+`@theme {}` blocks that browsers parse as plain CSS (`@theme` is a
+no-op selector to a stock CSS parser when the Tailwind plugin
+isn't loaded). Components consume these as `var(--token-name)` in
+CSS Modules.
+
+**Why this is the right shape (not a defect)**:
+
+- The §Decision's three commitments — "tokens live in CSS where
+  consumers read them," "no JS preset," "components reference the
+  variables" — are all satisfied without the runtime.
+- Sophie does not use Tailwind utility classes (`flex p-4 bg-red-500`),
+  per the visual-polish target which favors expressive per-component
+  CSS Modules over utility-class composition.
+- Avoiding the runtime keeps the JS bundle smaller and removes one
+  build-step layer.
+
+**Status stays `shipped`**: the renamed-from-v3-preset-to-CSS-first
+decision IS shipped — `@theme` blocks are the live token surface
+that every CSS Module references. The Tailwind *utility-class
+runtime* is intentionally not part of the shipped surface;
+graduating it requires a new ADR (utility-class layer would be a
+significant authoring-pattern shift, not a quiet dep-add).
+
+**Trigger to graduate Tailwind utility classes**: an explicit
+brainstorm-locked decision that author velocity / consistency
+benefits outweigh the visual-polish-target's expressive-CSS bias.
+Not on the current roadmap.
+
 ## References
 
 - [ADR 0005: Three-layer theming](./0005-theming-three-layers.md) —

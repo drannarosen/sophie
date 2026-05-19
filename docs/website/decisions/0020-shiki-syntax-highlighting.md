@@ -5,7 +5,7 @@ tags:
   - shiki
   - code
   - mdx
-status: shipped
+status: accepted-design
 validation:
   status: unvalidated
   last_validated_date: null
@@ -135,6 +135,27 @@ Not used in:
 - The `<CodeCell>` un-hydrated server preview uses Shiki for the
   initial static render before CodeMirror takes over (improves
   perceived load: no flash of unstyled code).
+
+## Revisions
+
+### R-deferred — Shiki deferred until the CodeCell vertical ships (2026-05-19)
+
+The 2026-05-19 architecture audit flagged that this ADR's
+status was `shipped` but `shiki` and `rehype-pretty-code` are absent
+from every `packages/*/package.json`, and zero `<CodeCell>` callsites
+exist in the smoke target or any chapter.
+
+**Resolved posture**: status reverted to `accepted-design`. The
+syntax-highlighting choice is locked but the implementation hasn't
+shipped because the dependent surface ([`<CodeCell>` per ADR 0018](
+0018-codemirror-6-for-codecell.md)) hasn't shipped either.
+
+**Trigger to graduate** to `shipped`: the first COMP 536 chapter
+authoring an in-page executable code snippet — that's the surface
+that needs the static-render → CodeMirror handoff Shiki provides.
+At graduation: install `shiki` + `rehype-pretty-code` in
+`@sophie/astro`, wire into the MDX pipeline, ship the first
+`<CodeCell>` story + axe coverage.
 
 ## References
 

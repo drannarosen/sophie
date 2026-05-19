@@ -200,6 +200,36 @@ halves of the loop tractable.
   AI co-design the whole pedagogical arc *before* any chapter
   exists.
 
+## Revisions
+
+### R-0061 — Amended by ADR 0061 (AI authoring scope extended to platform code, 2026-05-18)
+
+[ADR 0061](0061-ai-optimized-codebase-design.md) extends the
+AI-primary-author principle from *chapter content* (this ADR's
+original scope) to *platform code itself*. The shift is concrete:
+this ADR locked four AI roles (author / pedagogy / domain /
+brainstorming) targeting student-facing content; ADR 0061 adds a
+fifth implicit author role — *platform code author* — for which
+the same human-in-the-loop supervision applies.
+
+Practical consequences:
+
+- File organization conventions (focused files, sibling templates,
+  filename-as-discovery-key) optimize for AI scaffolding in
+  platform code, not just chapter MDX.
+- The Write-over-Edit preference (Rule 2) reduces token usage on
+  the platform-code authoring path the same way it does for
+  chapter authoring.
+- The HITL mandate's "revisit and confirm" loop applies to
+  platform-code design decisions (ADR amendments, package
+  surfaces, refactor shape) with the same rigor as content
+  decisions. The Session 9 + 10 sprints (24 PRs across two days)
+  demonstrate this in practice.
+
+The four content-authoring AI roles remain unchanged; ADR 0061
+simply formalizes that platform-code authoring is a sibling
+discipline with its own conventions.
+
 ## References
 
 - [overview.md §1–§2](../overview.md) — full audience and
