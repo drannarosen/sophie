@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import { indexAccumulator } from "./pedagogy-index-extractor.ts";
+import { indexAccumulator } from "./pedagogy-index/index.ts";
 import {
   PEDAGOGY_INDEX_VIRTUAL_ID,
   pedagogyIndexVirtualModule,

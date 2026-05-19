@@ -2,7 +2,7 @@ import rehypeKatex from "rehype-katex";
 import remarkFrontmatter from "remark-frontmatter";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
-import { pedagogyIndexRemarkPlugin } from "./lib/pedagogy-index-extractor.ts";
+import { pedagogyIndexRemarkPlugin } from "./lib/pedagogy-index/orchestrator.ts";
 
 /**
  * MDX integration options for `@astrojs/mdx`. Plugin chain:

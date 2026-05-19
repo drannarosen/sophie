@@ -1,8 +1,5 @@
 import { describe, expect, test } from "vitest";
-import {
-  extractMultiReps,
-  transformMultiRep,
-} from "./pedagogy-index-extractor.ts";
+import { extractMultiReps, transformMultiRep } from "./pedagogy-index/index.ts";
 
 /**
  * Synthetic-mdast tests for `extractMultiReps` + `transformMultiRep`,

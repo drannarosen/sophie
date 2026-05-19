@@ -5,7 +5,7 @@ import type {
   SerializedRep,
 } from "@sophie/core/schema";
 import { loadConsumerRegistry } from "../lib/notation-registry-loader";
-import { indexAccumulator } from "../lib/pedagogy-index-extractor";
+import { indexAccumulator } from "../lib/pedagogy-index/accumulator";
 
 const { multiReps } = indexAccumulator.asPedagogyIndex();
 // Load the Notation Registry directly (PR-ε): in-MDX `<ChapterMultiReps>`

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { transformLearningObjectives } from "./pedagogy-index-extractor.ts";
+import { transformLearningObjectives } from "./pedagogy-index/index.ts";
 
 /**
  * Tests over synthetic mdast trees, matching the convention in

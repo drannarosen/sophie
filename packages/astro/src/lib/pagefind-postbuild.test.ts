@@ -45,7 +45,7 @@ describe("buildPagefindIndex (Layer 1.6)", () => {
     // entity type via direct test-mode wiring (Task 7 exposes a
     // test-only helper for this).
     const { resetIndexAccumulator, indexAccumulator } = await import(
-      "./pedagogy-index-extractor.ts"
+      "./pedagogy-index/index.ts"
     );
     resetIndexAccumulator();
     indexAccumulator.setModules([{ slug: "m", title: "M", order: 1 }]);
@@ -160,7 +160,7 @@ describe("pedagogy-index.json artifact (ADR 0045)", () => {
     );
 
     const { resetIndexAccumulator, indexAccumulator } = await import(
-      "./pedagogy-index-extractor.ts"
+      "./pedagogy-index/index.ts"
     );
     resetIndexAccumulator();
     indexAccumulator.setModules([{ slug: "m", title: "M", order: 1 }]);

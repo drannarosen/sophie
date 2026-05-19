@@ -1,4 +1,4 @@
-import { indexAccumulator } from "./pedagogy-index-extractor.ts";
+import { indexAccumulator } from "./pedagogy-index/accumulator.ts";
 
 /**
  * Minimal Vite server shape we read from in handleHotUpdate.

@@ -1,6 +1,6 @@
 ---
 import type { EquationEntry } from "@sophie/core/schema";
-import { indexAccumulator } from "../lib/pedagogy-index-extractor";
+import { indexAccumulator } from "../lib/pedagogy-index/accumulator";
 import BiographyRender from "./BiographyRender.astro";
 
 const { equations } = indexAccumulator.asPedagogyIndex();
