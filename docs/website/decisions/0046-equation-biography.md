@@ -272,7 +272,7 @@ ADR 0040–0045 precedent. The code PR follows separately:
   `CourseEquations.astro` — extend to render biography sections
   with `<details>` disclosure for `<CommonMisuse>` lists.
 - Three new audit invariants added to
-  `packages/astro/src/lib/pedagogy-audit.ts` (E7, E8, E9).
+  `packages/astro/src/lib/pedagogy-audit/runner.ts` (E7, E8, E9).
 - axe-core tests per
   [ADR 0004](./0004-component-contract-revisions.md).
 
@@ -458,7 +458,7 @@ coherent contract.
 - Render-layer updates to `<EquationRef>` hover, `<ChapterEquations>`,
   `<CourseEquations>`.
 - Three new E-prefix invariants in
-  `packages/astro/src/lib/pedagogy-audit.ts`.
+  `packages/astro/src/lib/pedagogy-audit/runner.ts`.
 - axe-core tests for each new component (per ADR 0004).
 - Unit tests for the new schema sub-shapes.
 - E2e test: a smoke chapter with one fully-authored equation
@@ -642,7 +642,7 @@ posture for v1.
   — biography changes classify under the existing diff taxonomy;
   TDR `affects_anchors` lists equation anchors at the equation
   level (not sub-equation).
-- [ADR 0048 — Sophie LDS Content Plugin System](./0048-sophie-lds-content-plugin-system.md)
+- [ADR 0048 — Sophie LDS Content Plugin System](./0048-sophie-lds-content-plugins.md)
   — future cross-course equation sharing (weaker case than for
   concepts or misconceptions; equations are typically course-
   specific in detail even when they share names). Forward-ref

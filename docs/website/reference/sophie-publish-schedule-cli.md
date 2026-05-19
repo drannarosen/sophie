@@ -14,6 +14,7 @@ validation:
   status: unvalidated
   last_validated_date: null
   evidence: []
+status: future-package-split
 ---
 
 # `sophie publish-state` + `sophie publish-schedule`

@@ -25,7 +25,7 @@ validation:
       date: "2026-05-15"
       notes: "CS2 INFO finding tested (status: draft surfaces in audit even though excluded from build)."
     - kind: audit
-      ref: packages/astro/src/lib/pedagogy-audit.ts
+      ref: packages/astro/src/lib/pedagogy-audit/runner.ts
       date: "2026-05-15"
       notes: "CS2 INFO live; chapter status surfaces in the audit report."
   notes: "Chapter status shipped end-to-end (PR #49: feat(core,astro): chapter.status frontmatter + draft-exclusion). Sibling status surface to ADR 0056 validation status — see reference/validation-tracker.md `See also` block."
@@ -433,7 +433,7 @@ than enforcing the bump; it's reviewable, not blocking.
   - Build: exclude `status: draft` chapters from student build
     routes; preserve in instructor build.
   - Audit: implement CS1–CS3, CV1, CV2 in
-    `packages/astro/src/lib/pedagogy-audit.ts`.
+    `packages/astro/src/lib/pedagogy-audit/runner.ts`.
   - Contract: extend `pedagogy-contract.yaml` schema with
     `course_version` block.
   - CLI: `sophie audit` surfaces CS/CV findings in summary;

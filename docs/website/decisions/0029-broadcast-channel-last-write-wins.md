@@ -60,7 +60,7 @@ to commit. The hydration guard ([PR #8](https://github.com/drannarosen/sophie/pu
 prevents this *during* hydration; nothing prevents it *after*
 hydration when both tabs are steady.
 
-The current code, [`useInteractive.ts:150-171`](../../packages/components/src/runtime/useInteractive.ts),
+The current code, [`useInteractive.ts:150-171`](../../../packages/components/src/runtime/useInteractive.ts),
 sequences: (a) local set, (b) async IDB write, (c) post to channel
 *only after IDB resolves*. The broadcast is correctly ordered with
 respect to disk, but neither writer nor receiver knows whether the
@@ -227,6 +227,6 @@ readable.
   — the audit finding that triggered this ADR.
 - [coding-standards § Persistence-bearing controls](../contributing/coding-standards.md)
   — the hydration-guard pattern (PR #8) the LWW fix complements.
-- [`useInteractive.ts`](../../packages/components/src/runtime/useInteractive.ts)
-  and [`IndexedDBResponseStore.ts`](../../packages/components/src/runtime/IndexedDBResponseStore.ts)
+- [`useInteractive.ts`](../../../packages/components/src/runtime/useInteractive.ts)
+  and [`IndexedDBResponseStore.ts`](../../../packages/components/src/runtime/IndexedDBResponseStore.ts)
   — the implementation surface.

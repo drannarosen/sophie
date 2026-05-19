@@ -499,7 +499,7 @@ sync seam pattern).
     `packages/components/src/schedule/`.
   - Build: `/schedule.ics` static route in `@sophie/astro`.
   - Audit: SC1–SC5 in
-    `packages/astro/src/lib/pedagogy-audit.ts`.
+    `packages/astro/src/lib/pedagogy-audit/runner.ts`.
   - axe-core tests per ADR 0004.
 
 ## Alternatives considered

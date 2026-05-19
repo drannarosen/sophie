@@ -357,7 +357,7 @@ schema *enforcement code* lands in a follow-up PR:
   aggregated ledger at `/about-this-course/ai-ledger`.
 - `packages/astro/src/components/ChapterFooter.astro` — extended
   with the `transparency_note` rendering.
-- New audit invariants in `packages/astro/src/lib/pedagogy-audit.ts`
+- New audit invariants in `packages/astro/src/lib/pedagogy-audit/runner.ts`
   (hardened 2026-05-14):
   - **PC1** (ERROR, raised from WARNING in hardening): consumer
     repo with chapters but no `pedagogy-contract.yaml`. Foundation
@@ -372,7 +372,7 @@ schema *enforcement code* lands in a follow-up PR:
     `ai_contribution.visibility: public`. Preamble required only
     when there's a public Ledger surface to frame.
   - **AC1** (ERROR): chapter with `status: stable` (per
-    [ADR 0051](./0051-chapter-status-and-course-versioning.md))
+    [ADR 0051](./0051-chapter-status-course-versioning.md))
     declares `ai_workflow` but lacks `instructor_reviewed`.
     Published AI-contributed content must be reviewed before
     shipping.
@@ -648,7 +648,7 @@ course's commitments.
 - [ADR 0045 — Pedagogical Diff + Curriculum CI](./0045-pedagogical-diff-curriculum-ci.md)
   — `instructor_reviewed.date` staleness surfaces in the diff
   taxonomy's `requires-judgment` severity classifier.
-- [ADR 0051 — Chapter Status + Course Versioning](./0051-chapter-status-and-course-versioning.md)
+- [ADR 0051 — Chapter Status + Course Versioning](./0051-chapter-status-course-versioning.md)
   — AC1 fires only on `status: stable` chapters; review staleness
   measured against `course_version`.
 - [ADR 0053 — Conformance Failure Modes](./0053-conformance-failure-modes.md)

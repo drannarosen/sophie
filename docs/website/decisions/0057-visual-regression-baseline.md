@@ -32,7 +32,7 @@ Sophie scaled.
 
 The trigger for revisiting is **Workstream 3 — per-component visual
 polish** (17 components in scope per the
-[Bucket B + C architecture audit](../reviews/2026-05-15-bucket-b-c-architecture-audit.md)).
+[Bucket B + C architecture audit](../../reviews/2026-05-15-bucket-b-c-architecture-audit.md)).
 Polish PRs need three things visual regression delivers:
 
 1. **A regression gate.** Once a component lands a polished baseline,
@@ -236,9 +236,9 @@ the way it'll actually be used.
   this ADR follows.
 - [`@storybook/test-runner` test-hook API](https://storybook.js.org/docs/writing-tests/integrations/test-runner#test-hook-api)
   — the `postRender` extension point this ADR's implementation uses.
-- [Bucket B + C architecture audit](../reviews/2026-05-15-bucket-b-c-architecture-audit.md)
+- [Bucket B + C architecture audit](../../reviews/2026-05-15-bucket-b-c-architecture-audit.md)
   — Workstream 3 scope: 17 components.
-- [VR baseline design](../plans/2026-05-15-vr-baseline-design.md) —
+- [VR baseline design](../../plans/2026-05-15-vr-baseline-design.md) —
   validated design output from the brainstorming session.
 - [cheerful-eagle session plan](file:///Users/anna/.claude/plans/hi-claude-this-session-cheerful-eagle.md)
   — Workstream 3 entry decisions.

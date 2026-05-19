@@ -21,7 +21,7 @@ validation:
       date: "2026-05-16"
       notes: "ADR 0056 is the contract this reference doc specs; ADR 0056 itself is validated in PR 6 Workstream D."
     - kind: audit
-      ref: packages/astro/src/lib/pedagogy-audit.ts
+      ref: packages/astro/src/lib/pedagogy-audit/runner.ts
       date: "2026-05-16"
       notes: "All nine audit invariants V0–V8 specified in this doc are live and tested."
     - kind: test
@@ -29,6 +29,7 @@ validation:
       date: "2026-05-16"
       notes: "Dashboard-pin integration test enforces the regen workflow this doc specifies."
   notes: "Reference doc shipped in PR 6 Workstream A; specifies the schema + admonition contract + audit invariants + dashboard workflow. Graduated to validated alongside ADR 0056 itself after the curated-pass + V1/V2 promotion landed in the same PR."
+status: shipped
 ---
 
 # Validation tracker schema
@@ -457,11 +458,11 @@ the V9 split above (both are Paper-#1-triggered).
   block above](#see-also-chapter-status-vs-contract-validation)).
 - [explanation/audit-and-ai-authoring.md](../explanation/audit-and-ai-authoring.md) —
   canonical severity philosophy; V1–V8 follow it.
-- [`packages/astro/src/lib/pedagogy-audit.ts`](../../../packages/astro/src/lib/pedagogy-audit.ts) —
+- [`packages/astro/src/lib/pedagogy-audit/runner.ts`](../../../packages/astro/src/lib/pedagogy-audit/runner.ts) —
   audit invariants V0–V8 source.
-- [`packages/astro/src/lib/validation-extractor.ts`](../../../packages/astro/src/lib/validation-extractor.ts) —
+- [`packages/astro/src/lib/validation/extractor.ts`](../../../packages/astro/src/lib/validation/extractor.ts) —
   extractor (V0 + V8 source).
-- [`packages/astro/src/lib/validation-index-generator.ts`](../../../packages/astro/src/lib/validation-index-generator.ts) —
+- [`packages/astro/src/lib/validation/index-generator.ts`](../../../packages/astro/src/lib/validation/index-generator.ts) —
   dashboard generator.
 - [`scripts/regenerate-validation-index.mts`](../../../scripts/regenerate-validation-index.mts) —
   canonical regen entrypoint.

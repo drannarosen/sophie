@@ -20,7 +20,7 @@ validation:
 
 - **Status**: accepted
 - **Deciders**: anna
-- **Amends**: [0038](./0038-pedagogy-index-pattern.md), [0043](./0043-notation-registry-multirep-alignment-audit.md), [0044](./0044-misconception-graph-and-intervention-library.md), [0046](./0046-equation-biography.md), [0048](./0048-lds-content-plugin-system.md)
+- **Amends**: [0038](./0038-pedagogy-index-pattern.md), [0043](./0043-notation-registry-multirep-alignment-audit.md), [0044](./0044-misconception-graph-and-intervention-library.md), [0046](./0046-equation-biography.md), [0048](./0048-sophie-lds-content-plugins.md)
 :::
 
 ## Context
@@ -235,7 +235,7 @@ What this decision makes:
 - [Vision page — Registry ecosystem](../vision/design/registry-ecosystem.md) —
   the thesis-level framing (audience: tenure letters, grant reviewers,
   prospective adopters).
-- [ADR 0023 — Vertical-slice-first](./0023-build-order.md) — the
+- [ADR 0023 — Vertical-slice-first](./0023-vertical-slice-build-order.md) — the
   principle that justifies bundling figures as Phase 1 (the second
   consumer that proves the abstractions).
 - [ADR 0038 — Pedagogy-index pattern](./0038-pedagogy-index-pattern.md) —
@@ -248,7 +248,7 @@ What this decision makes:
 - [ADR 0046 — Equation Biography](./0046-equation-biography.md) —
   biography contract preserved; storage migrates from chapter-inline
   to registry.
-- [ADR 0048 — LDS Content Plugin System](./0048-lds-content-plugin-system.md) —
+- [ADR 0048 — LDS Content Plugin System](./0048-sophie-lds-content-plugins.md) —
   registries are the natural unit of cross-course content sharing.
 - [ADR 0058 — Epistemic Component Contract](./0058-epistemic-component-contract.md) —
   the 8-role taxonomy survives unchanged; this ADR adds a second

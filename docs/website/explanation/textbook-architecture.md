@@ -56,7 +56,7 @@ post-textbook). The module's MDX body is author-controlled prose —
 Chapters declare module membership via a `module: "<slug>"` ref and
 intra-module position via a sparse `order` field. Chapter `slug` is
 stable and authoritative for routing and for the persistent-response
-key per [ADR 0007](0007-persistence-indexeddb.md) — it does **not**
+key per [ADR 0007](../decisions/0007-persistence-indexeddb.md) — it does **not**
 derive from the filesystem. The schema also tightens `description`
 to be required and capped at 280 characters, matching `ModuleSchema`
 for ToC layout predictability.
@@ -126,7 +126,7 @@ This section is a **placeholder** for the brainstorms that follow
 the textbook-first pass. Each deferred kind gets a one-paragraph
 sketch of how it slots into the two-collection model when it lands:
 
-- **Slides** ([ADR 0006](0006-slides-revealjs.md)) — likely a third
+- **Slides** ([ADR 0006](../decisions/0006-slides-revealjs.md)) — likely a third
   textbook collection (`slides`) with its own `SlideDeckSchema`
   referencing modules.
 - **Prep materials** — likely either an optional `prep[]` field on

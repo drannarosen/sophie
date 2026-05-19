@@ -15,6 +15,7 @@ validation:
   status: unvalidated
   last_validated_date: null
   evidence: []
+status: future-package-split
 ---
 
 # `sophie audit --metrics` + `sophie metrics history`

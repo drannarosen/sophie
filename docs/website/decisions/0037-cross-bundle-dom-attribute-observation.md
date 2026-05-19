@@ -38,7 +38,7 @@ concern; the script needed to re-position asides whenever the
 view mode changed. The natural first draft —
 
 ```ts
-// Inside packages/astro/src/lib/aside-positioning.ts
+// Inside packages/astro/src/lib/aside-positioning/install-positioning.ts
 import { viewModePref } from "../preferences";
 viewModePref.subscribe(scheduleReposition);
 ```
@@ -87,7 +87,7 @@ per-bundle conveniences over that truth.
 Concrete pattern for cross-bundle observers:
 
 ```ts
-// packages/astro/src/lib/aside-positioning.ts
+// packages/astro/src/lib/aside-positioning/install-positioning.ts
 function scheduleReposition(): void { /* … */ }
 
 const htmlObserver = new MutationObserver(scheduleReposition);
@@ -210,7 +210,7 @@ primitive that solves the actual coordination problem**.
 
 - [PR #35](https://github.com/drannarosen/sophie/pull/35) —
   introduced the pattern via the aside-positioning script.
-- [`packages/astro/src/lib/aside-positioning.ts`](../../../packages/astro/src/lib/aside-positioning.ts)
+- [`packages/astro/src/lib/aside-positioning/install-positioning.ts`](../../../packages/astro/src/lib/aside-positioning/install-positioning.ts)
   — first consumer; observe `data-view-mode` + `data-sidebar`.
 - [ADR 0032](0032-vanilla-js-chrome-state.md) — vanilla JS
   chrome layer; this ADR refines its cross-bundle observation

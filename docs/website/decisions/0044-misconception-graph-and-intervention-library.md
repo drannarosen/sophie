@@ -17,7 +17,7 @@ validation:
       date: "2026-05-15"
       notes: "MG1 (cycle) + MG2 (dangling/earlier-chapter) audit invariants tested."
     - kind: audit
-      ref: packages/astro/src/lib/pedagogy-audit.ts
+      ref: packages/astro/src/lib/pedagogy-audit/runner.ts
       date: "2026-05-15"
       notes: "MG1 + MG2 ERROR-grade audit invariants live; graph-extractor populates prerequisite_misconceptions."
     - kind: manual
@@ -255,7 +255,7 @@ for intervention checks + parent-move resolution.
 | **I4** (new, 2026-05-14, cross-ADR with ADR 0041) | WARNING | Every canonical intervention's `move:` field (declared in `intervention-index.ts` per ADR 0041 hardening) resolves to a real move in `move-index.ts`. Custom interventions (`type="custom"`) can declare `move=` too; if they do, I4 applies. Couples the Intervention Library and Teaching Move Library structurally — no intervention whose parent move doesn't exist can ship. |
 
 **Relationship to existing M-prefix invariants in the shipped audit.**
-The shipped audit ([`pedagogy-audit.ts`](https://github.com/drannarosen/sophie/blob/main/packages/astro/src/lib/pedagogy-audit.ts))
+The shipped audit ([`pedagogy-audit.ts`](https://github.com/drannarosen/sophie/blob/main/packages/astro/src/lib/pedagogy-audit/runner.ts))
 already reserves **M1, M2** as **extractor-thrown** errors (about
 title / id-derivation mechanics that throw during MDX parse before
 the audit pass runs) and **M3** as a deferred orphan-misconception
@@ -298,7 +298,7 @@ follow-up PR:
   build-time graph constructor walking the pedagogy index for
   prerequisite / related relationships; cycle detection.
 - Six new audit invariants added to
-  `packages/astro/src/lib/pedagogy-audit.ts`.
+  `packages/astro/src/lib/pedagogy-audit/runner.ts`.
 - axe-core tests per [ADR 0004](./0004-component-contract-revisions.md).
 
 That code PR follows the standard branch + PR cadence per
@@ -643,11 +643,11 @@ Sophie LDS keeps the universal scope.
   — misconception-graph changes classified by the diff taxonomy;
   prerequisite-cycle introduction is a `breaking` item; TDR
   `affects_anchors` may demote misconception-related diff items.
-- [ADR 0048 — Sophie LDS Content Plugin System](./0048-sophie-lds-content-plugin-system.md)
+- [ADR 0048 — Sophie LDS Content Plugin System](./0048-sophie-lds-content-plugins.md)
   — future cross-course misconception inheritance via Commons
   catalogs. v1 ships per-course misconceptions only; the per-
   course shape is forward-compatible.
-- [ADR 0049 — `sophie refactor` CLI Family](./0049-sophie-refactor-cli-family.md)
+- [ADR 0049 — `sophie refactor` CLI Family](./0049-sophie-refactor-cli.md)
   — `sophie refactor misconception rename | split | merge | delete`
   for atomic operations across the graph's cross-references.
   Addresses the graph-maintenance burden as the misconception count
@@ -798,12 +798,12 @@ Intervention `addresses="this"` resolution:
    precedence places `name` **above** `slug(title)` so an
    `<Aside kind="misconception" name="…" title="…">` resolves to the
    `name`-derived anchor, not the prettier title-derived one. See
-   [`pedagogy-index-extractor.ts:836-843`](../../../packages/astro/src/lib/pedagogy-index-extractor.ts).
+   [`pedagogy-index-extractor.ts:836-843`](../../../packages/astro/src/lib/pedagogy-index/orchestrator.ts).
 
 2. **`<Intervention addresses="this">` rewrite** uses `slugify(miscName)`
    (the enclosing `<Aside kind="misconception" name="…">`'s
    slugified `name`), matching the misconception anchor precedence
-   exactly. See [`pedagogy-index-extractor.ts:1450-1461`](../../../packages/astro/src/lib/pedagogy-index-extractor.ts).
+   exactly. See [`pedagogy-index-extractor.ts:1450-1461`](../../../packages/astro/src/lib/pedagogy-index/orchestrator.ts).
 
 Without this alignment, an author writing `<Aside kind="misconception"
 name="Universe With A Center" title="Cosmology has no center"><Intervention

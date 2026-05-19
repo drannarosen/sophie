@@ -44,7 +44,7 @@ Two forces are reshaping the trade-off:
    snapshot test, `b5f6377` excluding Playwright snapshot dirs from
    biome) that were both reverted in `03b442d` once the snapshot
    approach was abandoned for behavior-only e2e tests. The
-   [Bucket B + C architecture audit](../reviews/2026-05-15-bucket-b-c-architecture-audit.md)
+   [Bucket B + C architecture audit](../../reviews/2026-05-15-bucket-b-c-architecture-audit.md)
    dim 8 evaluated this commit-history hygiene as "natural TDD arc
    with one mid-PR pivot" and noted that future iterations of
    similar shape would benefit from collapsing noise on merge.
@@ -155,7 +155,7 @@ mechanic.
 
 ## References
 
-- [Bucket B + C architecture audit](../reviews/2026-05-15-bucket-b-c-architecture-audit.md)
+- [Bucket B + C architecture audit](../../reviews/2026-05-15-bucket-b-c-architecture-audit.md)
   — dim 8 surfaced the convention question.
 - [ADR 0025: Phase 0 actual scope](./0025-phase-0-actual-scope.md)
   — branch protection deferred until CI build green.

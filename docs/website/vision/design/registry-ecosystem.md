@@ -155,7 +155,7 @@ promotion:
 Three positioning consequences worth naming explicitly:
 
 **Cross-course content sharing becomes concrete.**
-[ADR 0048](../../decisions/0048-lds-content-plugin-system.md)
+[ADR 0048](../../decisions/0048-sophie-lds-content-plugins.md)
 articulates the LDS Content Plugin System as Sophie's path to
 cross-course content reuse: Sophie Astro's equation registry imported
 by Sophie Compute's algorithms course; Sophie Compute's algorithm-
@@ -188,5 +188,5 @@ that wants to query the platform's content as data.
 - [ADR 0060 — Registry Ecosystem](../../decisions/0060-registry-ecosystem.md) — the decision record (this vision page's normative counterpart).
 - [ADR 0058 — Epistemic Component Contract](../../decisions/0058-epistemic-component-contract.md) — Axiom 1; the parallel content-architecture commitment.
 - [ADR 0038 — Pedagogy-index pattern](../../decisions/0038-pedagogy-index-pattern.md) — amended to aggregate both registry and collection sources.
-- [ADR 0048 — LDS Content Plugin System](../../decisions/0048-lds-content-plugin-system.md) — what registries unlock at the cross-course layer.
+- [ADR 0048 — LDS Content Plugin System](../../decisions/0048-sophie-lds-content-plugins.md) — what registries unlock at the cross-course layer.
 - [Reasoning OS vision](../reasoning-os/index.md) — where the registry ecosystem sits in Sophie's broader thesis.

@@ -13,6 +13,7 @@ validation:
   status: unvalidated
   last_validated_date: null
   evidence: []
+status: shipped
 ---
 
 # Chapter components
