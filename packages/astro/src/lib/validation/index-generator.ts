@@ -1,6 +1,7 @@
 import type {
   AuditFinding,
   ContractValidationEntry,
+  PageStatus,
   PedagogyIndex,
   ValidationKind,
   ValidationStatus,
@@ -48,6 +49,20 @@ const EVIDENCE_KIND_ORDER: readonly ValidationKind[] = [
   "audit",
   "manual",
 ] as const;
+
+const PAGE_STATUS_ORDER: readonly PageStatus[] = [
+  "shipped",
+  "accepted-design",
+  "mixed",
+  "future-package-split",
+] as const;
+
+const PAGE_STATUS_LABELS: Record<PageStatus, string> = {
+  shipped: "Shipped",
+  "accepted-design": "Accepted design",
+  mixed: "Mixed",
+  "future-package-split": "Future package split",
+};
 
 const GENERATED_BANNER = [
   "<!-- GENERATED FILE — DO NOT EDIT BY HAND.",
@@ -104,6 +119,42 @@ function renderStatusSummary(
     `| Total | ${totalCount} |`,
   ];
   return ["## Status summary", "", ...rows].join("\n");
+}
+
+/**
+ * Page-status summary (ADR 0062): counts per `PageStatus` value
+ * across all contracts. Separate axis from the validation-status
+ * summary above — see ADR 0062 for the orthogonality argument.
+ * "No status" tracks rollout incompleteness; eventually every page
+ * should carry one.
+ */
+function renderPageStatusSummary(
+  contracts: readonly ContractValidationEntry[]
+): string {
+  const counts: Record<PageStatus, number> = {
+    shipped: 0,
+    "accepted-design": 0,
+    mixed: 0,
+    "future-package-split": 0,
+  };
+  let noStatus = 0;
+  for (const entry of contracts) {
+    if (entry.status === undefined) {
+      noStatus += 1;
+    } else {
+      counts[entry.status] += 1;
+    }
+  }
+  const rows: string[] = [
+    "| Lifecycle | Count |",
+    "|---|---|",
+    ...PAGE_STATUS_ORDER.map(
+      (s) => `| ${PAGE_STATUS_LABELS[s]} | ${counts[s]} |`
+    ),
+    `| No status | ${noStatus} |`,
+    `| Total | ${contracts.length} |`,
+  ];
+  return ["## Lifecycle summary", "", ...rows].join("\n");
 }
 
 function renderEvidenceKindsTable(
@@ -172,6 +223,11 @@ function formatStatusCell(entry: ContractValidationEntry): string {
   return STATUS_LABELS[entry.validation.status].toLowerCase();
 }
 
+function formatLifecycleCell(entry: ContractValidationEntry): string {
+  if (entry.status === undefined) return "—";
+  return PAGE_STATUS_LABELS[entry.status].toLowerCase();
+}
+
 function formatDateCell(entry: ContractValidationEntry): string {
   if (entry.validation === undefined) return "—";
   return entry.validation.last_validated_date ?? "—";
@@ -214,13 +270,14 @@ function renderContractsTable(
   }
   const sorted = [...contracts].sort((a, b) => a.path.localeCompare(b.path));
   const rows: string[] = [
-    "| Contract | Status | Last validated | Evidence | Notes |",
-    "|---|---|---|---|---|",
+    "| Contract | Status | Lifecycle | Last validated | Evidence | Notes |",
+    "|---|---|---|---|---|---|",
   ];
   for (const entry of sorted) {
     rows.push(
       `| [${entry.path}](${contractHref(entry.path)}) ` +
         `| ${formatStatusCell(entry)} ` +
+        `| ${formatLifecycleCell(entry)} ` +
         `| ${formatDateCell(entry)} ` +
         `| ${formatEvidenceCell(entry)} ` +
         `| ${formatNotesCell(entry)} |`
@@ -288,9 +345,10 @@ function renderContractsSection(
  * Sections, in order:
  *   1. Generated-source banner (HTML comment) + frontmatter
  *   2. Status summary table (counts per ValidationStatus + missing-block + total)
- *   3. Evidence-kinds cross-tab (counts per ValidationKind)
- *   4. Extractor findings (V0 + V8 counts + per-finding listing)
- *   5. Per-contract listing grouped by ADRs / reference docs
+ *   3. Lifecycle summary table (counts per PageStatus — ADR 0062)
+ *   4. Evidence-kinds cross-tab (counts per ValidationKind)
+ *   5. Extractor findings (V0 + V8 + S0 counts + per-finding listing)
+ *   6. Per-contract listing grouped by ADRs / reference docs (with Lifecycle column)
  */
 export function generateValidationIndex(index: PedagogyIndex): string {
   const contracts = index.contractValidations;
@@ -304,10 +362,12 @@ export function generateValidationIndex(index: PedagogyIndex): string {
     "# Validation status",
     "",
     "Snapshot of every ADR and reference doc's `validation:` frontmatter",
-    "block (ADR 0056). Regenerated on every build; suppressed when",
-    "`SOPHIE_DOCS_INCLUDE_VALIDATION=0`.",
+    "block (ADR 0056) and page-level `status:` field (ADR 0062). Regenerated",
+    "on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.",
     "",
     renderStatusSummary(byStatus, missing.length, contracts.length),
+    "",
+    renderPageStatusSummary(contracts),
     "",
     renderEvidenceKindsTable(contracts),
     "",

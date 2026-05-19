@@ -68,6 +68,7 @@ export {
   type NotationRegistry,
   NotationRegistrySchema,
 } from "./notation-registry.js";
+export { type PageStatus, PageStatusSchema } from "./page-status.js";
 export { type PedagogyIndex, PedagogyIndexSchema } from "./pedagogy-index.js";
 export {
   type ChapterEntry,

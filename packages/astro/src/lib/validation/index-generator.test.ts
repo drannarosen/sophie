@@ -341,4 +341,104 @@ describe("generateValidationIndex", () => {
     expect(md).toContain("First line. Second line. Third line.");
     expect(md).not.toContain("First line.\nSecond");
   });
+
+  test("lifecycle summary counts each PageStatus value (ADR 0062)", () => {
+    const md = generateValidationIndex(
+      makeIndex({
+        contractValidations: [
+          {
+            path: "docs/website/reference/a.md",
+            validation: undefined,
+            status: "shipped",
+            lastRevisedDate: null,
+          },
+          {
+            path: "docs/website/reference/b.md",
+            validation: undefined,
+            status: "shipped",
+            lastRevisedDate: null,
+          },
+          {
+            path: "docs/website/reference/c.md",
+            validation: undefined,
+            status: "accepted-design",
+            lastRevisedDate: null,
+          },
+          {
+            path: "docs/website/reference/d.md",
+            validation: undefined,
+            status: "mixed",
+            lastRevisedDate: null,
+          },
+          {
+            path: "docs/website/reference/e.md",
+            validation: undefined,
+            status: "future-package-split",
+            lastRevisedDate: null,
+          },
+          {
+            path: "docs/website/reference/f.md",
+            validation: undefined,
+            // no status — counts toward "No status".
+            lastRevisedDate: null,
+          },
+        ],
+      })
+    );
+    expect(md).toMatch(/##\s+Lifecycle summary/);
+    expect(md).toMatch(/\|\s*Shipped\s*\|\s*2\s*\|/);
+    expect(md).toMatch(/\|\s*Accepted design\s*\|\s*1\s*\|/);
+    expect(md).toMatch(/\|\s*Mixed\s*\|\s*1\s*\|/);
+    expect(md).toMatch(/\|\s*Future package split\s*\|\s*1\s*\|/);
+    expect(md).toMatch(/\|\s*No status\s*\|\s*1\s*\|/);
+  });
+
+  test("contracts table includes a Lifecycle column", () => {
+    const md = generateValidationIndex(
+      makeIndex({
+        contractValidations: [
+          {
+            path: "docs/website/reference/plugin-api.md",
+            validation: undefined,
+            status: "future-package-split",
+            lastRevisedDate: null,
+          },
+          {
+            path: "docs/website/reference/glossary.md",
+            validation: {
+              status: "unvalidated",
+              last_validated_date: null,
+              evidence: [],
+            },
+            status: "shipped",
+            lastRevisedDate: null,
+          },
+        ],
+      })
+    );
+    // Header row has the new Lifecycle column.
+    expect(md).toMatch(
+      /\|\s*Contract\s*\|\s*Status\s*\|\s*Lifecycle\s*\|\s*Last validated/
+    );
+    // Row content renders the page-status as a lowercased label.
+    expect(md).toContain("future package split");
+    expect(md).toContain("shipped");
+  });
+
+  test("Lifecycle cell shows '—' for entries with no page-level status", () => {
+    const md = generateValidationIndex(
+      makeIndex({
+        contractValidations: [
+          {
+            path: "docs/website/reference/no-status.md",
+            validation: undefined,
+            // no status field
+            lastRevisedDate: null,
+          },
+        ],
+      })
+    );
+    // The contract row must contain '—' in the Lifecycle column.
+    expect(md).toMatch(/no-status\.md.*\|\s*—\s*\|/);
+  });
 });

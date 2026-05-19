@@ -3,7 +3,7 @@ title: Textbook use cases
 short_title: Textbook use cases
 description: How Anna actually uses Sophie textbooks — authoring, migration from Quarto, migrating Python content, teaching across semesters, AI-assisted authoring, dual-profile, reordering, cross-references, and print/handout export.
 tags: [textbook, use-cases, requirements, design-notes]
-status: draft (skeleton — outline + section summaries; full prose pending Anna's sign-off on shape, 2026-05-11)
+status: accepted-design
 ---
 
 # Textbook use cases

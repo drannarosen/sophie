@@ -38,6 +38,14 @@ jobs:
         # the E3b decision; the signal is surfaced in the log so
         # future sweep PRs can target it.
         run: pnpm lint:links
+      - name: Page-status check (ADR 0062 / Codex P2)
+        # Reports the page-status distribution + rollout gaps + any
+        # unknown status values across docs/website/**/*.md{,x}.
+        # Informational only — does not fail CI per ADR 0062. Promote
+        # to blocking once the rollout reaches every page (the
+        # extractor's S0 finding catches contract-page failures
+        # eagerly already).
+        run: pnpm lint:status
 
   typecheck:
     name: typecheck

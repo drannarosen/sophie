@@ -3,7 +3,7 @@ title: Textbook architecture
 short_title: Textbook architecture
 description: How a Sophie textbook is structured — modules and chapters as canonical content collections, the schema, the filesystem layout, routing, navigation, and what's deferred to future passes.
 tags: [architecture, textbook, modules, chapters, schema, design-notes]
-status: draft (skeleton — outline + section summaries; full prose pending Anna's sign-off on shape, 2026-05-11)
+status: accepted-design
 ---
 
 # Textbook architecture

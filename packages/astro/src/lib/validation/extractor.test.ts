@@ -305,3 +305,60 @@ describe("extractContractValidations — entry collection", () => {
     expect(entries[0]?.lastRevisedDate).toBeNull();
   });
 });
+
+describe("extractContractValidations — S0 (page-status parse failure)", () => {
+  it("threads a valid page-level status onto the entry", async () => {
+    const tmpRoot = await makeTmpRepoWithContract({
+      path: "docs/website/reference/plugin-api.md",
+      frontmatter: { status: "future-package-split" },
+    });
+    const { entries, findings } = await extractContractValidations(tmpRoot);
+    const entry = entries.find((e) => e.path.endsWith("plugin-api.md"));
+    expect(entry?.status).toBe("future-package-split");
+    expect(findings.some((f) => f.code === "S0")).toBe(false);
+  });
+
+  it("surfaces an S0 INFO finding when status has an unknown value", async () => {
+    const tmpRoot = await makeTmpRepoWithContract({
+      path: "docs/website/reference/typo.md",
+      frontmatter: { status: "shippeed" },
+    });
+    const { entries, findings } = await extractContractValidations(tmpRoot);
+    const entry = entries.find((e) => e.path.endsWith("typo.md"));
+    expect(entry?.status).toBeUndefined();
+    const s0 = findings.find((f) => f.code === "S0");
+    expect(s0).toBeDefined();
+    expect(s0?.severity).toBe("INFO");
+    expect(s0?.message).toContain("shippeed");
+  });
+
+  it("does not emit S0 when status is absent (rollout incompleteness is not a defect)", async () => {
+    const tmpRoot = await makeTmpRepoWithContract({
+      path: "docs/website/reference/no-status.md",
+      frontmatter: { title: "foo" },
+    });
+    const { entries, findings } = await extractContractValidations(tmpRoot);
+    const entry = entries.find((e) => e.path.endsWith("no-status.md"));
+    expect(entry?.status).toBeUndefined();
+    expect(findings.some((f) => f.code === "S0")).toBe(false);
+  });
+
+  it("accepts each of the 4 PageStatus values", async () => {
+    const cases: Array<{ name: string; value: string }> = [
+      { name: "shipped.md", value: "shipped" },
+      { name: "accepted-design.md", value: "accepted-design" },
+      { name: "mixed.md", value: "mixed" },
+      { name: "future-package-split.md", value: "future-package-split" },
+    ];
+    for (const c of cases) {
+      const tmpRoot = await makeTmpRepoWithContract({
+        path: `docs/website/reference/${c.name}`,
+        frontmatter: { status: c.value },
+      });
+      const { entries, findings } = await extractContractValidations(tmpRoot);
+      const entry = entries.find((e) => e.path.endsWith(c.name));
+      expect(entry?.status).toBe(c.value);
+      expect(findings.some((f) => f.code === "S0")).toBe(false);
+    }
+  });
+});
