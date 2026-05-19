@@ -1,0 +1,119 @@
+---
+title: Audit-clean baseline
+short_title: Audit baseline
+description: What "passes `sophie audit` cleanly" means in concrete terms — the production-chapter bar, the smoke-fixture expected baseline, and the severity → CI exit-code mapping.
+tags:
+  - reference
+  - audit
+  - quality
+status: shipped
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
+---
+
+# Audit-clean baseline
+
+The Sophie audit (`runPedagogyAudit`, surfaced via the smoke build's
+"Pedagogy audit: N errors, M warnings, K infos" summary line) emits
+findings in three severity levels per the audit invariant catalog:
+
+| Severity | Build effect | Definition |
+|---|---|---|
+| **ERROR** | Non-zero exit; CI fails. | A contract or structural-integrity violation. The chapter as-authored is broken. |
+| **WARNING** | Printed; build continues. | Coverage gap or authoring nudge. The chapter would ship, but the author should know. |
+| **INFO** | Verbose-only. | Informational signal — not a defect. |
+
+This page defines what `sophie audit` cleanliness means for two
+distinct contexts: **production chapters** and the **smoke fixture**.
+
+## Production chapter — the v1 ship bar
+
+[`docs/website/overview.md`](../overview.md) declares the v1 success
+criterion: "Every chapter passes `sophie audit` cleanly before it
+ships." Cleanly means:
+
+- **0 ERRORs** (mandatory). Any ERROR finding blocks shipment until
+  resolved. The chapter has a broken cross-reference, undefined
+  registry target, cycle in misconception graph, schema violation,
+  or similar — the audit catalog lists each ERROR code in its
+  invariant family.
+- **0 WARNINGs of types that indicate the chapter is incomplete**.
+  WARNINGs split into two interpretations:
+
+  - **Authoring incompleteness in this chapter** (must clear before
+    ship): `O2` chapter-with-zero-objectives; `MG3` orphan
+    misconception within a chapter that should pair it with an
+    intervention; `D5` orphan definitions IF this is the chapter
+    that defines them and no other chapter references them.
+  - **Authoring gap elsewhere in the course** (clearable
+    cross-chapter): `D5` on a chapter that ships definitions
+    expected to be referenced later; `R2` orphan registry equation
+    when registry is in-flight; `I1` unresolved-misconception-ref in
+    a chapter under active authoring.
+
+- **0 chapter-specific INFOs that surface a structural defect**.
+  Most INFOs (`K1` zero key-insights, `MR4` alt-text-doesn't-mention-concept,
+  `E7/E9` biography-completion-nudge) are advisory and may ship.
+
+The bar is **the human author's judgment**, applied to the smoke
+build's per-chapter audit output. The audit catches deterministic
+issues; pedagogical soundness is the instructor's responsibility.
+
+## Smoke fixture — expected baseline
+
+The repo's smoke build at `examples/smoke/` is a fixture, not a
+production course. Its purpose is to exercise the full audit
+pipeline across every invariant family. The baseline at
+2026-05-19 is:
+
+```
+Pedagogy audit: 0 errors, 16 warnings, 9 infos
+```
+
+Breakdown:
+
+| Code | Count | Severity | Rationale |
+|---|---:|---|---|
+| `D5` | 13 | WARNING | Orphan definitions in the `spoiler-alerts` fixture — intentionally seed many terms to exercise the D5 invariant without each one being a `<GlossaryTerm>` target in the smoke set. |
+| `O2` | 1 | WARNING | `misconception-fixture` chapter has zero learning objectives — fixture exercises O2 detection. |
+| `R2` | 1 | WARNING | `stefan-boltzmann` registry equation is declared but no smoke chapter cites it — exercises the registry-orphan invariant (ADR 0060 R2). |
+| `I1` | 1 | WARNING | `misconception-fixture` references an undeclared misconception slug — exercises the intervention-target-resolution invariant. |
+| `K1` | 3 | INFO | Chapters without key-insights — fixture has chapters intentionally lacking K1 content. |
+| `MR4` | 2 | INFO | MultiRep figure-alt-text doesn't mention concept — exercises MR4. |
+| `NR2` | 2 | INFO | Unreferenced notation-registry concepts — exercises NR2. |
+| `MG4` | 1 | INFO | Course-level depth-coverage summary (single-finding table per ADR 0044 §D3). |
+| `E9` | 1 | INFO | `<CommonMisuse>` lacks misconception cross-ref — exercises E9. |
+
+The smoke build IS "audit clean" by the v1 ship bar definition
+because no ERRORs fire and every WARNING / INFO is an intentional
+exercise of an invariant. **The 16-warnings count is the expected
+baseline, not a defect.** Any regression (e.g., 17 warnings, or
+WARNINGs of unexpected codes) is a signal the audit picked up
+something new — that's the intended behavior.
+
+## CI exit-code mapping
+
+`auditExitCode(report)` (in [`lib/pedagogy-audit/format.ts`](../../../packages/astro/src/lib/pedagogy-audit/format.ts))
+maps:
+
+```
+errors.length > 0  →  exit 1  →  CI fails
+errors.length = 0  →  exit 0  →  CI passes (regardless of WARNING/INFO count)
+```
+
+This intentional choice keeps the build green when the chapter
+ships honest authoring gaps + course-level coverage signals. The
+human supervisor (instructor) reviews WARNINGs + INFOs before
+shipping a real course.
+
+## See also
+
+- [validation-tracker.md](validation-tracker.md) — the V*-prefixed
+  contract-validation invariants (ADR 0056), distinct from the
+  D/E/F/M/O/K/R/MG/I/NR/MR pedagogy-audit invariants documented in
+  the runner doc-comment at `packages/astro/src/lib/pedagogy-audit/runner.ts`.
+- [ADR 0056](../decisions/0056-validation-tracker.md) — validation-tracker design.
+- [`lib/pedagogy-audit/`](../../../packages/astro/src/lib/pedagogy-audit/) —
+  the audit cluster split per ADR 0061 C2.
