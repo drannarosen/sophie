@@ -1,0 +1,108 @@
+---
+import { ChevronsDownUp, ChevronsUpDown } from "../icons";
+
+/**
+ * <DisclosuresToggle> — binary toggle for the disclosures view-state.
+ *
+ * Cycles `collapsed → expanded → collapsed`. State drives
+ * `data-disclosures` on <html>, which the textbook layout CSS maps
+ * to:
+ *   - `collapsed` (default) → disclosures honor their author-authored
+ *     default-collapsed state (the production reading shape).
+ *   - `expanded` → every `<Callout variant="deep-dive">` and
+ *     `<Callout variant="the-more-you-know">` renders open via a
+ *     CSS rule that targets `details` inside the disclosure-style
+ *     callouts; no per-element JS.
+ *
+ * For students with cognitive accommodations who prefer everything
+ * visible, or for instructors in classroom-projection mode who want
+ * to scan the whole chapter at once. Per ADR 0004 (component
+ * contract a11y) + 2026-05-19 architecture audit P2 #9.
+ *
+ * Pre-paint state is set by the boot script in <TextbookHead>; this
+ * component wires the click handler and keeps the aria-label + icon
+ * in sync. Per ADR 0032 (vanilla JS chrome state) — no React.
+ * Per ADR 0036 — uses `definePreference` factory (fourth consumer
+ * after sidebar / theme / view-mode).
+ */
+---
+
+<button
+  type='button'
+  class='sophie-disclosures-toggle'
+  data-sophie-disclosures-toggle
+  data-disclosures-pref='collapsed'
+  aria-label='Disclosures: collapsed (click to expand all)'
+  aria-pressed='false'
+>
+  {/* Two icons; CSS shows one at a time based on data-disclosures-pref. */}
+  <span
+    class='sophie-disclosures-icon sophie-disclosures-icon-collapsed'
+    set:html={ChevronsUpDown}
+  />
+  <span
+    class='sophie-disclosures-icon sophie-disclosures-icon-expanded'
+    set:html={ChevronsDownUp}
+  />
+</button>
+
+<script>
+  import {
+    type DisclosuresStored,
+    disclosuresPref,
+    nextDisclosures,
+  } from "../preferences";
+
+  const LABELS: Record<DisclosuresStored, string> = {
+    collapsed: "Disclosures: collapsed (click to expand all)",
+    expanded: "Disclosures: expanded (click to collapse all)",
+  };
+
+  /**
+   * Selector for collapsible Callout disclosures:
+   * `<aside role="note">` (every Callout) wrapping a `<details>`
+   * (only the collapsible variants). Other `role="note"` components
+   * (regular Callouts, Aside) don't nest a `<details>` directly so
+   * the selector is stable + framework-pure (no hashed CSS Module
+   * class needed).
+   */
+  const DISCLOSURE_SELECTOR = 'aside[role="note"] > details';
+
+  function syncDisclosures(stored: DisclosuresStored): void {
+    // CSS can't override Chrome's `content-visibility: hidden` on
+    // closed details cleanly across browsers; toggling the native
+    // `open` attribute is the SoTA path. Per 2026-05-19 audit P2 #9.
+    document
+      .querySelectorAll<HTMLDetailsElement>(DISCLOSURE_SELECTOR)
+      .forEach((d) => {
+        if (stored === "expanded") {
+          d.open = true;
+        } else {
+          d.open = false;
+        }
+      });
+  }
+
+  function syncUI(stored: DisclosuresStored): void {
+    document
+      .querySelectorAll<HTMLButtonElement>("[data-sophie-disclosures-toggle]")
+      .forEach((btn) => {
+        btn.setAttribute("data-disclosures-pref", stored);
+        btn.setAttribute("aria-label", LABELS[stored]);
+        btn.setAttribute(
+          "aria-pressed",
+          stored === "expanded" ? "true" : "false"
+        );
+      });
+    syncDisclosures(stored);
+  }
+
+  syncUI(disclosuresPref.read());
+  disclosuresPref.subscribe(syncUI);
+
+  document
+    .querySelectorAll<HTMLButtonElement>("[data-sophie-disclosures-toggle]")
+    .forEach((btn) => {
+      disclosuresPref.bindToggle(btn, nextDisclosures);
+    });
+</script>

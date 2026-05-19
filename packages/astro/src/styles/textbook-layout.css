@@ -211,6 +211,44 @@
   display: inline-block;
 }
 
+/* Disclosures toggle — same primitive shape as the theme/sidebar/
+   view-mode toggles. Binary; icons swap via [data-disclosures-pref]
+   on the button (the STORED value). Per 2026-05-19 architecture
+   audit P2 #9. */
+.sophie-disclosures-toggle {
+  appearance: none;
+  background: transparent;
+  border: 1px solid var(--sophie-border);
+  border-radius: var(--sophie-radius-sm);
+  padding: 0.375rem 0.625rem;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+}
+
+.sophie-disclosures-toggle:focus-visible {
+  outline: var(--sophie-focus-width) solid var(--sophie-focus-color);
+  outline-offset: 2px;
+}
+
+.sophie-disclosures-toggle:hover {
+  background: var(--sophie-bg);
+}
+
+.sophie-disclosures-icon {
+  display: none;
+}
+
+.sophie-disclosures-toggle[data-disclosures-pref="collapsed"]
+  .sophie-disclosures-icon-collapsed,
+.sophie-disclosures-toggle[data-disclosures-pref="expanded"]
+  .sophie-disclosures-icon-expanded {
+  display: inline-flex;
+}
+
 /* View-mode toggle — same primitive shape as the theme + sidebar
    toggles. Cycles Default / Focused / Wide; icons swap via
    [data-view-mode-pref] on the button (the STORED value). */

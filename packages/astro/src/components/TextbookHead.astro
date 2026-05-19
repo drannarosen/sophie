@@ -23,7 +23,12 @@
  *     </body>
  *   </html>
  */
-import { sidebarPref, themePref, viewModePref } from "../preferences";
+import {
+  disclosuresPref,
+  sidebarPref,
+  themePref,
+  viewModePref,
+} from "../preferences";
 
 // Sidebar default is viewport-aware: mobile sidebar is a slide-over
 // that obscures content, so default to "closed" below 768px. Desktop
@@ -44,8 +49,16 @@ const themeBoot = themePref.bootScript();
 // indirection. CSS handles the cross-state visual rules (sidebar +
 // right column collapse when mode is focused|wide).
 const viewModeBoot = viewModePref.bootScript();
+
+// Disclosures pref: binary collapsed|expanded. Reflects onto
+// data-disclosures; CSS forces <details>[open] on every disclosure-
+// style Callout (deep-dive / the-more-you-know) when "expanded" so
+// students with cognitive accommodations can see all depth content
+// at once. Per 2026-05-19 architecture audit P2 #9.
+const disclosuresBoot = disclosuresPref.bootScript();
 ---
 
 <script is:inline set:html={sidebarBoot} />
 <script is:inline set:html={themeBoot} />
 <script is:inline set:html={viewModeBoot} />
+<script is:inline set:html={disclosuresBoot} />

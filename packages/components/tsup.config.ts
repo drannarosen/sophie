@@ -5,6 +5,9 @@ export default defineConfig({
     index: "src/index.ts",
     "contract/index": "src/contract/index.ts",
     "runtime/index": "src/runtime/index.ts",
+    // Internal store-hydration entry — TextbookLayout-only.
+    // Per ADR 0061 R4 + 2026-05-19 architecture audit P2 #3.
+    "internal/store-hydration": "src/internal/store-hydration.ts",
   },
   format: ["esm"],
   target: "es2022",

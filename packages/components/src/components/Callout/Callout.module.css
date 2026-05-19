@@ -251,3 +251,20 @@
     cursor: default;
   }
 }
+
+/*
+ * Student-side disclosures override is JS-driven, not CSS-driven:
+ * <DisclosuresToggle> subscribes to the `disclosuresPref` and
+ * toggles the native `open` attribute on every
+ * `aside[role="note"] > details` when expanded. JS is necessary
+ * because Chrome's UA stylesheet uses `content-visibility: hidden`
+ * on `details > :not(summary)` for closed disclosures, which is
+ * cheaper to bypass via the open attribute than to override via CSS
+ * (would need cascading content-visibility + display + auto-revert
+ * on toggle-back-to-collapsed). Per 2026-05-19 architecture audit
+ * P2 #9.
+ *
+ * The @media print rule above stays CSS-only — print rendering
+ * doesn't run the JS handler, but every browser auto-expands
+ * <details> for print or our display:block override handles it.
+ */

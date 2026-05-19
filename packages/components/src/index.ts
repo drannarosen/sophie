@@ -35,18 +35,17 @@ export {
   interactiveCalloutContract,
 } from "./components/Callout/index.ts";
 export type { ChapterRefProps } from "./components/ChapterRef/ChapterRef.schema.ts";
-// Internal-use setters: @sophie/astro's <TextbookLayout> calls these
-// to hydrate the chapters + modules collections from
-// `getCollection('chapters')` / `getCollection('modules')` at render
-// time. Not part of the public authoring API; underscore-prefix
-// flags internal-use.
-export { __setChapters } from "./components/ChapterRef/chapters-store.ts";
+// Internal-use store-hydration setters (__setChapters, __setModules,
+// __setEquations, __setFigureRegistry, __setFigureUsages,
+// __setGlossaryDefinitions, __setObjectives) live at
+// `@sophie/components/internal/store-hydration` per ADR 0061 Rule 4 +
+// 2026-05-19 architecture audit P2 #3. TextbookLayout is the only
+// consumer; consumer apps should never import these directly.
 export {
   ChapterRef,
   ChapterRefPropsSchema,
   chapterRefContract,
 } from "./components/ChapterRef/index.ts";
-export { __setModules } from "./components/ChapterRef/modules-store.ts";
 export type { CollapsibleCardProps } from "./components/CollapsibleCard/index.ts";
 export {
   CollapsibleCard,
@@ -94,11 +93,6 @@ export {
   effortLogContract,
 } from "./components/EffortLog/index.ts";
 export type { EquationRefProps } from "./components/EquationRef/EquationRef.schema.ts";
-// Internal-use setters: @sophie/astro's <TextbookLayout> calls these
-// to hydrate the pedagogy index (definitions, equations, ...) from
-// `virtual:sophie/pedagogy-index` at render time. Not part of the
-// public authoring API; underscore-prefix flags internal-use.
-export { __setEquations } from "./components/EquationRef/equations-store.ts";
 export {
   EquationRef,
   EquationRefPropsSchema,
@@ -112,19 +106,11 @@ export {
   figureRegistryContract,
 } from "./components/Figure/index.ts";
 export type { FigureRefProps } from "./components/FigureRef/FigureRef.schema.ts";
-// Internal-use setters: @sophie/astro's <TextbookLayout> calls these
-// to hydrate the two-tier figure stores (registry + usages) from
-// `virtual:sophie/pedagogy-index` (usages) and the consumer-owned
-// figure-registry prop (registry) at render time. Not part of the
-// public authoring API; underscore-prefix flags internal-use.
-export { __setFigureRegistry } from "./components/FigureRef/figure-registry-store.ts";
-export { __setFigureUsages } from "./components/FigureRef/figure-usages-store.ts";
 export {
   FigureRef,
   FigureRefPropsSchema,
   figureRefContract,
 } from "./components/FigureRef/index.ts";
-export { __setGlossaryDefinitions } from "./components/GlossaryTerm/definitions-store.ts";
 export type { GlossaryTermProps } from "./components/GlossaryTerm/index.ts";
 export {
   GlossaryTerm,
@@ -169,14 +155,6 @@ export {
   Objective,
   ObjectivePropsSchema,
 } from "./components/Objective/index.ts";
-// Internal-use setter: @sophie/astro's <TextbookLayout> calls this to
-// hydrate the objectives collection from the populated pedagogy index
-// at render time. v1 has no React consumer for the store (the
-// `/objectives` page is server-rendered Astro that reads the
-// accumulator directly), but ships in PR-C4 for pattern uniformity
-// with `__setChapters` / `__setModules` and to anticipate future
-// client-side consumers without rewiring TextbookLayout later.
-export { __setObjectives } from "./components/Objective/objectives-store.ts";
 export type { ObservableProps } from "./components/Observable/index.ts";
 export {
   OBSERVABLE_EPISTEMIC_ROLE,

@@ -18,6 +18,10 @@
       "types": "./dist/runtime/index.d.ts",
       "import": "./dist/runtime/index.js"
     },
+    "./internal/store-hydration": {
+      "types": "./dist/internal/store-hydration.d.ts",
+      "import": "./dist/internal/store-hydration.js"
+    },
     "./styles.css": "./dist/styles.css"
   },
   "files": [

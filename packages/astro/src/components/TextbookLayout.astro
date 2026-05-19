@@ -1,5 +1,8 @@
 ---
 import "../styles/textbook-layout.css";
+// Store-hydration setters live at an internal subpath (per ADR 0061
+// Rule 4 + 2026-05-19 architecture audit P2 #3). TextbookLayout is
+// the only consumer; consumer apps never call these directly.
 import {
   __setChapters,
   __setEquations,
@@ -8,7 +11,7 @@ import {
   __setGlossaryDefinitions,
   __setModules,
   __setObjectives,
-} from "@sophie/components";
+} from "@sophie/components/internal/store-hydration";
 import type { FigureRegistryEntry } from "@sophie/core/schema";
 import { type CollectionEntry, getCollection, render } from "astro:content";
 import { getStudentChapters } from "../lib/get-student-chapters";
@@ -23,6 +26,7 @@ import { extractContractValidations } from "../lib/validation/extractor";
 import ContentColumn from "./ContentColumn.astro";
 import RightColumn from "./RightColumn.astro";
 import SearchTrigger from "./SearchTrigger.astro";
+import DisclosuresToggle from "./DisclosuresToggle.astro";
 import Sidebar from "./Sidebar.astro";
 import SidebarToggle from "./SidebarToggle.astro";
 import ThemeToggle from "./ThemeToggle.astro";
@@ -405,6 +409,7 @@ const collapsedVars = [
     </slot>
     <slot name='topbar-trailing'>
       <SearchTrigger />
+      <DisclosuresToggle />
       <ViewModeToggle />
       <ThemeToggle />
     </slot>
