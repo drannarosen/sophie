@@ -164,9 +164,9 @@ already going to do.
 ## 5. Architecture at a glance
 
 Sophie is a **TypeScript monorepo orchestrated by Turborepo**
-([ADR 0014](decisions/0014-turborepo-for-monorepo.md)) with
-**pnpm** ([ADR 0011](decisions/0011-pnpm-not-npm-or-yarn.md)) as the
-package manager and **Biome** ([ADR 0013](decisions/0013-biome-replaces-eslint-prettier.md))
+([ADR 0014](decisions/0014-turborepo-monorepo-orchestration.md)) with
+**pnpm** ([ADR 0011](decisions/0011-pnpm-package-manager.md)) as the
+package manager and **Biome** ([ADR 0013](decisions/0013-biome-lint-format.md))
 for lint + format. The renderer is **Astro + MDX** with **React 19**
 islands ([ADR 0002](decisions/0002-renderer-astro-mdx.md)).
 **Zod** is the single source of truth for content schemas
@@ -175,9 +175,9 @@ runs through `useInteractive` and a `ResponseStore` repository over
 IndexedDB**, with `MemoryResponseStore` as the runtime fallback and
 **BroadcastChannel** for last-writer-wins cross-tab sync
 ([ADR 0007](decisions/0007-persistence-indexeddb.md),
-[ADR 0029](decisions/0029-broadcastchannel-lww-timestamps.md)).
+[ADR 0029](decisions/0029-broadcast-channel-last-write-wins.md)).
 **axe-core tests are mandatory** on every component PR
-([ADR 0004](decisions/0004-component-contract.md)).
+([ADR 0004](decisions/0004-component-contract-revisions.md)).
 
 The package layout:
 

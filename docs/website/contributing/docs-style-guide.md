@@ -17,7 +17,7 @@ The structure is **Diátaxis-disciplined**.
 
 Active voice. Concrete nouns. Specific numbers. Real names.
 
-> ✅ "Astro 5 + MDX, with `remark-math`, `rehype-katex`, and
+> ✅ "Astro 6 + MDX, with `remark-math`, `rehype-katex`, and
 > `rehype-citation` plugins."
 >
 > ❌ "A modern web framework with appropriate plugins for academic
@@ -52,9 +52,9 @@ If a page is "for everyone," it's probably for no one.
 Decisions are commitments. ADRs especially: state the decision in
 one sentence; hedge in Consequences if needed.
 
-> ✅ "Astro 5 + MDX as the renderer."
+> ✅ "Astro 6 + MDX as the renderer."
 >
-> ❌ "We probably want to use Astro 5 + MDX, but we might switch."
+> ❌ "We probably want to use Astro 6 + MDX, but we might switch."
 
 ## Information architecture (Diátaxis)
 

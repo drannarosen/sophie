@@ -25,11 +25,15 @@ into the Sophie self-hosted `apps/docs/` site. The design here uses
 only MyST features that translate cleanly to MDX so the migration is
 mechanical.
 
-:::{important} Status: design phase
-Nothing in `@sophie/*` is committed code yet. These docs are living
-artifacts updated as we make decisions, implement, and validate.
-The roadmap in [Status → Roadmap](status/roadmap.md) tracks what's
-shipped and what's next.
+:::{important} Status: pre-launch, working vertical slice
+Five packages ship under `@sophie/*`: `core` (schemas), `components`
+(React + axe), `astro` (extractor/audit/integration), `cli`
+(start/dev/preview/audit), `theme` (tokens). The smoke target at
+`examples/smoke/` is the working vertical slice. These docs are still
+living artifacts — see [Status → Roadmap](status/roadmap.md) and the
+[validation tracker](status/validation.md) for what's shipped vs. in
+flight vs. designed-only. Per [ADR 0061 Rule 5](decisions/0061-ai-optimized-codebase-design.md),
+each reference page distinguishes shipped vs. designed surface.
 :::
 
 ## Where to start
@@ -96,7 +100,7 @@ And one collaborator-oriented section: **[Contributing](contributing/setup.md)**
 
 ## Quick facts
 
-- **Platform: Astro 5 + MDX** — see [ADR 0002](decisions/0002-renderer-astro-mdx.md).
+- **Platform: Astro 6 + MDX** — see [ADR 0002](decisions/0002-renderer-astro-mdx.md).
 - **Schema source of truth: Zod** — see [ADR 0003](decisions/0003-zod-as-source-of-truth.md).
 - **Persistence: IndexedDB via a `ResponseStore` repository** — see
   [ADR 0007](decisions/0007-persistence-indexeddb.md).
