@@ -122,6 +122,22 @@ const ChapterJsonSchema = zodToJsonSchema(ChapterSchema);
   migrates forward-only on read.
 - Build emits `sophie.schema.json` for VSCode + external tools.
 
+## Revisions
+
+### R-0058 — Amended by ADR 0058 (epistemic role contract, 2026-05-16)
+
+[ADR 0058](0058-epistemic-component-contract.md) adds the
+eight-role `EpistemicRoleSchema` Zod enum and makes
+`epistemicRole` an optional, additive field on pedagogy-component
+schemas. The role contract is implemented as a Zod literal
+(`EpistemicRoleSchema.extract([...])`) — double-bound at compile
+time (TypeScript literal narrowing) AND at parse time (Zod literal
+validation), per ADR 0058 §R-greenfield. The `<DeepDiveEntry>`
+schema added in PR #133 (2026-05-19) extends `inline-content.ts`
+following the same Zod-as-source-of-truth shape; no schema for
+`<Callout variant="the-more-you-know">` ships because that variant
+sits outside the taxonomy by design.
+
 ## References
 
 - Brainstorming session, schema-sourcing pin (May 2026).

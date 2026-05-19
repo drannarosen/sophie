@@ -8,7 +8,7 @@ tags:
   - graph
   - audit
   - lds
-status: accepted-design
+status: shipped
 validation:
   status: in-progress
   last_validated_date: "2026-05-17"
