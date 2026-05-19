@@ -8,19 +8,22 @@ import { __setFigureUsages } from "./figure-usages-store.ts";
 // self-closing `<FigureRef />` renders "Fig. {number}" from the
 // canonical usage entry; decision #3: two-tier (registry +
 // usages) means two setters are wired in lockstep.
+// Self-hosted SVG placeholders (.storybook/static/figures/) replace
+// external Wikimedia URLs that caused VR baseline failures (#131).
 const registryFixture = [
   {
     name: "cosmic-distance-ladder",
-    src: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Cosmic_distance_ladder.jpg/640px-Cosmic_distance_ladder.jpg",
-    alt: "Schematic of the cosmic distance ladder: parallax → standard candles → redshift.",
-    caption: "The cosmic distance ladder — each rung calibrates the next.",
-    credit: "NASA / ESA / A. Feild (STScI)",
+    src: "/figures/cosmic-distance-ladder.svg",
+    alt: "Placeholder: stylized cosmic distance ladder schematic.",
+    caption:
+      "Placeholder for: the cosmic distance ladder — each rung calibrates the next.",
+    credit: "Storybook placeholder (SVG).",
   },
   {
     name: "m51-optical-radio",
-    src: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Messier51_sRGB.jpg/640px-Messier51_sRGB.jpg",
-    alt: "Optical view of the Whirlpool Galaxy (M51).",
-    caption: "M51 in optical light.",
+    src: "/figures/messier51.svg",
+    alt: "Placeholder: stylized spiral galaxy with companion.",
+    caption: "Placeholder for: M51 in optical light.",
   },
 ];
 

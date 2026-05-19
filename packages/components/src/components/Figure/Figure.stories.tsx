@@ -13,24 +13,29 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+// Storybook-only fixtures use self-hosted SVG placeholders served
+// from .storybook/static/figures/ (issue #131 — external CDN URLs
+// caused VR baseline fragility). Captions describe what the
+// production image *would* show; the placeholder is clearly marked
+// as such in-image.
 const sampleRegistry = {
   "milky-way-from-atacama": {
     name: "milky-way-from-atacama",
-    src: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Milky_Way_Galaxy_taken_from_the_Atacama_Desert%2C_Chile_at_an_altitude_of_5%2C100_meters.jpg/640px-Milky_Way_Galaxy_taken_from_the_Atacama_Desert%2C_Chile_at_an_altitude_of_5%2C100_meters.jpg",
-    alt: "The Milky Way galactic plane arcing across a star-saturated sky over the Atacama Desert.",
+    src: "/figures/milky-way-atacama.svg",
+    alt: "Placeholder: stylized Milky Way over a horizon, used as a Storybook fixture.",
     caption:
-      "The Milky Way as seen from the Atacama Desert at 5,100 m elevation.",
-    credit: "Photo: Bruno Gilli / ESO.",
+      "Placeholder for: the Milky Way as seen from the Atacama Desert at 5,100 m elevation.",
+    credit: "Storybook placeholder (SVG).",
   },
 };
 
 export const Inline: Story = {
   args: {
-    src: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/HST-SM4.jpeg/640px-HST-SM4.jpeg",
-    alt: "Hubble Space Telescope photographed against Earth's limb during Servicing Mission 4.",
+    src: "/figures/hubble-st-sm4.svg",
+    alt: "Placeholder: stylized telescope diagram against a starfield, used as a Storybook fixture.",
     caption:
-      "Hubble Space Telescope, photographed by the STS-125 crew during Servicing Mission 4 in 2009.",
-    credit: "NASA.",
+      "Placeholder for: Hubble Space Telescope, photographed by the STS-125 crew during Servicing Mission 4.",
+    credit: "Storybook placeholder (SVG).",
   },
 };
 
@@ -59,7 +64,7 @@ export const MissingFromRegistry: Story = {
 
 export const InlineWithoutCaption: Story = {
   args: {
-    src: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/HST-SM4.jpeg/640px-HST-SM4.jpeg",
-    alt: "Hubble Space Telescope above Earth.",
+    src: "/figures/hubble-st-sm4.svg",
+    alt: "Placeholder: stylized telescope above a starfield.",
   },
 };

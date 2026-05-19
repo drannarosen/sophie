@@ -11,6 +11,10 @@ const config: StorybookConfig = {
     options: {},
   },
   stories: ["../src/**/*.stories.@(ts|tsx|mdx)"],
+  // Self-hosted placeholder figures for Figure + FigureRef stories.
+  // External CDN URLs (Wikimedia) caused intermittent VR baseline
+  // failures (issue #131) — SVG placeholders are deterministic.
+  staticDirs: ["./static"],
   addons: ["@storybook/addon-a11y", "@storybook/addon-themes"],
   typescript: {
     check: false,
