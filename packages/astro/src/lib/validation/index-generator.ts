@@ -52,7 +52,7 @@ const EVIDENCE_KIND_ORDER: readonly ValidationKind[] = [
 const GENERATED_BANNER = [
   "<!-- GENERATED FILE — DO NOT EDIT BY HAND.",
   "     Produced by @sophie/astro's pagefind-postbuild hook",
-  "     (packages/astro/src/lib/validation-index-generator.ts).",
+  "     (packages/astro/src/lib/validation/index-generator.ts).",
   "     Re-run `pnpm tsx scripts/regenerate-validation-index.mts` from the",
   "     repo root to regenerate. Suppressed when SOPHIE_DOCS_INCLUDE_VALIDATION=0.",
   "     (The smoke build's cwd has no docs/website/, so its pagefind-postbuild",
@@ -246,7 +246,7 @@ function renderContractsTable(
  *
  * Prior incarnation (`/decisions/0001-…/`) was based on a wrong
  * assumption about MyST routing and every contract link 404'd; the I5
- * integration test in `validation-index-generator.integration.test.ts`
+ * integration test in `validation/index-generator.integration.test.ts`
  * exists to lock this contract by resolving links against the rendered
  * HTML build artifacts.
  */

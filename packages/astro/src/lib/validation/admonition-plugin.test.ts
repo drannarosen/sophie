@@ -5,7 +5,7 @@ import {
   isContractFile,
   parseValidationFrontmatter,
   renderValidationAdmonition,
-} from "./validation-admonition-plugin";
+} from "./admonition-plugin";
 
 describe("renderValidationAdmonition", () => {
   it("emits a validated admonition for status=validated", () => {

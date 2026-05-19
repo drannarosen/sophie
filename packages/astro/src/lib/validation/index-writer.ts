@@ -1,7 +1,7 @@
 import { stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { PedagogyIndex } from "@sophie/core/schema";
-import { generateValidationIndex } from "./validation-index-generator.ts";
+import { generateValidationIndex } from "./index-generator.ts";
 
 /**
  * Side-effecting wrapper around `generateValidationIndex` (ADR 0056 PR 5).
@@ -21,7 +21,7 @@ import { generateValidationIndex } from "./validation-index-generator.ts";
  *   2. `<sophieRoot>/docs/website/status/` is absent — consumer repos
  *      that use `@sophie/astro` without shipping the Sophie docs tree
  *      (the smoke fixture, eventual real course repos) keep working
- *      unchanged. Mirrors `validation-extractor.ts`'s ENOENT-tolerance.
+ *      unchanged. Mirrors `validation/extractor.ts`'s ENOENT-tolerance.
  */
 export async function writeValidationIndexMarkdown(
   index: PedagogyIndex,

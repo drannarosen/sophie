@@ -27,4 +27,4 @@ export {
   type MystAdmonitionNode,
   parseValidationFrontmatter,
   renderValidationAdmonition,
-} from "./lib/validation-admonition-plugin.ts";
+} from "./lib/validation/admonition-plugin.ts";

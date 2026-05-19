@@ -7,7 +7,7 @@ import {
   type PagefindCustomRecord,
 } from "./pagefind-converters/index.ts";
 import { indexAccumulator } from "./pedagogy-index-extractor.ts";
-import { writeValidationIndexMarkdown } from "./validation-index-writer.ts";
+import { writeValidationIndexMarkdown } from "./validation/index-writer.ts";
 
 /**
  * Emit the consumer's `PedagogyIndex` snapshot to

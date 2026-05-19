@@ -16,7 +16,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   buildValidationAdmonitionNode,
   type MystAdmonitionNode,
-} from "./validation-admonition-plugin";
+} from "./admonition-plugin";
 
 expect.extend(toHaveNoViolations);
 

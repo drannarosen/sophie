@@ -627,7 +627,7 @@ export function runPedagogyAudit(
 
   // ---------------------------------------------------------------------
   // V0 + V8 — extractor findings (ADR 0056 PR 3). The contract-
-  // validations extractor (validation-extractor.ts) reads each ADR /
+  // validations extractor (validation/extractor.ts) reads each ADR /
   // reference doc's raw frontmatter; it emits V0 (schema parse failure,
   // ERROR) when ValidationSchema.safeParse fails, and V8 (unknown key,
   // INFO) when a key falls outside KNOWN_VALIDATION_KEYS. Those findings

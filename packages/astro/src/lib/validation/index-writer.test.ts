@@ -9,7 +9,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { PedagogyIndex } from "@sophie/core/schema";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
-import { writeValidationIndexMarkdown } from "./validation-index-writer.ts";
+import { writeValidationIndexMarkdown } from "./index-writer.ts";
 
 /**
  * Tests for the side-effecting wrapper around `generateValidationIndex`.
@@ -22,7 +22,7 @@ import { writeValidationIndexMarkdown } from "./validation-index-writer.ts";
  *     generator's output
  *
  * The pure-function generator is exhaustively covered by
- * `validation-index-generator.test.ts`; these tests only assert the
+ * `index-generator.test.ts`; these tests only assert the
  * wrapper's I/O and env-flag semantics.
  */
 
