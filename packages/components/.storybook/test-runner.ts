@@ -117,6 +117,24 @@ const config: TestRunnerConfig = {
         detailedReport: true,
         detailedReportOptions: { html: true },
         axeOptions: {
+          // `color-contrast` is excluded pending a focused token-
+          // audit + per-component remediation pass. Investigated
+          // 2026-05-19 ([architecture-audit P2 #4](../../../docs/reviews/2026-05-19-architecture-audit.md)):
+          // re-enabling surfaces 59 violations across 10 components
+          // (MultiRep × 15, EquationBiography × 15, Intervention × 6,
+          // Aside × 6, Callout × 5, Figure × 4, KeyEquation × 3,
+          // ConfidenceCheck × 3, Predict × 1, EquationRef × 1). The
+          // component-family clustering suggests systemic per-variant
+          // token violations (`--sophie-text-muted` / `--sophie-callout-*-title-bg`),
+          // not per-story author issues — a 1-2 day token-audit +
+          // remediation pass, not a single-PR fix.
+          //
+          // Phased trigger to re-enable: (1) token-audit pass measures
+          // every `--sophie-text-*` × `--sophie-callout-*-title-bg`
+          // combination against WCAG 2 AA; (2) token fixes in
+          // @sophie/theme; (3) per-story opt-outs for intentional
+          // low-contrast fixtures; (4) flip this line and remove the
+          // deferral. Dark-mode parity required at each step.
           rules: { "color-contrast": { enabled: false } },
         },
       });
