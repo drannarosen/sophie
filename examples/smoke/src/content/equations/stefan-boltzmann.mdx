@@ -1,0 +1,102 @@
+---
+id: stefan-boltzmann
+title: "Stefan-Boltzmann Law"
+tex: "L = 4\\pi R^2 \\sigma T^4"
+symbols: ["L", "R", "T"]
+constants:
+  - symbol: "\\sigma"
+    value: "5.6704 \\times 10^{-5}"
+    unit: "erg s^{-1} cm^{-2} K^{-4}"
+    name: "Stefan-Boltzmann constant (CGS)"
+rearranged_forms:
+  - tex: "T = \\left(\\frac{L}{4\\pi R^2 \\sigma}\\right)^{1/4}"
+    solves_for: "T"
+    label: "Temperature from luminosity and radius"
+  - tex: "R = \\sqrt{\\frac{L}{4\\pi \\sigma T^4}}"
+    solves_for: "R"
+    label: "Radius from luminosity and temperature"
+related:
+  - refId: "wiens-law"
+    kind: "see-also"
+    description: "Both relate blackbody temperature to its emission characteristics — Wien's law via the peak wavelength, Stefan-Boltzmann via the integrated power."
+  - refId: "inverse-square-law"
+    kind: "see-also"
+    description: "Stefan-Boltzmann gives a source's intrinsic luminosity L from its surface temperature and size; the inverse-square law then maps that L to the flux F a distant observer measures."
+tags: ["thermal", "spectroscopy", "blackbody", "luminosity"]
+version: "1"
+---
+
+import {
+  Assumption,
+  BreaksWhen,
+  CommonMisuse,
+  DerivationStep,
+  Observable,
+} from "@sophie/components";
+
+<Observable>
+  The total radiant power $L$ emitted by a thermal source of surface
+  temperature $T$ and physical radius $R$, integrated over the full
+  electromagnetic spectrum. We don't measure $L$ directly — it's
+  inferred from flux + distance via the inverse-square law, with
+  temperature and radius arriving from spectral fitting and
+  interferometry respectively.
+</Observable>
+
+<Assumption type="thermal-equilibrium">
+  The source is in local thermodynamic equilibrium, so the Planck
+  blackbody distribution governs its emission and an effective
+  temperature is well-defined.
+</Assumption>
+
+<Assumption type="blackbody">
+  The source emits as an ideal blackbody — emissivity $\epsilon = 1$
+  across all wavelengths. Real stars approximate this with effective
+  temperatures slightly lower than what a perfect blackbody of the
+  same total power would have.
+</Assumption>
+
+<Assumption type="spherical-source">
+  The emitting surface is a sphere of well-defined radius $R$. Rapidly
+  rotating, tidally distorted, or extended-atmosphere sources require
+  a more careful surface-area treatment.
+</Assumption>
+
+<BreaksWhen>
+  Non-thermal emission (synchrotron, pulsar magnetospheres, accretion
+  jets); strong emission or absorption lines that dominate the
+  bolometric output; sources where the photosphere is poorly defined
+  (giants with extended atmospheres, supernova ejecta during the
+  optically-thick phase).
+</BreaksWhen>
+
+<CommonMisuse>
+  Treating apparent brightness as direct evidence of source radius.
+  A small hot star and a large cool one can have identical
+  luminosities; without independent temperature information from the
+  spectrum, $R$ stays unconstrained. The Stefan-Boltzmann relation
+  needs *two* of $\{L, R, T\}$ to fix the third.
+</CommonMisuse>
+
+<DerivationStep label="Start from the spectral radiance">
+  The Planck distribution gives the power emitted per unit area per
+  unit wavelength: $B_\lambda(T)$. Total intensity is the integral
+  over all wavelengths: $\int_0^\infty B_\lambda(T) \, d\lambda$.
+</DerivationStep>
+
+<DerivationStep label="Integrate Planck's law over wavelength">
+  The closed-form result is
+  $\int_0^\infty B_\lambda(T) \, d\lambda = (\sigma / \pi) \, T^4$,
+  where $\sigma = 2\pi^5 k_B^4 / (15 h^3 c^2)$ collects the
+  fundamental constants. This is the bolometric flux per unit
+  emitting surface area, integrated over wavelength.
+</DerivationStep>
+
+<DerivationStep label="Multiply by surface area and the per-steradian factor">
+  A blackbody emits into the full $4\pi$ steradians; total radiant
+  power is the surface flux times the surface area:
+  $L = 4\pi R^2 \cdot \sigma T^4$. Three measurements — luminosity,
+  radius, temperature — collapse into one relation; observers
+  routinely use it both forward (predict L from R and T) and inverse
+  (infer R when L and T are known).
+</DerivationStep>

@@ -111,6 +111,25 @@ concepts:
       we measure. Combined with orbital velocity v via $M = v^2 r / G$,
       yields the enclosed gravitational mass interior to r.
 
+  - id: "stellar-radius"
+    verbal_label: "stellar radius"
+    canonical_symbol: "R"
+    latex: "R"
+    epistemic_role: "model"
+    units: "cm (CGS); R_\\odot"
+    code_alias: "R_cgs"
+    common_confusions:
+      - symbol: "r"
+        meaning: "orbital radius — distance from a gravitating centre to a tracer, NOT the source's physical extent"
+        concept_ref: "orbital-radius"
+    introduced_in: "01-foundations/spoiler-alerts"
+    notes: >-
+      Physical radius of a stellar (or other thermal) source. Inferred —
+      typically from the Stefan-Boltzmann law combined with luminosity
+      and temperature measurements — rather than measured directly,
+      except for the closest stars where interferometric angular
+      diameter measurements resolve the disc.
+
   - id: "peak-wavelength"
     verbal_label: "peak emission wavelength"
     canonical_symbol: "\\lambda_{peak}"
