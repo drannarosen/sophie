@@ -48,8 +48,15 @@ import type { AuditExtras, AuditReport, FindingSink } from "./types.ts";
  * Invariants not implemented in v1:
  *   E1, E6, F3, F5, M1, M2 — extractor throws first; audit-level
  *                            parallel check deferred.
- *   M3 — orphan misconception heuristic; deferred until a usable
- *        signal beyond "no source-of-truth title" exists.
+ *   M3 — orphan misconception heuristic; deferred. The extractor
+ *        emits an anchor for every misconception (auto-generated
+ *        `misc-N` fallback ensures this), so the "anchor exists"
+ *        axis is never null. A more useful M3 would track
+ *        *referencing* callsites the way D5 tracks definitions,
+ *        but no `<MisconceptionRef>` component exists in v1.
+ *        MG3 already covers the intervention-pairing axis. See
+ *        https://github.com/drannarosen/sophie/issues/118 for the
+ *        revisit-trigger conditions + when NOT to implement.
  *   I4 — verifies every canonical-intervention's `move:` resolves to a
  *        real entry in `move-index.ts` (ADR 0041). Deferred until
  *        `move-index.ts` ships.

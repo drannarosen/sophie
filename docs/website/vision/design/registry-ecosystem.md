@@ -1,8 +1,17 @@
 ---
 title: Registry ecosystem — Sophie's content-architecture axiom
-short_title: Registry ecosystem
+short_title: Registry ecosystem (vision)
 description: Sophie's second content-architecture axiom (parallel to ADR 0058's 8-role epistemic contract). The bright-line rule that decides which canonical pedagogy content lives in a registry vs. inline in chapter MDX, and the shared platform conventions every registry follows. Frames equation, figure, misconception, and definition registries as instances of one platform pattern — not six one-off features.
 tags: [vision, design, content-architecture, registry, reasoning-os, lds, thesis]
+# Slug-collision note (Bucket D investigation): this page and
+# decisions/0060-registry-ecosystem.md both slug to /registry-ecosystem/.
+# MyST 1.9 auto-disambiguates by suffixing the later-loaded page —
+# the ADR keeps the un-prefixed URL (canonical contract surface)
+# and this vision page routes at /registry-ecosystem-1/ (the auto-
+# suffix). A frontmatter `slug:` override isn't honored at the
+# disambiguation layer in MyST 1.9. If the auto-suffix URL becomes
+# a navigation problem, rename this file to e.g.
+# `registry-ecosystem-vision.md` and update the TOC + cross-refs.
 ---
 
 # Registry ecosystem

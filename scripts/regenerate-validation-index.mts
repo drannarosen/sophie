@@ -28,8 +28,8 @@
 
 import { resolve } from "node:path";
 import type { PedagogyIndex } from "@sophie/core/schema";
-import { extractContractValidations } from "../packages/astro/src/lib/validation-extractor.ts";
-import { writeValidationIndexMarkdown } from "../packages/astro/src/lib/validation-index-writer.ts";
+import { extractContractValidations } from "../packages/astro/src/lib/validation/extractor.ts";
+import { writeValidationIndexMarkdown } from "../packages/astro/src/lib/validation/index-writer.ts";
 
 const repoRoot = resolve(import.meta.dirname, "..");
 

@@ -228,6 +228,74 @@ What this decision makes:
 - ADR 0048's plugin layer extends naturally to cross-course
   registry imports once 2+ courses exist.
 
+## Implementation pattern: eager registry collection rendering
+
+Every registry consumer in `TextbookLayout` must eagerly render
+the registry collection BEFORE the page-render slot. The pattern
+surfaced during PR-A as a dev-mode-only correctness fix and now
+applies to every registry the ecosystem grows.
+
+**The problem**: Astro's content-collection processing differs
+across build modes.
+
+- **Production (`astro build`)**: Astro processes every entry in
+  every collection at build start. Static pages for every chapter,
+  every equation registry MDX, every figure get rendered. By the
+  time `TextbookLayout`'s slot runs, the pedagogy accumulator is
+  populated with every entry.
+- **Dev (`astro dev`)**: Astro processes content lazily — only the
+  collections requested by the current navigation. Visiting a
+  chapter that cites `<KeyEquation refId="wiens-law">` triggers
+  rendering of THAT chapter's MDX (which calls the extractor), but
+  the registry MDX at `src/content/equations/wiens-law.mdx` may
+  never have been processed. The chapter's `R1` audit invariant
+  fires ("citation without declaration") because the accumulator
+  has the citation but not the declaration.
+
+**The fix**: Force eager rendering of the registry collection at
+the top of `TextbookLayout`'s frontmatter, before the per-page
+audit runs. The canonical shape (post-C1 split) lives at
+`packages/astro/src/components/TextbookLayout.astro`:
+
+```ts
+const equationEntries: CollectionEntry<"equations">[] =
+  await getCollection("equations");
+await Promise.all(equationEntries.map((e) => render(e)));
+```
+
+`getCollection` is a metadata read; `render(e)` is what triggers
+Astro to process the MDX through the remark pipeline (and thereby
+through Sophie's pedagogy-index extractor's
+`pedagogyIndexRemarkPlugin`). The `Promise.all` ensures all
+entries are processed before the audit reads the accumulator.
+
+**When this pattern fires**: any registry that the audit's
+cross-validation invariants compare against chapter-side
+citations. Today that's:
+
+- **chapters** (the eager-render appears in the same code path as
+  `getStudentChapters` — chapters are themselves a registry).
+- **equations** (post-ADR-0060; the PR-A fix).
+
+**When this pattern will fire in the future**: every additional
+registry that crosses chapter-citation/declaration boundaries.
+The Consequences section above names misconceptions, definitions,
+worked-examples as likely future registries. Each adds one
+`await Promise.all(entries.map((e) => render(e)))` line in
+TextbookLayout's frontmatter, and the audit's cross-validation
+keeps working in dev-mode without per-developer build-mode
+intuition.
+
+**Cost**: small. `Promise.all` parallelizes; `render` is a no-op
+in production (entries already processed). In dev mode the cost
+is one extra remark pass per registry entry on first page render
+— typically a few dozen entries, all small MDX files.
+
+**Documenting in code**: each `await Promise.all(...)` call in
+TextbookLayout carries an inline comment block citing this
+section. When a future registry lands, the comment block becomes
+the template — copy + adjust the collection name.
+
 ## References
 
 - Brainstorm + plan: `~/.claude/plans/hi-claude-working-directory-cozy-penguin.md`
