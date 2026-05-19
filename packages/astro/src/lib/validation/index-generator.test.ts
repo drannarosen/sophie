@@ -1,6 +1,6 @@
 import type { PedagogyIndex } from "@sophie/core/schema";
 import { describe, expect, test } from "vitest";
-import { generateValidationIndex } from "./validation-index-generator.ts";
+import { generateValidationIndex } from "./index-generator.ts";
 
 /**
  * Tests for the validation-status index page generator (ADR 0056 PR 5).

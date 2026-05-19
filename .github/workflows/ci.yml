@@ -77,7 +77,7 @@ jobs:
             ${{ runner.os }}-turbo-
       - name: Build @sophie/docs (MyST HTML — required for I5 href test)
         # The I5 integration test in
-        # packages/astro/src/lib/validation-index-generator.integration.test.ts
+        # packages/astro/src/lib/validation/index-generator.integration.test.ts
         # resolves every dashboard href against the rendered MyST HTML
         # build. Without this step the test fails loud (per the I7
         # fail-loud invariant), so the unit job builds the docs first.

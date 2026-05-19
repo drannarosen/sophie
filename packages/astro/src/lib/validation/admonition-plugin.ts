@@ -15,7 +15,7 @@ import {
  * output / silently broken CSS classes.
  *
  * Findings are NOT surfaced from this code path; that's the extractor's
- * job (V0 in `validation-extractor.ts`). When parse fails here, the
+ * job (V0 in `validation/extractor.ts`). When parse fails here, the
  * renderer emits the unvalidated-fallback admonition — matching the V1
  * "missing block" UI so authors get a visible signal something is wrong.
  */
@@ -129,10 +129,10 @@ export function renderValidationAdmonition({
  *
  * Re-exported here for backward-compat with consumers that import
  * `extractLastRevisedDate` from this module; the canonical home is
- * `./last-revised-date.ts` so the validation-extractor doesn't have to
- * pull in this whole admonition-plugin module.
+ * `../last-revised-date.ts` so the extractor doesn't have to pull
+ * in this whole admonition-plugin module.
  */
-export { extractLastRevisedDate } from "./last-revised-date.ts";
+export { extractLastRevisedDate } from "../last-revised-date.ts";
 
 function computeRenderedStatus(
   validation: Validation,

@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { extractContractValidations } from "./validation-extractor.ts";
+import { extractContractValidations } from "./extractor.ts";
 
 /**
  * Tests for `extractContractValidations` — the build-time walk that

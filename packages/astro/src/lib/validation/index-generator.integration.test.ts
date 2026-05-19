@@ -32,10 +32,10 @@ import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type { PedagogyIndex } from "@sophie/core/schema";
 import { describe, expect, it } from "vitest";
-import { extractContractValidations } from "./validation-extractor.ts";
-import { generateValidationIndex } from "./validation-index-generator.ts";
+import { extractContractValidations } from "./extractor.ts";
+import { generateValidationIndex } from "./index-generator.ts";
 
-const REPO_ROOT = resolve(__dirname, "../../../..");
+const REPO_ROOT = resolve(__dirname, "../../../../..");
 const DASHBOARD = resolve(REPO_ROOT, "docs/website/status/validation.md");
 const DECISIONS_DIR = resolve(REPO_ROOT, "docs/website/decisions");
 
@@ -64,7 +64,7 @@ function emptyIndexShape(): PedagogyIndex {
   };
 }
 
-describe("validation-index-generator integration (I3)", () => {
+describe("validation/index-generator integration (I3)", () => {
   it("fails loudly when the dashboard or decisions directory is missing", () => {
     // Fail-loud guard: if the test fixture is wrong (sparse checkout,
     // moved file, etc.), surface a specific error rather than letting
@@ -119,7 +119,7 @@ describe("validation-index-generator integration (I3)", () => {
  */
 const HTML_BUILD = resolve(REPO_ROOT, "docs/website/_build/html");
 
-describe("validation-index-generator integration (I5 — href resolution)", () => {
+describe("validation/index-generator integration (I5 — href resolution)", () => {
   it("sampled dashboard hrefs resolve to rendered HTML artifacts", async () => {
     // Fail-loud guard (I7): the MyST HTML build is a hard precondition.
     // CI builds it in the `unit` job before vitest; local devs run

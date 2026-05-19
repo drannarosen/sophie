@@ -24,8 +24,8 @@
  * heading-line offset in the document.
  *
  * Lives in its own module so the validation admonition plugin
- * (`validation-admonition-plugin.ts`) and the contract validations
- * extractor (`validation-extractor.ts`) can both depend on it without
+ * (`validation/admonition-plugin.ts`) and the contract validations
+ * extractor (`validation/extractor.ts`) can both depend on it without
  * either depending on the other. Prevents the cross-module coupling
  * flagged in PR #51 review M2.
  */

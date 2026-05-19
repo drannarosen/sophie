@@ -20,13 +20,13 @@ import { readdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import matter from "gray-matter";
 import { describe, expect, it } from "vitest";
-import { extractLastRevisedDate } from "./last-revised-date.ts";
+import { extractLastRevisedDate } from "../last-revised-date.ts";
 import {
   buildValidationAdmonitionNode,
   type MystAdmonitionNode,
-} from "./validation-admonition-plugin.ts";
+} from "./admonition-plugin.ts";
 
-const REPO_ROOT = resolve(__dirname, "../../../..");
+const REPO_ROOT = resolve(__dirname, "../../../../..");
 const DECISIONS_DIR = resolve(REPO_ROOT, "docs/website/decisions");
 const REFERENCE_DIR = resolve(REPO_ROOT, "docs/website/reference");
 const VALIDATION_CLASS_RE =
