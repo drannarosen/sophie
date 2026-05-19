@@ -438,6 +438,74 @@ back-fill as a P1 priority. Future role-bearing components (whether
 biography-family or otherwise) should follow this shape; reviewers
 should flag drift on every PR.
 
+### R-deep-dive — Callout deep-dive variant joins the implicit-role table; the-more-you-know stays outside the taxonomy (2026-05-19)
+
+Session 9 P3 ([PR #130](https://github.com/drannarosen/sophie/pull/130))
+shipped two new `<Callout>` variants at the renderer surface:
+
+- `<Callout variant="deep-dive">` — technical depth on the same topic
+  the surrounding prose covers (telescope icon, native `<details>`
+  collapsibility, "Deep Dive: " title prefix, default-collapsed,
+  print-mode auto-expand).
+- `<Callout variant="the-more-you-know">` — adjacent enrichment
+  (history, fun facts, connections) with the same collapse shape.
+
+PR-B (this PR) ships the pedagogy-tracking layer. The two variants
+divide cleanly across the taxonomy boundary:
+
+| Variant                                 | Implicit role                                  | Tracked in `PedagogyIndex.deepDives`?                               | Pattern                              |
+| --------------------------------------- | ---------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------ |
+| `<Callout variant="deep-dive">`         | inherited from surrounding pedagogical context | **Yes** — one `DeepDiveEntry` per call site (anchor + title + body) | §Decision §3 (variant discriminator) |
+| `<Callout variant="the-more-you-know">` | — (chrome / enrichment)                        | **No** — intentionally outside the eight-role contract              | §Decision §3 "chrome" treatment      |
+
+**Why deep-dive is tracked but the-more-you-know is not.** The eight
+roles (observable / model / inference / assumption / approximation /
+uncertainty / numerical / misconception) are about *scientific
+reasoning*. Deep-dive surfaces scaffold reasoning — they extend a
+chapter's main thread with technical depth, derivation, mechanism, or
+worked detail. Their epistemic role is *inherited* from the
+surrounding context: a math-derivation deep-dive carries `derivation`-
+shaped content (often `model`), a physical-picture deep-dive carries
+`model`, a mechanism deep-dive carries `inference`. The deep-dive
+component itself does NOT declare a fixed role const — mirroring the
+ADR 0046 `<CommonMisuse>` pattern of inheriting role from a linked
+container.
+
+The-more-you-know is **deliberately outside** the taxonomy. Enrichment
+content (cultural history, scientist anecdotes, fun connections) is
+not scientific reasoning. Forcing every Callout into a role would
+either mis-classify enrichment as epistemic content or balloon the
+role list with non-reasoning categories (`history`, `enrichment`,
+`anecdote`). Drawing the line at *the-more-you-know = no role* keeps
+the role list scoped to what ADR 0058 §Rationale §"why eight roles"
+already locked: minimum closed set covering reasoning.
+
+**This is the first ADR-blessed precedent for "rendered but not
+indexed."** Future Callout-class variants should declare on PR which
+side of the boundary they sit on: tracked (gets a `PedagogyIndex`
+entry kind) or chrome (renders normally but produces no index entry).
+Reviewers should ask the boundary question on every new variant PR.
+
+**Index shape.** PR-B adds `PedagogyIndex.deepDives:
+readonly DeepDiveEntry[]` and the anchor-prefix table entry `dd-`
+(auto: `dd-${counter}` when no `id`/`title` present, slug(title) when
+title present, explicit `id` otherwise). The `DeepDiveEntry` schema
+mirrors the inline-content shape (`chapter`, `anchor`, `title`,
+`body`) and lives in `inline-content.ts` per ADR 0061 C4 domain
+grouping. The extractor (`extractDeepDives`) walks `<Callout
+variant="deep-dive">` flow elements only and follows the unified-
+anchor precedence established in [PR #128](https://github.com/drannarosen/sophie/pull/128).
+
+**Updates to inline-content.ts §1 mapping.** The header comment in
+`packages/core/src/schema/pedagogy-index-entries/inline-content.ts`
+now lists deep-dive alongside definition / key-insight /
+misconception:
+
+- definition  → observable / inference (terminological grounding)
+- key-insight → inference (the "so what" of a chapter)
+- misconception → uncertainty (the durable wrong-model alert)
+- **deep-dive → role-inherited from container (per §R-deep-dive)**
+
 ## References
 
 - [ADR 0003 — Zod as source of truth](./0003-zod-as-source-of-truth.md)
