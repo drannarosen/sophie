@@ -213,6 +213,7 @@ project:
         - file: decisions/0059-linked-representation-state-primitive.md
         - file: decisions/0060-registry-ecosystem.md
         - file: decisions/0061-ai-optimized-codebase-design.md
+        - file: decisions/0062-page-status-frontmatter-enum.md
     - title: Status
       children:
         - file: status/roadmap.md
