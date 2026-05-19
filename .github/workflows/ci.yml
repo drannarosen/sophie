@@ -25,6 +25,13 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Biome check
         run: pnpm exec biome check .
+      - name: LOC budget (ADR 0061 Rule 3)
+        # Enforces per-file line-count thresholds (300 info / 500
+        # warning / 800 error for source; 500/800/1200 for tests),
+        # with schema-registry + barrel + grandfathered exemptions.
+        # Fails CI on a non-exempt ERROR breach; warnings/infos are
+        # surfaced in the log without blocking.
+        run: pnpm lint:loc
 
   typecheck:
     name: typecheck
