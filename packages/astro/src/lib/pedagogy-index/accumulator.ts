@@ -1,0 +1,588 @@
+import type {
+  AuditFinding,
+  ChapterEntry,
+  ContractValidationEntry,
+  DefinitionEntry,
+  EquationCitationEntry,
+  EquationEntry,
+  FigureRegistryEntry,
+  FigureUsageEntry,
+  InlineRefUsageEntry,
+  InterventionEntry,
+  KeyInsightEntry,
+  MisconceptionEntry,
+  ModuleEntry,
+  MultiRepIndexEntry,
+  ObjectiveEntry,
+  PedagogyIndex,
+} from "@sophie/core/schema";
+
+/**
+ * Cross-chapter accumulator — state lives on `globalThis` so it
+ * survives across Vite environments within a single Astro build.
+ *
+ * Why globalThis instead of a module-level `Map`: Astro 6 / Vite 7
+ * runs separate environments for client and SSR bundles. Each
+ * environment has its own module-resolution graph, so a module-
+ * level `new Map()` produces TWO independent maps in the same
+ * Node process — one written by the MDX-parsing pass, the other
+ * read by the page-rendering pass. `globalThis` is genuinely
+ * per-process and bridges the environments. Observed during PR-C1
+ * with a `pid` + accumulator-size trace.
+ *
+ * Per ADR 0038's role-aggregation principle. Future entry types
+ * (equations, key-insights, figures, misconceptions) attach to
+ * this same accumulator under their own collections; PR-C1 only
+ * surfaces definitions.
+ */
+const GLOBAL_KEY = "__sophiePedagogyIndex";
+
+interface GlobalIndexState {
+  definitions: Map<string, DefinitionEntry>;
+  /**
+   * Registry-sourced equation declarations per ADR 0060. Keyed by
+   * equation `id` (one entry per `src/content/equations/<id>.mdx`
+   * file). NOT chapter-keyed — equations are registry-sourced post-
+   * ADR-0060; chapter-side `<KeyEquation refId>` callsites live in
+   * `equationCitations` instead.
+   */
+  equations: Map<string, EquationEntry>;
+  /**
+   * Per-chapter `<KeyEquation refId>` citation callsites per ADR 0060.
+   * Append-only array (mirrors `inlineRefUsages`); `clearChapterCitations`
+   * filters out entries with the cleared chapter slug.
+   */
+  equationCitations: EquationCitationEntry[];
+  keyInsights: Map<string, KeyInsightEntry>;
+  figureUsages: Map<string, FigureUsageEntry>;
+  misconceptions: Map<string, MisconceptionEntry>;
+  /**
+   * Consumer-supplied figure registry (two-tier model, PR-C3 decision
+   * #3). Unlike the other collections, this is NOT populated by the
+   * MDX extractor — `TextbookLayout` pushes it in via
+   * `setFigureRegistry()` at SSR merge time after reading it from the
+   * consumer's `content/figures.ts`. `<CourseFigures>` and
+   * `<ChapterFigures>` then read it through `asPedagogyIndex()`
+   * alongside `figureUsages` to resolve names → image src/alt/caption.
+   */
+  figureRegistry: ReadonlyArray<FigureRegistryEntry>;
+  /**
+   * Per-chapter learning objectives (PR-C4). Keyed by
+   * `${chapter}#${anchor}` so different chapters can each declare an
+   * objective with the same id (no semantic collision).
+   */
+  objectives: Map<string, ObjectiveEntry>;
+  /**
+   * Consumer-supplied chapters collection (PR-C4). Populated from
+   * `getCollection('chapters')` at TextbookLayout SSR-merge time.
+   * Last-write-wins; NOT touched by `clearChapter` (mirrors
+   * `figureRegistry`).
+   */
+  chapters: ReadonlyArray<ChapterEntry>;
+  /**
+   * Consumer-supplied modules collection (PR-C4). Same shape as
+   * `chapters`; populated from `getCollection('modules')`.
+   */
+  modules: ReadonlyArray<ModuleEntry>;
+  /**
+   * Per-chapter inline-ref callsites (PR-C4). Append-only array
+   * (NOT a Map) — the audit consumes the whole list and
+   * usage-count facets care about callsite counts, not dedup'd keys.
+   * `clearChapter` filters out entries with the cleared chapter slug.
+   */
+  inlineRefUsages: InlineRefUsageEntry[];
+  /**
+   * Per-contract validation entries (ADR 0056 PR 3). Populated by
+   * `validation/extractor.ts` via `setContractValidations`. Last-write-
+   * wins, consumer-global, NOT touched by `clearChapter` (mirrors
+   * `figureRegistry` / `chapters` / `modules` — the contract files
+   * are external to chapter MDX so the per-chapter clear pass
+   * doesn't apply).
+   */
+  contractValidations: ReadonlyArray<ContractValidationEntry>;
+  /**
+   * Extractor-layer audit findings (V0 + V8; ADR 0056 PR 3).
+   * Populated together with `contractValidations`. Flows into
+   * `PedagogyIndex.extractorFindings` so `runPedagogyAudit` can
+   * merge them into the report at the same call.
+   */
+  extractorFindings: ReadonlyArray<AuditFinding>;
+  /**
+   * Per-chapter `<MultiRep>` concept-binding entries (ADR 0043 +
+   * 2026-05-17 design hardening). Keyed by `${chapter}#${id}` so
+   * different chapters can reuse the auto-derived `mr-<concept>`
+   * anchor without collision. Populated by `extractMultiReps`;
+   * consumed by audit invariants MR1–MR4/MR6 in PR-δ.
+   */
+  multiReps: Map<string, MultiRepIndexEntry>;
+  /**
+   * Per-chapter `<Intervention>` entries (ADR 0044). Keyed by
+   * `${chapter}#${anchor}` so different chapters can reuse the same
+   * `intervention-<type>-<idx>` anchor without collision. Populated by
+   * `extractInterventions`; consumed by audit invariants MG3/MG4/I1/I2/I3
+   * (PR-δ). Per-batch duplicates within a chapter trip the key
+   * collision and throw — the extractor's sequential numbering makes
+   * this impossible in practice, so the throw is a defense-in-depth
+   * guard against future refactors.
+   */
+  interventions: Map<string, InterventionEntry>;
+}
+
+function getGlobalState(): GlobalIndexState {
+  const g = globalThis as { [GLOBAL_KEY]?: GlobalIndexState };
+  if (!g[GLOBAL_KEY]) {
+    g[GLOBAL_KEY] = {
+      definitions: new Map(),
+      equations: new Map(),
+      equationCitations: [],
+      keyInsights: new Map(),
+      figureUsages: new Map(),
+      misconceptions: new Map(),
+      figureRegistry: [],
+      objectives: new Map(),
+      chapters: [],
+      modules: [],
+      inlineRefUsages: [],
+      contractValidations: [],
+      extractorFindings: [],
+      multiReps: new Map(),
+      interventions: new Map(),
+    };
+  }
+  return g[GLOBAL_KEY];
+}
+
+class IndexAccumulator {
+  /**
+   * Drop all entries for a given chapter. Called by the remark
+   * plugin before re-extracting a chapter (so re-parses don't
+   * accumulate stale entries).
+   */
+  clearChapter(chapterSlug: string): void {
+    const state = getGlobalState();
+    for (const [slug, entry] of state.definitions) {
+      if (entry.chapter === chapterSlug) {
+        state.definitions.delete(slug);
+      }
+    }
+    // Post-ADR-0060: equations are registry-sourced (one declaration per
+    // `src/content/equations/<id>.mdx`), NOT chapter-keyed. The chapter-
+    // clear pass drops the chapter's citations instead — declarations
+    // are managed by `clearEquations` (full registry reset) or by
+    // re-running the registry walker which overwrites by `id`.
+    state.equationCitations = state.equationCitations.filter(
+      (c) => c.chapter !== chapterSlug
+    );
+    for (const [key, entry] of state.keyInsights) {
+      if (entry.chapter === chapterSlug) {
+        state.keyInsights.delete(key);
+      }
+    }
+    for (const [key, entry] of state.figureUsages) {
+      if (entry.chapter === chapterSlug) {
+        state.figureUsages.delete(key);
+      }
+    }
+    for (const [key, entry] of state.misconceptions) {
+      if (entry.chapter === chapterSlug) {
+        state.misconceptions.delete(key);
+      }
+    }
+    for (const [key, entry] of state.objectives) {
+      if (entry.chapter === chapterSlug) {
+        state.objectives.delete(key);
+      }
+    }
+    // Inline-ref usages are stored as a plain array (append-only). Filter
+    // out the cleared chapter's entries. `chapters` and `modules` are
+    // consumer-global (mirror `figureRegistry`) and are NOT touched here.
+    state.inlineRefUsages = state.inlineRefUsages.filter(
+      (u) => u.chapter !== chapterSlug
+    );
+    for (const [key, entry] of state.multiReps) {
+      if (entry.chapter === chapterSlug) {
+        state.multiReps.delete(key);
+      }
+    }
+    for (const [key, entry] of state.interventions) {
+      if (entry.chapter === chapterSlug) {
+        state.interventions.delete(key);
+      }
+    }
+  }
+
+  /**
+   * Add a chapter's extracted entries. Throws on cross-chapter
+   * slug collision (audit invariant #1).
+   */
+  addDefinitions(entries: ReadonlyArray<DefinitionEntry>): void {
+    const state = getGlobalState();
+    // Validate the whole batch BEFORE mutating. Without this two-
+    // pass shape, a cross-chapter collision in entry N would leave
+    // entries 0..N-1 already in the map — fine while the throw
+    // kills the build, but brittle for PR-C2+ which may batch
+    // larger role-mixed adds.
+    for (const entry of entries) {
+      const existing = state.definitions.get(entry.slug);
+      if (existing && existing.chapter !== entry.chapter) {
+        throw new Error(
+          `Definition "${entry.term}" (slug "${entry.slug}") is defined in multiple chapters: "${existing.chapter}" and "${entry.chapter}". Resolution: rename one or consolidate.`
+        );
+      }
+    }
+    for (const entry of entries) {
+      state.definitions.set(entry.slug, entry);
+    }
+  }
+
+  /**
+   * Add registry-sourced equation declarations per ADR 0060. One entry
+   * per `src/content/equations/<id>.mdx` file. Keyed by `id`; last-write-
+   * wins (re-parsing the same registry MDX overwrites). No cross-chapter
+   * collision check because equations are no longer chapter-keyed —
+   * each registry file's `id` is the canonical identifier.
+   */
+  addEquations(entries: ReadonlyArray<EquationEntry>): void {
+    const state = getGlobalState();
+    for (const entry of entries) {
+      state.equations.set(entry.id, entry);
+    }
+  }
+
+  /**
+   * Drop ALL registry-sourced equation declarations (full reset). Called
+   * when the equation registry is re-loaded wholesale (e.g., during HMR
+   * after a registry-file deletion). Distinct from `clearChapter`, which
+   * does NOT touch `equations` post-ADR-0060.
+   */
+  clearEquations(): void {
+    const state = getGlobalState();
+    state.equations.clear();
+  }
+
+  /**
+   * Add a chapter's extracted `<KeyEquation refId>` citation entries per
+   * ADR 0060. Append-only; the per-chapter clear path is
+   * `clearChapterCitations(chapterSlug)`.
+   */
+  addEquationCitations(entries: ReadonlyArray<EquationCitationEntry>): void {
+    const state = getGlobalState();
+    for (const entry of entries) {
+      state.equationCitations.push(entry);
+    }
+  }
+
+  /**
+   * Drop a chapter's `<KeyEquation refId>` citations. Called by the
+   * remark plugin's chapter pass before re-extracting (mirrors
+   * `inlineRefUsages` clearing semantics).
+   */
+  clearChapterCitations(chapterSlug: string): void {
+    const state = getGlobalState();
+    state.equationCitations = state.equationCitations.filter(
+      (c) => c.chapter !== chapterSlug
+    );
+  }
+
+  /**
+   * Add a chapter's extracted key-insights. Key-insights are
+   * chapter-local: anchors only need to be unique within a chapter
+   * (intra-chapter collisions are caught by `extractKeyInsights`
+   * before they reach the accumulator), so no cross-chapter
+   * validation is required. Keyed by `${chapter}#${anchor}` so two
+   * different chapters can both have e.g. anchor "ki-1"
+   * without collision.
+   */
+  addKeyInsights(entries: ReadonlyArray<KeyInsightEntry>): void {
+    const state = getGlobalState();
+    for (const entry of entries) {
+      state.keyInsights.set(`${entry.chapter}#${entry.anchor}`, entry);
+    }
+  }
+
+  /**
+   * Add a chapter's extracted figure usages. F3 invariant (PR-C3
+   * decisions row 10): exactly one canonical usage per figure name
+   * across the whole textbook. Two-pass shape: detect any cross-
+   * chapter multiple-canonical conflict BEFORE mutating, so a batch
+   * that throws on entry N leaves entries 0..N-1 unwritten.
+   *
+   * Keyed by `${chapter}#${anchor}`; multiple `<Figure name="X">`
+   * usages in one chapter coexist via distinct auto-generated anchors
+   * (`fig-x-1`, `fig-x-2`, ...).
+   */
+  addFigureUsages(entries: ReadonlyArray<FigureUsageEntry>): void {
+    const state = getGlobalState();
+    // Two-pass: detect cross-chapter multiple-canonical (F3) BEFORE
+    // mutating. Also catches multiple canonical usages within the
+    // SAME incoming batch by comparing against earlier entries already
+    // queued for write.
+    const seenCanonicalNames = new Map<string, string>(); // name -> chapter
+    for (const entry of entries) {
+      if (!entry.canonical) continue;
+      // Compare against existing accumulator state.
+      for (const existing of state.figureUsages.values()) {
+        if (existing.name === entry.name && existing.canonical) {
+          throw new Error(
+            `F3 invariant: multiple <Figure name="${entry.name}" canonical /> usages — found in chapter "${existing.chapter}" and chapter "${entry.chapter}". Resolution: remove \`canonical\` from one of them.`
+          );
+        }
+      }
+      // Also detect within the incoming batch.
+      const prior = seenCanonicalNames.get(entry.name);
+      if (prior !== undefined && prior !== entry.chapter) {
+        throw new Error(
+          `F3 invariant: multiple <Figure name="${entry.name}" canonical /> usages — found in chapter "${prior}" and chapter "${entry.chapter}". Resolution: remove \`canonical\` from one of them.`
+        );
+      }
+      seenCanonicalNames.set(entry.name, entry.chapter);
+    }
+    for (const entry of entries) {
+      state.figureUsages.set(`${entry.chapter}#${entry.anchor}`, entry);
+    }
+  }
+
+  /**
+   * Add a chapter's extracted misconceptions. M2 invariant (PR-C3
+   * decisions row 10): explicit-id-derived anchors must be unique
+   * across chapters. Auto-anchors of the shape `misc-${N}`
+   * are inherently chapter-scoped (each chapter restarts its counter
+   * at 1) and are NOT subject to the cross-chapter check — two
+   * chapters can each have a `misc-1` without conflict.
+   *
+   * Two-pass shape: validate the whole batch BEFORE mutating, so a
+   * collision in entry N leaves entries 0..N-1 unwritten (mirrors
+   * `addDefinitions` / `addEquations` / `addFigureUsages`).
+   *
+   * Keyed by `${chapter}#${anchor}` so the same anchor can coexist
+   * across chapters when permitted (auto-anchors).
+   *
+   * Note on intra-batch dedup: unlike `addFigureUsages` (which guards
+   * against same-name canonical figures within a single batch via
+   * `seenCanonicalNames`), this method has no intra-batch check.
+   * Safe because the batch is always single-chapter (see callsite
+   * `indexAccumulator.addMisconceptions(extractMisconceptions(tree, slug))`)
+   * and `extractMisconceptions` already enforces M1 (intra-chapter
+   * anchor uniqueness) via `seenAnchors` before this method ever
+   * runs. If the calling shape ever changes to multi-chapter batches,
+   * mirror the `addFigureUsages` two-map pattern.
+   */
+  addMisconceptions(entries: ReadonlyArray<MisconceptionEntry>): void {
+    const state = getGlobalState();
+    // M2: cross-chapter slug collision check (only for EXPLICIT id-
+    // derived anchors, not for auto-anchors which are chapter-scoped).
+    for (const entry of entries) {
+      // Match only the literal auto-anchor shape `misc-${counter}`.
+      // `startsWith("misc-")` would also skip explicit ids like
+      // `misc-orbital`, silently bypassing M2 cross-chapter validation.
+      if (/^misc-\d+$/.test(entry.anchor)) continue;
+      for (const existing of state.misconceptions.values()) {
+        if (
+          existing.chapter !== entry.chapter &&
+          existing.anchor === entry.anchor
+        ) {
+          throw new Error(
+            `Misconception slug "${entry.anchor}" defined in multiple chapters: "${existing.chapter}" and "${entry.chapter}". (M2 invariant.) Resolution: change one of the \`id\` props.`
+          );
+        }
+      }
+    }
+    for (const entry of entries) {
+      state.misconceptions.set(`${entry.chapter}#${entry.anchor}`, entry);
+    }
+  }
+
+  /**
+   * Push the consumer-supplied figure registry into the accumulator
+   * (two-tier model, PR-C3 decision #3). Unlike the other accumulator
+   * setters, the registry doesn't come from an MDX walk — it comes
+   * from the consumer's `content/figures.ts` via TextbookLayout's
+   * `figureRegistry` prop. `<CourseFigures>` and `<ChapterFigures>`
+   * read it back through `asPedagogyIndex()` to resolve figure names
+   * to image src/alt/caption. Called from TextbookLayout's frontmatter
+   * before the slot renders so consumers see a populated registry.
+   */
+  setFigureRegistry(entries: ReadonlyArray<FigureRegistryEntry>): void {
+    const state = getGlobalState();
+    state.figureRegistry = entries;
+  }
+
+  /**
+   * Add a chapter's extracted objectives. Keyed by
+   * `${chapter}#${anchor}`; different chapters can each declare an
+   * objective with the same `id` (no semantic collision at this layer
+   * — chapter scope is part of the key). Single-chapter batch
+   * invariant: `extractObjectives` already enforces O1 (duplicate-id-
+   * within-chapter) via `seenIds`, mirroring `addMisconceptions`'s
+   * comment. No cross-chapter id-collision check.
+   */
+  addObjectives(entries: ReadonlyArray<ObjectiveEntry>): void {
+    const state = getGlobalState();
+    for (const entry of entries) {
+      state.objectives.set(`${entry.chapter}#${entry.anchor}`, entry);
+    }
+  }
+
+  /**
+   * Push the consumer-supplied chapters collection into the accumulator
+   * (PR-C4). Mirrors `setFigureRegistry` semantics: last-write-wins,
+   * consumer-global, NOT touched by `clearChapter`. Called from
+   * TextbookLayout's frontmatter after `getCollection('chapters')`
+   * resolves so consumers see a populated chapters list.
+   */
+  setChapters(entries: ReadonlyArray<ChapterEntry>): void {
+    const state = getGlobalState();
+    state.chapters = entries;
+  }
+
+  /**
+   * Push the consumer-supplied modules collection into the accumulator
+   * (PR-C4). Same shape as `setChapters`.
+   */
+  setModules(entries: ReadonlyArray<ModuleEntry>): void {
+    const state = getGlobalState();
+    state.modules = entries;
+  }
+
+  /**
+   * Append a chapter's inline-ref callsites. Append-only — the audit
+   * consumes the whole list and usage-count facets later care about
+   * callsite counts, not dedup'd keys. `clearChapter` filters out
+   * entries with the cleared chapter slug to keep re-parses idempotent.
+   */
+  addInlineRefUsages(entries: ReadonlyArray<InlineRefUsageEntry>): void {
+    const state = getGlobalState();
+    state.inlineRefUsages.push(...entries);
+  }
+
+  /**
+   * Push the contract-validations extraction result into the
+   * accumulator (ADR 0056 PR 3). Called from TextbookLayout's
+   * frontmatter once per build after `extractContractValidations`
+   * resolves. Mirrors `setFigureRegistry` / `setChapters` /
+   * `setModules` semantics: last-write-wins, consumer-global, NOT
+   * touched by `clearChapter` (contract files are external to chapter
+   * MDX). Both arrays are written atomically so the audit always sees
+   * a coherent {entries, findings} pair.
+   */
+  setContractValidations(
+    entries: ReadonlyArray<ContractValidationEntry>,
+    findings: ReadonlyArray<AuditFinding>
+  ): void {
+    const state = getGlobalState();
+    state.contractValidations = entries;
+    state.extractorFindings = findings;
+  }
+
+  /**
+   * Add a chapter's extracted MultiRep bindings. Keyed by
+   * `${chapter}#${id}` so different chapters can reuse the auto-
+   * derived `mr-<concept>` anchor without collision. Within-chapter
+   * duplicate concept bindings (two `<MultiRep concept="x">` in one
+   * chapter sharing an auto-anchor) trip the key collision and throw.
+   * Cross-chapter same-concept bindings are valid by design (the
+   * audit-time MR6 invariant handles cross-chapter equivalent_to
+   * resolution; concept reuse across chapters is fine).
+   */
+  addMultiReps(entries: ReadonlyArray<MultiRepIndexEntry>): void {
+    const state = getGlobalState();
+    for (const entry of entries) {
+      const key = `${entry.chapter}#${entry.id}`;
+      const existing = state.multiReps.get(key);
+      if (existing) {
+        throw new Error(
+          `MultiRep id collision: chapter "${entry.chapter}" has two <MultiRep> bindings sharing anchor "${entry.id}" (concepts "${existing.concept}" and "${entry.concept}"). Resolution: change one of the \`id\` props.`
+        );
+      }
+    }
+    for (const entry of entries) {
+      const key = `${entry.chapter}#${entry.id}`;
+      state.multiReps.set(key, entry);
+    }
+  }
+
+  /**
+   * Add a chapter's extracted `<Intervention>` entries (ADR 0044).
+   * Keyed by `${chapter}#${anchor}` so different chapters can reuse
+   * the same `intervention-<type>-<idx>` anchor without collision.
+   * Within-chapter duplicate anchors trip the key collision and throw
+   * — the extractor's sequential numbering makes this impossible in
+   * practice, so the throw is a defense-in-depth guard against future
+   * refactors.
+   */
+  addInterventions(entries: ReadonlyArray<InterventionEntry>): void {
+    const state = getGlobalState();
+    for (const entry of entries) {
+      const key = `${entry.chapter}#${entry.anchor}`;
+      const existing = state.interventions.get(key);
+      if (existing) {
+        throw new Error(
+          `Intervention anchor collision: chapter "${entry.chapter}" has two <Intervention> blocks sharing anchor "${entry.anchor}". Resolution: this should never happen with sequential extractor numbering — file a bug.`
+        );
+      }
+    }
+    for (const entry of entries) {
+      const key = `${entry.chapter}#${entry.anchor}`;
+      state.interventions.set(key, entry);
+    }
+  }
+
+  /**
+   * Snapshot the current accumulator state as a PedagogyIndex.
+   * Equations populate from PR-C2 onward; keyInsights, figureUsages,
+   * and misconceptions populate from PR-C3 onward. `figureRegistry`
+   * comes from the consumer app via `setFigureRegistry()` (called by
+   * TextbookLayout at SSR merge time, PR-C3 decisions row 3 two-tier
+   * model); empty until that setter fires.
+   */
+  asPedagogyIndex(): PedagogyIndex {
+    const state = getGlobalState();
+    return {
+      definitions: Array.from(state.definitions.values()),
+      equations: Array.from(state.equations.values()),
+      equationCitations: state.equationCitations.slice(),
+      keyInsights: Array.from(state.keyInsights.values()),
+      figureRegistry: state.figureRegistry,
+      figureUsages: Array.from(state.figureUsages.values()),
+      misconceptions: Array.from(state.misconceptions.values()),
+      chapters: state.chapters,
+      modules: state.modules,
+      objectives: Array.from(state.objectives.values()),
+      inlineRefUsages: state.inlineRefUsages.slice(),
+      contractValidations: state.contractValidations,
+      extractorFindings: state.extractorFindings,
+      multiReps: Array.from(state.multiReps.values()),
+      interventions: Array.from(state.interventions.values()),
+    };
+  }
+}
+
+export const indexAccumulator = new IndexAccumulator();
+
+/**
+ * Test-only helper: wipe ALL accumulator state in one call. Use in a
+ * vitest `beforeEach` to remove cross-test ordering coupling. Not for
+ * production use — `clearChapter` is the production-shape API (it
+ * preserves entries from other chapters and is what the remark plugin
+ * calls); `resetIndexAccumulator` blows away every collection,
+ * including the consumer-supplied `figureRegistry`, which a build
+ * never wants.
+ */
+export function resetIndexAccumulator(): void {
+  const state = getGlobalState();
+  state.definitions.clear();
+  state.equations.clear();
+  state.equationCitations = [];
+  state.keyInsights.clear();
+  state.figureUsages.clear();
+  state.misconceptions.clear();
+  state.figureRegistry = [];
+  state.objectives.clear();
+  state.chapters = [];
+  state.modules = [];
+  state.inlineRefUsages = [];
+  state.contractValidations = [];
+  state.extractorFindings = [];
+  state.multiReps.clear();
+  state.interventions.clear();
+}

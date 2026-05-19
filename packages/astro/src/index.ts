@@ -10,12 +10,12 @@ export {
   getStudentChapters,
   isStudentVisible,
 } from "./lib/get-student-chapters.ts";
+export { indexAccumulator } from "./lib/pedagogy-index/accumulator.ts";
+export { extractDefinitions } from "./lib/pedagogy-index/extractors/definitions.ts";
 export {
-  extractDefinitions,
-  indexAccumulator,
   type PedagogyIndexRemarkPluginOptions,
   pedagogyIndexRemarkPlugin,
-} from "./lib/pedagogy-index-extractor.ts";
+} from "./lib/pedagogy-index/orchestrator.ts";
 export {
   PEDAGOGY_INDEX_VIRTUAL_ID,
   pedagogyIndexVirtualModule,

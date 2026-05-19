@@ -31,12 +31,14 @@ export default defineConfig({
     // Must exist at dist/lib/get-student-chapters.js to resolve from
     // the copied-verbatim .astro files in dist/components/.
     "lib/get-student-chapters": "src/lib/get-student-chapters.ts",
-    // `lib/pedagogy-index-extractor` is the remark plugin + cross-
-    // chapter accumulator (PR-C1 / ADR 0038). Imported by .astro
-    // components (TextbookLayout, ChapterGlossary, CourseGlossary)
-    // to read aggregated definitions and seed the @sophie/components
-    // glossary store.
-    "lib/pedagogy-index-extractor": "src/lib/pedagogy-index-extractor.ts",
+    // `lib/pedagogy-index/accumulator` is the cross-chapter
+    // `IndexAccumulator` singleton (ADR 0038; C1 split under ADR 0061).
+    // Imported by 12 .astro chrome components (TextbookLayout,
+    // ChapterGlossary, CourseGlossary, ChapterMisconceptions, etc.)
+    // to read aggregated entries and seed @sophie/components stores.
+    // Must exist at dist/lib/pedagogy-index/accumulator.js to resolve
+    // from the copied-verbatim .astro files in dist/components/.
+    "lib/pedagogy-index/accumulator": "src/lib/pedagogy-index/accumulator.ts",
     // `lib/pedagogy-audit` is the systematic build-time audit pass
     // (PR-C4) over the populated PedagogyIndex. Imported by
     // TextbookLayout to surface cross-cutting invariants (undefined

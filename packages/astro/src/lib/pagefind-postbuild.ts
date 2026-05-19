@@ -6,7 +6,7 @@ import {
   converters,
   type PagefindCustomRecord,
 } from "./pagefind-converters/index.ts";
-import { indexAccumulator } from "./pedagogy-index-extractor.ts";
+import { indexAccumulator } from "./pedagogy-index/accumulator.ts";
 import { writeValidationIndexMarkdown } from "./validation/index-writer.ts";
 
 /**

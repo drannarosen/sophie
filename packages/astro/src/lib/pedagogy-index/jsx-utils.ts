@@ -1,0 +1,246 @@
+import { toHtml } from "hast-util-to-html";
+import { toHast } from "mdast-util-to-hast";
+
+/**
+ * Minimal mdxJsxFlowElement shape we read. The unified ecosystem's
+ * `mdast-util-mdx-jsx` ships the canonical types, but we only need
+ * the attribute-by-name lookup so a narrow shape keeps this module
+ * decoupled from the (large) mdx-types surface.
+ */
+export interface MdxJsxFlowElement {
+  type: "mdxJsxFlowElement";
+  name: string | null;
+  attributes: ReadonlyArray<{
+    type: string;
+    name: string;
+    value: string | boolean | null | { type: string };
+  }>;
+  children: ReadonlyArray<unknown>;
+}
+
+export interface MisconceptionGraphFields {
+  prerequisite_misconceptions?: string[];
+  related_misconceptions?: string[];
+  concept_refs?: string[];
+  discipline_scope?: string[];
+}
+
+export interface AsideAttributes extends MisconceptionGraphFields {
+  kind?: string;
+  title?: string;
+  id?: string;
+  /**
+   * `<Aside kind="misconception" name="…">` — the canonical
+   * misconception-graph identifier per ADR 0044 (used in
+   * `prerequisite_misconceptions` / `related_misconceptions` /
+   * `<Intervention addresses="…">` references). The misconception
+   * extractor uses `name` as a higher-precedence anchor source than
+   * `slug(title)` so `addresses="this"` resolution (Intervention PR-γ)
+   * lands on a matching `MisconceptionEntry.anchor`.
+   */
+  name?: string;
+}
+
+export interface FigureAttributes {
+  name?: string;
+  caption?: string;
+  canonical?: boolean;
+}
+
+export interface ObjectiveAttributes {
+  id?: string;
+  verb?: string;
+}
+
+export interface CalloutAttributes extends MisconceptionGraphFields {
+  variant?: string;
+  title?: string;
+  id?: string;
+}
+
+/**
+ * Read a JSX expression-valued attribute as a list of strings.
+ *
+ * The four ADR-0044 misconception-graph fields are authored as JSX
+ * expression attrs:
+ *
+ *   <Aside kind="misconception" prerequisite_misconceptions={["a", "b"]} ...>
+ *
+ * mdast surfaces these as `mdxJsxAttributeValueExpression` nodes
+ * whose raw source lives on `attr.value.value` (the string between
+ * `{` and `}`). We parse that source as JSON after a light
+ * normalization (JS single-quoted string literals → JSON double-
+ * quoted) so the common authoring shape `["x", "y"]` round-trips.
+ * Anything that doesn't parse to an array of non-empty strings is
+ * dropped (returns `undefined`); the schema-layer Zod validator is
+ * the source of truth for shape enforcement, and undefined values
+ * are pre-ADR-0044 schema-compatible.
+ *
+ * An empty array (`[]`) is preserved — per the schema reference
+ * doc, `prerequisite_misconceptions: []` is meaningful (it asserts
+ * "this is a root in the DAG").
+ */
+export function readStringListAttr(
+  node: MdxJsxFlowElement,
+  name: string
+): string[] | undefined {
+  for (const attr of node.attributes ?? []) {
+    if (attr.type !== "mdxJsxAttribute") continue;
+    if (attr.name !== name) continue;
+    const value = attr.value;
+    if (!value || typeof value !== "object") continue;
+    const v = value as { type?: string; value?: unknown };
+    if (v.type !== "mdxJsxAttributeValueExpression") continue;
+    if (typeof v.value !== "string") continue;
+    // Normalize single-quoted string literals to JSON double-quoted form.
+    // Authors commonly write `={['a', 'b']}`; JSON requires double quotes.
+    // This is a deliberate one-shot normalization for the array-of-string
+    // shape; arbitrary JS expressions are not supported.
+    const normalized = v.value
+      .trim()
+      .replace(
+        /'([^'\\]*)'/g,
+        (_, inner) => `"${String(inner).replace(/"/g, '\\"')}"`
+      );
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(normalized);
+    } catch {
+      continue;
+    }
+    if (!Array.isArray(parsed)) continue;
+    const out: string[] = [];
+    for (const item of parsed) {
+      if (typeof item !== "string") return undefined;
+      const trimmed = item.trim();
+      if (trimmed.length === 0) return undefined;
+      out.push(trimmed);
+    }
+    return out;
+  }
+  return undefined;
+}
+
+export function readMisconceptionGraphFields(
+  node: MdxJsxFlowElement
+): MisconceptionGraphFields {
+  const out: MisconceptionGraphFields = {};
+  const prereqs = readStringListAttr(node, "prerequisite_misconceptions");
+  if (prereqs !== undefined) out.prerequisite_misconceptions = prereqs;
+  const related = readStringListAttr(node, "related_misconceptions");
+  if (related !== undefined) out.related_misconceptions = related;
+  const concepts = readStringListAttr(node, "concept_refs");
+  if (concepts !== undefined) out.concept_refs = concepts;
+  const disciplines = readStringListAttr(node, "discipline_scope");
+  if (disciplines !== undefined) out.discipline_scope = disciplines;
+  return out;
+}
+
+export function readAsideAttributes(node: MdxJsxFlowElement): AsideAttributes {
+  const out: AsideAttributes = {};
+  for (const attr of node.attributes ?? []) {
+    if (attr.type !== "mdxJsxAttribute") continue;
+    if (typeof attr.value !== "string") continue;
+    if (attr.name === "kind") out.kind = attr.value;
+    if (attr.name === "title") out.title = attr.value;
+    if (attr.name === "id") out.id = attr.value;
+    if (attr.name === "name") out.name = attr.value;
+  }
+  Object.assign(out, readMisconceptionGraphFields(node));
+  return out;
+}
+
+export function readFigureAttributes(
+  node: MdxJsxFlowElement
+): FigureAttributes {
+  const out: FigureAttributes = {};
+  for (const attr of node.attributes ?? []) {
+    if (attr.type !== "mdxJsxAttribute") continue;
+    if (attr.name === "name" && typeof attr.value === "string") {
+      out.name = attr.value;
+    }
+    if (attr.name === "caption" && typeof attr.value === "string") {
+      out.caption = attr.value;
+    }
+    // `canonical` is a boolean-presence JSX prop: `<Figure name="X" canonical />`
+    // surfaces in the mdast as `value: null` (no `=`), while
+    // `canonical={true}` may surface as either `true` or an expression node.
+    // We accept both shapes; anything else (including an explicit `false`
+    // string or expression) leaves `canonical` undefined.
+    if (attr.name === "canonical") {
+      out.canonical = attr.value === null || attr.value === true;
+    }
+  }
+  return out;
+}
+
+export function readObjectiveAttributes(
+  node: MdxJsxFlowElement
+): ObjectiveAttributes {
+  const out: ObjectiveAttributes = {};
+  for (const attr of node.attributes ?? []) {
+    if (attr.type !== "mdxJsxAttribute") continue;
+    if (typeof attr.value !== "string") continue;
+    if (attr.name === "id") out.id = attr.value;
+    if (attr.name === "verb") out.verb = attr.value;
+  }
+  return out;
+}
+
+/**
+ * Read a single string-valued attribute by name. Returns the trimmed
+ * value, or undefined when the attribute is absent / non-string / empty.
+ * Used by `extractInlineRefUsages` to read the lookup prop on each of
+ * the four inline-ref components.
+ */
+export function readStringAttr(
+  node: {
+    attributes?: ReadonlyArray<{ type: string; name: string; value: unknown }>;
+  },
+  name: string
+): string | undefined {
+  for (const attr of node.attributes ?? []) {
+    if (attr.type !== "mdxJsxAttribute") continue;
+    if (attr.name !== name) continue;
+    if (typeof attr.value !== "string") continue;
+    const trimmed = attr.value.trim();
+    if (trimmed.length === 0) return undefined;
+    return trimmed;
+  }
+  return undefined;
+}
+
+export function readCalloutAttributes(
+  node: MdxJsxFlowElement
+): CalloutAttributes {
+  const out: CalloutAttributes = {};
+  for (const attr of node.attributes ?? []) {
+    if (attr.type !== "mdxJsxAttribute") continue;
+    if (typeof attr.value !== "string") continue;
+    if (attr.name === "variant") out.variant = attr.value;
+    if (attr.name === "title") out.title = attr.value;
+    if (attr.name === "id") out.id = attr.value;
+  }
+  Object.assign(out, readMisconceptionGraphFields(node));
+  return out;
+}
+
+export function renderChildrenToHtml(children: ReadonlyArray<unknown>): string {
+  // Wrap in a synthetic root so mdast-util-to-hast can process the
+  // body as a top-level subtree. Returns the empty string when no
+  // children (definitions are allowed to be header-only).
+  if (children.length === 0) return "";
+  const synthetic = {
+    type: "root" as const,
+    children: children as never,
+  };
+  const hast = toHast(synthetic);
+  if (!hast) return "";
+  return toHtml(hast);
+}
+
+export function isWhitespaceTextNode(node: unknown): boolean {
+  if (!node || typeof node !== "object") return false;
+  const n = node as { type?: string; value?: string };
+  return n.type === "text" && (n.value ?? "").trim() === "";
+}

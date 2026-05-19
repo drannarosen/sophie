@@ -25,7 +25,7 @@ import {
   markFirstUseGlossaryTerms,
   pedagogyIndexRemarkPlugin,
   resetIndexAccumulator,
-} from "./pedagogy-index-extractor.ts";
+} from "./pedagogy-index/index.ts";
 
 /**
  * Top-level `beforeEach` resets the entire accumulator (all five

@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   pedagogyIndexRemarkPlugin,
   resetIndexAccumulator,
-} from "./pedagogy-index-extractor.ts";
+} from "./pedagogy-index/index.ts";
 
 /**
  * Layer 1.5 — plugin round-trip snapshot test. See design doc

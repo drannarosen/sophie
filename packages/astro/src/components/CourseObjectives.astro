@@ -4,7 +4,7 @@ import type {
   ModuleEntry,
   ObjectiveEntry,
 } from "@sophie/core/schema";
-import { indexAccumulator } from "../lib/pedagogy-index-extractor";
+import { indexAccumulator } from "../lib/pedagogy-index/accumulator";
 
 const { modules, chapters, objectives } = indexAccumulator.asPedagogyIndex();
 
