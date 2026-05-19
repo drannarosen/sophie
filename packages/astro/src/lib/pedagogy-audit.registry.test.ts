@@ -4,7 +4,7 @@ import type {
   PedagogyIndex,
 } from "@sophie/core/schema";
 import { describe, expect, it } from "vitest";
-import { runPedagogyAudit } from "./pedagogy-audit.ts";
+import { runPedagogyAudit } from "./pedagogy-audit/index.ts";
 
 /**
  * Audit invariants R1–R4 per ADR 0060 — registry-ecosystem cross-

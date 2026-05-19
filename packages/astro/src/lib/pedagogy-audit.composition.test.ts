@@ -7,7 +7,7 @@ import type {
   PedagogyIndex,
 } from "@sophie/core/schema";
 import { describe, expect, it } from "vitest";
-import { runPedagogyAudit } from "./pedagogy-audit.ts";
+import { runPedagogyAudit } from "./pedagogy-audit/index.ts";
 
 /**
  * Cross-family composition integration test (P2-1; Phase B Reasoning

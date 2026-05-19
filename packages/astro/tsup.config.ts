@@ -39,13 +39,12 @@ export default defineConfig({
     // Must exist at dist/lib/pedagogy-index/accumulator.js to resolve
     // from the copied-verbatim .astro files in dist/components/.
     "lib/pedagogy-index/accumulator": "src/lib/pedagogy-index/accumulator.ts",
-    // `lib/pedagogy-audit` is the systematic build-time audit pass
-    // (PR-C4) over the populated PedagogyIndex. Imported by
-    // TextbookLayout to surface cross-cutting invariants (undefined
-    // cross-refs, orphan definitions, registry figures with zero
-    // usages, etc.). Must exist at dist/lib/pedagogy-audit.js to
-    // resolve from the copied-verbatim .astro files in dist/components/.
-    "lib/pedagogy-audit": "src/lib/pedagogy-audit.ts",
+    // `lib/pedagogy-audit/runner` is the systematic build-time audit
+    // pass (PR-C4) over the populated PedagogyIndex (C2 split under
+    // ADR 0061). Imported indirectly by TextbookLayout via
+    // `lib/audit-cache`. Must exist at dist/lib/pedagogy-audit/runner.js
+    // because the dist/ tree mirrors src/.
+    "lib/pedagogy-audit/runner": "src/lib/pedagogy-audit/runner.ts",
     // `lib/validation/extractor` walks docs/website/{decisions,reference}/
     // at build time and emits ContractValidationEntry[] + V0/V8 findings
     // for the ADR 0056 validation tracker. Imported by TextbookLayout
