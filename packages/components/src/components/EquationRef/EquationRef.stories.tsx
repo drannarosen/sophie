@@ -5,6 +5,7 @@
 // visually correct in the popover.
 import "katex/dist/katex.min.css";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 import { EquationRef } from "./EquationRef.tsx";
 import { __setEquations } from "./equations-store.ts";
 
@@ -105,6 +106,54 @@ export const InAParagraph: Story = {
       temperature.
     </p>
   ),
+};
+
+/**
+ * Popover-open baseline (#57). The four stories above capture the
+ * inline pill trigger but not the KaTeX-rendered math + biography
+ * inside the Radix HoverCard popover (which renders into a portal and
+ * stays closed until hover). This story uses Storybook's `play()`
+ * lifecycle to hover the trigger before the test-runner takes its
+ * screenshot, so the VR baseline includes a regression gate on the
+ * popover's mathematical content + biography summary layout.
+ *
+ * Per ADR 0057 §"Dual purpose": the most important visual content
+ * of an EquationRef (the math) belongs in the baseline so polish PRs
+ * touching this component have a real regression gate, not just a
+ * trigger-pill gate.
+ */
+export const PopoverOpen: Story = {
+  args: {
+    refId: "inverse-square-law",
+  },
+  render: (args) => (
+    <p>
+      Popover-open baseline:{" "}
+      <EquationRef {...args}>the inverse-square law</EquationRef> exposes title,
+      KaTeX-rendered tex, and biography summary on hover.
+    </p>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const trigger = await canvas.findByRole("link", {
+      name: /inverse-square law/i,
+    });
+    await userEvent.hover(trigger);
+    // Wait on Radix's own state-machine signal rather than an arbitrary
+    // timeout. Radix HoverCard adds `data-state="open"` to its Content
+    // element when it opens; we paired that with the component's own
+    // `data-sophie-equation-popover` attribute so this selector
+    // identifies our popover unambiguously even if other hover-cards
+    // share the DOM in future MultiRep / KeyEquation hover stacks.
+    // Portal content lives at document.body, NOT inside canvasElement —
+    // hence the document.querySelector instead of within(canvas).
+    await waitFor(() => {
+      const popover = document.querySelector(
+        '[data-sophie-equation-popover][data-state="open"]'
+      );
+      expect(popover).not.toBeNull();
+    });
+  },
 };
 
 /**
