@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-label="Placeholder for Milky Way over Atacama demo image">
+  <defs>
+    <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#0b0f2a"/>
+      <stop offset="70%" stop-color="#1d1238"/>
+      <stop offset="100%" stop-color="#2a1a18"/>
+    </linearGradient>
+    <linearGradient id="ground" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#2a1a18"/>
+      <stop offset="100%" stop-color="#0a0604"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="280" fill="url(#sky)"/>
+  <rect y="280" width="640" height="80" fill="url(#ground)"/>
+  <path d="M 0 130 Q 200 60, 640 100" stroke="#d8d3f4" stroke-width="40" stroke-opacity="0.25" fill="none"/>
+  <g fill="#ffffff">
+    <circle cx="50" cy="50" r="1"/>
+    <circle cx="150" cy="90" r="1.5"/>
+    <circle cx="250" cy="40" r="1"/>
+    <circle cx="350" cy="70" r="2"/>
+    <circle cx="450" cy="55" r="1"/>
+    <circle cx="550" cy="110" r="1.5"/>
+    <circle cx="600" cy="180" r="1"/>
+    <circle cx="100" cy="220" r="1"/>
+    <circle cx="320" cy="200" r="1.5"/>
+    <circle cx="500" cy="240" r="1"/>
+  </g>
+  <text x="320" y="330" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#aab" font-weight="bold">Milky Way · placeholder</text>
+</svg>

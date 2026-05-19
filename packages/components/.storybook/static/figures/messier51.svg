@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-label="Placeholder for M51 Whirlpool Galaxy demo image">
+  <defs>
+    <radialGradient id="m51core" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffe6b3"/>
+      <stop offset="35%" stop-color="#c89e6a"/>
+      <stop offset="70%" stop-color="#603a2a" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#000010" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="640" height="360" fill="#03030d"/>
+  <g fill="#ffffff" opacity="0.7">
+    <circle cx="80"  cy="60"  r="1"/>
+    <circle cx="540" cy="60"  r="1.5"/>
+    <circle cx="120" cy="290" r="1"/>
+    <circle cx="600" cy="320" r="1"/>
+    <circle cx="220" cy="40"  r="1"/>
+  </g>
+  <ellipse cx="320" cy="180" rx="120" ry="100" fill="url(#m51core)"/>
+  <g stroke="#ffd9a6" stroke-width="2" fill="none" opacity="0.55">
+    <path d="M 320 180 q 80 -60 140 -10 q 30 30 -10 70"/>
+    <path d="M 320 180 q -80 60 -140 10 q -30 -30 10 -70"/>
+  </g>
+  <circle cx="470" cy="200" r="18" fill="#ffe6b3" opacity="0.5"/>
+  <text x="320" y="340" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#aab" font-weight="bold">M51 · placeholder</text>
+</svg>
