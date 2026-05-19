@@ -118,4 +118,25 @@ describe("extractDeepDives (pure)", () => {
     expect(entries[0]?.anchor).toBe("dd-1");
     expect(entries[1]?.anchor).toBe("dd-2");
   });
+
+  // 2026-05-19 architecture audit C1/P2 #10 — counter increments BEFORE
+  // the anchor decision, so explicit-id deep-dives still consume slots.
+  // This locks in source-position numbering so a future "warn instead
+  // of throw on collision" refactor can't silently re-number downstream
+  // anonymous anchors.
+  test("explicit-id deep-dives consume counter slots — anonymous numbering reflects source position", () => {
+    const tree = root([
+      mdxCallout({ variant: "deep-dive", id: "explicit-a" }, [para("a")]),
+      mdxCallout({ variant: "deep-dive" }, [para("anon at position 2")]),
+      mdxCallout({ variant: "deep-dive", id: "explicit-c" }, [para("c")]),
+      mdxCallout({ variant: "deep-dive" }, [para("anon at position 4")]),
+    ]);
+    const entries = extractDeepDives(tree as never, "ch");
+    expect(entries.map((e) => e.anchor)).toEqual([
+      "explicit-a",
+      "dd-2",
+      "explicit-c",
+      "dd-4",
+    ]);
+  });
 });

@@ -143,6 +143,29 @@ Four revisions to the component contract:
 - `composition.containedIn` / `forbidsContaining` audit checks land
   in Tier 2.
 
+## Revisions
+
+### R-0058 — Amended by ADR 0058 (epistemic role contract, 2026-05-16)
+
+[ADR 0058](0058-epistemic-component-contract.md) adds an optional
+top-level `epistemicRole: EpistemicRole.optional()` field to the
+component contract. No required migration; existing components
+that encode role implicitly (via `variant=`, `kind=`, or child-
+component shape) continue to work, and the lookup table in
+[scientific-reasoning-os.md](../explanation/scientific-reasoning-os.md)
+documents the implicit mapping.
+
+[ADR 0058 §R-deep-dive](0058-epistemic-component-contract.md)
+(2026-05-19, shipped via PR #133) demonstrates the contract's
+elasticity: `<Callout variant="deep-dive">` joins the implicit-role
+table with the new pattern *"role inherited from surrounding
+container"* (mirrors the ADR 0046 `<CommonMisuse>` linked-container
+pattern), while `<Callout variant="the-more-you-know">` is
+deliberately untracked — the first ADR-blessed precedent for
+"rendered but not indexed." The taxonomy boundary is itself a
+component-contract decision, even when it produces no schema
+entry.
+
 ## References
 
 - Brainstorming session, contract-revisions Q (May 2026).

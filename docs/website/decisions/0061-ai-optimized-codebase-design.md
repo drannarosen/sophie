@@ -6,7 +6,7 @@ tags:
   - ai-authoring
   - philosophy
   - foundation
-status: accepted-design
+status: shipped
 validation:
   status: unvalidated
   last_validated_date: null
