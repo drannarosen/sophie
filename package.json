@@ -28,6 +28,7 @@
     "lint": "biome check .",
     "lint:loc": "tsx scripts/loc-budget.ts",
     "lint:links": "tsx scripts/link-check.ts",
+    "lint:status": "tsx scripts/lint-status.ts",
     "format": "biome format --write .",
     "typecheck": "turbo run typecheck"
   },
