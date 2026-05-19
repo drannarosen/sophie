@@ -68,6 +68,7 @@ export {
   type NotationRegistry,
   NotationRegistrySchema,
 } from "./notation-registry.js";
+export { type PedagogyIndex, PedagogyIndexSchema } from "./pedagogy-index.js";
 export {
   type ChapterEntry,
   ChapterEntrySchema,
@@ -95,9 +96,7 @@ export {
   ModuleEntrySchema,
   type ObjectiveEntry,
   ObjectiveEntrySchema,
-  type PedagogyIndex,
-  PedagogyIndexSchema,
-} from "./pedagogy-index.js";
+} from "./pedagogy-index-entries/index.js";
 export { LangTag, NonEmptyString, Slug } from "./primitives.js";
 export { type RegistryBase, RegistryBaseSchema } from "./registry-base.js";
 export type { EntityType } from "./search-facet.js";
