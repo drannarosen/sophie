@@ -91,7 +91,10 @@ export function KeyEquation({
         />
 
         {entry.constants && entry.constants.length > 0 && (
-          <dl className={styles.constants} aria-label='Constants'>
+          <dl
+            className={styles.constants}
+            aria-label={`Constants for ${entry.title}`}
+          >
             {entry.constants.map((c) => (
               <div key={c.symbol} className={styles.constantRow}>
                 <dt className={styles.constantSymbol}>{c.symbol}</dt>
@@ -173,7 +176,10 @@ export function KeyEquation({
         )}
 
         {!hideRelated && entry.related && entry.related.length > 0 && (
-          <nav className={styles.related} aria-label='Related equations'>
+          <nav
+            className={styles.related}
+            aria-label={`Related equations for ${entry.title}`}
+          >
             <span className={styles.relatedLabel}>Related:</span>
             <ul className={styles.relatedList}>
               {entry.related.map((r) => (
