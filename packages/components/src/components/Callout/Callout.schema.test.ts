@@ -39,6 +39,30 @@ describe("CalloutPropsSchema", () => {
     ).toBe(true);
   });
 
+  // Session 9 P3 (2026-05-19): two new collapsible-by-default
+  // variants for pedagogical depth and enrichment. Schema-level
+  // tests; rendering shape + ADR 0058 tracking covered separately.
+
+  it("accepts variant='deep-dive' (Session 9 P3, depth/derivation surface)", () => {
+    expect(
+      CalloutPropsSchema.safeParse({
+        variant: "deep-dive",
+        title: "How the distance ladder works",
+        children: null,
+      }).success
+    ).toBe(true);
+  });
+
+  it("accepts variant='the-more-you-know' (Session 9 P3, enrichment surface)", () => {
+    expect(
+      CalloutPropsSchema.safeParse({
+        variant: "the-more-you-know",
+        title: "Hubble's redshift puzzle",
+        children: null,
+      }).success
+    ).toBe(true);
+  });
+
   it("accepts an optional `id` prop on the static Callout", () => {
     expect(
       CalloutPropsSchema.safeParse({

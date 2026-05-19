@@ -49,19 +49,21 @@ const chapterEntries = {
 };
 
 /**
- * Figures in the DOM = figure-usages MINUS those inside collapsed
- * Radix Collapsible cards (which unmount on close). PR-7 / Trio 3 #1
- * documented one such case: the "standard-candles" figure in the
- * "Deep Dive: How the Distance Ladder Works" CollapsibleCard.
+ * Figures in the DOM = total figure-usages from the index.
  *
- * The index tracks all figure-usages (rendering-environment-agnostic),
- * so the rendered DOM count is index-count minus collapsed cards. The
- * single constant here documents the one known unmounted figure;
- * when collapse-state becomes index-tracked, the constant goes away.
+ * Pre-Session-9-P3: one figure ("standard-candles") was unmounted by
+ * Radix Collapsible inside the "Deep Dive: How the Distance Ladder
+ * Works" CollapsibleCard, requiring a `-1` adjustment.
+ *
+ * Post-P3 (this PR-A): the 4 Deep Dive CollapsibleCards migrated to
+ * `<Callout variant="deep-dive">`, which uses native `<details>` for
+ * disclosure. Native `<details>` *hides* content via CSS but does NOT
+ * unmount it — every figure inside a closed deep-dive is still in the
+ * DOM. The COLLAPSED_FIGURES_COUNT adjustment is gone; the rendered
+ * count equals the index count directly. Function-of-content closes
+ * the small literal gap.
  */
-const COLLAPSED_FIGURES_COUNT = 1;
-const expectedFigureCount =
-  chapterEntries.figureUsages.length - COLLAPSED_FIGURES_COUNT;
+const expectedFigureCount = chapterEntries.figureUsages.length;
 
 test.describe("Phase 0 vertical-slice acceptance — spoiler-alerts chapter", () => {
   test.beforeEach(async ({ context }) => {
@@ -82,13 +84,16 @@ test.describe("Phase 0 vertical-slice acceptance — spoiler-alerts chapter", ()
     // gates until the renderer uniformly tracks every role="note"
     // source in the pedagogy index):
     //
-    //   role="note" total = 36 = 28 <Callout> (info/tip/key-insight/
-    //   roadmap/summary/warning — chrome callouts, not pedagogy) +
-    //   8 <Intervention>. <Callout> isn't tracked in the index today
-    //   (it's narration/chrome, not pedagogy-OMI roles), so the total
-    //   can't yet be fully derived from the index. When <Callout> is
-    //   indexed or migrated, swap this for the derived form.
-    await expect(page.locator("[role='note']")).toHaveCount(36);
+    //   role="note" total = 40 = 32 <Callout> (8 info / 13 tip /
+    //   1 key-insight / 3 roadmap / 2 summary / 1 warning / 4 deep-dive)
+    //   + 8 <Intervention>. The deep-dive variant joined as part of
+    //   the Session 9 P3 migration (PR-A): the four CollapsibleCards
+    //   in the smoke chapter migrated to <Callout variant="deep-dive">,
+    //   each rendering as <aside role="note"> with a native <details>
+    //   disclosure inside. Pedagogy-index tracking for deep-dive
+    //   lands in PR-B; this literal remains as a sanity gate until
+    //   then.
+    await expect(page.locator("[role='note']")).toHaveCount(40);
     // figureUsages.length − collapsed-card unmounts. Function-of-
     // content: when a <Figure>/<FigureRef> is added or removed in
     // the chapter MDX, expectedFigureCount auto-adjusts.

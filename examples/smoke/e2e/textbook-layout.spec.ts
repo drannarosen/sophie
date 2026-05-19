@@ -28,7 +28,7 @@ test.describe("PR 1: TextbookLayout shell on the smoke chapter", () => {
   test.beforeEach(async ({ context }) => {
     // Each test gets a fresh context (Playwright default), so
     // localStorage is empty at start. We only need to explicitly
-    // clear cookies (matches the pattern in collapsible-card.spec.ts
+    // clear cookies (matches the pattern in deep-dive-callout.spec.ts
     // and others). DO NOT use addInitScript to clear localStorage —
     // it would re-clear on every page reload, breaking persistence
     // tests like the toggle's `survives across reload` assertion.

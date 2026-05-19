@@ -180,3 +180,74 @@
   color: var(--sophie-brand-teal-text);
   font-weight: var(--sophie-weight-medium);
 }
+
+/* ─── Session 9 P3: deep-dive + the-more-you-know variants ─── */
+
+/*
+ * Variant-specific accent colors. Telescope icon for deep-dive
+ * (technical depth — uses the brand-teal accent so it reads as
+ * "serious depth"); Sparkles icon for the-more-you-know (enrichment
+ * — uses a warmer accent so it reads as "playful aside").
+ */
+/*
+ * The two new variants share the default callout chrome (teal
+ * accent, brand title color). Differentiation today is icon-only:
+ * Telescope for deep-dive, Sparkles for the-more-you-know.
+ * Per-variant accent color is a future polish item — it would need
+ * a `--sophie-brand-amber` token (or similar) added to @sophie/theme
+ * before the-more-you-know can carry its own warmer accent. Tracked
+ * separately to avoid coupling this PR to a theme-token addition.
+ */
+
+/*
+ * Native <details> disclosure inside collapsible variants. The
+ * outer <aside> keeps the variant's chrome; the inner <details>
+ * provides the keyboard + screen-reader disclosure semantics. No
+ * JS, no persistence — Print-mode auto-expands via @media print
+ * below.
+ */
+.disclosure {
+  /* Inherit the aside's background; <details> default styles add
+     no visual chrome of their own here. The titleBar (<summary>)
+     and body (<div>) below carry the layout. */
+}
+
+.disclosure > .titleBar {
+  /* <summary> is interactive — show pointer + remove the default
+     triangle marker so the Lucide icon carries the open/closed
+     signal. */
+  cursor: pointer;
+  list-style: none;
+}
+
+.disclosure > .titleBar::-webkit-details-marker {
+  display: none;
+}
+.disclosure > .titleBar::marker {
+  display: none;
+}
+
+/*
+ * Print mode: force-open every <details> disclosure. Paper handouts
+ * shouldn't hide depth or enrichment content; readers of the
+ * printout have no UX cost to "expand" so the content should be
+ * visible by default. This handles both deep-dive and
+ * the-more-you-know automatically because both compose the same
+ * <details> shell.
+ */
+@media print {
+  /* Forcing `display: block` on the body element under the
+     `.callout .disclosure` ancestor chain gives enough specificity
+     to override the UA stylesheet's collapsed-content rule without
+     needing `!important`. Browsers vary on auto-expand-in-print for
+     <details>; this guarantees consistent print output across
+     engines. */
+  .callout .disclosure > .body {
+    display: block;
+  }
+  /* Hide the cursor-pointer styles in print since the content is
+     auto-shown. */
+  .callout .disclosure > .titleBar {
+    cursor: default;
+  }
+}
