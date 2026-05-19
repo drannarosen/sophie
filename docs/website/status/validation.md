@@ -34,8 +34,8 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 
 | Lifecycle | Count |
 |---|---|
-| Shipped | 49 |
-| Accepted design | 28 |
+| Shipped | 57 |
+| Accepted design | 20 |
 | Mixed | 1 |
 | Future package split | 9 |
 | No status | 0 |
@@ -80,16 +80,16 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0016-react-flow-for-concept-maps.md](/react-flow-for-concept-maps/) | unvalidated | future package split | — | — |  |
 | [docs/website/decisions/0017-rename-sophia-to-sophie.md](/rename-sophia-to-sophie/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0018-codemirror-6-for-codecell.md](/codemirror-6-for-codecell/) | unvalidated | accepted design | — | — |  |
-| [docs/website/decisions/0019-radix-ui-primitives.md](/radix-ui-primitives/) | unvalidated | accepted design | — | — |  |
-| [docs/website/decisions/0020-shiki-syntax-highlighting.md](/shiki-syntax-highlighting/) | unvalidated | shipped | — | — |  |
-| [docs/website/decisions/0021-observable-plot-data-viz.md](/observable-plot-data-viz/) | unvalidated | accepted design | — | — |  |
+| [docs/website/decisions/0019-radix-ui-primitives.md](/radix-ui-primitives/) | unvalidated | shipped | — | — |  |
+| [docs/website/decisions/0020-shiki-syntax-highlighting.md](/shiki-syntax-highlighting/) | unvalidated | accepted design | — | — |  |
+| [docs/website/decisions/0021-observable-plot-data-viz.md](/observable-plot-data-viz/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0022-tsup-library-builds.md](/tsup-library-builds/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0023-vertical-slice-build-order.md](/vertical-slice-build-order/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0024-license-agpl.md](/license-agpl/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0025-phase-0-actual-scope.md](/phase-0-actual-scope/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0026-tailwind-v4-css-first.md](/tailwind-v4-css-first/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0027-mdx-render-boundary-prop-threading.md](/mdx-render-boundary-prop-threading/) | unvalidated | shipped | — | — |  |
-| [docs/website/decisions/0028-storybook-setup.md](/storybook-setup/) | unvalidated | accepted design | — | — |  |
+| [docs/website/decisions/0028-storybook-setup.md](/storybook-setup/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0029-broadcast-channel-last-write-wins.md](/broadcast-channel-last-write-wins/) | validated | shipped | 2026-05-16 | review, test | ADR 0007 refinement; LWW timestamping confirmed via the useInteractive test suite. No cross-tab production cohort data yet (deferred to fa26). |
 | [docs/website/decisions/0030-audience-and-ai-author-model.md](/audience-and-ai-author-model/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0031-compound-component-layout-primitives.md](/compound-component-layout-primitives/) | unvalidated | shipped | — | — |  |
@@ -100,14 +100,14 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0036-define-preference-factory-pattern.md](/define-preference-factory-pattern/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0037-cross-bundle-dom-attribute-observation.md](/cross-bundle-dom-attribute-observation/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0038-pedagogy-index-pattern.md](/pedagogy-index-pattern/) | validated | shipped | 2026-05-16 | audit, chapter, review, test | The pedagogy-index pattern is the load-bearing reference architecture for ADRs 0042/0043/0044/0045/0056; pattern itself is validated, downstream consumers ship in tranches (see 0044/0045/0046 in-progress). |
-| [docs/website/decisions/0039-lucide-two-adapter-convention.md](/lucide-two-adapter-convention/) | unvalidated | accepted design | — | — |  |
+| [docs/website/decisions/0039-lucide-two-adapter-convention.md](/lucide-two-adapter-convention/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0040-teaching-decision-records.md](/teaching-decision-records/) | in progress | accepted design | 2026-05-16 | deployment, review | Contract spec'd + cross-referenced; tooling + TDR-coverage audit invariant not yet wired. Code lands in a follow-up PR (separate from the validation tracker rollout). |
 | [docs/website/decisions/0041-teaching-move-library.md](/teaching-move-library/) | in progress | accepted design | 2026-05-16 | deployment, manual, review | Taxonomy spec'd in reference doc; no automated audit of move IDs against pedagogy-contract.reasoning\_style yet. Code follow-up tracked. |
 | [docs/website/decisions/0042-pedagogy-contract-and-ai-contribution-ledger.md](/pedagogy-contract-and-ai-contribution-ledger/) | in progress | accepted design | 2026-05-16 | deployment, manual, review | Schema + reference docs are stable; runtime renderer + audit invariants land in follow-up work. |
 | [docs/website/decisions/0043-notation-registry-multirep-alignment-audit.md](/notation-registry-multirep-alignment-audit/) | in progress | accepted design | 2026-05-17 | deployment, manual, review | Schema + reference shape stable; 2026-05-17 design hardening locks the v1 ship-shape (3 Rep children, framed-card+grid render, epistemic\_role on registry); audit + runtime code lands in Phase 3 sprint PRs α–ε. |
-| [docs/website/decisions/0044-misconception-graph-and-intervention-library.md](/misconception-graph-and-intervention-library/) | in progress | accepted design | 2026-05-17 | audit, deployment, manual, test | Graph schema + first audit pair shipped; 2026-05-17 design hardening locks the v1 ship-shape (12 canonical interventions, sub-card render, no PR-α/PR-ε); intervention runtime + MG3/MG4/I1–I3 audit invariants land in Phase 3 sprint PRs β–δ. |
+| [docs/website/decisions/0044-misconception-graph-and-intervention-library.md](/misconception-graph-and-intervention-library/) | in progress | shipped | 2026-05-17 | audit, deployment, manual, test | Graph schema + first audit pair shipped; 2026-05-17 design hardening locks the v1 ship-shape (12 canonical interventions, sub-card render, no PR-α/PR-ε); intervention runtime + MG3/MG4/I1–I3 audit invariants land in Phase 3 sprint PRs β–δ. |
 | [docs/website/decisions/0045-pedagogical-diff-curriculum-ci.md](/pedagogical-diff-curriculum-ci/) | in progress | accepted design | 2026-05-16 | deployment, manual, review | Contract + taxonomy stable; CLI implementation + CI enforcement land in follow-up PRs. |
-| [docs/website/decisions/0046-equation-biography.md](/equation-biography/) | in progress | accepted design | 2026-05-17 | deployment, manual, test | Schema + reference doc stable; 2026-05-17 design hardening locks the v1 ship-shape (6 biography children with hardcoded epistemicRole const, bundled render updates in PR-β, Wien's law smoke fixture); runtime biography surface + E7/E8/E9 audit invariants land in Phase 3 sprint PRs α–δ. |
+| [docs/website/decisions/0046-equation-biography.md](/equation-biography/) | in progress | shipped | 2026-05-17 | deployment, manual, test | Schema + reference doc stable; 2026-05-17 design hardening locks the v1 ship-shape (6 biography children with hardcoded epistemicRole const, bundled render updates in PR-β, Wien's law smoke fixture); runtime biography surface + E7/E8/E9 audit invariants land in Phase 3 sprint PRs α–δ. |
 | [docs/website/decisions/0047-empirical-validation-plan.md](/empirical-validation-plan/) | unvalidated | accepted design | — | — |  |
 | [docs/website/decisions/0048-sophie-lds-content-plugins.md](/sophie-lds-content-plugins/) | in progress | future package split | 2026-05-16 | deployment, manual | Contract spec'd; runtime plugin system implementation deferred until first cross-course consumer surfaces a concrete need. |
 | [docs/website/decisions/0049-sophie-refactor-cli.md](/sophie-refactor-cli/) | unvalidated | future package split | — | — |  |
@@ -117,11 +117,11 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0054-course-schedule-calendar.md](/course-schedule-calendar/) | unvalidated | accepted design | — | — |  |
 | [docs/website/decisions/0055-squash-merge-for-code-prs.md](/squash-merge-for-code-prs/) | validated | shipped | 2026-05-16 | deployment, manual | Status promoted from in-progress → validated on 2026-05-16 after the squash-merge-guard CI workflow + repo-settings change both landed. Two layers are required: settings prevent UI accidents (the \`Create a merge commit\` and \`Rebase and merge\` buttons are gone); the CI workflow catches API-level bypass of the merge-commit shape. Together they cover all three GitHub merge strategies. |
 | [docs/website/decisions/0056-validation-tracker.md](/validation-tracker/) | validated | shipped | 2026-05-16 | audit, deployment, manual, review, test | All six PRs (#43 schema, #44 bulk migration, #50 admonition, #51 audit, #52 index, this PR curated-pass + reference doc + V1/V2 promotion) shipped. Self-referential validation complete; tracker is the source of truth for every ADR + reference doc's validation state as of 2026-05-16. |
-| [docs/website/decisions/0057-visual-regression-baseline.md](/visual-regression-baseline/) | unvalidated | accepted design | — | — |  |
-| [docs/website/decisions/0058-epistemic-component-contract.md](/epistemic-component-contract/) | unvalidated | accepted design | — | — |  |
+| [docs/website/decisions/0057-visual-regression-baseline.md](/visual-regression-baseline/) | unvalidated | shipped | — | — |  |
+| [docs/website/decisions/0058-epistemic-component-contract.md](/epistemic-component-contract/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0059-linked-representation-state-primitive.md](/linked-representation-state-primitive/) | unvalidated | accepted design | — | — |  |
 | [docs/website/decisions/0060-registry-ecosystem.md](/registry-ecosystem/) | unvalidated | accepted design | — | — |  |
-| [docs/website/decisions/0061-ai-optimized-codebase-design.md](/ai-optimized-codebase-design/) | unvalidated | accepted design | — | — |  |
+| [docs/website/decisions/0061-ai-optimized-codebase-design.md](/ai-optimized-codebase-design/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0062-page-status-frontmatter-enum.md](/page-status-frontmatter-enum/) | unvalidated | shipped | — | — |  |
 
 ### Reference docs
