@@ -98,15 +98,22 @@ Grade range over the last 10 days: B+ (84) → A+ (96), median A (91). The grade
 
 Prioritized by leverage (impact ÷ effort), with P1 = act now.
 
-### P1 — Codex IndexedDB fallback contract gap (~2–4h)
+### ~~P1 — Codex IndexedDB fallback contract gap~~ ✅ Verified closed (2026-05-19 audit-hygiene pass)
 
-**What**: The 2026-05-18 Codex audit's P1 finding (still open). `packages/components/src/runtime/useInteractive.ts` doesn't implement the IndexedDB-unavailable fallback contract promised by ADR 0007 + ADR 0053. If a student's browser blocks IndexedDB (private mode, storage disabled, certain corporate environments), the persistence layer silently fails instead of falling back per the documented contract.
+**Closed.** When this review was first drafted, the P1 cited the 2026-05-18 Codex audit's "Open" status. A 2026-05-19 hygiene pass discovered the fix had already landed in a subsequent session:
 
-**Why P1**: It's the **only currently-known production-impacting defect** in the codebase. ADR 0007 explicitly promises the behavior; readers landing on the ADR (now `status: shipped` per PR #126) get a contract that the code doesn't honor. Pre-launch posture amplifies the urgency — fewer rollback considerations than post-launch.
+- `packages/components/src/runtime/FallbackResponseStore.ts` exists (IDB→memory downgrade wrapper).
+- `packages/components/src/runtime/MemoryResponseStore.ts` exists.
+- `useInteractive.ts` uses `FallbackResponseStore` (not raw `IndexedDBResponseStore`); `UseInteractiveResult` exposes `persistence: PersistenceMode`.
+- 21 tests pass (`FallbackResponseStore.test.ts` + `MemoryResponseStore.test.ts`).
+- ADR 0007's `validation:` block lists these as `validated` evidence dated 2026-05-18.
+- Validation dashboard shows ADR 0007 as `validated` + `shipped`.
 
-**Plan**: Read the Codex audit's P1 section in detail; write a failing test that simulates IndexedDB-blocked; implement the fallback per ADR 0053's "five failure modes" §"CF5 runtime fallback"; add an integration test that exercises the fallback path. Possibly amend ADR 0053 if the audit revealed gaps in the spec.
+The Codex audit's P1.2 (docs "current source of truth" broken links + stale Astro 5 claims) was also addressed — overview.md links are correct, index.md no longer says "Nothing in @sophie/* is committed code yet", architecture.md says "Astro 6 (upgraded from Astro 5)". Both Codex P1 items are closed; the audit row in `docs/reviews/README.md` was updated in the same hygiene pass.
 
-### P2 — Renderer-consistency PR to enable function-of-content on remaining pedagogy kinds (~3–5h)
+**P1 promoted upward**: what was P2 becomes the new working P1 below.
+
+### P1 — Renderer-consistency PR to enable function-of-content on remaining pedagogy kinds (~3–5h)
 
 **What**: PR #127 shipped per-entry existence assertions only for interventions because that's the one kind where the renderer emits `id={anchor}` cleanly. Extend the pattern to definitions (currently `<details>` without id), key-insights (only `data-aside-kind="key-insight"` exposed today), and misconceptions (same shape).
 
@@ -114,7 +121,7 @@ Prioritized by leverage (impact ÷ effort), with P1 = act now.
 
 **Plan**: Audit how `<Aside>` (per-kind) currently composes its rendered DOM; add `id={anchor}` emission for definition/key-insight/misconception kinds; update the e2e spec's per-entry assertions to cover all 4 kinds; consider extending `<Callout>` into the index too (closes the 28-Callout gap).
 
-### P3 — Promote `lint:status` from informational to blocking (~30min, when ready)
+### P2 — Promote `lint:status` from informational to blocking (~30min, when ready)
 
 **What**: `pnpm lint:status` currently always exits 0. Switch to exit-1 on unknown status values; consider also exit-1 on missing `status:` for non-contract pages once the rollout completes.
 
@@ -122,7 +129,7 @@ Prioritized by leverage (impact ÷ effort), with P1 = act now.
 
 **Blocker**: Decide whether explanation/vision pages should also be required to carry `status:`. 68 pages currently no-status; that's the deferred work from ADR 0062's "decisions and explanation pages may follow in a later sweep." Two paths: (a) tag the remaining 68 first, then promote; (b) promote now with "ADRs+reference required, others optional" and tighten later.
 
-### P4 — `<Callout>` migration into the pedagogy index (~4–6h)
+### P3 — `<Callout>` migration into the pedagogy index (~4–6h)
 
 **What**: `<Callout>` family (info/tip/key-insight/roadmap/summary/warning) renders 28 `role='note'` elements in the smoke chapter today, none indexed. Either (a) index Callouts as a new pedagogy kind, or (b) judge that `<Callout>` is chrome (per its current "narrative voice" role, not OMI) and exclude from the count.
 
