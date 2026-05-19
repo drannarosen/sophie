@@ -19,6 +19,8 @@ const meta = {
         "summary",
         "key-insight",
         "misconception",
+        "deep-dive",
+        "the-more-you-know",
       ],
     },
     title: { control: { type: "text" } },
@@ -133,5 +135,51 @@ export const WithCustomTitle: Story = {
         provided, otherwise from the variant default.
       </p>
     ),
+  },
+};
+
+// ─── Session 9 P3: collapsible depth + enrichment variants ───
+
+export const DeepDive: Story = {
+  args: {
+    variant: "deep-dive",
+    title: "How the distance ladder works",
+    children: (
+      <p>
+        Parallax measures distances to nearby stars by triangulation, then
+        standard candles like Cepheid variables extend the calibration to other
+        galaxies, then redshift extends it to cosmological scales. Each rung is
+        anchored to the one below — a single failure propagates.
+      </p>
+    ),
+  },
+};
+
+export const TheMoreYouKnow: Story = {
+  args: {
+    variant: "the-more-you-know",
+    title: "Hubble's redshift puzzle",
+    children: (
+      <p>
+        When Edwin Hubble first measured galactic redshifts in the 1920s, he
+        nearly named what he found "the recession effect" instead of connecting
+        it to spacetime expansion. The conceptual leap to "space itself is
+        stretching" came years later — observation, then model.
+      </p>
+    ),
+  },
+};
+
+export const DeepDiveNoTitle: Story = {
+  args: {
+    variant: "deep-dive",
+    children: <p>Without an explicit title, the variant label is the label.</p>,
+  },
+};
+
+export const TheMoreYouKnowNoTitle: Story = {
+  args: {
+    variant: "the-more-you-know",
+    children: <p>Same fallback behavior on the enrichment variant.</p>,
   },
 };

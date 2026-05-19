@@ -19,6 +19,26 @@ export const CalloutVariant = z.enum([
   // Pairs with `<Aside kind="misconception">` (short-form) — the
   // pedagogy index discriminator is component-name + variant/kind.
   "misconception",
+  // Session 9 P3 (2026-05-19): collapsible-by-default depth +
+  // enrichment surfaces.
+  //
+  //   - `deep-dive`: technical depth on the same topic the
+  //     surrounding prose covers (derivations, edge cases, math
+  //     extensions). Pedagogically TRACKED in the index per the
+  //     ADR 0058 amendment shipped alongside this enum addition —
+  //     counting deep-dives signals chapter difficulty + scaffolding.
+  //     Renders with Telescope icon + "Deep Dive: " title prefix.
+  //
+  //   - `the-more-you-know`: adjacent enrichment (history,
+  //     connections, fun facts) that's intentionally OUTSIDE the
+  //     ADR 0058 eight-role epistemic taxonomy. Not tracked in the
+  //     pedagogy index — by design. Renders with Sparkles icon +
+  //     "The More You Know: " title prefix.
+  //
+  // Both default-collapsed via composed `<CollapsibleCard>`;
+  // print mode auto-expands via `@media print`.
+  "deep-dive",
+  "the-more-you-know",
 ]);
 export type CalloutVariant = z.infer<typeof CalloutVariant>;
 

@@ -5,6 +5,8 @@ import {
   Lightbulb,
   ListChecks,
   Milestone,
+  Sparkles,
+  Telescope,
   TriangleAlert,
   Zap,
 } from "lucide-react";
@@ -33,6 +35,31 @@ const variantTitles: Record<CalloutVariant, string> = {
   summary: "Summary",
   "key-insight": "Key insight",
   misconception: "Misconception",
+  "deep-dive": "Deep Dive",
+  "the-more-you-know": "The More You Know",
+};
+
+/**
+ * Collapsible-by-default variants (Session 9 P3): renderer wraps the
+ * body in a native `<details>` disclosure widget so readers opt-in to
+ * depth/enrichment content. Native `<details>` gives free keyboard +
+ * screen-reader semantics; print mode auto-expands via CSS
+ * (`@media print` in Callout.module.css).
+ */
+const COLLAPSIBLE_VARIANTS = new Set<CalloutVariant>([
+  "deep-dive",
+  "the-more-you-know",
+]);
+
+/**
+ * Variant-injected title prefix (Session 9 P3). The author writes the
+ * specific bit ("How the distance ladder works"); the renderer
+ * prepends the variant-owned prefix ("Deep Dive: "). When no title is
+ * supplied, falls through to `variantTitles[variant]` as before.
+ */
+const TITLE_PREFIX: Partial<Record<CalloutVariant, string>> = {
+  "deep-dive": "Deep Dive: ",
+  "the-more-you-know": "The More You Know: ",
 };
 
 // Per-variant Lucide icon (per ADR 0039 the pedagogy layer imports
@@ -55,6 +82,12 @@ const variantIcons: Record<CalloutVariant, LucideIcon> = {
   summary: ListChecks,
   "key-insight": Zap,
   misconception: CircleAlert,
+  // Session 9 P3: depth + enrichment surfaces. Telescope keeps the
+  // Sophie astronomy lineage while generalizing to "looking deeper";
+  // Sparkles matches the NBC "The More You Know" shooting-star
+  // imagery without literally being a star.
+  "deep-dive": Telescope,
+  "the-more-you-know": Sparkles,
 };
 
 export function Callout({
@@ -63,9 +96,33 @@ export function Callout({
   id,
   children,
 }: CalloutProps) {
-  const visibleTitle = title ?? variantTitles[variant];
+  const visibleTitle = resolveVisibleTitle(variant, title);
   const Icon = variantIcons[variant];
   const className = `${styles.callout} ${styles[variant] ?? ""}`.trim();
+  const isCollapsible = COLLAPSIBLE_VARIANTS.has(variant);
+
+  // Collapsible variants (deep-dive, the-more-you-know): wrap body in
+  // native <details> for free a11y + print-mode auto-expand via CSS.
+  // No JS, no persistence — for a "remembered open state across
+  // reload" follow-up, see the design note in the Session 9 P3 PR.
+  if (isCollapsible) {
+    return (
+      <aside
+        role='note'
+        aria-label={visibleTitle}
+        className={className}
+        {...(id !== undefined ? { id } : {})}
+      >
+        <details className={styles.disclosure}>
+          <summary className={styles.titleBar}>
+            <Icon className={styles.icon} size={18} aria-hidden />
+            <span className={styles.title}>{visibleTitle}</span>
+          </summary>
+          <div className={styles.body}>{children}</div>
+        </details>
+      </aside>
+    );
+  }
 
   return (
     <aside
@@ -81,6 +138,25 @@ export function Callout({
       <div className={styles.body}>{children}</div>
     </aside>
   );
+}
+
+/**
+ * Compose the visible title from variant + author-supplied title.
+ *
+ *   - For variants with a `TITLE_PREFIX` entry (deep-dive,
+ *     the-more-you-know): "Deep Dive: " + author title. When no
+ *     author title is provided, falls through to the variant default
+ *     (e.g. "Deep Dive").
+ *   - For other variants: author title overrides; variant default is
+ *     the fallback.
+ */
+function resolveVisibleTitle(
+  variant: CalloutVariant,
+  title: string | undefined
+): string {
+  const prefix = TITLE_PREFIX[variant];
+  if (prefix && title) return `${prefix}${title}`;
+  return title ?? variantTitles[variant];
 }
 
 /**

@@ -10,7 +10,7 @@ function withProfile(node: React.ReactNode) {
 }
 
 describe("<Callout> (static)", () => {
-  it("renders all seven variants with correct accessible name", () => {
+  it("renders all variants with correct accessible name", () => {
     const variants = [
       "info",
       "warning",
@@ -19,6 +19,9 @@ describe("<Callout> (static)", () => {
       "roadmap",
       "summary",
       "key-insight",
+      "misconception",
+      "deep-dive",
+      "the-more-you-know",
     ] as const;
     for (const variant of variants) {
       const { unmount } = render(
@@ -109,6 +112,90 @@ describe("<Callout> (static)", () => {
     const { container } = render(<Callout>Body.</Callout>);
     const root = container.querySelector("aside");
     expect(root?.hasAttribute("id")).toBe(false);
+  });
+
+  // ─── Session 9 P3: collapsible depth + enrichment variants ───
+
+  it("renders deep-dive with the 'Deep Dive: ' title prefix when title is provided", () => {
+    render(
+      <Callout variant='deep-dive' title='How the distance ladder works'>
+        depth body
+      </Callout>
+    );
+    expect(
+      screen.getByRole("note", {
+        name: "Deep Dive: How the distance ladder works",
+      })
+    ).toBeInTheDocument();
+  });
+
+  it("renders the-more-you-know with the 'The More You Know: ' prefix when title is provided", () => {
+    render(
+      <Callout variant='the-more-you-know' title="Hubble's redshift puzzle">
+        enrichment body
+      </Callout>
+    );
+    expect(
+      screen.getByRole("note", {
+        name: "The More You Know: Hubble's redshift puzzle",
+      })
+    ).toBeInTheDocument();
+  });
+
+  it("falls back to the variant default label when no title is provided", () => {
+    const { unmount } = render(<Callout variant='deep-dive'>body</Callout>);
+    expect(screen.getByRole("note", { name: "Deep Dive" })).toBeInTheDocument();
+    unmount();
+    render(<Callout variant='the-more-you-know'>body</Callout>);
+    expect(
+      screen.getByRole("note", { name: "The More You Know" })
+    ).toBeInTheDocument();
+  });
+
+  it("wraps deep-dive content in a native <details> disclosure (default-collapsed)", () => {
+    const { container } = render(
+      <Callout variant='deep-dive' title='Derivation'>
+        body
+      </Callout>
+    );
+    const details = container.querySelector("details");
+    expect(details).not.toBeNull();
+    // Native HTML semantics: <details> without the `open` attribute is
+    // collapsed by default.
+    expect(details?.hasAttribute("open")).toBe(false);
+  });
+
+  it("wraps the-more-you-know content in a native <details> disclosure (default-collapsed)", () => {
+    const { container } = render(
+      <Callout variant='the-more-you-know' title='Context'>
+        body
+      </Callout>
+    );
+    const details = container.querySelector("details");
+    expect(details).not.toBeNull();
+    expect(details?.hasAttribute("open")).toBe(false);
+  });
+
+  it("does NOT wrap non-collapsible variants in <details>", () => {
+    const { container } = render(
+      <Callout variant='info' title='Just a note'>
+        body
+      </Callout>
+    );
+    expect(container.querySelector("details")).toBeNull();
+  });
+
+  it("collapsible variants pass axe (native <details> brings a11y for free)", async () => {
+    for (const variant of ["deep-dive", "the-more-you-know"] as const) {
+      const { container, unmount } = render(
+        <Callout variant={variant} title='Title in context'>
+          <p>Body content for the {variant} variant.</p>
+        </Callout>
+      );
+      const results = await axe(container);
+      expect(results.violations).toEqual([]);
+      unmount();
+    }
   });
 });
 
