@@ -336,4 +336,45 @@ describe("useInteractive", () => {
     // And the value is persisted in local state.
     expect(screen.getByTestId("value").textContent).toBe("true");
   });
+
+  // ===================================================================
+  // ADR 0007 fallback contract — `persistence` field per ADR 0053 CF5
+  // ===================================================================
+  // Pre-2026-05-18 (E1 PR), the ADRs claimed `validation: validated`
+  // for the fallback contract; the cited test file did NOT exercise
+  // IDB unavailability. Codex 2026-05-18 caught the gap. The
+  // FallbackResponseStore unit tests cover the wrapper contract in
+  // isolation; this hook-level test pins that `persistence` threads
+  // through `useInteractive` correctly in both paths.
+
+  it("exposes `persistence: 'persistent'` on the happy path", async () => {
+    function PersistenceProbe() {
+      const { persistence, hydrated } = useInteractive(
+        "persistence-course",
+        "ch",
+        "probe:happy",
+        false
+      );
+      return (
+        <div>
+          <span data-testid='persistence'>{persistence}</span>
+          <span data-testid='hydrated'>{String(hydrated)}</span>
+        </div>
+      );
+    }
+    render(
+      <ProfileWrapper>
+        <PersistenceProbe />
+      </ProfileWrapper>
+    );
+    // Initial render: persistence starts at "persistent" (IDB assumed
+    // healthy until proven otherwise).
+    expect(screen.getByTestId("persistence").textContent).toBe("persistent");
+    await waitFor(() =>
+      expect(screen.getByTestId("hydrated").textContent).toBe("true")
+    );
+    // After hydration completes with IDB healthy, persistence stays
+    // "persistent".
+    expect(screen.getByTestId("persistence").textContent).toBe("persistent");
+  });
 });

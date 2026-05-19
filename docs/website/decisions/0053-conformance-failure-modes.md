@@ -9,9 +9,21 @@ tags:
   - runtime
   - lds
 validation:
-  status: unvalidated
-  last_validated_date: null
-  evidence: []
+  status: in-progress
+  last_validated_date: "2026-05-18"
+  evidence:
+    - kind: test
+      ref: packages/components/src/runtime/FallbackResponseStore.test.ts
+      date: "2026-05-18"
+      notes: "CF5 runtime fallback contract implemented + tested. `FallbackResponseStore` wraps `IndexedDBResponseStore` + `MemoryResponseStore`; engages session-only fallback on IDB failure with one-time console.warn and persistence-mode subscriber notification. 13 test cases."
+    - kind: test
+      ref: packages/components/src/runtime/useInteractive.test.tsx
+      date: "2026-05-18"
+      notes: "`UseInteractiveResult.persistence: 'persistent' | 'session'` field threaded through hook; happy-path test pins `persistent` mode on IDB-healthy paths."
+    - kind: review
+      ref: docs/reviews/2026-05-18-codex-sophie-codebase-architecture-docs-audit.md
+      date: "2026-05-18"
+      notes: "Codex adversarial review caught the prior CF5 implementation gap (ADRs cited validation evidence that did not actually exercise IDB unavailability). E1 PR closes the gap; this ADR moves to `in-progress` until CF1–CF4 also carry implementation evidence."
 ---
 
 # ADR 0053: Conformance Failure Modes
