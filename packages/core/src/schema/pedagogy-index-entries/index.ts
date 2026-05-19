@@ -42,6 +42,8 @@ export {
   FigureUsageEntrySchema,
 } from "./figure.ts";
 export {
+  type DeepDiveEntry,
+  DeepDiveEntrySchema,
   type DefinitionEntry,
   DefinitionEntrySchema,
   type KeyInsightEntry,

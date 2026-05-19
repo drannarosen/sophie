@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { PedagogyIndexSchema } from "./pedagogy-index.ts";
 import {
   ChapterEntrySchema,
+  DeepDiveEntrySchema,
   DefinitionEntrySchema,
   EquationCitationEntrySchema,
   EquationEntrySchema,
@@ -557,6 +558,85 @@ describe("MisconceptionEntrySchema", () => {
         discipline_scope: ["astronomy"],
       }).success
     ).toBe(true);
+  });
+});
+
+// ADR 0058 §R-deep-dive — <Callout variant="deep-dive"> entries are
+// tracked; <Callout variant="the-more-you-know"> is intentionally not.
+describe("DeepDiveEntrySchema", () => {
+  test("accepts the minimal valid shape", () => {
+    expect(
+      DeepDiveEntrySchema.safeParse({
+        chapter: "spoiler-alerts",
+        anchor: "distance-ladder",
+        title: "How the Distance Ladder Works",
+        body: "<p>Parallax then Cepheids.</p>",
+      }).success
+    ).toBe(true);
+  });
+
+  test("accepts an entry with an empty title (untitled deep-dives are legal)", () => {
+    expect(
+      DeepDiveEntrySchema.safeParse({
+        chapter: "ch",
+        anchor: "dd-1",
+        title: "",
+        body: "<p>x</p>",
+      }).success
+    ).toBe(true);
+  });
+
+  test("accepts an entry with an empty body (extractor warns; schema doesn't reject)", () => {
+    expect(
+      DeepDiveEntrySchema.safeParse({
+        chapter: "ch",
+        anchor: "dd-1",
+        title: "Title",
+        body: "",
+      }).success
+    ).toBe(true);
+  });
+
+  test("rejects an entry missing the chapter field", () => {
+    expect(
+      DeepDiveEntrySchema.safeParse({
+        anchor: "dd-1",
+        title: "x",
+        body: "<p>x</p>",
+      }).success
+    ).toBe(false);
+  });
+
+  test("rejects an entry missing the anchor field", () => {
+    expect(
+      DeepDiveEntrySchema.safeParse({
+        chapter: "ch",
+        title: "x",
+        body: "<p>x</p>",
+      }).success
+    ).toBe(false);
+  });
+
+  test("rejects an empty chapter slug (NonEmptyString-style)", () => {
+    expect(
+      DeepDiveEntrySchema.safeParse({
+        chapter: "",
+        anchor: "dd-1",
+        title: "x",
+        body: "<p>x</p>",
+      }).success
+    ).toBe(false);
+  });
+
+  test("rejects an empty anchor (NonEmptyString-style)", () => {
+    expect(
+      DeepDiveEntrySchema.safeParse({
+        chapter: "ch",
+        anchor: "",
+        title: "x",
+        body: "<p>x</p>",
+      }).success
+    ).toBe(false);
   });
 });
 
