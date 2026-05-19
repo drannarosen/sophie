@@ -6,7 +6,7 @@ import type {
   PedagogyIndex,
 } from "@sophie/core/schema";
 import { describe, expect, it } from "vitest";
-import { runPedagogyAudit } from "./pedagogy-audit/index.ts";
+import { runPedagogyAudit } from "../index.ts";
 
 /**
  * Tests for the NR/MR audit invariants added in PR-δ per the

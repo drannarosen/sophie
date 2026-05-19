@@ -1,9 +1,6 @@
 import { compile } from "@mdx-js/mdx";
 import { describe, expect, test } from "vitest";
-import {
-  pedagogyIndexRemarkPlugin,
-  resetIndexAccumulator,
-} from "./pedagogy-index/index.ts";
+import { pedagogyIndexRemarkPlugin, resetIndexAccumulator } from "./index.ts";
 
 /**
  * Layer 1.6 — MDX-compile round-trip. See design doc §4 + §2's pitfall

@@ -4,7 +4,7 @@ import type {
   PedagogyIndex,
 } from "@sophie/core/schema";
 import { describe, expect, it } from "vitest";
-import { runPedagogyAudit } from "./pedagogy-audit/index.ts";
+import { runPedagogyAudit } from "../index.ts";
 
 /**
  * Tests for the Intervention-family audit invariants added in PR-δ

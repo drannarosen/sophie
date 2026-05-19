@@ -17,11 +17,7 @@ import type {
   PedagogyIndex,
 } from "@sophie/core/schema";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import {
-  auditExitCode,
-  formatAuditReport,
-  runPedagogyAudit,
-} from "./pedagogy-audit/index.ts";
+import { auditExitCode, formatAuditReport, runPedagogyAudit } from "./index.ts";
 
 /**
  * Tests for the systematic build-time pedagogy audit pass (PR-C4 Task

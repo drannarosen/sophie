@@ -1,6 +1,6 @@
 import type { EquationEntry } from "@sophie/core/schema";
 import { describe, expect, test } from "vitest";
-import { extractEquationRegistryDeclaration } from "./pedagogy-index/index.ts";
+import { extractEquationRegistryDeclaration } from "../index.ts";
 
 /**
  * Tests over synthetic mdast trees, exercising the biography walker.

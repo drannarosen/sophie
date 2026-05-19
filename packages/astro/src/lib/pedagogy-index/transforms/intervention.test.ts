@@ -1,8 +1,5 @@
 import { describe, expect, test } from "vitest";
-import {
-  extractInterventions,
-  transformIntervention,
-} from "./pedagogy-index/index.ts";
+import { extractInterventions, transformIntervention } from "../index.ts";
 
 /**
  * Synthetic-mdast tests for `extractInterventions` + `transformIntervention`,
