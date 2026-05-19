@@ -43,6 +43,28 @@ project:
     LMS: Learning Management System
     a11y: accessibility
     SoTA: State of the Art
+  # Sophie ships two custom frontmatter keys that MyST doesn't know
+  # about natively and would otherwise warn `'frontmatter' extra keys
+  # ignored: validation, status` on every contract page (Codex P2):
+  #
+  #   - `validation:` block (ADR 0056) — consumed by the
+  #     validation-admonition plugin in `scripts/`.
+  #   - `status:` field (E2/E3b) — 4-value enum (shipped /
+  #     accepted-design / mixed / future-package-split) rendered as a
+  #     status banner on reference pages.
+  #
+  # MyST 1.9 doesn't expose a plugin-declared-extra-keys API; the
+  # available knob is the `valid-page-frontmatter` rule via
+  # `error_rules`. Setting severity=ignore suppresses the rule
+  # wholesale. The trade-off: we lose detection of OTHER page-
+  # frontmatter shape problems (bad date format, malformed license,
+  # etc.). Acceptable today because the validation-admonition plugin
+  # + the @sophie/core schema do their own validation on the keys we
+  # care about, and ADR-process review catches new frontmatter
+  # additions.
+  error_rules:
+    - rule: valid-page-frontmatter
+      severity: ignore
   toc:
     - file: index.md
     - file: overview.md
@@ -90,6 +112,7 @@ project:
         - file: reference/sophie-publish-schedule-cli.md
         - file: reference/course-schedule.md
         - file: reference/validation-tracker.md
+        - file: reference/audit-baseline.md
         - file: reference/visual-regression.md
     - title: Explanation
       children:

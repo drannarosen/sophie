@@ -89,6 +89,11 @@ a fifth as bonus:
   reliable across cohorts and across tabs.
 - **D — Quality bar.** Every chapter passes `sophie audit` cleanly
   before it ships; no chapter requires re-drafting after deploy.
+  ["Cleanly" is defined in reference/audit-baseline.md](reference/audit-baseline.md) —
+  0 ERRORs is mandatory; chapter-specific WARNINGs that indicate
+  incompleteness must be cleared; advisory WARNINGs/INFOs are the
+  human supervisor's call. The smoke fixture's expected baseline
+  (0 errors / 16 warnings / 9 infos) is documented there too.
 - **E (bonus) — Open-source momentum.** By spring 2027, ≥1 external
   instructor is actively using Sophie or in serious adoption
   discussion.
