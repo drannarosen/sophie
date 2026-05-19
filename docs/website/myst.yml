@@ -136,6 +136,11 @@ project:
         - file: vision/design/manim-program.md
         - file: vision/design/dark-mode-palette.md
         - file: vision/design/theme-token-audit.md
+        # Routes at `/registry-ecosystem-1/` — MyST 1.9 auto-
+        # disambiguates against decisions/0060-registry-ecosystem.md
+        # which keeps the un-prefixed `/registry-ecosystem/` URL.
+        # See the slug-collision note in the file's frontmatter.
+        - file: vision/design/registry-ecosystem.md
         - file: vision/features/index.md
         - file: vision/features/accepted.md
         - file: vision/features/backlog.md
