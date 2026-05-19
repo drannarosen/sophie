@@ -25,10 +25,10 @@ block (ADR 0056). Regenerated on every build; suppressed when
 |---|---|
 | Validated | 14 |
 | In progress | 9 |
-| Unvalidated | 62 |
+| Unvalidated | 63 |
 | Re-validation needed | 0 |
 | Missing block | 0 |
-| Total | 85 |
+| Total | 86 |
 
 ## Evidence kinds
 
@@ -117,6 +117,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | Contract | Status | Last validated | Evidence | Notes |
 |---|---|---|---|---|
 | [docs/website/reference/ai-contribution-schema.md](/ai-contribution-schema/) | unvalidated | — | — |  |
+| [docs/website/reference/audit-baseline.md](/audit-baseline/) | unvalidated | — | — |  |
 | [docs/website/reference/chapter-components.md](/chapter-components/) | unvalidated | — | — |  |
 | [docs/website/reference/cli.md](/cli/) | unvalidated | — | — |  |
 | [docs/website/reference/component-contract.md](/component-contract/) | unvalidated | — | — |  |
