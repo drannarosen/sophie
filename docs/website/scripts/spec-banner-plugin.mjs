@@ -2,21 +2,47 @@
  * MyST plugin: inject a "Forward-looking specification" admonition on
  * every page with `status: future-package-split` frontmatter (ADR 0062).
  *
- * Reads the page-level `status:` field from the source file's raw
- * frontmatter (re-read from disk — `vfile.data.frontmatter` is
- * unreliable at the document stage; the validation-admonition plugin
- * sidesteps the issue by always emitting an admonition with a
- * "missing block" fallback, but we need the actual status value to
- * gate injection). When `status === "future-package-split"`, prepends
- * a `:::{important} Forward-looking specification` admonition to the
- * doc body (after the H1 and after any ADR-metadata + validation
+ * When `status === "future-package-split"`, prepends a
+ * `:::{important} Forward-looking specification` admonition to the doc
+ * body (after the H1 and after any ADR-metadata + validation
  * admonitions where present).
  *
- * The banner content is static: every `future-package-split` page
- * gets the same prose. Authors who want a customized banner can edit
- * this file; per-page customization is intentionally not supported
- * (the banner exists precisely to give readers a *consistent* visual
- * cue across all forward-looking pages).
+ * ## Why disk-read instead of `vfile.data.frontmatter.status`
+ *
+ * At MyST 1.9's `document` stage, custom frontmatter keys are not
+ * present on `vfile.data.frontmatter`. Reproducer (run from this
+ * file's directory inside `docs/website`):
+ *
+ *   1. Temporarily log `vfile?.data?.frontmatter?.status` from inside
+ *      the transform on a page known to carry the key in YAML (e.g.
+ *      `reference/plugin-api.md` has `status: future-package-split`
+ *      on disk).
+ *   2. `rm -rf _build && npx mystmd build --html` from `docs/website/`.
+ *   3. Observe: `vfile.data.frontmatter.status` logs `undefined` on
+ *      every contract page, despite the value being parseable from
+ *      the source file via a plain YAML read.
+ *
+ * This was empirically verified on 2026-05-18 against MyST 1.9 across
+ * all 6 currently-tagged `future-package-split` pages
+ * (plugin-api, sophie-{diff,metrics,plugin,publish-schedule,refactor}-cli).
+ * The validation-admonition plugin in this same directory appears to
+ * "work" only because `buildValidationAdmonitionNode(undefined)` emits
+ * a "missing block" fallback admonition — that pattern can't apply
+ * here because the banner must be gated on a specific value, not
+ * always-emitted.
+ *
+ * Disk-read is the same pattern the validation-admonition plugin uses
+ * for `extractLastRevisedDate` (Revisions-section date — also not in
+ * `vfile.data`). When MyST 1.10+ exposes custom keys through a stable
+ * plugin API, switch and remove the `readStatusFromDisk` helper.
+ *
+ * ## Authoring
+ *
+ * Banner content is static: every `future-package-split` page gets
+ * the same prose. Authors who want a customized banner can edit this
+ * file; per-page customization is intentionally not supported (the
+ * banner exists precisely to give readers a *consistent* visual cue
+ * across all forward-looking pages).
  *
  * Honors `SOPHIE_DOCS_INCLUDE_SPEC_BANNERS=0` — when set, the
  * admonition is skipped, parallel to the validation-admonition
