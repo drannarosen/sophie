@@ -5,6 +5,7 @@ tags:
   - broadcast
   - concurrency
   - hardening
+status: shipped
 validation:
   status: validated
   last_validated_date: "2026-05-16"

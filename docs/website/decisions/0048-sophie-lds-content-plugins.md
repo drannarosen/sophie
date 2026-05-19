@@ -7,6 +7,7 @@ tags:
   - commons
   - cross-course
   - lds
+status: future-package-split
 validation:
   status: in-progress
   last_validated_date: "2026-05-16"

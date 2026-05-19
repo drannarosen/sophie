@@ -6,6 +6,7 @@ tags:
   - dx
   - testing
   - visual-regression
+status: accepted-design
 validation:
   status: unvalidated
   last_validated_date: null
