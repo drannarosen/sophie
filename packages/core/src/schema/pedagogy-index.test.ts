@@ -911,6 +911,34 @@ describe("PedagogyIndexSchema", () => {
     }
   });
 
+  // PR-B (P3 deep-dive tracking) — deepDives optional with default [].
+  test("deepDives defaults to [] when absent (forward-compat)", () => {
+    const result = PedagogyIndexSchema.safeParse(emptyIndex);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.deepDives).toEqual([]);
+    }
+  });
+
+  test("accepts a populated deepDives array", () => {
+    const result = PedagogyIndexSchema.safeParse({
+      ...emptyIndex,
+      deepDives: [
+        {
+          chapter: "spoiler-alerts",
+          anchor: "distance-ladder",
+          title: "How the Distance Ladder Works",
+          body: "<p>Parallax → Cepheids → SN Ia.</p>",
+        },
+      ],
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.deepDives).toHaveLength(1);
+      expect(result.data.deepDives[0]?.anchor).toBe("distance-ladder");
+    }
+  });
+
   test("accepts a populated multiReps array", () => {
     const result = PedagogyIndexSchema.safeParse({
       ...emptyIndex,
