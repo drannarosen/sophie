@@ -105,18 +105,31 @@ export function Callout({
   // native <details> for free a11y + print-mode auto-expand via CSS.
   // No JS, no persistence — for a "remembered open state across
   // reload" follow-up, see the design note in the Session 9 P3 PR.
+  //
+  // a11y: outer <aside> uses aria-labelledby (not aria-label) pointing
+  // at the summary's title span, so NVDA/JAWS resolve both references
+  // to the same content and de-duplicate the announcement. Without
+  // this, landmark navigation announces the title and then the summary
+  // announces it again on focus. Per 2026-05-19 architecture audit P1
+  // #1. Prefer the author-supplied id derivative when present (stable
+  // across renders) and fall back to React's useId() (unique-but-
+  // hydration-safe) when no id is provided.
+  const generatedTitleId = useId();
   if (isCollapsible) {
+    const titleSpanId = id !== undefined ? `${id}-title` : generatedTitleId;
     return (
       <aside
         role='note'
-        aria-label={visibleTitle}
+        aria-labelledby={titleSpanId}
         className={className}
         {...(id !== undefined ? { id } : {})}
       >
         <details className={styles.disclosure}>
           <summary className={styles.titleBar}>
             <Icon className={styles.icon} size={18} aria-hidden />
-            <span className={styles.title}>{visibleTitle}</span>
+            <span id={titleSpanId} className={styles.title}>
+              {visibleTitle}
+            </span>
           </summary>
           <div className={styles.body}>{children}</div>
         </details>
