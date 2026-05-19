@@ -1,5 +1,6 @@
 import type {
   ChapterEntry,
+  DeepDiveEntry,
   EquationCitationEntry,
   EquationEntry,
   FigureRegistryEntry,
@@ -1005,5 +1006,94 @@ describe("asPedagogyIndex (PR-C4 collections)", () => {
     expect(index.modules).toHaveLength(1);
     expect(index.objectives).toHaveLength(1);
     expect(index.inlineRefUsages).toHaveLength(1);
+  });
+});
+
+describe("indexAccumulator deepDives (cross-chapter)", () => {
+  const dd = (overrides: Partial<DeepDiveEntry> = {}): DeepDiveEntry => ({
+    chapter: "dd-ch-a",
+    anchor: "default-anchor",
+    title: "Default Title",
+    body: "<p>body</p>",
+    ...overrides,
+  });
+
+  test("addDeepDives populates deepDives collection accessible via asPedagogyIndex", () => {
+    indexAccumulator.addDeepDives([
+      dd({ chapter: "dd-pop-a", anchor: "alpha", title: "Alpha" }),
+      dd({ chapter: "dd-pop-b", anchor: "beta", title: "Beta" }),
+    ]);
+
+    const index = indexAccumulator.asPedagogyIndex();
+    const titles = index.deepDives
+      .filter((d) => d.chapter === "dd-pop-a" || d.chapter === "dd-pop-b")
+      .map((d) => d.title)
+      .sort();
+    expect(titles).toEqual(["Alpha", "Beta"]);
+  });
+
+  test("D2 — throws on cross-chapter explicit-id anchor collision", () => {
+    indexAccumulator.addDeepDives([
+      dd({ chapter: "dd-d2-a", anchor: "shared-explicit-id" }),
+    ]);
+
+    expect(() =>
+      indexAccumulator.addDeepDives([
+        dd({ chapter: "dd-d2-b", anchor: "shared-explicit-id" }),
+      ])
+    ).toThrow(/D2 invariant/);
+    expect(() =>
+      indexAccumulator.addDeepDives([
+        dd({ chapter: "dd-d2-b", anchor: "shared-explicit-id" }),
+      ])
+    ).toThrow(/dd-d2-a/);
+    expect(() =>
+      indexAccumulator.addDeepDives([
+        dd({ chapter: "dd-d2-b", anchor: "shared-explicit-id" }),
+      ])
+    ).toThrow(/dd-d2-b/);
+  });
+
+  test("D2 — auto-anchors ('dd-N') do NOT trigger cross-chapter collision", () => {
+    indexAccumulator.addDeepDives([
+      dd({ chapter: "dd-auto-a", anchor: "dd-1" }),
+    ]);
+    expect(() =>
+      indexAccumulator.addDeepDives([
+        dd({ chapter: "dd-auto-b", anchor: "dd-1" }),
+      ])
+    ).not.toThrow();
+    const index = indexAccumulator.asPedagogyIndex();
+    expect(
+      index.deepDives.filter(
+        (d) => d.chapter === "dd-auto-a" || d.chapter === "dd-auto-b"
+      )
+    ).toHaveLength(2);
+  });
+
+  test("D2 — explicit id 'dd-orbital' (non-numeric) DOES trigger cross-chapter collision", () => {
+    indexAccumulator.addDeepDives([
+      dd({ chapter: "dd-explicit-a", anchor: "dd-orbital" }),
+    ]);
+    expect(() =>
+      indexAccumulator.addDeepDives([
+        dd({ chapter: "dd-explicit-b", anchor: "dd-orbital" }),
+      ])
+    ).toThrow(/D2 invariant/);
+  });
+
+  test("clearChapter drops deep-dive entries for the chapter", () => {
+    indexAccumulator.addDeepDives([
+      dd({ chapter: "dd-clear-a", anchor: "a-entry" }),
+      dd({ chapter: "dd-clear-b", anchor: "b-entry" }),
+    ]);
+    indexAccumulator.clearChapter("dd-clear-a");
+    const index = indexAccumulator.asPedagogyIndex();
+    expect(
+      index.deepDives.filter((d) => d.chapter === "dd-clear-a")
+    ).toHaveLength(0);
+    expect(
+      index.deepDives.filter((d) => d.chapter === "dd-clear-b")
+    ).toHaveLength(1);
   });
 });

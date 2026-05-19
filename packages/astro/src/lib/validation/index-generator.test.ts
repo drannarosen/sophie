@@ -34,6 +34,7 @@ function makeIndex(partial: Partial<PedagogyIndex> = {}): PedagogyIndex {
     extractorFindings: [],
     multiReps: [],
     interventions: [],
+    deepDives: [],
     ...partial,
   };
 }

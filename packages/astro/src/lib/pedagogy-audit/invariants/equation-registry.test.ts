@@ -39,6 +39,7 @@ function emptyIndex(): PedagogyIndex {
     extractorFindings: [],
     multiReps: [],
     interventions: [],
+    deepDives: [],
   };
 }
 

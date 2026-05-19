@@ -78,6 +78,8 @@ consumers see a uniform read.
 | Component / surface                          | Implicit role     | Signal                                           |
 | -------------------------------------------- | ----------------- | ------------------------------------------------ |
 | `<Callout variant="misconception">`          | `misconception`   | `variant="misconception"`                        |
+| `<Callout variant="deep-dive">`              | (inherited)       | tracked in `PedagogyIndex.deepDives` (R-dd)      |
+| `<Callout variant="the-more-you-know">`      | (none)            | enrichment; rendered but NOT indexed (R-dd)      |
 | `<Callout variant="key-insight">`            | (none)            | chrome / pedagogy-emphasis, not an epistemic role |
 | `<Callout variant="warning">`                | (none)            | chrome                                           |
 | `<Callout variant="tip">`                    | (none)            | chrome                                           |
@@ -116,6 +118,19 @@ When a row says *"(none)"*, the component is **chrome or
 teaching-move**, not epistemic content. The pedagogy-index
 extractor does not record an `epistemicRole` for chrome rows; AI
 authoring should not target chrome rows with role-aware prompts.
+
+When a row says *"(inherited)"*, the component is **tracked but
+inherits its epistemic role from the surrounding pedagogical
+context** (mirrors the ADR 0046 `<CommonMisuse>` "linked container"
+pattern). The `<Callout variant="deep-dive">` surface scaffolds the
+chapter's reasoning with technical depth, derivation, or worked
+detail; a math-derivation deep-dive carries `model`; a mechanism
+deep-dive carries `inference`. `<Callout variant="the-more-you-know">`
+is the deliberate counter-example: enrichment content (history, fun
+facts, anecdotes) sits **outside** the eight-role taxonomy by design
+and is rendered but NOT indexed. See
+[ADR 0058 §R-deep-dive](../decisions/0058-epistemic-component-contract.md)
+(the "R-dd" rows in the lookup table) for the boundary rationale.
 
 When a row says *"(slot-dependent)"* or *"(caption-dependent)"*,
 the role lives on the *content inside* the component, not the

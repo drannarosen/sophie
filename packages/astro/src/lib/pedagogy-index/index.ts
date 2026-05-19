@@ -28,6 +28,7 @@ export {
   resetIndexAccumulator,
 } from "./accumulator.ts";
 export { buildBiographyFromChildren } from "./extractors/biography.ts";
+export { extractDeepDives } from "./extractors/deep-dives.ts";
 export { extractDefinitions } from "./extractors/definitions.ts";
 export { extractEquationCitations } from "./extractors/equation-citations.ts";
 export { extractEquationRegistryDeclaration } from "./extractors/equation-registry.ts";

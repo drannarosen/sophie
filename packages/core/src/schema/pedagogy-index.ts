@@ -5,6 +5,7 @@ import { MultiRepIndexEntrySchema } from "./multirep.ts";
 import {
   ChapterEntrySchema,
   ContractValidationEntrySchema,
+  DeepDiveEntrySchema,
   DefinitionEntrySchema,
   EquationCitationEntrySchema,
   EquationEntrySchema,
@@ -36,6 +37,7 @@ import {
  * | Key insight   | `ki-`   | auto: `ki-${counter}`                                     |
  * | Figure        | `fig-`  | auto: `fig-${slug(name)}-${counter}`                      |
  * | Misconception | `misc-` | auto: `misc-${counter}` (auto only)                       |
+ * | Deep dive     | `dd-`   | id > slug(title) > auto: `dd-${counter}`                  |
  * | Chapter       | `ch-`   | passthrough chapter slug                                  |
  * | Objective     | `lo-`   | passthrough author id                                     |
  *
@@ -70,6 +72,14 @@ export const PedagogyIndexSchema = z.object({
   /** Per-chapter usage records, populated by the extractor (renamed from `figures` in PR-C3). */
   figureUsages: z.array(FigureUsageEntrySchema).readonly(),
   misconceptions: z.array(MisconceptionEntrySchema).readonly(),
+  /**
+   * Per-chapter `<Callout variant="deep-dive">` entries (ADR 0058
+   * §R-deep-dive). Populated by `extractDeepDives`. Optional with
+   * default `[]` so consumer apps on the pre-PR-B path keep working.
+   * The-more-you-know callouts are intentionally NOT included here —
+   * enrichment content sits outside the eight-role taxonomy.
+   */
+  deepDives: z.array(DeepDiveEntrySchema).readonly().default([]),
   /** Consumer-app-owned chapter metadata, forwarded from `getCollection('chapters')`. */
   chapters: z.array(ChapterEntrySchema).readonly(),
   /** Consumer-app-owned module metadata, forwarded from `getCollection('modules')`. */

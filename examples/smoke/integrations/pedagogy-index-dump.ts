@@ -48,7 +48,8 @@ export function pedagogyIndexDumpIntegration(): AstroIntegration {
           index.keyInsights.length +
           index.misconceptions.length +
           index.interventions.length +
-          index.figureUsages.length;
+          index.figureUsages.length +
+          index.deepDives.length;
         logger.info(
           `Wrote pedagogy-index snapshot (${total} pedagogy entries) to ${outPath}`
         );

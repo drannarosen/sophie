@@ -3,15 +3,16 @@ import { NonEmptyString, Slug } from "../primitives.ts";
 
 /**
  * Inline-content pedagogy entries — definitions, key-insights,
- * misconceptions. The three roles share an authoring shape (extracted
- * from `<Aside kind="X">` flow elements with optional title/id and
- * required body) and live together so the AI-authoring template
- * surface is one file.
+ * misconceptions, deep-dives. The four roles share an authoring shape
+ * (extracted from `<Aside kind="X">` or `<Callout variant="X">` flow
+ * elements with optional title/id and required body) and live together
+ * so the AI-authoring template surface is one file.
  *
- * ADR 0058 §2 (epistemic component contract) covers all three:
+ * ADR 0058 §2 (epistemic component contract) + §R-deep-dive cover all four:
  *   - definition  → observable / inference (terminological grounding)
  *   - key-insight → inference (the "so what" of a chapter)
  *   - misconception → uncertainty (the durable wrong-model alert)
+ *   - deep-dive → role-inherited from surrounding container (per §R-deep-dive)
  */
 
 /**
@@ -84,3 +85,32 @@ export const MisconceptionEntrySchema = z.object({
   discipline_scope: z.array(NonEmptyString).optional(),
 });
 export type MisconceptionEntry = z.infer<typeof MisconceptionEntrySchema>;
+
+/**
+ * A deep-dive callout (`<Callout variant="deep-dive">`) — extracted
+ * in PR-B (ADR 0058 §R-deep-dive, 2026-05-19). The deep-dive surface
+ * scaffolds the surrounding chapter's reasoning with technical depth,
+ * derivation, or worked detail; its epistemic role is *inherited
+ * from the surrounding pedagogical context* rather than fixed on the
+ * component itself (mirrors the ADR 0046 `<CommonMisuse>` "linked
+ * container" pattern).
+ *
+ * Title is required by the schema but may be empty (the `<Callout>`
+ * renderer falls back to the "Deep Dive" variant default when no
+ * title is supplied). Body is the pre-rendered HTML of the callout's
+ * children; may be empty (the extractor emits a warning in
+ * non-production builds, but the schema does not reject).
+ *
+ * `<Callout variant="the-more-you-know">` is intentionally NOT tracked
+ * — enrichment content sits outside the eight-role taxonomy by design.
+ * The extractor does not emit entries for those callouts.
+ */
+export const DeepDiveEntrySchema = z.object({
+  chapter: Slug,
+  anchor: NonEmptyString,
+  /** Authored title. May be empty (renderer falls back to "Deep Dive" default). */
+  title: z.string(),
+  /** Pre-rendered HTML of the callout body. May be empty. */
+  body: z.string(),
+});
+export type DeepDiveEntry = z.infer<typeof DeepDiveEntrySchema>;

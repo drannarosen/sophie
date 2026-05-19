@@ -2,6 +2,7 @@ import type {
   AuditFinding,
   ChapterEntry,
   ContractValidationEntry,
+  DeepDiveEntry,
   DefinitionEntry,
   EquationCitationEntry,
   EquationEntry,
@@ -126,6 +127,14 @@ interface GlobalIndexState {
    * guard against future refactors.
    */
   interventions: Map<string, InterventionEntry>;
+  /**
+   * Per-chapter `<Callout variant="deep-dive">` entries (ADR 0058
+   * §R-deep-dive). Keyed by `${chapter}#${anchor}` so two chapters
+   * can each have a `dd-1` auto-anchor without collision. Populated
+   * by `extractDeepDives`. The-more-you-know callouts intentionally
+   * NOT tracked here.
+   */
+  deepDives: Map<string, DeepDiveEntry>;
 }
 
 function getGlobalState(): GlobalIndexState {
@@ -147,6 +156,7 @@ function getGlobalState(): GlobalIndexState {
       extractorFindings: [],
       multiReps: new Map(),
       interventions: new Map(),
+      deepDives: new Map(),
     };
   }
   return g[GLOBAL_KEY];
@@ -207,6 +217,11 @@ class IndexAccumulator {
     for (const [key, entry] of state.interventions) {
       if (entry.chapter === chapterSlug) {
         state.interventions.delete(key);
+      }
+    }
+    for (const [key, entry] of state.deepDives) {
+      if (entry.chapter === chapterSlug) {
+        state.deepDives.delete(key);
       }
     }
   }
@@ -528,6 +543,45 @@ class IndexAccumulator {
   }
 
   /**
+   * Add a chapter's extracted deep-dives. D2 invariant: explicit-id-
+   * derived anchors must be unique across chapters. Auto-anchors of
+   * the shape `dd-${N}` are chapter-scoped (each chapter restarts its
+   * counter at 1) and are NOT subject to the cross-chapter check.
+   *
+   * Two-pass shape mirroring `addMisconceptions` (M2): validate the
+   * whole batch BEFORE mutating so a collision in entry N leaves
+   * entries 0..N-1 unwritten.
+   *
+   * Keyed by `${chapter}#${anchor}` so the same anchor can coexist
+   * across chapters when permitted (auto-anchors). The intra-chapter
+   * uniqueness check (D1) lives in `extractDeepDives` before this
+   * method ever runs.
+   */
+  addDeepDives(entries: ReadonlyArray<DeepDiveEntry>): void {
+    const state = getGlobalState();
+    // D2: cross-chapter slug collision check for EXPLICIT id-derived
+    // anchors only. `/^dd-\d+$/` matches only the literal auto-anchor
+    // shape (`dd-1`, `dd-42`); explicit ids like `dd-orbital` or
+    // `distance-ladder` still validate.
+    for (const entry of entries) {
+      if (/^dd-\d+$/.test(entry.anchor)) continue;
+      for (const existing of state.deepDives.values()) {
+        if (
+          existing.chapter !== entry.chapter &&
+          existing.anchor === entry.anchor
+        ) {
+          throw new Error(
+            `Deep-dive anchor "${entry.anchor}" defined in multiple chapters: "${existing.chapter}" and "${entry.chapter}". (D2 invariant.) Resolution: change one of the \`id\` props.`
+          );
+        }
+      }
+    }
+    for (const entry of entries) {
+      state.deepDives.set(`${entry.chapter}#${entry.anchor}`, entry);
+    }
+  }
+
+  /**
    * Snapshot the current accumulator state as a PedagogyIndex.
    * Equations populate from PR-C2 onward; keyInsights, figureUsages,
    * and misconceptions populate from PR-C3 onward. `figureRegistry`
@@ -553,6 +607,7 @@ class IndexAccumulator {
       extractorFindings: state.extractorFindings,
       multiReps: Array.from(state.multiReps.values()),
       interventions: Array.from(state.interventions.values()),
+      deepDives: Array.from(state.deepDives.values()),
     };
   }
 }
@@ -585,4 +640,5 @@ export function resetIndexAccumulator(): void {
   state.extractorFindings = [];
   state.multiReps.clear();
   state.interventions.clear();
+  state.deepDives.clear();
 }

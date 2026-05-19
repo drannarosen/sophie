@@ -70,7 +70,7 @@ This page is the chapter author's quick reference.
 | `<Aside kind="key-insight">` | Source for `PedagogyIndex.keyInsights` (short variant). |
 | `<Aside kind="misconception">` | Source for `PedagogyIndex.misconceptions` (short variant). |
 | `<Aside kind="note">` / `kind="digression">` | Non-indexed marginal asides; no pedagogy-index role. |
-| `<Callout>` (and `variant="key-insight"` / `variant="misconception"`) | Static variant ships pure-display; the `key-insight` and `misconception` variants ALSO feed the index (long-form). |
+| `<Callout>` (and `variant="key-insight"` / `variant="misconception"` / `variant="deep-dive"`) | Static variant ships pure-display; the `key-insight` and `misconception` variants ALSO feed the index (long-form). `variant="deep-dive"` feeds `PedagogyIndex.deepDives` per [ADR 0058 §R-deep-dive](../decisions/0058-epistemic-component-contract.md); `variant="the-more-you-know"` is intentionally NOT tracked (taxonomy boundary). |
 | `<Figure>` | Source for `PedagogyIndex.figureUsages` (per-chapter record of where each registry figure appears). Resolves `name` against the consumer-supplied `figureRegistry`. |
 | `<KeyEquation refId="...">` | Chapter-side citation of a registry equation per [ADR 0060](../decisions/0060-registry-ecosystem.md). `refId` resolves to a registry MDX entry at `src/content/equations/<refId>.mdx`. Body of the registry MDX carries the biography children (Observable / Assumption / BreaksWhen / Units / CommonMisuse / DerivationStep) + frontmatter (`title`, `tex`, `symbols`, `constants`, `related`); the chapter `<KeyEquation>` block accepts optional framing prose children for chapter-specific context. Optional `showDerivation` (expand derivation steps inline) and `hideRelated` (suppress related-equations footer) flags. Citations populate `PedagogyIndex.equationCitations`; declarations populate `PedagogyIndex.equations`. |
 | `<Objective>` | Pure-display primitive. Only meaningful as a child of `<LearningObjectives>`; the remark extractor walks it during MDX parse to populate `PedagogyIndex.objectives`. |
@@ -328,6 +328,8 @@ time, not at runtime.
 | A flagged misconception (multi-paragraph) | `<Callout variant="misconception">` |
 | A flagged key insight (1–2 sentences) | `<Aside kind="key-insight">` |
 | A flagged key insight (multi-paragraph) | `<Callout variant="key-insight">` |
+| Optional technical depth on the chapter's topic (derivation, mechanism, worked detail) — collapsible | `<Callout variant="deep-dive" id="..." title="...">` (tracked in `PedagogyIndex.deepDives` per [ADR 0058 §R-deep-dive](../decisions/0058-epistemic-component-contract.md)) |
+| Adjacent enrichment (history, cultural connections, fun facts) — collapsible | `<Callout variant="the-more-you-know" title="...">` (intentionally NOT tracked — outside the eight-role taxonomy per ADR 0058 §R-deep-dive) |
 | An image with caption + credit | `<Figure>` (registry-resolved) |
 | A named equation block citing a registry entry | `<KeyEquation refId="X">` (registry-resolved per [ADR 0060](../decisions/0060-registry-ecosystem.md)) |
 | Inline reference to a defined term | `<GlossaryTerm name="X">term</GlossaryTerm>` |

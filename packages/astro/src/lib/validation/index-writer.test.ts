@@ -43,6 +43,7 @@ function makeEmptyIndex(): PedagogyIndex {
     extractorFindings: [],
     multiReps: [],
     interventions: [],
+    deepDives: [],
   };
 }
 

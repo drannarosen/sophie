@@ -185,6 +185,44 @@ describe("<Callout> (static)", () => {
     expect(container.querySelector("details")).toBeNull();
   });
 
+  // Per 2026-05-19 architecture audit P1 #1: the collapsible branch
+  // previously set `aria-label={visibleTitle}` on the outer <aside>
+  // AND rendered the same title inside <summary>, causing NVDA/JAWS
+  // to read the title twice (once on landmark navigation, once when
+  // the summary gains focus). Fix: use aria-labelledby pointing at
+  // the summary's title span — screen readers de-duplicate when both
+  // references resolve to the same content.
+  it("collapsible variants link aria-labelledby to the summary title (no duplicate aria-label)", () => {
+    const { container } = render(
+      <Callout variant='deep-dive' title='Hydrogen line'>
+        body
+      </Callout>
+    );
+    const aside = container.querySelector("aside");
+    expect(aside).not.toBeNull();
+    // Outer <aside> must NOT carry aria-label (would double-announce
+    // alongside the summary text).
+    expect(aside?.hasAttribute("aria-label")).toBe(false);
+    // Outer <aside> must carry aria-labelledby pointing at a real id.
+    const labelledBy = aside?.getAttribute("aria-labelledby");
+    expect(labelledBy).toBeTruthy();
+    if (labelledBy) {
+      const target = container.querySelector(`#${labelledBy}`);
+      expect(target).not.toBeNull();
+      expect(target?.textContent).toBe("Deep Dive: Hydrogen line");
+    }
+  });
+
+  it("non-collapsible variants keep aria-label (no inner summary to take over)", () => {
+    const { container } = render(
+      <Callout variant='info' title='Just a note'>
+        body
+      </Callout>
+    );
+    const aside = container.querySelector("aside");
+    expect(aside?.getAttribute("aria-label")).toBe("Just a note");
+  });
+
   it("collapsible variants pass axe (native <details> brings a11y for free)", async () => {
     for (const variant of ["deep-dive", "the-more-you-know"] as const) {
       const { container, unmount } = render(

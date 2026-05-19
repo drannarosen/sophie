@@ -80,6 +80,8 @@ export {
   ChapterEntrySchema,
   type ContractValidationEntry,
   ContractValidationEntrySchema,
+  type DeepDiveEntry,
+  DeepDiveEntrySchema,
   type DefinitionEntry,
   DefinitionEntrySchema,
   type EquationCitationEntry,

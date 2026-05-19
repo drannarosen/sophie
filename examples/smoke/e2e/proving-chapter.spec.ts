@@ -33,6 +33,7 @@ const index = JSON.parse(indexJson) as {
   interventions: { chapter: string; anchor: string }[];
   figureUsages: { chapter: string; anchor: string }[];
   equationCitations: { chapter: string; anchor: string }[];
+  deepDives: { chapter: string; anchor: string; title: string }[];
 };
 
 const chapterEntries = {
@@ -46,6 +47,7 @@ const chapterEntries = {
   equationCitations: index.equationCitations.filter(
     (e) => e.chapter === CHAPTER_SLUG
   ),
+  deepDives: index.deepDives.filter((d) => d.chapter === CHAPTER_SLUG),
 };
 
 /**
@@ -86,13 +88,9 @@ test.describe("Phase 0 vertical-slice acceptance — spoiler-alerts chapter", ()
     //
     //   role="note" total = 40 = 32 <Callout> (8 info / 13 tip /
     //   1 key-insight / 3 roadmap / 2 summary / 1 warning / 4 deep-dive)
-    //   + 8 <Intervention>. The deep-dive variant joined as part of
-    //   the Session 9 P3 migration (PR-A): the four CollapsibleCards
-    //   in the smoke chapter migrated to <Callout variant="deep-dive">,
-    //   each rendering as <aside role="note"> with a native <details>
-    //   disclosure inside. Pedagogy-index tracking for deep-dive
-    //   lands in PR-B; this literal remains as a sanity gate until
-    //   then.
+    //   + 8 <Intervention>. Per-deep-dive existence is now enforced
+    //   via the chapterEntries.deepDives loop below (PR-B); this
+    //   aggregate literal remains as a cross-cutting sanity gate.
     await expect(page.locator("[role='note']")).toHaveCount(40);
     // figureUsages.length − collapsed-card unmounts. Function-of-
     // content: when a <Figure>/<FigureRef> is added or removed in
@@ -167,6 +165,16 @@ test.describe("Phase 0 vertical-slice acceptance — spoiler-alerts chapter", ()
       await expect(
         page.locator(`#${iv.anchor}`),
         `Intervention should be rendered in DOM at #${iv.anchor}`
+      ).toHaveCount(1);
+    }
+    // Deep dives (PR-B): each <Callout variant="deep-dive"> renders
+    // with id=<anchor> on the <aside> element. Extractor + renderer
+    // share the same explicit-id-first precedence; the spoiler-alerts
+    // chapter's 4 deep-dives all carry explicit ids.
+    for (const dd of chapterEntries.deepDives) {
+      await expect(
+        page.locator(`#${dd.anchor}`),
+        `Deep dive "${dd.title}" should be rendered in DOM at #${dd.anchor}`
       ).toHaveCount(1);
     }
 

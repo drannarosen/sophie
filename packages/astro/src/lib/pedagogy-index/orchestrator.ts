@@ -6,6 +6,7 @@ import {
 import type { Root } from "mdast";
 import { parse as parseYaml } from "yaml";
 import { indexAccumulator } from "./accumulator.ts";
+import { extractDeepDives } from "./extractors/deep-dives.ts";
 import { extractDefinitions } from "./extractors/definitions.ts";
 import { extractEquationCitations } from "./extractors/equation-citations.ts";
 import { extractEquationRegistryDeclaration } from "./extractors/equation-registry.ts";
@@ -162,6 +163,10 @@ export function pedagogyIndexRemarkPlugin(
     indexAccumulator.addMisconceptions(
       extractMisconceptions(tree, chapterSlug)
     );
+    // ADR 0058 §R-deep-dive — <Callout variant="deep-dive"> tracking
+    // (PR-B follow-up to PR-A's renderer surface). The-more-you-know
+    // callouts are intentionally NOT walked.
+    indexAccumulator.addDeepDives(extractDeepDives(tree, chapterSlug));
     indexAccumulator.addObjectives(extractObjectives(tree, chapterSlug));
     indexAccumulator.addInlineRefUsages(
       extractInlineRefUsages(tree, chapterSlug)
