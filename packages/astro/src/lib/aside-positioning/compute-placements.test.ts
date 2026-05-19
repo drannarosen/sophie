@@ -1,11 +1,10 @@
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { describe, expect, test } from "vitest";
 import {
   type Anchor,
   type AsidePlacement,
   computeAsidePositions,
-  installAsidePositioning,
   type PlacementInput,
-} from "./aside-positioning";
+} from "./compute-placements.ts";
 
 /**
  * Pure-algorithm tests for the docking layout math. The full
@@ -16,7 +15,7 @@ import {
  *
  * Here we test the deterministic pure function
  * `computeAsidePositions(asides, toc, gap)` against synthetic
- * inputs, plus the idempotency guard on `installAsidePositioning`.
+ * inputs.
  */
 
 const GAP = 16;
@@ -134,56 +133,5 @@ describe("computeAsidePositions", () => {
       GAP
     );
     expect(result.map((p) => p.top)).toEqual([100, 116]);
-  });
-});
-
-describe("installAsidePositioning lifecycle", () => {
-  beforeEach(() => {
-    (
-      window as Window & { __sophieAsideDockBound?: boolean }
-    ).__sophieAsideDockBound = undefined;
-  });
-
-  afterEach(() => {
-    (
-      window as Window & { __sophieAsideDockBound?: boolean }
-    ).__sophieAsideDockBound = undefined;
-  });
-
-  test("first install sets the window guard", () => {
-    const cleanup = installAsidePositioning();
-    expect(
-      (window as Window & { __sophieAsideDockBound?: boolean })
-        .__sophieAsideDockBound
-    ).toBe(true);
-    cleanup();
-  });
-
-  test("second install is a no-op (idempotent via window guard)", () => {
-    const addListenerSpy = vi.spyOn(window, "addEventListener");
-    const first = installAsidePositioning();
-    const beforeSecond = addListenerSpy.mock.calls.length;
-    const second = installAsidePositioning();
-    // Second call should not register new listeners on window.
-    expect(addListenerSpy.mock.calls.length).toBe(beforeSecond);
-    first();
-    second();
-    addListenerSpy.mockRestore();
-  });
-
-  test("cleanup resets the window guard so re-install works", () => {
-    const cleanup = installAsidePositioning();
-    cleanup();
-    expect(
-      (window as Window & { __sophieAsideDockBound?: boolean })
-        .__sophieAsideDockBound
-    ).toBe(false);
-    // Re-install must work.
-    const cleanup2 = installAsidePositioning();
-    expect(
-      (window as Window & { __sophieAsideDockBound?: boolean })
-        .__sophieAsideDockBound
-    ).toBe(true);
-    cleanup2();
   });
 });

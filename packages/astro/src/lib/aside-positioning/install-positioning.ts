@@ -1,92 +1,33 @@
+import {
+  type Anchor,
+  computeAsidePositions,
+  type PlacementInput,
+} from "./compute-placements.ts";
+
 /**
- * Aside positioning — vanilla-JS layout adapter for `<Aside>`
- * elements rendered by `@sophie/components/Aside`.
+ * Aside positioning — DOM lifecycle adapter.
  *
  * Per the PR 6 design doc (2026-05-13), `<Aside>` renders inline at
- * its MDX position as a `<details>` element. This module:
+ * its MDX position as a `<details>` element. This module installs the
+ * client-side docking lifecycle that drives placement:
  *
  *   1. In docked mode (desktop ≥768px AND data-view-mode="default"),
- *      computes absolute `top` values for each aside such that the
- *      aside docks alongside its anchor paragraph in the right
- *      column area, clamped below the ToC and cascaded to avoid
- *      overlap between asides.
+ *      computes absolute `top` values via the pure
+ *      `computeAsidePositions` from `./compute-placements.ts` and
+ *      applies them, opening each `<details>` imperatively.
  *
  *   2. In inline-fallback mode (mobile OR view-mode=focused|wide),
  *      clears the `top` values so CSS can render asides as inline
  *      collapsed `<details>`.
  *
- *   3. Sets the `<details>` `open` attribute imperatively in docked
- *      mode (CSS cannot toggle a boolean DOM attribute), and clears
- *      it on the way back to inline mode.
+ * Listeners: `window.resize` (debounced via rAF), a MutationObserver
+ * on `<html>` for `data-view-mode`/`data-sidebar` attributes, and a
+ * MutationObserver on `.sophie-content` for DOM changes from
+ * interactive components. Idempotent via a window-level guard
+ * matching the pattern in theme.ts:78 / view-mode.ts.
  *
- * Pure computation is exported separately (`computeAsidePositions`)
- * for deterministic unit testing. Lifecycle helpers
- * (`installAsidePositioning`) wire up the DOM event sources
- * (resize, view-mode subscription, MutationObserver). Per ADR 0032
- * this is vanilla JS, not React.
+ * Per ADR 0032 this is vanilla JS, not React.
  */
-
-export interface PlacementInput {
-  /** Document-coordinate top of the aside's anchor paragraph (offsetTop). */
-  anchorTop: number;
-  /** Aside's current rendered height in px. */
-  height: number;
-}
-
-export interface AsidePlacement {
-  /** Resolved top in document coordinates (offsetTop on the aside). */
-  top: number;
-  /** Echoed back from input — convenience for the next cascade step. */
-  height: number;
-}
-
-export interface Anchor {
-  top: number;
-  height: number;
-}
-
-/**
- * Pure positioning algorithm. Given the document-coordinate anchors
- * and heights of N asides plus an optional ToC anchor, compute each
- * aside's `top` value in document coordinates.
- *
- * Rules (in evaluation order per aside):
- *   1. Start at the aside's `anchorTop`.
- *   2. Clamp to `tocBottom + gap` if the ToC exists (asides must
- *      not overlap the ToC's natural-flow box).
- *   3. Clamp to `previousAside.bottom + gap` if there is a previous
- *      aside (asides must not overlap each other).
- *
- * Input order is preserved in output. The algorithm processes asides
- * in input order (matches DOM document order at the call site).
- */
-export function computeAsidePositions(
-  asides: ReadonlyArray<PlacementInput>,
-  toc: Anchor | null,
-  gap: number
-): AsidePlacement[] {
-  const tocBottom = toc ? toc.top + toc.height + gap : -Infinity;
-  const placements: AsidePlacement[] = [];
-
-  for (const input of asides) {
-    let top = input.anchorTop;
-    if (top < tocBottom) {
-      top = tocBottom;
-    }
-    if (placements.length > 0) {
-      const prev = placements[placements.length - 1];
-      if (prev) {
-        const prevBottom = prev.top + prev.height + gap;
-        if (top < prevBottom) {
-          top = prevBottom;
-        }
-      }
-    }
-    placements.push({ top, height: input.height });
-  }
-
-  return placements;
-}
 
 const GAP = 16;
 const DOCK_BREAKPOINT_PX = 768;

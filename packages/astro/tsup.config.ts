@@ -19,11 +19,15 @@ export default defineConfig({
     // dist/icons/index.js to resolve from the copied-verbatim .astro
     // files in dist/components/.
     "icons/index": "src/icons/index.ts",
-    // `lib/aside-positioning` is the vanilla-JS docking script for
-    // <Aside> (PR 6). Wired by <AsideDocker> / <TextbookLayout>;
-    // must exist at dist/lib/aside-positioning.js to resolve from
-    // the copied-verbatim .astro files.
-    "lib/aside-positioning": "src/lib/aside-positioning.ts",
+    // `lib/aside-positioning/install-positioning` is the vanilla-JS
+    // docking-lifecycle entry point for <Aside> (PR 6; C7 seam split
+    // under ADR 0061). Wired by TextbookLayout's <script> block;
+    // tree-shakes in `computeAsidePositions` from the sibling
+    // `compute-placements.ts`. Must exist at
+    // dist/lib/aside-positioning/install-positioning.js to resolve
+    // from the copied-verbatim .astro files.
+    "lib/aside-positioning/install-positioning":
+      "src/lib/aside-positioning/install-positioning.ts",
     // `lib/get-student-chapters` is the ADR 0051 student-build filter.
     // Imported by TextbookLayout.astro (filters drafts before they
     // reach the pedagogy index) and re-exported from the package
