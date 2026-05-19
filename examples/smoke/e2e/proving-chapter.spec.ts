@@ -1,7 +1,67 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
 const CHAPTER_URL = "/chapters/spoiler-alerts";
+const CHAPTER_SLUG = "spoiler-alerts";
+
+/**
+ * Build-time snapshot of `indexAccumulator.asPedagogyIndex()` (Session
+ * 9 Area 3). Written by `integrations/pedagogy-index-dump.ts`'s
+ * `astro:build:done` hook into `dist/.sophie-pedagogy-index.json`.
+ *
+ * Loaded once per test run; the spec derives expected element counts
+ * + per-entry existence assertions from this snapshot rather than
+ * hardcoded literal numbers. Audit Priority 5 (2026-05-18 post-PR-A)
+ * called this shape "function-of-content assertions": the test passes
+ * the index in, asserts every tracked entry has a rendered
+ * correspondence, survives shape refactors that previously required
+ * mechanical count updates (e.g. PR-7 +24, PR-A −17).
+ */
+const INDEX_PATH = resolve(
+  import.meta.dirname,
+  "..",
+  "dist",
+  ".sophie-pedagogy-index.json"
+);
+const indexJson = readFileSync(INDEX_PATH, "utf8");
+const index = JSON.parse(indexJson) as {
+  definitions: { chapter: string; slug: string; anchor: string }[];
+  keyInsights: { chapter: string; anchor: string }[];
+  misconceptions: { chapter: string; anchor: string }[];
+  interventions: { chapter: string; anchor: string }[];
+  figureUsages: { chapter: string; anchor: string }[];
+  equationCitations: { chapter: string; anchor: string }[];
+};
+
+const chapterEntries = {
+  definitions: index.definitions.filter((d) => d.chapter === CHAPTER_SLUG),
+  keyInsights: index.keyInsights.filter((k) => k.chapter === CHAPTER_SLUG),
+  misconceptions: index.misconceptions.filter(
+    (m) => m.chapter === CHAPTER_SLUG
+  ),
+  interventions: index.interventions.filter((i) => i.chapter === CHAPTER_SLUG),
+  figureUsages: index.figureUsages.filter((f) => f.chapter === CHAPTER_SLUG),
+  equationCitations: index.equationCitations.filter(
+    (e) => e.chapter === CHAPTER_SLUG
+  ),
+};
+
+/**
+ * Figures in the DOM = figure-usages MINUS those inside collapsed
+ * Radix Collapsible cards (which unmount on close). PR-7 / Trio 3 #1
+ * documented one such case: the "standard-candles" figure in the
+ * "Deep Dive: How the Distance Ladder Works" CollapsibleCard.
+ *
+ * The index tracks all figure-usages (rendering-environment-agnostic),
+ * so the rendered DOM count is index-count minus collapsed cards. The
+ * single constant here documents the one known unmounted figure;
+ * when collapse-state becomes index-tracked, the constant goes away.
+ */
+const COLLAPSED_FIGURES_COUNT = 1;
+const expectedFigureCount =
+  chapterEntries.figureUsages.length - COLLAPSED_FIGURES_COUNT;
 
 test.describe("Phase 0 vertical-slice acceptance — spoiler-alerts chapter", () => {
   test.beforeEach(async ({ context }) => {
@@ -18,40 +78,69 @@ test.describe("Phase 0 vertical-slice acceptance — spoiler-alerts chapter", ()
 
     await expect(page).toHaveTitle(/Spoiler Alerts/);
 
-    // Static structure expectations (matches @sophie/components README's
-    // 14→4 mapping table for this chapter).
-    // 36 → 35 in Trio 2 (Predict migration). 35 → 31 in Trio 3 #1 (four
-    // Deep Dive Callouts → <CollapsibleCard>). 31 → 29 in Trio 3 #2
-    // (Inverse-Square Law + Wien's Law Callouts → <KeyEquation>).
-    // PR-7 chapter capstone adds:
-    //   +17 from the 3 KeyEquations' biography children (Observable,
-    //       Assumption, BreaksWhen, CommonMisuse — each renders as
-    //       <aside role="note">): 6 + 5 + 6.
-    //   +8 from the nested <Intervention> components — each renders
-    //      as <aside role="note">.
-    //   −1 from removing the legacy `<Callout variant="misconception"
-    //      title="Misconception Alert">` (converted to a misconception
-    //      Aside which renders as <details>, not role=note).
-    // Net delta: +24. 29 + 24 = 53.
-    // PR-A registry rewrite (ADR 0060): −17 from the 3 KeyEquations'
-    //   biography children — <KeyEquation refId> resolves biography
-    //   from the registry into a Radix Collapsible popover, which
-    //   lazy-renders the asides only when the trigger is activated.
-    //   In the static DOM at chapter load, the biography children are
-    //   gone. The +8 Intervention asides remain (they still render
-    //   inline). Final: 53 − 17 = 36. See examples/smoke/e2e/key-equation.spec.ts
-    //   for KeyEquation-specific coverage.
+    // Aggregate structural counts (Phase 0 lineage — kept as sanity
+    // gates until the renderer uniformly tracks every role="note"
+    // source in the pedagogy index):
+    //
+    //   role="note" total = 36 = 28 <Callout> (info/tip/key-insight/
+    //   roadmap/summary/warning — chrome callouts, not pedagogy) +
+    //   8 <Intervention>. <Callout> isn't tracked in the index today
+    //   (it's narration/chrome, not pedagogy-OMI roles), so the total
+    //   can't yet be fully derived from the index. When <Callout> is
+    //   indexed or migrated, swap this for the derived form.
     await expect(page.locator("[role='note']")).toHaveCount(36);
-    // 19 → 18 in Trio 3 #1 — one figure ("standard-candles") lives inside
-    // the "Deep Dive: How the Distance Ladder Works" CollapsibleCard,
-    // which is collapsed by default. Radix Collapsible unmounts content
-    // when closed, so the figure isn't in the DOM until the student opens
-    // the card.
-    await expect(page.locator("figure")).toHaveCount(18);
-    // 9 → 8 in Trio 3 #3 — the Mini-Glossary markdown table migrated to
-    // <MiniGlossary>, which renders as a <dl>, not a <table>. See
-    // examples/smoke/e2e/mini-glossary.spec.ts for the new coverage.
+    // figureUsages.length − collapsed-card unmounts. Function-of-
+    // content: when a <Figure>/<FigureRef> is added or removed in
+    // the chapter MDX, expectedFigureCount auto-adjusts.
+    await expect(page.locator("figure")).toHaveCount(expectedFigureCount);
+    // The Mini-Glossary markdown table migrated to <MiniGlossary>
+    // (Trio 3 #3) which renders as a <dl>, not a <table>. The 8
+    // remaining are raw markdown tables in MDX prose (not tracked
+    // in the pedagogy index — markdown tables are formatting, not
+    // pedagogy roles). Literal until tables become a tracked kind.
     await expect(page.locator("table")).toHaveCount(8);
+
+    // ─── Function-of-content per-kind assertions (Session 9 Area 3) ───
+    //
+    // For each pedagogy kind tracked in the index, assert the rendered
+    // DOM count matches the index entry count. The renderer emits
+    // `data-aside-kind="<kind>"` (or a kind-specific id prefix) on each
+    // rendered element, giving us a stable selector that DOESN'T
+    // change with role/aria refactors. When the chapter MDX adds or
+    // removes a definition/key-insight/misconception/intervention,
+    // these counts auto-update; no spec edit required.
+    //
+    // Per the 2026-05-18 post-PR-A audit's Priority 5 — replacing
+    // hardcoded counts with index-derived expressions survives shape
+    // refactors and removes the PR-7 +24 / PR-A −17 mechanical-update
+    // pattern documented in the comments above.
+    await expect(
+      page.locator('[data-aside-kind="definition"]'),
+      `Index lists ${chapterEntries.definitions.length} definitions for this chapter`
+    ).toHaveCount(chapterEntries.definitions.length);
+    await expect(
+      page.locator('[data-aside-kind="key-insight"]'),
+      `Index lists ${chapterEntries.keyInsights.length} key-insights for this chapter`
+    ).toHaveCount(chapterEntries.keyInsights.length);
+    await expect(
+      page.locator('[data-aside-kind="misconception"]'),
+      `Index lists ${chapterEntries.misconceptions.length} misconceptions for this chapter`
+    ).toHaveCount(chapterEntries.misconceptions.length);
+
+    // Per-intervention existence (the one kind where the renderer
+    // emits anchor as DOM id today). For each intervention in the
+    // index, assert its rendered anchor is present. This is the
+    // strongest function-of-content shape — "every entry has a
+    // rendered correspondence" per the audit's full vision.
+    // Extending to other kinds requires renderer-consistency work
+    // (each Aside variant needs to emit id={anchor}); tracked
+    // separately as a future renderer follow-up.
+    for (const iv of chapterEntries.interventions) {
+      await expect(
+        page.locator(`#${iv.anchor}`),
+        `Intervention should be rendered in DOM at #${iv.anchor}`
+      ).toHaveCount(1);
+    }
 
     // KaTeX rendered all math (no raw `$...$` left behind).
     const katexCount = await page.locator(".katex").count();
