@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { PedagogyIndexSchema } from "./pedagogy-index.ts";
 import {
   ChapterEntrySchema,
   DefinitionEntrySchema,
@@ -12,8 +13,7 @@ import {
   MisconceptionEntrySchema,
   ModuleEntrySchema,
   ObjectiveEntrySchema,
-  PedagogyIndexSchema,
-} from "./pedagogy-index.ts";
+} from "./pedagogy-index-entries/index.ts";
 
 const validDefinition = {
   term: "Standard candle",
