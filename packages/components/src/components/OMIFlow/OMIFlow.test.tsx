@@ -162,6 +162,51 @@ describe("<OMIFlow> — slot titles", () => {
   });
 });
 
+describe("<OMIFlow> — Fragment-wrapped children (Storybook args shape)", () => {
+  it("descends transparently into a single Fragment wrapping the 3 slots", () => {
+    // Storybook stories pass `children: <>X Y Z</>` via `args` — the
+    // Fragment is a single React child until we walk into it. Without
+    // explicit Fragment handling, React.Children.forEach yields the
+    // Fragment as one opaque element and no slots are matched.
+    render(
+      <OMIFlow id='frag-flow'>
+        <>
+          <OMIFlow.Observable title='HR diagram'>
+            <p>obs body</p>
+          </OMIFlow.Observable>
+          <OMIFlow.Model title='Hydrostatic'>
+            <p>mod body</p>
+          </OMIFlow.Model>
+          <OMIFlow.Inference title='Mass-lifetime'>
+            <p>inf body</p>
+          </OMIFlow.Inference>
+        </>
+      </OMIFlow>
+    );
+    const sections = screen.getAllByRole("region");
+    expect(sections).toHaveLength(3);
+    expect(sections[0]?.textContent).toMatch(/HR diagram/);
+    expect(sections[1]?.textContent).toMatch(/Hydrostatic/);
+    expect(sections[2]?.textContent).toMatch(/Mass-lifetime/);
+  });
+
+  it("descends into nested Fragments", () => {
+    render(
+      <OMIFlow id='nested-frag-flow'>
+        <>
+          <OMIFlow.Observable>obs</OMIFlow.Observable>
+          <>
+            <OMIFlow.Model>mod</OMIFlow.Model>
+            <OMIFlow.Inference>inf</OMIFlow.Inference>
+          </>
+        </>
+      </OMIFlow>
+    );
+    const sections = screen.getAllByRole("region");
+    expect(sections).toHaveLength(3);
+  });
+});
+
 describe("<OMIFlow> — a11y (axe)", () => {
   it("renders zero violations in the minimal shape", async () => {
     const { container } = render(<MinimalFlow />);

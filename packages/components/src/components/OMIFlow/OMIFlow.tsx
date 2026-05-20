@@ -1,5 +1,6 @@
 import {
   Children,
+  Fragment,
   isValidElement,
   type ReactElement,
   type ReactNode,
@@ -202,7 +203,14 @@ function resolveSlots(
 
   // Author mode: scan children for slot-component identity matches.
   // Skips slots already resolved from extractor-fed props.
-  Children.forEach(props.children, (child) => {
+  //
+  // React.Children.forEach does NOT descend into Fragments — it treats
+  // a Fragment as a single opaque child. So `<OMIFlow><>X Y Z</></OMIFlow>`
+  // would yield ONE iteration (the Fragment) where identifySlot returns
+  // undefined and no slot is found. We walk Fragments transparently so
+  // the authoring shape is uniform regardless of whether the author
+  // wraps slot children in a Fragment (common in Storybook args).
+  visitChildrenWithFragments(props.children, (child) => {
     const kind = identifySlot(child);
     if (kind === undefined) return;
     if (out[kind] !== undefined) return;
@@ -211,6 +219,28 @@ function resolveSlots(
   });
 
   return out;
+}
+
+/**
+ * Walk children, descending transparently into any `<Fragment>`
+ * children so each leaf JSX element is visited exactly once. Used by
+ * the author-mode slot detection so a Fragment-wrapped slot set
+ * `<><OMIFlow.Observable>…</OMIFlow.Observable>…</>` matches the same
+ * as bare children.
+ */
+function visitChildrenWithFragments(
+  children: ReactNode,
+  visit: (child: ReactNode) => void
+): void {
+  Children.forEach(children, (child) => {
+    if (isValidElement(child) && (child as ReactElement).type === Fragment) {
+      const fragChildren = (child as ReactElement<{ children?: ReactNode }>)
+        .props.children;
+      visitChildrenWithFragments(fragChildren, visit);
+      return;
+    }
+    visit(child);
+  });
 }
 
 export function OMIFlow(props: OMIFlowProps) {
