@@ -34,6 +34,11 @@ const index = JSON.parse(indexJson) as {
   figureUsages: { chapter: string; anchor: string }[];
   equationCitations: { chapter: string; anchor: string }[];
   deepDives: { chapter: string; anchor: string; title: string }[];
+  omiFlows: {
+    chapter: string;
+    anchor: string;
+    concept?: string;
+  }[];
 };
 
 const chapterEntries = {
@@ -48,6 +53,7 @@ const chapterEntries = {
     (e) => e.chapter === CHAPTER_SLUG
   ),
   deepDives: index.deepDives.filter((d) => d.chapter === CHAPTER_SLUG),
+  omiFlows: index.omiFlows.filter((o) => o.chapter === CHAPTER_SLUG),
 };
 
 /**
@@ -176,6 +182,22 @@ test.describe("Phase 0 vertical-slice acceptance — spoiler-alerts chapter", ()
         page.locator(`#${dd.anchor}`),
         `Deep dive "${dd.title}" should be rendered in DOM at #${dd.anchor}`
       ).toHaveCount(1);
+    }
+
+    // OMI flows (ADR 0063 PR-C): each <OMIFlow> renders as a
+    // <div role="group" id=anchor> with exactly three <section>
+    // slots inside. Same explicit-id-first anchor precedence as
+    // deep-dives. spoiler-alerts ships one OMIFlow ("decoder-ring-
+    // distance"); the OF-2 chapter-level invariant requires it.
+    for (const omi of chapterEntries.omiFlows) {
+      await expect(
+        page.locator(`#${omi.anchor}`),
+        `OMIFlow "${omi.concept ?? omi.anchor}" should be rendered in DOM at #${omi.anchor}`
+      ).toHaveCount(1);
+      await expect(
+        page.locator(`#${omi.anchor} > section`),
+        `OMIFlow "${omi.anchor}" should render exactly 3 slot <section>s`
+      ).toHaveCount(3);
     }
 
     // KaTeX rendered all math (no raw `$...$` left behind).
