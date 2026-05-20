@@ -83,12 +83,24 @@ function reposition(state: InstalledState): void {
   );
 
   if (!isDockingActive()) {
-    for (const aside of asides) {
-      aside.style.top = "";
-      aside.open = false;
-      aside.removeAttribute("data-aside-docked");
+    // Only reset asides on docked→inline TRANSITION (not on every
+    // layout event while stably-inline). In stable inline mode the
+    // user toggles each <details> open/closed via summary click;
+    // clobbering aside.open on every ResizeObserver fire would snap
+    // the user's open state back to closed whenever expanding content
+    // reflows the page — a feedback loop the MutationObserver alone
+    // didn't surface because <details>-expand isn't a structural DOM
+    // change. (Surfaced 2026-05-20 when this fix added ResizeObserver
+    // and aside.spec.ts:200 "mobile: clicking the summary toggles
+    // open/closed" started failing on the second click.)
+    if (state.lastSignature !== "inline") {
+      for (const aside of asides) {
+        aside.style.top = "";
+        aside.open = false;
+        aside.removeAttribute("data-aside-docked");
+      }
+      state.lastSignature = "inline";
     }
-    state.lastSignature = "inline";
     return;
   }
 
@@ -123,9 +135,23 @@ function reposition(state: InstalledState): void {
  *
  * Listeners:
  *   - `window.resize` (debounced via rAF)
- *   - `viewModePref.subscribe` (re-position on mode flip)
- *   - MutationObserver on .sophie-content (DOM changes, e.g.
- *     dynamic content from interactive components)
+ *   - MutationObserver on `<html>` for `data-view-mode` /
+ *     `data-sidebar` attribute flips
+ *   - MutationObserver on `.sophie-content` for DOM structure changes
+ *     (added/removed nodes — e.g. interactive component hydration)
+ *   - **ResizeObserver on `.sophie-content`** for element-size
+ *     changes that don't change DOM structure: font loading (IBM
+ *     Plex async-loads, KaTeX em-based math metrics shift), images
+ *     that resize after natural-size load, lazy-loaded content. The
+ *     MutationObserver misses these because the DOM tree never
+ *     mutates — only the rendered heights do. Without this listener,
+ *     the cascade computes positions from stale heights and adjacent
+ *     docked asides overlap after the post-paint layout shift.
+ *   - **`document.fonts.ready`** one-shot: fonts loading async is
+ *     the most common height-shift trigger; await the FontFaceSet
+ *     ready promise and schedule one explicit reposition so the
+ *     cascade catches the font-induced reflow as early as possible
+ *     even on browsers whose ResizeObserver coalesces aggressively.
  *
  * Returns a cleanup function that detaches all listeners + resets
  * the guard.
@@ -172,12 +198,41 @@ export function installAsidePositioning(): () => void {
   }
 
   let mutationObserver: MutationObserver | null = null;
+  let resizeObserver: ResizeObserver | null = null;
   const content = document.querySelector(".sophie-content");
   if (content && typeof MutationObserver !== "undefined") {
     mutationObserver = new MutationObserver(scheduleReposition);
     mutationObserver.observe(content, {
       childList: true,
       subtree: true,
+    });
+  }
+
+  // ResizeObserver catches element-size changes that don't change DOM
+  // structure: font loading, image natural-size load, lazy hydration
+  // of inline math (KaTeX em metrics shift when the body font swaps
+  // from fallback to IBM Plex Sans). Observing `.sophie-content`
+  // bubbles up any descendant resize without needing per-element
+  // wiring. Cheap, scoped, and self-cleans when the page unmounts.
+  if (content && typeof ResizeObserver !== "undefined") {
+    resizeObserver = new ResizeObserver(scheduleReposition);
+    resizeObserver.observe(content);
+  }
+
+  // One-shot fonts-ready trigger. document.fonts.ready resolves once
+  // every declared @font-face has either loaded or failed. Schedule a
+  // reposition then so the cascade sees post-font-swap heights as soon
+  // as possible — most browsers' ResizeObservers coalesce, so this
+  // explicit kick avoids a visible mid-page reflow window.
+  if (
+    typeof document !== "undefined" &&
+    typeof (document as Document & { fonts?: FontFaceSet }).fonts !==
+      "undefined"
+  ) {
+    const fonts = (document as Document & { fonts?: FontFaceSet }).fonts;
+    fonts?.ready.then(scheduleReposition).catch(() => {
+      // Font load failures are not the cascade's concern; ResizeObserver
+      // will still catch any layout shift that does occur.
     });
   }
 
@@ -190,6 +245,10 @@ export function installAsidePositioning(): () => void {
     if (mutationObserver) {
       mutationObserver.disconnect();
       mutationObserver = null;
+    }
+    if (resizeObserver) {
+      resizeObserver.disconnect();
+      resizeObserver = null;
     }
     if (rafId !== null) {
       window.cancelAnimationFrame(rafId);
