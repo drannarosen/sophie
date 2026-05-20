@@ -51,3 +51,4 @@ export { markFirstUseGlossaryTerms } from "./transforms/first-use-glossary.ts";
 export { transformIntervention } from "./transforms/intervention.ts";
 export { transformLearningObjectives } from "./transforms/learning-objectives.ts";
 export { transformMultiRep } from "./transforms/multirep.ts";
+export { transformOMIFlow } from "./transforms/omi-flow.ts";

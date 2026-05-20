@@ -11,13 +11,132 @@ import {
   renderChildrenToHtml,
 } from "../jsx-utils.ts";
 
-type SlotKind = "observable" | "model" | "inference";
+export type OMIFlowSlotKind = "observable" | "model" | "inference";
 
-const SLOT_NAMES: Record<string, SlotKind> = {
+const SLOT_NAMES: Record<string, OMIFlowSlotKind> = {
   "OMIFlow.Observable": "observable",
   "OMIFlow.Model": "model",
   "OMIFlow.Inference": "inference",
 };
+
+const REQUIRED_SLOTS: ReadonlyArray<OMIFlowSlotKind> = [
+  "observable",
+  "model",
+  "inference",
+];
+
+/**
+ * Shared parse result for a single `<OMIFlow>` node — used by BOTH
+ * `extractOMIFlows` (read-only index pass) and `transformOMIFlow`
+ * (AST mutation pass) so the two phases agree on the slot payload
+ * shape. Mirrors the `buildRepsFromMultiRepChildren` precedent from
+ * ADR 0043's MultiRep family.
+ *
+ * `anchor` derivation:
+ *   1. explicit `id=` attr (slugified) wins
+ *   2. else `omi-${slug(concept)}` when `concept=` is present
+ *   3. else positional fallback `omi-${counter}` (chapter-scoped)
+ *
+ * Counter must be provided by the caller and threaded across all
+ * `<OMIFlow>` nodes within one chapter to make rule (3) chapter-
+ * consistent. Use `parseOMIFlowChildren` via the caller-owned loop.
+ */
+export interface OMIFlowParseResult {
+  anchor: string;
+  concept: string | undefined;
+  observable: OMIFlowSlot;
+  model: OMIFlowSlot;
+  inference: OMIFlowSlot;
+  sourceOrder: [OMIFlowSlotKind, OMIFlowSlotKind, OMIFlowSlotKind];
+}
+
+/**
+ * Pure parser for a single `<OMIFlow>` mdxJsxFlowElement. Throws on:
+ *   - strict-3 invariant (missing required slot)
+ *   - exactly-one invariant (duplicated slot)
+ *
+ * Anchor uniqueness (intra-chapter) is the caller's responsibility —
+ * the caller owns the chapter's seenAnchors Set so the same throw
+ * message can name the offending anchor.
+ */
+export function parseOMIFlowElement(
+  el: MdxJsxFlowElement,
+  chapterSlug: string,
+  anchor: string
+): OMIFlowParseResult {
+  const concept = readStringAttr(el, "concept");
+  const sourceOrder: OMIFlowSlotKind[] = [];
+  const slots: Partial<Record<OMIFlowSlotKind, OMIFlowSlot>> = {};
+
+  for (const child of el.children ?? []) {
+    const childEl = child as MdxJsxFlowElement;
+    if (childEl.type !== "mdxJsxFlowElement") continue;
+    const kind = childEl.name ? SLOT_NAMES[childEl.name] : undefined;
+    if (kind === undefined) continue;
+    if (slots[kind] !== undefined) {
+      throw new Error(
+        `OMIFlow "${anchor}" in chapter "${chapterSlug}": slot "${kind}" appears more than once. (ADR 0063 exactly-one invariant.)`
+      );
+    }
+    const title = readStringAttr(childEl, "title") ?? "";
+    const body = renderChildrenToHtml(childEl.children);
+    slots[kind] = { title, body };
+    sourceOrder.push(kind);
+  }
+
+  for (const required of REQUIRED_SLOTS) {
+    if (slots[required] === undefined) {
+      throw new Error(
+        `OMIFlow "${anchor}" in chapter "${chapterSlug}": missing required slot "${required}". (ADR 0063 strict-3 invariant.)`
+      );
+    }
+  }
+
+  // Re-narrow after the loop's existence checks. Direct destructure
+  // satisfies strict-null TypeScript without `!`.
+  const observable = slots.observable;
+  const model = slots.model;
+  const inference = slots.inference;
+  if (
+    observable === undefined ||
+    model === undefined ||
+    inference === undefined
+  ) {
+    // Unreachable post-existence-check; explicit guard for strict-null.
+    throw new Error(
+      `OMIFlow "${anchor}": slot detection invariant violated post-check.`
+    );
+  }
+
+  return {
+    anchor,
+    concept,
+    observable,
+    model,
+    inference,
+    sourceOrder: sourceOrder as [
+      OMIFlowSlotKind,
+      OMIFlowSlotKind,
+      OMIFlowSlotKind,
+    ],
+  };
+}
+
+/**
+ * Compute the canonical anchor for an `<OMIFlow>` element per
+ * ADR 0063 §Decision 10. Counter is positional (1-based, chapter-
+ * scoped); pass an incrementing counter from the caller.
+ */
+export function deriveOMIFlowAnchor(
+  el: MdxJsxFlowElement,
+  counter: number
+): string {
+  const explicitId = readStringAttr(el, "id");
+  const concept = readStringAttr(el, "concept");
+  if (explicitId) return slugify(explicitId);
+  if (concept) return `omi-${slugify(concept)}`;
+  return `omi-${counter}`;
+}
 
 /**
  * Pure extractor. Walks an mdast tree, emits one OMIFlowEntry per
@@ -45,14 +164,7 @@ export function extractOMIFlows(
     if (el.name !== "OMIFlow") return;
 
     counter += 1;
-
-    const explicitId = readStringAttr(el, "id");
-    const concept = readStringAttr(el, "concept");
-    const anchor = explicitId
-      ? slugify(explicitId)
-      : concept
-        ? `omi-${slugify(concept)}`
-        : `omi-${counter}`;
+    const anchor = deriveOMIFlowAnchor(el, counter);
 
     if (seenAnchors.has(anchor)) {
       throw new Error(
@@ -61,55 +173,16 @@ export function extractOMIFlows(
     }
     seenAnchors.add(anchor);
 
-    const sourceOrder: SlotKind[] = [];
-    const slots: Partial<Record<SlotKind, OMIFlowSlot>> = {};
-    for (const child of el.children ?? []) {
-      const childEl = child as MdxJsxFlowElement;
-      if (childEl.type !== "mdxJsxFlowElement") continue;
-      const kind = childEl.name ? SLOT_NAMES[childEl.name] : undefined;
-      if (kind === undefined) continue;
-      if (slots[kind] !== undefined) {
-        throw new Error(
-          `OMIFlow "${anchor}" in chapter "${chapterSlug}": slot "${kind}" appears more than once. (ADR 0063 exactly-one invariant.)`
-        );
-      }
-      const title = readStringAttr(childEl, "title") ?? "";
-      const body = renderChildrenToHtml(childEl.children);
-      slots[kind] = { title, body };
-      sourceOrder.push(kind);
-    }
-
-    for (const required of ["observable", "model", "inference"] as const) {
-      if (slots[required] === undefined) {
-        throw new Error(
-          `OMIFlow "${anchor}" in chapter "${chapterSlug}": missing required slot "${required}". (ADR 0063 strict-3 invariant.)`
-        );
-      }
-    }
-
-    const observable = slots.observable;
-    const model = slots.model;
-    const inference = slots.inference;
-    if (
-      observable === undefined ||
-      model === undefined ||
-      inference === undefined
-    ) {
-      // Unreachable — the loop above throws before this point. The
-      // explicit guard satisfies strict-null TypeScript without an `!`.
-      throw new Error(
-        `OMIFlow "${anchor}": slot detection invariant violated post-check.`
-      );
-    }
+    const parsed = parseOMIFlowElement(el, chapterSlug, anchor);
 
     out.push({
       chapter: chapterSlug,
-      anchor,
-      ...(concept ? { concept } : {}),
-      observable,
-      model,
-      inference,
-      sourceOrder: sourceOrder as [SlotKind, SlotKind, SlotKind],
+      anchor: parsed.anchor,
+      ...(parsed.concept ? { concept: parsed.concept } : {}),
+      observable: parsed.observable,
+      model: parsed.model,
+      inference: parsed.inference,
+      sourceOrder: parsed.sourceOrder,
     });
   });
 

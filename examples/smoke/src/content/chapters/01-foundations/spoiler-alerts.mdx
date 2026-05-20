@@ -28,6 +28,7 @@ import {
   MultiRep,
   Objective,
   Observable,
+  OMIFlow,
   Predict,
   Reflection,
   RepEquation,
@@ -236,6 +237,18 @@ Suppose you observe two stars of the same type (same intrinsic properties), but 
 If they're truly identical, the fainter one must be farther away. But how much farther? This is where physics enters. Light spreads out as it travels, and the amount of light you receive decreases with the **square** of the distance. So if Star B is 4× fainter than Star A, Star B must be **2× farther away** (because $2^2 = 4$).
 
 That's one measurement (relative brightness), one physical law (the **inverse-square law**), one inference (relative distance). This is what "decoding" means.
+
+<OMIFlow id="decoder-ring-distance" concept="distance-from-brightness">
+  <OMIFlow.Observable title="Relative brightness of two same-type stars">
+    Star B appears **4× fainter** than Star A. Both stars are spectroscopically identical (same type, so we infer the same intrinsic luminosity). The only thing different is the photon count arriving at our detector.
+  </OMIFlow.Observable>
+  <OMIFlow.Model title="Inverse-square law of flux">
+    A star emits light uniformly over an expanding sphere of area $4\pi d^2$. The flux (light per unit area) at distance $d$ scales as $F = L / 4\pi d^2$. Same luminosity, larger distance → smaller flux. Brightness ratio is the *square* of the distance ratio.
+  </OMIFlow.Model>
+  <OMIFlow.Inference title="Star B is twice as far">
+    From $F_A / F_B = (d_B / d_A)^2 = 4$, we infer $d_B = 2 \, d_A$. One measurement + one physical relationship → one quantitative inference about a quantity we cannot directly access.
+  </OMIFlow.Inference>
+</OMIFlow>
 
 <InteractiveCallout
   client:load
