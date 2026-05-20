@@ -214,6 +214,7 @@ project:
         - file: decisions/0060-registry-ecosystem.md
         - file: decisions/0061-ai-optimized-codebase-design.md
         - file: decisions/0062-page-status-frontmatter-enum.md
+        - file: decisions/0063-omiflow-composite-primitive.md
     - title: Status
       children:
         - file: status/roadmap.md
