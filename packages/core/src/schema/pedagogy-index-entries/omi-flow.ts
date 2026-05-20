@@ -37,6 +37,16 @@ export const OMIFlowEntrySchema = z.object({
   observable: OMIFlowSlotSchema,
   model: OMIFlowSlotSchema,
   inference: OMIFlowSlotSchema,
+  /**
+   * As-authored slot order (for OF-1 audit). The renderer always
+   * emits canonical O → M → I regardless; OF-1 warns when this
+   * field is not `["observable", "model", "inference"]`.
+   */
+  sourceOrder: z.tuple([
+    z.enum(["observable", "model", "inference"]),
+    z.enum(["observable", "model", "inference"]),
+    z.enum(["observable", "model", "inference"]),
+  ]),
 });
 export type OMIFlowEntry = z.infer<typeof OMIFlowEntrySchema>;
 export type { OMIFlowSlot };

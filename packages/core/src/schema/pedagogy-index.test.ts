@@ -651,6 +651,7 @@ describe("OMIFlowEntrySchema", () => {
     observable: validSlot,
     model: validSlot,
     inference: validSlot,
+    sourceOrder: ["observable", "model", "inference"] as const,
   };
 
   test("accepts the minimal valid shape (no concept binding)", () => {
@@ -1032,6 +1033,7 @@ describe("PedagogyIndexSchema", () => {
           observable: { title: "HR diagram", body: "<p>x</p>" },
           model: { title: "Hydrostatic equilibrium", body: "<p>x</p>" },
           inference: { title: "Mass-lifetime relation", body: "<p>x</p>" },
+          sourceOrder: ["observable", "model", "inference"] as const,
         },
       ],
     });
