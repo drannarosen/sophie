@@ -24,6 +24,21 @@ import { LangTag, NonEmptyString, Slug } from "./primitives.js";
 export const ChapterStatus = z.enum(["draft", "review", "stable"]);
 export type ChapterStatus = z.infer<typeof ChapterStatus>;
 
+/**
+ * Chapter pedagogical framing (ADR 0063 §OF-2 + accepted-features
+ * §A8). Declares the scientific-reasoning structure the chapter
+ * exposes. v1 ships only `OMI` (observable → model → inference); the
+ * enum is reserved for forward-compat with `PMI` (predict-model-
+ * infer) and `custom` framings as those graduate with their own
+ * audit invariants.
+ *
+ * The OF-2 chapter-level audit invariant fires when a chapter
+ * declares `framing: 'OMI'` but renders zero `<OMIFlow>` callsites.
+ * Trivially satisfied by one OMIFlow per chapter.
+ */
+export const ChapterFraming = z.enum(["OMI"]);
+export type ChapterFraming = z.infer<typeof ChapterFraming>;
+
 export const ChapterSchema = z.object({
   title: NonEmptyString,
   slug: Slug,
@@ -37,6 +52,12 @@ export const ChapterSchema = z.object({
   // no cross-chapter audit roll-ups); `review` chapters render with a
   // "Under review" badge; `stable` is the steady state.
   status: ChapterStatus,
+  /**
+   * Optional pedagogical framing declaration (ADR 0063). When set to
+   * `"OMI"`, the OF-2 audit invariant requires the chapter to render
+   * at least one `<OMIFlow>` callsite.
+   */
+  framing: ChapterFraming.optional(),
   lang: LangTag.optional(),
   description: z.string().optional(),
   tags: z.array(NonEmptyString).optional(),

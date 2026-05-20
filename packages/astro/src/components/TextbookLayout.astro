@@ -120,6 +120,10 @@ indexAccumulator.setChapters(
     order: c.data.order,
     description: c.data.description,
     status: c.data.status,
+    // ADR 0063 — surfaces `framing: "OMI"` to the OF-2 audit invariant.
+    // Other framings (PMI, custom) are reserved by the schema enum but
+    // not yet emitted by chapters; this passthrough is forward-compat.
+    framing: c.data.framing,
   }))
 );
 indexAccumulator.setModules(

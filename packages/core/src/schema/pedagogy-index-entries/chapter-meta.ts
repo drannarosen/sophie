@@ -39,6 +39,13 @@ export const ChapterEntrySchema = z.object({
    * `@sophie/astro/lib/get-student-chapters.ts`.
    */
   status: z.enum(["draft", "review", "stable"]),
+  /**
+   * Optional pedagogical framing declaration (ADR 0063 + accepted-
+   * features §A8). Mirrors `ChapterSchema.framing`. v1 only models
+   * `"OMI"`; OF-2 audit invariant fires when this is `"OMI"` but the
+   * chapter renders zero `<OMIFlow>` callsites.
+   */
+  framing: z.enum(["OMI"]).optional(),
 });
 export type ChapterEntry = z.infer<typeof ChapterEntrySchema>;
 
