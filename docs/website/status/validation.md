@@ -34,8 +34,8 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 
 | Lifecycle | Count |
 |---|---|
-| Shipped | 57 |
-| Accepted design | 21 |
+| Shipped | 58 |
+| Accepted design | 20 |
 | Mixed | 1 |
 | Future package split | 9 |
 | No status | 0 |
@@ -123,7 +123,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0060-registry-ecosystem.md](/registry-ecosystem/) | unvalidated | accepted design | — | — |  |
 | [docs/website/decisions/0061-ai-optimized-codebase-design.md](/ai-optimized-codebase-design/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0062-page-status-frontmatter-enum.md](/page-status-frontmatter-enum/) | unvalidated | shipped | — | — |  |
-| [docs/website/decisions/0063-omiflow-composite-primitive.md](/omiflow-composite-primitive/) | unvalidated | accepted design | — | — |  |
+| [docs/website/decisions/0063-omiflow-composite-primitive.md](/omiflow-composite-primitive/) | unvalidated | shipped | — | — |  |
 
 ### Reference docs
 

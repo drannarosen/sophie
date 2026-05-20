@@ -110,7 +110,7 @@ consumers see a uniform read.
 | Chapter `framing: 'OMI'`                     | section-level     | the section has slots `observable` → `model` → `inference` even if not yet rendered via `<OMIFlow>` |
 | Chapter `framing: 'PMI'`                     | section-level     | the section's `problem`/`model`/`implementation`/`interpretation` arc; PMI roles are not directly the epistemic eight |
 | Misconception graph node (ADR 0044)          | `misconception`   | graph-node type                                  |
-| Future A8 `<OMIFlow>` slots                  | per-slot          | three slots: `observable` / `model` / `inference` (declared in A8's ADR) |
+| `<OMIFlow>` (A8 graduated 2026-05-20)        | per-slot          | three slots: `<OMIFlow.Observable>` → `observable`, `<OMIFlow.Model>` → `model`, `<OMIFlow.Inference>` → `inference`. Slot component name binds role at the schema layer (ADR 0063 §Decision 11); not author-overridable. |
 | Future A9 `<AssumptionStack>` entries        | `assumption`      | (with optional `approximation` variant per entry — A9's ADR resolves) |
 | Future A10 `<UncertaintyLens>` overlay       | `uncertainty`     | A10's ADR declares                               |
 

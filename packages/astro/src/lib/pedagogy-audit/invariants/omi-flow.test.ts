@@ -1,4 +1,8 @@
-import type { OMIFlowEntry, PedagogyIndex } from "@sophie/core/schema";
+import type {
+  ChapterEntry,
+  OMIFlowEntry,
+  PedagogyIndex,
+} from "@sophie/core/schema";
 import { describe, expect, test } from "vitest";
 import type { FindingSink } from "../types.ts";
 import { checkOMIFlow } from "./omi-flow.ts";
@@ -87,5 +91,72 @@ describe("OF-1 — OMIFlow slots out of canonical source order (WARN)", () => {
     checkOMIFlow(index, sink);
     expect(sink.warnings).toHaveLength(1);
     expect(sink.warnings[0]?.location?.anchor).toBe("ooo");
+  });
+});
+
+describe("OF-2 — framing:'OMI' chapter requires ≥1 <OMIFlow> (ERROR)", () => {
+  const chapter = (overrides: Partial<ChapterEntry> = {}): ChapterEntry => ({
+    slug: "ch",
+    title: "Title",
+    module: "mod",
+    status: "stable",
+    ...overrides,
+  });
+
+  test("emits no finding when an OMI-framed chapter has at least one OMIFlow", () => {
+    const index = {
+      ...emptyIndex(),
+      chapters: [chapter({ slug: "covered", framing: "OMI" })],
+      omiFlows: [{ ...baseEntry, chapter: "covered" }],
+    };
+    const sink = emptySink();
+    checkOMIFlow(index, sink);
+    expect(sink.errors).toEqual([]);
+  });
+
+  test("emits one ERROR per OMI-framed chapter with zero OMIFlows", () => {
+    const index = {
+      ...emptyIndex(),
+      chapters: [chapter({ slug: "missing", framing: "OMI" })],
+      omiFlows: [],
+    };
+    const sink = emptySink();
+    checkOMIFlow(index, sink);
+    expect(sink.errors).toHaveLength(1);
+    expect(sink.errors[0]).toMatchObject({
+      severity: "ERROR",
+      code: "OF-2",
+      location: { chapter: "missing" },
+    });
+    expect(sink.errors[0]?.message).toMatch(/framing.*OMI/);
+    expect(sink.errors[0]?.message).toMatch(/zero/i);
+  });
+
+  test("emits no finding for non-OMI-framed chapters regardless of OMIFlow presence", () => {
+    const index = {
+      ...emptyIndex(),
+      chapters: [chapter({ slug: "ch-a" /* framing omitted */ })],
+      omiFlows: [],
+    };
+    const sink = emptySink();
+    checkOMIFlow(index, sink);
+    expect(sink.errors).toEqual([]);
+  });
+
+  test("multiple OMI-framed chapters: each missing OMIFlow gets its own ERROR", () => {
+    const index = {
+      ...emptyIndex(),
+      chapters: [
+        chapter({ slug: "missing-a", framing: "OMI" }),
+        chapter({ slug: "covered", framing: "OMI" }),
+        chapter({ slug: "missing-b", framing: "OMI" }),
+      ],
+      omiFlows: [{ ...baseEntry, chapter: "covered" }],
+    };
+    const sink = emptySink();
+    checkOMIFlow(index, sink);
+    expect(sink.errors).toHaveLength(2);
+    const offenders = sink.errors.map((e) => e.location?.chapter).sort();
+    expect(offenders).toEqual(["missing-a", "missing-b"]);
   });
 });
