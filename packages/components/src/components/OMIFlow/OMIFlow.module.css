@@ -1,0 +1,140 @@
+/* OMIFlow — composite primitive renderer per ADR 0063.
+ *
+ * Layout: flat 3-panel grid with subtle ›‹ chevrons between panels.
+ * Mobile + print collapse to a vertical stack with ↓ chevrons.
+ *
+ * Anatomy:
+ *   .omiFlow    — outer container; CSS Grid 3-cell layout on desktop.
+ *   .chevron    — purely decorative chevron span between slots
+ *                 (aria-hidden). › on desktop, ↓ on mobile/print.
+ *   .slot       — section wrapping each slot's title + body. Each
+ *                 slot is a card-light Tier-2 surface so the three-
+ *                 panel grid reads as one composite.
+ *   .titleBar   — slot header with role label (small-caps) + optional
+ *                 author title.
+ *   .roleLabel  — small-caps "OBSERVABLE" / "MODEL" / "INFERENCE"
+ *                 prefix; always present (ADR 0063 §Decision 5).
+ *   .titleSep   — em-dash separator between role label and author title.
+ *   .userTitle  — author-supplied title (rendered when title= is set).
+ *   .body       — slot prose pane (Tier-2 white-on-tinted card).
+ *
+ * Per-role accent tokens reuse the existing callout vocabulary:
+ *   observable → --sophie-callout-key-insight-* (yellow lineage; the
+ *                  empirical-evidence accent in scientific-reasoning-os
+ *                  visual language)
+ *   model      → --sophie-callout-info-* (teal; the formal-structure
+ *                  accent)
+ *   inference  → --sophie-callout-summary-* (green; the takeaway-claim
+ *                  accent)
+ */
+
+.omiFlow {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1fr;
+  gap: var(--sophie-space-3);
+  align-items: stretch;
+  margin-block: var(--sophie-space-5);
+}
+
+.chevron {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--sophie-text-muted);
+  font-size: var(--sophie-text-xl);
+  line-height: 1;
+  user-select: none;
+}
+
+.slot {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  background: var(--sophie-surface-1);
+  border: 1px solid var(--sophie-border);
+  border-left: var(--sophie-card-rule-light) solid var(--sophie-accent);
+  border-radius: var(--sophie-radius-sm);
+  color: var(--sophie-text);
+  font-family: var(--sophie-font-sans);
+  line-height: var(--sophie-leading-prose);
+  overflow: hidden;
+}
+
+.slotObservable {
+  --sophie-accent: var(--sophie-callout-key-insight-accent);
+}
+.slotModel {
+  --sophie-accent: var(--sophie-callout-info-accent);
+}
+.slotInference {
+  --sophie-accent: var(--sophie-callout-summary-accent);
+}
+
+.titleBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--sophie-space-1);
+  padding: var(--sophie-space-2) var(--sophie-space-4);
+  border-bottom: 1px solid var(--sophie-border);
+  font-weight: var(--sophie-weight-semibold);
+  font-size: var(--sophie-text-sm);
+}
+
+.slotObservable .titleBar {
+  background: var(--sophie-callout-key-insight-title-bg);
+  color: var(--sophie-callout-key-insight-title-text, var(--sophie-text));
+}
+.slotModel .titleBar {
+  background: var(--sophie-callout-info-title-bg);
+  color: var(--sophie-callout-info-title-text, var(--sophie-text));
+}
+.slotInference .titleBar {
+  background: var(--sophie-callout-summary-title-bg);
+  color: var(--sophie-callout-summary-title-text, var(--sophie-text));
+}
+
+.roleLabel {
+  font-size: var(--sophie-text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: var(--sophie-weight-bold);
+}
+
+.titleSep {
+  color: var(--sophie-text-muted);
+  padding-inline: var(--sophie-space-1);
+}
+
+.userTitle {
+  font-weight: var(--sophie-weight-semibold);
+}
+
+.body {
+  padding: var(--sophie-space-3) var(--sophie-space-4);
+}
+
+.body > :first-child {
+  margin-block-start: 0;
+}
+.body > :last-child {
+  margin-block-end: 0;
+}
+
+/* Mobile + tablet: stack vertically, chevrons rotate to ↓. */
+@media (max-width: 768px) {
+  .omiFlow {
+    grid-template-columns: 1fr;
+    grid-auto-rows: auto;
+    gap: var(--sophie-space-2);
+  }
+}
+
+/* Print: same vertical stack as mobile. */
+@media print {
+  .omiFlow {
+    grid-template-columns: 1fr;
+    grid-auto-rows: auto;
+    gap: var(--sophie-space-2);
+    break-inside: avoid;
+  }
+}

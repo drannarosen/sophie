@@ -163,6 +163,16 @@ export {
   observableContract,
 } from "./components/Observable/index.ts";
 export type {
+  OMIFlowProps,
+  OMIFlowSlotProps,
+} from "./components/OMIFlow/index.ts";
+export {
+  OMIFlow,
+  OMIFlowPropsSchema,
+  OMIFlowSlotPropsSchema,
+  omiFlowContract,
+} from "./components/OMIFlow/index.ts";
+export type {
   PredictPrompt,
   PredictProps,
   PredictState,
