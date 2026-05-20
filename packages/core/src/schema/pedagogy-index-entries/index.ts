@@ -57,3 +57,8 @@ export {
   type InlineRefUsageEntry,
   InlineRefUsageEntrySchema,
 } from "./inline-ref.ts";
+export {
+  type OMIFlowEntry,
+  OMIFlowEntrySchema,
+  type OMIFlowSlot,
+} from "./omi-flow.ts";

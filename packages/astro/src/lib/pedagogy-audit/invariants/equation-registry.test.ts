@@ -40,6 +40,7 @@ function emptyIndex(): PedagogyIndex {
     multiReps: [],
     interventions: [],
     deepDives: [],
+    omiFlows: [],
   };
 }
 

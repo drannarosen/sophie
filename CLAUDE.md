@@ -143,6 +143,7 @@ full set (0001–0060 at last count).
 | **Linked-representation state**  | 0059 | **A11 graduated**: Zustand page-local store + `useLinkedParameter` + `<ParameterCursor>` + `<ParameterSlider>`             |
 | **Registry ecosystem**           | 0060 | **Universal+reusable → registry; one-shot → inline (collection)**: 6 shared conventions; amends 0038/0043/0044/0046/0048    |
 | **AI-optimized codebase design** | 0061 | **AI is primary author of platform code, not just content**: 6 rules (focused files, Write-over-Edit, LOC budget 300/500/800, filename routing, atomic docs, tests split with source); amends 0023/0030 |
+| **`<OMIFlow>` composite (A8)**   | 0063 | **Compound component with slot-name-binds-role** (3 slots: `<OMIFlow.{Observable,Model,Inference}>`); pure-layout v1; lands ADR 0058's deferred chapter-level audit invariant as **OF-2**               |
 
 ## Engineering principles
 

@@ -15,6 +15,7 @@ import {
   checkNotationRegistry,
 } from "./invariants/notation-registry.ts";
 import { checkObjectives } from "./invariants/objectives.ts";
+import { checkOMIFlow } from "./invariants/omi-flow.ts";
 import { checkOrphans } from "./invariants/orphans.ts";
 import { checkValidation } from "./invariants/validation.ts";
 import type { AuditExtras, AuditReport, FindingSink } from "./types.ts";
@@ -99,6 +100,10 @@ export function runPedagogyAudit(
   checkMisconceptionPairing(index, sink);
   checkBiography(index, ctx, sink);
   checkEquationRegistry(index, sink);
+
+  // ADR 0063 — OF-1 (slot source-order WARN). OF-2 (chapter-level
+  // conformance ERROR for framing: 'OMI') lands in PR-C.
+  checkOMIFlow(index, sink);
 
   return {
     errors: sink.errors,

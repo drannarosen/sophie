@@ -14,6 +14,7 @@ import {
   MisconceptionEntrySchema,
   ModuleEntrySchema,
   ObjectiveEntrySchema,
+  OMIFlowEntrySchema,
 } from "./pedagogy-index-entries/index.ts";
 
 const validDefinition = {
@@ -640,6 +641,79 @@ describe("DeepDiveEntrySchema", () => {
   });
 });
 
+// ADR 0063 §Decision §3-7 — <OMIFlow> entry: strict-3-slot, slot-name
+// binds role, optional concept binding.
+describe("OMIFlowEntrySchema", () => {
+  const validSlot = { title: "x", body: "<p>x</p>" };
+  const validOmiFlow = {
+    chapter: "spoiler-alerts",
+    anchor: "omi-1",
+    observable: validSlot,
+    model: validSlot,
+    inference: validSlot,
+    sourceOrder: ["observable", "model", "inference"] as const,
+  };
+
+  test("accepts the minimal valid shape (no concept binding)", () => {
+    expect(OMIFlowEntrySchema.safeParse(validOmiFlow).success).toBe(true);
+  });
+
+  test("accepts an entry with concept= binding", () => {
+    expect(
+      OMIFlowEntrySchema.safeParse({
+        ...validOmiFlow,
+        concept: "stellar-temperature",
+      }).success
+    ).toBe(true);
+  });
+
+  test("accepts slots with empty titles (untitled slots fall back to role label)", () => {
+    expect(
+      OMIFlowEntrySchema.safeParse({
+        ...validOmiFlow,
+        observable: { title: "", body: "<p>x</p>" },
+      }).success
+    ).toBe(true);
+  });
+
+  test("rejects an entry missing chapter", () => {
+    const { chapter: _chapter, ...without } = validOmiFlow;
+    expect(OMIFlowEntrySchema.safeParse(without).success).toBe(false);
+  });
+
+  test("rejects an entry missing anchor", () => {
+    const { anchor: _anchor, ...without } = validOmiFlow;
+    expect(OMIFlowEntrySchema.safeParse(without).success).toBe(false);
+  });
+
+  test("rejects an entry missing the observable slot", () => {
+    const { observable: _observable, ...without } = validOmiFlow;
+    expect(OMIFlowEntrySchema.safeParse(without).success).toBe(false);
+  });
+
+  test("rejects an entry missing the model slot", () => {
+    const { model: _model, ...without } = validOmiFlow;
+    expect(OMIFlowEntrySchema.safeParse(without).success).toBe(false);
+  });
+
+  test("rejects an entry missing the inference slot", () => {
+    const { inference: _inference, ...without } = validOmiFlow;
+    expect(OMIFlowEntrySchema.safeParse(without).success).toBe(false);
+  });
+
+  test("rejects an empty chapter slug (NonEmptyString)", () => {
+    expect(
+      OMIFlowEntrySchema.safeParse({ ...validOmiFlow, chapter: "" }).success
+    ).toBe(false);
+  });
+
+  test("rejects an empty anchor (NonEmptyString)", () => {
+    expect(
+      OMIFlowEntrySchema.safeParse({ ...validOmiFlow, anchor: "" }).success
+    ).toBe(false);
+  });
+});
+
 describe("ChapterEntrySchema", () => {
   const validChapter = {
     slug: "hydrostatic-equilibrium",
@@ -936,6 +1010,37 @@ describe("PedagogyIndexSchema", () => {
     if (result.success) {
       expect(result.data.deepDives).toHaveLength(1);
       expect(result.data.deepDives[0]?.anchor).toBe("distance-ladder");
+    }
+  });
+
+  // ADR 0063 (A8) — omiFlows optional with default [].
+  test("omiFlows defaults to [] when absent (forward-compat)", () => {
+    const result = PedagogyIndexSchema.safeParse(emptyIndex);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.omiFlows).toEqual([]);
+    }
+  });
+
+  test("accepts a populated omiFlows array", () => {
+    const result = PedagogyIndexSchema.safeParse({
+      ...emptyIndex,
+      omiFlows: [
+        {
+          chapter: "spoiler-alerts",
+          anchor: "omi-stellar-temperature",
+          concept: "stellar-temperature",
+          observable: { title: "HR diagram", body: "<p>x</p>" },
+          model: { title: "Hydrostatic equilibrium", body: "<p>x</p>" },
+          inference: { title: "Mass-lifetime relation", body: "<p>x</p>" },
+          sourceOrder: ["observable", "model", "inference"] as const,
+        },
+      ],
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.omiFlows).toHaveLength(1);
+      expect(result.data.omiFlows[0]?.anchor).toBe("omi-stellar-temperature");
     }
   });
 

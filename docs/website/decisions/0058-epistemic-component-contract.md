@@ -177,6 +177,15 @@ audit can bind to it. A future ADR (likely paired with the A8
 `<OMIFlow>` graduation) carries that invariant; the role set this
 ADR locks is the prerequisite.
 
+:::{note} Graduated in ADR 0063 as OF-2 (2026-05-19)
+[ADR 0063](./0063-omiflow-composite-primitive.md) graduates the
+A8 `<OMIFlow>` composite primitive and lands this deferred invariant
+as **OF-2** (chapter-level conformance ERROR): chapters with
+`framing: 'OMI'` MUST contain ≥ 1 `<OMIFlow>` callsite. The strict-3
+slot tuple from ADR 0063 §Decision 3 reduces the invariant to a
+one-line audit check (per-chapter presence of any OMIFlowEntry).
+:::
+
 ## Rationale
 
 ### Why declare the contract now rather than incrementally

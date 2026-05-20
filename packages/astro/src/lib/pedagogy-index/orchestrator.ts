@@ -17,6 +17,7 @@ import { extractKeyInsights } from "./extractors/key-insights.ts";
 import { extractMisconceptions } from "./extractors/misconceptions.ts";
 import { extractMultiReps } from "./extractors/multireps.ts";
 import { extractObjectives } from "./extractors/objectives.ts";
+import { extractOMIFlows } from "./extractors/omi-flow.ts";
 import { markFirstUseGlossaryTerms } from "./transforms/first-use-glossary.ts";
 import { transformIntervention } from "./transforms/intervention.ts";
 import { transformLearningObjectives } from "./transforms/learning-objectives.ts";
@@ -167,6 +168,11 @@ export function pedagogyIndexRemarkPlugin(
     // (PR-B follow-up to PR-A's renderer surface). The-more-you-know
     // callouts are intentionally NOT walked.
     indexAccumulator.addDeepDives(extractDeepDives(tree, chapterSlug));
+    // ADR 0063 — A8 <OMIFlow> composite primitive. Extractor walks
+    // future <OMIFlow> JSX and emits OMIFlowEntry rows; no callsites
+    // exist yet (the React component lands in PR-B), so this is a
+    // no-op until then.
+    indexAccumulator.addOMIFlows(extractOMIFlows(tree, chapterSlug));
     indexAccumulator.addObjectives(extractObjectives(tree, chapterSlug));
     indexAccumulator.addInlineRefUsages(
       extractInlineRefUsages(tree, chapterSlug)

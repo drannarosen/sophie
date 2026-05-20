@@ -16,6 +16,7 @@ import {
   MisconceptionEntrySchema,
   ModuleEntrySchema,
   ObjectiveEntrySchema,
+  OMIFlowEntrySchema,
 } from "./pedagogy-index-entries/index.ts";
 
 /**
@@ -38,6 +39,7 @@ import {
  * | Figure        | `fig-`  | auto: `fig-${slug(name)}-${counter}`                      |
  * | Misconception | `misc-` | auto: `misc-${counter}` (auto only)                       |
  * | Deep dive     | `dd-`   | id > slug(title) > auto: `dd-${counter}`                  |
+ * | OMI flow      | `omi-`  | id > `omi-${slug(concept)}` > auto: `omi-${counter}`      |
  * | Chapter       | `ch-`   | passthrough chapter slug                                  |
  * | Objective     | `lo-`   | passthrough author id                                     |
  *
@@ -80,6 +82,13 @@ export const PedagogyIndexSchema = z.object({
    * enrichment content sits outside the eight-role taxonomy.
    */
   deepDives: z.array(DeepDiveEntrySchema).readonly().default([]),
+  /**
+   * Per-chapter `<OMIFlow>` callsites (ADR 0063). Populated by
+   * `extractOMIFlows`. Optional with default `[]` so consumer apps on
+   * the pre-A8 path keep working. One entry per callsite carrying all
+   * three slot bodies (observable / model / inference).
+   */
+  omiFlows: z.array(OMIFlowEntrySchema).readonly().default([]),
   /** Consumer-app-owned chapter metadata, forwarded from `getCollection('chapters')`. */
   chapters: z.array(ChapterEntrySchema).readonly(),
   /** Consumer-app-owned module metadata, forwarded from `getCollection('modules')`. */

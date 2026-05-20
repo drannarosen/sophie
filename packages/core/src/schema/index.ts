@@ -104,6 +104,9 @@ export {
   ModuleEntrySchema,
   type ObjectiveEntry,
   ObjectiveEntrySchema,
+  type OMIFlowEntry,
+  OMIFlowEntrySchema,
+  type OMIFlowSlot,
 } from "./pedagogy-index-entries/index.js";
 export { LangTag, NonEmptyString, Slug } from "./primitives.js";
 export { type RegistryBase, RegistryBaseSchema } from "./registry-base.js";

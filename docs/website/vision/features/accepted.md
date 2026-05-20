@@ -261,20 +261,20 @@ the six child components + three audit invariants.
 (a8-omiflow-composite-primitive)=
 ## A8. `<OMIFlow>` composite primitive
 
-**Status.** Accepted-pending-ADR. **Prerequisite met 2026-05-16** —
-both [ADR 0058](../../decisions/0058-epistemic-component-contract.md)
-(role contract) and
-[ADR 0059](../../decisions/0059-linked-representation-state-primitive.md)
-(A11 linked-representation primitive) are now graduated. A8 is
-**ready to graduate** as the next concrete C-tier component.
-Surfaced 2026-05-16 alongside
-[ADR 0058 — Epistemic Component Contract](../../decisions/0058-epistemic-component-contract.md),
+**Status.** **Shipped per [ADR 0063](../../decisions/0063-omiflow-composite-primitive.md)** (2026-05-19).
+v1 design + 14 locked decisions captured in
+[`docs/plans/2026-05-19-omiflow-design.md`](../../../plans/2026-05-19-omiflow-design.md);
+implementation lands across PR-A (schema + extractor + OF-1), PR-B
+(React component + stories + axe + VR + smoke fixture), and PR-C
+(OF-2 chapter-level conformance + e2e + docs sweep). Pre-shipped
+context (preserved below for audit trail): surfaced 2026-05-16
+alongside [ADR 0058 — Epistemic Component Contract](../../decisions/0058-epistemic-component-contract.md),
 which is A8's prerequisite. A8 is the **canonical compound primitive**
 that demonstrates ADR 0058's eight-role contract end-to-end — three
 declared slots (`observable`, `model`, `inference`), per-slot role
 declaration, and the first chapter-level audit invariant
 (*"every `framing: 'OMI'` chapter reaches all three roles"*) bound
-to it.
+to it (graduated as **OF-2** in PR-C).
 
 **Motivating use case.** Sophie chapters declare
 `framing: 'OMI'|'PMI'|'custom'` today, but the OMI arc is implicit

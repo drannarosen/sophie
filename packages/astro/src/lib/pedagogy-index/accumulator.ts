@@ -15,6 +15,7 @@ import type {
   ModuleEntry,
   MultiRepIndexEntry,
   ObjectiveEntry,
+  OMIFlowEntry,
   PedagogyIndex,
 } from "@sophie/core/schema";
 
@@ -135,6 +136,14 @@ interface GlobalIndexState {
    * NOT tracked here.
    */
   deepDives: Map<string, DeepDiveEntry>;
+  /**
+   * Per-chapter `<OMIFlow>` callsites (ADR 0063). Keyed by
+   * `${chapter}#${anchor}` so two chapters can each have an `omi-1`
+   * auto-anchor without collision. Populated by `extractOMIFlows`.
+   * One entry per callsite carries all three slot bodies — no
+   * separate per-slot rows.
+   */
+  omiFlows: Map<string, OMIFlowEntry>;
 }
 
 function getGlobalState(): GlobalIndexState {
@@ -157,6 +166,7 @@ function getGlobalState(): GlobalIndexState {
       multiReps: new Map(),
       interventions: new Map(),
       deepDives: new Map(),
+      omiFlows: new Map(),
     };
   }
   return g[GLOBAL_KEY];
@@ -222,6 +232,11 @@ class IndexAccumulator {
     for (const [key, entry] of state.deepDives) {
       if (entry.chapter === chapterSlug) {
         state.deepDives.delete(key);
+      }
+    }
+    for (const [key, entry] of state.omiFlows) {
+      if (entry.chapter === chapterSlug) {
+        state.omiFlows.delete(key);
       }
     }
   }
@@ -582,6 +597,37 @@ class IndexAccumulator {
   }
 
   /**
+   * Add a chapter's extracted <OMIFlow> callsites (ADR 0063).
+   * Cross-chapter OMIFlow anchor invariant: explicit-id-derived
+   * anchors must be unique across chapters. Auto-anchors of the shape
+   * `omi-${N}` are chapter-scoped (each chapter restarts its counter
+   * at 1) and NOT subject to the cross-chapter check.
+   *
+   * Two-pass validate-then-mutate mirrors `addDeepDives` (D2 shape):
+   * a collision in entry N leaves entries 0..N-1 unwritten so the
+   * audit-error message identifies a single offender.
+   */
+  addOMIFlows(entries: ReadonlyArray<OMIFlowEntry>): void {
+    const state = getGlobalState();
+    for (const entry of entries) {
+      if (/^omi-\d+$/.test(entry.anchor)) continue;
+      for (const existing of state.omiFlows.values()) {
+        if (
+          existing.chapter !== entry.chapter &&
+          existing.anchor === entry.anchor
+        ) {
+          throw new Error(
+            `OMIFlow anchor "${entry.anchor}" defined in multiple chapters: "${existing.chapter}" and "${entry.chapter}". (Cross-chapter OMIFlow invariant.) Resolution: change one of the \`id\` props.`
+          );
+        }
+      }
+    }
+    for (const entry of entries) {
+      state.omiFlows.set(`${entry.chapter}#${entry.anchor}`, entry);
+    }
+  }
+
+  /**
    * Snapshot the current accumulator state as a PedagogyIndex.
    * Equations populate from PR-C2 onward; keyInsights, figureUsages,
    * and misconceptions populate from PR-C3 onward. `figureRegistry`
@@ -608,6 +654,7 @@ class IndexAccumulator {
       multiReps: Array.from(state.multiReps.values()),
       interventions: Array.from(state.interventions.values()),
       deepDives: Array.from(state.deepDives.values()),
+      omiFlows: Array.from(state.omiFlows.values()),
     };
   }
 }
@@ -641,4 +688,5 @@ export function resetIndexAccumulator(): void {
   state.multiReps.clear();
   state.interventions.clear();
   state.deepDives.clear();
+  state.omiFlows.clear();
 }

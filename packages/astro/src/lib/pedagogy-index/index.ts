@@ -42,6 +42,7 @@ export {
   extractMultiReps,
 } from "./extractors/multireps.ts";
 export { extractObjectives } from "./extractors/objectives.ts";
+export { extractOMIFlows } from "./extractors/omi-flow.ts";
 export {
   type PedagogyIndexRemarkPluginOptions,
   pedagogyIndexRemarkPlugin,
