@@ -1012,6 +1012,36 @@ describe("PedagogyIndexSchema", () => {
     }
   });
 
+  // ADR 0063 (A8) — omiFlows optional with default [].
+  test("omiFlows defaults to [] when absent (forward-compat)", () => {
+    const result = PedagogyIndexSchema.safeParse(emptyIndex);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.omiFlows).toEqual([]);
+    }
+  });
+
+  test("accepts a populated omiFlows array", () => {
+    const result = PedagogyIndexSchema.safeParse({
+      ...emptyIndex,
+      omiFlows: [
+        {
+          chapter: "spoiler-alerts",
+          anchor: "omi-stellar-temperature",
+          concept: "stellar-temperature",
+          observable: { title: "HR diagram", body: "<p>x</p>" },
+          model: { title: "Hydrostatic equilibrium", body: "<p>x</p>" },
+          inference: { title: "Mass-lifetime relation", body: "<p>x</p>" },
+        },
+      ],
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.omiFlows).toHaveLength(1);
+      expect(result.data.omiFlows[0]?.anchor).toBe("omi-stellar-temperature");
+    }
+  });
+
   test("accepts a populated multiReps array", () => {
     const result = PedagogyIndexSchema.safeParse({
       ...emptyIndex,
