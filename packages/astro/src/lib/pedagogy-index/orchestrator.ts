@@ -22,6 +22,7 @@ import { markFirstUseGlossaryTerms } from "./transforms/first-use-glossary.ts";
 import { transformIntervention } from "./transforms/intervention.ts";
 import { transformLearningObjectives } from "./transforms/learning-objectives.ts";
 import { transformMultiRep } from "./transforms/multirep.ts";
+import { transformOMIFlow } from "./transforms/omi-flow.ts";
 
 /**
  * Default chapter-slug deriver. Matches Astro 6's glob-loader
@@ -209,5 +210,11 @@ export function pedagogyIndexRemarkPlugin(
     // :target outline fires. Runs after the read-only extractInterventions
     // (above) so the JSX-DFS numbering agrees.
     transformIntervention(tree, chapterSlug);
+    // Hoist <OMIFlow> slot children into explicit observable/model/
+    // inference props (ADR 0063). The slot marker components return
+    // null at runtime; without this transform Astro's MDX integration
+    // discards the slot bodies before the outer <OMIFlow> runs. Same
+    // shape + same shared parser as extractOMIFlows (above).
+    transformOMIFlow(tree, chapterSlug);
   };
 }

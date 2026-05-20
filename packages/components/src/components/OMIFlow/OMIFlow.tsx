@@ -6,26 +6,46 @@ import {
   useId,
 } from "react";
 import styles from "./OMIFlow.module.css.js";
-import type { OMIFlowProps, OMIFlowSlotProps } from "./OMIFlow.schema.ts";
+import type {
+  OMIFlowProps,
+  OMIFlowSlotPayload,
+  OMIFlowSlotProps,
+} from "./OMIFlow.schema.ts";
 
 /**
  * `<OMIFlow>` — composite pedagogy primitive (ADR 0063, A8).
  *
  * Three named slots whose role is bound by component identity, not by
- * an author prop (ADR 0063 §Decision 11). The renderer:
+ * an author prop (ADR 0063 §Decision 11). Renders a `<div role="group">`
+ * landmark with three labelled `<section>` slot regions in canonical
+ * observable → model → inference order, regardless of source order
+ * (ADR 0063 §Decision 4 — liberal in, strict out; OF-1 audit warns on
+ * non-canonical source order).
  *
- *   1. Scans children for the three slot components (`OMIFlow.Observable`,
- *      `OMIFlow.Model`, `OMIFlow.Inference`).
- *   2. Sorts them into canonical observable → model → inference order
- *      regardless of source order (ADR 0063 §Decision 4 — liberal in
- *      input, strict in output; OF-1 audit warns on out-of-order source).
- *   3. Emits an outer `<div role="group" aria-labelledby="…">` with the
- *      three slots as labelled `<section role="region">` children.
+ * **Two render modes** (mirrors `<MultiRep>` / `<RepVerbal>`,
+ * ADR 0043):
  *
- * Strict-3-slot validation lives in the extractor (`extractOMIFlows`,
- * ADR 0063 PR-A). The renderer trusts well-formed input; missing slots
- * render as a partial flow (forgiving at runtime so a temporarily
- * mid-edit MDX source doesn't crash the page).
+ *   - **Extractor-fed mode**: when `observable` / `model` /
+ *     `inference` props are set (post-`transformOMIFlow`), bodies are
+ *     pre-rendered HTML strings injected via `dangerouslySetInnerHTML`.
+ *     This is the production MDX path — `transformOMIFlow` harvests
+ *     authored slot children at build time and replaces the parent's
+ *     `children` with these explicit props. Without the transform,
+ *     Astro's MDX integration evaluates each `<OMIFlow.Observable>`
+ *     marker (which returns `null`), discarding the authored content
+ *     before the outer `<OMIFlow>` runs (ADR 0027 — "data crosses the
+ *     MDX render boundary as props, not as React children").
+ *
+ *   - **Author mode**: when slot props are absent, the renderer reads
+ *     children via `React.Children` + component-identity matching. Used
+ *     by Storybook + raw-React unit tests where no MDX build-time
+ *     transform is in play. Stays as the documented authoring shape so
+ *     stories and tests remain expressive.
+ *
+ * Strict-3-slot validation is enforced at the EXTRACT phase by
+ * `extractOMIFlows` (ADR 0063 strict-3 invariant). The renderer trusts
+ * well-formed input; missing slots render as a partial flow so a
+ * temporarily mid-edit MDX source doesn't crash the page.
  */
 
 type SlotKind = "observable" | "model" | "inference";
@@ -48,22 +68,23 @@ function slotClassFor(role: SlotKind): string {
 }
 
 /**
- * Internal slot component shared by all three role-bound exports.
- * Renders the role-labelled `<section>` wrapper + the author's body.
- * Authors never construct this directly — they use
- * `<OMIFlow.Observable>`, `<OMIFlow.Model>`, or `<OMIFlow.Inference>`,
- * which set the `role` prop via the binding below.
+ * Shared slot renderer. Accepts either `children` (author mode) or
+ * `bodyHtml` (extractor-fed mode) — never both meaningfully. `title`
+ * is optional; when omitted the rendered title bar shows only the
+ * role label.
  */
 function OMIFlowSlotImpl({
   role,
   titleId,
   title,
+  bodyHtml,
   children,
 }: {
   role: SlotKind;
   titleId: string;
   title: string | undefined;
-  children: ReactNode;
+  bodyHtml?: string;
+  children?: ReactNode;
 }) {
   const trimmed = title?.trim();
   return (
@@ -85,23 +106,29 @@ function OMIFlowSlotImpl({
           </>
         ) : null}
       </header>
-      <div className={styles.body}>{children}</div>
+      {bodyHtml !== undefined ? (
+        <div
+          className={styles.body}
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: bodyHtml is build-time-serialized author MDX from renderChildrenToHtml (same trust boundary as <RepVerbal>'s body / <Objective>'s body) — never runtime input
+          dangerouslySetInnerHTML={{ __html: bodyHtml }}
+        />
+      ) : (
+        <div className={styles.body}>{children}</div>
+      )}
     </section>
   );
 }
 
 /**
- * Marker slot components used to identify each slot via `child.type`.
- * Exported so the .d.ts can reference them as `OMIFlow.Observable` etc.
- * Authors reach them via the compound-component syntax
- * (`<OMIFlow.Observable>`); the standalone exports exist purely so the
- * TS declaration emitter can name them.
+ * Marker slot components used by the author-mode children-identity
+ * branch. Exported so the .d.ts can name them as `OMIFlow.Observable`
+ * etc. They render `null` directly — the outer `<OMIFlow>` reads
+ * their props by identity-matching the React children. In MDX
+ * production this branch is unreachable because `transformOMIFlow`
+ * hoists slot data into explicit `observable` / `model` / `inference`
+ * props before Astro compiles the MDX.
  */
 export function OMIFlowObservable(_: OMIFlowSlotProps): ReactNode {
-  // Never invoked directly — `<OMIFlow>` reads the children and
-  // delegates to `OMIFlowSlotImpl`. Returning null keeps Storybook
-  // happy if someone authors `<OMIFlow.Observable>` outside an
-  // enclosing `<OMIFlow>`.
   return null;
 }
 OMIFlowObservable.displayName = "OMIFlow.Observable";
@@ -140,20 +167,59 @@ function identifySlot(child: ReactNode): SlotKind | undefined {
   return undefined;
 }
 
-export function OMIFlow({ id, concept, children }: OMIFlowProps) {
+interface ResolvedSlot {
+  title?: string;
+  /** When set: post-transform HTML string injected via dangerouslySetInnerHTML. */
+  bodyHtml?: string;
+  /** When set: author-mode React children passed through directly. */
+  children?: ReactNode;
+}
+
+function resolveSlots(
+  props: OMIFlowProps
+): Partial<Record<SlotKind, ResolvedSlot>> {
+  const out: Partial<Record<SlotKind, ResolvedSlot>> = {};
+
+  // Extractor-fed mode wins when ANY slot payload is set. Per-slot
+  // resolution: if a slot has a payload, use it; if it doesn't but
+  // children-mode would supply it, fall through. (Production MDX
+  // always sets all three; mixed mode is for forward-compat.)
+  if (props.observable !== undefined) {
+    out.observable = {
+      title: props.observable.title,
+      bodyHtml: props.observable.body,
+    };
+  }
+  if (props.model !== undefined) {
+    out.model = { title: props.model.title, bodyHtml: props.model.body };
+  }
+  if (props.inference !== undefined) {
+    out.inference = {
+      title: props.inference.title,
+      bodyHtml: props.inference.body,
+    };
+  }
+
+  // Author mode: scan children for slot-component identity matches.
+  // Skips slots already resolved from extractor-fed props.
+  Children.forEach(props.children, (child) => {
+    const kind = identifySlot(child);
+    if (kind === undefined) return;
+    if (out[kind] !== undefined) return;
+    const el = child as ReactElement<OMIFlowSlotProps>;
+    out[kind] = { title: el.props.title, children: el.props.children };
+  });
+
+  return out;
+}
+
+export function OMIFlow(props: OMIFlowProps) {
+  const { id, concept } = props;
   const fallbackId = useId();
   const rootId = id ?? fallbackId;
   const titleId = `${rootId}-label`;
 
-  const slots: Partial<Record<SlotKind, OMIFlowSlotProps>> = {};
-  Children.forEach(children, (child) => {
-    const kind = identifySlot(child);
-    if (kind === undefined) return;
-    const el = child as ReactElement<OMIFlowSlotProps>;
-    // Last-write-wins on duplicate slots — extractor's exactly-one
-    // invariant catches this at build time; runtime is forgiving.
-    slots[kind] = el.props;
-  });
+  const slots = resolveSlots(props);
 
   return (
     // biome-ignore lint/a11y/useSemanticElements: outer landmark is role="group" on a <div> on purpose. <fieldset> is form-only; <section> here would compete with the three slot <section> children. The composite-of-labelled-regions shape needs the explicit group role on a non-section parent.
@@ -177,13 +243,13 @@ export function OMIFlow({ id, concept, children }: OMIFlowProps) {
             role={kind}
             titleId={slotTitleId}
             title={slot.title}
+            bodyHtml={slot.bodyHtml}
           >
             {slot.children}
           </OMIFlowSlotImpl>
         );
-        // Add a decorative chevron between slots (not before the first,
-        // not after the last). Chevron rotation to ↓ on mobile/print
-        // lives in CSS.
+        // Decorative chevron between adjacent slots; not after the
+        // final one. Chevron rotation to ↓ on mobile/print lives in CSS.
         const isLast = idx === CANONICAL_ORDER.length - 1;
         if (isLast) return [slotEl];
         return [
@@ -200,3 +266,7 @@ export function OMIFlow({ id, concept, children }: OMIFlowProps) {
 OMIFlow.Observable = OMIFlowObservable;
 OMIFlow.Model = OMIFlowModel;
 OMIFlow.Inference = OMIFlowInference;
+
+// Re-export the slot payload type so downstream consumers (transform,
+// orchestrator) reference one canonical shape.
+export type { OMIFlowSlotPayload };
