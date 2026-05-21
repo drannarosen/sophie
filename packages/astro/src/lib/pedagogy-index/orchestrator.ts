@@ -18,6 +18,7 @@ import { extractMisconceptions } from "./extractors/misconceptions.ts";
 import { extractMultiReps } from "./extractors/multireps.ts";
 import { extractObjectives } from "./extractors/objectives.ts";
 import { extractOMIFlows } from "./extractors/omi-flow.ts";
+import { markChapterOpener } from "./transforms/chapter-opener.ts";
 import { markFirstUseGlossaryTerms } from "./transforms/first-use-glossary.ts";
 import { transformIntervention } from "./transforms/intervention.ts";
 import { transformLearningObjectives } from "./transforms/learning-objectives.ts";
@@ -230,6 +231,13 @@ export function pedagogyIndexRemarkPlugin(
     // reads the prop and renders an inline footnote span; the @media
     // print rules in textbook-layout.css reveal the span in print.
     markFirstUseGlossaryTerms(tree, chapterSlug);
+
+    // Sprint H follow-up — stamp `data-chapter-opener="true"` on the
+    // first non-chrome h2 so the chapter-opening ornament rule in
+    // textbook-layout.css fires. Done at remark-time (not as raw HTML
+    // wrapper in MDX) so the heading stays markdown-syntax and remains
+    // visible to Astro's heading extractor for the in-page ToC.
+    markChapterOpener(tree);
 
     // Rewrite <LearningObjectives> AST shape so the React island
     // receives a props-driven `objectives` array instead of JSX

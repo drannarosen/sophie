@@ -293,17 +293,42 @@
  * not pedagogy; it must not compete with Sprint G's brand-teal Part
  * labels for attention.
  */
-/*
- * The ornament rule that previously lived here targeted
- * `h2[data-chapter-opener]`. Removed during the 2026-05-20 hardening
- * pass: the `data-chapter-opener` attribute was being set via a raw
- * `<h2 data-chapter-opener>` MDX wrapper, which made the heading
- * invisible to Astro's markdown-heading extractor and broke the
- * in-page ToC (Part 1 was missing). A future implementation should
- * apply the ornament via a remark plugin that sets the attribute on
- * the rendered `<h2>` element while keeping the heading as
- * markdown `## Heading` syntax. Drop cap below is unaffected.
+/* Sprint H — Chapter-opening ornament.
+ *
+ * A single decorative dot-dash row rendered below the first Part
+ * heading, marking the boundary between front-matter chrome (Learning
+ * Objectives, Concept throughline, opening callouts) and the chapter
+ * body. The `data-chapter-opener` attribute is stamped at remark-time
+ * by `markChapterOpener` (see
+ * packages/astro/src/lib/pedagogy-index/transforms/chapter-opener.ts)
+ * — first non-chrome h2 wins. Keeps the heading as markdown `##`
+ * syntax so Astro's heading extractor picks it up for the in-page
+ * ToC. (First-attempt JSX `<h2 data-chapter-opener>` wrapper broke
+ * that; surfaced 2026-05-20 verify pass Bug 2.)
+ *
+ * Neutral stone color — ornament is chrome, not pedagogy; it must
+ * not compete with Sprint G's brand-teal Part labels for attention.
  */
+.sophie-content > h2[data-chapter-opener]::after {
+  content: "";
+  display: block;
+  margin-block: 0.6em 0;
+  block-size: 1em;
+  background-image:
+    radial-gradient(circle, var(--sophie-text-muted) 1.2px, transparent 1.6px),
+    linear-gradient(
+      to right,
+      transparent,
+      var(--sophie-text-muted) 50%,
+      transparent
+    );
+  background-repeat: no-repeat;
+  background-size:
+    6px 6px,
+    4em 1px;
+  background-position: center, center;
+  opacity: 0.55;
+}
 
 /* Sprint H — Drop cap on the chapter's first prose paragraph.
  *
