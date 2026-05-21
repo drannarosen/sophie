@@ -1,0 +1,161 @@
+---
+/**
+ * `<ChapterTitle>` — chapter-opening title block (Sprint K, 2026-05-21).
+ *
+ * Renders the chapter's title with an **auto-prefixed "Lecture N"** in
+ * the small-caps teal voice that matches Sprint G's Part counters, plus
+ * an optional italic-serif subtitle. Consumer pages compose this in
+ * place of a bare `<h1>{frontmatter.title}</h1>`.
+ *
+ * **Auto-prefix derivation:** "Lecture N" is computed from
+ * `frontmatter.order` (the within-module chapter order). The literal
+ * `Lecture N: ` prefix is intentionally NOT in the authored title
+ * field — it's derived structurally so:
+ *
+ *   1. Sidebar listings + page titles don't contain a redundant
+ *      "Lecture N:" string (resolves CT-1 + CT-2 audit warnings on
+ *      same-prefix collisions across chapters).
+ *   2. Future renumbering edits one place (frontmatter `order`)
+ *      rather than every chapter's title string.
+ *
+ * Defensive normalization: if the authored title still contains a
+ * leading `Lecture N: ` (legacy authoring or in-progress migration),
+ * we strip it so the prefix only renders once. The regex is tolerant
+ * of varying whitespace and en/em dashes.
+ *
+ * **Subtitle:** when `frontmatter.subtitle` is set, renders below the
+ * title as italic Fraunces serif — editorial "deck" voice matching the
+ * Sprint H drop cap + chapter ornament treatment. Optional; omitted
+ * chapters keep the meta strip flush against the title.
+ *
+ * **a11y:** the rendered `<h1>` carries the title only. The "Lecture N"
+ * prefix is a `<p>` above (not part of the heading text); the subtitle
+ * is a `<p>` sibling below. Screen readers announce the heading-level
+ * structure cleanly without the prefix bleeding into the chapter name.
+ */
+export interface Props {
+  frontmatter: {
+    title: string;
+    subtitle?: string;
+    /**
+     * Display chapter number (Sprint F) — drives "Lecture N" prefix.
+     * Decoupled from `order` (the sort key) so renaming/reordering
+     * doesn't change the user-facing lecture number. ASTR 201's
+     * M2-L3 pilot has `chapter: 3` because the source course names
+     * it that; the within-module sort `order` is a separate concern.
+     */
+    chapter?: number;
+    order?: number;
+    /**
+     * Author byline (Sprint I-D field). Rendered MyST-style under
+     * the subtitle as "By {names}" in italic Plex Sans. The footer
+     * also renders the author list at chapter end — both surfaces
+     * pull from the same array. Empty/absent → no byline rendered.
+     */
+    authors?: ReadonlyArray<string>;
+  };
+}
+
+const { frontmatter } = Astro.props;
+
+// Strip a leading `Lecture N: ` (or em/en-dash variants) so the
+// auto-prefix doesn't double up during the smoke-fixture migration.
+// Tolerant of whitespace + Unicode dashes.
+const TITLE_PREFIX_RE = /^Lecture\s+\d+\s*[:–—-]\s*/u;
+const normalizedTitle = frontmatter.title.replace(TITLE_PREFIX_RE, "");
+
+// Compute auto-prefix. Prefer `chapter` (display number, Sprint F);
+// fallback to `order` (sort key). Chapters with neither get a
+// title-only header (no prefix).
+const lectureNum = frontmatter.chapter ?? frontmatter.order;
+const prefixLabel =
+  typeof lectureNum === "number" && lectureNum > 0
+    ? `Lecture ${lectureNum}`
+    : null;
+
+// MyST-style author byline. Single author: "By Anna Rosen".
+// Multiple authors: "By Anna Rosen, Jane Doe" (Oxford-comma-free
+// per typographic convention for 2-author lists); 3+ uses Oxford.
+const authorList = frontmatter.authors?.filter((a) => a.trim().length > 0) ?? [];
+const bylineText =
+  authorList.length === 0
+    ? null
+    : authorList.length === 1
+      ? `By ${authorList[0]}`
+      : authorList.length === 2
+        ? `By ${authorList[0]} and ${authorList[1]}`
+        : `By ${authorList.slice(0, -1).join(", ")}, and ${authorList[authorList.length - 1]}`;
+---
+
+<header class='sophie-chapter-title' data-no-counter>
+  {
+    prefixLabel && (
+      <p class='sophie-chapter-title__prefix' aria-hidden='true'>
+        {prefixLabel}
+      </p>
+    )
+  }
+  <h1 class='sophie-chapter-title__main'>{normalizedTitle}</h1>
+  {
+    frontmatter.subtitle && (
+      <p class='sophie-chapter-title__subtitle'>{frontmatter.subtitle}</p>
+    )
+  }
+  {
+    bylineText && (
+      <p class='sophie-chapter-title__byline'>{bylineText}</p>
+    )
+  }
+</header>
+
+<style is:global>
+  /* Sprint K — chapter-title block.
+   *
+   * Anatomy:
+   *   .prefix      "Lecture 3"        small-caps teal, ~14px, tracked
+   *   .main        Chapter title       Fraunces serif h1 (inherits global)
+   *   .subtitle    Editorial deck      italic Fraunces, ~22px, text-2
+   */
+  .sophie-chapter-title {
+    margin-block-end: var(--sophie-space-4);
+  }
+  .sophie-chapter-title__prefix {
+    margin: 0;
+    font-family: var(--sophie-font-sans);
+    font-size: var(--sophie-text-small);
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--sophie-brand-teal-text);
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+  .sophie-chapter-title__main {
+    /* Inherits global `.sophie-content h1` Fraunces styling. Reset
+       margin-block-start so the prefix sits tight against the title. */
+    margin-block-start: 0.15em;
+  }
+  .sophie-chapter-title__subtitle {
+    margin-block: 0.4em 0;
+    font-family: var(--sophie-font-serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 1.25rem;
+    line-height: 1.35;
+    color: var(--sophie-text-2);
+    font-variation-settings:
+      "opsz" 36,
+      "SOFT" 60;
+  }
+  /* MyST-style byline: smaller, muted, Plex Sans (NOT serif) so it
+     reads as scholarly metadata rather than editorial continuation
+     of the subtitle. Spaced loosely below subtitle to feel
+     attribution-y rather than another line of the deck. */
+  .sophie-chapter-title__byline {
+    margin-block: 0.6em 0;
+    font-family: var(--sophie-font-sans);
+    font-size: 0.95rem;
+    font-weight: 400;
+    color: var(--sophie-text-muted);
+    font-style: italic;
+  }
+</style>

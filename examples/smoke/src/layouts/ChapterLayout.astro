@@ -2,6 +2,7 @@
 import ChapterFooter from "@sophie/astro/components/ChapterFooter.astro";
 import ChapterMeta from "@sophie/astro/components/ChapterMeta.astro";
 import ChapterPagination from "@sophie/astro/components/ChapterPagination.astro";
+import ChapterTitle from "@sophie/astro/components/ChapterTitle.astro";
 import ModuleNav from "@sophie/astro/components/ModuleNav.astro";
 import ScrollProgress from "@sophie/astro/components/ScrollProgress.astro";
 import TextbookHead from "@sophie/astro/components/TextbookHead.astro";
@@ -23,6 +24,8 @@ const figureRegistryArray = Object.values(figureRegistry);
 interface Props {
   frontmatter: {
     title: string;
+    /** Sprint K — optional editorial subtitle / deck. */
+    subtitle?: string;
     slug: string;
     module: string;
     order?: number;
@@ -155,7 +158,7 @@ const next = nextRaw
             </Fragment>
           )
         }
-        <h1>{frontmatter.title}</h1>
+        <ChapterTitle frontmatter={frontmatter} />
         <ChapterMeta
           reading={frontmatter.reading}
           track={frontmatter.track}
