@@ -198,3 +198,135 @@ concepts:
     units: "arcsec (small-angle); degrees (wide-field)"
     code_alias: "theta_arcsec"
     introduced_in: "01-foundations/measuring-the-sky"
+
+  # Atomic-physics + Doppler symbols introduced in
+  # 02-stars/spectra-and-composition (Bohr model, photon energy,
+  # non-relativistic Doppler shift). Eight new concepts cover the
+  # symbol arrays of bohr-energy.mdx, photon-energy.mdx, and
+  # doppler-shift.mdx.
+
+  - id: "bohr-energy-level"
+    verbal_label: "Bohr energy level"
+    canonical_symbol: "E_n"
+    latex: "E_n"
+    epistemic_role: "model"
+    units: "eV; erg"
+    code_alias: "E_n"
+    introduced_in: "02-stars/spectra-and-composition"
+    notes: >-
+      Quantized energy of an electron in the n-th allowed Bohr orbit
+      of hydrogen. Negative (bound). Sets the photon-energy ladder
+      visible as the Balmer, Lyman, and Paschen line series.
+
+  - id: "principal-quantum-number"
+    verbal_label: "principal quantum number"
+    canonical_symbol: "n"
+    latex: "n"
+    epistemic_role: "model"
+    units: "(dimensionless integer)"
+    code_alias: "n"
+    introduced_in: "02-stars/spectra-and-composition"
+    notes: >-
+      Integer label (n = 1, 2, 3, ...) for hydrogen-atom energy levels
+      in the Bohr model. n = 1 is the ground state; n -> infinity is
+      the ionization threshold.
+
+  - id: "photon-energy"
+    verbal_label: "photon energy"
+    canonical_symbol: "E"
+    latex: "E"
+    epistemic_role: "model"
+    units: "eV; erg"
+    code_alias: "E_photon"
+    common_confusions:
+      - symbol: "E_n"
+        meaning: "Bohr energy LEVEL (negative, bound state) — NOT a free photon energy (positive)"
+        concept_ref: "bohr-energy-level"
+    introduced_in: "02-stars/spectra-and-composition"
+    notes: >-
+      Energy of a single photon. Computed from wavelength via
+      E = hc / lambda or from frequency via E = h nu. Convenient
+      shortcut hc ~ 1240 eV nm.
+
+  - id: "frequency"
+    verbal_label: "frequency"
+    canonical_symbol: "\\nu"
+    latex: "\\nu"
+    epistemic_role: "observable"
+    units: "Hz; s^{-1}"
+    code_alias: "nu_hz"
+    common_confusions:
+      - symbol: "v"
+        meaning: "velocity — Latin v, not Greek nu; visually similar but distinct"
+        concept_ref: "orbital-velocity"
+    introduced_in: "02-stars/spectra-and-composition"
+    notes: >-
+      Number of wave cycles per unit time. Related to wavelength by
+      c = lambda nu in vacuum.
+
+  - id: "wavelength"
+    verbal_label: "wavelength"
+    canonical_symbol: "\\lambda"
+    latex: "\\lambda"
+    epistemic_role: "observable"
+    units: "nm (optical); cm (general)"
+    code_alias: "lambda_nm"
+    common_confusions:
+      - symbol: "\\lambda_{peak}"
+        meaning: "peak wavelength of a blackbody continuum — a derived quantity, not the wavelength of a spectral line"
+        concept_ref: "peak-wavelength"
+    introduced_in: "02-stars/spectra-and-composition"
+    notes: >-
+      Spatial period of an electromagnetic wave. Direct observable in
+      spectroscopy via diffraction or interference. Specific atomic
+      transitions emit and absorb at characteristic wavelengths set by
+      energy-level differences.
+
+  - id: "wavelength-shift"
+    verbal_label: "wavelength shift"
+    canonical_symbol: "\\Delta\\lambda"
+    latex: "\\Delta\\lambda"
+    epistemic_role: "observable"
+    units: "nm; cm"
+    code_alias: "delta_lambda_nm"
+    introduced_in: "02-stars/spectra-and-composition"
+    notes: >-
+      Offset of an observed spectral line from its laboratory rest
+      wavelength. A real Doppler shift moves every line by the same
+      fraction Delta lambda over lambda_0; a shift in only one line is
+      a misidentification, not motion.
+
+  - id: "rest-wavelength"
+    verbal_label: "rest wavelength"
+    canonical_symbol: "\\lambda_0"
+    latex: "\\lambda_0"
+    epistemic_role: "observable"
+    units: "nm; cm"
+    code_alias: "lambda_0_nm"
+    common_confusions:
+      - symbol: "\\lambda"
+        meaning: "observed wavelength — what the detector measures, possibly Doppler-shifted from the rest value"
+        concept_ref: "wavelength"
+    introduced_in: "02-stars/spectra-and-composition"
+    notes: >-
+      Laboratory-measured wavelength of an atomic or molecular
+      transition in the source's rest frame. Reference value against
+      which Doppler shifts are computed.
+
+  - id: "radial-velocity"
+    verbal_label: "radial velocity"
+    canonical_symbol: "v_r"
+    latex: "v_r"
+    epistemic_role: "inference"
+    units: "km s^{-1}; cm s^{-1}"
+    code_alias: "v_r_kms"
+    common_confusions:
+      - symbol: "v"
+        meaning: "full 3D velocity — radial is only the line-of-sight component; transverse velocity is invisible to Doppler"
+        concept_ref: "orbital-velocity"
+    introduced_in: "02-stars/spectra-and-composition"
+    notes: >-
+      Component of a source's velocity along the line of sight to the
+      observer. Positive for recession (redshift), negative for
+      approach (blueshift). Inferred from Doppler shift via
+      Delta lambda over lambda_0 = v_r over c (non-relativistic limit).

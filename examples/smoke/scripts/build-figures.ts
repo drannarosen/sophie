@@ -5,10 +5,10 @@ import { parse as parseYaml } from "yaml";
 
 // Generates examples/smoke/src/content/figures.ts from
 // astr201-sp26/assets/figures.yml, copying the image files actually
-// referenced by the chapter source into examples/smoke/public/figures/.
+// referenced by the listed chapter sources into examples/smoke/public/figures/.
 //
-// Idempotent: re-runs from scratch each time. Re-run when either the
-// chapter source or figures.yml changes.
+// Idempotent: re-runs from scratch each time. Re-run when any of the
+// chapter sources or figures.yml changes.
 
 interface YamlFigureEntry {
   path: string;
@@ -29,22 +29,38 @@ const astr201Root = process.env.ASTR201_REPO
   ? resolve(process.env.ASTR201_REPO)
   : "/Users/anna/Teaching/astr201-sp26";
 
-const chapterQmd = join(
-  astr201Root,
-  "modules/module-01/readings/lecture-01-spoiler-alerts-reading.qmd"
-);
+const chapterQmds = [
+  join(
+    astr201Root,
+    "modules/module-01/readings/lecture-01-spoiler-alerts-reading.qmd"
+  ),
+  join(
+    astr201Root,
+    "modules/module-02/readings/lecture-03-spectra-and-composition-reading.qmd"
+  ),
+];
 const figuresYaml = join(astr201Root, "assets/figures.yml");
 const publicFigures = join(smokeRoot, "public/figures");
 const figuresTs = join(smokeRoot, "src/content/figures.ts");
 
-console.log(`Reading chapter source:   ${chapterQmd}`);
 console.log(`Reading figure registry:  ${figuresYaml}`);
+for (const qmd of chapterQmds) {
+  console.log(`Reading chapter source:   ${qmd}`);
+}
 
-const chapterText = await readFile(chapterQmd, "utf8");
 const yamlText = await readFile(figuresYaml, "utf8");
 
-const usedNames = extractFigureRefs(chapterText);
-console.log(`Chapter references ${usedNames.length} unique figures.`);
+const usedNamesSet = new Set<string>();
+for (const qmd of chapterQmds) {
+  const chapterText = await readFile(qmd, "utf8");
+  for (const name of extractFigureRefs(chapterText)) {
+    usedNamesSet.add(name);
+  }
+}
+const usedNames = [...usedNamesSet].sort();
+console.log(
+  `Chapters reference ${usedNames.length} unique figures across ${chapterQmds.length} sources.`
+);
 
 const registry = parseYaml(yamlText) as YamlRegistry;
 if (registry?.figures === undefined) {

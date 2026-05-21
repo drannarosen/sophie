@@ -1,0 +1,108 @@
+---
+id: doppler-shift
+title: "Non-relativistic Doppler Shift"
+tex: "\\frac{\\Delta\\lambda}{\\lambda_0} = \\frac{v_r}{c}"
+symbols: ["\\Delta\\lambda", "\\lambda_0", "v_r"]
+constants:
+  - symbol: "c"
+    value: "2.998 \\times 10^{10}"
+    unit: "cm s^{-1}"
+    name: "Speed of light in vacuum"
+rearranged_forms:
+  - tex: "v_r = c \\, \\frac{\\Delta\\lambda}{\\lambda_0}"
+    solves_for: "v_r"
+    label: "Radial velocity from spectral shift"
+  - tex: "\\lambda_{\\text{obs}} = \\lambda_0 \\left(1 + \\frac{v_r}{c}\\right)"
+    solves_for: "\\lambda_{\\text{obs}}"
+    label: "Observed wavelength from rest wavelength and velocity"
+related:
+  - refId: "photon-energy"
+    kind: "see-also"
+    description: "Doppler shift moves the observed wavelength; $E = hc/\\lambda$ then gives the observed photon energy. A redshifted line carries less energy at the detector than at the source."
+tags: ["doppler", "kinematics", "spectroscopy", "radial-velocity"]
+version: "1"
+---
+
+import {
+  Assumption,
+  BreaksWhen,
+  CommonMisuse,
+  DerivationStep,
+  Observable,
+} from "@sophie/components";
+
+<Observable>
+  The fractional shift of a known spectral line's wavelength from its
+  laboratory rest value, observed in the spectrum of a moving source.
+  Comparing the observed wavelength of a line we can identify (Ca II
+  K, H$\alpha$, Na D) against its lab value yields the source's
+  line-of-sight velocity. Sign convention: $\Delta\lambda > 0$ for
+  redshift (recession), $\Delta\lambda < 0$ for blueshift (approach).
+</Observable>
+
+<Assumption type="non-relativistic">
+  The radial velocity is small compared to $c$: $|v_r| \ll c$. The
+  expression is the first-order term in a Taylor expansion of the
+  full relativistic Doppler formula. At $v_r = 0.1c$ the
+  approximation errs by $\sim 5\%$; at $v_r = 0.5c$ it errs by
+  $\sim 30\%$.
+</Assumption>
+
+<Assumption type="radial-only">
+  The formula gives the line-of-sight component of velocity. Motion
+  perpendicular to the line of sight (proper motion) shifts the
+  observed wavelength only at second order $(v_t/c)^2$ and is
+  unobservable from a single spectrum.
+</Assumption>
+
+<Assumption type="rest-frame-known">
+  The line's rest-frame wavelength $\lambda_0$ is known from
+  laboratory spectroscopy or atomic theory. Without an independently
+  identified line, you cannot disentangle a Doppler shift from a
+  source emitting at an unknown wavelength.
+</Assumption>
+
+<BreaksWhen>
+  Relativistic velocities ($|v_r| \gtrsim 0.1c$) require the full
+  relativistic Doppler formula
+  $\lambda_{\text{obs}}/\lambda_0 = \sqrt{(1+\beta)/(1-\beta)}$
+  with $\beta = v_r/c$. Strong gravitational potentials add a
+  gravitational redshift on top of the kinematic shift. Hot or
+  turbulent gas broadens lines via thermal Doppler and turbulent
+  broadening, mimicking a shift if the line profile is asymmetric.
+</BreaksWhen>
+
+<CommonMisuse misconception="common-student-confusions">
+  Using the formula to measure proper motion (sideways motion). Doppler
+  shift is sensitive only to the line-of-sight component; a star
+  moving perpendicular to the line of sight at 1000 km s$^{-1}$
+  shows $\Delta\lambda = 0$ in its spectrum. Proper motion requires
+  astrometric measurement of the star's position over time, not
+  spectroscopy.
+</CommonMisuse>
+
+<DerivationStep label="Geometric wave-emission setup">
+  A source emits wavefronts at rest-frame period $\tau_0 =
+  \lambda_0/c$. While one wavefront travels toward the observer, the
+  source moves a distance $v_r \tau_0$ along the line of sight,
+  changing the spacing of successive wavefronts arriving at the
+  detector.
+</DerivationStep>
+
+<DerivationStep label="Compute the observed wavelength">
+  The observed spacing between wavefronts becomes
+  $\lambda_{\text{obs}} = \lambda_0 + v_r \tau_0
+   = \lambda_0 (1 + v_r/c)$. Rearranging:
+  $\Delta\lambda / \lambda_0 = v_r/c$. Positive $v_r$ (recession)
+  stretches the wavelength; negative $v_r$ (approach) compresses it.
+</DerivationStep>
+
+<DerivationStep label="Relate to the relativistic limit">
+  The exact relativistic result is
+  $\lambda_{\text{obs}}/\lambda_0 = \sqrt{(1+\beta)/(1-\beta)}
+   \approx 1 + \beta + \tfrac{1}{2}\beta^2 + \mathcal{O}(\beta^3)$.
+  The non-relativistic formula keeps only the linear term. Use the
+  full form when $|\beta| \gtrsim 0.1$ or when the second-order
+  transverse Doppler matters (precision spectroscopy of high-redshift
+  sources).
+</DerivationStep>
