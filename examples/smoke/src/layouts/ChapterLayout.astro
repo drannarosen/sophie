@@ -8,6 +8,7 @@ import TextbookHead from "@sophie/astro/components/TextbookHead.astro";
 import TextbookLayout from "@sophie/astro/components/TextbookLayout.astro";
 import TocDrawer from "@sophie/astro/components/TocDrawer.astro";
 import TocSidebar from "@sophie/astro/components/TocSidebar.astro";
+import { indexAccumulator } from "@sophie/astro";
 import { SophieChapter } from "@sophie/astro/client";
 import { getCollection } from "astro:content";
 import type { MarkdownHeading } from "astro";
@@ -92,12 +93,36 @@ const sortableChapters = chapters
 const currentIdx = currentChapterSlug
   ? sortableChapters.findIndex((c) => c.slug === currentChapterSlug)
   : -1;
-const previous =
+const previousRaw =
   currentIdx > 0 ? sortableChapters[currentIdx - 1] ?? null : null;
-const next =
+const nextRaw =
   currentIdx >= 0 && currentIdx < sortableChapters.length - 1
     ? sortableChapters[currentIdx + 1] ?? null
     : null;
+
+// Sprint I-C follow-up — pagination pill thumbnails. For each adjacent
+// chapter, resolve its first <Figure> callsite from the pedagogy index
+// and look up the registry entry for its src + alt. Pills without a
+// resolvable figure render text-only (the prev/next text + module
+// breadcrumb is always present).
+const pedagogySnapshot = indexAccumulator.asPedagogyIndex();
+function firstFigureThumbnailFor(
+  chapterSlug: string
+): { src: string; alt: string } | undefined {
+  const usage = pedagogySnapshot.figureUsages
+    .filter((u) => u.chapter === chapterSlug)
+    .sort((a, b) => a.number - b.number)[0];
+  if (!usage) return undefined;
+  const entry = figureRegistry[usage.name];
+  if (!entry) return undefined;
+  return { src: entry.src, alt: entry.alt };
+}
+const previous = previousRaw
+  ? { ...previousRaw, thumbnail: firstFigureThumbnailFor(previousRaw.slug) }
+  : null;
+const next = nextRaw
+  ? { ...nextRaw, thumbnail: firstFigureThumbnailFor(nextRaw.slug) }
+  : null;
 ---
 
 <html lang={frontmatter.lang ?? "en"}>
