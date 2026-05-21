@@ -1,5 +1,6 @@
 import { toHtml } from "hast-util-to-html";
 import { toHast } from "mdast-util-to-hast";
+import rehypeKatex from "rehype-katex";
 
 /**
  * Minimal mdxJsxFlowElement shape we read. The unified ecosystem's
@@ -248,6 +249,15 @@ export function renderChildrenToHtml(children: ReadonlyArray<unknown>): string {
       `renderChildrenToHtml: mdast-util-to-hast returned null for a ${children.length}-child subtree. This indicates a malformed mdast subtree the extractor pipeline cannot serialize. (Audit P2 #8.)`
     );
   }
+  // Run rehype-katex over the extracted subtree before serialization.
+  // The pedagogy index plugin runs in the remark chain between
+  // remark-math (which produces `inlineMath`/`math` nodes → hast
+  // `<code class="language-math">`) and the main rehype-katex pass.
+  // Subtrees harvested for OMIFlow slots, Aside/Callout bodies, and
+  // ChapterGlossary aggregation never reach the main rehype pipeline,
+  // so without this hop math round-trips as raw `\frac{...}` text in
+  // every downstream consumer.
+  (rehypeKatex() as (tree: typeof hast) => void)(hast);
   return toHtml(hast);
 }
 

@@ -1,6 +1,7 @@
 import { PauseCircle } from "lucide-react";
 import { useId } from "react";
 import { HydrationAnnouncer } from "../../runtime/HydrationAnnouncer.tsx";
+import { MathText } from "../../runtime/MathText.tsx";
 import { useSelfAssessment } from "../../runtime/useSelfAssessment.ts";
 import styles from "./Reflection.module.css.js";
 import type { ReflectionProps } from "./Reflection.schema.ts";
@@ -31,9 +32,9 @@ export function Reflection({
     <div className={styles.section}>
       <header className={styles.titleBar}>
         <PauseCircle className={styles.icon} size={20} aria-hidden />
-        <label htmlFor={textareaId} className={styles.title}>
+        <MathText as='label' htmlFor={textareaId} className={styles.title}>
           {prompt}
-        </label>
+        </MathText>
       </header>
       <div className={styles.body}>
         <textarea
