@@ -140,4 +140,29 @@ describe("GlossaryTerm first-use footnote", () => {
     );
     expect(screen.queryByTestId("glossary-footnote")).not.toBeInTheDocument();
   });
+
+  /**
+   * Regression test for the chapter-prose paragraph-split bug
+   * (verify pass 2026-05-20): the footnote `<span>` lives INSIDE the
+   * chapter's MDX `<p>`, so the injected definition body must not
+   * contain a block-level `<p>` of its own. If it does, the browser
+   * auto-closes the parent paragraph and hoists the inner `<p>` to
+   * top level — splitting the surrounding sentence across multiple
+   * paragraphs. Test asserts the footnote's innerHTML carries the
+   * definition's text/inline content but DOES NOT contain a `<p>`
+   * tag (it should be stripped from the body wrapper before injection).
+   */
+  it("strips wrapping <p> from the definition body so it stays inline-safe", () => {
+    render(
+      <GlossaryTerm name='Parallax' data-first-use='true'>
+        parallax
+      </GlossaryTerm>
+    );
+    const footnote = screen.getByTestId("glossary-footnote");
+    // The body fixture is "<p>Apparent shift of a star...</p>".
+    // After stripping, the visible text is preserved but no <p> tag
+    // remains in the inline footnote span.
+    expect(footnote.innerHTML).not.toMatch(/<p[\s>]/i);
+    expect(footnote.textContent).toContain("Apparent shift");
+  });
 });

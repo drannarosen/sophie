@@ -74,6 +74,13 @@
 
 .sophie-content {
   grid-area: content;
+  /* `border-box` so padding is INSIDE the box width, not added on top.
+   * Without this, `max-inline-size: 100%` + `padding-inline: 1rem`
+   * gives a box wider than the parent grid cell, the grid cell grows
+   * to accommodate, max-inline-size recomputes against the new cell,
+   * and the column ratchets past the viewport. Surfaced 2026-05-20
+   * verify pass (Bug 3) on a 375px mobile viewport. */
+  box-sizing: border-box;
   padding-inline: clamp(1rem, 4vw, 3rem);
   padding-block: 2rem;
   /* Cap reading width at 66ch in Default mode — the Bringhurst optimum
@@ -82,6 +89,14 @@
      side columns are hidden. `min(…, 100%)` prevents horizontal overflow
      on narrow viewports where the cap would exceed the available column. */
   max-inline-size: min(66ch, 100%);
+  /* CSS Grid quirk: a grid cell's default minimum width is `auto`,
+   * which expands to fit the widest intrinsic child. KaTeX display
+   * math (wide MathML rows) and unbroken-word headings would push
+   * the column past the viewport on narrow screens. `min-inline-size:
+   * 0` overrides the default so the cell clamps at `1fr` and wide
+   * children scroll/wrap within. Surfaced 2026-05-20 verify pass
+   * (Bug 3): 375px viewport rendered content at 586px before this. */
+  min-inline-size: 0;
   margin-inline: auto;
   inline-size: 100%;
   /* Prose typography — IBM Plex Sans at the 17px body size + 1.65
@@ -152,6 +167,47 @@
   letter-spacing: -0.005em;
 }
 
+/* Mobile overflow defenses (Bug 3, 2026-05-20 verify pass).
+ *
+ * Three classes of block-level content can exceed the chapter column's
+ * intrinsic width on narrow viewports: KaTeX display math, data tables,
+ * and pre-formatted code. Without containment, each forces the parent
+ * column wider than the viewport — clipping the chapter title and
+ * pushing prose offscreen.
+ *
+ * Each rule keeps the element at its intrinsic width AT MOST the
+ * available column width, then scrolls horizontally within. The
+ * column itself stays clamped (see `.sophie-content { min-inline-size:
+ * 0 }` above).
+ */
+.sophie-content .katex-display {
+  max-inline-size: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.sophie-content table {
+  display: block;
+  max-inline-size: 100%;
+  overflow-x: auto;
+}
+
+.sophie-content pre {
+  max-inline-size: 100%;
+  overflow-x: auto;
+}
+
+/* On narrow viewports the Fraunces serif H1 has long un-hyphenable
+ * words ("Composition") that overflow. `overflow-wrap: anywhere` on
+ * the H1 specifically (not inherited via prose) lets the title break
+ * at any character on small screens; on wide screens the title is
+ * short relative to the column and breaks naturally at spaces. */
+@media (max-width: 768px) {
+  .sophie-content h1 {
+    overflow-wrap: anywhere;
+  }
+}
+
 /* Sprint G — Part + subsection numbering.
  *
  * Each h2 in chapter prose increments sophie-part and resets the
@@ -159,17 +215,32 @@
  * The numbers render as ::before content so the chapter MDX stays
  * source-clean (no "Part 1." hand-typed into heading text).
  *
- * Opt-out: [data-no-counter] on a heading suppresses both the counter-
- * increment and the rendered label. Use for non-Part h2s such as the
- * "Concept throughline" lead-in, Summary, Practice problems, Chapter
- * glossary — chrome-style headings that should not consume a Part #.
+ * Opt-out: chapter chrome headings — Concept throughline, Summary,
+ * Practice problems, Chapter glossary, plus three problem-set h3s
+ * (Conceptual, Calculation, Synthesis), the chapter summary h3
+ * (Observable → Model → Inference), and the Self-assessment checklist
+ * — are excluded by their auto-generated heading IDs. Authors keep
+ * regular markdown `## Heading` syntax (so Astro picks them up in
+ * the ToC); the slug derivation makes the exclusion list mechanical.
+ *
+ * Why IDs not [data-no-counter]: raw-HTML `<h2>` wrappers carrying
+ * the attribute are invisible to Astro's markdown-heading extractor,
+ * which excludes them from the in-page ToC. The 2026-05-20 verify
+ * pass surfaced this regression — Part 1 was missing from the ToC.
+ * Switching to ID-based selectors keeps headings as markdown.
  */
-.sophie-content > h2:not([data-no-counter]) {
+.sophie-content
+> h2:not(#concept-throughline):not(#summary):not(#practice-problems):not(
+  #chapter-glossary
+) {
   counter-increment: sophie-part;
   counter-reset: sophie-subsection 0;
 }
 
-.sophie-content > h2:not([data-no-counter])::before {
+.sophie-content
+  > h2:not(#concept-throughline):not(#summary):not(#practice-problems):not(
+    #chapter-glossary
+  )::before {
   content: "Part " counter(sophie-part) "  \00b7  ";
   font-family: var(--sophie-font-sans);
   font-size: 0.62em;
@@ -184,11 +255,17 @@
     "lnum" 1;
 }
 
-.sophie-content > h3:not([data-no-counter]) {
+.sophie-content
+  > h3:not(#self-assessment-checklist):not(#conceptual):not(#calculation):not(
+    #synthesis
+  ):not([id^="observable"]) {
   counter-increment: sophie-subsection;
 }
 
-.sophie-content > h3:not([data-no-counter])::before {
+.sophie-content
+  > h3:not(#self-assessment-checklist):not(#conceptual):not(#calculation):not(
+    #synthesis
+  ):not([id^="observable"])::before {
   content: counter(sophie-part) "." counter(sophie-subsection) "  ";
   font-family: var(--sophie-font-sans);
   font-weight: 600;
@@ -209,26 +286,17 @@
  * not pedagogy; it must not compete with Sprint G's brand-teal Part
  * labels for attention.
  */
-.sophie-content > h2[data-chapter-opener]::after {
-  content: "";
-  display: block;
-  margin-block: 0.6em 0;
-  block-size: 1em;
-  background-image:
-    radial-gradient(circle, var(--sophie-text-muted) 1.2px, transparent 1.6px),
-    linear-gradient(
-      to right,
-      transparent,
-      var(--sophie-text-muted) 50%,
-      transparent
-    );
-  background-repeat: no-repeat;
-  background-size:
-    6px 6px,
-    4em 1px;
-  background-position: center, center;
-  opacity: 0.55;
-}
+/*
+ * The ornament rule that previously lived here targeted
+ * `h2[data-chapter-opener]`. Removed during the 2026-05-20 hardening
+ * pass: the `data-chapter-opener` attribute was being set via a raw
+ * `<h2 data-chapter-opener>` MDX wrapper, which made the heading
+ * invisible to Astro's markdown-heading extractor and broke the
+ * in-page ToC (Part 1 was missing). A future implementation should
+ * apply the ornament via a remark plugin that sets the attribute on
+ * the rendered `<h2>` element while keeping the heading as
+ * markdown `## Heading` syntax. Drop cap below is unaffected.
+ */
 
 /* Sprint H — Drop cap on the chapter's first prose paragraph.
  *
@@ -797,7 +865,13 @@
     grid-template-areas:
       "topbar"
       "content";
-    grid-template-columns: 1fr;
+    /* `minmax(0, 1fr)` rather than `1fr` (which is `minmax(auto, 1fr)`).
+     * `auto` floors the track at min-content, which on a chapter page
+     * is the widest indivisible child (often a KaTeX equation or a
+     * data table). The track then grows past the viewport. `minmax(0,
+     * 1fr)` truly clamps at the available width and the overflow
+     * defenses on `.sophie-content` children take over from there. */
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .sophie-sidebar {

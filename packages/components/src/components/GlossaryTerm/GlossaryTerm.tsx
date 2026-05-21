@@ -104,13 +104,47 @@ export function GlossaryTerm({
         </HoverCard.Portal>
       </HoverCard.Root>
       {dataFirstUse === "true" ? (
+        // Strip the outer `<p>…</p>` from the body before injecting
+        // (see `stripWrappingParagraph` below). The footnote `<span>`
+        // is INLINE — it sits inside the chapter's MDX paragraph.
+        // A block-level `<p>` inside an inline element triggers
+        // HTML5's "implied end tag" rule (the browser auto-closes
+        // the outer `<p>` and hoists the inner `<p>` out of the
+        // parent, splitting the surrounding sentence across multiple
+        // top-level paragraphs). Stripping the wrapper keeps the body
+        // as inline-safe HTML so the span stays in flow. The popover
+        // above keeps the wrapping `<p>` because its container is a
+        // `<div>` (block).
         <span
           className={`${styles.glossaryFootnote} sophie-glossary-footnote`}
           data-testid='glossary-footnote'
           // biome-ignore lint/security/noDangerouslySetInnerHtml: body is pre-rendered HTML produced by our remark plugin (mdast → hast → html), not user-supplied content. ADR 0038 decision #11.
-          dangerouslySetInnerHTML={{ __html: entry.body }}
+          dangerouslySetInnerHTML={{
+            __html: stripWrappingParagraph(entry.body),
+          }}
         />
       ) : null}
     </>
   );
+}
+
+/**
+ * Strip a single outer `<p>…</p>` wrapper from a one-paragraph HTML
+ * fragment. Returns the inner content (still HTML; preserves inline
+ * elements like `<em>` / `<strong>` / `<a>`). Returns the input
+ * unchanged when the body is not a single-paragraph wrapper (e.g.
+ * multi-paragraph definitions where stripping would damage structure).
+ *
+ * Match is anchored to the start/end and allows whitespace + line
+ * breaks around the wrapper — markdown-rendered bodies are typically
+ * `<p>…</p>\n` or `<p>…</p>`.
+ */
+function stripWrappingParagraph(html: string): string {
+  const trimmed = html.trim();
+  const match = trimmed.match(/^<p>([\s\S]*)<\/p>$/);
+  if (!match?.[1]) return html;
+  // Defensive: bail when stripping would unwrap a multi-paragraph body.
+  // A multi-paragraph body has additional `<p>` open tags inside.
+  if (/<p[\s>]/i.test(match[1])) return html;
+  return match[1];
 }
