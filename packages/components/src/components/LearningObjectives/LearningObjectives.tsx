@@ -64,7 +64,10 @@ export function LearningObjectives({
   return (
     <section className={styles.section} aria-labelledby={`${id}-heading`}>
       <header className={styles.titleBar}>
-        <Target className={styles.icon} size={20} aria-hidden />
+        {/* Icon size matched to the smaller-label heading set in
+            LearningObjectives.module.css (Sprint K). 16px target reads
+            as inline-label glyph rather than card avatar. */}
+        <Target className={styles.icon} size={16} aria-hidden />
         <MathText as='h2' id={`${id}-heading`} className={styles.heading}>
           {heading}
         </MathText>
