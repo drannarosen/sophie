@@ -23,9 +23,12 @@
 
 .titleBar {
   display: flex;
-  align-items: center;
+  align-items: baseline; /* Sprint K — icon optical center on heading
+                            baseline so the telescope glyph sits next
+                            to the cap-height. Matches LearningObjectives
+                            pattern. */
   gap: var(--sophie-space-2);
-  padding: var(--sophie-space-2) var(--sophie-space-4);
+  padding: var(--sophie-space-1) var(--sophie-space-4);
   background: color-mix(
     in oklch,
     var(--sophie-brand-rose) 8%,
@@ -38,16 +41,29 @@
 
 .icon {
   flex-shrink: 0;
+  transform: translateY(0.15em);
 }
 
-.heading {
+/* Higher-specificity (0,2,0) selector to override the global
+   .sophie-content h2 (0,1,1) Sprint G Fraunces-serif-2xl rule —
+   chrome callout headings are SECTION LABELS, not Part-level
+   subheads. Sprint K (2026-05-21) follow-up to the LearningObjectives
+   fix; same root cause across every component that uses
+   `<MathText as='h2'>` inside chapter content. */
+.titleBar .heading {
   margin: 0;
-  font-size: var(--sophie-text-base);
+  font-family: var(--sophie-font-sans);
+  font-size: var(--sophie-text-small);
   font-weight: var(--sophie-weight-semibold);
+  letter-spacing: 0.02em;
+  line-height: 1.3;
   color: inherit;
-  /* No uppercase tracking — title-case in the rendered text itself. */
   text-transform: none;
-  letter-spacing: 0;
+}
+/* Suppress the global Sprint G h2::before counter prefix on this
+   chrome heading. */
+.titleBar .heading::before {
+  content: "";
 }
 
 .body {

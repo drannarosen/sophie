@@ -31,7 +31,8 @@ export function Reflection({
   return (
     <div className={styles.section}>
       <header className={styles.titleBar}>
-        <PauseCircle className={styles.icon} size={20} aria-hidden />
+        {/* Sprint K — icon shrunk to 16 (label-voice consistency). */}
+        <PauseCircle className={styles.icon} size={16} aria-hidden />
         <MathText as='label' htmlFor={textareaId} className={styles.title}>
           {prompt}
         </MathText>

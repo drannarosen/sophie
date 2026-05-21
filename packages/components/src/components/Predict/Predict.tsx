@@ -47,7 +47,9 @@ export function Predict({
   return (
     <section className={`${styles.section} sophie-predict`}>
       <header className={styles.titleBar}>
-        <Telescope className={styles.icon} size={20} aria-hidden />
+        {/* Sprint K — icon shrunk to 16 to match section-label voice
+            (matches LearningObjectives' Target icon size). */}
+        <Telescope className={styles.icon} size={16} aria-hidden />
         <MathText as='h2' className={styles.heading}>
           {heading}
         </MathText>

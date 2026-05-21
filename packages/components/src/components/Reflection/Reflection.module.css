@@ -23,9 +23,11 @@
 
 .titleBar {
   display: flex;
-  align-items: center;
+  align-items: baseline; /* Sprint K — icon optical center on heading
+                            baseline. Matches LearningObjectives /
+                            Predict tightening pattern. */
   gap: var(--sophie-space-2);
-  padding: var(--sophie-space-2) var(--sophie-space-4);
+  padding: var(--sophie-space-1) var(--sophie-space-4);
   background: color-mix(
     in oklch,
     var(--sophie-brand-rose) 8%,
@@ -34,11 +36,13 @@
   border-bottom: 1px solid var(--sophie-border);
   color: var(--sophie-brand-rose-text);
   font-weight: var(--sophie-weight-semibold);
-  font-size: var(--sophie-text-sm);
+  font-size: var(--sophie-text-small);
+  letter-spacing: 0.02em;
 }
 
 .icon {
   flex-shrink: 0;
+  transform: translateY(0.15em);
 }
 
 .title {
