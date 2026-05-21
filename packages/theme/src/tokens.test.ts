@@ -5,10 +5,17 @@ const css = generateCSS();
 
 describe.each([
   // [role, l_light, chroma, hue, l_dark]
-  ["observable", "48", "0.02", "60", "73"],
-  ["model", "58", "0.13", "195", "78"],
-  ["inference", "63", "0.16", "12", "83"],
-  ["approximation", "70", "0.04", "60", "85"],
+  // Sprint B palette refresh (anchors.ts 2026-05-21):
+  // - observable → brand-teal (hue 195)
+  // - model      → brand-violet (hue 295)
+  // - inference  → brand-rose (hue 0)
+  // - approximation → warm-stone neutral (hue 60, low chroma)
+  // L values calibrated for prose-color use in light + legibility
+  // against Stone 800 surface-1 in dark.
+  ["observable", "50", "0.085", "195", "80"],
+  ["model", "50", "0.10", "295", "80"],
+  ["inference", "55", "0.13", "0", "80"],
+  ["approximation", "60", "0.025", "60", "80"],
 ])("role color: %s", (role, lLight, chroma, hue, lDark) => {
   test(`emits --sophie-role-${role} in :root with oklch(${lLight}% ${chroma} ${hue})`, () => {
     const escaped = chroma.replace(".", "\\.");
