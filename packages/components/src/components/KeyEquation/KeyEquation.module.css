@@ -7,6 +7,7 @@
  */
 
 .section {
+  position: relative;
   margin-block: var(--sophie-space-5);
   background: var(--sophie-surface-1);
   border: 1px solid var(--sophie-border);
@@ -16,8 +17,59 @@
   color: var(--sophie-text);
   font-family: var(--sophie-font-sans);
   line-height: var(--sophie-leading-prose);
-  overflow: hidden;
+  /* Was `overflow: hidden;` — Sprint E needs the numbered margin
+   * label to escape rightward into the page gutter, so we drop
+   * overflow clipping. No regression risk: no internal element
+   * previously relied on overflow-hidden clipping. */
   scroll-margin-block-start: var(--sophie-space-4);
+}
+
+/* Sprint E — texRow + numberLabel.
+ *
+ * `.texRow` is a positioning context that wraps the KaTeX-rendered
+ * display equation; the absolute-positioned `.numberLabel` escapes
+ * rightward into the page gutter at the equation's vertical center.
+ * Anchoring on .texRow (rather than the whole .section, which spans
+ * the title bar + tex + biography children) is what keeps the label
+ * aligned with the equation itself rather than drifting down the
+ * card.
+ *
+ * Color: brand-violet text — same color family as the card's left
+ * rule. Equations are the "model" role in the OMI triad, and
+ * brand-violet is Sophie's model-role color (per anchors.ts comment).
+ *
+ * Narrow-viewport fallback (<1100px): the label tucks into the
+ * card's top-right corner instead of floating into a nonexistent
+ * gutter.
+ */
+.texRow {
+  position: relative;
+}
+
+.numberLabel {
+  position: absolute;
+  inset-inline-end: -7ch;
+  inset-block-start: 50%;
+  transform: translateY(-50%);
+  font-family: var(--sophie-font-sans);
+  font-size: var(--sophie-text-sm);
+  font-weight: 600;
+  color: var(--sophie-brand-violet-text);
+  font-feature-settings:
+    "tnum" 1,
+    "lnum" 1;
+  pointer-events: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+@media (max-width: 1100px) {
+  .numberLabel {
+    inset-inline-end: var(--sophie-space-3);
+    inset-block-start: var(--sophie-space-2);
+    transform: none;
+    font-size: var(--sophie-text-xs);
+  }
 }
 
 .section:target {

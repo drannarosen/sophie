@@ -55,6 +55,14 @@ export const EquationCitationEntrySchema = z
     anchor: NonEmptyString,
     /** Per-chapter sequential number, extractor-assigned at appearance order. */
     number: z.number().int().positive(),
+    /**
+     * Display chapter number from the chapter's `chapter` frontmatter
+     * field (Sprint E). Optional. When present, the KeyEquation
+     * component renders "(C.N)" in the margin gutter and EquationRef
+     * renders "Eq. C.N"; when absent, both fall back to within-chapter
+     * "(N)" / "Eq. N".
+     */
+    chapterNumber: z.number().int().positive().optional(),
     /** Pre-rendered chapter-specific framing prose from `<KeyEquation>` children. */
     framingHtml: z.string().optional(),
   })

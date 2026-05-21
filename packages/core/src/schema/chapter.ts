@@ -47,6 +47,14 @@ export const ChapterSchema = z.object({
   // Within-module ordering. When omitted, chapters fall back to
   // `title.localeCompare` (see `chaptersForModule`).
   order: z.number().int().nonnegative().optional(),
+  /**
+   * Display chapter number (Sprint F). Drives the "Figure 3.2" and
+   * "Eq. 3.1" prefixes on numbered figures + key equations. Decoupled
+   * from `order` so display number stays stable when sort order
+   * changes. Optional — chapters without `chapter` get unprefixed
+   * "Figure 2", "Eq. 1" labels (within-chapter only).
+   */
+  chapter: z.number().int().positive().optional(),
   // Chapter maturity. Required per ADR 0051. `draft` chapters are
   // excluded entirely from the student build (no route, no indices,
   // no cross-chapter audit roll-ups); `review` chapters render with a

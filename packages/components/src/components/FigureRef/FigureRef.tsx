@@ -52,7 +52,13 @@ export function FigureRef({ name, children }: FigureRefProps) {
   }
 
   const href = `/chapters/${canonical.chapter}#${canonical.anchor}`;
-  const linkText = children ?? `Fig. ${canonical.number}`;
+  // Sprint F — prefer "Fig. C.N" when the chapter declares a display
+  // chapter number; fall back to within-chapter "Fig. N" otherwise.
+  const figLabel =
+    canonical.chapterNumber !== undefined
+      ? `Fig. ${canonical.chapterNumber}.${canonical.number}`
+      : `Fig. ${canonical.number}`;
+  const linkText = children ?? figLabel;
   const caption =
     canonical.captionOverride ?? registry.caption ?? registry.name;
 

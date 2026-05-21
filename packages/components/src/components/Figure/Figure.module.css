@@ -20,6 +20,27 @@
   color: var(--sophie-text-2);
 }
 
+/* Sprint F — numbered-figure caption prefix. Small-caps "FIGURE C.N"
+ * in brand-teal so the label visually pairs with Sprint G's Part
+ * heading prefix. Inline element so the caption body wraps around it
+ * naturally; trailing en-dash for typographic separation. */
+.label {
+  font-size: 0.78em;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--sophie-brand-teal-text);
+  margin-inline-end: 0.55em;
+  font-feature-settings:
+    "tnum" 1,
+    "lnum" 1;
+}
+
+.label::after {
+  content: "  ";
+  white-space: pre;
+}
+
 .credit {
   display: block;
   font-size: var(--sophie-text-xs);

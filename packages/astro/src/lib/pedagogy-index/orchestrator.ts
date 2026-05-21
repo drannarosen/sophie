@@ -93,6 +93,37 @@ function readEquationRegistryFrontmatter(
   return parsed.data;
 }
 
+/**
+ * Read the `chapter` field (Sprint F: display chapter number) from a
+ * chapter MDX file's YAML frontmatter. Returns `undefined` for
+ * chapters that omit the field — the figure / equation numbering
+ * components handle the missing case by rendering within-chapter-only
+ * numbers.
+ *
+ * Same fs-direct rationale as `readEquationRegistryFrontmatter`:
+ * `remark-mdx-frontmatter` hoists the YAML into an `mdxjsEsm` export
+ * before this remark plugin sees the tree, so the YAML node is gone
+ * from `tree.children`.
+ */
+function readChapterNumberFromFrontmatter(
+  filePath: string
+): number | undefined {
+  let source: string;
+  try {
+    source = readFileSync(filePath, "utf8");
+  } catch {
+    return undefined;
+  }
+  const match = source.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n/);
+  if (!match) return undefined;
+  const raw = parseYaml(match[1] ?? "");
+  if (raw === null || typeof raw !== "object") return undefined;
+  const value = (raw as Record<string, unknown>).chapter;
+  return typeof value === "number" && Number.isInteger(value) && value > 0
+    ? value
+    : undefined;
+}
+
 export interface PedagogyIndexRemarkPluginOptions {
   /** Derive a chapter slug from the source file path. Defaults to the
    * standard Astro content-collection layout (see defaultGetChapterSlug). */
@@ -155,13 +186,21 @@ export function pedagogyIndexRemarkPlugin(
     }
     if (!chapterSlug) return;
 
+    // Sprint F — read the chapter's display `chapter` number from
+    // frontmatter once per chapter pass and thread it to extractors
+    // that need it (figures today; key-equations in Sprint E). When
+    // absent, extractors fall back to within-chapter-only numbering.
+    const chapterNumber = readChapterNumberFromFrontmatter(filePath);
+
     indexAccumulator.clearChapter(chapterSlug);
     indexAccumulator.addDefinitions(extractDefinitions(tree, chapterSlug));
     indexAccumulator.addEquationCitations(
-      extractEquationCitations(tree, chapterSlug)
+      extractEquationCitations(tree, chapterSlug, chapterNumber)
     );
     indexAccumulator.addKeyInsights(extractKeyInsights(tree, chapterSlug));
-    indexAccumulator.addFigureUsages(extractFigures(tree, chapterSlug));
+    indexAccumulator.addFigureUsages(
+      extractFigures(tree, chapterSlug, chapterNumber)
+    );
     indexAccumulator.addMisconceptions(
       extractMisconceptions(tree, chapterSlug)
     );

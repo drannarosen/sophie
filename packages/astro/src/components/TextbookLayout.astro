@@ -5,6 +5,7 @@ import "../styles/textbook-layout.css";
 // the only consumer; consumer apps never call these directly.
 import {
   __setChapters,
+  __setEquationCitations,
   __setEquations,
   __setFigureRegistry,
   __setFigureUsages,
@@ -223,6 +224,7 @@ if (auditReport !== null) {
 // When those land (PR-C4+), they'll be added here in the same shape.
 __setGlossaryDefinitions(pedagogy.definitions);
 __setEquations(pedagogy.equations);
+__setEquationCitations(pedagogy.equationCitations);
 __setFigureRegistry(figureRegistry);
 __setFigureUsages(pedagogy.figureUsages);
 // PR-C4: three new setters wired alongside the four PR-C1/C2/C3
@@ -260,6 +262,9 @@ const pedagogyEquationsJson = JSON.stringify(pedagogy.equations).replace(
   /</g,
   "\\u003c"
 );
+const pedagogyEquationCitationsJson = JSON.stringify(
+  pedagogy.equationCitations
+).replace(/</g, "\\u003c");
 const pedagogyFigureRegistryJson = JSON.stringify(figureRegistry).replace(
   /</g,
   "\\u003c"
@@ -347,6 +352,15 @@ const collapsedVars = [
   id='sophie-pedagogy-equations'
   type='application/json'
   set:html={pedagogyEquationsJson}
+/>
+{/* Sprint E — per-callsite <KeyEquation> citations payload. Hydrates
+    the equation-citations store used by KeyEquation (margin "(C.N)"
+    label) + EquationRef ("Eq. C.N" label). */}
+<script
+  is:inline
+  id='sophie-pedagogy-equation-citations'
+  type='application/json'
+  set:html={pedagogyEquationCitationsJson}
 />
 {/* Figure registry payload (two-tier figures, PR-C3 decision #3):
     canonical figure metadata supplied by the consumer app's

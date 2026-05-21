@@ -1,6 +1,7 @@
 import katex from "katex";
 import { Sigma } from "lucide-react";
 import { useId, useMemo } from "react";
+import { lookupCanonicalCitationByRefId } from "../EquationRef/equation-citations-store.ts";
 import { lookupEquation } from "../EquationRef/equations-store.ts";
 import styles from "./KeyEquation.module.css.js";
 import type { KeyEquationProps } from "./KeyEquation.schema.ts";
@@ -71,6 +72,17 @@ export function KeyEquation({
   }
 
   const biography = entry.biography;
+  // Sprint E — pull the canonical citation for this equation to render
+  // the "(C.N)" margin label. Multi-citation case: every callsite shows
+  // the canonical (lowest-chapter) citation's number (v1 limitation;
+  // documented in the pilot report). When no citation is registered,
+  // the label is omitted.
+  const citation = lookupCanonicalCitationByRefId(refId);
+  const eqLabel = citation
+    ? citation.chapterNumber !== undefined
+      ? `(${citation.chapterNumber}.${citation.number})`
+      : `(${citation.number})`
+    : null;
 
   return (
     <section id={entry.id} aria-labelledby={titleId} className={styles.section}>
@@ -84,11 +96,18 @@ export function KeyEquation({
         </span>
       </header>
       <div className={styles.body}>
-        <div
-          className={styles.tex}
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: tex is rendered by katex.renderToString from registry-validated TeX source (not user-supplied content).
-          dangerouslySetInnerHTML={{ __html: texHtml }}
-        />
+        <div className={styles.texRow}>
+          <div
+            className={styles.tex}
+            // biome-ignore lint/security/noDangerouslySetInnerHtml: tex is rendered by katex.renderToString from registry-validated TeX source (not user-supplied content).
+            dangerouslySetInnerHTML={{ __html: texHtml }}
+          />
+          {eqLabel !== null && (
+            <span className={styles.numberLabel} aria-hidden>
+              {eqLabel}
+            </span>
+          )}
+        </div>
 
         {entry.constants && entry.constants.length > 0 && (
           <dl

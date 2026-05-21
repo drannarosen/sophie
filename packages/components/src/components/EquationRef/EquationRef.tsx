@@ -6,6 +6,7 @@ import { useHydrated } from "../../runtime/useHydrated.ts";
 import { BiographySummary } from "./EquationRef.biography-summary.tsx";
 import styles from "./EquationRef.module.css.js";
 import type { EquationRefProps } from "./EquationRef.schema.ts";
+import { lookupCanonicalCitationByRefId } from "./equation-citations-store.ts";
 import { lookupEquation } from "./equations-store.ts";
 
 /**
@@ -58,7 +59,20 @@ export function EquationRef({ refId, children }: EquationRefProps) {
   // citations live in `equationCitations` but the in-prose ref still
   // points at the canonical declaration page.
   const href = `/equations/${entry.id}`;
-  const linkText = children ?? entry.title;
+  // Sprint E — prefer "Eq. C.N" when a citation exists, else fall
+  // back to the equation title (pre-Sprint-E behavior). Citation
+  // lookup returns the canonical citation (lowest chapter number).
+  const citation = lookupCanonicalCitationByRefId(refId);
+  let eqLabel: string;
+  if (citation) {
+    eqLabel =
+      citation.chapterNumber !== undefined
+        ? `Eq. ${citation.chapterNumber}.${citation.number}`
+        : `Eq. ${citation.number}`;
+  } else {
+    eqLabel = entry.title;
+  }
+  const linkText = children ?? eqLabel;
 
   return (
     <HoverCard.Root openDelay={150} closeDelay={120}>

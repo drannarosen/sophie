@@ -95,6 +95,12 @@
   /* Prevent extra-wide chapter content (long inline code, big tables)
      from forcing horizontal scroll at any viewport. */
   overflow-wrap: break-word;
+  /* Sprint G: chapter-level counters for Part (h2) + subsection (h3)
+     numbering. h2::before / h3::before below consume these. Opt-out
+     via [data-no-counter] on a heading (used for Summary, Practice
+     problems, Concept throughline, etc. — chrome-style headings that
+     don't carry Part numbering). */
+  counter-reset: sophie-part 0 sophie-subsection 0;
 }
 
 /* Asymmetric heading rhythm per visual-polish-target.md — h2 owns the
@@ -103,22 +109,169 @@
    inheriting browser defaults. Weight stays at semibold across the
    hierarchy; size carries the level (MyST convention; visual-polish-
    target.md "Spacing rhythm" §"All headings weight"). */
+/* H1/H2 use Fraunces (serif) for editorial voice; H3 stays sans so
+ * the visual rhythm pulses serif→sans→serif as the reader scrolls.
+ * Fraunces' `opsz` axis is set high for display sizes; `SOFT` axis
+ * pushed toward soft (60) at H1 for warmth, neutral (0) at H2.
+ * Line-height tightens at display sizes (~1.1) to keep the chapter
+ * title visually compact. */
 .sophie-content h1 {
   margin-block-start: var(--sophie-heading-h1-margin-top);
   margin-block-end: var(--sophie-heading-h1-margin-bottom);
-  font-weight: var(--sophie-weight-semibold);
+  font-family: var(--sophie-font-serif);
+  font-weight: 600;
+  font-size: var(--sophie-text-4xl);
+  line-height: 1.08;
+  letter-spacing: -0.015em;
+  font-variation-settings:
+    "opsz" 144,
+    "SOFT" 60,
+    "WONK" 0;
 }
 
 .sophie-content h2 {
   margin-block-start: var(--sophie-heading-h2-margin-top);
   margin-block-end: var(--sophie-heading-h2-margin-bottom);
-  font-weight: var(--sophie-weight-semibold);
+  font-family: var(--sophie-font-serif);
+  font-weight: 600;
+  font-size: var(--sophie-text-2xl);
+  line-height: 1.18;
+  letter-spacing: -0.01em;
+  font-variation-settings:
+    "opsz" 72,
+    "SOFT" 30,
+    "WONK" 0;
 }
 
 .sophie-content h3 {
   margin-block-start: var(--sophie-heading-h3-margin-top);
   margin-block-end: var(--sophie-heading-h3-margin-bottom);
+  font-family: var(--sophie-font-sans);
   font-weight: var(--sophie-weight-semibold);
+  font-size: var(--sophie-text-lg);
+  letter-spacing: -0.005em;
+}
+
+/* Sprint G — Part + subsection numbering.
+ *
+ * Each h2 in chapter prose increments sophie-part and resets the
+ * sophie-subsection sub-counter; each h3 increments sophie-subsection.
+ * The numbers render as ::before content so the chapter MDX stays
+ * source-clean (no "Part 1." hand-typed into heading text).
+ *
+ * Opt-out: [data-no-counter] on a heading suppresses both the counter-
+ * increment and the rendered label. Use for non-Part h2s such as the
+ * "Concept throughline" lead-in, Summary, Practice problems, Chapter
+ * glossary — chrome-style headings that should not consume a Part #.
+ */
+.sophie-content > h2:not([data-no-counter]) {
+  counter-increment: sophie-part;
+  counter-reset: sophie-subsection 0;
+}
+
+.sophie-content > h2:not([data-no-counter])::before {
+  content: "Part " counter(sophie-part) "  \00b7  ";
+  font-family: var(--sophie-font-sans);
+  font-size: 0.62em;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sophie-brand-teal-text);
+  vertical-align: 0.18em;
+  margin-inline-end: 0.1em;
+  font-feature-settings:
+    "tnum" 1,
+    "lnum" 1;
+}
+
+.sophie-content > h3:not([data-no-counter]) {
+  counter-increment: sophie-subsection;
+}
+
+.sophie-content > h3:not([data-no-counter])::before {
+  content: counter(sophie-part) "." counter(sophie-subsection) "  ";
+  font-family: var(--sophie-font-sans);
+  font-weight: 600;
+  color: var(--sophie-brand-violet-text);
+  margin-inline-end: 0.2em;
+  font-feature-settings:
+    "tnum" 1,
+    "lnum" 1;
+}
+
+/* Sprint H — Chapter-opening ornament.
+ *
+ * A single decorative dot-dash row rendered above the first Part
+ * heading, marking the boundary between front-matter chrome (Learning
+ * Objectives, Concept throughline, opening callouts) and the chapter
+ * body. Author opts in by adding `data-chapter-opener` to the
+ * appropriate h2 in MDX. Neutral stone color — ornament is chrome,
+ * not pedagogy; it must not compete with Sprint G's brand-teal Part
+ * labels for attention.
+ */
+.sophie-content > h2[data-chapter-opener]::after {
+  content: "";
+  display: block;
+  margin-block: 0.6em 0;
+  block-size: 1em;
+  background-image:
+    radial-gradient(circle, var(--sophie-text-muted) 1.2px, transparent 1.6px),
+    linear-gradient(
+      to right,
+      transparent,
+      var(--sophie-text-muted) 50%,
+      transparent
+    );
+  background-repeat: no-repeat;
+  background-size:
+    6px 6px,
+    4em 1px;
+  background-position: center, center;
+  opacity: 0.55;
+}
+
+/* Sprint H — Drop cap on the chapter's first prose paragraph.
+ *
+ * Targets `.sophie-content > p:first-of-type` so the cap lands on the
+ * first direct-child <p> — the chapter's first true prose paragraph,
+ * past the LearningObjectives island, Concept throughline blockquote,
+ * and opening callouts. Fraunces variable (already loaded), brand-teal
+ * for visual continuity with the Part-label color, ~3 lines tall.
+ * Skips when [data-no-drop-cap] is present, in case a chapter's first
+ * prose paragraph is decorative rather than load-bearing.
+ *
+ * `:first-letter` automatically respects punctuation — quotes,
+ * brackets, and dashes preceding the letter are absorbed into the cap.
+ */
+.sophie-content > p:first-of-type:not([data-no-drop-cap])::first-letter {
+  float: inline-start;
+  font-family: var(--sophie-font-serif);
+  font-weight: 600;
+  font-size: 3.2em;
+  line-height: 0.85;
+  margin-inline-end: 0.08em;
+  margin-block-start: 0.06em;
+  color: var(--sophie-brand-teal-text);
+  font-variation-settings:
+    "opsz" 144,
+    "SOFT" 60,
+    "WONK" 0;
+}
+
+/* Small-caps utility for role labels (OBSERVABLE / MODEL / INFERENCE),
+ * figure numbers (Fig. 1.2), equation numbers, "key insight" pill
+ * labels, etc. Sans stack, narrow tracking inverted to wide tracking
+ * — the academic-paper small-caps convention. */
+.sophie-content .smallCaps,
+.sophie-content [data-small-caps] {
+  font-family: var(--sophie-font-sans);
+  font-size: 0.72em;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-feature-settings:
+    "tnum" 1,
+    "lnum" 1;
 }
 
 .sophie-right {
@@ -378,6 +531,42 @@
     [data-sophie-aside][data-aside-docked="true"]
     > summary {
     display: none;
+  }
+
+  /* Sprint J — Tufte-style anchor connector.
+   *
+   * Renders a 1px dashed vertical line up the aside's left edge,
+   * spanning the displacement between the aside's source position
+   * (preceding-anchor's offsetTop) and its docked position. When
+   * displacement is zero — the cascade didn't have to shove the
+   * aside down to avoid overlap — `--sophie-aside-anchor-delta`
+   * is `0px` and the connector has zero height (invisible).
+   *
+   * Hover-only opacity reveal — the line is a navigation
+   * affordance for "where does this margin note belong in the
+   * main column," not decorative chrome. Brand-rose-desaturated
+   * tint pairs with the inference role color without competing.
+   */
+  :root[data-view-mode="default"]
+    [data-sophie-aside][data-aside-docked="true"]::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: -10px;
+    inset-block-start: calc(-1 * var(--sophie-aside-anchor-delta, 0px));
+    inline-size: 1px;
+    block-size: var(--sophie-aside-anchor-delta, 0px);
+    border-inline-start: 1px dashed
+      color-mix(in oklch, var(--sophie-brand-rose) 55%, transparent);
+    opacity: 0;
+    transition: opacity 140ms ease-out;
+    pointer-events: none;
+  }
+
+  :root[data-view-mode="default"]
+    [data-sophie-aside][data-aside-docked="true"]:hover::before,
+  :root[data-view-mode="default"]
+    [data-sophie-aside][data-aside-docked="true"]:focus-within::before {
+    opacity: 0.9;
   }
 }
 
