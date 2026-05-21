@@ -42,6 +42,7 @@
     "./components/ChapterFooter.astro": "./dist/components/ChapterFooter.astro",
     "./components/ChapterPagination.astro": "./dist/components/ChapterPagination.astro",
     "./components/ChapterTitle.astro": "./dist/components/ChapterTitle.astro",
+    "./components/TocToggle.astro": "./dist/components/TocToggle.astro",
     "./styles/textbook-layout.css": "./dist/styles/textbook-layout.css"
   },
   "files": [

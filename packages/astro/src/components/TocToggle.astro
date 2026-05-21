@@ -1,0 +1,56 @@
+---
+import { List } from "../icons";
+
+/**
+ * <TocToggle> — accessible toggle button for the right column's
+ * (in-page Table of Contents) open/closed state. Drives `data-toc`
+ * on `<html>` through `rightSidebarPref` (preferences/right-sidebar.ts),
+ * which encapsulates the localStorage round-trip, cross-tab `storage`
+ * sync, and idempotent click binding — mirrors `<SidebarToggle>`'s
+ * shape for the left sidebar.
+ *
+ * Sprint K (2026-05-21): introduced alongside the default-closed
+ * right column. Renders in the topbar next to `<SidebarToggle>` so
+ * both chrome surfaces are toggleable from the same chrome strip.
+ *
+ * Icon: Lucide `List` via lucide-static (no React) — matches the
+ * MyST "CONTENTS" affordance shape.
+ */
+---
+
+<button
+  type='button'
+  class='sophie-toc-toggle'
+  data-sophie-toc-toggle
+  aria-controls='sophie-right-region'
+  aria-expanded='false'
+  aria-label='Toggle contents'
+>
+  <Fragment set:html={List} />
+</button>
+
+<script>
+  import { rightSidebarPref } from "../preferences";
+
+  function syncAriaExpanded(next: "open" | "closed"): void {
+    document
+      .querySelectorAll<HTMLButtonElement>("[data-sophie-toc-toggle]")
+      .forEach((btn) => {
+        btn.setAttribute(
+          "aria-expanded",
+          next === "open" ? "true" : "false",
+        );
+      });
+  }
+
+  syncAriaExpanded(rightSidebarPref.read());
+  rightSidebarPref.subscribe(syncAriaExpanded);
+
+  document
+    .querySelectorAll<HTMLButtonElement>("[data-sophie-toc-toggle]")
+    .forEach((btn) => {
+      rightSidebarPref.bindToggle(btn, (cur) =>
+        cur === "open" ? "closed" : "open",
+      );
+    });
+</script>

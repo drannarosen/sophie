@@ -392,17 +392,66 @@
   border-inline-end: 0;
 }
 
-/* When the sidebar is hidden, let content widen to use the freed
-   horizontal space — to 75ch (equivalent to Focused mode's cap, but
-   still under Bringhurst's 75ch upper bound). Users who collapse the
-   sidebar deliberately see the prose breathe a bit more rather than
-   leaving leftover whitespace.
+/* Right column (in-page ToC) — Sprint K toggle. Mirrors the
+   sidebar-closed shape: drop the column width, hide the column,
+   keep the border off. The Contents toggle button (TocToggle.astro)
+   drives the data-toc state via rightSidebarPref. Cascade order:
+   sits ABOVE view-mode rules so view-mode=focused/wide still wins
+   when active even with data-toc="open". */
+:root[data-toc="closed"] .sophie-shell {
+  --sophie-right-w: 0;
+}
+:root[data-toc="closed"] .sophie-right {
+  visibility: hidden;
+  border-inline-start: 0;
+}
 
-   Cascade order matters: this rule comes BEFORE the view-mode
-   overrides below, so Focused (75ch) and Wide (95ch) win when
-   active even with sidebar="closed". */
+/* When the sidebar is hidden, let content widen to use the freed
+   horizontal space. Sprint K caps:
+     - sidebar=open + toc=open    → 66ch (Bringhurst optimum)
+     - sidebar=closed + toc=open  → 75ch (Bringhurst upper bound)
+     - sidebar=open + toc=closed  → 85ch (one chrome side gone)
+     - sidebar=closed + toc=closed → 95ch (MyST-style wide reading;
+       title fits on one line, paragraphs use the freed space)
+
+   Cascade order matters: these rules come BEFORE the view-mode
+   overrides below, so Focused (85ch) and Wide (105ch) win when
+   active even with both sidebars closed. */
 :root[data-sidebar="closed"] .sophie-content {
   max-inline-size: min(75ch, 100%);
+}
+:root[data-toc="closed"] .sophie-content {
+  max-inline-size: min(85ch, 100%);
+}
+:root[data-sidebar="closed"][data-toc="closed"] .sophie-content {
+  max-inline-size: min(95ch, 100%);
+}
+
+/* TocToggle button — basic primitive shape mirroring SidebarToggle. */
+.sophie-toc-toggle {
+  appearance: none;
+  background: transparent;
+  border: 1px solid var(--sophie-border);
+  border-radius: var(--sophie-radius-sm);
+  padding: 0.375rem 0.625rem;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  color: inherit;
+}
+.sophie-toc-toggle:focus-visible {
+  outline: var(--sophie-focus-width) solid var(--sophie-focus-color);
+  outline-offset: 2px;
+}
+.sophie-toc-toggle:hover {
+  background: var(--sophie-bg);
+}
+/* Hide the toggle on narrow mobile viewports; the existing
+   TocDrawer FAB takes over there (per ADR 0036 transient state). */
+@media (max-width: 768px) {
+  .sophie-toc-toggle {
+    display: none;
+  }
 }
 
 /* Sidebar toggle button — basic primitive shape; full design in @sophie/theme later. */

@@ -6,6 +6,8 @@ export type {
 export { definePreference } from "./define";
 export type { DisclosuresStored } from "./disclosures";
 export { disclosuresPref, nextDisclosures } from "./disclosures";
+export type { RightSidebarStored } from "./right-sidebar";
+export { rightSidebarPref } from "./right-sidebar";
 export type { SidebarStored } from "./sidebar";
 export { sidebarPref } from "./sidebar";
 export type { ThemeAttr, ThemeStored } from "./theme";

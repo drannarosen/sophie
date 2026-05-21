@@ -24,6 +24,7 @@
 export {
   ChevronsDownUp,
   ChevronsUpDown,
+  List,
   Menu,
   Moon,
   Sun,

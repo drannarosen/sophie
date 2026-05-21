@@ -30,6 +30,7 @@ import SearchTrigger from "./SearchTrigger.astro";
 import DisclosuresToggle from "./DisclosuresToggle.astro";
 import Sidebar from "./Sidebar.astro";
 import SidebarToggle from "./SidebarToggle.astro";
+import TocToggle from "./TocToggle.astro";
 import ThemeToggle from "./ThemeToggle.astro";
 import TopBar from "./TopBar.astro";
 import ViewModeToggle from "./ViewModeToggle.astro";
@@ -427,6 +428,7 @@ const collapsedVars = [
     </slot>
     <slot name='topbar-trailing'>
       <SearchTrigger />
+      <TocToggle />
       <DisclosuresToggle />
       <ViewModeToggle />
       <ThemeToggle />
