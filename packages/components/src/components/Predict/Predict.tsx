@@ -1,5 +1,6 @@
 import { Telescope } from "lucide-react";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { ChromeTitleBar } from "../../primitives/ChromeTitleBar/ChromeTitleBar.tsx";
 import { HydrationAnnouncer } from "../../runtime/HydrationAnnouncer.tsx";
 import { MathText } from "../../runtime/MathText.tsx";
 import { useInteractive } from "../../runtime/useInteractive.ts";
@@ -46,12 +47,7 @@ export function Predict({
 
   return (
     <section className={`${styles.section} sophie-predict`}>
-      <header className={styles.titleBar}>
-        <Telescope className={styles.icon} size={20} aria-hidden />
-        <MathText as='h2' className={styles.heading}>
-          {heading}
-        </MathText>
-      </header>
+      <ChromeTitleBar accent='rose' icon={Telescope} heading={heading} />
       <div className={styles.body}>
         {description !== undefined && (
           <MathText as='p' className={styles.description}>

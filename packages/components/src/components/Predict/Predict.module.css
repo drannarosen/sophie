@@ -2,8 +2,13 @@
  *
  * Brand-rose accent — elicitation/self-disclosure family (pairs with
  * Reflection). Tier-1 anatomy: 4px rose left rule, drop shadow, 5px
- * radius, pale-rose title bar with Telescope icon ("predict + observe"
- * verb, fits Sophie Astro sub-brand identity).
+ * radius, pale-rose title bar (provided by <ChromeTitleBar
+ * accent="rose" />) with Telescope icon ("predict + observe" verb,
+ * fits Sophie Astro sub-brand identity).
+ *
+ * Title-bar rules previously inlined here moved to
+ * primitives/ChromeTitleBar/ChromeTitleBar.module.css in the Sprint K
+ * hardening combo (2026-05-21) — see code-review Agent 1 finding #1.
  *
  * Per ADR 0005, no hex/rgb literals — all colors flow through
  * @sophie/theme tokens.
@@ -19,35 +24,6 @@
   color: var(--sophie-text);
   font-family: var(--sophie-font-sans);
   overflow: hidden;
-}
-
-.titleBar {
-  display: flex;
-  align-items: center;
-  gap: var(--sophie-space-2);
-  padding: var(--sophie-space-2) var(--sophie-space-4);
-  background: color-mix(
-    in oklch,
-    var(--sophie-brand-rose) 8%,
-    var(--sophie-surface-1)
-  );
-  border-bottom: 1px solid var(--sophie-border);
-  color: var(--sophie-brand-rose-text);
-  font-weight: var(--sophie-weight-semibold);
-}
-
-.icon {
-  flex-shrink: 0;
-}
-
-.heading {
-  margin: 0;
-  font-size: var(--sophie-text-base);
-  font-weight: var(--sophie-weight-semibold);
-  color: inherit;
-  /* No uppercase tracking — title-case in the rendered text itself. */
-  text-transform: none;
-  letter-spacing: 0;
 }
 
 .body {

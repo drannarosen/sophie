@@ -79,6 +79,13 @@ export type AIContribution = z.infer<typeof AIContribution>;
 
 export const ChapterSchema = z.object({
   title: NonEmptyString,
+  /**
+   * Optional editorial subtitle / deck (Sprint K). Renders below the
+   * auto-prefixed "Lecture N" and the title in italic Fraunces serif —
+   * "magazine deck" voice for one-line chapter framing that doesn't
+   * fit in the meta strip. When omitted, no subtitle slot renders.
+   */
+  subtitle: NonEmptyString.optional(),
   slug: Slug,
   // Every chapter belongs to exactly one module (PR 3 design doc).
   module: Slug,

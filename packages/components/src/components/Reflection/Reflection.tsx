@@ -1,7 +1,7 @@
 import { PauseCircle } from "lucide-react";
 import { useId } from "react";
+import { ChromeTitleBar } from "../../primitives/ChromeTitleBar/ChromeTitleBar.tsx";
 import { HydrationAnnouncer } from "../../runtime/HydrationAnnouncer.tsx";
-import { MathText } from "../../runtime/MathText.tsx";
 import { useSelfAssessment } from "../../runtime/useSelfAssessment.ts";
 import styles from "./Reflection.module.css.js";
 import type { ReflectionProps } from "./Reflection.schema.ts";
@@ -30,12 +30,13 @@ export function Reflection({
 
   return (
     <div className={styles.section}>
-      <header className={styles.titleBar}>
-        <PauseCircle className={styles.icon} size={20} aria-hidden />
-        <MathText as='label' htmlFor={textareaId} className={styles.title}>
-          {prompt}
-        </MathText>
-      </header>
+      <ChromeTitleBar
+        accent='rose'
+        icon={PauseCircle}
+        heading={prompt}
+        headingAs='label'
+        headingFor={textareaId}
+      />
       <div className={styles.body}>
         <textarea
           id={textareaId}

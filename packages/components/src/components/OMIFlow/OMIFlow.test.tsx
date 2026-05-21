@@ -170,6 +170,11 @@ describe("<OMIFlow> — Fragment-wrapped children (Storybook args shape)", () =>
     // Fragment as one opaque element and no slots are matched.
     render(
       <OMIFlow id='frag-flow'>
+        {/* biome-ignore lint/complexity/noUselessFragments: the Fragment
+            is load-bearing — this test exercises OMIFlow's
+            Children.forEach descent into Fragment wrappers (the
+            Storybook `args.children` shape). Removing it defeats the
+            test. */}
         <>
           <OMIFlow.Observable title='HR diagram'>
             <p>obs body</p>
@@ -193,8 +198,14 @@ describe("<OMIFlow> — Fragment-wrapped children (Storybook args shape)", () =>
   it("descends into nested Fragments", () => {
     render(
       <OMIFlow id='nested-frag-flow'>
+        {/* biome-ignore lint/complexity/noUselessFragments: outer
+            Fragment is load-bearing — tests Children.forEach descent
+            into Fragment-wrapped slots (Storybook args shape). */}
         <>
           <OMIFlow.Observable>obs</OMIFlow.Observable>
+          {/* biome-ignore lint/complexity/noUselessFragments: inner
+              Fragment is load-bearing — tests Children.forEach descent
+              into NESTED Fragment wrappers. */}
           <>
             <OMIFlow.Model>mod</OMIFlow.Model>
             <OMIFlow.Inference>inf</OMIFlow.Inference>

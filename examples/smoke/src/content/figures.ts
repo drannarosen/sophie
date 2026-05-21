@@ -58,7 +58,7 @@ export const figures: FigureRegistry = {
   "desi-3d-map": {
     name: "desi-3d-map",
     src: "/figures/DESI-Universe-3D-Map.jpg",
-    alt: "3D map of galaxy distribution from DESI showing the cosmic web structure. Galaxies form filaments and clusters connected by walls, with large voids between. Color gradient from cyan (nearby) through yellow to red (distant) shows lookback time up to 2.5 billion years. 'You Are Here' marks Earth's position at center.",
+    alt: "3D map of galaxy distribution from DESI showing the cosmic web — the spatial distribution that traces enclosed gravitational mass (M) on cosmic scales. Galaxies form filaments and clusters connected by walls, with large voids between. Color gradient from cyan (nearby) through yellow to red (distant) shows lookback time up to 2.5 billion years. 'You Are Here' marks Earth's position at center.",
     caption:
       "**What to notice:** The cosmic web—galaxies aren't scattered randomly. They cluster into filaments, walls, and voids. You are at the center; colors show distance (cyan = nearby, red = billions of light-years away). Gravity is still pulling these structures together.",
     credit: "DESI Collaboration/NOIRLab/NSF/AURA/Kitt Peak",
@@ -82,7 +82,7 @@ export const figures: FigureRegistry = {
   "em-spectrum-temperature": {
     name: "em-spectrum-temperature",
     src: "/figures/em-spectrum-nblm.png",
-    alt: "Vertical electromagnetic spectrum showing wavelength bands with corresponding temperatures: Gamma/X-Ray at top for million-degree plasma and black holes, UV/Visible in middle for stars (3,000K–50,000K), Infrared/Radio at bottom for dust (100K) and cold gas (10K). Rainbow colors shown in visible band.",
+    alt: "Vertical electromagnetic spectrum showing wavelength bands with corresponding temperatures — illustrating how peak emission wavelength (λ_peak, the Planck-curve maximum) sets the band a blackbody radiates in: Gamma/X-Ray at top for million-degree plasma and black holes, UV/Visible in middle for stars (3,000K–50,000K), Infrared/Radio at bottom for dust (100K) and cold gas (10K). Rainbow colors shown in visible band.",
     caption:
       "**What to notice:** The EM spectrum is a temperature ladder. Gamma/X-ray = million-degree plasma; UV/Visible = stellar surfaces (3,000–50,000 K); Infrared/Radio = dust and cold gas (10–100 K).",
     credit: "Course illustration (A. Rosen)",

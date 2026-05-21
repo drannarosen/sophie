@@ -2,8 +2,15 @@
  *
  * Brand-teal accent — Sophie's primary brand color. Tier-1 anatomy:
  * 4px teal left rule, drop shadow, 5px radius, pale-teal title bar
- * with Target icon (goal-setting glyph), white body holding the
- * objective checklist.
+ * (provided by <ChromeTitleBar accent="teal" />) with Target icon
+ * (goal-setting glyph), white body holding the objective checklist.
+ *
+ * Title-bar rules previously inlined here moved to
+ * primitives/ChromeTitleBar/ChromeTitleBar.module.css in the Sprint K
+ * hardening combo (2026-05-21) — see code-review Agent 1 finding #1.
+ * <Objective> owns its own .row / .checkbox / .label / .verb styles
+ * (the rules previously present here were vestigial after the
+ * Children.map → child-component migration; Agent 1 finding #9).
  *
  * Per ADR 0005, no hex/rgb literals — all colors flow through
  * @sophie/theme tokens.
@@ -21,32 +28,6 @@
   overflow: hidden;
 }
 
-.titleBar {
-  display: flex;
-  align-items: center;
-  gap: var(--sophie-space-2);
-  padding: var(--sophie-space-2) var(--sophie-space-4);
-  background: color-mix(
-    in oklch,
-    var(--sophie-brand-teal) 8%,
-    var(--sophie-surface-1)
-  );
-  border-bottom: 1px solid var(--sophie-border);
-  color: var(--sophie-brand-teal-text);
-  font-weight: var(--sophie-weight-semibold);
-}
-
-.icon {
-  flex-shrink: 0;
-}
-
-.heading {
-  margin: 0;
-  font-size: var(--sophie-text-base);
-  font-weight: var(--sophie-weight-semibold);
-  color: inherit;
-}
-
 .list {
   margin: 0;
   padding: var(--sophie-space-3) var(--sophie-space-4);
@@ -54,58 +35,4 @@
   display: grid;
   gap: var(--sophie-space-2);
   font-size: var(--sophie-text-body);
-}
-
-.row {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.625rem;
-  align-items: baseline;
-}
-
-.checkbox {
-  margin: 0;
-  inline-size: 1rem;
-  block-size: 1rem;
-  cursor: pointer;
-  accent-color: var(--sophie-brand-teal);
-}
-
-.checkbox:disabled {
-  cursor: progress;
-  opacity: 0.5;
-}
-
-.label {
-  cursor: pointer;
-  line-height: var(--sophie-leading-prose);
-}
-
-.label:has(+ .checkbox:disabled),
-.checkbox:disabled + .label {
-  cursor: progress;
-}
-
-.checkbox:checked + .label {
-  color: var(--sophie-text-muted);
-  text-decoration: line-through currentColor 1px;
-  text-decoration-skip-ink: auto;
-}
-
-.checkbox:focus-visible {
-  outline: var(--sophie-focus-width) solid var(--sophie-focus-color);
-  outline-offset: 2px;
-}
-
-.verb {
-  font-weight: var(--sophie-weight-semibold);
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .checkbox,
-  .label {
-    transition:
-      color 120ms ease-out,
-      opacity 120ms ease-out;
-  }
 }

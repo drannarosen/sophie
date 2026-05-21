@@ -1,0 +1,39 @@
+---
+/**
+ * <ChapterStatusChip> — small editorial-status indicator rendered in
+ * the topbar trailing slot.
+ *
+ * Reads the chapter's `status` frontmatter field (per ADR 0051 the
+ * enum is `draft | review | stable`) and renders a label-voice chip
+ * surfacing the maturity state.
+ *
+ * - draft → orange/amber tint, "DRAFT" label. Drafts are excluded
+ *   from the student build (per ADR 0051), so this only renders
+ *   during authoring previews.
+ * - review → teal tint, "UNDER REVIEW" label. The most common state
+ *   for actively iterating chapters.
+ * - stable → no chip rendered (steady state shouldn't add chrome).
+ *
+ * When `status` is undefined the component renders nothing — the
+ * platform-level fallback for non-chapter pages (index, glossary,
+ * etc.).
+ */
+export interface Props {
+  status?: "draft" | "review" | "stable";
+}
+
+const { status } = Astro.props;
+const show = status === "draft" || status === "review";
+const label = status === "draft" ? "DRAFT" : "UNDER REVIEW";
+---
+
+{
+  show && (
+    <span
+      class={`sophie-status-chip sophie-status-chip--${status}`}
+      aria-label={`Chapter status: ${label.toLowerCase()}`}
+    >
+      {label}
+    </span>
+  )
+}

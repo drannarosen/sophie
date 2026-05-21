@@ -2,6 +2,7 @@
 import ChapterFooter from "@sophie/astro/components/ChapterFooter.astro";
 import ChapterMeta from "@sophie/astro/components/ChapterMeta.astro";
 import ChapterPagination from "@sophie/astro/components/ChapterPagination.astro";
+import ChapterTitle from "@sophie/astro/components/ChapterTitle.astro";
 import ModuleNav from "@sophie/astro/components/ModuleNav.astro";
 import ScrollProgress from "@sophie/astro/components/ScrollProgress.astro";
 import TextbookHead from "@sophie/astro/components/TextbookHead.astro";
@@ -23,6 +24,8 @@ const figureRegistryArray = Object.values(figureRegistry);
 interface Props {
   frontmatter: {
     title: string;
+    /** Sprint K — optional editorial subtitle / deck. */
+    subtitle?: string;
     slug: string;
     module: string;
     order?: number;
@@ -72,6 +75,18 @@ const chapters = (await getCollection("chapters")).map((c) => ({
   chapter: c.data.chapter,
   status: c.data.status,
 }));
+
+// Sprint K — derive the topbar breadcrumb context from frontmatter.
+// `module: "stars"` (slug) resolves to the matching modules-collection
+// entry; its `order` field becomes the "MOD N" rung. `chapter: 3`
+// (numeric) from the chapter frontmatter becomes the "LECTURE M" rung.
+// `status` is the chapter maturity enum (draft | review | stable).
+const currentModule = modules.find((m) => m.slug === frontmatter.module);
+const chapterContext = {
+  moduleOrder: currentModule?.order,
+  chapterNumber: frontmatter.chapter,
+  status: chapters.find((c) => c.slug === currentChapterSlug)?.status,
+};
 
 // Sprint I-C — adjacent-chapter resolution for prev/next pills.
 // Stable sort by (module index, order ?? 0, title) so the
@@ -140,7 +155,10 @@ const next = nextRaw
   <body>
     <SophieChapter client:load>
       <ScrollProgress />
-      <TextbookLayout figureRegistry={figureRegistryArray}>
+      <TextbookLayout
+        figureRegistry={figureRegistryArray}
+        chapterContext={chapterContext}
+      >
         <Fragment slot='sidebar'>
           <ModuleNav
             modules={modules}
@@ -155,7 +173,7 @@ const next = nextRaw
             </Fragment>
           )
         }
-        <h1>{frontmatter.title}</h1>
+        <ChapterTitle frontmatter={frontmatter} />
         <ChapterMeta
           reading={frontmatter.reading}
           track={frontmatter.track}

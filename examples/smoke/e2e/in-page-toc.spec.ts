@@ -14,7 +14,24 @@ const STELLAR_EVOLUTION = "/chapters/stellar-evolution";
  *   aria-current="location" on the active ToC link.
  * - Mobile (<768px): right column hidden; <TocDrawer> shows a
  *   floating "Contents" FAB; tap opens a slide-over drawer.
+ *
+ * Sprint K (2026-05-21, commit 997e545): the ToC defaults to closed
+ * on every viewport (MyST-style "chapter is the content; chrome opens
+ * on demand"). Tests that exercise the OPEN-state behavior (heading
+ * list, link click, scroll-spy) flip it open via the topbar
+ * `<TocToggle>` button first. See textbook-layout.css line ~431:
+ * `:root[data-toc='closed'] .sophie-toc { display: none }`.
  */
+
+/**
+ * Open the in-page ToC by clicking the topbar TocToggle. Asserts the
+ * resulting `html[data-toc='open']` state before returning so callers
+ * get a clean precondition.
+ */
+async function openToc(page: import("@playwright/test").Page): Promise<void> {
+  await page.getByRole("button", { name: /toggle contents/i }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-toc", "open");
+}
 
 test.describe("PR 4: In-page ToC (desktop)", () => {
   test.beforeEach(async ({ context }) => {
@@ -25,6 +42,9 @@ test.describe("PR 4: In-page ToC (desktop)", () => {
     page,
   }) => {
     await page.goto(SPOILER_ALERTS);
+    // Sprint K: ToC defaults to closed — open it before asserting the
+    // list is visible.
+    await openToc(page);
     const toc = page.locator(".sophie-toc--sidebar");
     await expect(toc).toBeVisible();
     // At least 4 H2 entries (the chapter has several "1.1 ...",
@@ -40,6 +60,8 @@ test.describe("PR 4: In-page ToC (desktop)", () => {
 
   test("clicking an H2 link jumps to the heading anchor", async ({ page }) => {
     await page.goto(SPOILER_ALERTS);
+    // Sprint K: ToC defaults to closed.
+    await openToc(page);
     const firstH2 = page
       .locator(".sophie-toc--sidebar .sophie-toc-list > .sophie-toc-item > a")
       .first();
@@ -109,15 +131,14 @@ test.describe("PR 4: In-page ToC (desktop)", () => {
     // <TocSidebar> primitive returns null in that case, so no
     // .sophie-toc--sidebar element exists.
     await expect(page.locator(".sophie-toc--sidebar")).toHaveCount(0);
-    // KNOWN LIMITATION: the right column's `--sophie-right-w`
-    // remains at 280px even when the ToC renders null. Astro's
-    // `Astro.slots.has("right")` registers a slot when the template
-    // declares one (even conditionally), so empty-slot-collapse
-    // (ADR 0034) doesn't fire here. A follow-up may change
-    // TextbookLayout to detect emptiness via `Astro.slots.render()`
-    // output length instead; tracked in P3 backlog.
-    const rightInner = await page.locator(".sophie-right").innerHTML();
-    expect(rightInner.trim()).toBe("");
+    // The slot body (.sophie-right__body) is empty — the wordmark in
+    // .sophie-right__foot is chrome, not slot content. (Pre 2026-05-21
+    // this asserted `.sophie-right` innerHTML; the polish pass added
+    // the "Made with Sophie" wordmark inside .sophie-right, so the
+    // user-facing question — "did the in-page-ToC render anything?" —
+    // moved to .sophie-right__body.)
+    const slotBody = await page.locator(".sophie-right__body").innerHTML();
+    expect(slotBody.trim()).toBe("");
   });
 
   test("axe-core: zero violations on the desktop ToC", async ({ page }) => {
@@ -179,6 +200,14 @@ test.describe("PR 4: In-page ToC (mobile drawer)", () => {
   test("clicking a ToC link inside the drawer closes the drawer", async ({
     page,
   }) => {
+    // The drawer composes <TocSidebar variant="drawer"> inside itself
+    // and uses its own `data-toc-state` to manage visibility per ADR
+    // 0036 (transient state, independent of the persistent `data-toc`
+    // preference). The Sprint K global rule that hid `.sophie-toc` on
+    // closed is scoped to `.sophie-toc--sidebar` so the drawer variant
+    // paints regardless of preference — this test exercises the
+    // mobile-only link-click → drawer-close contract without needing
+    // to seed any preference state.
     await page.goto(SPOILER_ALERTS);
     await page.getByRole("button", { name: /open contents/i }).click();
     const firstLink = page

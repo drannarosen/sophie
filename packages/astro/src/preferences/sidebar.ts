@@ -7,18 +7,20 @@ import { definePreference } from "./define";
  * `styles/textbook-layout.css` collapses the sidebar to 0 width when
  * `data-sidebar="closed"`.
  *
- * The viewport-aware default (mobile-default-closed, desktop-default-
- * open) is injected into the boot script via `defaultExpression` in
- * `<TextbookHead>` — it is NOT baked into the factory because the
- * factory is generic across all chrome preferences.
+ * Sprint K (2026-05-21): default flipped from "open" to "closed" to
+ * match the MyST-style "chapter is the content, chrome opens on
+ * demand" UX. The viewport-aware boot expression in `<TextbookHead>`
+ * is correspondingly simplified — default is "closed" on all
+ * viewports. Users who open the sidebar persist that preference via
+ * localStorage; the next reload remembers it.
  */
 export type SidebarStored = "open" | "closed";
 
 export const sidebarPref = definePreference<SidebarStored>({
   key: "sophie:sidebar",
   attribute: "data-sidebar",
-  default: "open",
+  default: "closed",
   values: ["open", "closed"],
-  parse: (raw) => (raw === "closed" ? "closed" : "open"),
+  parse: (raw) => (raw === "open" ? "open" : "closed"),
   serialize: (v) => v,
 });

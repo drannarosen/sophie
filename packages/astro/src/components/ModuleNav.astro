@@ -43,25 +43,43 @@ const sortedModules = [...modules].sort((a, b) => a.order - b.order);
 <nav class='sophie-module-nav' aria-label='Chapters'>
   <ol class='sophie-module-list'>
     {
-      sortedModules.map((m) => (
-        <li class='sophie-module' data-module={m.slug}>
-          <h2 class='sophie-module-title'>{m.title}</h2>
-          <ol class='sophie-chapter-list'>
-            {chaptersForModule(m.slug, chapters).map((c) => (
-              <li>
-                <a
-                  href={`/chapters/${c.slug}`}
-                  aria-current={
-                    c.slug === currentChapterSlug ? "page" : undefined
-                  }
-                >
-                  {c.title}
-                </a>
-              </li>
-            ))}
-          </ol>
-        </li>
-      ))
+      sortedModules.map((m) => {
+        const moduleChapters = chaptersForModule(m.slug, chapters);
+        const containsCurrent = moduleChapters.some(
+          (c) => c.slug === currentChapterSlug
+        );
+        return (
+          <li class='sophie-module' data-module={m.slug}>
+            <details
+              class='sophie-module-disclosure'
+              open={containsCurrent || currentChapterSlug === undefined}
+            >
+              <summary class='sophie-module-title'>
+                <span class='sophie-module-title__label'>{m.title}</span>
+                <span class='sophie-module-title__chevron' aria-hidden='true' />
+              </summary>
+              <ol class='sophie-chapter-list'>
+                {moduleChapters.map((c) => (
+                  <li>
+                    <a
+                      href={`/chapters/${c.slug}`}
+                      aria-current={
+                        c.slug === currentChapterSlug ? "page" : undefined
+                      }
+                    >
+                      {c.title}
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </details>
+          </li>
+        );
+      })
     }
   </ol>
+  {/* "Made with Sophie" attribution moved to the right column's
+      footer (RightColumn.astro) in the 2026-05-21 polish pass —
+      MyST-style margin wordmark with a brand-teal accent on "Sophie".
+      Left sidebar stays focused on chapter nav only. */}
 </nav>

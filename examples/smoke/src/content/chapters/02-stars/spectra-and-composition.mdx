@@ -1,5 +1,6 @@
 ---
-title: "Lecture 3: Spectra & Composition"
+title: "Spectra & Composition"
+subtitle: "How light from a star tells us what, how hot, and how fast"
 slug: "spectra-and-composition"
 module: "stars"
 order: 0
@@ -26,6 +27,7 @@ import {
   Aside,
   Callout,
   ComprehensionGate,
+  EquationRef,
   GlossaryTerm,
   Intervention,
   KeyEquation,
@@ -882,7 +884,9 @@ Everything you've learned about spectral absorption applies not only to stars bu
 
 ### Planetary energy balance: Stefan–Boltzmann applied to planets
 
-In Lecture 2, you learned the Stefan–Boltzmann law: $L = 4\pi R^2 \sigma T^4$. That law applies to **any blackbody** — and to first approximation, a planet is one. A planet doesn't generate its own luminosity — it absorbs sunlight and re-radiates that energy as **thermal (blackbody) radiation** at infrared wavelengths. The key insight is that the Sun and Earth are *both* approximate blackbodies, but at very different temperatures: the Sun's Planck curve peaks in visible light (${\sim}0.5\ \mu\text{m}$), while Earth's peaks in the thermal infrared (${\sim}10\ \mu\text{m}$). These two blackbody spectra barely overlap — and that spectral separation is what makes the greenhouse effect possible.
+<KeyEquation refId="stefan-boltzmann" />
+
+In Lecture 2, you learned the <EquationRef refId="stefan-boltzmann" client:load /> above. That law applies to **any blackbody** — and to first approximation, a planet is one. A planet doesn't generate its own luminosity — it absorbs sunlight and re-radiates that energy as **thermal (blackbody) radiation** at infrared wavelengths. The key insight is that the Sun and Earth are *both* approximate blackbodies, but at very different temperatures: the Sun's Planck curve peaks in visible light (${\sim}0.5\ \mu\text{m}$), while Earth's peaks in the thermal infrared (${\sim}10\ \mu\text{m}$). These two blackbody spectra barely overlap — and that spectral separation is what makes the greenhouse effect possible.
 
 At **energy balance**, the planet radiates exactly as much as it absorbs:
 

@@ -40,8 +40,24 @@ export function SearchModal(): ReactNode {
         setOpen((prev) => !prev);
       }
     };
+    // Cross-bundle bridge: the static `<SearchTrigger>` input in the
+    // topbar dispatches `sophie:search-open` on focus, optionally with
+    // `detail.query` if the user fast-typed before focus shifted. We
+    // open the modal and seed the query input so the typed characters
+    // aren't lost.
+    const onOpen = (e: Event) => {
+      const detail = (e as CustomEvent<{ query?: string }>).detail ?? {};
+      setOpen(true);
+      if (typeof detail.query === "string" && detail.query.length > 0) {
+        setQuery(detail.query);
+      }
+    };
     document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
+    document.addEventListener("sophie:search-open", onOpen);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("sophie:search-open", onOpen);
+    };
   }, []);
 
   useEffect(() => {

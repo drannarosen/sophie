@@ -1,4 +1,5 @@
 import type { FigureRegistry } from "../../runtime/index.ts";
+import { MathText } from "../../runtime/MathText.tsx";
 import { lookupCanonicalUsageByName } from "../FigureRef/figure-usages-store.ts";
 import styles from "./Figure.module.css.js";
 import type { FigureProps } from "./Figure.schema.ts";
@@ -93,7 +94,7 @@ function FigureBody({
       {(caption !== undefined || credit !== undefined || label !== null) && (
         <figcaption className={styles.caption}>
           {label !== null && <span className={styles.label}>{label}</span>}
-          {caption}
+          {caption !== undefined && <MathText>{caption}</MathText>}
           {credit !== undefined && (
             <span className={styles.credit}>{credit}</span>
           )}

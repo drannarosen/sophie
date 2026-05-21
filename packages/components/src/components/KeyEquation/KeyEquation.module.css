@@ -24,36 +24,26 @@
   scroll-margin-block-start: var(--sophie-space-4);
 }
 
-/* Sprint E — texRow + numberLabel.
- *
- * `.texRow` is a positioning context that wraps the KaTeX-rendered
- * display equation; the absolute-positioned `.numberLabel` escapes
- * rightward into the page gutter at the equation's vertical center.
- * Anchoring on .texRow (rather than the whole .section, which spans
- * the title bar + tex + biography children) is what keeps the label
- * aligned with the equation itself rather than drifting down the
- * card.
- *
- * Color: brand-violet text — same color family as the card's left
- * rule. Equations are the "model" role in the OMI triad, and
- * brand-violet is Sophie's model-role color (per anchors.ts comment).
- *
- * Narrow-viewport fallback (<1100px): the label tucks into the
- * card's top-right corner instead of floating into a nonexistent
- * gutter.
- */
+/* Equation number (e.g. "(3.2)") inside the box, on the same line as
+ * the equation, right-aligned. LaTeX `\tag{}` convention — the number
+ * floats at the equation's vertical center on the right margin of the
+ * tex row. Brand-violet text aligns with the equation's role color. */
 .texRow {
-  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--sophie-space-3);
 }
 
-.numberLabel {
-  position: absolute;
-  inset-inline-end: -7ch;
-  inset-block-start: 50%;
-  transform: translateY(-50%);
+.texRow > .tex {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.eqLabel {
+  flex-shrink: 0;
   font-family: var(--sophie-font-sans);
   font-size: var(--sophie-text-sm);
-  font-weight: 600;
+  font-weight: var(--sophie-weight-semibold);
   color: var(--sophie-brand-violet-text);
   font-feature-settings:
     "tnum" 1,
@@ -61,15 +51,6 @@
   pointer-events: none;
   -webkit-user-select: none;
   user-select: none;
-}
-
-@media (max-width: 1100px) {
-  .numberLabel {
-    inset-inline-end: var(--sophie-space-3);
-    inset-block-start: var(--sophie-space-2);
-    transform: none;
-    font-size: var(--sophie-text-xs);
-  }
 }
 
 .section:target {
@@ -130,6 +111,12 @@
   margin-block-end: 0;
 }
 
+/* biome-ignore lint/style/noDescendingSpecificity: base .tex styles
+   intentionally live below the `.texRow > .tex` qualifier earlier in
+   the file. The qualifier handles the flex-row layout when .tex sits
+   inside a .texRow container; the base rule below owns the standalone
+   .tex display formatting. Both target .tex but with different
+   structural contexts; no override conflict at runtime. */
 .tex {
   margin-block: var(--sophie-space-4);
   padding-block: var(--sophie-space-2);
@@ -173,6 +160,10 @@
   color: var(--sophie-text);
 }
 
+.constantName {
+  color: var(--sophie-text-muted);
+}
+
 /* Biography Tier-3 cards (Observable / Assumption / BreaksWhen /
  * CommonMisuse). Subordinate to the Tier-1 KeyEquation chrome. */
 .bioCard {
@@ -194,6 +185,79 @@
 
 .bioCard[data-epistemic-role="approximation"] {
   border-left-color: var(--sophie-warning, var(--sophie-accent));
+}
+
+.bioCard[data-epistemic-role="misconception"] {
+  border-left-color: var(--sophie-brand-rose);
+}
+
+/* Grouped epistemic-role children (Assumptions, Common misuses) —
+ * when a KeyEquation has 2+ items of the same role, collapse the
+ * stacked individual cards into a single labeled group with a
+ * definition-list inside. Lighter chrome (one bordered box, not N),
+ * tighter type rhythm, and a label-voice header that reads as a
+ * collective ("Assumptions") rather than per-item heavy callouts. */
+.bioGroup {
+  margin-block: var(--sophie-space-3);
+  padding: var(--sophie-space-3) var(--sophie-space-4);
+  border-inline-start: 3px solid var(--sophie-border);
+  background: var(--sophie-surface-2);
+  border-radius: 0 var(--sophie-radius-sm) var(--sophie-radius-sm) 0;
+  font-size: var(--sophie-text-sm);
+}
+
+.bioGroup[data-epistemic-role="assumption"] {
+  border-inline-start-color: var(--sophie-brand-violet);
+}
+
+.bioGroup[data-epistemic-role="misconception"] {
+  border-inline-start-color: var(--sophie-brand-rose);
+}
+
+.bioGroupHeading {
+  margin: 0 0 var(--sophie-space-2);
+  font-family: var(--sophie-font-sans);
+  font-size: var(--sophie-text-tiny);
+  font-weight: var(--sophie-weight-semibold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sophie-text-muted);
+}
+
+/* Vertical layout — term above body — same idiom as the chapter
+   glossary `<dl>`. Term reads as a real definition label, not a code
+   tag. Body indents underneath with a comfortable hanging indent. */
+.bioGroupList {
+  margin: 0;
+}
+
+.bioGroupItem + .bioGroupItem {
+  margin-block-start: var(--sophie-space-3);
+}
+
+.bioGroupTerm {
+  font-family: var(--sophie-font-sans);
+  font-weight: var(--sophie-weight-semibold);
+  font-size: 1.0625em;
+  color: var(--sophie-brand-violet-text);
+  margin-block-end: var(--sophie-space-1);
+}
+
+.bioGroup[data-epistemic-role="misconception"] .bioGroupTerm {
+  color: var(--sophie-brand-rose-text, var(--sophie-text-muted));
+}
+
+.bioGroupBody {
+  margin: 0;
+  color: var(--sophie-text);
+  line-height: var(--sophie-leading-prose);
+}
+
+.bioGroupBody > :first-child {
+  margin-block-start: 0;
+}
+.bioGroupBody > :last-child {
+  margin-block-end: 0;
 }
 
 /* Rearranged forms list. */

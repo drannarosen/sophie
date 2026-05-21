@@ -25,18 +25,21 @@
  */
 import {
   disclosuresPref,
+  rightSidebarPref,
   sidebarPref,
   themePref,
   viewModePref,
 } from "../preferences";
 
-// Sidebar default is viewport-aware: mobile sidebar is a slide-over
-// that obscures content, so default to "closed" below 768px. Desktop
-// default stays "open" (sidebar is part of the persistent grid).
-// Mobile breakpoint matches packages/astro/src/styles/textbook-layout.css.
-const sidebarBoot = sidebarPref.bootScript({
-  defaultExpression: "(window.innerWidth < 768 ? 'closed' : 'open')",
-});
+// Sprint K (2026-05-21): both sidebars default to "closed" on all
+// viewports — MyST-style "chapter is content; chrome opens on
+// demand." The previous viewport-aware default (mobile-closed,
+// desktop-open) is replaced by an unconditional "closed" — both
+// sidebars now share the same UX convention across breakpoints.
+// Users who open either sidebar persist that state via localStorage;
+// the next reload remembers it.
+const sidebarBoot = sidebarPref.bootScript();
+const rightSidebarBoot = rightSidebarPref.bootScript();
 
 // Theme default is "system" — resolved at boot via the
 // resolveExpression on themePref (preferences/theme.ts), which
@@ -59,6 +62,7 @@ const disclosuresBoot = disclosuresPref.bootScript();
 ---
 
 <script is:inline set:html={sidebarBoot} />
+<script is:inline set:html={rightSidebarBoot} />
 <script is:inline set:html={themeBoot} />
 <script is:inline set:html={viewModeBoot} />
 <script is:inline set:html={disclosuresBoot} />

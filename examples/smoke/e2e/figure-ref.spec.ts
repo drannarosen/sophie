@@ -11,10 +11,13 @@ const CHAPTER_URL = "/chapters/spoiler-alerts";
  * The smoke chapter (`spoiler-alerts.mdx`) places two cites — one
  * of each rendering mode (mirrors the PR-C2 EqRef spec shape):
  *   - line 876: `<FigureRef client:load name="decoder-ring" />`
- *     (self-closing → renders "Fig. 16" — decoder-ring is the
- *     16th `<Figure name>` in the source MDX, so the extractor
- *     assigns it per-chapter `number: 16` and anchor
- *     `fig-decoder-ring-16`)
+ *     (self-closing → renders "Fig. 1.16" via Sprint F's
+ *     "Fig. C.N" label form — the chapter declares
+ *     `chapterNumber: 1` and decoder-ring is the 16th `<Figure
+ *     name>` in the source MDX, so the extractor assigns it
+ *     per-chapter `number: 16` and anchor `fig-decoder-ring-16`.
+ *     See FigureRef.tsx around line 62 for the "C.N when
+ *     chapterNumber is defined, else N" fallback.)
  *   - line 491:
  *     `<FigureRef client:load name="cosmic-distance-ladder">This distance ladder</FigureRef>`
  *     (children → renders "This distance ladder" — cosmic-
@@ -47,7 +50,7 @@ const CHAPTER_URL = "/chapters/spoiler-alerts";
  */
 
 test.describe("PR-C3: <FigureRef> on the smoke chapter", () => {
-  test("T43: renders the self-closing cite as 'Fig. 16' linking to the source anchor (decoder-ring)", async ({
+  test("T43: renders the self-closing cite as 'Fig. 1.16' linking to the source anchor (decoder-ring)", async ({
     page,
   }) => {
     await page.goto(CHAPTER_URL);
@@ -55,7 +58,10 @@ test.describe("PR-C3: <FigureRef> on the smoke chapter", () => {
       .locator('a[href="/chapters/spoiler-alerts#fig-decoder-ring-16"]')
       .first();
     await expect(trigger).toBeAttached();
-    await expect(trigger).toContainText("Fig. 16");
+    // Sprint F label form ("Fig. C.N") fires when the chapter declares
+    // `chapterNumber`. spoiler-alerts.mdx declares chapter 1, so the
+    // label is "Fig. 1.16" (chapterNumber.number), not "Fig. 16".
+    await expect(trigger).toContainText("Fig. 1.16");
   });
 
   test.skip("T43 dual-mode: renders the children cite as 'This distance ladder' (cosmic-distance-ladder)", () => {

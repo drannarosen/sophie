@@ -82,6 +82,20 @@ describe("typography tokens", () => {
   test("emits --sophie-text-pill at 0.6875rem", () => {
     expect(css).toMatch(/--sophie-text-pill:\s*0\.6875rem/);
   });
+
+  // Marginalia-voice slots used by Aside body, Callout title,
+  // ChromeTitleBar, ChapterTitle subtitle, textbook breadcrumbs +
+  // status chips. References predate the tokens; 2026-05-21 fix
+  // emits them so those declarations stop being silently dropped.
+  test("emits --sophie-text-small at 0.875rem (alias of sm)", () => {
+    expect(css).toMatch(/--sophie-text-small:\s*0\.875rem/);
+  });
+  test("emits --sophie-text-tiny at 0.75rem (alias of xs)", () => {
+    expect(css).toMatch(/--sophie-text-tiny:\s*0\.75rem/);
+  });
+  test("emits --sophie-text-body at 1.0625rem (prose-reading slot)", () => {
+    expect(css).toMatch(/--sophie-text-body:\s*1\.0625rem/);
+  });
 });
 
 describe("spacing tokens", () => {

@@ -13,6 +13,12 @@ export default defineConfig({
     // and must exist at dist/lib/group-headings.js to be resolvable
     // from the copied-verbatim .astro files in dist/components/.
     "lib/group-headings": "src/lib/group-headings.ts",
+    // `lib/clean-heading-text` is imported by TocSidebar.astro (SSR
+    // side) to strip KaTeX-SSR artifacts from MarkdownHeading.text
+    // values before re-rendering via MathText. Must exist at
+    // dist/lib/clean-heading-text.js to resolve from the copied-
+    // verbatim .astro files in dist/components/.
+    "lib/clean-heading-text": "src/lib/clean-heading-text.ts",
     // `icons/index` is the uniform icon export surface for chrome
     // primitives — re-exports lucide-static SVG strings + bespoke
     // icons (e.g. view-mode column shapes). Must exist at

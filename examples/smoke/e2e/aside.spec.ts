@@ -38,12 +38,11 @@ test.describe("PR 6: <Aside> on the smoke chapter", () => {
     // PR-C1 migration added 14 definition asides + 1 converted
     // key-insight alongside the original 3 (definition + digression
     // + key-insight) = 18. PR-7 chapter capstone added 8 misconception
-    // Asides (rainbows-are-decorative, one-image-tells-the-whole-story,
-    // dust-means-empty, dark-matter-is-just-hidden-normal-matter,
-    // big-bang-was-an-explosion-in-space, brighter-equals-
-    // intrinsically-brighter, wiens-law-absorption-spectra,
-    // astronomy-is-looking-through-telescopes). 18 + 8 = 26.
-    await expect(asides).toHaveCount(26);
+    // Asides; a follow-up added `brighter-equals-closer` as a sibling
+    // of `brighter-equals-intrinsically-brighter` for 9 misconceptions
+    // total. 15 definitions + 1 digression + 2 key-insights +
+    // 9 misconceptions = 27.
+    await expect(asides).toHaveCount(27);
   });
 
   test("each aside carries its kind via data-aside-kind", async ({ page }) => {
@@ -55,9 +54,10 @@ test.describe("PR 6: <Aside> on the smoke chapter", () => {
         els.map((el) => (el as HTMLElement).dataset.asideKind ?? "")
       );
     // Assert distribution rather than the exact MDX order. Post-
-    // PR-7 the smoke chapter has 15 definitions + 1 digression +
-    // 2 key-insights + 8 misconceptions = 26. The ordering depends
-    // on prose flow; counts are the stable contract.
+    // PR-7 plus the brighter-equals-closer follow-up, the smoke
+    // chapter has 15 definitions + 1 digression + 2 key-insights +
+    // 9 misconceptions = 27. The ordering depends on prose flow;
+    // counts are the stable contract.
     const counts = kinds.reduce<Record<string, number>>(
       (acc, k) => Object.assign(acc, { [k]: (acc[k] ?? 0) + 1 }),
       {}
@@ -66,7 +66,7 @@ test.describe("PR 6: <Aside> on the smoke chapter", () => {
       definition: 15,
       digression: 1,
       "key-insight": 2,
-      misconception: 8,
+      misconception: 9,
     });
   });
 
@@ -111,7 +111,7 @@ test.describe("PR 6: <Aside> on the smoke chapter", () => {
     );
   });
 
-  test("desktop Default: docked summary is visually hidden", async ({
+  test("desktop Default: docked summary reads as a typographic header (visible, non-interactive)", async ({
     page,
   }) => {
     await page.setViewportSize(DESKTOP_VIEWPORT);
@@ -121,11 +121,20 @@ test.describe("PR 6: <Aside> on the smoke chapter", () => {
         .querySelector("[data-sophie-aside]")
         ?.hasAttribute("data-aside-docked")
     );
+    // Sprint K (2026-05-21): the docked summary now stays VISIBLE as
+    // the aside's definition-term/typographic header (per MyST
+    // marginalia idiom). It's made non-interactive via
+    // pointer-events:none + cursor:default so it doesn't suggest a
+    // disclosure-toggle affordance, but it's no longer visually hidden.
+    // See textbook-layout.css "Sprint K — view-mode no longer gates
+    // docking" block (`[data-aside-docked='true'] > summary`).
     const summary = page
       .locator("[data-sophie-aside]")
       .first()
       .locator("summary");
-    await expect(summary).toBeHidden();
+    await expect(summary).toBeVisible();
+    await expect(summary).toHaveCSS("pointer-events", "none");
+    await expect(summary).toHaveCSS("cursor", "default");
   });
 
   test("desktop Default: consecutive asides do not vertically overlap (collision cascade)", async ({
@@ -153,7 +162,7 @@ test.describe("PR 6: <Aside> on the smoke chapter", () => {
     }
   });
 
-  test("Focused mode: asides revert to inline (no data-aside-docked, open cleared)", async ({
+  test("Focused mode: asides remain docked on desktop (Sprint K view-mode/docking decoupling)", async ({
     page,
   }) => {
     await page.setViewportSize(DESKTOP_VIEWPORT);
@@ -172,15 +181,17 @@ test.describe("PR 6: <Aside> on the smoke chapter", () => {
       "focused"
     );
 
-    // Wait one rAF for the positioning script to react.
-    await page.waitForFunction(() => {
-      const a = document.querySelector("[data-sophie-aside]");
-      return a && !a.hasAttribute("data-aside-docked");
-    });
-
+    // Sprint K (2026-05-21, commit 997e545): view-mode is now a pure
+    // content-cap preset, orthogonal to aside docking. Docking is
+    // viewport-gated only (>= 768px) — Focused no longer evicts asides
+    // back to the inline reading flow. See textbook-layout.css
+    // "Sprint K — view-mode no longer gates docking" comment around
+    // the `@media (min-width: 768px) { [data-aside-docked='true'] }`
+    // block. The inline-revert behavior is now exercised only by the
+    // mobile-viewport tests below.
     const aside = page.locator("[data-sophie-aside]").first();
-    await expect(aside).not.toHaveAttribute("data-aside-docked", "true");
-    await expect(aside).not.toHaveAttribute("open", "");
+    await expect(aside).toHaveAttribute("data-aside-docked", "true");
+    await expect(aside).toHaveAttribute("open", "");
   });
 
   test("mobile (<768px): asides render inline with visible summary", async ({

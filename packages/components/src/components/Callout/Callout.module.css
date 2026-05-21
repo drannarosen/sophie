@@ -51,23 +51,26 @@
 
 .titleBar {
   display: flex;
-  align-items: center;
+  align-items: baseline; /* Sprint K — icon optical center on title
+                            baseline so glyph + label feel like one
+                            unit. Matches LearningObjectives, Predict,
+                            Reflection. */
   gap: var(--sophie-space-2);
-  padding: var(--sophie-space-2) var(--sophie-space-4);
+  padding: var(--sophie-space-1) var(--sophie-space-4);
   /* No bottom border — title-bar tint provides visual separation from
    * the body. Sprint C MyST-lightening pass. */
   border-bottom: 0;
   /* Default color (overridden per-variant below). */
   color: var(--sophie-brand-teal-text);
   font-weight: var(--sophie-weight-semibold);
-  font-size: var(--sophie-text-sm);
-  /* No uppercase tracking — title-case via the rendered text itself. */
+  font-size: var(--sophie-text-small);
+  letter-spacing: 0.02em;
   text-transform: none;
-  letter-spacing: 0;
 }
 
 .icon {
   flex-shrink: 0;
+  transform: translateY(0.15em);
   /* Icon color inherits the titleBar's `color` via currentColor on
    * Lucide's stroke. */
 }

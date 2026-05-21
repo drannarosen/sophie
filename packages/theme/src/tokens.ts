@@ -65,8 +65,11 @@ export const tokens = {
   size: {
     pill: v("text-pill"),
     xs: v("text-xs"),
+    tiny: v("text-tiny"),
     sm: v("text-sm"),
+    small: v("text-small"),
     base: v("text-base"),
+    body: v("text-body"),
     md: v("text-md"),
     lg: v("text-lg"),
     xl: v("text-xl"),

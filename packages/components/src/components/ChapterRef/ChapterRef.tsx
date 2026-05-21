@@ -46,9 +46,14 @@ export function ChapterRef({ slug, children }: ChapterRefProps) {
     // pages stay silent — the bare-prose fallback degrades
     // gracefully. PR-C4's audit invariant C1 elevates this to a
     // build error.
+    // SSR-pass-tolerant warning — same Sprint K pattern as
+    // GlossaryTerm / EquationRef / FigureRef. Astro dev SSR ordering
+    // means the chapters/modules stores aren't populated when chapter
+    // MDX renders server-side. Suppress SSR warning so only
+    // client-side real misses surface in dev console.
     if (
-      typeof process === "undefined" ||
-      process.env?.NODE_ENV !== "production"
+      typeof document !== "undefined" &&
+      (typeof process === "undefined" || process.env?.NODE_ENV !== "production")
     ) {
       console.warn(
         `[ChapterRef] No chapter found for slug "${slug}". Rendering bare prose.`

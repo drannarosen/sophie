@@ -40,9 +40,14 @@ export function FigureRef({ name, children }: FigureRefProps) {
   const hydrated = useHydrated();
 
   if (!registry || !canonical) {
+    // SSR-pass-tolerant warning — same Sprint K pattern as
+    // GlossaryTerm / EquationRef. Astro dev SSR ordering means the
+    // figure-registry / figure-usages stores aren't populated when
+    // chapter MDX renders server-side. Suppress SSR warning so only
+    // client-side real misses surface in dev console.
     if (
-      typeof process === "undefined" ||
-      process.env?.NODE_ENV !== "production"
+      typeof document !== "undefined" &&
+      (typeof process === "undefined" || process.env?.NODE_ENV !== "production")
     ) {
       console.warn(
         `[FigureRef] No registry/usages found for name "${name}". Rendering bare prose.`

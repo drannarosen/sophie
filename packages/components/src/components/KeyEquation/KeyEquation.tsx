@@ -1,10 +1,51 @@
 import katex from "katex";
 import { Sigma } from "lucide-react";
-import { useId, useMemo } from "react";
+import { type ReactNode, useId, useMemo } from "react";
 import { lookupCanonicalCitationByRefId } from "../EquationRef/equation-citations-store.ts";
 import { lookupEquation } from "../EquationRef/equations-store.ts";
 import styles from "./KeyEquation.module.css.js";
 import type { KeyEquationProps } from "./KeyEquation.schema.ts";
+
+/**
+ * Render an arbitrary LaTeX fragment as inline KaTeX HTML. Used for
+ * constants rows (symbol, value, unit) where the registry holds the
+ * fragments as raw LaTeX strings — KaTeX expects pre-wrapped math,
+ * not the `$...$` markdown shorthand. Returns a `<span>` with
+ * dangerouslySetInnerHTML so the rendered math sits inline.
+ */
+function InlineTex({ tex }: { tex: string }): ReactNode {
+  const html = katex.renderToString(tex, {
+    displayMode: false,
+    throwOnError: false,
+    output: "html",
+  });
+  return (
+    // biome-ignore lint/security/noDangerouslySetInnerHtml: tex rendered by katex from registry-validated source.
+    <span dangerouslySetInnerHTML={{ __html: html }} />
+  );
+}
+
+/**
+ * Wrap a unit string for `\text{}` rendering. Author-friendly units
+ * like "cm s^{-1}" mix prose ("cm", "s") and math ("^{-1}").
+ * Wrapping the whole thing in `\text{}` preserves whitespace but
+ * makes `^{-1}` literal; not wrapping kills whitespace ("cms-1").
+ * The fix: re-enter math mode inside `\text{}` for each
+ * `^{...}` / `_{...}` segment via `$...$`.
+ */
+function formatUnitTex(unit: string): string {
+  const mathified = unit.replace(/([_^])(\{[^}]+\}|\S)/g, "$$$1$2$$");
+  return `\\text{${mathified}}`;
+}
+
+/**
+ * Humanize a slug-form epistemic-role term ("vacuum-propagation",
+ * "rest-frame-known") for display as a definition title. Replaces
+ * hyphens/underscores with spaces and capitalizes each word.
+ */
+function humanizeTermSlug(slug: string): string {
+  return slug.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 /**
  * Named-equation content block per ADR 0060. Resolves the registry
@@ -60,9 +101,11 @@ export function KeyEquation({
   }, [entry?.rearranged_forms]);
 
   if (!entry) {
+    // SSR-pass-tolerant warning — same Sprint K pattern as
+    // GlossaryTerm / EquationRef / FigureRef / ChapterRef.
     if (
-      typeof process === "undefined" ||
-      process.env?.NODE_ENV !== "production"
+      typeof document !== "undefined" &&
+      (typeof process === "undefined" || process.env?.NODE_ENV !== "production")
     ) {
       console.warn(
         `[KeyEquation] No equation found for refId "${refId}". Rendering framing prose only.`
@@ -103,7 +146,7 @@ export function KeyEquation({
             dangerouslySetInnerHTML={{ __html: texHtml }}
           />
           {eqLabel !== null && (
-            <span className={styles.numberLabel} aria-hidden>
+            <span className={styles.eqLabel} aria-hidden>
               {eqLabel}
             </span>
           )}
@@ -116,11 +159,20 @@ export function KeyEquation({
           >
             {entry.constants.map((c) => (
               <div key={c.symbol} className={styles.constantRow}>
-                <dt className={styles.constantSymbol}>{c.symbol}</dt>
+                <dt className={styles.constantSymbol}>
+                  <InlineTex tex={c.symbol} />
+                </dt>
                 <dd className={styles.constantValue}>
-                  {c.value}
-                  {c.unit ? ` ${c.unit}` : ""}
-                  {c.name ? ` — ${c.name}` : ""}
+                  <InlineTex tex={c.value} />
+                  {c.unit ? (
+                    <>
+                      {" "}
+                      <InlineTex tex={formatUnitTex(c.unit)} />
+                    </>
+                  ) : null}
+                  {c.name ? (
+                    <span className={styles.constantName}> — {c.name}</span>
+                  ) : null}
                 </dd>
               </div>
             ))}
@@ -138,19 +190,53 @@ export function KeyEquation({
           />
         ) : null}
 
-        {biography?.assumptions?.map((a, i) => (
-          <div
-            // biome-ignore lint/suspicious/noArrayIndexKey: stable order from extractor; entries have no unique id.
-            key={`assumption-${i}`}
-            className={styles.bioCard}
-            data-epistemic-role='assumption'
-            data-assumption-type={a.type}
-            // biome-ignore lint/security/noDangerouslySetInnerHtml: body is pre-rendered HTML from the registry MDX body.
-            dangerouslySetInnerHTML={{
-              __html: `<strong>Assumption${a.type ? ` (${a.type})` : ""}.</strong> ${a.body}`,
-            }}
-          />
-        ))}
+        {biography?.assumptions &&
+          biography.assumptions.length > 0 &&
+          (biography.assumptions.length === 1 && biography.assumptions[0] ? (
+            <div
+              className={styles.bioCard}
+              data-epistemic-role='assumption'
+              data-assumption-type={biography.assumptions[0].type}
+              // biome-ignore lint/security/noDangerouslySetInnerHtml: body is pre-rendered HTML from the registry MDX body.
+              dangerouslySetInnerHTML={{
+                __html: `<strong>Assumption${biography.assumptions[0].type ? ` (${biography.assumptions[0].type})` : ""}.</strong> ${biography.assumptions[0].body}`,
+              }}
+            />
+          ) : (
+            <section
+              className={styles.bioGroup}
+              data-epistemic-role='assumption'
+              // No aria-label: avoid creating a duplicate "region"
+              // landmark per equation (axe `landmark-unique` violation
+              // when multiple KeyEquations sit on the page). The inner
+              // <h3>Assumptions</h3> provides the heading-level
+              // structure screen readers use for traversal; the outer
+              // KeyEquation <section aria-labelledby={refId}-heading> is
+              // the landmark that scopes "this is the inverse-square
+              // law's assumptions." 2026-05-21 hardening pass.
+            >
+              <h3 className={styles.bioGroupHeading}>Assumptions</h3>
+              <dl className={styles.bioGroupList}>
+                {biography.assumptions.map((a, i) => (
+                  <div
+                    // biome-ignore lint/suspicious/noArrayIndexKey: stable order from extractor.
+                    key={`assumption-${i}`}
+                    className={styles.bioGroupItem}
+                    data-assumption-type={a.type}
+                  >
+                    <dt className={styles.bioGroupTerm}>
+                      {humanizeTermSlug(a.type ?? "general")}
+                    </dt>
+                    <dd
+                      className={styles.bioGroupBody}
+                      // biome-ignore lint/security/noDangerouslySetInnerHtml: body is pre-rendered HTML from the registry MDX body.
+                      dangerouslySetInnerHTML={{ __html: a.body }}
+                    />
+                  </div>
+                ))}
+              </dl>
+            </section>
+          ))}
 
         {biography?.breaks_when ? (
           <div
@@ -163,18 +249,49 @@ export function KeyEquation({
           />
         ) : null}
 
-        {biography?.common_misuses?.map((m, i) => (
-          <div
-            // biome-ignore lint/suspicious/noArrayIndexKey: stable order from extractor.
-            key={`misuse-${i}`}
-            className={styles.bioCard}
-            data-misconception-ref={m.misconception}
-            // biome-ignore lint/security/noDangerouslySetInnerHtml: body is pre-rendered HTML from the registry MDX body.
-            dangerouslySetInnerHTML={{
-              __html: `<strong>Common misuse.</strong> ${m.body}`,
-            }}
-          />
-        ))}
+        {biography?.common_misuses &&
+          biography.common_misuses.length > 0 &&
+          (biography.common_misuses.length === 1 &&
+          biography.common_misuses[0] ? (
+            <div
+              className={styles.bioCard}
+              data-epistemic-role='misconception'
+              data-misconception-ref={biography.common_misuses[0].misconception}
+              // biome-ignore lint/security/noDangerouslySetInnerHtml: body is pre-rendered HTML from the registry MDX body.
+              dangerouslySetInnerHTML={{
+                __html: `<strong>Common misuse.</strong> ${biography.common_misuses[0].body}`,
+              }}
+            />
+          ) : (
+            <section
+              className={styles.bioGroup}
+              data-epistemic-role='misconception'
+              // No aria-label — same rationale as the Assumptions
+              // group above. Heading-level <h3> is sufficient
+              // structure; the outer KeyEquation landmark scopes it.
+            >
+              <h3 className={styles.bioGroupHeading}>Common misuses</h3>
+              <dl className={styles.bioGroupList}>
+                {biography.common_misuses.map((m, i) => (
+                  <div
+                    // biome-ignore lint/suspicious/noArrayIndexKey: stable order from extractor.
+                    key={`misuse-${i}`}
+                    className={styles.bioGroupItem}
+                    data-misconception-ref={m.misconception}
+                  >
+                    <dt className={styles.bioGroupTerm}>
+                      {humanizeTermSlug(m.misconception ?? "general")}
+                    </dt>
+                    <dd
+                      className={styles.bioGroupBody}
+                      // biome-ignore lint/security/noDangerouslySetInnerHtml: body is pre-rendered HTML from the registry MDX body.
+                      dangerouslySetInnerHTML={{ __html: m.body }}
+                    />
+                  </div>
+                ))}
+              </dl>
+            </section>
+          ))}
 
         {rearrangedHtml.length > 0 && (
           <div className={styles.rearrangedForms}>

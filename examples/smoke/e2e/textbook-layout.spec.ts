@@ -60,29 +60,35 @@ test.describe("PR 1: TextbookLayout shell on the smoke chapter", () => {
   //   - PR 4 in-page-toc.spec.ts:81 asserts the right column DOES
   //     collapse on a stub chapter (no H2 headings → empty slot).
 
-  test("default state: html has data-sidebar='open'", async ({ page }) => {
+  // Sprint K (2026-05-21, commit 997e545): the sidebar default flipped
+  // from "open on desktop / closed on mobile" to "closed on every
+  // viewport" — MyST-style "chapter is the content, chrome opens on
+  // demand." Tests below assert the new contract; cold-load default-
+  // closed is also covered explicitly by sidebar-initial-state.spec.ts.
+
+  test("default state: html has data-sidebar='closed' (Sprint K)", async ({
+    page,
+  }) => {
     await page.goto(CHAPTER_URL);
-    await expect(page.locator("html")).toHaveAttribute("data-sidebar", "open");
+    await expect(page.locator("html")).toHaveAttribute(
+      "data-sidebar",
+      "closed"
+    );
   });
 
-  test("clicking sidebar toggle: collapses sidebar and persists across reload", async ({
+  test("clicking sidebar toggle: opens sidebar and persists across reload", async ({
     page,
   }) => {
     await page.goto(CHAPTER_URL);
     const toggle = page.getByRole("button", { name: /toggle sidebar/i });
     await expect(toggle).toBeVisible();
 
+    // Default is closed under Sprint K — clicking opens.
     await toggle.click();
-    await expect(page.locator("html")).toHaveAttribute(
-      "data-sidebar",
-      "closed"
-    );
+    await expect(page.locator("html")).toHaveAttribute("data-sidebar", "open");
 
     await page.reload();
-    await expect(page.locator("html")).toHaveAttribute(
-      "data-sidebar",
-      "closed"
-    );
+    await expect(page.locator("html")).toHaveAttribute("data-sidebar", "open");
   });
 
   test("mobile (<768px): sidebar defaults to 'closed' so it doesn't obscure content", async ({
@@ -96,9 +102,8 @@ test.describe("PR 1: TextbookLayout shell on the smoke chapter", () => {
     try {
       await page.goto(CHAPTER_URL);
       await expect(page.locator(".sophie-topbar")).toBeVisible();
-      // Default on mobile must be "closed" (not the desktop "open"
-      // default) so the slide-over sidebar doesn't obscure the
-      // chapter content the user came to read.
+      // Default on mobile must be "closed" so the slide-over sidebar
+      // doesn't obscure the chapter content the user came to read.
       await expect(page.locator("html")).toHaveAttribute(
         "data-sidebar",
         "closed"
@@ -108,7 +113,7 @@ test.describe("PR 1: TextbookLayout shell on the smoke chapter", () => {
     }
   });
 
-  test("desktop (>=768px): sidebar still defaults to 'open' (existing behavior)", async ({
+  test("desktop (>=768px): sidebar also defaults to 'closed' (Sprint K design)", async ({
     browser,
   }) => {
     const context = await browser.newContext({
@@ -118,9 +123,11 @@ test.describe("PR 1: TextbookLayout shell on the smoke chapter", () => {
     try {
       await page.goto(CHAPTER_URL);
       await expect(page.locator(".sophie-topbar")).toBeVisible();
+      // Sprint K design: desktop and mobile share the default-closed
+      // convention (was open-on-desktop pre-997e545).
       await expect(page.locator("html")).toHaveAttribute(
         "data-sidebar",
-        "open"
+        "closed"
       );
     } finally {
       await context.close();

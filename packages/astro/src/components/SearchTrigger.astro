@@ -4,42 +4,64 @@ import { SearchModal } from "@sophie/components";
 /**
  * <SearchTrigger> — Pagefind faceted search affordance in chapter chrome.
  *
- * Static Astro button (paint-fast discovery — visible immediately, no
- * React hydration delay) plus the `<SearchModal client:idle>` React
- * island that defers hydration until after the chapter's primary
- * content paints.
+ * Renders as a real `<input type="search">` element (an honest
+ * affordance — the previous fake-input button was a UX trap because
+ * users naturally tried to type into it and nothing happened). On
+ * focus the trigger dispatches a `sophie:search-open` CustomEvent;
+ * the `<SearchModal client:idle>` React island listens and opens the
+ * dialog, seeded with whatever the user already typed (a fast-typer
+ * who lands a character before focus shifts is still captured).
  *
- * The button is a visible/keyboard-discoverable affordance; the
- * primary entry is Cmd/Ctrl+K, handled by SearchModal's own
- * document-level keydown listener (ADR 0037 cross-bundle pattern not
- * required for v1 since the modal owns its own open state). Future
- * polish: a click handler dispatching a synthetic keyboard event
- * (design doc §11 follow-up).
+ * Primary entries: click/focus the trigger, or press Cmd/Ctrl+K
+ * anywhere (handled by SearchModal's document-level keydown).
  *
- * `data-pagefind-ignore` keeps the trigger's own UI strings ("Search",
- * "⌘K") out of the next build's index — without it, Pagefind would
- * surface the trigger as a hit on its own.
- *
- * `aria-keyshortcuts` advertises the Cmd/Ctrl+K binding to assistive
- * tech that exposes keyboard shortcut hints.
+ * `data-pagefind-ignore` keeps the trigger's own UI strings out of
+ * the next build's index. `aria-keyshortcuts` advertises Cmd/Ctrl+K
+ * to assistive tech.
  *
  * Styles live in `packages/astro/src/styles/textbook-layout.css`
  * alongside other chrome (TopBar, Sidebar, RightColumn) so the
- * cascading `@media print` chrome-reset rule applies without
- * specificity fights from a per-component scoped style block.
+ * `@media print` chrome-reset rule applies without specificity
+ * fights from a per-component scoped style block.
  */
 ---
 
-<button
-  type='button'
-  class='sophie-search-trigger'
-  data-pagefind-ignore
-  aria-keyshortcuts='Control+K Meta+K'
-  aria-label='Open search'
->
+<div class='sophie-search-trigger-wrap' data-pagefind-ignore>
   <span class='sophie-search-trigger__icon' aria-hidden='true'>🔍</span>
-  <span class='sophie-search-trigger__label'>Search</span>
-  <kbd class='sophie-search-trigger__kbd'>⌘K</kbd>
-</button>
+  <input
+    type='search'
+    class='sophie-search-trigger'
+    aria-keyshortcuts='Control+K Meta+K'
+    aria-label='Search'
+    placeholder='Search'
+    autocomplete='off'
+    spellcheck='false'
+  />
+  <kbd class='sophie-search-trigger__kbd' aria-hidden='true'>⌘K</kbd>
+</div>
 
 <SearchModal client:idle />
+
+<script>
+  const inputs = document.querySelectorAll<HTMLInputElement>(
+    "input.sophie-search-trigger"
+  );
+
+  function openSearch(query: string): void {
+    document.dispatchEvent(
+      new CustomEvent("sophie:search-open", { detail: { query } })
+    );
+  }
+
+  inputs.forEach((input) => {
+    // Focus opens the modal. Blur the trigger so the modal's autoFocus
+    // input takes focus cleanly. Preserve typed value as initial query
+    // (handles the fast-typer who lands a char before focus shifts).
+    input.addEventListener("focus", () => {
+      const query = input.value;
+      input.value = "";
+      input.blur();
+      openSearch(query);
+    });
+  });
+</script>

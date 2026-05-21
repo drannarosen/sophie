@@ -55,9 +55,19 @@ export function GlossaryTerm({
     // pages stay silent — the bare-prose fallback degrades
     // gracefully. PR-C4's audit invariant #4 elevates this to
     // a build error.
+    //
+    // The `typeof document !== "undefined"` guard suppresses warnings
+    // during Astro SSR (Node runtime, no `document`). In Astro dev
+    // mode the chapter MDX's React-island SSR runs BEFORE
+    // `TextbookLayout`'s `__setGlossaryDefinitions` setter fires, so
+    // every valid slug would miss-and-warn on the server pass. The
+    // client-side hydration path (script tag → store.set) runs before
+    // the React island's first lookup on the browser, so warnings on
+    // the client correspond to real authoring drift. Sprint K root-
+    // cause diagnostic (2026-05-21).
     if (
-      typeof process === "undefined" ||
-      process.env?.NODE_ENV !== "production"
+      typeof document !== "undefined" &&
+      (typeof process === "undefined" || process.env?.NODE_ENV !== "production")
     ) {
       console.warn(
         `[GlossaryTerm] No definition found for "${name}" (slug "${slug}"). Term is undefined; rendering bare prose.`
