@@ -28,6 +28,7 @@ validation:
 :::{admonition} ADR metadata
 - **Status**: accepted
 - **Deciders**: anna
+- **Amended by**: [0064](./0064-chapter-migration-playbook.md) (extends the TDR pattern with a fixed pilot-report template for chapter migrations)
 :::
 
 ## Context

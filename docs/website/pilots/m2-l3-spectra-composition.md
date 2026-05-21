@@ -1,23 +1,34 @@
 ---
 title: 'Pilot report: ASTR 201 Module 2 Lecture 3 — Spectra & Composition'
 short_title: 'Pilot: M2-L3 Spectra & Composition'
-description: 'Conversion of an existing Quarto astronomy chapter into Sophie MDX. Motivating chapter for ADR 0063 `<OMIFlow>`; evidence base for the planned ADR 0064 (chapter-migration playbook).'
+description: 'Conversion of an existing Quarto astronomy chapter into Sophie MDX. Motivating chapter for ADR 0063 `<OMIFlow>`; evidence base for ADR 0064 (chapter-migration playbook).'
 authors:
   - name: Anna Rosen
 date: 2026-05-20
 ---
 
+:::{note} On this report's template alignment
+This report was written before [ADR 0064](../decisions/0064-chapter-migration-playbook.md)
+locked the pilot-report template. The section ordering and labels
+were edited post-acceptance (2026-05-21) to match ADR 0064's §2
+template so the worked example is normative for future pilots.
+*Content* was not changed; only section order and a few section
+headings (notably *OMI arc map* → *Pedagogy structure map*) were
+relabeled. Original section structure is recoverable from git
+history at commit [`a13861f`](https://github.com/drannarosen/sophie/commit/a13861f).
+:::
+
 ## Pilot context
 
 This pilot converted ASTR 201 Module 2 Lecture 3 ("Spectra & Composition") from its existing Quarto `.qmd` source into a Sophie MDX chapter that renders through the smoke example. The chapter was named in [ADR 0063](../decisions/0063-omiflow-composite-primitive.md) and the accepted-features brief as the motivating example for the `<OMIFlow>` composite primitive: the source reading is structured around three explicit Observable → Model → Inference arcs ("Spectrum Detective — Clue Collected" at the end of Parts 1, 2, 3, and 4), so the OMI structure isn't being retrofit — it's the spine of the lecture.
 
-The pilot is **evidence**, not product. The output chapter lives in `examples/smoke/src/content/chapters/02-stars/spectra-and-composition.mdx`; the *findings* documented here become input to ADR 0064 (the chapter-migration playbook ADR, planned, **not** written in this session).
+The pilot is **evidence**, not product. The output chapter lives in `examples/smoke/src/content/chapters/02-stars/spectra-and-composition.mdx`; the *findings* documented here became the input to [ADR 0064](../decisions/0064-chapter-migration-playbook.md) (chapter-migration playbook), which accepted 2026-05-21.
 
-Output target: single PR against `drannarosen/sophie` on branch `feat/pilot-astr201-m2-l3`. Source repo `astr201-sp26/` was treated as **read-only design input** per the architecture revision recorded in the plan file at [`~/.claude/plans/sophie-just-shipped-a8-wild-parnas.md`](../../../.claude/plans/sophie-just-shipped-a8-wild-parnas.md). No edits to astr201-sp26.
+Output target: single PR against `drannarosen/sophie` on branch `feat/pilot-astr201-m2-l3` (merged as [PR #143](https://github.com/drannarosen/sophie/pull/143)). Source repo `astr201-sp26/` was treated as **read-only design input** per the architecture revision recorded in the plan file at [`~/.claude/plans/sophie-just-shipped-a8-wild-parnas.md`](../../../.claude/plans/sophie-just-shipped-a8-wild-parnas.md). No edits to astr201-sp26.
 
-## Shortcode → Sophie-component dictionary
+## Shortcode → component dictionary
 
-The final mapping the pilot used. Gap rows are platform issues to file against `drannarosen/sophie`; they are listed at the end of this report rather than inline links because none were filed during this session.
+The final mapping the pilot used. Gap rows are platform issues to file against `drannarosen/sophie`; they are listed at the end of this report (§ *Platform issues to file*) per [ADR 0064](../decisions/0064-chapter-migration-playbook.md) §2's template.
 
 | Quarto shortcode / pattern | Sophie target | Status | Notes |
 |---|---|---|---|
@@ -40,7 +51,15 @@ The final mapping the pilot used. Gap rows are platform issues to file against `
 | Harvard Computers 55-line enrichment | `<Callout variant="the-more-you-know" title="Enrichment — When astronomy became astrophysics: the Harvard Computers">` | ✅ direct | Visible (not hidden under a collapsible) so the historical / equity content carries weight. |
 | Per-equation `<Observable>` / `<Assumption>` / `<BreaksWhen>` / `<CommonMisuse>` | live in `src/content/equations/<id>.mdx`, not chapter body | ✅ ADR 0046 pattern | Three equation files created with biography children. |
 
-## OMI arc map
+## Pedagogy structure map
+
+Per [ADR 0064](../decisions/0064-chapter-migration-playbook.md) §2 the
+pedagogy structure map covers OMI arcs (if framed `OMI`), eight-role
+component-mapping decisions per [ADR 0058](../decisions/0058-epistemic-component-contract.md),
+and multi-representation usage per [ADR 0043](../decisions/0043-notation-registry-multirep-alignment-audit.md)
+(not exercised in this chapter).
+
+### OMI arcs
 
 Sprint A8's three-arc proposal in the plan file was expanded to **five OMI arcs** during conversion (count-cap removed 2026-05-20 mid-conversion; the climate connection became its own arc since it's a genuine independent O→M→I cycle). Each arc passes ADR 0063's OF-1 strict-3 invariant; the chapter satisfies OF-2 (framing: "OMI" → ≥1 OMIFlow).
 
@@ -54,9 +73,9 @@ Sprint A8's three-arc proposal in the plan file was expanded to **five OMI arcs*
 
 The 5th arc (planetary energy balance) was the cap-removal call: the climate section *is* a genuine OMI cycle, not just an application. Honoring it as a 5th OMIFlow surfaced the same epistemic structure as the stellar arcs and ties the chapter's spectroscopy spine to its climate-physics resolution.
 
-## Eight-role component-mapping decisions
+### Eight-role component-mapping decisions
 
-Per ADR 0058's role taxonomy, the pilot exercised:
+Per [ADR 0058](../decisions/0058-epistemic-component-contract.md)'s role taxonomy, the pilot exercised:
 
 - **`observable`** — every OMIFlow.Observable slot, plus three biography `<Observable>` children in the equation registry files.
 - **`model`** — every OMIFlow.Model slot, plus the equation-registry KeyEquation entries (the tex + biography).
@@ -79,7 +98,7 @@ Decisions where the converted chapter departed from a literal `.qmd → .mdx` re
 - **18 inline definition asides preserved.** `<Aside kind="definition" title="X">` at first natural use; `<ChapterGlossary>` aggregator at chapter end. The density (~1 definition per ~250 prose words) is what surfaced Bug 1 — see Surprises.
 - **Two-track frontmatter without two-track content.** The chapter declares `track: "A"` so the Sprint I-A meta strip renders "TRACK A", but the chapter doesn't fork content per track. A real Track-B variant would need either `<DifficultyPath>` (doesn't exist yet) or sibling chapter files; deferred.
 
-## Time spent per phase (this session)
+## Time spent per phase
 
 Rough log. "Visual polish" and "hardening" were not in the original plan's scope but became the bulk of the work; they're called out separately so future estimates aren't anchored on this pilot's actual numbers.
 
@@ -117,9 +136,9 @@ This bug had been *latent in the platform* for months, only surfacing when chapt
 
 **6. The platform changes that fell out of this pilot are bigger than the chapter.** Two new top-level frontmatter fields (`chapter`, `reading`, `track`, `authors`, `updated`, `ai_contribution`). Four new components (`ChapterMeta`, `ScrollProgress`, `ChapterFooter`, `ChapterPagination`). One new pedagogy-index entity flavor (`KeyEquationUsageEntry` via `EquationCitationEntry.chapterNumber`). One new pedagogy-audit invariant family (CT-1, CT-2). One new mdast remark transform (`markChapterOpener`). One new component-runtime store (`equation-citations-store.ts`). Plus extensive CSS work in `textbook-layout.css` (counters, drop cap, ornament, mobile-overflow defenses, Tufte connectors). Most of this is reusable across future chapters; none of it was anticipated by the original plan.
 
-## Recommendations for ADR 0064 (migration playbook)
+## Recommendations + ADR backlog
 
-Draft notes only. ADR 0064 itself is the next session's work.
+These recommendations were the draft notes that became [ADR 0064](../decisions/0064-chapter-migration-playbook.md). Preserved verbatim; the ADR locked them as doctrine 2026-05-21.
 
 **Ordered checklist a future chapter migration should follow:**
 
@@ -142,9 +161,9 @@ Draft notes only. ADR 0064 itself is the next session's work.
 - The current ADR draft list calls for **ADR 0064** (migration playbook). The contents of *this report* are most of its evidence base; ADR 0064 should turn this report into binding doctrine.
 - Worth considering a follow-up ADR on **inline-context block-leak safety** as a general component-author guideline. Bug 1 was specific to GlossaryTerm but the pattern (dangerouslySetInnerHTML + markdown-rendered body + inline parent) could recur in any new component that does the same. Either codify the pattern (always use `stripWrappingParagraph` / a sanitizer) or change the rendering surface (pre-render at extractor-time as inline-safe HTML).
 
-## Platform issues — to file against `drannarosen/sophie`
+## Platform issues to file
 
-These were noted in the original plan's Phase 3.3 list as "confirm scope with Anna before filing." None filed this session. Each warrants one issue:
+These were noted in the original plan's Phase 3.3 list as "confirm scope with Anna before filing." None filed this session. Each warrants one issue against `drannarosen/sophie`. Per [ADR 0064](../decisions/0064-chapter-migration-playbook.md) §3 these **should** be filed before the next pilot starts.
 
 1. **Doc-correction:** ADR 0063 + accepted-features §A8 name "Module 3" as the OMIFlow motivating chapter. Actual content is Module 2 Lecture 3. Update the ADR examples block.
 2. **Gap: `<Video>` component.** Quarto's `{{< video URL >}}` shortcode. Even a thin `<iframe>`-with-aspect-ratio wrapper would unblock most future chapters.
@@ -153,7 +172,7 @@ These were noted in the original plan's Phase 3.3 list as "confirm scope with An
 5. **Sophie audit warning CT-3 candidate:** the misconception graph currently flags unreferenced declarations; an analogous warning for *over-referenced* shortcodes or *unused* registered figures would help the migration workflow.
 6. **Future, not blocking:** course-management chrome pack (`<Due>`, `<Points>`, `<Reading>`, `<Canvas>`, `<OfficeHours>`, `<Week>`) — defer until a second migration target is an index or homework page.
 
-## Success criteria — final state
+## Success criteria
 
 - ✅ Lecture 3 reading converted with full pedagogy structure intact (every learning objective, every Quick Check, every misconception callout, every enrichment box).
 - ✅ Chapter renders cleanly in Sophie's smoke fixture (build + biome + smoke tests clean; e2e Playwright tests pass).

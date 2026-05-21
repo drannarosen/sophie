@@ -325,3 +325,5 @@ the slot without naming its role. The contract becomes prose-legible.
 - [ADR 0061](./0061-ai-optimized-codebase-design.md) — atomic-docs rule (this ADR sweep satisfies)
 - [`docs/plans/2026-05-19-omiflow-design.md`](../../plans/2026-05-19-omiflow-design.md) — full 14-decision brainstorm
 - [`docs/plans/2026-05-19-omiflow-implementation.md`](../../plans/2026-05-19-omiflow-implementation.md) — executable PR-A/B/C plan
+- [ADR 0064](./0064-chapter-migration-playbook.md) — chapter-migration playbook locked by the ASTR 201 M2-L3 pilot this ADR motivated; cites OF-2 conformance as step 4 of the migration protocol
+- [pilots/m2-l3-spectra-composition.md](../pilots/m2-l3-spectra-composition.md) — the M2-L3 pilot report (worked example for ADR 0064's template); OMI-arc map shows OMIFlow exercised at production-chapter scale
