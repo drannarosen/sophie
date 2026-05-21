@@ -7,6 +7,7 @@ export type {
 } from "./BroadcastChannel.ts";
 export { createBroadcastChannel } from "./BroadcastChannel.ts";
 export { IndexedDBResponseStore } from "./IndexedDBResponseStore.ts";
+export { MathText } from "./MathText.tsx";
 export type { Profile } from "./ProfileContext.tsx";
 export { ProfileProvider, useProfile } from "./ProfileContext.tsx";
 export {
@@ -14,6 +15,7 @@ export {
   compositeKey,
   type ResponseStore,
 } from "./ResponseStore.ts";
+export { renderTextWithMath } from "./render-text-with-math.ts";
 export type { SyncedResponseStore } from "./SyncedResponseStore.ts";
 export { useHydrated } from "./useHydrated.ts";
 export type {

@@ -1,4 +1,5 @@
 import { deriveAsideAnchor } from "@sophie/core/schema";
+import { MathText } from "../../runtime/MathText.tsx";
 import styles from "./Aside.module.css.js";
 import type { AsideKind, AsideProps } from "./Aside.schema.ts";
 
@@ -61,7 +62,9 @@ export function Aside({
     >
       <summary className={styles.summary}>
         {showKindMarker && <span className={styles.marker}>{kindLabel}</span>}
-        {title !== undefined && <span className={styles.title}>{title}</span>}
+        {title !== undefined && (
+          <MathText className={styles.title}>{title}</MathText>
+        )}
       </summary>
       <div className={styles.body}>{children}</div>
     </details>

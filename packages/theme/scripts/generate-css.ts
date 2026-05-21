@@ -3,6 +3,7 @@ import {
   brand,
   calloutTitleBg,
   cardRules,
+  cite,
   darkBrand,
   darkStatus,
   darkSurfacesMix,
@@ -85,7 +86,12 @@ function colorBlock(scheme: Scheme): string {
     `--sophie-text-2: color-mix(in oklch, ${fg} 64%, ${bg});`,
     `--sophie-text-muted: color-mix(in oklch, ${fg} 46%, ${bg});`,
     `--sophie-text-faint: color-mix(in oklch, ${fg} 32%, ${bg});`,
-    `--sophie-link: color-mix(in oklch, var(--sophie-accent) 70%, var(--sophie-text));`,
+    // Body link color derives from the cite accent (plum), not the
+    // brand-teal accent — Sprint B chose plum as the scholarly cross-
+    // reference voice. Brand-teal stays for chrome (buttons, focus
+    // rings, badges); body links + GlossaryTerm + FigureRef + EquationRef
+    // pick up the cite hue via this derivation.
+    `--sophie-link: color-mix(in oklch, var(--sophie-cite) 70%, var(--sophie-text));`,
     // Modal backdrop. Derived from ${fg} so it stays visible against the
     // scheme-appropriate surface — ink-tinted overlay in light mode,
     // paper-tinted in dark mode.
@@ -130,6 +136,17 @@ function roleBlock(scheme: Scheme): string {
     .join("\n    ");
 }
 
+// Cross-reference / citation accent — plum, scheme-aware. Reserved
+// exclusively for scholarly cross-references (Fig. 1.2, Eq. 3, §3.2,
+// <GlossaryTerm> hover targets, citation chips). Never used for body,
+// chrome, or epistemic roles. Sprint B addition.
+function citeBlock(scheme: Scheme): string {
+  return [
+    `--sophie-cite: ${cite[scheme]};`,
+    `--sophie-cite-hover: color-mix(in oklch, var(--sophie-cite) 80%, var(--sophie-text));`,
+  ].join("\n    ");
+}
+
 // Truly mode-invariant utilities. Accent alias, link-hover alias, and
 // text-on-accent (white reads AA-clear on every brand/status fill in
 // both schemes).
@@ -144,6 +161,7 @@ function invariantUtilitiesBlock(): string {
 function typographyBlock(): string {
   return [
     `--sophie-font-sans: ${fontStacks.sans};`,
+    `--sophie-font-serif: ${fontStacks.serif};`,
     `--sophie-font-mono: ${fontStacks.mono};`,
     ...Object.entries(sizes).map(([k, v]) => `--sophie-text-${k}: ${v};`),
     `--sophie-leading-tight: ${leadings.tight};`,
@@ -260,6 +278,9 @@ export function generateCSS(): string {
   /* Epistemic role colors — light */
   ${roleBlock("light")}
 
+  /* Cross-reference / citation accent — light (plum) */
+  ${citeBlock("light")}
+
   /* Mode-invariant utilities (accent alias, text-on-accent) */
   ${invariantUtilitiesBlock()}
 
@@ -303,6 +324,9 @@ export function generateCSS(): string {
 
   /* Epistemic role colors — dark */
   ${roleBlock("dark")}
+
+  /* Cross-reference / citation accent — dark (plum) */
+  ${citeBlock("dark")}
 }
 
 @media (prefers-color-scheme: dark) {
