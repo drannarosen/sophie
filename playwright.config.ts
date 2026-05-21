@@ -13,10 +13,17 @@ import { defineConfig, devices } from "@playwright/test";
  */
 export default defineConfig({
   testDir: "./examples/smoke/e2e",
-  fullyParallel: false,
+  // 2026-05-21: enabled parallel execution within and across spec
+  // files. The single shared webServer is read-only (preview of a
+  // pre-built static site), each test gets its own browser context
+  // (cookies/localStorage isolated), and the CLI specs that spawn
+  // their own subprocesses use distinct ports (4510, 4511) that
+  // can't collide with the shared webServer on 4321. Workers=4 is
+  // a measured local default; CI gets 2 for memory-bound runners.
+  fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
-  workers: 1,
+  workers: process.env.CI ? 2 : 4,
   reporter: process.env.CI ? "github" : "list",
   use: {
     baseURL: "http://localhost:4321",
