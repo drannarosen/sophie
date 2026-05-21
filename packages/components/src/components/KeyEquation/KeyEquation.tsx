@@ -60,9 +60,11 @@ export function KeyEquation({
   }, [entry?.rearranged_forms]);
 
   if (!entry) {
+    // SSR-pass-tolerant warning — same Sprint K pattern as
+    // GlossaryTerm / EquationRef / FigureRef / ChapterRef.
     if (
-      typeof process === "undefined" ||
-      process.env?.NODE_ENV !== "production"
+      typeof document !== "undefined" &&
+      (typeof process === "undefined" || process.env?.NODE_ENV !== "production")
     ) {
       console.warn(
         `[KeyEquation] No equation found for refId "${refId}". Rendering framing prose only.`
