@@ -1,0 +1,202 @@
+---
+/**
+ * <ChapterPagination> — Sprint I-C
+ *
+ * End-of-chapter Previous / Next pills, mirroring the pagination
+ * pattern at the bottom of editorial-quality long-form articles
+ * (Stratechery, NYT Magazine, The New Yorker). Each pill is a
+ * card with:
+ *   - "Previous" / "Next" label (small-caps brand-teal)
+ *   - Chapter title (Fraunces serif, semibold)
+ *   - Module breadcrumb (sans, muted)
+ *
+ * Adjacency is computed from the chapters collection by
+ * (module, order, title) sort. Chapters without prev/next (first
+ * and last chapter of the whole textbook) render only one pill;
+ * the layout grid collapses appropriately.
+ *
+ * Thumbnail strategy (per Sprint I plan): when the next chapter
+ * declares a `figures` registry, surface the first figure as a
+ * small preview thumbnail. v1 ships without thumbnails — the
+ * cross-chapter figure-registry resolution is deferred to a
+ * follow-up; the pills carry title + module context, which is
+ * the load-bearing navigation chrome.
+ */
+
+interface ChapterPill {
+  slug: string;
+  title: string;
+  module: string;
+  chapter?: number;
+}
+
+interface Props {
+  previous?: ChapterPill | null;
+  next?: ChapterPill | null;
+}
+
+const { previous, next } = Astro.props;
+const hasAny = previous != null || next != null;
+---
+
+{
+  hasAny && (
+    <nav class="sophie-chapter-pagination" aria-label="Chapter navigation">
+      {previous ? (
+        <a
+          class="sophie-chapter-pagination__pill sophie-chapter-pagination__pill--prev"
+          href={`/chapters/${previous.slug}`}
+          rel="prev"
+        >
+          <span class="sophie-chapter-pagination__direction">
+            <span class="sophie-chapter-pagination__arrow" aria-hidden>
+              ←
+            </span>
+            Previous
+          </span>
+          <span class="sophie-chapter-pagination__title">{previous.title}</span>
+          <span class="sophie-chapter-pagination__module">
+            {previous.chapter !== undefined && (
+              <>Chapter {previous.chapter} · </>
+            )}
+            {previous.module}
+          </span>
+        </a>
+      ) : (
+        <span aria-hidden />
+      )}
+      {next ? (
+        <a
+          class="sophie-chapter-pagination__pill sophie-chapter-pagination__pill--next"
+          href={`/chapters/${next.slug}`}
+          rel="next"
+        >
+          <span class="sophie-chapter-pagination__direction">
+            Next
+            <span class="sophie-chapter-pagination__arrow" aria-hidden>
+              →
+            </span>
+          </span>
+          <span class="sophie-chapter-pagination__title">{next.title}</span>
+          <span class="sophie-chapter-pagination__module">
+            {next.chapter !== undefined && (
+              <>Chapter {next.chapter} · </>
+            )}
+            {next.module}
+          </span>
+        </a>
+      ) : (
+        <span aria-hidden />
+      )}
+    </nav>
+  )
+}
+
+<style>
+  .sophie-chapter-pagination {
+    margin-block: 3rem 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .sophie-chapter-pagination__pill {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    padding: 1.1rem 1.25rem;
+    background: var(--sophie-surface-1);
+    border: 1px solid var(--sophie-border);
+    border-radius: var(--sophie-radius-md);
+    box-shadow: var(--sophie-shadow-card);
+    text-decoration: none;
+    color: var(--sophie-text);
+    transition: transform 140ms ease-out, box-shadow 140ms ease-out,
+      border-color 140ms ease-out;
+  }
+
+  .sophie-chapter-pagination__pill--next {
+    text-align: end;
+  }
+
+  .sophie-chapter-pagination__pill:hover {
+    transform: translateY(-1px);
+    border-color: color-mix(in oklch, var(--sophie-brand-teal) 35%, var(--sophie-border));
+    box-shadow:
+      0 2px 6px color-mix(in oklch, var(--sophie-brand-teal) 12%, transparent),
+      var(--sophie-shadow-card);
+  }
+
+  .sophie-chapter-pagination__pill:focus-visible {
+    outline: var(--sophie-focus-width) solid var(--sophie-focus-color);
+    outline-offset: 2px;
+  }
+
+  .sophie-chapter-pagination__direction {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-family: var(--sophie-font-sans);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--sophie-brand-teal-text);
+  }
+
+  .sophie-chapter-pagination__pill--next .sophie-chapter-pagination__direction {
+    justify-content: flex-end;
+  }
+
+  .sophie-chapter-pagination__arrow {
+    font-size: 0.95rem;
+    line-height: 1;
+    transition: transform 140ms ease-out;
+  }
+
+  .sophie-chapter-pagination__pill--prev:hover .sophie-chapter-pagination__arrow {
+    transform: translateX(-2px);
+  }
+
+  .sophie-chapter-pagination__pill--next:hover .sophie-chapter-pagination__arrow {
+    transform: translateX(2px);
+  }
+
+  .sophie-chapter-pagination__title {
+    font-family: var(--sophie-font-serif);
+    font-weight: 600;
+    font-size: 1.05rem;
+    line-height: 1.25;
+    color: var(--sophie-text);
+    font-variation-settings:
+      "opsz" 36,
+      "SOFT" 30;
+  }
+
+  .sophie-chapter-pagination__module {
+    font-family: var(--sophie-font-sans);
+    font-size: 0.78rem;
+    color: var(--sophie-text-muted);
+    text-transform: capitalize;
+  }
+
+  @media (max-width: 600px) {
+    .sophie-chapter-pagination {
+      grid-template-columns: 1fr;
+    }
+
+    .sophie-chapter-pagination__pill--next {
+      text-align: start;
+    }
+
+    .sophie-chapter-pagination__pill--next .sophie-chapter-pagination__direction {
+      justify-content: flex-start;
+    }
+  }
+
+  @media print {
+    .sophie-chapter-pagination {
+      display: none;
+    }
+  }
+</style>

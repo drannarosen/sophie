@@ -1,5 +1,9 @@
 ---
+import ChapterFooter from "@sophie/astro/components/ChapterFooter.astro";
+import ChapterMeta from "@sophie/astro/components/ChapterMeta.astro";
+import ChapterPagination from "@sophie/astro/components/ChapterPagination.astro";
 import ModuleNav from "@sophie/astro/components/ModuleNav.astro";
+import ScrollProgress from "@sophie/astro/components/ScrollProgress.astro";
 import TextbookHead from "@sophie/astro/components/TextbookHead.astro";
 import TextbookLayout from "@sophie/astro/components/TextbookLayout.astro";
 import TocDrawer from "@sophie/astro/components/TocDrawer.astro";
@@ -23,6 +27,22 @@ interface Props {
     order?: number;
     lang?: string;
     description?: string;
+    /** Sprint F — display chapter number for "Figure C.N" / "Eq. C.N". */
+    chapter?: number;
+    /** Sprint I-A — reading-time estimate. */
+    reading?: { min: number; max: number };
+    /** Sprint I-A — difficulty track marker. */
+    track?: "A" | "B";
+    /** Sprint I-D — chapter authorship byline. */
+    authors?: string[];
+    /** Sprint I-D — last-revised ISO date string. */
+    updated?: string;
+    /** Sprint I-D — AI-contribution disclosure per ADR 0042. */
+    ai_contribution?: {
+      visibility: "public" | "private";
+      models?: string[];
+      review_depth?: string;
+    };
   };
   /** Astro collection id of the chapter currently being rendered. */
   currentChapterSlug?: string;
@@ -48,7 +68,36 @@ const chapters = (await getCollection("chapters")).map((c) => ({
   title: c.data.title,
   module: c.data.module,
   order: c.data.order,
+  chapter: c.data.chapter,
+  status: c.data.status,
 }));
+
+// Sprint I-C — adjacent-chapter resolution for prev/next pills.
+// Stable sort by (module index, order ?? 0, title) so the
+// pagination order matches the sidebar's visual order. Drafts
+// stay excluded from navigation per ADR 0051.
+const moduleOrder = new Map(modules.map((m, i) => [m.slug, i] as const));
+const sortableChapters = chapters
+  .filter((c) => c.status !== "draft")
+  .slice()
+  .sort((a, b) => {
+    const mA = moduleOrder.get(a.module) ?? Number.POSITIVE_INFINITY;
+    const mB = moduleOrder.get(b.module) ?? Number.POSITIVE_INFINITY;
+    if (mA !== mB) return mA - mB;
+    const oA = a.order ?? 0;
+    const oB = b.order ?? 0;
+    if (oA !== oB) return oA - oB;
+    return a.title.localeCompare(b.title);
+  });
+const currentIdx = currentChapterSlug
+  ? sortableChapters.findIndex((c) => c.slug === currentChapterSlug)
+  : -1;
+const previous =
+  currentIdx > 0 ? sortableChapters[currentIdx - 1] ?? null : null;
+const next =
+  currentIdx >= 0 && currentIdx < sortableChapters.length - 1
+    ? sortableChapters[currentIdx + 1] ?? null
+    : null;
 ---
 
 <html lang={frontmatter.lang ?? "en"}>
@@ -65,6 +114,7 @@ const chapters = (await getCollection("chapters")).map((c) => ({
   </head>
   <body>
     <SophieChapter client:load>
+      <ScrollProgress />
       <TextbookLayout figureRegistry={figureRegistryArray}>
         <Fragment slot='sidebar'>
           <ModuleNav
@@ -81,7 +131,17 @@ const chapters = (await getCollection("chapters")).map((c) => ({
           )
         }
         <h1>{frontmatter.title}</h1>
+        <ChapterMeta
+          reading={frontmatter.reading}
+          track={frontmatter.track}
+        />
         <slot />
+        <ChapterPagination previous={previous} next={next} />
+        <ChapterFooter
+          authors={frontmatter.authors}
+          updated={frontmatter.updated}
+          ai={frontmatter.ai_contribution}
+        />
       </TextbookLayout>
       <TocDrawer headings={headings} />
     </SophieChapter>
