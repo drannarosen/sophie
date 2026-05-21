@@ -52,7 +52,15 @@ export function Objective({
         className={styles.content}
       >
         <strong className={styles.verb}>{verb}</strong>{" "}
-        <span
+        {/* `<div>` rather than `<span>` so the HTML5 parser sees a
+            flow-content container when `body` contains a wrapping
+            `<p>` (the common mdast→html output for one-line prose).
+            CSS sets `display: inline` to preserve the verb + body
+            visual line. Without `<div>`, a `<p>` opening inside a
+            `<span>` is structurally invalid; we avoid that even
+            though it's not Bug 1's reproduction shape here (the
+            parent is `<li>`, not chapter prose `<p>`). */}
+        <div
           className={styles.body}
           // biome-ignore lint/security/noDangerouslySetInnerHtml: body is build-time-serialized author MDX, never runtime input — same trust as MDX prose
           dangerouslySetInnerHTML={{ __html: body }}

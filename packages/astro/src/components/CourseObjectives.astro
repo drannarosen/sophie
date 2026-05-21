@@ -102,7 +102,13 @@ const grouped: GroupedModule[] = [...modules]
                         <strong class='sophie-course-objectives__verb'>
                           {o.verb}
                         </strong>{" "}
-                        <span
+                        {/* `<div>` rather than `<span>` so the HTML5
+                            parser sees a flow-content container when
+                            `o.body` is `<p>...</p>` (the common
+                            mdast→html shape). CSS below renders it
+                            inline to preserve the verb + body single
+                            line. Mirrors the Objective.tsx pattern. */}
+                        <div
                           class='sophie-course-objectives__body'
                           set:html={o.body}
                         />
@@ -118,3 +124,18 @@ const grouped: GroupedModule[] = [...modules]
     </div>
   )
 }
+
+<style is:global>
+  /* `__body` is a `<div>` so the HTML5 parser accepts a `<p>` from
+     mdast→html as a flow-content child (rather than the structurally
+     invalid `<p>` inside `<span>` we'd get without this). Rendered
+     inline so verb + body stay on the same visual line. Mirrors
+     Objective.module.css's `.body` rule. */
+  .sophie-course-objectives__body {
+    display: inline;
+  }
+  .sophie-course-objectives__body > p {
+    display: inline;
+    margin: 0;
+  }
+</style>

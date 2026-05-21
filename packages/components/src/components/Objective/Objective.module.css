@@ -43,7 +43,16 @@
 }
 
 .body {
-  /* Inline so it sits next to the verb on the same line. */
+  /* `<div>` element (so the HTML5 parser treats it as flow-content
+     and accepts a wrapping `<p>` from mdast→html without invalid-
+     nesting consequences) rendered visually inline so verb + body
+     sit on the same line. The inner `<p>` (if mdast emitted one) is
+     forced to inline too so the visual stays single-line. */
+  display: inline;
+}
+.body > p {
+  display: inline;
+  margin: 0;
 }
 
 @media (prefers-reduced-motion: no-preference) {
