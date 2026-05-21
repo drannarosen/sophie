@@ -1,5 +1,5 @@
 import { Target } from "lucide-react";
-import { MathText } from "../../runtime/MathText.tsx";
+import { ChromeTitleBar } from "../../primitives/ChromeTitleBar/ChromeTitleBar.tsx";
 import { useInteractive } from "../../runtime/useInteractive.ts";
 import { Objective } from "../Objective/Objective.tsx";
 import styles from "./LearningObjectives.module.css.js";
@@ -63,15 +63,12 @@ export function LearningObjectives({
 
   return (
     <section className={styles.section} aria-labelledby={`${id}-heading`}>
-      <header className={styles.titleBar}>
-        {/* Icon size matched to the smaller-label heading set in
-            LearningObjectives.module.css (Sprint K). 16px target reads
-            as inline-label glyph rather than card avatar. */}
-        <Target className={styles.icon} size={16} aria-hidden />
-        <MathText as='h2' id={`${id}-heading`} className={styles.heading}>
-          {heading}
-        </MathText>
-      </header>
+      <ChromeTitleBar
+        accent='teal'
+        icon={Target}
+        heading={heading}
+        headingId={`${id}-heading`}
+      />
       <ul
         className={styles.list}
         aria-busy={controlProps["aria-busy"]}

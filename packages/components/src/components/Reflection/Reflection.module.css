@@ -2,8 +2,15 @@
  *
  * Brand-rose accent — elicitation/self-disclosure family (pairs with
  * Predict). Tier-1 anatomy: 4px rose left rule, drop shadow, 5px
- * radius, pale-rose title bar with PauseCircle icon, white body
- * holding the textarea.
+ * radius, pale-rose title bar (provided by <ChromeTitleBar
+ * accent="rose" headingAs="label" />) with PauseCircle icon, white
+ * body holding the textarea.
+ *
+ * Title-bar rules previously inlined here moved to
+ * primitives/ChromeTitleBar/ChromeTitleBar.module.css in the Sprint K
+ * hardening combo (2026-05-21) — see code-review Agent 1 finding #1.
+ * The label cursor:text affordance lives there too, gated on
+ * `label.heading[for]`.
  *
  * Per ADR 0005, no hex/rgb literals — all colors flow through
  * @sophie/theme tokens.
@@ -19,36 +26,6 @@
   color: var(--sophie-text);
   font-family: var(--sophie-font-sans);
   overflow: hidden;
-}
-
-.titleBar {
-  display: flex;
-  align-items: baseline; /* Sprint K — icon optical center on heading
-                            baseline. Matches LearningObjectives /
-                            Predict tightening pattern. */
-  gap: var(--sophie-space-2);
-  padding: var(--sophie-space-1) var(--sophie-space-4);
-  background: color-mix(
-    in oklch,
-    var(--sophie-brand-rose) 8%,
-    var(--sophie-surface-1)
-  );
-  border-bottom: 1px solid var(--sophie-border);
-  color: var(--sophie-brand-rose-text);
-  font-weight: var(--sophie-weight-semibold);
-  font-size: var(--sophie-text-small);
-  letter-spacing: 0.02em;
-}
-
-.icon {
-  flex-shrink: 0;
-  transform: translateY(0.15em);
-}
-
-.title {
-  margin: 0;
-  cursor: text;
-  color: inherit;
 }
 
 .body {

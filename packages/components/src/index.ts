@@ -257,6 +257,15 @@ export {
   getInterventionByName,
   getInterventionLibrary,
 } from "./intervention/intervention-index.ts";
+// Primitives — shared layout primitives reused across pedagogy
+// components. Per ADR 0061 Rule 4 (filename-as-discovery), primitives
+// live in src/primitives/<Name>/ and export through this barrel so
+// AI authors can find them via a single import surface.
+export type {
+  ChromeTitleBarAccent,
+  ChromeTitleBarProps,
+} from "./primitives/ChromeTitleBar/index.ts";
+export { ChromeTitleBar } from "./primitives/ChromeTitleBar/index.ts";
 // Runtime — public surface re-exported from runtime/index.ts
 export type {
   BroadcastChannelLayer,
