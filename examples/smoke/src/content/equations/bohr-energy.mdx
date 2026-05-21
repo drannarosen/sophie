@@ -1,0 +1,99 @@
+---
+id: bohr-energy
+title: "Bohr Hydrogen Energy Levels"
+tex: "E_n = -\\frac{13.6\\,\\text{eV}}{n^2}"
+symbols: ["E_n", "n"]
+constants:
+  - symbol: "E_R"
+    value: "13.6"
+    unit: "eV"
+    name: "Rydberg energy (hydrogen ground-state binding energy)"
+rearranged_forms:
+  - tex: "n = \\sqrt{\\frac{13.6\\,\\text{eV}}{|E_n|}}"
+    solves_for: "n"
+    label: "Level number from binding energy"
+related:
+  - refId: "photon-energy"
+    kind: "see-also"
+    description: "Transitions between Bohr levels emit or absorb a photon whose energy equals the level difference: $E_\\gamma = E_{n_f} - E_{n_i}$."
+tags: ["atomic-physics", "hydrogen", "quantum", "spectroscopy"]
+version: "1"
+---
+
+import {
+  Assumption,
+  BreaksWhen,
+  CommonMisuse,
+  DerivationStep,
+  Observable,
+} from "@sophie/components";
+
+<Observable>
+  The discrete energies an electron may hold while bound to a hydrogen
+  nucleus. Each integer $n \geq 1$ labels one of hydrogen's allowed
+  orbits; transitions between them produce the absorption and emission
+  lines visible in stellar spectra. We never measure $E_n$ directly —
+  we infer it from the wavelength of the photon emitted or absorbed
+  during a transition.
+</Observable>
+
+<Assumption type="single-electron">
+  Exactly one electron orbits a single proton. The formula extends to
+  hydrogen-like ions (He$^+$, Li$^{2+}$, ...) with a $Z^2$ scaling but
+  breaks for any atom with two or more electrons, because
+  electron–electron interactions reshape the level structure.
+</Assumption>
+
+<Assumption type="point-nucleus">
+  The proton is a structureless point charge. Finite nuclear size,
+  spin–orbit coupling, and QED corrections shift levels by parts in
+  $10^5$ — important for precision spectroscopy, irrelevant for
+  classifying stellar lines.
+</Assumption>
+
+<Assumption type="non-relativistic">
+  The electron's orbital velocity is small compared to $c$. Failure of
+  this assumption produces the fine-structure splitting visible in
+  high-resolution spectra: H$\alpha$ splits into multiple sub-lines
+  separated by $\sim 0.36$ cm$^{-1}$.
+</Assumption>
+
+<BreaksWhen>
+  Multi-electron atoms — helium, iron, calcium, every atom heavier
+  than hydrogen — have level structures fundamentally different from
+  the $13.6\,\text{eV}/n^2$ pattern. Strong external magnetic fields
+  (Zeeman effect) or electric fields (Stark effect) split each
+  $n$-level into sub-states. Highly excited Rydberg states
+  ($n \gtrsim 100$) ionize easily from ambient radiation and don't
+  behave as isolated bound states.
+</BreaksWhen>
+
+<CommonMisuse misconception="common-student-confusions">
+  Applying $13.6\,\text{eV}/n^2$ to a non-hydrogen atom. Every atom
+  stellar atmospheres care about beyond hydrogen has its own level
+  diagram. The Bohr formula is specifically hydrogenic; using it on
+  the Ca II K line at 3934 Å gives the wrong answer by orders of
+  magnitude.
+</CommonMisuse>
+
+<DerivationStep label="Quantize angular momentum">
+  Bohr postulated that bound-electron angular momentum is quantized in
+  units of $\hbar$: $L = n\hbar$ for integer $n \geq 1$. This move
+  turns a continuous classical orbit problem into a discrete spectrum
+  of allowed states.
+</DerivationStep>
+
+<DerivationStep label="Balance Coulomb and centripetal forces">
+  Set the Coulomb attraction $ke^2/r^2$ equal to the centripetal
+  force $m_e v^2 / r$, then combine with $m_e v r = n\hbar$ to solve
+  for the orbit radius $r_n = n^2 a_0$, where
+  $a_0 = \hbar^2 / (m_e k e^2) \approx 5.29 \times 10^{-9}$ cm is the
+  Bohr radius.
+</DerivationStep>
+
+<DerivationStep label="Compute total energy at each radius">
+  Add kinetic and potential energy at $r_n$:
+  $E_n = -k e^2 / (2 r_n) = -13.6\,\text{eV} / n^2$. The negative
+  sign signals binding; $E_n \to 0$ as $n \to \infty$ marks the
+  ionization threshold.
+</DerivationStep>

@@ -2,6 +2,7 @@ import type { PedagogyIndex } from "@sophie/core/schema";
 import { buildAuditContext } from "./context.ts";
 import { checkBiography } from "./invariants/biography.ts";
 import { checkChapterStatus } from "./invariants/chapter-status.ts";
+import { checkChapterTitleCollisions } from "./invariants/chapter-title-collisions.ts";
 import { checkEquationRegistry } from "./invariants/equation-registry.ts";
 import { passthroughExtractorFindings } from "./invariants/extractor-findings.ts";
 import { checkInlineRefs } from "./invariants/inline-refs.ts";
@@ -80,6 +81,10 @@ export function runPedagogyAudit(
 
   // External-signal invariants (require `extras`).
   checkChapterStatus(extras, sink);
+  // CT-1 / CT-2 — chapter-title prefix collisions (e.g. two chapters
+  // both titled "Lecture 3: …"). Authoring-time nudge surfaced by the
+  // 2026-05-20 verify pass.
+  checkChapterTitleCollisions(index, sink);
   passthroughExtractorFindings(index, sink);
   checkValidation(index, extras, sink);
 

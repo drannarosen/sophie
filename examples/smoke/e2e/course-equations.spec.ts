@@ -13,9 +13,12 @@ const EQUATIONS_URL = "/equations";
  * pair per declaration. Each entry's backlink points at the
  * registry route `/equations/<id>` (no longer at a chapter anchor).
  *
- * The smoke target ships four registry entries:
+ * The smoke target ships seven registry entries:
+ *   - bohr-energy        (ASTR 201 M2-L3 pilot)
+ *   - doppler-shift      (ASTR 201 M2-L3 pilot)
  *   - inverse-square-law (Batch 6)
  *   - orbital-mass       (Batch 6)
+ *   - photon-energy      (ASTR 201 M2-L3 pilot)
  *   - stefan-boltzmann   (Session-7 B2)
  *   - wiens-law          (Batch 6)
  *
@@ -31,8 +34,11 @@ test.describe("<CourseEquations /> on /equations (ADR 0060)", () => {
     const block = page.locator("[data-sophie-course-equations]");
     await expect(block).toBeAttached();
     const terms = block.locator(".sophie-course-equations__term");
-    // Four registry entries in examples/smoke/src/content/equations/.
-    await expect(terms).toHaveCount(4);
+    // Seven registry entries in examples/smoke/src/content/equations/.
+    await expect(terms).toHaveCount(7);
+    await expect(block).toContainText("Bohr Hydrogen Energy Levels");
+    await expect(block).toContainText("Non-relativistic Doppler Shift");
+    await expect(block).toContainText("Photon Energy");
     await expect(block).toContainText("Inverse-Square Law");
     await expect(block).toContainText(/Wien.s Law/);
     await expect(block).toContainText("Circular Orbit Mass Law");
@@ -44,14 +50,19 @@ test.describe("<CourseEquations /> on /equations (ADR 0060)", () => {
     const titles = await page
       .locator(".sophie-course-equations__title")
       .evaluateAll((els) => els.map((el) => (el.textContent ?? "").trim()));
-    // Alphabetical (string-localeCompare): Circular Orbit Mass Law,
-    // Stefan-Boltzmann Law, The Inverse-Square Law, Wien's Law.
-    // "The " sorts as 'T'; "Stefan-..." sorts as 'S' so it lands between
-    // 'C' and 'T'.
-    expect(titles[0]).toBe("Circular Orbit Mass Law");
-    expect(titles[1]).toBe("Stefan-Boltzmann Law");
-    expect(titles[2]).toBe("The Inverse-Square Law");
-    expect(titles[3]).toMatch(/^Wien.s Law$/);
+    // Alphabetical (string-localeCompare):
+    //   Bohr Hydrogen Energy Levels, Circular Orbit Mass Law,
+    //   Non-relativistic Doppler Shift, Photon Energy,
+    //   Stefan-Boltzmann Law, The Inverse-Square Law, Wien's Law.
+    // "The " sorts as 'T'; "Stefan-..." sorts as 'S' so it lands
+    // between 'P' and 'T'.
+    expect(titles[0]).toBe("Bohr Hydrogen Energy Levels");
+    expect(titles[1]).toBe("Circular Orbit Mass Law");
+    expect(titles[2]).toBe("Non-relativistic Doppler Shift");
+    expect(titles[3]).toBe("Photon Energy");
+    expect(titles[4]).toBe("Stefan-Boltzmann Law");
+    expect(titles[5]).toBe("The Inverse-Square Law");
+    expect(titles[6]).toMatch(/^Wien.s Law$/);
   });
 
   test("each entry carries a backlink to its registry route", async ({
@@ -59,13 +70,16 @@ test.describe("<CourseEquations /> on /equations (ADR 0060)", () => {
   }) => {
     await page.goto(EQUATIONS_URL);
     const backlinks = page.locator(".sophie-course-equations__backlink a");
-    await expect(backlinks).toHaveCount(4);
+    await expect(backlinks).toHaveCount(7);
     const hrefs = await backlinks.evaluateAll((els) =>
       els.map((el) => (el as HTMLAnchorElement).getAttribute("href") ?? "")
     );
     // Sorted by title (alphabetical); backlinks match the sort order.
     expect(hrefs).toEqual([
+      "/equations/bohr-energy",
       "/equations/orbital-mass",
+      "/equations/doppler-shift",
+      "/equations/photon-energy",
       "/equations/stefan-boltzmann",
       "/equations/inverse-square-law",
       "/equations/wiens-law",

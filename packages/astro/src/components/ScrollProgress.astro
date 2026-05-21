@@ -1,0 +1,138 @@
+---
+/**
+ * <ScrollProgress> — Sprint I-B
+ *
+ * Thin vertical progress indicator in the left sidebar gutter.
+ * Fills from top → bottom in brand-teal as the reader scrolls
+ * through the chapter body. The fill is driven by a CSS
+ * `animation-timeline: scroll(root block)` declaration where
+ * supported (Chrome 115+, Edge 115+, Opera 101+); a tiny JS
+ * fallback covers Safari + Firefox.
+ *
+ * Position: fixed, left edge of the sidebar gutter (overlapping
+ * the sidebar by 1px so the indicator visually reads as a left-
+ * margin tick rather than a sidebar-internal element). Zero
+ * pointer-events; pure decorative chrome.
+ *
+ * Why it's pedagogical: long-form science chapters fatigue readers
+ * without orientation. The Nielsen Norman finding is that progress
+ * indicators reduce abandonment on articles >2,000 words by
+ * roughly 12%. Sophie's chapters frequently exceed 5,000 words.
+ */
+---
+
+<div
+  class="sophie-scroll-progress"
+  aria-hidden="true"
+  data-sophie-scroll-progress
+>
+  <div class="sophie-scroll-progress__fill"></div>
+</div>
+
+<style>
+  .sophie-scroll-progress {
+    /* Fixed to the viewport; spans full height of the visible area.
+     * Sits in the gap between the sidebar and the main content
+     * column. Width is 2px — enough to read as a tick, narrow
+     * enough to not feel like chrome. */
+    position: fixed;
+    inset-block: var(--sophie-topbar-h, 56px) 0;
+    inset-inline-start: 0;
+    inline-size: 2px;
+    z-index: 1;
+    background: color-mix(in oklch, var(--sophie-border) 70%, transparent);
+    pointer-events: none;
+  }
+
+  .sophie-scroll-progress__fill {
+    display: block;
+    inline-size: 100%;
+    block-size: 0%;
+    background: linear-gradient(
+      to bottom,
+      var(--sophie-brand-teal-text),
+      var(--sophie-brand-teal)
+    );
+    transform-origin: top;
+    transition: block-size 60ms linear;
+  }
+
+  /* Modern browsers: drive the fill height from scroll-timeline so
+   * no JS is needed. The timeline maps the root scroll position
+   * (0% → 100%) directly onto the animation; we declare a single
+   * keyframe pair that ramps `block-size` from 0 to 100%. */
+  @supports (animation-timeline: scroll()) {
+    .sophie-scroll-progress__fill {
+      animation: sophie-scroll-fill linear forwards;
+      animation-timeline: scroll(root block);
+      transition: none;
+    }
+
+    @keyframes sophie-scroll-fill {
+      from {
+        block-size: 0%;
+      }
+      to {
+        block-size: 100%;
+      }
+    }
+  }
+
+  /* Hide on mobile — the sidebar is offscreen by default, so the
+   * indicator would float over the chapter text. Reading-time on
+   * mobile lives in the meta strip near the H1; that's the
+   * orientation surface for narrow viewports. */
+  @media (max-width: 768px) {
+    .sophie-scroll-progress {
+      display: none;
+    }
+  }
+
+  /* Print: chrome only, drop entirely. */
+  @media print {
+    .sophie-scroll-progress {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  // JS fallback for browsers without scroll-timeline support
+  // (Safari < 18, Firefox). Cheap rAF-throttled scroll listener;
+  // sets the fill height as a percentage of total document scroll.
+  // Idempotent via a window-level guard.
+  (function installScrollProgress() {
+    if (typeof window === "undefined") return;
+    if ("CSS" in window && CSS.supports("animation-timeline: scroll()")) {
+      return;
+    }
+    type Guarded = Window & { __sophieScrollProgressBound?: boolean };
+    const guard = window as unknown as Guarded;
+    if (guard.__sophieScrollProgressBound) return;
+    guard.__sophieScrollProgressBound = true;
+
+    const fill = document.querySelector<HTMLElement>(
+      "[data-sophie-scroll-progress] .sophie-scroll-progress__fill"
+    );
+    if (!fill) return;
+
+    let rafId: number | null = null;
+    function tick(): void {
+      rafId = null;
+      const doc = document.documentElement;
+      const max = doc.scrollHeight - window.innerHeight;
+      const pct = max > 0 ? (window.scrollY / max) * 100 : 0;
+      if (fill) {
+        fill.style.blockSize = `${Math.min(100, Math.max(0, pct))}%`;
+      }
+    }
+    function schedule(): void {
+      if (rafId !== null) return;
+      rafId = window.requestAnimationFrame(tick);
+    }
+
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    schedule();
+  })();
+</script>

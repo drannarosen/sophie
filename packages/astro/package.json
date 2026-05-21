@@ -37,6 +37,10 @@
     "./components/CourseMisconceptions.astro": "./dist/components/CourseMisconceptions.astro",
     "./components/ChapterMultiReps.astro": "./dist/components/ChapterMultiReps.astro",
     "./components/CourseObjectives.astro": "./dist/components/CourseObjectives.astro",
+    "./components/ChapterMeta.astro": "./dist/components/ChapterMeta.astro",
+    "./components/ScrollProgress.astro": "./dist/components/ScrollProgress.astro",
+    "./components/ChapterFooter.astro": "./dist/components/ChapterFooter.astro",
+    "./components/ChapterPagination.astro": "./dist/components/ChapterPagination.astro",
     "./styles/textbook-layout.css": "./dist/styles/textbook-layout.css"
   },
   "files": [

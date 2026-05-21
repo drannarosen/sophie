@@ -50,6 +50,14 @@ export const FigureUsageEntrySchema = z.object({
   anchor: NonEmptyString,
   /** Per-chapter sequential number, extractor-assigned at appearance order. */
   number: z.number().int().positive(),
+  /**
+   * Display chapter number from the chapter's `chapter` frontmatter
+   * field (Sprint F). Optional. When present, the Figure component
+   * and FigureRef render "Figure {chapterNumber}.{number}" /
+   * "Fig. {chapterNumber}.{number}"; when absent, they render
+   * within-chapter only ("Figure {number}" / "Fig. {number}").
+   */
+  chapterNumber: z.number().int().positive().optional(),
   /** Exactly one usage per name should be canonical. Default false set by extractor (not by schema); author opts in via `<Figure name="X" canonical />`. */
   canonical: z.boolean(),
   /** Optional caption override from `<Figure caption="...">` JSX prop; wins over registry caption. */

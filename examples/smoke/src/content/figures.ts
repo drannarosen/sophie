@@ -7,6 +7,22 @@
 import type { FigureRegistry } from "@sophie/components/runtime";
 
 export const figures: FigureRegistry = {
+  "absorption-emission-elements": {
+    name: "absorption-emission-elements",
+    src: "/figures/absorption-emission-spectra-jwst.png",
+    alt: "Absorption and emission spectra for sodium, nitrogen, hydrogen, and oxygen showing matching line patterns. Absorption spectra show dark lines on continuous rainbow; emission spectra show same-position bright lines on black background.",
+    caption:
+      "**What to notice:** Each element has a unique spectral fingerprint. The dark lines in absorption exactly match the bright lines in emission—same energy transitions, opposite directions.",
+    credit: "JWST/STScI",
+  },
+  "altair-spectrum-annotated": {
+    name: "altair-spectrum-annotated",
+    src: "/figures/altair-spectrum-jwst.png",
+    alt: "Top: rainbow spectrum image of star Altair showing dark absorption lines. Bottom: graph of brightness vs wavelength (about 400–700 nm) showing a smooth blackbody-like curve with sharp dips at absorption line wavelengths. Hydrogen Balmer lines labeled.",
+    caption:
+      "**What to notice:** A real stellar spectrum combines continuous (blackbody) shape with absorption lines. The overall curve gives temperature (Wien); the lines give composition (spectroscopy). Two inference tools in one observation.",
+    credit: "JWST/STScI",
+  },
   "answering-big-questions": {
     name: "answering-big-questions",
     src: "/figures/answering-the-big-questions-nblm.png",
@@ -47,6 +63,22 @@ export const figures: FigureRegistry = {
       "**What to notice:** The cosmic web—galaxies aren't scattered randomly. They cluster into filaments, walls, and voids. You are at the center; colors show distance (cyan = nearby, red = billions of light-years away). Gravity is still pulling these structures together.",
     credit: "DESI Collaboration/NOIRLab/NSF/AURA/Kitt Peak",
   },
+  "earth-energy-balance-blackbodies": {
+    name: "earth-energy-balance-blackbodies",
+    src: "/figures/energy_breakdown.png",
+    alt: "Diagram showing the electromagnetic spectrum with two Planck curves. Left panel (yellow background): incoming solar radiation peaking near 1 micron in the visible band. Right panel (blue background): outgoing terrestrial radiation peaking near 10 microns in the thermal infrared, with deep absorption notches carved by atmospheric greenhouse gases. The full EM spectrum from gamma rays to long waves is labeled across the top.",
+    caption:
+      "**What to notice:** Two blackbodies, two very different temperatures. The Sun (~5,800 K) radiates a Planck curve peaking in visible light (~0.5 $\\mu\\text{m}$). Earth (~288 K) re-radiates a Planck curve peaking in thermal infrared (~10 $\\mu\\text{m}$). Greenhouse gases absorb in the infrared window where Earth is trying to radiate — not where the Sun's energy arrives. The sharp absorption features in the outgoing spectrum are the molecular fingerprints of CO$_2$, H$_2$O, and O$_3$.",
+    credit: "NOAA JetStream",
+  },
+  "earth-reflectance-spectra": {
+    name: "earth-reflectance-spectra",
+    src: "/figures/reflectance-spectra-earth-jwst.png",
+    alt: "Graph showing reflectance vs wavelength (400-2400 nm) for snow (high, flat), vegetation (red edge jump at 700 nm), dry soil (rising toward IR), and water (absorbs in IR). Each material has distinct spectral signature.",
+    caption:
+      "**What to notice:** Different materials reflect different wavelengths. Snow reflects broadly; water absorbs IR; vegetation has a sharp 'red edge' at 700 nm. Spectra can identify surface composition—even on exoplanets.",
+    credit: "JWST/STScI",
+  },
   "em-spectrum-temperature": {
     name: "em-spectrum-temperature",
     src: "/figures/em-spectrum-nblm.png",
@@ -78,6 +110,46 @@ export const figures: FigureRegistry = {
       "**What to notice:** From billions of kilometers away, we can directly measure only four things. Everything else—mass, radius, temperature, age—is a calculation.",
     credit: "Course illustration (A. Rosen)",
   },
+  "greenhouse-comparison": {
+    name: "greenhouse-comparison",
+    src: "/figures/greenhouse-comparison.png",
+    alt: "Bar chart comparing equilibrium temperature (teal) and actual surface temperature (gold) for Venus, Earth, and Mars. Venus shows the largest greenhouse gap of +508 K, Earth shows +33 K, and Mars shows approximately zero. Dominant atmospheric greenhouse gases are labeled beneath each planet.",
+    caption:
+      "**What to notice:** Venus is closer to the Sun yet has a *lower* equilibrium temperature than Earth because its high albedo reflects 77% of sunlight. The greenhouse warming (mauve arrows) is what separates $T_{\\text{eq}}$ from $T_{\\text{actual}}$ — Venus's massive CO$_2$ atmosphere adds 508 K, Earth's adds 33 K, and Mars's thin atmosphere adds essentially nothing.",
+    credit: "ASTR 201 (generated)",
+  },
+  "harvard-computers": {
+    name: "harvard-computers",
+    src: "/figures/harvard-computers.jpg",
+    alt: "Black-and-white photograph from circa 1890 showing seven women working at desks in a room at Harvard College Observatory, examining photographic plates and notebooks. A light-curve chart labeled 'B Aurigae Dec 1889' hangs on the wall behind them.",
+    caption:
+      "**What to notice:** These women analyzed hundreds of thousands of stellar spectra from photographic plates, discovering the patterns (OBAFGKM, period-luminosity relation, luminosity classification) that transformed astronomy into astrophysics.",
+    credit: "Harvard College Observatory / Smithsonian Institution",
+  },
+  "hydrogen-absorption": {
+    name: "hydrogen-absorption",
+    src: "/figures/absorption-of-light-hydrogen-jwst.png",
+    alt: "Left: Bohr model of hydrogen with electron energy levels 1-6. Right top: energy level diagram showing electron absorbing photons and jumping up. Right bottom: absorption spectrum with dark lines at specific wavelengths corresponding to transitions.",
+    caption:
+      "**What to notice:** Hydrogen absorbs specific wavelengths because electrons jump UP between quantized energy levels. Each dark line = one electron transition. E = hν determines which wavelengths.",
+    credit: "JWST/STScI",
+  },
+  "hydrogen-emission": {
+    name: "hydrogen-emission",
+    src: "/figures/emission-of-light-hydrogen-jwst.png",
+    alt: "Left: Bohr model of hydrogen with electron falling between levels. Right top: energy level diagram showing electron emitting photons while dropping down. Right bottom: emission spectrum with bright lines at specific wavelengths.",
+    caption:
+      "**What to notice:** Hydrogen emits specific wavelengths because electrons fall DOWN between energy levels. Each bright line = one electron transition. The Balmer series (visible) comes from transitions to level 2.",
+    credit: "JWST/STScI",
+  },
+  "jwst-doppler-shift": {
+    name: "jwst-doppler-shift",
+    src: "/figures/jwst-doppler-shift.png",
+    alt: "Diagram of a star with an orbiting exoplanet and three corresponding spectra labeled blueshift, neutral, and redshift, showing the same absorption lines moving to shorter or longer wavelengths as the star moves toward or away from the viewer.",
+    caption:
+      "**What to notice:** The same spectral lines slide left for blueshift and right for redshift. Even tiny wavelength shifts let us infer line-of-sight motion and detect an orbiting companion.",
+    credit: "JWST/STScI",
+  },
   "lsst-cosmic-treasure-chest": {
     name: "lsst-cosmic-treasure-chest",
     src: "/figures/lsst-cosmic-treasure-chest-zoom.jpg",
@@ -93,6 +165,22 @@ export const figures: FigureRegistry = {
     caption:
       "**What to notice:** Left (optical) shows stars and dust lanes. Right (radio/21-cm) shows cold neutral hydrogen gas. The distributions don't perfectly overlap—different wavelengths reveal different physical components.",
     credit: "NASA/ESA/STScI/AURA (Optical); NRAO/AUI (Radio)",
+  },
+  "mk-star-sizes": {
+    name: "mk-star-sizes",
+    src: "/figures/800px-Morgan-Keenan_spectral_classificatio.max-1000x1000.png",
+    alt: "Artistic rendering of main-sequence stars arranged left to right by spectral type from M (small, red-orange) through K, G, F, A, B to O (large, blue-white), shown to relative scale against a black background. Each star is labeled with its spectral letter.",
+    caption:
+      "**What to notice:** Main-sequence stars span a huge range of size and color. M dwarfs (left) are small and red-orange; O stars (right) are large and blue-white. But size on the main sequence is just one dimension — a red *supergiant* can dwarf an O star despite being cooler.",
+    credit: "Wikimedia Commons (after Morgan & Keenan)",
+  },
+  "obafgkm-spectra": {
+    name: "obafgkm-spectra",
+    src: "/figures/obafgkm_noao_big.jpg",
+    alt: "Composite image of stellar spectra arranged vertically from O6.5 at top to M5 at bottom, with wavelength increasing left to right across the visible band. Each horizontal strip shows a rainbow-colored spectrum with dark absorption lines at different positions. Star catalog identifiers (HD numbers) are labeled on the right. Three additional spectra at the bottom show an F4 metal-poor star, an M4.5 emission star, and a B1 emission star.",
+    caption:
+      "**What to notice:** The spectral sequence from O (top, hottest) to M (bottom, coolest). Dark absorption lines shift across the sequence — hydrogen Balmer lines peak at A-type, helium lines dominate O and B, metal lines crowd in at G and K, and molecular bands appear at M. The bottom three rows show special cases: a metal-poor F star, an M star with emission lines, and a B star with emission.",
+    credit: "NOAO/AURA/NSF",
   },
   "periodic-table-origins": {
     name: "periodic-table-origins",
@@ -126,6 +214,14 @@ export const figures: FigureRegistry = {
       "**What to notice:** Atoms have quantized energy levels like rungs on a ladder. Electrons jumping between rungs absorb or emit photons of *exact* energies—creating unique spectral fingerprints. Hot dense sources produce continuous spectra; cool gas in front absorbs specific wavelengths; hot thin gas emits specific wavelengths.",
     credit: "Course illustration (A. Rosen)",
   },
+  "rayleigh-scattering-sky": {
+    name: "rayleigh-scattering-sky",
+    src: "/figures/rayleigh-scattering-nblm.png",
+    alt: "Diagram showing sunlight entering atmosphere. Blue light (short wavelength) scatters in all directions while red light (long wavelength) passes through more directly. Viewer looking up sees scattered blue; viewer at sunset sees transmitted red.",
+    caption:
+      "**What to notice:** Rayleigh scattering explains both the blue sky (scattered short wavelengths) and red sunsets (transmitted long wavelengths). Same physics, different viewing geometry.",
+    credit: "NotebookLM",
+  },
   "standard-candles": {
     name: "standard-candles",
     src: "/figures/standard-candles-nblm.png",
@@ -142,6 +238,14 @@ export const figures: FigureRegistry = {
       "**What to notice:** Three questions drive modern astronomy—and we answer all of them using the same method: inference from signals.",
     credit: "Course illustration (A. Rosen)",
   },
+  "three-types-of-spectra": {
+    name: "three-types-of-spectra",
+    src: "/figures/types-of-spectra-jwst.png",
+    alt: "Diagram showing three scenarios: (1) continuous spectrum from hot dense object producing rainbow, (2) absorption spectrum with dark lines when cool gas absorbs from continuous source, (3) emission spectrum with bright lines from hot thin gas cloud.",
+    caption:
+      "**What to notice:** Three spectrum types encode different physics. Continuous = hot dense source. Absorption = cool gas in front of hot source. Emission = hot thin gas. Same atoms, different conditions, different spectra.",
+    credit: "JWST/STScI",
+  },
   "universe-history-nasa": {
     name: "universe-history-nasa",
     src: "/figures/universe-history-nasa.png",
@@ -157,5 +261,21 @@ export const figures: FigureRegistry = {
     caption:
       "**What to notice:** Distance is a time dial. Looking at the Moon = 1.3 seconds ago; the Sun = 8 minutes ago; Andromeda = 2.5 million years ago; distant galaxies = 10 billion years ago.",
     credit: "Course illustration (A. Rosen)",
+  },
+  "week04-colors-of-stars-hubble": {
+    name: "week04-colors-of-stars-hubble",
+    src: "/figures/colors-of-stars-nasa-esa-hubble.webp",
+    alt: "Dense star field image with a bright cluster near the center and many stars of different apparent colors, including blue-white, yellow, and red-orange stars scattered across the frame.",
+    caption:
+      "**What to notice:** Real star fields are not monochrome. Even before we spread starlight into spectra, blue-white and orange-red stars tell us that stellar surfaces come in different temperature regimes.",
+    credit: "NASA/ESA/Hubble",
+  },
+  "week04-photosphere-line-formation-cococubed": {
+    name: "week04-photosphere-line-formation-cococubed",
+    src: "/figures/photosphere_line_formation-cococubed.svg",
+    alt: "Cross-section of a stellar photosphere with curved layers labeled about 5800 K deeper and 4500 K higher up across roughly 500 km. Dashed sight lines from different depths connect to a spectrum panel showing a dark absorption line dip versus wavelength and intensity.",
+    caption:
+      "**What to notice:** Different wavelengths form at different depths in the photosphere, so absorption lines encode atmospheric structure, not just composition.",
+    credit: "cococubed.com",
   },
 };

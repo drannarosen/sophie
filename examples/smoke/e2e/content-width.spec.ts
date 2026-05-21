@@ -65,11 +65,18 @@ test.describe("PR 6: content-width responds to sidebar state", () => {
     );
 
     const width = await getContentWidth(page);
-    // 75ch at Plex Sans measures ≈ 846px on CI. Range covers font +
-    // system variance while rejecting 66ch (~756px) below and 95ch
-    // (~1080px) above.
-    expect(width).toBeGreaterThan(800);
-    expect(width).toBeLessThan(910);
+    // Post-Sprint J (`box-sizing: border-box` on `.sophie-content`,
+    // shipped in 73bb3c6 to fix mobile overflow), `max-inline-size:
+    // 75ch` caps the BORDER box at 75ch. `getBoundingClientRect`
+    // returns the border-box width, so the measured value lands at
+    // ~75ch px directly: ≈ 750 on CI Linux, ≈ 765 on macOS (1ch is
+    // ~10.0/10.2 px in Plex Sans 17px across the two systems).
+    // Range covers both while rejecting 66ch (~660-675 px) below
+    // and 95ch (~950-970 px) above. See content-area follow-up:
+    // the actual chars/line is now ≈ 66 (75ch border-box − 96px
+    // padding), down from the pre-Sprint J ~75ch reading area.
+    expect(width).toBeGreaterThan(720);
+    expect(width).toBeLessThan(810);
   });
 
   test("Default mode: closing the sidebar makes content strictly wider", async ({

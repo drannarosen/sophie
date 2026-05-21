@@ -32,7 +32,8 @@ import { type MdxJsxFlowElement, readFigureAttributes } from "../jsx-utils.ts";
  */
 export function extractFigures(
   tree: Root,
-  chapterSlug: string
+  chapterSlug: string,
+  chapterNumber?: number
 ): FigureUsageEntry[] {
   const out: FigureUsageEntry[] = [];
   const seenAnchors = new Set<string>();
@@ -60,6 +61,7 @@ export function extractFigures(
       chapter: chapterSlug,
       anchor,
       number: counter,
+      chapterNumber,
       canonical: attrs.canonical === true,
       captionOverride: attrs.caption?.trim() || undefined,
     });

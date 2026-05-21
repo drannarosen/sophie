@@ -23,6 +23,7 @@
  */
 export { __setChapters } from "../components/ChapterRef/chapters-store.ts";
 export { __setModules } from "../components/ChapterRef/modules-store.ts";
+export { __setEquationCitations } from "../components/EquationRef/equation-citations-store.ts";
 export { __setEquations } from "../components/EquationRef/equations-store.ts";
 export { __setFigureRegistry } from "../components/FigureRef/figure-registry-store.ts";
 export { __setFigureUsages } from "../components/FigureRef/figure-usages-store.ts";

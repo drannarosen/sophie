@@ -104,13 +104,77 @@ export function GlossaryTerm({
         </HoverCard.Portal>
       </HoverCard.Root>
       {dataFirstUse === "true" ? (
+        // Strip the outer `<p>…</p>` from the body before injecting
+        // (see `stripWrappingParagraph` below). The footnote `<span>`
+        // is INLINE — it sits inside the chapter's MDX paragraph.
+        // A block-level `<p>` inside an inline element triggers
+        // HTML5's "implied end tag" rule (the browser auto-closes
+        // the outer `<p>` and hoists the inner `<p>` out of the
+        // parent, splitting the surrounding sentence across multiple
+        // top-level paragraphs). Stripping the wrapper keeps the body
+        // as inline-safe HTML so the span stays in flow. The popover
+        // above keeps the wrapping `<p>` because its container is a
+        // `<div>` (block).
         <span
           className={`${styles.glossaryFootnote} sophie-glossary-footnote`}
           data-testid='glossary-footnote'
           // biome-ignore lint/security/noDangerouslySetInnerHtml: body is pre-rendered HTML produced by our remark plugin (mdast → hast → html), not user-supplied content. ADR 0038 decision #11.
-          dangerouslySetInnerHTML={{ __html: entry.body }}
+          dangerouslySetInnerHTML={{
+            __html: stripWrappingParagraph(entry.body),
+          }}
         />
       ) : null}
     </>
   );
+}
+
+/**
+ * Make a markdown-rendered HTML body safe to inject into an INLINE
+ * context — the footnote `<span>` sits inside the chapter's MDX
+ * `<p>`, so any block-level child triggers HTML5's "implied end tag"
+ * rule and the browser hoists the block out of the parent paragraph,
+ * splitting the surrounding sentence across multiple top-level
+ * paragraphs.
+ *
+ * Two passes:
+ *   1. Strip a single outer `<p>…</p>` wrapper that markdown applies
+ *      to a one-paragraph body. Multi-paragraph bodies (additional
+ *      `<p>` open tags inside the wrapper) pass through unchanged so
+ *      the popover-rendering path (`<div>` container) stays correct.
+ *   2. Unwrap remaining block-level tags inside the body — most
+ *      importantly the `<div>` that JSX-flow elements (like a nested
+ *      `<GlossaryTerm>` callsite) render as during mdast→html
+ *      serialization. Replaces `<div>…</div>` and `<p>…</p>` with
+ *      their contents; the result is inline-safe HTML carrying only
+ *      text, `<em>`, `<strong>`, `<a>`, KaTeX `<span>` trees, etc.
+ *
+ * Returns the input unchanged when both passes detect a multi-block
+ * structure (rare but worth defending — if the body's structure is
+ * load-bearing we keep it intact and accept the paragraph-split risk
+ * rather than mangling content silently).
+ */
+function stripWrappingParagraph(html: string): string {
+  const trimmed = html.trim();
+  const match = trimmed.match(/^<p>([\s\S]*)<\/p>$/);
+  if (!match?.[1]) return html;
+  const innerHTML = match[1];
+  // Defensive: bail when the body is multi-paragraph (additional `<p>`
+  // open tags). Authoring would have to do something unusual to hit
+  // this; leaving it alone is safer than reshaping unknown structure.
+  if (/<p[\s>]/i.test(innerHTML)) return html;
+  // Unwrap any remaining block-level tags. Specifically:
+  //   - `<div>…</div>` from JSX-flow elements that mdast→html serialize
+  //     as div (nested `<GlossaryTerm>` callsites are the common case).
+  //   - `<section>` / `<article>` / `<figure>` from arbitrary nested
+  //     content. Repeated until stable so nested blocks unwrap fully.
+  let unwrapped = innerHTML;
+  let prev: string;
+  do {
+    prev = unwrapped;
+    unwrapped = unwrapped.replace(
+      /<(div|section|article|figure)\b[^>]*>([\s\S]*?)<\/\1>/gi,
+      "$2"
+    );
+  } while (unwrapped !== prev);
+  return unwrapped;
 }

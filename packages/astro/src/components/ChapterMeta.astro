@@ -1,0 +1,103 @@
+---
+/**
+ * <ChapterMeta> — Sprint I-A
+ *
+ * Small editorial meta strip rendered between the chapter H1 and
+ * the chapter body. Two chips:
+ *
+ *   1. Reading-time range — "30–55 MIN READ"
+ *   2. Track marker — "TRACK A" (only when the chapter declares one)
+ *
+ * Visual voice matches Sprint G's Part labels: small-caps sans,
+ * tabular numerals, brand-teal text. The strip is decorative
+ * rather than navigational; readers use it to budget time before
+ * committing to read.
+ *
+ * The component renders nothing when the chapter declares neither
+ * a `reading` nor a `track` — chapters without reading-furniture
+ * frontmatter degrade silently.
+ */
+import type { ReadingEstimate } from "@sophie/core/schema";
+
+interface Props {
+  reading?: ReadingEstimate;
+  track?: "A" | "B";
+}
+
+const { reading, track } = Astro.props;
+
+const hasContent = reading !== undefined || track !== undefined;
+---
+
+{
+  hasContent && (
+    <aside class="sophie-chapter-meta" aria-label="Chapter metadata">
+      {reading && (
+        <span class="sophie-chapter-meta__chip">
+          <span class="sophie-chapter-meta__num">
+            {reading.min === reading.max
+              ? reading.min
+              : `${reading.min}–${reading.max}`}
+          </span>
+          <span class="sophie-chapter-meta__unit">min read</span>
+        </span>
+      )}
+      {track && (
+        <>
+          {reading && <span class="sophie-chapter-meta__dot" aria-hidden>·</span>}
+          <span class="sophie-chapter-meta__chip">
+            <span class="sophie-chapter-meta__unit">Track</span>
+            <span class="sophie-chapter-meta__num">{track}</span>
+          </span>
+        </>
+      )}
+    </aside>
+  )
+}
+
+<style>
+  .sophie-chapter-meta {
+    /* Inline-flex strip placed between the H1 and the chapter body.
+     * Sits flush-left under the title (not floated top-right) so it
+     * shares the chapter's reading column rather than competing with
+     * the right gutter where docked asides + ToC live. */
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.4em;
+    margin-block: -0.35rem 1.8rem;
+    font-family: var(--sophie-font-sans);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--sophie-brand-teal-text);
+    font-feature-settings:
+      "tnum" 1,
+      "lnum" 1;
+  }
+
+  .sophie-chapter-meta__chip {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.32em;
+  }
+
+  .sophie-chapter-meta__num {
+    /* Numbers + track letter get a slight visual lift via the body
+     * size; the lowercase "min read" / "Track" label stays small.
+     * Keeps the strip visually anchored on the digits. */
+    font-size: 0.88rem;
+    letter-spacing: 0.04em;
+    color: var(--sophie-text);
+  }
+
+  .sophie-chapter-meta__unit {
+    color: var(--sophie-text-muted);
+  }
+
+  .sophie-chapter-meta__dot {
+    color: var(--sophie-text-muted);
+    opacity: 0.6;
+    margin-inline: 0.1em;
+  }
+</style>

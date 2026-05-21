@@ -21,7 +21,8 @@ import {
  */
 export function extractEquationCitations(
   tree: Root,
-  chapterSlug: string
+  chapterSlug: string,
+  chapterNumber?: number
 ): EquationCitationEntry[] {
   const out: EquationCitationEntry[] = [];
   let counter = 0;
@@ -45,6 +46,7 @@ export function extractEquationCitations(
       refId: slugify(refId),
       anchor,
       number: counter,
+      ...(chapterNumber !== undefined ? { chapterNumber } : {}),
       ...(framingHtml.length > 0 ? { framingHtml } : {}),
     });
   });

@@ -1,0 +1,190 @@
+---
+/**
+ * <ChapterFooter> — Sprint I-D
+ *
+ * End-of-chapter chrome rendering authorship, last-revised date,
+ * and AI-contribution disclosure per ADR 0042 (Pedagogy Contract).
+ *
+ * The footer is Sophie's FIRST chapter-rendered surface of the
+ * pedagogy contract. ADR 0042 commits Sophie to public-by-default
+ * AI contribution provenance; this is how that commitment becomes
+ * visible to students.
+ *
+ * Visual voice: small-caps strip aligned with the chapter's other
+ * editorial chrome (Part labels, ChapterMeta). Three lines, each
+ * a label + value pair. Bottom border separates from preceding
+ * content; generous top margin so the footer doesn't crowd the
+ * Practice problems or chapter glossary.
+ *
+ * Degradation: each of the three lines is independently optional.
+ * A chapter that declares only `authors:` shows only the byline;
+ * one that declares only `ai_contribution:` shows only the AI
+ * disclosure. A chapter that declares none of the three renders
+ * nothing.
+ */
+import type { AIContribution } from "@sophie/core/schema";
+
+interface Props {
+  authors?: string[];
+  updated?: string;
+  ai?: AIContribution;
+}
+
+const { authors, updated, ai } = Astro.props;
+
+const showAuthors = authors !== undefined && authors.length > 0;
+const showUpdated = updated !== undefined;
+const showAi = ai !== undefined && ai.visibility === "public";
+
+const hasAny = showAuthors || showUpdated || showAi;
+
+function joinAuthors(list: string[]): string {
+  if (list.length === 0) return "";
+  if (list.length === 1) return list[0]!;
+  if (list.length === 2) return `${list[0]} and ${list[1]}`;
+  return `${list.slice(0, -1).join(", ")}, and ${list[list.length - 1]}`;
+}
+
+function formatUpdated(iso: string): string {
+  // Render as "May 20, 2026" — long-form locale-stable.
+  const d = new Date(`${iso}T00:00:00Z`);
+  if (Number.isNaN(d.valueOf())) return iso;
+  return d.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+function formatReviewDepth(depth: string | undefined): string {
+  if (!depth) return "";
+  // Convert "ai-drafted-human-reviewed" → "AI-drafted, human-reviewed"
+  // Keep the canonical ADR vocabulary in the frontmatter; render a
+  // student-readable phrasing here.
+  switch (depth) {
+    case "minor-edit":
+      return "AI assistance with minor edits";
+    case "structural-and-line-edit":
+      return "AI structural + line editing";
+    case "co-authored":
+      return "Co-authored with AI";
+    case "ai-drafted-human-reviewed":
+      return "AI-drafted, human-reviewed";
+    default:
+      return depth;
+  }
+}
+---
+
+{
+  hasAny && (
+    <footer class="sophie-chapter-footer" aria-label="Chapter colophon">
+      <div class="sophie-chapter-footer__inner">
+        {showAuthors && (
+          <div class="sophie-chapter-footer__row">
+            <span class="sophie-chapter-footer__label">Authors</span>
+            <span class="sophie-chapter-footer__value">
+              {joinAuthors(authors!)}
+            </span>
+          </div>
+        )}
+        {showUpdated && (
+          <div class="sophie-chapter-footer__row">
+            <span class="sophie-chapter-footer__label">Last revised</span>
+            <span class="sophie-chapter-footer__value">
+              {formatUpdated(updated!)}
+            </span>
+          </div>
+        )}
+        {showAi && (
+          <div class="sophie-chapter-footer__row sophie-chapter-footer__row--ai">
+            <span class="sophie-chapter-footer__label">AI contribution</span>
+            <span class="sophie-chapter-footer__value">
+              {formatReviewDepth(ai!.review_depth)}
+              {ai!.models && ai!.models.length > 0 && (
+                <>
+                  {" "}
+                  <span class="sophie-chapter-footer__models">
+                    ({ai!.models.join(", ")})
+                  </span>
+                </>
+              )}
+              {" "}
+              <a
+                class="sophie-chapter-footer__adr-link"
+                href="/decisions/0042-pedagogy-contract-ai-ledger"
+              >
+                <abbr title="Architecture Decision Record 0042 — Pedagogy Contract + AI Ledger">
+                  ADR 0042
+                </abbr>
+              </a>
+            </span>
+          </div>
+        )}
+      </div>
+    </footer>
+  )
+}
+
+<style>
+  .sophie-chapter-footer {
+    margin-block-start: 4rem;
+    padding-block-start: 1.5rem;
+    border-block-start: 1px solid var(--sophie-border-subtle);
+    /* Visual signal that this is the end of the chapter: a thin
+     * top rule + generous space above. Bottom-of-page anchor. */
+  }
+
+  .sophie-chapter-footer__inner {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 0.6rem 1.2rem;
+    align-items: baseline;
+  }
+
+  .sophie-chapter-footer__row {
+    display: contents;
+  }
+
+  .sophie-chapter-footer__label {
+    font-family: var(--sophie-font-sans);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--sophie-brand-teal-text);
+    white-space: nowrap;
+  }
+
+  .sophie-chapter-footer__value {
+    font-family: var(--sophie-font-sans);
+    font-size: 0.875rem;
+    color: var(--sophie-text);
+    line-height: 1.5;
+  }
+
+  .sophie-chapter-footer__models {
+    color: var(--sophie-text-muted);
+    font-size: 0.78rem;
+    font-family: var(--sophie-font-mono);
+  }
+
+  .sophie-chapter-footer__adr-link {
+    color: var(--sophie-cite);
+    text-decoration: none;
+    border-block-end: 1px dotted
+      color-mix(in oklch, var(--sophie-cite) 40%, transparent);
+  }
+
+  .sophie-chapter-footer__adr-link abbr {
+    text-decoration: none;
+    border: none;
+    /* abbr browser defaults add their own dotted underline;
+     * override so we don't double up with our border-bottom. */
+  }
+
+  .sophie-chapter-footer__adr-link:hover {
+    border-block-end-color: var(--sophie-cite);
+  }
+</style>

@@ -215,6 +215,9 @@ project:
         - file: decisions/0061-ai-optimized-codebase-design.md
         - file: decisions/0062-page-status-frontmatter-enum.md
         - file: decisions/0063-omiflow-composite-primitive.md
+    - title: Pilots
+      children:
+        - file: pilots/m2-l3-spectra-composition.md
     - title: Status
       children:
         - file: status/roadmap.md

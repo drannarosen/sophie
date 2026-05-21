@@ -1,0 +1,107 @@
+---
+id: photon-energy
+title: "Photon Energy"
+tex: "E = h\\nu = \\frac{hc}{\\lambda}"
+symbols: ["E", "\\nu", "\\lambda"]
+constants:
+  - symbol: "h"
+    value: "6.626 \\times 10^{-27}"
+    unit: "erg s"
+    name: "Planck's constant"
+  - symbol: "c"
+    value: "2.998 \\times 10^{10}"
+    unit: "cm s^{-1}"
+    name: "Speed of light in vacuum"
+  - symbol: "hc"
+    value: "1240"
+    unit: "eV nm"
+    name: "Planck–light product (eV per nm); convenient shortcut for spectroscopy"
+rearranged_forms:
+  - tex: "\\lambda = \\frac{hc}{E}"
+    solves_for: "\\lambda"
+    label: "Wavelength from photon energy"
+  - tex: "\\nu = \\frac{E}{h}"
+    solves_for: "\\nu"
+    label: "Frequency from photon energy"
+related:
+  - refId: "bohr-energy"
+    kind: "see-also"
+    description: "Bohr-level transitions emit or absorb a photon whose energy equals the level gap: $E = E_{n_f} - E_{n_i}$. Photon-energy converts that gap into the observed wavelength."
+  - refId: "doppler-shift"
+    kind: "see-also"
+    description: "A Doppler-shifted photon carries the same energy in its source's rest frame as in the lab; the observer sees a shifted wavelength because the relationship $E = hc/\\lambda$ holds frame-by-frame."
+tags: ["radiation", "quantum", "spectroscopy"]
+version: "1"
+---
+
+import {
+  Assumption,
+  BreaksWhen,
+  CommonMisuse,
+  DerivationStep,
+  Observable,
+} from "@sophie/components";
+
+<Observable>
+  The energy carried by a single quantum of electromagnetic radiation
+  as a function of its wavelength or frequency. Direct measurement is
+  impractical at optical wavelengths — detectors count photons and
+  report their wavelength via diffraction or interference. Energy is
+  inferred from the wavelength via $E = hc/\lambda$.
+</Observable>
+
+<Assumption type="vacuum-propagation">
+  The photon propagates through vacuum, so the wavelength used in
+  $E = hc/\lambda$ is the wavelength the photon would have without
+  any intervening medium. Real instruments correct for
+  index-of-refraction shifts in air or glass before applying the
+  relation.
+</Assumption>
+
+<Assumption type="monochromatic">
+  The photon has a well-defined single wavelength. Reasonable for a
+  narrow atomic line; questionable for a broadband continuum, where
+  the relation applies per-wavelength but cannot be summed
+  meaningfully without integrating against the spectrum.
+</Assumption>
+
+<BreaksWhen>
+  Strong gravitational potentials between source and observer shift
+  the observed wavelength via gravitational redshift; using the lab
+  $\lambda$ in $E = hc/\lambda$ then gives the energy in the source
+  frame, not the observer frame. Cosmological redshift behaves the
+  same way: a quasar's Ly$\alpha$ photons emitted at 1216 Å reach
+  Earth at $1216(1+z)$ Å.
+</BreaksWhen>
+
+<CommonMisuse misconception="common-student-confusions">
+  Treating frequency and wavelength as interchangeable variables in
+  arithmetic. They have an inverse relationship: doubling $\lambda$
+  halves $\nu$. A factor-of-two error in this step is common when
+  translating between "the 5 GHz line" and "the 6 cm line" without
+  first computing $c / \nu$.
+</CommonMisuse>
+
+<DerivationStep label="Planck's quantization hypothesis (1900)">
+  Planck postulated that blackbody emitters exchange energy with the
+  radiation field only in discrete packets $E = h\nu$, where $h$ is
+  a new fundamental constant. This was a mathematical fix for the
+  ultraviolet catastrophe; Planck himself initially viewed it as a
+  bookkeeping trick rather than a physical claim.
+</DerivationStep>
+
+<DerivationStep label="Einstein's photon (1905)">
+  Einstein extended Planck's quantum from a property of emitters to a
+  property of the light itself. The photoelectric effect — electrons
+  ejected from metal only above a threshold frequency — required that
+  light arrive in indivisible quanta of energy $h\nu$, not as a
+  continuous wave.
+</DerivationStep>
+
+<DerivationStep label="Convert frequency to wavelength">
+  Use $c = \lambda \nu$ to rewrite $E = h\nu$ as $E = hc/\lambda$.
+  The wavelength form is the convenient one for spectroscopy because
+  detectors measure wavelength directly via diffraction. The shortcut
+  $hc \approx 1240\,\text{eV nm}$ lets you read photon energy in eV
+  off a wavelength in nm without further unit conversion.
+</DerivationStep>

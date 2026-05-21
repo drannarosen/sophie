@@ -122,8 +122,16 @@ function reposition(state: InstalledState): void {
   for (let i = 0; i < asides.length; i++) {
     const aside = asides[i];
     const placement = placements[i];
-    if (!aside || !placement) continue;
+    const input = inputs[i];
+    if (!aside || !placement || !input) continue;
     aside.style.top = `${placement.top}px`;
+    // Sprint J — Tufte-style connector: expose the vertical delta
+    // between the aside's source position (anchorTop) and its docked
+    // position so CSS can render a dashed connector line back to the
+    // inline anchor. When delta is 0 (aside lands at its source y),
+    // the connector has zero height and is invisible — natural fallback.
+    const delta = Math.max(0, placement.top - input.anchorTop);
+    aside.style.setProperty("--sophie-aside-anchor-delta", `${delta}px`);
     aside.setAttribute("data-aside-docked", "true");
     aside.open = true;
   }
