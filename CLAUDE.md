@@ -87,6 +87,32 @@ npx mystmd start          # serves locally on http://localhost:3000
 npx mystmd build --html   # static build → _build/html/
 ```
 
+## Consumer course migrations
+
+Courses are separate repos per ADR 0001. The instructor's working
+directories sit alongside `sophie/`; cross-repo migration work happens
+in those directories, not here, but Sophie tracks the plan so platform
+decisions can anticipate real-content needs.
+
+| Course                        | Lecture-reading source                        | Status                                            |
+| ----------------------------- | --------------------------------------------- | ------------------------------------------------- |
+| ASTR 201 (Intro Astrophysics) | `/Users/anna/Teaching/astr201-sp26/modules/`  | Quarto `.qmd`; migration to Sophie `.mdx` planned |
+
+**Migration strategy — locked in [ADR 0064](docs/website/decisions/0064-chapter-migration-playbook.md) (shipped 2026-05-21).**
+The first pilot (ASTR 201 Module 2 Lecture 3 — Spectra & Composition,
+the motivating chapter for ADR 0063 `<OMIFlow>`) landed in
+[PR #143](https://github.com/drannarosen/sophie/pull/143); the
+[pilot report](docs/website/pilots/m2-l3-spectra-composition.md) is the
+worked example for ADR 0064's TDR template.
+
+Per ADR 0064's six locked rules, future chapter migrations follow a
+seven-step protocol, produce a fixed-template pilot report under
+`docs/website/pilots/`, halt on missing-component gaps (no inline
+workarounds), and the next pilot must differ in structural-density
+profile from M2-L3 (no two consecutive pilots exercise the same
+dominant component-density profile). Read ADR 0064 before scoping
+the next migration.
+
 ## Locked decisions — ADRs 0001–0060
 
 Read the relevant ADR before proposing changes that touch its area.
