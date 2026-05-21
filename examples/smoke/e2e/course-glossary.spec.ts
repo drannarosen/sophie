@@ -12,15 +12,16 @@ const CHAPTER_URL = "/chapters/spoiler-alerts";
  * across every chapter aggregates here, alphabetical, with
  * back-links to the canonical source chapter + anchor.
  *
- * The smoke target's spoiler-alerts chapter ships 15 definition
- * asides (per the migration in `docs/plans/2026-05-13-pr-c1-glossary-index-design.md`).
+ * The smoke target ships 36 definition asides across two chapters
+ * (15 in `spoiler-alerts.mdx` per `docs/plans/2026-05-13-pr-c1-glossary-index-design.md`,
+ * plus 21 in the `spectra-and-composition.mdx` ASTR 201 M2-L3 pilot).
  */
 
 test.describe("PR-C1: <CourseGlossary /> on /glossary", () => {
   test("lists every definition across the textbook", async ({ page }) => {
     await page.goto(GLOSSARY_URL);
     const terms = page.locator(".sophie-course-glossary__term");
-    await expect(terms).toHaveCount(15);
+    await expect(terms).toHaveCount(36);
   });
 
   test("renders terms in alphabetical order", async ({ page }) => {
@@ -37,7 +38,7 @@ test.describe("PR-C1: <CourseGlossary /> on /glossary", () => {
   }) => {
     await page.goto(GLOSSARY_URL);
     const backlinks = page.locator(".sophie-course-glossary__backlink a");
-    await expect(backlinks).toHaveCount(15);
+    await expect(backlinks).toHaveCount(36);
     // Every back-link href hits a /chapters/.../#... pattern.
     const hrefs = await backlinks.evaluateAll((els) =>
       els.map((el) => (el as HTMLAnchorElement).getAttribute("href") ?? "")

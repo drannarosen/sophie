@@ -9,8 +9,8 @@ const MISCONCEPTIONS_URL = "/misconceptions";
  * Covers TDD test list row T39 from the PR-C3 design doc
  * (`docs/plans/2026-05-14-pr-c3-design.md`).
  *
- * The smoke target ships nine misconceptions post-PR-7 chapter
- * capstone:
+ * The smoke target ships eleven misconceptions post-ASTR 201 M2-L3
+ * pilot:
  *
  *  - `spoiler-alerts.mdx`: eight `<Aside kind="misconception">` entries
  *    authored by PR-7's chapter rebuild (rainbows-are-decorative,
@@ -23,16 +23,13 @@ const MISCONCEPTIONS_URL = "/misconceptions";
  *    from the legacy `<Callout variant="misconception">`).
  *  - `misconception-fixture.mdx`: one `<Aside kind="misconception"
  *    name="universe-with-a-center">` (Intervention PR-γ).
+ *  - `spectra-and-composition.mdx` (M2-L3 pilot): two
+ *    `<Callout variant="misconception">` long-form entries
+ *    (`two-myths-to-kill-now`, `common-student-confusions`).
  *
- * All nine are Aside-sourced post-PR-7. The Callout-sourced
- * (`length: 'long'`) code path has no representative in the smoke
- * target anymore — the `--long` modifier behavior is unit-tested at
- * the component level. The architectural test would be re-enabled
- * if a future chapter introduces a `<Callout variant="misconception">`.
- *
- * Per decision #12 (length-based visual distinction), the
- * `<CourseMisconceptions />` template emits `--short` for Aside-
- * sourced (brief) entries.
+ * Nine are Aside-sourced (`--short` modifier); two are Callout-sourced
+ * (`--long` modifier) per decision #12 (length-based visual
+ * distinction).
  */
 
 test.describe("PR-C3: <CourseMisconceptions /> on /misconceptions", () => {
@@ -43,11 +40,13 @@ test.describe("PR-C3: <CourseMisconceptions /> on /misconceptions", () => {
     const block = page.locator("[data-sophie-course-misconceptions]");
     await expect(block).toBeAttached();
     const terms = block.locator(".sophie-course-misconceptions__term");
-    // Nine misconceptions post-PR-7 (8 in spoiler-alerts + 1 in
-    // misconception-fixture). Pin by anchor id selector rather than
-    // text — robust to label-text changes.
-    await expect(terms).toHaveCount(9);
-    // Pin two specific PR-7 anchors + the legacy fixture anchor.
+    // Eleven misconceptions post-M2-L3 pilot (8 Aside in spoiler-alerts
+    // + 1 Aside in misconception-fixture + 2 Callout in the pilot
+    // chapter). Pin by anchor id selector rather than text — robust to
+    // label-text changes.
+    await expect(terms).toHaveCount(11);
+    // Pin two PR-7 anchors, the legacy fixture anchor, and one of the
+    // M2-L3 pilot's Callout-sourced entries.
     await expect(
       page.locator("dt#dark-matter-is-just-hidden-normal-matter")
     ).toHaveCount(1);
@@ -55,22 +54,34 @@ test.describe("PR-C3: <CourseMisconceptions /> on /misconceptions", () => {
       page.locator("dt#astronomy-is-looking-through-telescopes")
     ).toHaveCount(1);
     await expect(page.locator("dt#universe-with-a-center")).toHaveCount(1);
+    await expect(page.locator("dt#two-myths-to-kill-now")).toHaveCount(1);
   });
 
-  test.skip("Callout-sourced entry carries the `length: 'long'` modifier class on both <dt> and <dd>", () => {
-    // Architectural test for the `--long` modifier behavior. After
-    // PR-7's chapter capstone, the smoke target's only Callout-
-    // sourced misconception was converted to an Aside, so no
-    // representative is on the page. The `--long` rendering is
-    // unit-tested at the component level. Re-enable when any chapter
-    // introduces a `<Callout variant="misconception">` block again.
+  test("Callout-sourced entries carry the `length: 'long'` modifier class on both <dt> and <dd>", async ({
+    page,
+  }) => {
+    await page.goto(MISCONCEPTIONS_URL);
+    // M2-L3 pilot reintroduced Callout-sourced misconceptions. Two
+    // long-form entries are sourced from `<Callout
+    // variant="misconception">` blocks in spectra-and-composition.mdx.
+    const calloutTerms = page.locator(
+      ".sophie-course-misconceptions__term.sophie-course-misconceptions__term--long"
+    );
+    await expect(calloutTerms).toHaveCount(2);
+    const calloutBody = calloutTerms
+      .first()
+      .locator("xpath=following-sibling::dd[1]");
+    await expect(calloutBody).toHaveClass(
+      /sophie-course-misconceptions__body--long/
+    );
   });
 
   test("all Aside-sourced entries carry the `length: 'short'` modifier class on both <dt> and <dd>", async ({
     page,
   }) => {
     await page.goto(MISCONCEPTIONS_URL);
-    // All nine misconceptions post-PR-7 are Aside-sourced.
+    // Nine of eleven misconceptions are Aside-sourced (`--short`); the
+    // other two are Callout-sourced from the M2-L3 pilot.
     const asideTerms = page.locator(
       ".sophie-course-misconceptions__term.sophie-course-misconceptions__term--short"
     );
