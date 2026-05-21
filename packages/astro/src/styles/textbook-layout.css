@@ -234,7 +234,14 @@
   #chapter-glossary
 ) {
   counter-increment: sophie-part;
-  counter-reset: sophie-subsection 0;
+  /* `counter-set` (not `counter-reset`) so the subsection counter is
+   * SET on the existing instance scoped to `.sophie-content` rather
+   * than a NEW instance scoped to the h2. counter-reset on a sibling
+   * h2 creates a new scoped counter that h3 siblings can't see — they
+   * keep incrementing the outer counter on `.sophie-content`, which
+   * never resets, so subsections in Part 3 number 3.6, 3.7, 3.8 instead
+   * of 3.1, 3.2, 3.3. Surfaced 2026-05-20 verify pass round 2. */
+  counter-set: sophie-subsection 0;
 }
 
 .sophie-content
