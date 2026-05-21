@@ -16,13 +16,18 @@ const CHAPTER_URL = "/chapters/spoiler-alerts";
  *
  * The smoke chapter (`spoiler-alerts.mdx`) places callsites:
  *   - self-closing `<EquationRef refId="inverse-square-law" client:load />`
- *     (renders the equation title from the registry)
+ *     (renders the "Eq. C.N" numbered cross-ref label per Sprint E)
  *   - children form `<EquationRef refId="wiens-law" client:load>Wien's law</EquationRef>`
  *     (renders the children verbatim)
+ *
+ * Sprint E changed the self-closing-form output from the registry
+ * title to a numbered short reference (`Eq. 1`, `Eq. 3.2`, etc.) to
+ * match the chapter Figure-numbering voice. The hover-card popover
+ * still exposes the full registry title.
  */
 
 test.describe("<EquationRef> on the smoke chapter (ADR 0060)", () => {
-  test("self-closing form renders the registry title and links to /equations/<id>", async ({
+  test("self-closing form renders the 'Eq. N' cross-ref label and links to /equations/<id>", async ({
     page,
   }) => {
     await page.goto(CHAPTER_URL);
@@ -30,7 +35,7 @@ test.describe("<EquationRef> on the smoke chapter (ADR 0060)", () => {
       .locator('a[href="/equations/inverse-square-law"]')
       .first();
     await expect(trigger).toBeAttached();
-    await expect(trigger).toContainText(/inverse-square law/i);
+    await expect(trigger).toContainText(/^\s*Eq\.\s*\d+(\.\d+)?\s*$/);
   });
 
   test("children form renders the override text and links to /equations/<id>", async ({
