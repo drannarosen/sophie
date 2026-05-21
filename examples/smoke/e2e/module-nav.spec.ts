@@ -50,8 +50,14 @@ test.describe("PR 3: Module/chapter sidebar nav", () => {
     const stars = page.locator(
       ".sophie-module[data-module='stars'] .sophie-chapter-list a"
     );
-    await expect(stars).toHaveCount(1);
-    await expect(stars.nth(0)).toHaveText(/Stellar Evolution/);
+    // M2-L3 pilot added `spectra-and-composition.mdx` to the Stars
+    // module; ordering is by frontmatter `order` (pilot order=3,
+    // stellar-evolution order=3 too — see comment in the spec
+    // header) — both Lecture 3 today; the pilot lands first by
+    // slug-tiebreak.
+    await expect(stars).toHaveCount(2);
+    await expect(stars.nth(0)).toHaveText(/Spectra .{0,3}\s+Composition/);
+    await expect(stars.nth(1)).toHaveText(/Stellar Evolution/);
   });
 
   test("aria-current='page' is on the active chapter only", async ({
