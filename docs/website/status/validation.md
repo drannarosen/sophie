@@ -34,11 +34,11 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 
 | Lifecycle | Count |
 |---|---|
-| Shipped | 58 |
+| Shipped | 59 |
 | Accepted design | 20 |
 | Mixed | 1 |
 | Future package split | 9 |
-| No status | 1 |
+| No status | 0 |
 | Total | 89 |
 
 ## Evidence kinds
@@ -124,7 +124,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0061-ai-optimized-codebase-design.md](/ai-optimized-codebase-design/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0062-page-status-frontmatter-enum.md](/page-status-frontmatter-enum/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0063-omiflow-composite-primitive.md](/omiflow-composite-primitive/) | unvalidated | shipped | — | — |  |
-| [docs/website/decisions/0064-chapter-migration-playbook.md](/chapter-migration-playbook/) | unvalidated | — | — | — |  |
+| [docs/website/decisions/0064-chapter-migration-playbook.md](/chapter-migration-playbook/) | unvalidated | shipped | — | — |  |
 
 ### Reference docs
 

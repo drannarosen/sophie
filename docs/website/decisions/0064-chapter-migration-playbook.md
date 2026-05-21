@@ -6,6 +6,7 @@ tags:
   - tdr
   - process
   - reasoning-os
+status: shipped
 validation:
   status: unvalidated
   last_validated_date: null
