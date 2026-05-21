@@ -1,5 +1,6 @@
 import {
   AlertCircle,
+  ChevronDown,
   CircleAlert,
   Info,
   Lightbulb,
@@ -12,6 +13,7 @@ import {
 } from "lucide-react";
 import { type ComponentType, useId } from "react";
 import { HydrationAnnouncer } from "../../runtime/HydrationAnnouncer.tsx";
+import { MathText } from "../../runtime/MathText.tsx";
 import { useInteractive } from "../../runtime/useInteractive.ts";
 import styles from "./Callout.module.css.js";
 import type {
@@ -127,9 +129,10 @@ export function Callout({
         <details className={styles.disclosure}>
           <summary className={styles.titleBar}>
             <Icon className={styles.icon} size={18} aria-hidden />
-            <span id={titleSpanId} className={styles.title}>
+            <MathText id={titleSpanId} className={styles.title}>
               {visibleTitle}
-            </span>
+            </MathText>
+            <ChevronDown className={styles.chevron} size={18} aria-hidden />
           </summary>
           <div className={styles.body}>{children}</div>
         </details>
@@ -146,7 +149,7 @@ export function Callout({
     >
       <header className={styles.titleBar}>
         <Icon className={styles.icon} size={18} aria-hidden />
-        <span className={styles.title}>{visibleTitle}</span>
+        <MathText className={styles.title}>{visibleTitle}</MathText>
       </header>
       <div className={styles.body}>{children}</div>
     </aside>

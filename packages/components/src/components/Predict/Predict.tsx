@@ -1,6 +1,7 @@
 import { Telescope } from "lucide-react";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { HydrationAnnouncer } from "../../runtime/HydrationAnnouncer.tsx";
+import { MathText } from "../../runtime/MathText.tsx";
 import { useInteractive } from "../../runtime/useInteractive.ts";
 import styles from "./Predict.module.css.js";
 import type { PredictPrompt, PredictProps } from "./Predict.schema.ts";
@@ -47,11 +48,15 @@ export function Predict({
     <section className={`${styles.section} sophie-predict`}>
       <header className={styles.titleBar}>
         <Telescope className={styles.icon} size={20} aria-hidden />
-        <h2 className={styles.heading}>{heading}</h2>
+        <MathText as='h2' className={styles.heading}>
+          {heading}
+        </MathText>
       </header>
       <div className={styles.body}>
         {description !== undefined && (
-          <p className={styles.description}>{description}</p>
+          <MathText as='p' className={styles.description}>
+            {description}
+          </MathText>
         )}
         {prompts.map((p) => (
           <PromptRow
@@ -63,7 +68,11 @@ export function Predict({
             onValue={updateValue}
           />
         ))}
-        {closing !== undefined && <p className={styles.closing}>{closing}</p>}
+        {closing !== undefined && (
+          <MathText as='p' className={styles.closing}>
+            {closing}
+          </MathText>
+        )}
         {children !== undefined && (
           <RevealGate
             course={course}
@@ -107,9 +116,9 @@ function PromptRow({
 
   return (
     <div className={styles.prompt}>
-      <label htmlFor={textareaId} className={styles.label}>
+      <MathText as='label' htmlFor={textareaId} className={styles.label}>
         {prompt.label}
-      </label>
+      </MathText>
       <textarea
         id={textareaId}
         className={styles.textarea}

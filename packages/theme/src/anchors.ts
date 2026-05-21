@@ -1,27 +1,29 @@
 export const anchors = {
-  ink: "#0f1115",
-  paper: "#f9fafb",
-  // Dark-mode page substrate. Decoupled from `ink` because `ink` is
-  // semantically the light-mode body-text color — different role that
-  // happens to share a near-black hex. `darkBg` is the soft-dark page
-  // (Tailwind gray-900) per dark-mode-palette.md; surfaces above derive
-  // from it via color-mix percentages tuned to land at gray-800/700/600.
-  darkBg: "#111827",
+  // Warm near-black body-ink (Tailwind Stone 900). Shifted from the
+  // earlier cool `#0f1115` so light-mode prose reads "ink on paper"
+  // rather than "text on screen." Sprint B palette warmth pass.
+  ink: "#1c1917",
+  // Warm off-white page substrate (Tailwind Stone 50). Replaces the
+  // earlier cool `#f9fafb` for academic-book feel — pairs with Stone
+  // border/surface stack and warm dark-mode below.
+  paper: "#fafaf7",
+  // Dark-mode page substrate. Warm-dark Stone 900 (replaces the
+  // earlier cool `#111827`) so dark mode reads as charcoal-with-
+  // parchment rather than navy. Surfaces above derive from it via
+  // color-mix percentages tuned to land at Stone 800/700/600.
+  darkBg: "#1c1917",
 } as const;
 
 // Hardcoded light-mode surface stack. Overrides the symmetric color-mix
 // derivation in generate-css.ts so cards render as pure white on the
-// gray-50 page (per visual-polish-target.md) — the derivation off the
-// `paper` anchor produced gray-200-ish surface-1, not the pure white
-// the spec wanted. Hardcoding here is a visual correction, not a design
-// principle: dark-mode surfaces stay derivation-based against the new
-// `darkBg` anchor (per dark-mode-palette.md).
+// stone-50 page — the derivation off `paper` produced over-tinted
+// surface-1. Stone palette throughout for warmth.
 export const lightSurfaces = {
   surface1: "#ffffff",
-  surface2: "#f3f4f6",
-  surface3: "#e5e7eb",
-  border: "#e5e7eb",
-  borderSubtle: "#f3f4f6",
+  surface2: "#f5f5f4",
+  surface3: "#e7e5e4",
+  border: "#e7e5e4",
+  borderSubtle: "#f5f5f4",
 } as const;
 
 // Dark-mode surface derivation percentages. Each entry mixes `darkBg`
@@ -63,16 +65,40 @@ export const darkBrand = {
 } as const;
 
 // Epistemic-role color slots for interactive figures (Tier-1+ category).
-// Each entry pairs a light-mode and dark-mode oklch value. `observable`
-// ships first (Task 1.3); model / inference / approximation land in
-// Tasks 1.4–1.6. The generator's roleBlock(mode) iterates this map, so
-// new entries appear in :root and [data-theme="dark"] without changes
-// to the generator template.
+// Sprint B revision — aligned to the brand teal/violet/rose palette so
+// role coloring becomes Sophie's visual signature (something MyST has
+// no equivalent of, per design review 2026-05-20):
+//
+//   observable -> brand-teal hue   (primary brand = "what we see")
+//   model      -> brand-violet hue (theory/abstraction)
+//   inference  -> brand-rose hue   (the conclusion the chain lands on)
+//   approximation -> warm stone    (neutral, "less precise")
+//
+// Each entry pairs a light-mode and dark-mode oklch value. Light values
+// hit ~45-55% L for prose-color use; dark values hit ~75-85% L for
+// legibility against surface-1 (Stone 800). Chroma kept moderate (0.10-
+// 0.14) so the roles read as named colors, not as decorative gradients.
 export const role = {
-  observable: { light: "oklch(48% 0.02 60)", dark: "oklch(73% 0.02 60)" },
-  model: { light: "oklch(58% 0.13 195)", dark: "oklch(78% 0.13 195)" },
-  inference: { light: "oklch(63% 0.16 12)", dark: "oklch(83% 0.16 12)" },
-  approximation: { light: "oklch(70% 0.04 60)", dark: "oklch(85% 0.04 60)" },
+  observable: { light: "oklch(50% 0.085 195)", dark: "oklch(80% 0.085 195)" },
+  model: { light: "oklch(50% 0.10 295)", dark: "oklch(80% 0.10 295)" },
+  inference: { light: "oklch(55% 0.13 0)", dark: "oklch(80% 0.13 0)" },
+  approximation: { light: "oklch(60% 0.025 60)", dark: "oklch(80% 0.025 60)" },
+} as const;
+
+// Reserved cross-reference / citation accent — plum. Used ONLY for
+// scholarly references: figure numbers (Fig. 1.2), equation numbers
+// (Eq. 3), section refs (§3.2), <GlossaryTerm> hover targets, citation
+// chips. Never used for body, chrome, or epistemic roles. Plum sits at
+// the chromatic midpoint between brand-rose (hue ~10) and brand-violet
+// (hue ~295) — hue 325 places it inside the brand family while staying
+// visually distinct from both rose-inference and violet-model.
+//
+// Why plum and not orange: avoids collision with MyST's brand and with
+// Anthropic/Claude brand; carries the visited-link / academic-ink
+// tradition; warm enough to feel "book," cool enough to feel "academic."
+export const cite = {
+  light: "oklch(45% 0.16 325)",
+  dark: "oklch(75% 0.16 325)",
 } as const;
 
 export const status = {
@@ -100,16 +126,19 @@ export const darkStatus = {
   neutral: "#9ca3af",
 } as const;
 
-// Self-hosted IBM Plex family (per visual-polish-target.md). The
-// `Variable` suffix on the first sans candidate matches the
-// @fontsource-variable package's actual family name; the static
-// `"IBM Plex Sans"` fallback covers any consumer that opts into the
-// non-variable @fontsource package. Plex Serif is intentionally absent
-// — the v1 visual target commits to a sans body. KaTeX math keeps its
-// bundled Computer Modern fonts (separate stack, no dependency on
-// --sophie-font-*).
+// Self-hosted typeface family. Body + UI chrome use IBM Plex Sans
+// (the `Variable` suffix matches the @fontsource-variable package's
+// family name; the static `"IBM Plex Sans"` fallback covers consumers
+// that opt into the non-variable @fontsource package). Display serif
+// for h1/h2 + occasional emphasis uses Fraunces — a beautiful variable
+// font with optical-size and SOFT axes that gives Sophie's headings
+// a distinct editorial voice without committing the body to serif.
+// KaTeX math keeps its bundled Computer Modern fonts (separate stack,
+// no dependency on --sophie-font-*).
 export const fontStacks = {
   sans: '"IBM Plex Sans Variable", "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+  serif:
+    '"Fraunces Variable", "Fraunces", "Source Serif 4 Variable", "Source Serif Pro", "Iowan Old Style", Charter, ui-serif, Georgia, "Times New Roman", serif',
   mono: '"IBM Plex Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
 } as const;
 

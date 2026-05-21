@@ -19,13 +19,30 @@
  * the title text color.
  */
 
+/*
+ * Callout — Sprint C MyST-lightening pass (2026-05-20).
+ *
+ * Refined for editorial voice:
+ *   - Drop the hairline outer border; lift with shadow-card instead.
+ *     The outline-as-card-definition reads as software UI; shadow-as-
+ *     card-definition reads as physical paper.
+ *   - Thicken left rule to 4px (was 3px) so the variant color signals
+ *     from a longer distance — matches MyST's border-l-4.
+ *   - Remove titleBar bottom border so the title strip flows visually
+ *     into the body. The title-bar's tinted background already carries
+ *     the separation cue.
+ *   - Add per-variant body tint (very subtle, ~3% opacity) so the
+ *     entire callout reads as one tinted unit rather than a tinted-
+ *     header-on-white-body. Reads more "annotated prose" than "form".
+ */
 .callout {
   display: grid;
   margin-block: var(--sophie-space-5);
-  background: var(--sophie-surface-1);
-  border: 1px solid var(--sophie-border);
-  border-left: var(--sophie-card-rule-light) solid var(--sophie-accent);
-  border-radius: var(--sophie-radius-sm);
+  background: var(--sophie-callout-body-bg, var(--sophie-surface-1));
+  border: 0;
+  border-left: 4px solid var(--sophie-accent);
+  border-radius: 0 var(--sophie-radius-sm) var(--sophie-radius-sm) 0;
+  box-shadow: var(--sophie-shadow-card);
   color: var(--sophie-text);
   font-family: var(--sophie-font-sans);
   line-height: var(--sophie-leading-prose);
@@ -37,7 +54,9 @@
   align-items: center;
   gap: var(--sophie-space-2);
   padding: var(--sophie-space-2) var(--sophie-space-4);
-  border-bottom: 1px solid var(--sophie-border);
+  /* No bottom border — title-bar tint provides visual separation from
+   * the body. Sprint C MyST-lightening pass. */
+  border-bottom: 0;
   /* Default color (overridden per-variant below). */
   color: var(--sophie-brand-teal-text);
   font-weight: var(--sophie-weight-semibold);
@@ -225,6 +244,31 @@
 }
 .disclosure > .titleBar::marker {
   display: none;
+}
+
+/*
+ * Trailing chevron in the disclosure summary signals "click to
+ * open/close." The variant's leading Lucide icon (Telescope for
+ * deep-dive, Sparkles for the-more-you-know) carries semantic
+ * meaning; the chevron carries interaction affordance. Margin-left:
+ * auto pushes the chevron to the right end of the flex titleBar.
+ * Rotation animates between closed (▽) and open (△) states; respects
+ * prefers-reduced-motion via the transition's short duration.
+ */
+.chevron {
+  flex-shrink: 0;
+  margin-left: auto;
+  transition: transform 200ms ease;
+}
+
+.disclosure[open] > .titleBar > .chevron {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron {
+    transition: none;
+  }
 }
 
 /*
