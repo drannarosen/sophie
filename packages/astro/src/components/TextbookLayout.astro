@@ -32,7 +32,6 @@ import SearchTrigger from "./SearchTrigger.astro";
 import DisclosuresToggle from "./DisclosuresToggle.astro";
 import Sidebar from "./Sidebar.astro";
 import SidebarToggle from "./SidebarToggle.astro";
-import TocToggle from "./TocToggle.astro";
 import ThemeToggle from "./ThemeToggle.astro";
 import TopBar from "./TopBar.astro";
 import ViewModeToggle from "./ViewModeToggle.astro";
@@ -471,7 +470,12 @@ const collapsedVars = [
     <slot name='topbar-trailing'>
       <ChapterStatusChip status={chapterContext?.status} />
       <SearchTrigger />
-      <TocToggle />
+      {/* 2026-05-21 follow-up: ToC chevron moved INLINE with the
+          "CONTENTS" header in the right column (MyST-style affordance
+          in the margin). The TocSidebar's heading button now carries
+          `data-sophie-toc-toggle`, so this topbar slot no longer
+          renders a separate button. TocToggle.astro is retained for
+          consumers that want a topbar toggle but is opt-in. */}
       <DisclosuresToggle />
       <ViewModeToggle />
       <ThemeToggle />

@@ -21,8 +21,12 @@
  */
 
 .sophie-shell {
-  --sophie-sidebar-w: 280px;
-  --sophie-right-w: 280px;
+  /* MyST-style proportions (2026-05-21 follow-up): slimmer sidebars
+     so the content column reads with a comfortable MyST-like line
+     length rather than the previously-tight Bringhurst-66ch column
+     boxed by 280px chrome on each side. */
+  --sophie-sidebar-w: 220px;
+  --sophie-right-w: 220px;
   --sophie-topbar-h: 56px;
 
   display: grid;
@@ -90,12 +94,16 @@
   box-sizing: border-box;
   padding-inline: clamp(1rem, 4vw, 3rem);
   padding-block: 2rem;
-  /* Cap reading width at 66ch in Default mode — the Bringhurst optimum
-     for single-column prose (see visual-polish-target.md "Spacing rhythm"
-     row). Focused (75ch) and Wide (95ch) below relax the cap when
-     side columns are hidden. `min(…, 100%)` prevents horizontal overflow
-     on narrow viewports where the cap would exceed the available column. */
-  max-inline-size: min(66ch, 100%);
+  /* Cap reading width at 75ch in Default mode — MyST-style proportions
+     (2026-05-21 follow-up). Wider than the strict Bringhurst optimum
+     (66ch) because the narrower 220px sidebars don't crowd the column,
+     and at typical viewports this lands a comfortable 70-85ch line
+     length that matches MyST's reading rhythm. Focused override below
+     tightens to 66ch (the Bringhurst optimum, for deep-read mode);
+     Wide override relaxes to 105ch. `min(…, 100%)` prevents horizontal
+     overflow on narrow viewports where the cap would exceed the
+     available column. */
+  max-inline-size: min(75ch, 100%);
   /* CSS Grid quirk: a grid cell's default minimum width is `auto`,
    * which expands to fit the widest intrinsic child. KaTeX display
    * math (wide MathML rows) and unbroken-word headings would push
@@ -395,7 +403,62 @@
      <Aside> positioning script — which sets each aside's `top`
      against the shell's containing block — keeps each margin note
      vertically aligned with its anchor in the main column. ToC
-     persistence is handled by sticky on .sophie-toc inside, below. */
+     persistence is handled by sticky on .sophie-toc inside, below.
+
+     Flex layout pushes the "Made with Sophie" wordmark (.sophie-
+     right__foot) to the column's bottom while the .sophie-right__body
+     (ToC + docked asides) fills the upper region. */
+  display: flex;
+  flex-direction: column;
+}
+
+.sophie-right__body {
+  flex: 1;
+  min-block-size: 0;
+  /* Provide a containing block for the absolutely-positioned docked
+     asides — the positioning script reads `getBoundingClientRect`
+     relative to .sophie-shell, so this wrapper doesn't break that
+     contract (it has no `position` of its own). */
+}
+
+/* "Made with Sophie" wordmark — MyST-style margin attribution.
+   2026-05-21 polish pass: moved from the left ModuleNav foot to
+   here so the right column anchors a brand mark even when the ToC
+   and any docked asides are hidden. */
+.sophie-right__foot {
+  padding: var(--sophie-space-3) var(--sophie-space-4);
+  border-block-start: 1px solid var(--sophie-border-subtle);
+  font-family: var(--sophie-font-sans);
+  font-size: var(--sophie-text-tiny);
+  font-weight: var(--sophie-weight-medium);
+  letter-spacing: 0.06em;
+  color: var(--sophie-text-muted);
+  text-align: end;
+  /* Pin to the bottom of the right column. flex pushes via the body
+     above; this `margin-block-start: auto` is a defensive belt for
+     consumers that wrap the column outside the flex container. */
+  margin-block-start: auto;
+}
+
+.sophie-right__foot-prefix {
+  /* Quiet prefix in muted color; the brand wordmark below carries
+     the visual weight. */
+  opacity: 0.85;
+}
+
+.sophie-right__foot-mark {
+  display: inline-block;
+  margin-inline-start: 0.35em;
+  font-family: var(--sophie-font-serif, var(--sophie-font-sans));
+  font-weight: var(--sophie-weight-semibold);
+  font-style: italic;
+  font-size: 1.05em;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: var(--sophie-brand-teal-text);
+  /* Trademark-mark glyph (™) is intentionally NOT rendered — the
+     itlic-serif "Sophie" wordmark + brand-teal color is the visual
+     identity. Add ™ later if we register the platform name. */
 }
 
 /* Sidebar collapse via root data attribute. CSS-only; no JS reflow. */
@@ -426,16 +489,16 @@
    (stubs, index pages, glossary surfaces). Opt-in via the layout
    prop, not via user-toggle, so the column doesn't shift mid-read. */
 
-/* Always hide the desktop in-page ToC when toc is closed, regardless
-   of docked-asides state. Scoped to `.sophie-toc--sidebar` (the
-   desktop right-column instance) so the TocDrawer's nested
+/* When toc is closed, hide only the in-page list (not the heading
+   button — that stays visible as a MyST-style "CONTENTS ∨" affordance
+   in the margin). Scoped to `.sophie-toc--sidebar` (the desktop
+   right-column instance) so the TocDrawer's nested
    `.sophie-toc--drawer` instance is unaffected — the drawer surface
    manages its own visibility via `data-toc-state` per ADR 0036
-   (transient state, not the persistent preference). The Sprint K
-   global selector was hiding the drawer's inner list on mobile
-   because the drawer composes <TocSidebar variant="drawer"> inside
-   itself, surfaced by the 2026-05-21 hardening pass. */
-:root[data-toc="closed"] .sophie-toc--sidebar {
+   (transient state, not the persistent preference). 2026-05-21
+   follow-up: moved the toggle from the topbar into the heading
+   itself, MyST-style. */
+:root[data-toc="closed"] .sophie-toc--sidebar .sophie-toc-list {
   display: none;
 }
 
@@ -450,32 +513,32 @@
 }
 
 /* When the sidebar is hidden, let content widen to use the freed
-   horizontal space. Sprint K caps:
-     - sidebar=open + toc=open                              → 66ch (default; Bringhurst optimum)
-     - sidebar=closed + toc=open                            → 75ch (Bringhurst upper bound)
-     - sidebar=open + toc=closed + no docked asides         → 85ch (one chrome side gone)
-     - sidebar=closed + toc=closed + no docked asides       → 95ch (MyST-style wide reading)
+   horizontal space. MyST-style cap cascade (2026-05-21 follow-up):
+     - sidebar=open + toc=open                              → 75ch (default; MyST proportions)
+     - sidebar=closed + toc=open                            → 85ch (one chrome side gone)
+     - sidebar=open + toc=closed + no docked asides         → 90ch (right column collapsed)
+     - sidebar=closed + toc=closed + no docked asides       → 105ch (MyST wide reading)
 
    The toc=closed widenings are gated on data-docked-asides="absent"
    (read off .sophie-shell) because closing the ToC on an aside-
    bearing page doesn't actually free horizontal space (column stays
-   at 280px for the asides).
+   at 220px for the asides).
 
    Cascade order matters: these rules come BEFORE the view-mode
-   overrides below, so Focused (85ch) and Wide (105ch) win when
+   overrides below, so Focused (66ch) and Wide (105ch) win when
    active even with both sidebars closed. */
 :root[data-sidebar="closed"] .sophie-content {
-  max-inline-size: min(75ch, 100%);
+  max-inline-size: min(85ch, 100%);
 }
 :root[data-toc="closed"]
   .sophie-shell[data-docked-asides="absent"]
   .sophie-content {
-  max-inline-size: min(85ch, 100%);
+  max-inline-size: min(90ch, 100%);
 }
 :root[data-sidebar="closed"][data-toc="closed"]
   .sophie-shell[data-docked-asides="absent"]
   .sophie-content {
-  max-inline-size: min(95ch, 100%);
+  max-inline-size: min(105ch, 100%);
 }
 
 /* TocToggle button — basic primitive shape mirroring SidebarToggle. */
@@ -695,10 +758,17 @@
   [data-sophie-aside][data-aside-docked="true"] {
     position: absolute;
     inset-inline-end: 20px;
-    inline-size: 240px;
+    /* Size to the new 220px right column (2026-05-21 polish pass).
+       Old fixed 240px was for the 280px column; with the slimmer
+       220px column the aside has to shrink or it overflows into the
+       main reading column. calc() ties it to --sophie-right-w so a
+       future column-width change reflows the aside automatically:
+       column-width − inset-inline-end (20px) − leading gap (20px)
+       = 180px at 220px column, 240px at 280px column. */
+    inline-size: calc(var(--sophie-right-w) - 40px);
     /* `top` is set imperatively by aside-positioning.ts. */
     z-index: 1;
-    max-inline-size: 240px;
+    max-inline-size: calc(var(--sophie-right-w) - 40px);
   }
 
   /* In docked mode, the body is always shown (open attribute set by
@@ -711,12 +781,22 @@
      for inline-collapsed mode) — docked summaries aren't tappable,
      so the 44px box only creates dead vertical space between the
      definition term and its body. Reset min-block-size + line-height
-     so the term hugs the body. */
+     so the term hugs the body.
+     2026-05-21 polish pass: tighten font-size to var(--sophie-text-small)
+     so the definition term and body voice both read as marginalia
+     rather than competing with main-column prose. Beats the
+     0,1,0-specificity CSS Module `.summary { font-size: body }`
+     declaration in Aside.module.css via the attribute-selector
+     specificity (0,2,1). The body half already lands at small via
+     the Aside.module.css `--sophie-text-small` reference (which the
+     2026-05-21 theme fix unmasks), so this rule covers the summary
+     half of the marginalia pair. */
   [data-sophie-aside][data-aside-docked="true"] > summary {
     pointer-events: none;
     cursor: default;
     min-block-size: 0;
     line-height: var(--sophie-leading-tight);
+    font-size: var(--sophie-text-small);
   }
 
   /* Sprint J — Tufte-style anchor connector.
@@ -763,7 +843,10 @@
   height: 100%;
   padding: var(--sophie-space-4) var(--sophie-space-3);
   font-family: var(--sophie-font-sans);
-  font-size: 0.9375rem;
+  /* MyST-style proportions (2026-05-21): chapter-list font tightened
+     from 0.9375rem (15px) to 0.8125rem (13px) so the narrower 220px
+     sidebar feels like reference chrome, not primary content. */
+  font-size: 0.8125rem;
   line-height: 1.55;
 }
 
@@ -872,21 +955,9 @@
   background: var(--sophie-accent);
 }
 
-/* Sidebar foot — small attribution / position cue pinned to the
-   bottom of the nav column. Matches MyST's "Made with MyST" pattern
-   but reads as label-voice metadata. */
-.sophie-sidebar-foot {
-  margin-block-start: auto;
-  padding-block-start: var(--sophie-space-4);
-  border-block-start: 1px solid var(--sophie-border-subtle);
-  font-size: var(--sophie-text-tiny);
-  font-weight: var(--sophie-weight-medium);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--sophie-text-muted);
-  opacity: 0.7;
-  text-align: center;
-}
+/* .sophie-sidebar-foot was removed in the 2026-05-21 polish pass.
+   The "Made with Sophie" attribution now lives in the right
+   column's .sophie-right__foot wordmark (see ~L420). */
 
 /* ===== In-page table of contents (PR 4 + Sprint K uplift) =====
    Desktop variant lives inside the right column slot. MyST-quality:
@@ -896,7 +967,10 @@
 .sophie-toc {
   padding: var(--sophie-space-4) var(--sophie-space-3);
   font-family: var(--sophie-font-sans);
-  font-size: 0.875rem;
+  /* MyST-style proportions (2026-05-21): ToC font tightened from
+     0.875rem (14px) to 0.8125rem (13px) — matches the left ModuleNav
+     and reads as reference chrome rather than primary content. */
+  font-size: 0.8125rem;
   line-height: 1.55;
   /* ToC sticks at top of viewport when open. Capped at 35vh so the
      ToC paints a clearly-bounded chrome strip and docked margin
@@ -923,6 +997,79 @@
   border-block-end: 1px solid var(--sophie-border-subtle);
 }
 
+/* Toggle variant of the ToC heading — clickable, with inline chevron.
+   2026-05-21 follow-up: matches MyST's "CONTENTS ∨" pattern where the
+   collapse affordance lives in the margin next to the label, not in
+   the topbar. The heading stays visible even when data-toc='closed';
+   only the list collapses. */
+.sophie-toc-heading--toggle {
+  inline-size: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sophie-space-2);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  /* Defeat default button typography — inherit from the heading rule
+     above so the label voice (small caps + tracked) reads identical
+     to the static <h2> shape on the drawer variant. */
+  font: inherit;
+  text-align: start;
+  color: inherit;
+  /* Re-apply the heading-rule values that `font: inherit` overrode. */
+  font-size: 0.75rem;
+  font-weight: var(--sophie-weight-semibold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sophie-toc-heading--toggle:focus-visible {
+  outline: var(--sophie-focus-width) solid var(--sophie-focus-color);
+  outline-offset: 2px;
+  border-radius: var(--sophie-radius-sm);
+}
+
+.sophie-toc-heading__label {
+  flex: 1;
+}
+
+/* Base chevron — defined BEFORE the :hover and :root[data-toc='closed']
+   qualified overrides below so the cascade ascends in specificity
+   (satisfies biome's noDescendingSpecificity rule). */
+.sophie-toc-heading__chevron {
+  flex-shrink: 0;
+  inline-size: 14px;
+  block-size: 14px;
+  opacity: 0.55;
+  transition:
+    transform 150ms ease,
+    opacity 120ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sophie-toc-heading__chevron {
+    transition: none;
+  }
+}
+
+.sophie-toc-heading--toggle:hover .sophie-toc-heading__chevron {
+  opacity: 1;
+}
+
+/* Rotate chevron when ToC is collapsed (matches MyST's
+   "expand-to-show" arrow direction). */
+:root[data-toc="closed"]
+  .sophie-toc-heading--toggle
+  .sophie-toc-heading__chevron {
+  transform: rotate(-90deg);
+}
+
+/* biome-ignore lint/style/noDescendingSpecificity: base .sophie-toc-list
+   visuals — the qualified `:root[data-toc='closed'] .sophie-toc-list`
+   GATE earlier in the file (around L501) toggles visibility; this
+   base rule owns the list-marker reset. Different aspects, no runtime
+   override conflict. */
 .sophie-toc-list,
 .sophie-toc-sublist {
   list-style: none;

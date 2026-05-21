@@ -1,6 +1,7 @@
 ---
 import { renderTextWithMath } from "@sophie/components/runtime";
 import type { MarkdownHeading } from "astro";
+import { ChevronDown } from "../icons";
 import { cleanHeadingText } from "../lib/clean-heading-text";
 import { groupHeadings } from "../lib/group-headings";
 
@@ -57,7 +58,24 @@ const numberedGroups = groups.map((g) => {
     class:list={["sophie-toc", `sophie-toc--${variant}`]}
     aria-label='Table of contents'
   >
-    <h2 class='sophie-toc-heading'>Contents</h2>
+    {variant === "sidebar" ? (
+      <button
+        type='button'
+        class='sophie-toc-heading sophie-toc-heading--toggle'
+        data-sophie-toc-toggle
+        aria-controls='sophie-right-region'
+        aria-expanded='false'
+        aria-label='Toggle contents'
+      >
+        <span class='sophie-toc-heading__label' aria-hidden='true'>Contents</span>
+        <Fragment
+          set:html={ChevronDown}
+          class='sophie-toc-heading__chevron'
+        />
+      </button>
+    ) : (
+      <h2 class='sophie-toc-heading'>Contents</h2>
+    )}
     <ol class='sophie-toc-list'>
       {numberedGroups.map((g) => (
         <li
@@ -94,6 +112,39 @@ const numberedGroups = groups.map((g) => {
     </ol>
   </nav>
 )}
+
+<script>
+  // Heading-button toggle binding — wires the inline "CONTENTS ∨"
+  // header to rightSidebarPref so clicking it flips data-toc on
+  // <html>. 2026-05-21 follow-up: moved the toggle from TocToggle
+  // (topbar) into the heading itself. The TocToggle.astro script's
+  // identical bindings still apply when consumers opt to render the
+  // topbar variant; `data-sophie-pref-sophie-toc` (BOUND_ATTR) makes
+  // the bindToggle idempotent across both.
+  import { rightSidebarPref } from "../preferences";
+
+  function syncTocAriaExpanded(next: "open" | "closed"): void {
+    document
+      .querySelectorAll<HTMLButtonElement>("[data-sophie-toc-toggle]")
+      .forEach((btn) => {
+        btn.setAttribute(
+          "aria-expanded",
+          next === "open" ? "true" : "false",
+        );
+      });
+  }
+
+  syncTocAriaExpanded(rightSidebarPref.read());
+  rightSidebarPref.subscribe(syncTocAriaExpanded);
+
+  document
+    .querySelectorAll<HTMLButtonElement>("[data-sophie-toc-toggle]")
+    .forEach((btn) => {
+      rightSidebarPref.bindToggle(btn, (cur) =>
+        cur === "open" ? "closed" : "open",
+      );
+    });
+</script>
 
 <script>
   // Scroll-spy. The ToC's own links are the source of truth for

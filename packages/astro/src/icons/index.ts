@@ -22,6 +22,7 @@
 // Re-exports from lucide-static. Add icons here as new chrome
 // primitives need them (e.g. PR 7 search will add `Search`).
 export {
+  ChevronDown,
   ChevronsDownUp,
   ChevronsUpDown,
   List,

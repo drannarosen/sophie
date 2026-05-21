@@ -131,15 +131,14 @@ test.describe("PR 4: In-page ToC (desktop)", () => {
     // <TocSidebar> primitive returns null in that case, so no
     // .sophie-toc--sidebar element exists.
     await expect(page.locator(".sophie-toc--sidebar")).toHaveCount(0);
-    // KNOWN LIMITATION: the right column's `--sophie-right-w`
-    // remains at 280px even when the ToC renders null. Astro's
-    // `Astro.slots.has("right")` registers a slot when the template
-    // declares one (even conditionally), so empty-slot-collapse
-    // (ADR 0034) doesn't fire here. A follow-up may change
-    // TextbookLayout to detect emptiness via `Astro.slots.render()`
-    // output length instead; tracked in P3 backlog.
-    const rightInner = await page.locator(".sophie-right").innerHTML();
-    expect(rightInner.trim()).toBe("");
+    // The slot body (.sophie-right__body) is empty — the wordmark in
+    // .sophie-right__foot is chrome, not slot content. (Pre 2026-05-21
+    // this asserted `.sophie-right` innerHTML; the polish pass added
+    // the "Made with Sophie" wordmark inside .sophie-right, so the
+    // user-facing question — "did the in-page-ToC render anything?" —
+    // moved to .sophie-right__body.)
+    const slotBody = await page.locator(".sophie-right__body").innerHTML();
+    expect(slotBody.trim()).toBe("");
   });
 
   test("axe-core: zero violations on the desktop ToC", async ({ page }) => {

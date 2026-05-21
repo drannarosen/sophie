@@ -1,12 +1,30 @@
 ---
 /**
- * <RightColumn> — right column container; shared by in-page ToC
- * (PR 4) and margin asides (PR 6).
+ * <RightColumn> — right column container; hosts the in-page ToC
+ * (PR 4) and margin asides (PR 6) plus the "Made with Sophie"
+ * margin wordmark introduced in the 2026-05-21 polish pass.
  *
- * PR 1 ships the empty container. Hidden on mobile.
+ * The wordmark is always visible (regardless of `data-toc='closed'`)
+ * so the right column never reads as empty chrome — matches MyST's
+ * "Made with MyST" attribution pattern, but landed in the right
+ * column instead of the left so the brand mark anchors the margin
+ * even when both the ToC and any docked asides are hidden.
+ *
+ * Hidden on mobile (the CSS shell collapses the right column at
+ * `< 768px`).
  */
 ---
 
-<aside class='sophie-right' aria-label='Page outline and margin notes'>
-  <slot />
+<aside
+  id='sophie-right-region'
+  class='sophie-right'
+  aria-label='Page outline and margin notes'
+>
+  <div class='sophie-right__body'>
+    <slot />
+  </div>
+  <div class='sophie-right__foot' aria-hidden='true'>
+    <span class='sophie-right__foot-prefix'>Made with</span>
+    <span class='sophie-right__foot-mark'>Sophie</span>
+  </div>
 </aside>

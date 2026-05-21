@@ -47,11 +47,16 @@ test.describe("Pagefind search modal (Layer 2)", () => {
   }) => {
     await page.goto("/chapters/measuring-the-sky/");
 
-    // Wait for chapter page hydration to settle. Same condition-
-    // based-waiting discipline as the LO checkbox e2e — no fixed
-    // timeouts.
+    // Wait for chapter page hydration to settle. Same precondition
+    // as tests 2 + 3 below: SearchModal mounts `client:idle`, so its
+    // document-level Meta+K keydown listener isn't installed until
+    // React hydrates (Astro defers that until `requestIdleCallback`,
+    // which lands post-networkidle in practice). Without this gate
+    // the keypress fires into a void; the dialog never opens.
+    // Deterministic fail under load, not flake.
     const trigger = page.getByRole("searchbox", { name: /search/i });
     await expect(trigger).toBeVisible();
+    await page.waitForLoadState("networkidle");
 
     // Trigger via keyboard (the modal's primary entry point)
     await page.keyboard.press("Meta+k");

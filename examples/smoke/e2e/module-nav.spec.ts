@@ -123,32 +123,42 @@ test.describe("PR 3: Module/chapter sidebar nav", () => {
     await expect(active).toHaveAttribute("href", STELLAR_EVOLUTION);
   });
 
-  test("sidebar slot is filled (SSR) — opening the sidebar reveals 280px column", async ({
+  test("sidebar slot is filled (SSR); opening reveals a visible chapter-list column", async ({
     page,
   }) => {
     await page.goto(SPOILER_ALERTS);
     // Sprint K (2026-05-21): the sidebar defaults to closed
     // (`data-sidebar='closed'` on <html>) which sets
-    // `--sophie-sidebar-w: 0` REGARDLESS of slot fill state. The
+    // `--sophie-sidebar-w: 0` regardless of slot fill state. The
     // original "slot filled" contract is now expressed via the
     // SSR-stamped `data-sidebar-slot` attribute on `.sophie-shell`
     // (set by TextbookLayout from `Astro.slots.has('sidebar')`).
-    // We assert two things:
-    //   1. The slot is SSR-marked as filled (the original PR 3
-    //      empty-slot-collapse contract).
-    //   2. Toggling the sidebar open reveals a 280px column (the
-    //      Sprint K post-toggle width).
+    //
+    // 2026-05-21 polish pass slimmed `--sophie-sidebar-w` from 280px
+    // to 220px (MyST proportions). This test no longer asserts on
+    // the specific px value — that's chrome-rhythm tuning that can
+    // legitimately retune in either direction. The user-facing
+    // contract is "open the sidebar; the chapter-list column becomes
+    // visible and reads ~chrome-width." A nonzero-width + visible
+    // chapter-list assertion captures behavior without locking the
+    // typographic-rhythm number.
     const shell = page.locator(".sophie-shell");
     await expect(shell).toHaveAttribute("data-sidebar-slot", "filled");
 
     await page.getByRole("button", { name: /toggle sidebar/i }).click();
     await expect(page.locator("html")).toHaveAttribute("data-sidebar", "open");
 
-    const openWidth = await page.evaluate(() => {
-      const el = document.querySelector(".sophie-shell") as HTMLElement;
-      return getComputedStyle(el).getPropertyValue("--sophie-sidebar-w").trim();
-    });
-    expect(openWidth).toBe("280px");
+    const sidebar = page.locator(".sophie-sidebar");
+    await expect(sidebar).toBeVisible();
+    const box = await sidebar.boundingBox();
+    expect(box?.width ?? 0).toBeGreaterThan(150);
+    expect(box?.width ?? 0).toBeLessThan(360);
+    // The chapter list is the actual content the sidebar exists to
+    // present — assert the first chapter link is reachable as a
+    // behavior witness, not just a styled box.
+    await expect(
+      sidebar.getByRole("link", { name: /Spoiler Alerts/ })
+    ).toBeVisible();
   });
 
   test("axe-core: zero violations on the new nav region", async ({ page }) => {

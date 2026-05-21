@@ -14,23 +14,24 @@ const DESKTOP_VIEWPORT = { width: 1440, height: 900 };
  *
  * Sprint K (2026-05-21, commit 997e545) flipped the sidebar default
  * from "open on desktop" to "closed on every viewport" and decoupled
- * view-mode from sidebar visibility. The cap cascade (per
- * textbook-layout.css line ~446 comment) is now:
+ * view-mode from sidebar visibility. Post-Sprint-K polish (2026-05-21)
+ * retuned the cascade to MyST-style proportions — sidebars narrowed
+ * to 220px and the caps widened across the board:
  *
  * | State                                                       | Content cap      |
  * |---                                                          |---               |
- * | sidebar=open  + toc=open                                    | min(66ch, 100%)  |
- * | sidebar=closed + toc=open                                   | min(75ch, 100%)  |
- * | sidebar=open  + toc=closed + dockedAsides='absent'          | min(85ch, 100%)  |
- * | sidebar=closed + toc=closed + dockedAsides='absent'         | min(95ch, 100%)  |
+ * | sidebar=open  + toc=open                                    | min(75ch, 100%)  |
+ * | sidebar=closed + toc=open                                   | min(85ch, 100%)  |
+ * | sidebar=open  + toc=closed + dockedAsides='absent'          | min(90ch, 100%)  |
+ * | sidebar=closed + toc=closed + dockedAsides='absent'         | min(105ch, 100%) |
  * | view-mode=focused override                                  | min(66ch, 100%)  |
  * | view-mode=wide override                                     | min(105ch, 100%) |
  *
  * The smoke chapter (spoiler-alerts) does NOT pass `dockedAsides`
  * to <TextbookLayout> so `data-docked-asides='present'` is in
- * effect — the toc=closed widening rule (which is gated on
- * `data-docked-asides='absent'`) does NOT fire. So the cold-load
- * state here is sidebar=closed + toc=closed → 75ch (from the
+ * effect — the toc=closed widening rules (which are gated on
+ * `data-docked-asides='absent'`) do NOT fire. So the cold-load
+ * state here is sidebar=closed + toc=closed → 85ch (from the
  * sidebar=closed rule, the toc=closed widening skipping over).
  *
  * Asserts use relative comparisons + generous absolute ranges
@@ -49,12 +50,12 @@ test.describe("PR 6: content-width responds to sidebar state", () => {
     await page.setViewportSize(DESKTOP_VIEWPORT);
   });
 
-  test("Default mode + sidebar='open': content at the Bringhurst optimum (66ch)", async ({
+  test("Default mode + sidebar='open': content at the MyST default measure (75ch)", async ({
     page,
   }) => {
     await page.goto(CHAPTER_URL);
     // Sprint K (2026-05-21): sidebar defaults to 'closed'; open it
-    // explicitly to exercise the 66ch Bringhurst-optimum cap.
+    // explicitly to exercise the base 75ch MyST-style measure.
     await page.getByRole("button", { name: /toggle sidebar/i }).click();
     await expect(page.locator("html")).toHaveAttribute("data-sidebar", "open");
     await expect(page.locator("html")).toHaveAttribute(
@@ -62,60 +63,55 @@ test.describe("PR 6: content-width responds to sidebar state", () => {
       "default"
     );
     const width = await getContentWidth(page);
-    // 66ch at the 17px Plex Sans body font measures ≈ 756px on CI
-    // (1ch ≈ 11.4px). Range covers font + scrollbar variance while
-    // rejecting 75ch (~860px) above and 50ch (~570px) below.
-    expect(width).toBeGreaterThan(600);
-    expect(width).toBeLessThan(810);
+    // 75ch at 17px Plex Sans measures ~750-770px (1ch ≈ 10.0/10.2px).
+    // Range covers font + scrollbar variance while rejecting 66ch
+    // (~660px, Focused override) below and 85ch (~860px) above.
+    expect(width).toBeGreaterThan(700);
+    expect(width).toBeLessThan(820);
   });
 
-  test("Default mode + sidebar='closed' (cold load): content widens to ~75ch", async ({
+  test("Default mode + sidebar='closed' (cold load): content widens to ~85ch", async ({
     page,
   }) => {
     await page.goto(CHAPTER_URL);
     // Sprint K (2026-05-21): sidebar is closed on cold load — no
     // toggle needed. The toc=closed widening that would push the cap
-    // to 95ch is gated on `data-docked-asides='absent'`; smoke's
+    // to 105ch is gated on `data-docked-asides='absent'`; smoke's
     // spoiler-alerts has 27 docked asides so `dockedAsides='present'`
     // applies, the toc=closed widening rule skips, and the
-    // sidebar=closed rule sets the cap at 75ch.
+    // sidebar=closed rule sets the cap at 85ch.
     await expect(page.locator("html")).toHaveAttribute(
       "data-sidebar",
       "closed"
     );
 
     const width = await getContentWidth(page);
-    // Post-Sprint J (`box-sizing: border-box` on `.sophie-content`,
-    // shipped in 73bb3c6 to fix mobile overflow), `max-inline-size:
-    // 75ch` caps the BORDER box at 75ch. `getBoundingClientRect`
-    // returns the border-box width, so the measured value lands at
-    // ~75ch px directly: ≈ 750 on CI Linux, ≈ 765 on macOS (1ch is
-    // ~10.0/10.2 px in Plex Sans 17px across the two systems).
-    // Range covers both while rejecting 66ch (~660-675 px) below
-    // and 95ch (~950-970 px) above.
-    expect(width).toBeGreaterThan(720);
-    expect(width).toBeLessThan(810);
+    // 85ch at 17px Plex Sans measures ~850-870px. Range rejects 75ch
+    // (~750-770px, sidebar=open base) below and 105ch (~1050-1075px,
+    // Wide-mode override) above.
+    expect(width).toBeGreaterThan(820);
+    expect(width).toBeLessThan(920);
   });
 
   test("Default mode: opening the sidebar makes content strictly narrower", async ({
     page,
   }) => {
     await page.goto(CHAPTER_URL);
-    // Sprint K cold-load: sidebar=closed → 75ch.
+    // Sprint K cold-load: sidebar=closed → 85ch.
     const closedWidth = await getContentWidth(page);
 
-    // Open the sidebar → sidebar=open → 66ch (the dockedAsides='present'
-    // smoke chapter never widens past 75ch on toc-closed; opening the
-    // sidebar tightens the cap to 66ch via the base rule).
+    // Open the sidebar → sidebar=open → 75ch (the dockedAsides='present'
+    // smoke chapter never widens past 85ch on toc-closed; opening the
+    // sidebar tightens the cap to 75ch via the base rule).
     await page.getByRole("button", { name: /toggle sidebar/i }).click();
     await expect(page.locator("html")).toHaveAttribute("data-sidebar", "open");
     const openWidth = await getContentWidth(page);
 
-    // 75ch → 66ch is a 9ch tighten (~80px in this body font); require
+    // 85ch → 75ch is a 10ch tighten (~100px in this body font); require
     // at least 50px shrinkage to verify the rule fires while tolerating
-    // font-metric variance across systems. Note Sprint K inverted the
+    // font-metric variance across systems. Sprint K inverted the
     // "default state": closed is the cold-load wide reading state,
-    // open is the narrow Bringhurst optimum.
+    // open is the narrow MyST default measure.
     expect(closedWidth).toBeGreaterThan(openWidth + 50);
   });
 
@@ -123,12 +119,12 @@ test.describe("PR 6: content-width responds to sidebar state", () => {
     page,
   }) => {
     await page.goto(CHAPTER_URL);
-    // Sprint K cold-load: sidebar=closed → 75ch.
+    // Sprint K cold-load: sidebar=closed → 85ch.
     const sidebarClosedDefaultWidth = await getContentWidth(page);
 
     // Cycle to Focused (Sprint K: pure cap override, decoupled from
-    // sidebar state). Sprint K's CSS at line ~650 caps Focused at
-    // 66ch (not 75ch as the pre-Sprint-K design specified).
+    // sidebar state). Sprint K's CSS caps Focused at 66ch — the
+    // Bringhurst-optimum deep-read mode.
     await page.getByRole("button", { name: /^view:/i }).click();
     await expect(page.locator("html")).toHaveAttribute(
       "data-view-mode",
@@ -136,7 +132,7 @@ test.describe("PR 6: content-width responds to sidebar state", () => {
     );
     const focusedWidth = await getContentWidth(page);
 
-    // Focused (66ch) is strictly narrower than the cold-load 75ch.
+    // Focused (66ch) is strictly narrower than the cold-load 85ch.
     // Require at least 50px tighten to confirm the override fires.
     expect(sidebarClosedDefaultWidth).toBeGreaterThan(focusedWidth + 50);
   });
@@ -148,8 +144,7 @@ test.describe("PR 6: content-width responds to sidebar state", () => {
     const defaultColdLoadWidth = await getContentWidth(page);
 
     // Cycle through to Wide (default → focused → wide). Sprint K
-    // caps Wide at 105ch (CSS line ~654) — strictly wider than the
-    // cold-load 75ch.
+    // caps Wide at 105ch — strictly wider than the cold-load 85ch.
     const viewModeToggle = page.getByRole("button", { name: /^view:/i });
     await viewModeToggle.click(); // focused
     await viewModeToggle.click(); // wide

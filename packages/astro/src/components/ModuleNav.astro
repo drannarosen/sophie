@@ -78,5 +78,8 @@ const sortedModules = [...modules].sort((a, b) => a.order - b.order);
       })
     }
   </ol>
-  <div class='sophie-sidebar-foot' aria-hidden='true'>Made with Sophie</div>
+  {/* "Made with Sophie" attribution moved to the right column's
+      footer (RightColumn.astro) in the 2026-05-21 polish pass —
+      MyST-style margin wordmark with a brand-teal accent on "Sophie".
+      Left sidebar stays focused on chapter nav only. */}
 </nav>
