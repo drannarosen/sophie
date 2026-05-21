@@ -83,27 +83,47 @@ test.describe("PR 5: ViewModeToggle on the smoke chapter", () => {
     expect(stored).toBe("default");
   });
 
-  test("Focused: sidebar + right column collapse to zero width", async ({
+  // Sprint K (2026-05-21): view-mode is now a pure content-cap preset
+  // (Default → no override / Focused → 66ch / Wide → 105ch),
+  // orthogonal to sidebar visibility owned by SidebarToggle. The
+  // previous coupling ("Focused/Wide collapse sidebar to zero width,
+  // hide the SidebarToggle") was replaced because it made "I want
+  // narrow reading but keep my margin notes" impossible. See the
+  // inline comment in textbook-layout.css around line 422 + the
+  // 2026-05-21 code-review Agent 2 "Wins" entry on view-mode
+  // reconceptualization.
+
+  test("Focused: content cap narrows; sidebar visibility unchanged", async ({
     page,
   }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto(CHAPTER_URL);
     const toggle = page.getByRole("button", { name: /^view:/i });
+
+    const defaultContentBox = await page
+      .locator(".sophie-content")
+      .boundingBox();
+
     await toggle.click(); // → focused
 
     await expect(page.locator("html")).toHaveAttribute(
       "data-view-mode",
       "focused"
     );
-    // Sidebar collapsed: --sophie-sidebar-w should be 0 and the
-    // computed visibility hidden.
-    const sidebarBox = await page.locator(".sophie-sidebar").boundingBox();
-    expect(sidebarBox?.width ?? 0).toBe(0);
 
-    const rightBox = await page.locator(".sophie-right").boundingBox();
-    expect(rightBox?.width ?? 0).toBe(0);
+    // Focused tightens the content cap; sidebar pref state is left
+    // alone (Sprint K decoupling).
+    const focusedContentBox = await page
+      .locator(".sophie-content")
+      .boundingBox();
+    // Focused (66ch) ≤ Default (no override, so capped by parent column)
+    // — width should decrease or hold steady, never grow.
+    expect(focusedContentBox?.width ?? 0).toBeLessThanOrEqual(
+      defaultContentBox?.width ?? Infinity
+    );
   });
 
-  test("Wide: side columns collapsed AND content cap relaxes vs Focused", async ({
+  test("Wide: content cap relaxes vs Focused (105ch > 66ch)", async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
@@ -122,69 +142,62 @@ test.describe("PR 5: ViewModeToggle on the smoke chapter", () => {
     );
     const wideContentBox = await page.locator(".sophie-content").boundingBox();
 
-    // Wide must be wider than Focused (105ch > 85ch at this viewport).
+    // Wide must be wider than Focused (105ch > 66ch at this viewport).
     expect(
       (wideContentBox?.width ?? 0) - (focusedContentBox?.width ?? 0)
     ).toBeGreaterThan(80);
   });
 
-  test("cycling back to Default with sidebarPref='open' restores the sidebar", async ({
+  test("view-mode cycling does NOT touch sidebar pref (Sprint K decoupling)", async ({
     page,
   }) => {
     await page.goto(CHAPTER_URL);
-    // Sidebar pref defaults to 'open' on desktop. Verify, then cycle
-    // through focused → wide → default.
-    await expect(page.locator("html")).toHaveAttribute("data-sidebar", "open");
-    const sidebarOpenWidth = (
-      await page.locator(".sophie-sidebar").boundingBox()
-    )?.width;
-    expect(sidebarOpenWidth ?? 0).toBeGreaterThan(0);
+    // Default sidebar state is 'closed' (Sprint K default-flip).
+    await expect(page.locator("html")).toHaveAttribute(
+      "data-sidebar",
+      "closed"
+    );
 
     const toggle = page.getByRole("button", { name: /^view:/i });
     await toggle.click(); // focused
+    await expect(page.locator("html")).toHaveAttribute("data-sidebar", "closed");
     await toggle.click(); // wide
+    await expect(page.locator("html")).toHaveAttribute("data-sidebar", "closed");
     await toggle.click(); // back to default
-
     await expect(page.locator("html")).toHaveAttribute(
       "data-view-mode",
       "default"
     );
-    // sidebarPref was never touched — should still be 'open'.
-    await expect(page.locator("html")).toHaveAttribute("data-sidebar", "open");
-    const restored = (await page.locator(".sophie-sidebar").boundingBox())
-      ?.width;
-    expect(restored).toBe(sidebarOpenWidth);
+    await expect(page.locator("html")).toHaveAttribute(
+      "data-sidebar",
+      "closed"
+    );
   });
 
-  test("cycling back to Default with sidebarPref='closed' leaves sidebar closed", async ({
+  test("opening sidebar then cycling view modes preserves sidebar=open", async ({
     page,
   }) => {
     await page.goto(CHAPTER_URL);
-    // Close sidebar via its toggle first; verify the closed state.
+    // Open sidebar via toggle.
     const sidebarToggle = page.getByRole("button", { name: /toggle sidebar/i });
     await sidebarToggle.click();
-    await expect(page.locator("html")).toHaveAttribute(
-      "data-sidebar",
-      "closed"
-    );
+    await expect(page.locator("html")).toHaveAttribute("data-sidebar", "open");
 
     const toggle = page.getByRole("button", { name: /^view:/i });
     await toggle.click(); // focused
+    await expect(page.locator("html")).toHaveAttribute("data-sidebar", "open");
     await toggle.click(); // wide
+    await expect(page.locator("html")).toHaveAttribute("data-sidebar", "open");
     await toggle.click(); // default
-
     await expect(page.locator("html")).toHaveAttribute(
       "data-view-mode",
       "default"
     );
-    // sidebarPref was never written by view-mode cycling.
-    await expect(page.locator("html")).toHaveAttribute(
-      "data-sidebar",
-      "closed"
-    );
+    // sidebarPref was never touched by view-mode cycling — still 'open'.
+    await expect(page.locator("html")).toHaveAttribute("data-sidebar", "open");
   });
 
-  test("<SidebarToggle> is hidden in Focused and Wide modes", async ({
+  test("<SidebarToggle> remains visible in every view mode (Sprint K decoupling)", async ({
     page,
   }) => {
     await page.goto(CHAPTER_URL);
@@ -193,10 +206,12 @@ test.describe("PR 5: ViewModeToggle on the smoke chapter", () => {
 
     const toggle = page.getByRole("button", { name: /^view:/i });
     await toggle.click(); // focused
-    await expect(sidebarToggle).toBeHidden();
+    // Sprint K: SidebarToggle is no longer hidden by view-mode —
+    // the user can always open the sidebar from any reading mode.
+    await expect(sidebarToggle).toBeVisible();
 
     await toggle.click(); // wide
-    await expect(sidebarToggle).toBeHidden();
+    await expect(sidebarToggle).toBeVisible();
 
     await toggle.click(); // default
     await expect(sidebarToggle).toBeVisible();

@@ -206,7 +206,7 @@ export function KeyEquation({
             <section
               className={styles.bioGroup}
               data-epistemic-role='assumption'
-              aria-label='Assumptions'
+              aria-label={`Assumptions for ${entry.title}`}
             >
               <h3 className={styles.bioGroupHeading}>Assumptions</h3>
               <dl className={styles.bioGroupList}>
@@ -259,7 +259,7 @@ export function KeyEquation({
             <section
               className={styles.bioGroup}
               data-epistemic-role='misconception'
-              aria-label='Common misuses'
+              aria-label={`Common misuses for ${entry.title}`}
             >
               <h3 className={styles.bioGroupHeading}>Common misuses</h3>
               <dl className={styles.bioGroupList}>
