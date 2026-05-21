@@ -24,6 +24,13 @@ test-results/
 # transient screenshots from interactive verification
 step-7-acceptance.png
 *.acceptance.png
+# Visual-polish + verify-pass debug screenshots accumulated during
+# sprint iterations (Playwright MCP `browser_take_screenshot` output,
+# manual saves, etc). Root-level PNGs are NEVER committed; PNGs that
+# belong to the codebase live under their package's `figures/`,
+# `__snapshots__/`, or `public/` directories — those scoped paths are
+# unaffected by this root-only `/*.png` rule.
+/*.png
 
 # MyST docs build output (top-level logs and docs/website/_build/ both)
 _build/
