@@ -25,6 +25,19 @@ vi.mock("./definitions-store.ts", () => ({
         anchor: "parallax",
       };
     }
+    // Fixture with an author-emitted multi-block body — heading,
+    // list, blockquote — for the stripWrappingParagraph block-tag
+    // coverage regression test below. Bodies this shape are rare
+    // but possible; the defense matters.
+    if (slug === "block-rich") {
+      return {
+        term: "Block-rich",
+        slug: "block-rich",
+        body: "<p><h3>Heading inside</h3><ul><li>one</li><li>two</li></ul><blockquote>quoted</blockquote>tail text.</p>",
+        chapter: "spoiler-alerts",
+        anchor: "block-rich",
+      };
+    }
     return undefined;
   },
 }));
@@ -164,5 +177,34 @@ describe("GlossaryTerm first-use footnote", () => {
     // remains in the inline footnote span.
     expect(footnote.innerHTML).not.toMatch(/<p[\s>]/i);
     expect(footnote.textContent).toContain("Apparent shift");
+  });
+
+  /**
+   * Defensive coverage for additional block-level tags inside a
+   * one-paragraph-wrapped body — headings, lists, blockquotes, etc.
+   * Same Bug 1 failure mode as the wrapping `<p>` test above: if any
+   * block element survives into the inline footnote span, the
+   * browser hoists it out of the parent chapter paragraph, splitting
+   * the surrounding sentence.
+   */
+  it("strips nested block elements (h*, ul/ol/li, blockquote) from the footnote body", () => {
+    render(
+      <GlossaryTerm name='Block-rich' data-first-use='true'>
+        block-rich
+      </GlossaryTerm>
+    );
+    const footnote = screen.getByTestId("glossary-footnote");
+    // No surviving block-level tags in the inline span. (Tag-only
+    // pattern; we tolerate the unwrapped text content.)
+    expect(footnote.innerHTML).not.toMatch(
+      /<(p|div|section|article|figure|h[1-6]|ul|ol|li|blockquote|pre|table|hr)[\s>]/i
+    );
+    // Inner text survives the unwrap (heading text + list items +
+    // blockquote text + tail).
+    expect(footnote.textContent).toContain("Heading inside");
+    expect(footnote.textContent).toContain("one");
+    expect(footnote.textContent).toContain("two");
+    expect(footnote.textContent).toContain("quoted");
+    expect(footnote.textContent).toContain("tail text");
   });
 });

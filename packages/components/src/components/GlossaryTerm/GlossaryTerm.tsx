@@ -162,19 +162,30 @@ function stripWrappingParagraph(html: string): string {
   // open tags). Authoring would have to do something unusual to hit
   // this; leaving it alone is safer than reshaping unknown structure.
   if (/<p[\s>]/i.test(innerHTML)) return html;
-  // Unwrap any remaining block-level tags. Specifically:
-  //   - `<div>…</div>` from JSX-flow elements that mdast→html serialize
-  //     as div (nested `<GlossaryTerm>` callsites are the common case).
+  // Unwrap any remaining block-level tags. Covers the elements
+  // mdast→html commonly emits inside a one-paragraph body:
+  //   - `<div>` from JSX-flow elements (nested `<GlossaryTerm>` is
+  //     the common case that triggered the post-fix verify pass).
   //   - `<section>` / `<article>` / `<figure>` from arbitrary nested
-  //     content. Repeated until stable so nested blocks unwrap fully.
+  //     blocks.
+  //   - `<h1>`-`<h6>`, `<ul>` / `<ol>` / `<li>`, `<blockquote>`,
+  //     `<pre>`, `<table>`, `<hr>` for defensive coverage — a
+  //     definition body that contains any of these would otherwise
+  //     reintroduce Bug 1's "inline ancestor `<p>` auto-closes"
+  //     failure mode on the chapter prose path. Realistic? Low —
+  //     definitions are short — but the extra cost is one regex
+  //     character class.
+  // Repeated until stable so nested blocks unwrap fully.
   let unwrapped = innerHTML;
   let prev: string;
   do {
     prev = unwrapped;
     unwrapped = unwrapped.replace(
-      /<(div|section|article|figure)\b[^>]*>([\s\S]*?)<\/\1>/gi,
+      /<(div|section|article|figure|h[1-6]|ul|ol|li|blockquote|pre|table)\b[^>]*>([\s\S]*?)<\/\1>/gi,
       "$2"
     );
   } while (unwrapped !== prev);
+  // `<hr>` is void (no closing tag); strip it separately.
+  unwrapped = unwrapped.replace(/<hr\b[^>]*\/?>/gi, "");
   return unwrapped;
 }
