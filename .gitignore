@@ -24,6 +24,11 @@ test-results/
 # transient screenshots from interactive verification
 step-7-acceptance.png
 *.acceptance.png
+# Ad-hoc visual-polish scratch dir for Playwright MCP screenshot
+# captures during interactive review/iteration. Keepers move into
+# docs/reviews/assets/<date>/ (committed) or a package's __snapshots__/
+# (Storybook VR). This dir is never tracked.
+.review-temp/
 # Visual-polish + verify-pass debug screenshots accumulated during
 # sprint iterations (Playwright MCP `browser_take_screenshot` output,
 # manual saves, etc). Root-level PNGs are NEVER committed; PNGs that

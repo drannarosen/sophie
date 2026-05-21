@@ -24,6 +24,8 @@ import {
 import { loadConsumerRegistry } from "../lib/notation-registry-loader";
 import { indexAccumulator } from "../lib/pedagogy-index/accumulator";
 import { extractContractValidations } from "../lib/validation/extractor";
+import ChapterBreadcrumb from "./ChapterBreadcrumb.astro";
+import ChapterStatusChip from "./ChapterStatusChip.astro";
 import ContentColumn from "./ContentColumn.astro";
 import RightColumn from "./RightColumn.astro";
 import SearchTrigger from "./SearchTrigger.astro";
@@ -46,8 +48,43 @@ interface Props {
    * use `<FigureRef>` keep working unchanged.
    */
   figureRegistry?: ReadonlyArray<FigureRegistryEntry>;
+  /**
+   * Optional chapter context. When provided, the topbar renders a
+   * label-voice "MOD N · LECTURE M" breadcrumb on the leading side
+   * and an editorial-status chip ("UNDER REVIEW" / "DRAFT") on the
+   * trailing side. Index / glossary / overview pages omit this prop
+   * and the topbar stays utility-only.
+   */
+  chapterContext?: {
+    moduleOrder?: number;
+    chapterNumber?: number;
+    status?: "draft" | "review" | "stable";
+  };
+  /**
+   * Sprint K hardening (2026-05-21): governs the ToC-close cap-cascade.
+   *
+   * - `"present"` (default): closing the ToC hides the ToC element
+   *   only; the right column stays at 280px so docked margin asides
+   *   stay anchored, and the content cap does not widen.
+   * - `"absent"`: closing the ToC also collapses `--sophie-right-w`
+   *   to 0 and widens the content cap. For pages with no margin
+   *   asides (stubs, glossary, course index, overview pages).
+   *
+   * This is a layout-level opt-in, NOT a user toggle — switching it
+   * mid-read would shift the column unexpectedly. Consumer apps pass
+   * `dockedAsides="absent"` when the rendered chapter content has no
+   * `<Aside variant="margin">` (or equivalent docked-aside) usages.
+   *
+   * Defaults to `"present"` to preserve current behavior on every
+   * existing route until consumers opt routes in explicitly.
+   */
+  dockedAsides?: "present" | "absent";
 }
-const { figureRegistry = [] } = Astro.props;
+const {
+  figureRegistry = [],
+  chapterContext,
+  dockedAsides = "present",
+} = Astro.props;
 
 // Wire the build-time pedagogy index (ADR 0038) into the
 // @sophie/components pedagogy stores so <GlossaryTerm> and <EquationRef>
@@ -421,12 +458,18 @@ const collapsedVars = [
   style={collapsedVars || undefined}
   data-sidebar-slot={hasSidebarSlot ? "filled" : "empty"}
   data-right-slot={hasRightSlot ? "filled" : "empty"}
+  data-docked-asides={dockedAsides}
 >
   <TopBar>
     <slot name='topbar-leading'>
       <SidebarToggle />
+      <ChapterBreadcrumb
+        moduleOrder={chapterContext?.moduleOrder}
+        chapterNumber={chapterContext?.chapterNumber}
+      />
     </slot>
     <slot name='topbar-trailing'>
+      <ChapterStatusChip status={chapterContext?.status} />
       <SearchTrigger />
       <TocToggle />
       <DisclosuresToggle />

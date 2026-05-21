@@ -1,0 +1,46 @@
+---
+/**
+ * <ChapterBreadcrumb> — label-voice position cue rendered in the
+ * topbar leading slot.
+ *
+ * Displays "MOD N · LECTURE M" so a student deep-linking into a
+ * chapter immediately sees where they are in the course tree. Course
+ * name lives in the sidebar root; this surface is the position
+ * indicator, not the brand cue.
+ *
+ * Both numerals are derived: `moduleOrder` from the parent module's
+ * `order` field, `chapterNumber` from the chapter frontmatter's
+ * `chapter` field. The chapter slug-resolution lives in the consumer
+ * layout (smoke's ChapterLayout); this component is pure presentation.
+ *
+ * When either numeral is missing (e.g. an overview or index page),
+ * the component renders nothing — call sites should still pass it
+ * unconditionally and let it self-suppress.
+ */
+export interface Props {
+  /** 1-indexed module ordinal. Optional — empty render when absent. */
+  moduleOrder?: number;
+  /** 1-indexed chapter ordinal. Optional — empty render when absent. */
+  chapterNumber?: number;
+  /** Override label for the chapter rung (default "LECTURE"). */
+  chapterLabel?: string;
+}
+
+const { moduleOrder, chapterNumber, chapterLabel = "LECTURE" } = Astro.props;
+const showBreadcrumb =
+  typeof moduleOrder === "number" && typeof chapterNumber === "number";
+---
+
+{
+  showBreadcrumb && (
+    <nav class='sophie-breadcrumb' aria-label='Chapter position'>
+      <span class='sophie-breadcrumb__seg'>MOD {moduleOrder}</span>
+      <span class='sophie-breadcrumb__sep' aria-hidden='true'>
+        ·
+      </span>
+      <span class='sophie-breadcrumb__seg sophie-breadcrumb__seg--current'>
+        {`${chapterLabel} ${chapterNumber}`}
+      </span>
+    </nav>
+  )
+}

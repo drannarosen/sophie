@@ -76,6 +76,18 @@ const chapters = (await getCollection("chapters")).map((c) => ({
   status: c.data.status,
 }));
 
+// Sprint K — derive the topbar breadcrumb context from frontmatter.
+// `module: "stars"` (slug) resolves to the matching modules-collection
+// entry; its `order` field becomes the "MOD N" rung. `chapter: 3`
+// (numeric) from the chapter frontmatter becomes the "LECTURE M" rung.
+// `status` is the chapter maturity enum (draft | review | stable).
+const currentModule = modules.find((m) => m.slug === frontmatter.module);
+const chapterContext = {
+  moduleOrder: currentModule?.order,
+  chapterNumber: frontmatter.chapter,
+  status: chapters.find((c) => c.slug === currentChapterSlug)?.status,
+};
+
 // Sprint I-C — adjacent-chapter resolution for prev/next pills.
 // Stable sort by (module index, order ?? 0, title) so the
 // pagination order matches the sidebar's visual order. Drafts
@@ -143,7 +155,10 @@ const next = nextRaw
   <body>
     <SophieChapter client:load>
       <ScrollProgress />
-      <TextbookLayout figureRegistry={figureRegistryArray}>
+      <TextbookLayout
+        figureRegistry={figureRegistryArray}
+        chapterContext={chapterContext}
+      >
         <Fragment slot='sidebar'>
           <ModuleNav
             modules={modules}

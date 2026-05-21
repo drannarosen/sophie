@@ -61,18 +61,28 @@
   content: " \2014";
 }
 
+/* Definition asides: the term IS the header. Bold weight, body-text
+   size, full ink — reads as a typographic title bar above the
+   smaller muted body. For non-definition variants (note/digression/
+   key-insight/misconception), the title trails the small-caps kind
+   marker as "MARKER — Title" and shares the same weight. */
 .title {
-  font-weight: var(--sophie-weight-semibold);
+  font-weight: var(--sophie-weight-bold);
   font-style: normal;
   color: var(--sophie-text);
 }
 
+/* MyST-style marginalia voice: smaller than main column, upright (not
+   italic), muted color. The bold title carries the variant signal;
+   body recedes so it reads as parallel-but-secondary commentary
+   rather than competing main-column prose. Tight term→body gap so
+   the definition title and body read as one typographic unit. */
 .body {
-  margin-block-start: var(--sophie-space-2);
-  font-size: var(--sophie-text-body);
-  font-style: italic;
-  line-height: var(--sophie-leading-prose);
-  color: var(--sophie-text);
+  margin-block-start: var(--sophie-space-1);
+  font-size: var(--sophie-text-small);
+  font-style: normal;
+  line-height: var(--sophie-leading-tight);
+  color: var(--sophie-text-muted);
 }
 
 .body > :first-child {

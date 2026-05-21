@@ -40,13 +40,17 @@ interface InstalledState {
 }
 
 /**
- * Determine whether the current viewport + view-mode permits docking.
+ * Determine whether the current viewport permits docking.
  * Mirrors the CSS gate in textbook-layout.css.
+ *
+ * Sprint K — view-mode no longer collapses the right column (it now
+ * only adjusts content cap), so docking is purely a viewport-width
+ * concern. On desktop ≥768px the right column always exists; below
+ * that asides fall back to inline collapsed `<details>`.
  */
 function isDockingActive(): boolean {
   if (typeof window === "undefined") return false;
-  if (window.innerWidth < DOCK_BREAKPOINT_PX) return false;
-  return document.documentElement.dataset.viewMode === "default";
+  return window.innerWidth >= DOCK_BREAKPOINT_PX;
 }
 
 /**

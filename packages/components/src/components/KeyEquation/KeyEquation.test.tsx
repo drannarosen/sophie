@@ -117,8 +117,22 @@ describe("<KeyEquation> (ADR 0060 registry-shaped)", () => {
 
   it("renders constants strip from frontmatter when present", () => {
     render(<KeyEquation refId='with-constants' />);
-    expect(screen.getByText("g")).toBeInTheDocument();
-    expect(screen.getByText(/9\.81 m\/s\^2/)).toBeInTheDocument();
+    // Constants now render symbol + value + unit via KaTeX (<InlineTex>)
+    // so plain-text matchers no longer see "g" or "9.81 m/s^2" — the
+    // textContent is split across KaTeX-emitted spans. Assert on the
+    // constants <dl> structure instead.
+    const constantsList = screen.getByLabelText(
+      "Constants for Equation With Constants"
+    );
+    expect(constantsList).toBeInTheDocument();
+    // Symbol "g", value "9.81", and unit superscript appear in textContent
+    // even though wrapped in KaTeX markup.
+    expect(constantsList.textContent).toContain("g");
+    expect(constantsList.textContent).toContain("9.81");
+    // Unit rendered via KaTeX — confirms <InlineTex> path executed
+    // (the regression test for the 2026-05-21 KeyEquation.tsx refactor
+    // that swapped string interpolation for <InlineTex>).
+    expect(constantsList.querySelector(".katex")).toBeInTheDocument();
   });
 
   it("renders chapter framing prose at the top when children are provided", () => {

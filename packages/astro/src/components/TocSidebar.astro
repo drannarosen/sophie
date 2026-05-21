@@ -1,5 +1,7 @@
 ---
+import { renderTextWithMath } from "@sophie/components/runtime";
 import type { MarkdownHeading } from "astro";
+import { cleanHeadingText } from "../lib/clean-heading-text";
 import { groupHeadings } from "../lib/group-headings";
 
 /**
@@ -27,6 +29,27 @@ export interface Props {
 
 const { headings, variant = "sidebar" } = Astro.props;
 const groups = groupHeadings(headings);
+
+/**
+ * Slugs of H2 headings that are NOT Parts (chapter rhythm structure
+ * rather than narrative parts). Mirrors the exclusion list in
+ * textbook-layout.css :not(...) selector for `.sophie-content > h2`
+ * part-counter increments — keep these two lists in sync.
+ */
+const PART_EXCLUSION_SLUGS = new Set([
+  "concept-throughline",
+  "summary",
+  "practice-problems",
+  "chapter-glossary",
+  "assumptions-and-limitations",
+]);
+
+let partCounter = 0;
+const numberedGroups = groups.map((g) => {
+  const isPart = !PART_EXCLUSION_SLUGS.has(g.h2.slug);
+  if (isPart) partCounter++;
+  return { ...g, partNumber: isPart ? partCounter : null };
+});
 ---
 
 {groups.length > 0 && (
@@ -36,11 +59,23 @@ const groups = groupHeadings(headings);
   >
     <h2 class='sophie-toc-heading'>Contents</h2>
     <ol class='sophie-toc-list'>
-      {groups.map((g) => (
-        <li class='sophie-toc-item'>
-          <a class='sophie-toc-link' href={`#${g.h2.slug}`}>
-            {g.h2.text}
-          </a>
+      {numberedGroups.map((g) => (
+        <li
+          class:list={[
+            "sophie-toc-item",
+            g.partNumber !== null && "sophie-toc-item--part",
+          ]}
+        >
+          <a
+            class='sophie-toc-link'
+            href={`#${g.h2.slug}`}
+            set:html={
+              (g.partNumber !== null
+                ? `<span class="sophie-toc-part-num">Part ${g.partNumber}</span>`
+                : "") +
+              renderTextWithMath(cleanHeadingText(g.h2.text))
+            }
+          />
           {g.children.length > 0 && (
             <ol class='sophie-toc-sublist'>
               {g.children.map((c) => (
@@ -48,9 +83,8 @@ const groups = groupHeadings(headings);
                   <a
                     class='sophie-toc-link sophie-toc-link--sub'
                     href={`#${c.slug}`}
-                  >
-                    {c.text}
-                  </a>
+                    set:html={renderTextWithMath(cleanHeadingText(c.text))}
+                  />
                 </li>
               ))}
             </ol>

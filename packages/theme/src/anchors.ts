@@ -3,10 +3,15 @@ export const anchors = {
   // earlier cool `#0f1115` so light-mode prose reads "ink on paper"
   // rather than "text on screen." Sprint B palette warmth pass.
   ink: "#1c1917",
-  // Warm off-white page substrate (Tailwind Stone 50). Replaces the
-  // earlier cool `#f9fafb` for academic-book feel — pairs with Stone
-  // border/surface stack and warm dark-mode below.
-  paper: "#fafaf7",
+  // Neutral light-gray page substrate (Tailwind Neutral 50, tweaked
+  // half a step cooler). Sprint K revision — Anna's design call: the
+  // previous warm `#fafaf7` (Stone 50) read as cream/beige and clashed
+  // with the cool teal accent; this neutral off-white reads as "fresh
+  // paper" without the academic-book warmth. Pairs with the (still
+  // slightly warm) Stone surface-1/2/3 stack — the body bg dominates
+  // the visual temperature, so the subtle stone surfaces no longer
+  // tip the page toward beige.
+  paper: "#f7f7f8",
   // Dark-mode page substrate. Warm-dark Stone 900 (replaces the
   // earlier cool `#111827`) so dark mode reads as charcoal-with-
   // parchment rather than navy. Surfaces above derive from it via
