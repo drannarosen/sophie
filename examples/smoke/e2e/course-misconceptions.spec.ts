@@ -9,25 +9,24 @@ const MISCONCEPTIONS_URL = "/misconceptions";
  * Covers TDD test list row T39 from the PR-C3 design doc
  * (`docs/plans/2026-05-14-pr-c3-design.md`).
  *
- * The smoke target ships eleven misconceptions post-ASTR 201 M2-L3
- * pilot:
+ * The smoke target ships twelve misconceptions post-ASTR 201 M2-L3
+ * pilot + the `brighter-equals-closer` follow-up:
  *
- *  - `spoiler-alerts.mdx`: eight `<Aside kind="misconception">` entries
- *    authored by PR-7's chapter rebuild (rainbows-are-decorative,
- *    one-image-tells-the-whole-story, dust-means-empty,
- *    dark-matter-is-just-hidden-normal-matter,
+ *  - `spoiler-alerts.mdx`: nine `<Aside kind="misconception">` entries
+ *    (rainbows-are-decorative, one-image-tells-the-whole-story,
+ *    dust-means-empty, dark-matter-is-just-hidden-normal-matter,
  *    big-bang-was-an-explosion-in-space,
  *    brighter-equals-intrinsically-brighter,
- *    wiens-law-absorption-spectra,
- *    astronomy-is-looking-through-telescopes — the last one converted
- *    from the legacy `<Callout variant="misconception">`).
+ *    brighter-equals-closer — the sibling confusion added in the
+ *    Sprint-K-adjacent content pass — wiens-law-absorption-spectra,
+ *    astronomy-is-looking-through-telescopes).
  *  - `misconception-fixture.mdx`: one `<Aside kind="misconception"
  *    name="universe-with-a-center">` (Intervention PR-γ).
  *  - `spectra-and-composition.mdx` (M2-L3 pilot): two
  *    `<Callout variant="misconception">` long-form entries
  *    (`two-myths-to-kill-now`, `common-student-confusions`).
  *
- * Nine are Aside-sourced (`--short` modifier); two are Callout-sourced
+ * Ten are Aside-sourced (`--short` modifier); two are Callout-sourced
  * (`--long` modifier) per decision #12 (length-based visual
  * distinction).
  */
@@ -40,11 +39,11 @@ test.describe("PR-C3: <CourseMisconceptions /> on /misconceptions", () => {
     const block = page.locator("[data-sophie-course-misconceptions]");
     await expect(block).toBeAttached();
     const terms = block.locator(".sophie-course-misconceptions__term");
-    // Eleven misconceptions post-M2-L3 pilot (8 Aside in spoiler-alerts
-    // + 1 Aside in misconception-fixture + 2 Callout in the pilot
-    // chapter). Pin by anchor id selector rather than text — robust to
-    // label-text changes.
-    await expect(terms).toHaveCount(11);
+    // Twelve misconceptions post-M2-L3 pilot + `brighter-equals-closer`
+    // follow-up (9 Aside in spoiler-alerts + 1 Aside in
+    // misconception-fixture + 2 Callout in the pilot chapter). Pin by
+    // anchor id selector rather than text — robust to label changes.
+    await expect(terms).toHaveCount(12);
     // Pin two PR-7 anchors, the legacy fixture anchor, and one of the
     // M2-L3 pilot's Callout-sourced entries.
     await expect(
@@ -80,12 +79,12 @@ test.describe("PR-C3: <CourseMisconceptions /> on /misconceptions", () => {
     page,
   }) => {
     await page.goto(MISCONCEPTIONS_URL);
-    // Nine of eleven misconceptions are Aside-sourced (`--short`); the
+    // Ten of twelve misconceptions are Aside-sourced (`--short`); the
     // other two are Callout-sourced from the M2-L3 pilot.
     const asideTerms = page.locator(
       ".sophie-course-misconceptions__term.sophie-course-misconceptions__term--short"
     );
-    await expect(asideTerms).toHaveCount(9);
+    await expect(asideTerms).toHaveCount(10);
     // Spot-check one: matching <dd> sibling carries the body modifier.
     const asideBody = asideTerms
       .first()

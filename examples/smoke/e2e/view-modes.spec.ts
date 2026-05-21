@@ -160,9 +160,15 @@ test.describe("PR 5: ViewModeToggle on the smoke chapter", () => {
 
     const toggle = page.getByRole("button", { name: /^view:/i });
     await toggle.click(); // focused
-    await expect(page.locator("html")).toHaveAttribute("data-sidebar", "closed");
+    await expect(page.locator("html")).toHaveAttribute(
+      "data-sidebar",
+      "closed"
+    );
     await toggle.click(); // wide
-    await expect(page.locator("html")).toHaveAttribute("data-sidebar", "closed");
+    await expect(page.locator("html")).toHaveAttribute(
+      "data-sidebar",
+      "closed"
+    );
     await toggle.click(); // back to default
     await expect(page.locator("html")).toHaveAttribute(
       "data-view-mode",

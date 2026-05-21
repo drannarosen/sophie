@@ -25,7 +25,14 @@ test.describe("PR 10: chapter print contract", () => {
     await expect(page.locator(".sophie-topbar")).toHaveCSS("display", "none");
     await expect(page.locator(".sophie-sidebar")).toHaveCSS("display", "none");
     await expect(page.locator(".sophie-right")).toHaveCSS("display", "none");
-    await expect(page.locator(".sophie-search-trigger")).toHaveCSS(
+    // Sprint K (2026-05-21): SearchTrigger is now a real
+    // `<input type='search'>` wrapped by `<div
+    // class='sophie-search-trigger-wrap'>` (per the SearchTrigger.astro
+    // comment "honest affordance — the previous fake-input button was
+    // a UX trap"). The `@media print` rule hides the WRAP (the
+    // outer pill chrome that holds icon + input + kbd hint), which
+    // is the user-visible affordance. Assert against the wrap.
+    await expect(page.locator(".sophie-search-trigger-wrap")).toHaveCSS(
       "display",
       "none"
     );

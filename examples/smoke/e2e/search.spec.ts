@@ -32,6 +32,13 @@ import { expect, test } from "@playwright/test";
  * `02-stars/stellar-evolution.mdx`. Pagefind indexes the whole
  * built site, so opening the modal from
  * `/chapters/measuring-the-sky/` still surfaces those hits.
+ *
+ * Sprint K (2026-05-21): <SearchTrigger> is now a real
+ * `<input type='search'>` element (an "honest affordance" — the
+ * pre-Sprint-K fake-input button was a UX trap because users naturally
+ * tried to type into it and nothing happened; see SearchTrigger.astro).
+ * The trigger is now matched by ARIA role 'searchbox' instead of
+ * 'button'.
  */
 
 test.describe("Pagefind search modal (Layer 2)", () => {
@@ -43,7 +50,7 @@ test.describe("Pagefind search modal (Layer 2)", () => {
     // Wait for chapter page hydration to settle. Same condition-
     // based-waiting discipline as the LO checkbox e2e — no fixed
     // timeouts.
-    const trigger = page.getByRole("button", { name: /search/i });
+    const trigger = page.getByRole("searchbox", { name: /search/i });
     await expect(trigger).toBeVisible();
 
     // Trigger via keyboard (the modal's primary entry point)
@@ -84,7 +91,9 @@ test.describe("Pagefind search modal (Layer 2)", () => {
     // `client:idle`; its document keydown listener isn't installed
     // until React hydrates, which Astro defers until `requestIdleCallback`
     // (after network-idle in practice). Mirrors test 1's discipline.
-    await expect(page.getByRole("button", { name: /search/i })).toBeVisible();
+    await expect(
+      page.getByRole("searchbox", { name: /search/i })
+    ).toBeVisible();
     await page.waitForLoadState("networkidle");
     await page.keyboard.press("Meta+k");
     const dialog = page.getByRole("dialog");
@@ -112,7 +121,9 @@ test.describe("Pagefind search modal (Layer 2)", () => {
     // isn't installed until after `requestIdleCallback` (post-networkidle
     // in practice). Without the wait, Meta+K fires into a void and the
     // dialog never opens. Deterministic-fail-under-load, not flake.
-    await expect(page.getByRole("button", { name: /search/i })).toBeVisible();
+    await expect(
+      page.getByRole("searchbox", { name: /search/i })
+    ).toBeVisible();
     await page.waitForLoadState("networkidle");
     await page.keyboard.press("Meta+k");
     await expect(page.getByRole("dialog")).toBeVisible();

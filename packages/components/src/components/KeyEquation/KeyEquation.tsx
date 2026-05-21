@@ -206,7 +206,14 @@ export function KeyEquation({
             <section
               className={styles.bioGroup}
               data-epistemic-role='assumption'
-              aria-label={`Assumptions for ${entry.title}`}
+              // No aria-label: avoid creating a duplicate "region"
+              // landmark per equation (axe `landmark-unique` violation
+              // when multiple KeyEquations sit on the page). The inner
+              // <h3>Assumptions</h3> provides the heading-level
+              // structure screen readers use for traversal; the outer
+              // KeyEquation <section aria-labelledby={refId}-heading> is
+              // the landmark that scopes "this is the inverse-square
+              // law's assumptions." 2026-05-21 hardening pass.
             >
               <h3 className={styles.bioGroupHeading}>Assumptions</h3>
               <dl className={styles.bioGroupList}>
@@ -259,7 +266,9 @@ export function KeyEquation({
             <section
               className={styles.bioGroup}
               data-epistemic-role='misconception'
-              aria-label={`Common misuses for ${entry.title}`}
+              // No aria-label — same rationale as the Assumptions
+              // group above. Heading-level <h3> is sufficient
+              // structure; the outer KeyEquation landmark scopes it.
             >
               <h3 className={styles.bioGroupHeading}>Common misuses</h3>
               <dl className={styles.bioGroupList}>

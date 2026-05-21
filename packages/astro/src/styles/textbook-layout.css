@@ -426,9 +426,16 @@
    (stubs, index pages, glossary surfaces). Opt-in via the layout
    prop, not via user-toggle, so the column doesn't shift mid-read. */
 
-/* Always hide the ToC element when toc is closed, regardless of
-   docked-asides state. */
-:root[data-toc="closed"] .sophie-toc {
+/* Always hide the desktop in-page ToC when toc is closed, regardless
+   of docked-asides state. Scoped to `.sophie-toc--sidebar` (the
+   desktop right-column instance) so the TocDrawer's nested
+   `.sophie-toc--drawer` instance is unaffected — the drawer surface
+   manages its own visibility via `data-toc-state` per ADR 0036
+   (transient state, not the persistent preference). The Sprint K
+   global selector was hiding the drawer's inner list on mobile
+   because the drawer composes <TocSidebar variant="drawer"> inside
+   itself, surfaced by the 2026-05-21 hardening pass. */
+:root[data-toc="closed"] .sophie-toc--sidebar {
   display: none;
 }
 
@@ -886,13 +893,6 @@
    stronger label-voice "CONTENTS" header, 3px leading accent bar on
    the active item with bold ink, generous vertical breathing room,
    subdued hierarchy via color + weight (not boxes). */
-/* biome-ignore lint/style/noDescendingSpecificity: base .sophie-toc
-   styles intentionally live below the `:root[data-toc="closed"]
-   .sophie-toc { display: none }` qualified rule earlier in the file.
-   The qualified rule is a conditional override (display:none gate);
-   the base rule below it is the unconditional styling. Both target
-   the same selector but biome's specificity-ordering heuristic doesn't
-   distinguish gate-rule from base-rule. No runtime override conflict. */
 .sophie-toc {
   padding: var(--sophie-space-4) var(--sophie-space-3);
   font-family: var(--sophie-font-sans);

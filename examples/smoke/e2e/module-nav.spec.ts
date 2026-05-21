@@ -12,7 +12,20 @@ const STELLAR_EVOLUTION = "/chapters/stellar-evolution";
  * <ModuleNav> primitive renders all modules + chapters as a
  * two-level tree in the sidebar slot. Active state is set on the
  * SSR'd link via `aria-current="page"`. No client JS.
+ *
+ * Sprint K (2026-05-21, commit 997e545): the sidebar defaults to
+ * closed on every viewport (MyST-style "chapter is the content;
+ * chrome opens on demand"). Tests that click chapter-list links need
+ * to open the sidebar first via the topbar `<SidebarToggle>` button
+ * so the link surface is visible.
  */
+
+async function openSidebar(
+  page: import("@playwright/test").Page
+): Promise<void> {
+  await page.getByRole("button", { name: /toggle sidebar/i }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-sidebar", "open");
+}
 
 test.describe("PR 3: Module/chapter sidebar nav", () => {
   test.beforeEach(async ({ context }) => {
@@ -73,6 +86,10 @@ test.describe("PR 3: Module/chapter sidebar nav", () => {
     page,
   }) => {
     await page.goto(SPOILER_ALERTS);
+    // Sprint K: open the sidebar first; the chapter-list links live
+    // inside `.sophie-sidebar` which is `visibility: hidden` while
+    // closed.
+    await openSidebar(page);
     await page
       .locator(".sophie-chapter-list a", { hasText: /Measuring the Sky/ })
       .click();
@@ -86,6 +103,17 @@ test.describe("PR 3: Module/chapter sidebar nav", () => {
     page,
   }) => {
     await page.goto(SPOILER_ALERTS);
+    // Sprint K: open the sidebar first to expose the cross-module link.
+    await openSidebar(page);
+    // ModuleNav renders each module as a <details> that's `open` only
+    // when it contains the current chapter (ModuleNav.astro line ~55).
+    // The Foundations module is open here; expand the Stars module's
+    // disclosure so the Stellar Evolution link is in the visible tree.
+    await page
+      .locator(
+        ".sophie-module[data-module='stars'] > .sophie-module-disclosure > summary"
+      )
+      .click();
     await page
       .locator(".sophie-chapter-list a", { hasText: /Stellar Evolution/ })
       .click();
@@ -95,21 +123,32 @@ test.describe("PR 3: Module/chapter sidebar nav", () => {
     await expect(active).toHaveAttribute("href", STELLAR_EVOLUTION);
   });
 
-  test("sidebar slot is now filled — column does not collapse", async ({
+  test("sidebar slot is filled (SSR) — opening the sidebar reveals 280px column", async ({
     page,
   }) => {
     await page.goto(SPOILER_ALERTS);
-    // The shell has --sophie-sidebar-w defaulting to 280px in CSS;
-    // empty-slot-collapse logic in TextbookLayout overrides it to 0
-    // when the slot is empty. PR 3 fills the slot, so the inline
-    // style override should be absent and the rendered width should
-    // be > 0.
-    const shellWidth = await page.evaluate(() => {
-      const shell = document.querySelector(".sophie-shell") as HTMLElement;
-      const style = getComputedStyle(shell);
-      return style.getPropertyValue("--sophie-sidebar-w").trim();
+    // Sprint K (2026-05-21): the sidebar defaults to closed
+    // (`data-sidebar='closed'` on <html>) which sets
+    // `--sophie-sidebar-w: 0` REGARDLESS of slot fill state. The
+    // original "slot filled" contract is now expressed via the
+    // SSR-stamped `data-sidebar-slot` attribute on `.sophie-shell`
+    // (set by TextbookLayout from `Astro.slots.has('sidebar')`).
+    // We assert two things:
+    //   1. The slot is SSR-marked as filled (the original PR 3
+    //      empty-slot-collapse contract).
+    //   2. Toggling the sidebar open reveals a 280px column (the
+    //      Sprint K post-toggle width).
+    const shell = page.locator(".sophie-shell");
+    await expect(shell).toHaveAttribute("data-sidebar-slot", "filled");
+
+    await page.getByRole("button", { name: /toggle sidebar/i }).click();
+    await expect(page.locator("html")).toHaveAttribute("data-sidebar", "open");
+
+    const openWidth = await page.evaluate(() => {
+      const el = document.querySelector(".sophie-shell") as HTMLElement;
+      return getComputedStyle(el).getPropertyValue("--sophie-sidebar-w").trim();
     });
-    expect(shellWidth).not.toBe("0");
+    expect(openWidth).toBe("280px");
   });
 
   test("axe-core: zero violations on the new nav region", async ({ page }) => {
