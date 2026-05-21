@@ -9,13 +9,15 @@ const FIGURES_URL = "/figures";
  * Covers TDD test list row T38 from the PR-C3 design doc
  * (`docs/plans/2026-05-14-pr-c3-design.md`).
  *
- * The smoke chapter (`spoiler-alerts.mdx`) ships 19
- * `<Figure name="...">` registry-mode blocks. Each is captured
- * by the PR-C3 `extractFigures` extractor as a `FigureUsageEntry`
- * with per-chapter sequential `number: 1..19` and anchor
- * `fig-{slugify(name)}-{number}`. With a single chapter, the
- * default chapter-order sort reduces to source-appearance order
- * (number 1..19).
+ * The smoke fixture now ships TWO chapters with `<Figure name="...">`
+ * registry-mode blocks: `spectra-and-composition.mdx` (the ASTR 201
+ * M2-L3 pilot, 15 figures) and `spoiler-alerts.mdx` (19 figures).
+ * Each is captured by the PR-C3 `extractFigures` extractor as a
+ * `FigureUsageEntry` with per-chapter sequential `number: 1..N` and
+ * anchor `fig-{slugify(name)}-{number}`. Default sort is chapter slug
+ * asc then per-chapter number asc, so the page renders
+ * `spectra-and-composition` figs 1..15 first (s-p-e-c < s-p-o-i),
+ * then `spoiler-alerts` figs 1..19 — 34 entries total.
  *
  * Each `<li>` carries the `Fig. N` prefix, an `<img>` from the
  * registry, a caption (registry default or per-usage override),
@@ -24,14 +26,14 @@ const FIGURES_URL = "/figures";
  */
 
 test.describe("PR-C3: <CourseFigures /> on /figures", () => {
-  test("T38: renders all 19 figures from the smoke chapter with registry-resolved <img> tags", async ({
+  test("T38: renders all 34 figures across both smoke chapters with registry-resolved <img> tags", async ({
     page,
   }) => {
     await page.goto(FIGURES_URL);
     const block = page.locator("[data-sophie-course-figures]");
     await expect(block).toBeAttached();
     const items = block.locator(".sophie-course-figures__item");
-    await expect(items).toHaveCount(19);
+    await expect(items).toHaveCount(34);
 
     // Every figure should resolve via the registry — no
     // "Missing figure:" fallback markers should be present.
@@ -39,58 +41,43 @@ test.describe("PR-C3: <CourseFigures /> on /figures", () => {
       0
     );
 
-    // 19 <img> elements, one per item, each with non-empty src
+    // 34 <img> elements, one per item, each with non-empty src
     // and alt (the FigureRegistryEntry schema enforces
     // NonEmptyString for both).
     const images = block.locator(".sophie-course-figures__image");
-    await expect(images).toHaveCount(19);
+    await expect(images).toHaveCount(34);
     await expect(images.first()).toHaveAttribute("src", /\S/);
     await expect(images.first()).toHaveAttribute("alt", /\S/);
   });
 
-  test("default sort is chapter-order: Fig. 1 .. Fig. 19", async ({ page }) => {
+  test("default sort is chapter-order: spectra-and-composition 1..15, then spoiler-alerts 1..19", async ({
+    page,
+  }) => {
     // PR-C3 design decision #9: default `order="chapter"` sorts
-    // by chapter slug asc, then per-chapter `number` asc. With a
-    // single chapter (spoiler-alerts), this reduces to number
-    // 1..19 in source-appearance order. The number prefix
-    // `Fig. N` is rendered by `.sophie-course-figures__number`.
+    // by chapter slug asc, then per-chapter `number` asc. With
+    // two chapters, the `Fig. N` prefix resets when the slug
+    // transitions (spectra-and-composition → spoiler-alerts).
+    // The number prefix `Fig. N` is rendered by
+    // `.sophie-course-figures__number`.
     await page.goto(FIGURES_URL);
     const numbers = await page
       .locator(".sophie-course-figures__number")
       .evaluateAll((els) => els.map((el) => (el.textContent ?? "").trim()));
-    expect(numbers).toEqual([
-      "Fig. 1",
-      "Fig. 2",
-      "Fig. 3",
-      "Fig. 4",
-      "Fig. 5",
-      "Fig. 6",
-      "Fig. 7",
-      "Fig. 8",
-      "Fig. 9",
-      "Fig. 10",
-      "Fig. 11",
-      "Fig. 12",
-      "Fig. 13",
-      "Fig. 14",
-      "Fig. 15",
-      "Fig. 16",
-      "Fig. 17",
-      "Fig. 18",
-      "Fig. 19",
-    ]);
+    const spectra = Array.from({ length: 15 }, (_, i) => `Fig. ${i + 1}`);
+    const spoiler = Array.from({ length: 19 }, (_, i) => `Fig. ${i + 1}`);
+    expect(numbers).toEqual([...spectra, ...spoiler]);
   });
 
   test("each entry has a caption (registry default or override)", async ({
     page,
   }) => {
     await page.goto(FIGURES_URL);
-    // 19 figcaptions, all non-empty. Smart-quote tolerance: if
+    // 34 figcaptions, all non-empty. Smart-quote tolerance: if
     // any registry caption contains an apostrophe, remark may
     // render it curly — we only assert non-empty here, not exact
     // text, so the smart-quote pass is opaque to this test.
     const captions = page.locator(".sophie-course-figures__caption");
-    await expect(captions).toHaveCount(19);
+    await expect(captions).toHaveCount(34);
     const texts = await captions.evaluateAll((els) =>
       els.map((el) => (el.textContent ?? "").trim())
     );
@@ -104,24 +91,26 @@ test.describe("PR-C3: <CourseFigures /> on /figures", () => {
   }) => {
     await page.goto(FIGURES_URL);
     const backlinks = page.locator(".sophie-course-figures__backlink a");
-    await expect(backlinks).toHaveCount(19);
+    await expect(backlinks).toHaveCount(34);
     const hrefs = await backlinks.evaluateAll((els) =>
       els.map((el) => (el as HTMLAnchorElement).getAttribute("href") ?? "")
     );
-    // Spot-check: the 4th figure (cosmic-distance-ladder, line
-    // 445 of the source MDX) and the 16th (decoder-ring, line
-    // 867) — these are the two figures cross-referenced by
-    // `<FigureRef>` in the chapter (verified in
-    // figure-ref.spec.ts).
-    expect(hrefs[3]).toBe(
+    // Spot-check: the two `spoiler-alerts` figures cross-referenced
+    // by `<FigureRef>` in that chapter (verified in
+    // figure-ref.spec.ts). With sort order spectra(1..15) +
+    // spoiler(1..19), spoiler-alerts fig 4 lands at index 18 and
+    // fig 16 lands at index 30.
+    expect(hrefs[18]).toBe(
       "/chapters/spoiler-alerts#fig-cosmic-distance-ladder-4"
     );
-    expect(hrefs[15]).toBe("/chapters/spoiler-alerts#fig-decoder-ring-16");
+    expect(hrefs[30]).toBe("/chapters/spoiler-alerts#fig-decoder-ring-16");
     // All hrefs share the chapter prefix and the `fig-` anchor
     // prefix (the extractor's anchor shape is invariant —
-    // F5 invariant).
+    // F5 invariant). Now spans two chapters.
     for (const href of hrefs) {
-      expect(href).toMatch(/^\/chapters\/spoiler-alerts#fig-/);
+      expect(href).toMatch(
+        /^\/chapters\/(spectra-and-composition|spoiler-alerts)#fig-/
+      );
     }
   });
 
