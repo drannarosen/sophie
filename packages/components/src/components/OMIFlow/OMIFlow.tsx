@@ -6,6 +6,7 @@ import {
   type ReactNode,
   useId,
 } from "react";
+import { MathText } from "../../runtime/MathText.tsx";
 import styles from "./OMIFlow.module.css.js";
 import type {
   OMIFlowProps,
@@ -87,6 +88,15 @@ function OMIFlowSlotImpl({
   bodyHtml?: string;
   children?: ReactNode;
 }) {
+  // Sprint D refactor (2026-05-20): role-gutter stack layout. The
+  // outer <section> uses `display: contents` so its `<header>` and
+  // `<div>` children land directly on the parent OMIFlow grid (role
+  // label in left gutter, title+body in main column). Mobile fallback
+  // (in OMIFlow.module.css) collapses gutter to inline label.
+  //
+  // a11y: aria-labelledby still points at the role label span; role
+  // label remains the section's accessible name. Slot identity
+  // (data-omi-role) preserved for OF-1 / OF-2 audit DOM checks.
   const trimmed = title?.trim();
   return (
     <section
@@ -94,28 +104,27 @@ function OMIFlowSlotImpl({
       className={`${styles.slot} ${slotClassFor(role)}`.trim()}
       data-omi-role={role}
     >
-      <header className={styles.titleBar}>
+      <header className={styles.gutter}>
         <span id={titleId} className={styles.roleLabel}>
           {ROLE_LABEL[role]}
         </span>
-        {trimmed !== undefined && trimmed.length > 0 ? (
-          <>
-            <span aria-hidden className={styles.titleSep}>
-              —
-            </span>
-            <span className={styles.userTitle}>{trimmed}</span>
-          </>
-        ) : null}
       </header>
-      {bodyHtml !== undefined ? (
-        <div
-          className={styles.body}
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: bodyHtml is build-time-serialized author MDX from renderChildrenToHtml (same trust boundary as <RepVerbal>'s body / <Objective>'s body) — never runtime input
-          dangerouslySetInnerHTML={{ __html: bodyHtml }}
-        />
-      ) : (
-        <div className={styles.body}>{children}</div>
-      )}
+      <div className={styles.main}>
+        {trimmed !== undefined && trimmed.length > 0 ? (
+          <MathText as='h3' className={styles.userTitle}>
+            {trimmed}
+          </MathText>
+        ) : null}
+        {bodyHtml !== undefined ? (
+          <div
+            className={styles.body}
+            // biome-ignore lint/security/noDangerouslySetInnerHtml: bodyHtml is build-time-serialized author MDX from renderChildrenToHtml (same trust boundary as <RepVerbal>'s body / <Objective>'s body) — never runtime input
+            dangerouslySetInnerHTML={{ __html: bodyHtml }}
+          />
+        ) : (
+          <div className={styles.body}>{children}</div>
+        )}
+      </div>
     </section>
   );
 }
@@ -263,7 +272,7 @@ export function OMIFlow(props: OMIFlowProps) {
       <span id={titleId} hidden>
         {concept ?? "Observable, Model, Inference flow"}
       </span>
-      {CANONICAL_ORDER.flatMap((kind, idx) => {
+      {CANONICAL_ORDER.flatMap((kind) => {
         const slot = slots[kind];
         if (slot === undefined) return [];
         const slotTitleId = `${rootId}-${kind}-label`;
@@ -278,16 +287,14 @@ export function OMIFlow(props: OMIFlowProps) {
             {slot.children}
           </OMIFlowSlotImpl>
         );
-        // Decorative chevron between adjacent slots; not after the
-        // final one. Chevron rotation to ↓ on mobile/print lives in CSS.
-        const isLast = idx === CANONICAL_ORDER.length - 1;
-        if (isLast) return [slotEl];
-        return [
-          slotEl,
-          <span key={`${kind}-chevron`} aria-hidden className={styles.chevron}>
-            ›
-          </span>,
-        ];
+        // Sprint D refactor: chevrons between slots removed. The new
+        // role-gutter stack uses ↓ arrow connectors INSIDE each
+        // gutter (per OMIFlow.module.css `.gutter::after`), which sit
+        // in the role color and align with the vertical rule. No
+        // separator elements between slots — each <section> renders
+        // its gutter + main directly on the parent grid via
+        // display:contents.
+        return [slotEl];
       })}
     </div>
   );

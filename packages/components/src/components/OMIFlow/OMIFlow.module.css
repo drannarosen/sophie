@@ -1,116 +1,109 @@
-/* OMIFlow — composite primitive renderer per ADR 0063.
+/*
+ * OMIFlow — Sprint D role-gutter stack (2026-05-20).
  *
- * Layout: flat 3-panel grid with subtle ›‹ chevrons between panels.
- * Mobile + print collapse to a vertical stack with ↓ chevrons.
+ * Layout: 2-column grid. Left gutter holds small-caps role labels with
+ * a role-colored vertical rule on the right edge of each gutter row.
+ * The 3 gutter rules stack adjacently to form one continuous vertical
+ * line whose color graduates observable → model → inference, signaling
+ * the inference chain visually as it flows downward. Right column
+ * holds optional author-supplied title (serif italic) + body prose.
  *
- * Anatomy:
- *   .omiFlow    — outer container; CSS Grid 3-cell layout on desktop.
- *   .chevron    — purely decorative chevron span between slots
- *                 (aria-hidden). › on desktop, ↓ on mobile/print.
- *   .slot       — section wrapping each slot's title + body. Each
- *                 slot is a card-light Tier-2 surface so the three-
- *                 panel grid reads as one composite.
- *   .titleBar   — slot header with role label (small-caps) + optional
- *                 author title.
- *   .roleLabel  — small-caps "OBSERVABLE" / "MODEL" / "INFERENCE"
- *                 prefix; always present (ADR 0063 §Decision 5).
- *   .titleSep   — em-dash separator between role label and author title.
- *   .userTitle  — author-supplied title (rendered when title= is set).
- *   .body       — slot prose pane (Tier-2 white-on-tinted card).
+ * The slot DOM uses `display: contents` so each <section>'s <header>
+ * and <div> land directly on the parent grid (gutter cell + main
+ * cell). The <section> itself disappears from layout but stays in the
+ * DOM tree — preserves OF-1/OF-2 audit invariants and aria-labelledby
+ * accessibility wiring.
  *
- * Per-role accent tokens reuse the existing callout vocabulary:
- *   observable → --sophie-callout-key-insight-* (yellow lineage; the
- *                  empirical-evidence accent in scientific-reasoning-os
- *                  visual language)
- *   model      → --sophie-callout-info-* (teal; the formal-structure
- *                  accent)
- *   inference  → --sophie-callout-summary-* (green; the takeaway-claim
- *                  accent)
+ * Mobile + print: gutter collapses to inline label above body; the
+ * role-colored rule rotates to a horizontal underline beneath each
+ * role label.
+ *
+ * Per-role colors come from the epistemic-role tokens (--sophie-role-*)
+ * which Sprint B aligned to the brand teal / violet / rose palette.
  */
 
 .omiFlow {
   display: grid;
-  grid-template-columns: 1fr auto 1fr auto 1fr;
-  gap: var(--sophie-space-3);
-  align-items: stretch;
-  margin-block: var(--sophie-space-5);
-}
-
-.chevron {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--sophie-text-muted);
-  font-size: var(--sophie-text-xl);
-  line-height: 1;
-  user-select: none;
-}
-
-.slot {
-  display: grid;
-  grid-template-rows: auto 1fr;
-  background: var(--sophie-surface-1);
-  border: 1px solid var(--sophie-border);
-  border-left: var(--sophie-card-rule-light) solid var(--sophie-accent);
-  border-radius: var(--sophie-radius-sm);
-  color: var(--sophie-text);
+  grid-template-columns: 11ch 1fr;
+  margin-block: var(--sophie-space-6);
   font-family: var(--sophie-font-sans);
   line-height: var(--sophie-leading-prose);
-  overflow: hidden;
+  color: var(--sophie-text);
 }
 
-.slotObservable {
-  --sophie-accent: var(--sophie-callout-key-insight-accent);
-}
-.slotModel {
-  --sophie-accent: var(--sophie-callout-info-accent);
-}
-.slotInference {
-  --sophie-accent: var(--sophie-callout-summary-accent);
+/* Each slot uses display:contents so its <header> + <div> land
+ * directly on the parent .omiFlow grid (gutter col + main col).
+ * The <section> stays in the DOM tree for a11y + audit invariants. */
+.slot {
+  display: contents;
 }
 
-.titleBar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: var(--sophie-space-1);
-  padding: var(--sophie-space-2) var(--sophie-space-4);
-  border-bottom: 1px solid var(--sophie-border);
-  font-weight: var(--sophie-weight-semibold);
-  font-size: var(--sophie-text-sm);
+/* Gutter cell — right-aligned role label + colored vertical rule that
+ * forms the role-graduation line when 3 slots stack. The rule is the
+ * gutter's inline-end border; adjacent gutter rules stack to one
+ * continuous 3px line. */
+.gutter {
+  grid-column: 1;
+  text-align: end;
+  padding-inline-end: var(--sophie-space-4);
+  padding-block: var(--sophie-space-4);
+  border-inline-end: 3px solid var(--role-color, var(--sophie-text-faint));
+  position: relative;
 }
 
-.slotObservable .titleBar {
-  background: var(--sophie-callout-key-insight-title-bg);
-  color: var(--sophie-callout-key-insight-title-text, var(--sophie-text));
-}
-.slotModel .titleBar {
-  background: var(--sophie-callout-info-title-bg);
-  color: var(--sophie-callout-info-title-text, var(--sophie-text));
-}
-.slotInference .titleBar {
-  background: var(--sophie-callout-summary-title-bg);
-  color: var(--sophie-callout-summary-title-text, var(--sophie-text));
-}
-
+/* Small-caps role label — top-aligned to the body's first prose line.
+ * Sprint A small-caps token: 0.72em, weight 600, letter-spacing 0.1em. */
 .roleLabel {
+  display: inline-block;
+  font-family: var(--sophie-font-sans);
   font-size: var(--sophie-text-xs);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  font-weight: var(--sophie-weight-bold);
+  font-weight: 700;
+  color: var(--role-color, var(--sophie-text-2));
 }
 
-.titleSep {
-  color: var(--sophie-text-muted);
-  padding-inline: var(--sophie-space-1);
+/* Connector arrow below role label, only on slots that have a
+ * following slot — signals the inference chain flowing downward. */
+.slot:not(:last-of-type) .gutter::after {
+  content: "↓";
+  display: block;
+  margin-block-start: var(--sophie-space-2);
+  color: var(--role-color, var(--sophie-text-faint));
+  font-size: var(--sophie-text-md);
+  line-height: 1;
+  opacity: 0.7;
+  font-weight: 400;
 }
 
+/* Main cell — author title (serif italic) above body prose. */
+.main {
+  grid-column: 2;
+  padding-inline-start: var(--sophie-space-4);
+  padding-block: var(--sophie-space-4);
+  min-inline-size: 0; /* let the column shrink below intrinsic width */
+}
+
+/* Author-supplied title above body — Fraunces italic (Sprint A serif
+ * brought into a chapter-body context for the first time). Slight
+ * negative letter-spacing matches h3 treatment. */
 .userTitle {
-  font-weight: var(--sophie-weight-semibold);
+  margin: 0 0 var(--sophie-space-3) 0;
+  font-family: var(--sophie-font-serif);
+  font-size: var(--sophie-text-lg);
+  font-weight: 500;
+  font-style: italic;
+  line-height: 1.3;
+  letter-spacing: -0.005em;
+  color: var(--sophie-text);
+  font-variation-settings:
+    "opsz" 48,
+    "SOFT" 60;
 }
 
 .body {
-  padding: var(--sophie-space-3) var(--sophie-space-4);
+  /* No padding — main cell already padded. Body holds the prose
+   * directly, no wrapper chrome. */
 }
 
 .body > :first-child {
@@ -120,21 +113,63 @@
   margin-block-end: 0;
 }
 
-/* Mobile + tablet: stack vertically, chevrons rotate to ↓. */
+/* Per-slot role color binding. The 3 colors graduate to form the
+ * role-progression line on the left side of the OMIFlow. */
+.slotObservable {
+  --role-color: var(--sophie-role-observable);
+}
+.slotModel {
+  --role-color: var(--sophie-role-model);
+}
+.slotInference {
+  --role-color: var(--sophie-role-inference);
+}
+
+/* Mobile + tablet: gutter collapses to inline label above body. The
+ * role-colored rule rotates to a horizontal underline beneath the
+ * role label. The arrow connector disappears (vertical flow is
+ * already implied by stacking; no need for a chevron). */
 @media (max-width: 768px) {
   .omiFlow {
     grid-template-columns: 1fr;
-    grid-auto-rows: auto;
-    gap: var(--sophie-space-2);
+    row-gap: var(--sophie-space-4);
+  }
+  .gutter {
+    text-align: start;
+    padding-inline-end: 0;
+    padding-block-end: var(--sophie-space-1);
+    padding-block-start: var(--sophie-space-3);
+    border-inline-end: 0;
+    border-block-end: 2px solid var(--role-color, var(--sophie-text-faint));
+  }
+  .main {
+    padding-inline-start: 0;
+    padding-block-start: 0;
+  }
+  .slot:not(:last-of-type) .gutter::after {
+    display: none;
   }
 }
 
-/* Print: same vertical stack as mobile. */
+/* Print: same single-column flow as mobile. */
 @media print {
   .omiFlow {
     grid-template-columns: 1fr;
-    grid-auto-rows: auto;
-    gap: var(--sophie-space-2);
+    row-gap: var(--sophie-space-3);
     break-inside: avoid;
+  }
+  .gutter {
+    text-align: start;
+    padding-inline-end: 0;
+    padding-block-end: var(--sophie-space-1);
+    border-inline-end: 0;
+    border-block-end: 2px solid var(--role-color, var(--sophie-text-faint));
+  }
+  .main {
+    padding-inline-start: 0;
+    padding-block-start: 0;
+  }
+  .slot:not(:last-of-type) .gutter::after {
+    display: none;
   }
 }
