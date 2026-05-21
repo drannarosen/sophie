@@ -155,7 +155,16 @@ export const fontStacks = {
 export const sizes = {
   pill: "0.6875rem",
   xs: "0.75rem",
+  // `tiny` and `small` are semantic aliases (xs / sm) used by the
+  // marginalia voice: docked asides, callout titles, breadcrumbs,
+  // status chips, ChapterTitle subtitle. They lived as bare
+  // `var(--sophie-text-{tiny,small})` references in component CSS
+  // without ever being emitted — declarations silently dropped,
+  // those slots inherited body-prose size. 2026-05-21 fix: emit
+  // them so the original code intent renders.
+  tiny: "0.75rem",
   sm: "0.875rem",
+  small: "0.875rem",
   base: "1rem",
   body: "1.0625rem",
   md: "1.125rem",
