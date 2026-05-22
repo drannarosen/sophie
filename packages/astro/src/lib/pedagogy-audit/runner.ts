@@ -18,6 +18,7 @@ import {
 import { checkObjectives } from "./invariants/objectives.ts";
 import { checkOMIFlow } from "./invariants/omi-flow.ts";
 import { checkOrphans } from "./invariants/orphans.ts";
+import { checkRetrievalFamily } from "./invariants/retrieval-family.ts";
 import { checkValidation } from "./invariants/validation.ts";
 import type { AuditExtras, AuditReport, FindingSink } from "./types.ts";
 
@@ -109,6 +110,10 @@ export function runPedagogyAudit(
   // ADR 0063 — OF-1 (slot source-order WARN). OF-2 (chapter-level
   // conformance ERROR for framing: 'OMI') lands in PR-C.
   checkOMIFlow(index, sink);
+
+  // Wedge B1 retrieval-family invariants (PRA-1 prereq activation,
+  // RET-1 retrieval coverage, SR-1 SpacedReview ref validity).
+  checkRetrievalFamily(index, sink);
 
   return {
     errors: sink.errors,
