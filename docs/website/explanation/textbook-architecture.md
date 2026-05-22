@@ -40,16 +40,23 @@ collections beat one (audit invariants, routing layouts, AI
 authoring ergonomics) and how the design generalizes when future
 content kinds (slides, prep, solutions, handouts) get added.
 
-## 3. `ModuleSchema` — what a module is
+## 3. `SectionModuleVariantSchema` — what a module is
 
-Modules are first-class. A `ModuleSchema` requires a slug, title,
-order (sparse numeric for insertion-friendly reordering), description
-(capped at 280 characters for ToC consistency), and at least one
-learning objective (using the shared `ObjectiveSchema` lifted into
-`@sophie/core/schema` from `@sophie/components`). Optional fields:
-subtitle, weekRange, prep (the latter deferred for refinement
-post-textbook). The module's MDX body is author-controlled prose —
-"Why this module matters" — that anchors the landing page.
+Modules are first-class. Per
+[ADR 0067](../decisions/0067-section-level-artifacts.md) (locked
+2026-05-21 via Wedge A.5 reconciliation), the "module" concept is
+the `type: "module"` variant of the new `SectionSchema` discriminated
+union; `SectionModuleVariantSchema` is the exported Zod schema for
+that variant.
+
+A module requires a slug, title, order (sparse numeric for
+insertion-friendly reordering), description (capped at 280 characters
+for ToC consistency), and at least one learning objective (using the
+shared `ObjectiveSchema` lifted into `@sophie/core/schema` from
+`@sophie/components`). Optional fields: subtitle, weekRange, prep
+(the latter deferred for refinement post-textbook). The module's
+MDX body is author-controlled prose — "Why this module matters" —
+that anchors the landing page.
 
 ## 4. `ChapterSchema` — chapter↔module relationship
 
@@ -58,8 +65,8 @@ intra-module position via a sparse `order` field. Chapter `slug` is
 stable and authoritative for routing and for the persistent-response
 key per [ADR 0007](../decisions/0007-persistence-indexeddb.md) — it does **not**
 derive from the filesystem. The schema also tightens `description`
-to be required and capped at 280 characters, matching `ModuleSchema`
-for ToC layout predictability.
+to be required and capped at 280 characters, matching
+`SectionModuleVariantSchema` for ToC layout predictability.
 
 ## 5. Filesystem layout convention
 
@@ -130,7 +137,7 @@ sketch of how it slots into the two-collection model when it lands:
   textbook collection (`slides`) with its own `SlideDeckSchema`
   referencing modules.
 - **Prep materials** — likely either an optional `prep[]` field on
-  `ModuleSchema` (small) or a fourth collection (rich).
+  `SectionModuleVariantSchema` (small) or a fourth collection (rich).
 - **Solutions** — Phase 5 dual-profile work; inline
   `<SolutionKey profile="instructor">` per the existing component
   contract; COMP 536's existing `_instructor/` shape is the
