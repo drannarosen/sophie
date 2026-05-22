@@ -91,6 +91,31 @@ Breakdown:
 | `PRA-1` (Unit-aware) | 1 | Active — `spectra-and-composition` Unit's `["exponents", "logarithms"]` prereqs exercise BOTH the covered (no-WARN) + uncovered (WARN) paths in a single fixture. Verifies the graduated logic surfaces in production builds, not just unit tests. |
 | `SR-1` (section-validity) | 0 | Quiet — `stellar-evolution.mdx` has `<SpacedReview section="stars">` and `stars` resolves to a known `SectionEntry.slug`. Inverting to an unknown slug would emit SR-1 ERROR + fail the build; the fixture stays valid by design. |
 
+**Wedge B-followup (W2) graduation status:**
+
+W2 was a *structural* migration — the audit baseline counts are
+unchanged (0/14/7); the underlying invariants now iterate
+`index.units` instead of `index.chapters`, and they read `u.id` +
+`u.framing` + `u.status` instead of the deleted `ChapterEntry`'s
+`slug` + `framing` + `status` fields. Per W2/D4 1:1 convention,
+those strings coincide, so per-finding `location.chapter` strings
+also stay identical. The smoke build shape on disk graduated to
+ADR 0067's `sections/<sec>/units/<unit>/reading.mdx` file layout
+per W2/D1 (Path A).
+
+| Code | Migration | Status |
+|---|---|---|
+| `CT-1` / `CT-2` | iterate `index.units`; `u.section_id` replaces `ch.module` | Quiet (no fixture-side chapter-title collisions) |
+| `K1` | iterate `index.units`; `u.id` replaces `ch.slug` | 3 INFOs — same fixtures, same counts |
+| `MG2` | `index.units[u.id]` order map replaces `index.chapters[ch.slug]` | Quiet |
+| `O2` | iterate `index.units` | 1 WARN (misconception-fixture) — same finding |
+| `OF-2` | `u.framing` replaces `ch.framing`; iterate `index.units` | Quiet (OMI-framed units have ≥1 OMIFlow) |
+| `CS2` | `units.filter(u => u.status === 'draft').map(u => u.id)` populates `extras.draftChapterSlugs` from W2 TextbookLayout | Quiet (no draft units in fixture) |
+| `C1` | `ctx.chapterSlugs = new Set(index.units.map(u => u.id))` | Quiet (smoke `<ChapterRef chapter>` callsites resolve cleanly via the W2 prop rename) |
+
+Net W2 change: **zero findings added or removed**. Counts hold;
+shape graduated.
+
 The smoke build IS "audit clean" by the v1 ship bar definition
 because no ERRORs fire and every WARNING / INFO is an intentional
 exercise of an invariant. **The 14-warnings / 7-infos count is the

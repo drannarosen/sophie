@@ -118,7 +118,7 @@ This page is the chapter author's quick reference.
 | `<GlossaryTerm name="X">term</GlossaryTerm>` | `definitions` | The element's children (always; `name` is the lookup key) | Children-only |
 | `<EquationRef refId="X" />` | `equations` (registry collection) | Equation title with hover preview (KaTeX-rendered tex + title + compact biography summary). Clicks navigate to `/equations/<refId>` registry route. | Self-closing or children |
 | `<FigureRef name="X" />` | `figureRegistry` + `figureUsages` | "Fig. N" (ordinal) with hover preview (thumbnail + caption) | Self-closing or children |
-| `<ChapterRef slug="X" />` | `chapters` + `modules` | Chapter title with hover preview (module breadcrumb + title + description) | Self-closing or children |
+| `<ChapterRef chapter="X" />` | `artifacts` + `units` + `sections` | Unit title with hover preview (section breadcrumb + title + description); links to `/units/X/reading`. W2/D3 prop rename (`slug` → `chapter`); per W2/D4 the prop value equals both the reading-artifact id and the parent Unit id. | Self-closing or children |
 | `<TDRRef num="14" />` | `tdrReferences` (Teaching Decision Records) | `TDR-N: [title]` with hover preview (title + evidence_type + evidence_strength + 1-line summary) | Self-closing or children |
 
 `<TDRRef>` respects per-ADR-0040 visibility rules: in student-facing
@@ -248,7 +248,7 @@ import {
   </Objective>
 </LearningObjectives>
 
-In <ChapterRef client:load slug="measuring-the-sky" />, we will see how
+In <ChapterRef client:load chapter="measuring-the-sky" />, we will see how
 <GlossaryTerm client:load name="parallax">parallax</GlossaryTerm>
 underpins every distance method.
 ```
@@ -326,7 +326,7 @@ on the same page share an IndexedDB key and clobber each other.
 
 **Referencing a name/slug that doesn't exist in the index.**
 `<GlossaryTerm name="unknown">`, `<EquationRef refId="unknown">`,
-`<FigureRef name="unknown">`, `<ChapterRef slug="unknown">` all fall
+`<FigureRef name="unknown">`, `<ChapterRef chapter="unknown">` all fall
 back to bare-text render + dev `console.warn`. The audit pass
 catches this systematically (D4 / E4 / F2 / C1 for chapter-side
 miss; R1–R4 for cross-reference integrity between registry
@@ -351,7 +351,7 @@ time, not at runtime.
 | Inline reference to a defined term | `<GlossaryTerm name="X">term</GlossaryTerm>` |
 | Inline reference to an equation | `<EquationRef refId="X" />` |
 | Inline reference to a figure | `<FigureRef name="X" />` |
-| Inline reference to another chapter | `<ChapterRef slug="X" />` |
+| Inline reference to another chapter | `<ChapterRef chapter="X" />` (W2/D3 prop rename; links to `/units/X/reading`) |
 | Inline reference to a Teaching Decision Record | `<TDRRef num="14" />` (per [ADR 0040](../decisions/0040-teaching-decision-records.md)) |
 | The chapter-opening "you will be able to..." list | `<LearningObjectives>` with `<Objective>` children |
 | One concept presented across multiple representational modes (prose + equation + figure) with explicit cross-bindings | `<MultiRep>` 🚧 with `<RepVerbal>` / `<RepEquation>` / `<RepFigure>` children. `<RepCode>` deferred (pending `<CodeCell>`); intuition framing lives in `<RepVerbal>` prose. |
