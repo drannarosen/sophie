@@ -1120,4 +1120,87 @@ describe("PedagogyIndexSchema", () => {
     });
     expect(result.success).toBe(true);
   });
+
+  // Wedge B-followup (W1) — sections + units optional with default [].
+  test("sections defaults to [] when absent (forward-compat with pre-W1 indexes)", () => {
+    const result = PedagogyIndexSchema.safeParse(emptyIndex);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.sections).toEqual([]);
+    }
+  });
+
+  test("units defaults to [] when absent (forward-compat with pre-W1 indexes)", () => {
+    const result = PedagogyIndexSchema.safeParse(emptyIndex);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.units).toEqual([]);
+    }
+  });
+
+  test("accepts a populated sections array (W1)", () => {
+    const result = PedagogyIndexSchema.safeParse({
+      ...emptyIndex,
+      sections: [
+        { type: "module", slug: "intro", title: "Intro", order: 0 },
+        { type: "module", slug: "stars", title: "Stars", order: 1 },
+      ],
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.sections).toHaveLength(2);
+      expect(result.data.sections[0]?.slug).toBe("intro");
+    }
+  });
+
+  test("accepts a populated units array with chapter + lecture bindings (W1)", () => {
+    const result = PedagogyIndexSchema.safeParse({
+      ...emptyIndex,
+      units: [
+        {
+          id: "u1",
+          type: "lecture",
+          title: "U1",
+          order: 0,
+          prereqs: [],
+          section_id: "intro",
+          chapter: "u1-chapter",
+        },
+        {
+          id: "u2",
+          type: "lecture",
+          title: "U2",
+          order: 0,
+          prereqs: ["logarithms"],
+          section_id: "stars",
+          chapter: "u2-chapter",
+          lecture: "u2-slides",
+        },
+      ],
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.units).toHaveLength(2);
+      expect(result.data.units[1]?.lecture).toBe("u2-slides");
+      expect(result.data.units[1]?.prereqs).toEqual(["logarithms"]);
+    }
+  });
+
+  test("rejects a unit with an invalid type discriminator (W1)", () => {
+    const result = PedagogyIndexSchema.safeParse({
+      ...emptyIndex,
+      units: [
+        {
+          id: "x",
+          type: "invalid",
+          title: "X",
+          order: 0,
+          prereqs: [],
+          section_id: "intro",
+          chapter: "x",
+        },
+      ],
+    });
+    expect(result.success).toBe(false);
+  });
 });

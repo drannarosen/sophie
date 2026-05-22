@@ -18,8 +18,10 @@ import {
   ObjectiveEntrySchema,
   OMIFlowEntrySchema,
   RetrievalPromptEntrySchema,
+  SectionEntrySchema,
   SkillReviewEntrySchema,
   SpacedReviewEntrySchema,
+  UnitEntrySchema,
 } from "./pedagogy-index-entries/index.ts";
 
 /**
@@ -162,5 +164,26 @@ export const PedagogyIndexSchema = z.object({
    * registry-resolution pass.
    */
   skillReviews: z.array(SkillReviewEntrySchema).readonly().default([]),
+  /**
+   * Consumer-app-owned section metadata, forwarded from
+   * `getCollection('sections')` per ADR 0067. Wedge B-followup (W1)
+   * introduces this collection; consumers on the pre-W1 path see `[]`.
+   * Powers PRA-1's "same Section or prior Section" prereq lookup and
+   * `<SpacedReview section="…">` rendering's section→units→chapters
+   * traversal. `SectionEntry` is a verbatim alias of `SectionSchema`
+   * (5 typed variants: module / phase / track / unit-block / bridge).
+   */
+  sections: z.array(SectionEntrySchema).readonly().default([]),
+  /**
+   * Consumer-app-owned unit metadata, forwarded from
+   * `getCollection('units')` per ADR 0067. Wedge B-followup (W1)
+   * introduces this collection; consumers on the pre-W1 path see `[]`.
+   * `UnitEntry.section_id` binds to a `SectionEntry.slug` (parent ref);
+   * `UnitEntry.chapter` binds to the reading artifact (the "chapter")
+   * and `UnitEntry.lecture?` binds to the slides artifact (the
+   * "lecture") per design doc D7. The `chapter` + `lecture` field
+   * NAMES are permanent across W1/W2/W3.
+   */
+  units: z.array(UnitEntrySchema).readonly().default([]),
 });
 export type PedagogyIndex = z.infer<typeof PedagogyIndexSchema>;
