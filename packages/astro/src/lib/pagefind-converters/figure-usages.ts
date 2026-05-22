@@ -8,7 +8,7 @@ export const toFigureUsageRecord: EntityWithLookupToPagefindRecord<
   FigureUsageEntry,
   FigureRegistryEntry
 > = (usage, registry, ctx) => ({
-  url: `/chapters/${usage.chapter}#${usage.anchor}`,
+  url: `/units/${usage.chapter}/reading#${usage.anchor}`,
   content: [registry.alt, usage.captionOverride ?? registry.caption ?? ""]
     .filter(Boolean)
     .join(" — "),

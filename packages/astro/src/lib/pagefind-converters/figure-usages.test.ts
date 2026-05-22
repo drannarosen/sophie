@@ -70,7 +70,7 @@ describe("toFigureUsageRecord", () => {
 
   test("url uses chapter slug + usage anchor", () => {
     expect(toFigureUsageRecord(usage, registry, ctx).url).toBe(
-      "/chapters/measuring-the-sky#fig-hr-diagram-1"
+      "/units/measuring-the-sky/reading#fig-hr-diagram-1"
     );
   });
 });

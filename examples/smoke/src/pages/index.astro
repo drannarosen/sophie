@@ -1,8 +1,10 @@
 ---
 import { getCollection } from "astro:content";
 
-const chapters = await getCollection("chapters");
-chapters.sort((a, b) => a.data.title.localeCompare(b.data.title));
+// W2/D1 (Path A) per ADR 0067: list units (was chapters) and link to
+// their /units/<unit-id>/reading routes.
+const units = await getCollection("units");
+units.sort((a, b) => a.data.title.localeCompare(b.data.title));
 ---
 
 <html lang="en">
@@ -21,10 +23,10 @@ chapters.sort((a, b) => a.data.title.localeCompare(b.data.title));
       <h2>Chapters</h2>
       <ul>
         {
-          chapters.map((c) => (
+          units.map((u) => (
             <li>
-              <a href={`/chapters/${c.id}`}>{c.data.title}</a>
-              {c.data.description && <p>{c.data.description}</p>}
+              <a href={`/units/${u.data.id}/reading`}>{u.data.title}</a>
+              {u.data.description && <p>{u.data.description}</p>}
             </li>
           ))
         }

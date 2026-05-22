@@ -62,7 +62,7 @@ const sortedModules = [...modules].sort((a, b) => a.order - b.order);
                 {moduleChapters.map((c) => (
                   <li>
                     <a
-                      href={`/chapters/${c.slug}`}
+                      href={`/units/${c.slug}/reading`}
                       aria-current={
                         c.slug === currentChapterSlug ? "page" : undefined
                       }

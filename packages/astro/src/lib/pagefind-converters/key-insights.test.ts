@@ -29,7 +29,7 @@ describe("toKeyInsightRecord", () => {
 
   test("url uses anchor ki-3", () => {
     expect(toKeyInsightRecord(fixture, ctx).url).toBe(
-      "/chapters/measuring-the-sky#ki-3"
+      "/units/measuring-the-sky/reading#ki-3"
     );
   });
 

@@ -86,7 +86,7 @@ const grouped: GroupedModule[] = [...modules]
             modChapters.map(({ chapter, objectives: chObjectives }) => (
               <article class='sophie-course-objectives__chapter'>
                 <h3 class='sophie-course-objectives__chapter-title'>
-                  <a href={`/chapters/${chapter.slug}`}>{chapter.title}</a>
+                  <a href={`/units/${chapter.slug}/reading`}>{chapter.title}</a>
                 </h3>
                 {chObjectives.length === 0 ? (
                   <p class='sophie-course-objectives__empty'>

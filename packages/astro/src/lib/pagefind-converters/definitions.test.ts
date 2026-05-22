@@ -19,7 +19,7 @@ const fixture: DefinitionEntry = {
 describe("toDefinitionRecord", () => {
   test("emits url with chapter slug + anchor", () => {
     expect(toDefinitionRecord(fixture, ctx).url).toBe(
-      "/chapters/measuring-the-sky#def-luminosity"
+      "/units/measuring-the-sky/reading#def-luminosity"
     );
   });
 
