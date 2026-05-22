@@ -10,9 +10,21 @@ tags:
   - mdx
   - reference
 validation:
-  status: unvalidated
-  last_validated_date: null
-  evidence: []
+  status: in-progress
+  last_validated_date: "2026-05-22"
+  evidence:
+    - kind: test
+      ref: packages/components/src/components/SpacedReview/SpacedReview.test.tsx
+      date: "2026-05-22"
+      notes: "<SpacedReview section=…> section-scope rendering graduated end-to-end (Wedge B-followup W1); 11 unit tests cover target= and section= paths."
+    - kind: chapter
+      ref: examples/smoke/src/content/chapters/02-stars/stellar-evolution.mdx
+      date: "2026-05-22"
+      notes: "<SpacedReview section=\"stars\"> callsite exercises the new section-scope render path in smoke; section_id resolves cleanly through SR-1."
+    - kind: review
+      ref: docs/reviews/2026-05-22-wedge-b1-retrieval-family.md
+      date: "2026-05-22"
+      notes: "Wedge B1 retrieval-family A- grade validated the component-contract pattern this doc describes; W1 graduations extend coverage to Unit-aware PRA-1 + section-validity SR-1."
 status: shipped
 ---
 
