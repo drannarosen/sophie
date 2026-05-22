@@ -1,4 +1,5 @@
 {
+  "type": "module",
   "slug": "stars",
   "title": "Stars & Spectra",
   "order": 2,

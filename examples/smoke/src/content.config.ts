@@ -2,7 +2,7 @@ import { defineCollection } from "astro:content";
 import {
   ChapterSchema,
   EquationRegistryEntrySchema,
-  ModuleSchema,
+  SectionModuleVariantSchema,
 } from "@sophie/core/schema";
 import { glob } from "astro/loaders";
 
@@ -15,9 +15,15 @@ const chapters = defineCollection({
   schema: ChapterSchema,
 });
 
+// Wedge A.5 (ADR 0067): the previous `ModuleSchema` is now the
+// `module`-variant of the new SectionSchema discriminated union.
+// Collection name stays "modules" (content-collection rename is a
+// separate concern, not coupled to the schema-rename PR). Each
+// module JSON now carries `"type": "module"` to satisfy the
+// discriminator.
 const modules = defineCollection({
   loader: glob({ pattern: "**/*.json", base: "./src/content/modules" }),
-  schema: ModuleSchema,
+  schema: SectionModuleVariantSchema,
 });
 
 // ADR 0060 registry ecosystem: per-equation MDX files at
