@@ -68,6 +68,27 @@ export function RetrievalPrompt({
     else if (displayName === ANSWER_SLOT) answerChild = child;
   }
 
+  // Dev-mode warning when an author omits a required slot. The
+  // component still renders (the underlying <RetrievalCard> degrades
+  // gracefully) so a missing slot doesn't blank the page; curriculum-CI
+  // catches the authoring defect at build time. Caught in the
+  // 2026-05-22 quality audit.
+  if (
+    (promptChild === null || answerChild === null) &&
+    typeof process !== "undefined" &&
+    process.env?.NODE_ENV !== "production"
+  ) {
+    const missing = [
+      promptChild === null ? "<RetrievalPrompt.Prompt>" : null,
+      answerChild === null ? "<RetrievalPrompt.Answer>" : null,
+    ]
+      .filter((s): s is string => s !== null)
+      .join(" + ");
+    console.warn(
+      `[RetrievalPrompt] target="${target}" is missing required slot child(ren): ${missing}. The card renders but the experience is degraded. Resolution: add the missing slot(s) inside <RetrievalPrompt>...</RetrievalPrompt>.`
+    );
+  }
+
   return (
     <RetrievalCard
       bandToken='retrieval'

@@ -74,21 +74,34 @@ export function SpacedReview({
 
   const dueTargets = useMemo(() => {
     if (target !== undefined) {
-      const colon = target.indexOf(":");
-      const prefix = colon >= 0 ? `${target.slice(0, colon)}:` : undefined;
-      return selectLeastRecentlyAttempted({
-        attempts: flatAttempts,
-        max,
-        scope: prefix !== undefined ? { targetPrefix: prefix } : undefined,
-      }).filter((t) => t === target);
+      // Single-target scope: render one "Review: <target>" card iff the
+      // student has attempted this exact target at least once. `max`
+      // applies to multi-target scopes (section=) where distinct
+      // target_ids would compete for slots; for a single target, the
+      // surface is at most 1 row regardless of `max`.
+      //
+      // Running the LRU over a prefix-scoped queue and then filtering to
+      // the exact target would silently hide the target when it's not in
+      // the top-`max` least-recently-attempted of its prefix — a real
+      // correctness bug caught in the 2026-05-22 quality audit.
+      const hit = selectLeastRecentlyAttempted({
+        attempts: flatAttempts.filter((a) => a.target_id === target),
+        max: 1,
+      });
+      return hit;
     }
     if (section !== undefined) {
-      // TODO Wedge B-follow-up: pedagogy-index lookup for section scope.
-      // For B1, surface no items so the empty-state placeholder renders.
+      // TODO Wedge B-follow-up: pedagogy-index lookup for section scope
+      // will resolve `section` to its constituent target_ids, then run
+      // `selectLeastRecentlyAttempted` with the supplied `max` over the
+      // resolved attempt set. For B1, the lookup is stubbed and `max` is
+      // unused on this path; surface no items so the empty-state
+      // placeholder renders.
+      void max;
       return [];
     }
     return [];
-  }, [flatAttempts, max, target, section]);
+  }, [flatAttempts, target, section, max]);
 
   const emptyChild = useMemo(() => {
     for (const child of Children.toArray(children)) {

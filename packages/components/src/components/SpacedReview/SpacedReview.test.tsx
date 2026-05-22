@@ -124,6 +124,33 @@ describe("<SpacedReview>", () => {
     );
   });
 
+  it("surfaces the target even when it isn't the prefix-LRU least (regression for 2026-05-22 audit)", async () => {
+    // Seed in attempt-order: eq:older (oldest), eq:middle, eq:target (newest).
+    // The OLD code (LRU over `eq:` prefix → max items → filter to exact
+    // target) would have surfaced ["eq:older"] for max=1 and then dropped
+    // eq:target via the exact-match filter, rendering the empty state
+    // even though the student HAS attempted eq:target. The fix scopes
+    // the LRU to the exact target before applying max.
+    await seedAttempt("sr-test-regression", "ch1", "eq:older");
+    await seedAttempt("sr-test-regression", "ch1", "eq:middle");
+    await seedAttempt("sr-test-regression", "ch1", "eq:target");
+
+    render(
+      withProfile(
+        <SpacedReview
+          course='sr-test-regression'
+          chapter='ch1'
+          target='eq:target'
+          max={1}
+        />
+      )
+    );
+    await waitFor(() =>
+      expect(screen.queryAllByTestId("spaced-review-item")).toHaveLength(1)
+    );
+    expect(screen.getByText(/Review: equation: target/i)).toBeInTheDocument();
+  });
+
   it("section-scope returns no items in Wedge B1 (pedagogy-index lookup stubbed)", () => {
     render(
       withProfile(

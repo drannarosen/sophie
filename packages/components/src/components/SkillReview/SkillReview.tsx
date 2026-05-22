@@ -80,6 +80,20 @@ export function SkillReview({
   }
 
   const hasExplicitContent = promptChild !== null && answerChild !== null;
+  // Surface a dev-mode warning when an author supplies one of the two
+  // explicit slots but not the other: the partial content would silently
+  // disappear behind the placeholder render-path. Caught in the
+  // 2026-05-22 quality audit. Production builds stay silent (the
+  // curriculum-CI extractor flags missing required slots at build time).
+  if (
+    (promptChild !== null) !== (answerChild !== null) &&
+    typeof process !== "undefined" &&
+    process.env?.NODE_ENV !== "production"
+  ) {
+    console.warn(
+      `[SkillReview] target="${target}" was authored with only one of <SkillReview.Prompt> / <SkillReview.Answer>; both are required for the explicit-content render path. The partial content has been replaced with the Library-room placeholder. Resolution: add the missing slot, or remove both for the placeholder-only form.`
+    );
+  }
 
   // B1 fallback: when neither explicit slots nor Library registry are
   // available (Wedge C unbuilt), surface a quiet placeholder + optional
