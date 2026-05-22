@@ -34,13 +34,13 @@ export default defineConfig({
     // from the copied-verbatim .astro files.
     "lib/aside-positioning/install-positioning":
       "src/lib/aside-positioning/install-positioning.ts",
-    // `lib/get-student-chapters` is the ADR 0051 student-build filter.
-    // Imported by TextbookLayout.astro (filters drafts before they
-    // reach the pedagogy index) and re-exported from the package
-    // entrypoint for consumer-app `[...slug].astro` route files.
-    // Must exist at dist/lib/get-student-chapters.js to resolve from
-    // the copied-verbatim .astro files in dist/components/.
-    "lib/get-student-chapters": "src/lib/get-student-chapters.ts",
+    // `lib/artifacts-from-collection` is the W2/D1 path-derivation
+    // helper that maps the artifacts content-collection entries to
+    // ArtifactEntry shape. Imported by TextbookLayout.astro and
+    // re-exported from the package entrypoint for consumer-app route
+    // files. Must exist at dist/lib/artifacts-from-collection.js to
+    // resolve from the copied-verbatim .astro files in dist/components/.
+    "lib/artifacts-from-collection": "src/lib/artifacts-from-collection.ts",
     // `lib/pedagogy-index/accumulator` is the cross-chapter
     // `IndexAccumulator` singleton (ADR 0038; C1 split under ADR 0061).
     // Imported by 12 .astro chrome components (TextbookLayout,

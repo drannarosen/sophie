@@ -20,12 +20,23 @@ const figureRegistryArray = Object.values(figureRegistry);
  * discriminator visual class (decision #12) preserved.
  */
 
-const modules = (await getCollection("modules")).map((m) => m.data);
-const chapters = (await getCollection("chapters")).map((c) => ({
-  slug: c.id,
-  title: c.data.title,
-  module: c.data.module,
-  order: c.data.order,
+// W2/D1 graduation: chapters + modules collections deleted; derive
+// the ModuleNav input shape from units + sections instead.
+const sections = (await getCollection("sections")).map((s) => s.data);
+const units = (await getCollection("units")).map((u) => u.data);
+const modules = sections.map((s) => ({
+  slug: s.slug,
+  title: s.title,
+  order: s.order,
+  description: s.description,
+}));
+const chapters = units.map((u) => ({
+  slug: u.id,
+  title: u.title,
+  module: u.section_id,
+  order: u.order,
+  chapter: undefined as number | undefined,
+  status: u.status,
 }));
 ---
 
