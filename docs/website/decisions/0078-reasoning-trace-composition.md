@@ -18,9 +18,9 @@ validation:
 
 :::{admonition} ADR metadata
 
-- **Status**: **proposed** (decision pending — three options below)
+- **Status**: **accepted** (Option C chosen 2026-05-21 — generalize `<ReasoningTrace>` as the role-labeled parent; `<OMIFlow>` becomes a 3-slot preset)
 - **Deciders**: anna
-- **Amends** (if A or C chosen): [0063](./0063-omiflow-composite-primitive.md)
+- **Amends**: [0063](./0063-omiflow-composite-primitive.md) (re-frames `<OMIFlow>` as a preset of the new `<ReasoningTrace>` primitive, preserving its 3-slot OMI semantics)
 
 :::
 
@@ -80,10 +80,86 @@ the decision now (even if implementation is months away) prevents
 the "two near-identical components shipped by accident" failure
 mode.
 
-## Decision space
+## Decision
 
-Three viable options. **Anna picks**; this ADR records the choice +
-rationale once made.
+**Option C — generalize: `<ReasoningTrace>` as a role-labeled parent
+primitive; `<OMIFlow>` becomes a 3-slot preset.**
+
+```mdx
+{/* General form (new <ReasoningTrace>) */}
+<ReasoningTrace>
+  <ReasoningTrace.Step role="observable">...</ReasoningTrace.Step>
+  <ReasoningTrace.Step role="assumption">...</ReasoningTrace.Step>
+  <ReasoningTrace.Step role="model">...</ReasoningTrace.Step>
+  <ReasoningTrace.Step role="inference">...</ReasoningTrace.Step>
+  <ReasoningTrace.Step role="check">...</ReasoningTrace.Step>
+</ReasoningTrace>
+
+{/* OMIFlow stays — re-framed as a preset of ReasoningTrace */}
+<OMIFlow>
+  <OMIFlow.Observable>...</OMIFlow.Observable>
+  <OMIFlow.Model>...</OMIFlow.Model>
+  <OMIFlow.Inference>...</OMIFlow.Inference>
+</OMIFlow>
+```
+
+The `role` prop binds to [ADR 0058
+(Epistemic Component Contract)](./0058-epistemic-component-contract.md)'s
+eight-role taxonomy: `observable` / `model` / `inference` /
+`assumption` / `approximation` / `uncertainty` / `numerical` /
+`misconception`. Future authored patterns (e.g., compute steps,
+validation checks) compose as additional role values, not as new
+component types.
+
+## Rationale
+
+Option C is the SoTA-aligned choice because:
+
+1. **It binds to ADR 0058's already-locked contract.** The eight
+   epistemic roles (observable / model / inference / assumption /
+   approximation / uncertainty / numerical / misconception) are
+   the platform's authoritative vocabulary for "what role does
+   this pedagogy element play in scientific reasoning?" A
+   role-labeled `<ReasoningTrace.Step>` makes the contract usable
+   *as a primitive*, not just as a declarative annotation. Future
+   epistemic-anatomy patterns extend by adding role values, not
+   by adding component types.
+
+2. **Preserves OMI's semantic identity.** `<OMIFlow>` stays as
+   the named convention for the 3-slot Observable/Model/Inference
+   pattern documented in
+   [pedagogical-foundations.md](../explanation/pedagogical-foundations.md).
+   Authors who want OMI's pedagogical framing get the familiar
+   3-slot shape; authors who want a richer epistemic anatomy
+   reach for `<ReasoningTrace>` with the slots they need.
+
+3. **Matches Sophie's discriminated-union discipline.** Wedge A's
+   schemas (Subsection, Unit, Artifact, Assessment) all use
+   role/type discriminators within a single component contract
+   rather than spawning one component per shape. ADR 0058's
+   epistemic roles are the natural role discriminator for
+   reasoning-anatomy components. Option C continues this
+   architectural pattern.
+
+4. **Avoids component proliferation.** Option B would ship two
+   near-identical components and force every author to decide
+   between them per usage. Sophie's house style is "one typed
+   contract with discriminated variants, not N parallel
+   components."
+
+5. **Cheap migration path for OMIFlow.** Existing `<OMIFlow>`
+   usage continues to work unchanged; the platform-internal
+   refactor that makes `<OMIFlow>` consume `<ReasoningTrace>`
+   underneath is transparent to authors. No author-visible
+   breaking change.
+
+6. **Future epistemic-anatomy patterns compose naturally.**
+   When the next pattern surfaces (e.g., the Equation Clinic
+   per ADR roadmap Tier A, which wants Assumption → Check →
+   Diagnosis → Fix), it's a `<ReasoningTrace>` with the
+   appropriate role labels, not a new component PR.
+
+## Alternatives considered
 
 ### Option A — Amend ADR 0063: 4-slot OMIFlow
 
@@ -99,10 +175,13 @@ rationale once made.
 - Pros: One component; backwards-compatible (4th slot optional);
   preserves OMI as the canonical epistemic-anatomy primitive.
 - Cons: "OMI" already had a specific 3-letter meaning in
-  pedagogical-foundations.md; adding a 4th step technically isn't
-  "OMI" anymore. Naming drift.
-- Best for: if `<Check>` is a *one-off* extension and we don't
-  expect more slots later.
+  pedagogical-foundations.md; adding a 4th step technically
+  isn't "OMI" anymore. Naming drift. Doesn't generalize when
+  the *next* slot (Assumption, Compute, etc.) is needed.
+- **Why rejected:** Optimizes for "one-off Check addition" but
+  the analysis (and the roadmap's Tier A Equation Clinic +
+  reasoning-trace need) suggests this is the first of multiple
+  epistemic-anatomy patterns coming. Cheaper now; costlier later.
 
 ### Option B — New `<ReasoningTrace>` as a sibling component
 
@@ -111,103 +190,64 @@ rationale once made.
   <ReasoningTrace.Observe>...</ReasoningTrace.Observe>
   <ReasoningTrace.Assume>...</ReasoningTrace.Assume>
   <ReasoningTrace.Model>...</ReasoningTrace.Model>
-  <ReasoningTrace.Compute>...</ReasoningTrace.Compute>
-  <ReasoningTrace.Infer>...</ReasoningTrace.Infer>
-  <ReasoningTrace.Check>...</ReasoningTrace.Check>
+  ...
 </ReasoningTrace>
 ```
 
-- Pros: Clean semantic split; `<OMIFlow>` stays OMI (3 slots,
-  fixed meaning); `<ReasoningTrace>` carries the broader
-  epistemic-anatomy use case with as many slots as warranted.
-- Cons: Two similar components; authors must choose between them
-  for any given passage; risk of inconsistent usage; documentation
-  has to explain the distinction.
-- Best for: if `<Check>` is part of a broader pattern (Assume +
-  Compute + Check + ...) that warrants its own component identity.
-
-### Option C — Generalize: `<ReasoningTrace>` with role-labeled children, `<OMIFlow>` becomes a preset
-
-```mdx
-{/* General form */}
-<ReasoningTrace>
-  <ReasoningTrace.Step role="observable">...</ReasoningTrace.Step>
-  <ReasoningTrace.Step role="assumption">...</ReasoningTrace.Step>
-  <ReasoningTrace.Step role="model">...</ReasoningTrace.Step>
-  <ReasoningTrace.Step role="inference">...</ReasoningTrace.Step>
-  <ReasoningTrace.Step role="check">...</ReasoningTrace.Step>
-</ReasoningTrace>
-
-{/* OMIFlow stays as a convenience preset */}
-<OMIFlow>  {/* equivalent to a 3-step ReasoningTrace with observable/model/inference roles */}
-  <OMIFlow.Observable>...</OMIFlow.Observable>
-  <OMIFlow.Model>...</OMIFlow.Model>
-  <OMIFlow.Inference>...</OMIFlow.Inference>
-</OMIFlow>
-```
-
-- Pros: One canonical primitive (`<ReasoningTrace>`) bound to
-  ADR 0058's eight-role taxonomy directly; `<OMIFlow>` becomes a
-  named convention for the 3-slot OMI pattern (one of many
-  possible patterns); future extensions (Check, Compute, Validate,
-  Approximation, Uncertainty, Numerical, Misconception) compose
-  naturally without proliferating component types.
-- Cons: Slightly more implementation work (a generic Step
-  component with role-aware rendering); OMIFlow becomes a thin
-  wrapper.
-- Best for: if Sophie expects to ship multiple epistemic-chain
-  patterns over time and wants the eight-role contract to be the
-  single source of truth for what reasoning anatomies can look
-  like.
-
-### Recommendation
-
-**Option C.** It's the SoTA-over-simple call. It preserves OMI's
-semantic identity (the 3-slot pattern stays the named convention)
-while making the broader epistemic-anatomy primitive a true general
-case bound to ADR 0058's contract. Future slot additions (e.g.,
-shipping `<Assumption>` or `<Check>` as siblings) don't require new
-component types — they're new roles within the existing
-`<ReasoningTrace>` primitive. This matches Sophie's general
-preference for typed-contract-with-role-discriminator over
-component-per-shape proliferation (the same pattern that gave
-Wedge A discriminated unions over enums for Subsection / Unit
-types).
-
-Option A is the cheaper-now / costlier-later move. Option B is the
-"keep them separate by safety" move with the documentation tax.
-Both are defensible; Option C is the platform-aligned move.
-
-If implementation considerations make Option C heavier than budgeted,
-**fall back to Option A** (cheap; reversible later if more slots
-arrive); **avoid Option B** unless we have a positive reason to
-ship two near-identical primitives.
-
-## Rationale (will be filled in once Anna picks)
-
-[Placeholder — once Anna selects A / B / C, this section captures
-*why* the choice fits Sophie's component-composition discipline.
-The Decision-space section above moves to Alternatives.]
-
-## Alternatives considered
-
-[Placeholder — the two not-chosen options from the Decision space
-move here with their pros/cons preserved.]
+- Pros: Clean semantic split; `<OMIFlow>` stays exactly as
+  shipped; new component carries the broader epistemic-anatomy
+  use case independently.
+- Cons: Two similar components; authors must choose; risk of
+  inconsistent usage; documentation tax. Violates Sophie's
+  "one typed contract" architectural preference.
+- **Why rejected:** No positive reason to ship two
+  near-identical components when one role-labeled primitive
+  covers both use cases cleanly.
 
 ## Consequences
 
-[Placeholder — once Anna picks, this section enumerates what the
-choice makes easier / harder / triggers. Common triggers regardless
-of choice:]
+What this decision makes:
 
-- A future Wedge B or C ships the chosen component(s).
-- Updates to
-  [pedagogical-foundations.md](../explanation/pedagogical-foundations.md)
-  and the
-  [chapter-components reference](../reference/chapter-components.md)
-  document the chosen pattern.
-- If Option A or C: ADR 0063 gets an `Amends-by:` admonition row
-  pointing here.
+- **Easier**:
+  - Future epistemic-anatomy patterns (Equation Clinic per
+    roadmap Tier A; Assumption Ledger; reasoning checks; etc.)
+    ship as `<ReasoningTrace>` configurations rather than new
+    components.
+  - ADR 0058's eight-role contract becomes a *runtime-usable*
+    primitive in the component layer, not just a declarative
+    annotation in MDX prose.
+  - AI authoring packets (per [ADR 0077](./0077-ai-authoring-packets.md))
+    can target reasoning-anatomy generation with a uniform
+    schema (role-labeled steps) regardless of pattern.
+  - Cross-component audits (curriculum-CI per
+    [ADR 0045](./0045-pedagogical-diff-curriculum-ci.md)) can
+    ask uniform questions like "does every claim of inference
+    in this chapter cite its observable + model?" by walking
+    `<ReasoningTrace>` instances regardless of named preset.
+
+- **Harder**:
+  - Slightly more implementation work than Option A (generic
+    role-aware `<ReasoningTrace.Step>` component + the OMIFlow
+    preset wrapper).
+  - `<OMIFlow>` becomes a thin wrapper over `<ReasoningTrace>`;
+    the refactor has to preserve OMIFlow's existing rendering
+    semantics exactly (visual regression baselines must hold).
+  - One more concept for authors to learn (`<ReasoningTrace>`
+    on top of `<OMIFlow>`), though the OMIFlow path remains
+    canonical for the 3-slot OMI pattern.
+
+- **Triggers**:
+  - A future Wedge B or C ships `<ReasoningTrace>` + refactors
+    `<OMIFlow>` to consume it underneath. Visual regression
+    baselines must stay green for existing OMIFlow usage.
+  - ADR 0063 (`<OMIFlow>`) gets an `Amends-by: 0078` admonition
+    row pointing here.
+  - Updates to [pedagogical-foundations.md](../explanation/pedagogical-foundations.md)
+    and the [chapter-components reference](../reference/chapter-components.md)
+    document the new general-vs-preset pattern.
+  - Per Sophie's `feedback_no_backcompat_prelaunch`: the
+    OMIFlow rewrite lands in the same PR as `<ReasoningTrace>`
+    introduction, not split across PRs.
 
 ## References
 
