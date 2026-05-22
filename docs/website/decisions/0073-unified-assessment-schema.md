@@ -175,8 +175,9 @@ principle).
 
 Once BKT state exists per skill, UI adapts:
 
-- `<SkillReview topic="...">`
-  ([ADR 0068](./0068-bridge-rooms-and-prereq-pedagogy.md)) salience
+- `<SkillReview target="topic:...">`
+  ([ADR 0068](./0068-bridge-rooms-and-prereq-pedagogy.md), signature
+  unified in Wedge B1) salience
   varies by mastery (prominent if weak; collapsed-by-default if strong)
 - FSRS scheduler ([ADR 0069](./0069-fsrs-spaced-repetition-engine.md))
   weights retrieval frequency by mastery

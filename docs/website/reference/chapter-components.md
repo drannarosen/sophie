@@ -95,6 +95,9 @@ This page is the chapter author's quick reference.
 | `<EffortLog>` | Effort self-report |
 | `<Reflection>` | Free-text reflection prompt |
 | `<CollapsibleCard>` | "Deep Dive" disclosure block |
+| `<RetrievalPrompt>` | Primary in-flow recall prompt (Wedge B1 retrieval family) |
+| `<SpacedReview>` | Queued review surface; surfaces past-attempted targets (Wedge B1) |
+| `<SkillReview>` | Inline prereq-bridge prompt; same prefix-typed `target` convention (Wedge B1) |
 
 #### Hover-interactive (inline cross-references over the pedagogy index)
 
@@ -350,6 +353,9 @@ time, not at runtime.
 | An effort-level self-report | `<EffortLog>` |
 | A free-text reflection prompt | `<Reflection>` |
 | A "Deep Dive" disclosure block | `<CollapsibleCard>` |
+| In-flow recall prompt anchored to a pedagogy-graph node (equation / glossary / misconception / learning-objective / key-insight / topic) | `<RetrievalPrompt target="prefix:slug">` with required `<RetrievalPrompt.Prompt>` + `<RetrievalPrompt.Answer>` slot children. Amber left-band. Writes `practice_attempt` records via `useRetrievalAttempt`. Self-assess buttons (Got it / Partial / Missed it) render automatically below the revealed answer. Per Wedge B1 design doc §1. |
+| Queued review surface that resurfaces past-attempted targets due for review | `<SpacedReview target="prefix:slug" max={3} />` (single-target scope) or `<SpacedReview section="..." max={5} />` (Section-scope, stubbed in B1, pedagogy-index lookup wires in a follow-up). Exactly-one selection rule enforced by Zod refine. Cyan left-band. Optional `<SpacedReview.Empty>` slot overrides the default empty-state message. Wedge B1 ships an LRU stub scheduler; Wedge D's FSRS replaces the function body. |
+| Inline prereq-bridge prompt at the point a prereq concept is invoked mid-reading | `<SkillReview target="topic:..." />` (self-closing form, B1 placeholder until Wedge C Library room ships) or `<SkillReview target="topic:...">` with optional `<SkillReview.Prompt>` + `<SkillReview.Answer>` + `<SkillReview.ReviewMore>` slot children (explicit form, works in B1). Violet left-band. Same `target` prefix convention as RetrievalPrompt + SpacedReview, unifying ADR 0068's previously-`topic`-only signature. |
 | Chapter-end roll-up of definitions | `<ChapterGlossary chapter="X" />` |
 | Chapter-end roll-up of equations | `<ChapterEquations chapter="X" />` |
 | Chapter-end roll-up of figures | `<ChapterFigures chapter="X" />` |
@@ -379,6 +385,9 @@ JSDoc:
 | Chapter | `ch-` | passthrough chapter slug |
 | Objective | `lo-` | author-supplied via id |
 | TDR | `tdr-` | passthrough TDR number (e.g., `tdr-14` for TDR-014) |
+| Retrieval prompt | `rp-` | auto: `rp-${counter}` per chapter (Wedge B1) |
+| Spaced review | `sp-` | auto: `sp-${counter}` per chapter (Wedge B1) |
+| Skill review | `sk-` | auto: `sk-${counter}` per chapter (Wedge B1) |
 
 ## References
 
@@ -393,6 +402,8 @@ JSDoc:
 - [ADR 0046](../decisions/0046-equation-biography.md) — Equation Biography (now 6 children + `<DerivationStep>`) + E7 + E8 + E9 audit invariants. See [2026-05-17 design hardening](../../plans/2026-05-17-equation-biography-design.md).
 - [ADR 0058](../decisions/0058-epistemic-component-contract.md) — Epistemic Component Contract (8-role taxonomy). MultiRep binds role via Notation Registry concept declaration; EquationBiography children declare role as hardcoded const.
 - [ADR 0060](../decisions/0060-registry-ecosystem.md) — Registry Ecosystem. Equation biographies move from chapter-inline to registry MDX bodies; `<KeyEquation refId>` + `<EquationRef refId>` cite the registry; R1–R4 audit invariants police citation/declaration integrity.
+- [ADR 0068](../decisions/0068-bridge-rooms-and-prereq-pedagogy.md) — Bridge rooms + prereq pedagogy. `<SkillReview>` lives here; Wedge B1 unifies its signature with the rest of the retrieval family (target prefix-typed: `topic:`, `eq:`, etc.).
+- [Wedge B1 design doc](../../plans/2026-05-21-wedge-b1-retrieval-family-design.md) — locked decisions for `<RetrievalPrompt>` + `<SpacedReview>` + `<SkillReview>`: shared `<RetrievalCard>` primitive, `practice_attempt` persistence shape, LRU stub scheduler, target-prefix convention, smoke chapter usage. PRA-1 / RET-1 / SR-1 curriculum-CI invariants.
 - [ADR 0061](../decisions/0061-ai-optimized-codebase-design.md) — AI-optimized codebase design (six rules including docs-atomic-with-code).
 - [equation-registry-schema](equation-registry-schema.md) — the registry MDX shape (frontmatter + biography body).
 - [Component contract](component-contract.md) — the TypeScript interface every component implements.

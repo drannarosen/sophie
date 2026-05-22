@@ -45,9 +45,9 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 
 | Kind | Count |
 |---|---|
-| test | 30 |
+| test | 32 |
 | chapter | 4 |
-| review | 17 |
+| review | 18 |
 | deployment | 12 |
 | audit | 5 |
 | manual | 25 |
@@ -68,7 +68,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0004-component-contract-revisions.md](/component-contract-revisions/) | validated | shipped | 2026-05-16 | chapter, review, test | Component contract (serialize separate from render, axe-core mandatory, useInteractive for persistence, composition rules) confirmed across every shipped component as of the bucket B+C audit. |
 | [docs/website/decisions/0005-theming-three-layers.md](/theming-three-layers/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0006-slides-revealjs.md](/slides-revealjs/) | unvalidated | accepted design | — | — |  |
-| [docs/website/decisions/0007-persistence-indexeddb.md](/persistence-indexeddb/) | validated | shipped | 2026-05-18 | chapter, deployment, review, test | Build-time + smoke-environment validation complete; multi-cohort outcomes deferred to ASTR 201 fa26. |
+| [docs/website/decisions/0007-persistence-indexeddb.md](/persistence-indexeddb/) | validated | shipped | 2026-05-22 | chapter, deployment, review, test | Build-time + smoke-environment validation complete; multi-cohort outcomes deferred to ASTR 201 fa26. |
 | [docs/website/decisions/0008-cosmic-playground-protocol.md](/cosmic-playground-protocol/) | unvalidated | accepted design | — | — |  |
 | [docs/website/decisions/0009-i18n-deferred.md](/i18n-deferred/) | unvalidated | accepted design | — | — |  |
 | [docs/website/decisions/0010-myst-for-design-docs.md](/myst-for-design-docs/) | unvalidated | shipped | — | — |  |
@@ -90,7 +90,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0026-tailwind-v4-css-first.md](/tailwind-v4-css-first/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0027-mdx-render-boundary-prop-threading.md](/mdx-render-boundary-prop-threading/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0028-storybook-setup.md](/storybook-setup/) | unvalidated | shipped | — | — |  |
-| [docs/website/decisions/0029-broadcast-channel-last-write-wins.md](/broadcast-channel-last-write-wins/) | validated | shipped | 2026-05-16 | review, test | ADR 0007 refinement; LWW timestamping confirmed via the useInteractive test suite. No cross-tab production cohort data yet (deferred to fa26). |
+| [docs/website/decisions/0029-broadcast-channel-last-write-wins.md](/broadcast-channel-last-write-wins/) | validated | shipped | 2026-05-22 | review, test | ADR 0007 refinement; LWW timestamping confirmed via the useInteractive + useInteractiveRange test suites. 2026-05-22 Wedge B1 amendment: same-tab local fan-out added to unblock sibling-hook same-tab sync (senderId guard preserves the no-self-echo semantic). No cross-tab production cohort data yet (deferred to fa26). |
 | [docs/website/decisions/0030-audience-and-ai-author-model.md](/audience-and-ai-author-model/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0031-compound-component-layout-primitives.md](/compound-component-layout-primitives/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0032-vanilla-js-chrome-state.md](/vanilla-js-chrome-state/) | unvalidated | shipped | — | — |  |

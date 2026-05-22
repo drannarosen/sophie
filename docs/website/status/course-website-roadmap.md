@@ -427,14 +427,21 @@ that go beyond static reading. All Tier 1 unless noted.
 
 ### New pedagogy components (Tier 1)
 
-| Component | Role |
-|---|---|
-| `<RetrievalPrompt>` | Quick recall question; ungraded; auto-logs to FSRS |
-| `<SpacedReview topic="...">` | Resurfaces past concept's retrieval prompt on schedule |
-| `<WorkedExample>` | Step-by-step solution with epistemic-role annotations on each step |
-| `<FadedPrompt>` | Worked example with steps progressively hidden |
-| `<InterleavedSet>` | Practice set that auto-mixes topics from a declared set |
-| `<SkillReview topic="...">` (evolved) | Inline bridge: retrieval prompt → reveal → optional review; logs to FSRS |
+**Shipped — Wedge B1 (2026-05-22):** the retrieval family lands as a
+cohesive trio sharing one internal `<RetrievalCard>` primitive, one
+`practice_attempt` persistence shape (per `useRetrievalAttempt`), and
+one prefix-typed `target` convention (`eq:` / `gl:` / `misc:` / `lo:` /
+`ki:` / `topic:`). LRU stub scheduler for `<SpacedReview>` swaps for
+FSRS in Wedge D. See [Wedge B1 design doc](../plans/2026-05-21-wedge-b1-retrieval-family-design.md).
+
+| Component | Role | Status |
+| --- | --- | --- |
+| `<RetrievalPrompt target="prefix:slug">` | Quick recall question; ungraded; logs `practice_attempt` | **Shipped Wedge B1** |
+| `<SpacedReview target="prefix:slug" max={3}>` | Resurfaces past concept's retrieval prompt on schedule (LRU stub; FSRS when Wedge D ships); supports `section="..."` scope (B-follow-up) | **Shipped Wedge B1** (single-target scope; section-scope stubbed) |
+| `<SkillReview target="topic:...">` | Inline bridge: retrieval prompt → reveal → optional review; placeholder fallback when slot children absent (Wedge C registry resolution wires the self-closing form) | **Shipped Wedge B1** |
+| `<WorkedExample>` | Step-by-step solution with epistemic-role annotations on each step | Wedge B2 |
+| `<FadedPrompt>` | Worked example with steps progressively hidden | Wedge B2 |
+| `<InterleavedSet>` | Practice set that auto-mixes topics from a declared set | Wedge B2 |
 
 All integrate with the pedagogy graph
 ([ADR 0044](../decisions/0044-misconception-graph.md) misconceptions,
@@ -946,7 +953,7 @@ confirms.
 
 Once skill estimates exist, UI adapts:
 
-- `<SkillReview topic="…">` salience varies by mastery (prominent if
+- `<SkillReview target="topic:…">` salience varies by mastery (prominent if
   weak; collapsed-by-default if strong)
 - FSRS scheduler weights retrieval frequency by mastery
 - Schedule surfaces "review topic X before next Tuesday's lecture"
