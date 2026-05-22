@@ -12,6 +12,8 @@ import {
   __setGlossaryDefinitions,
   __setModules,
   __setObjectives,
+  __setSections,
+  __setUnits,
 } from "@sophie/components/internal/store-hydration";
 import type { FigureRegistryEntry } from "@sophie/core/schema";
 import { type CollectionEntry, getCollection, render } from "astro:content";
@@ -123,6 +125,11 @@ const {
 const allChapters: CollectionEntry<"chapters">[] =
   await getCollection("chapters");
 const modules: CollectionEntry<"modules">[] = await getCollection("modules");
+// Wedge B-followup (W1) per ADR 0067: read the new Section + Unit
+// content collections. Coexist with chapters/ + modules/ for W1; W2
+// deletes those in favor of these two.
+const sections: CollectionEntry<"sections">[] = await getCollection("sections");
+const units: CollectionEntry<"units">[] = await getCollection("units");
 await Promise.all(allChapters.map((c) => render(c)));
 // ADR 0060 registry pattern: force every equation registry MDX through
 // our remark plugin BEFORE the audit runs, so R1/R4 see a complete
@@ -172,6 +179,14 @@ indexAccumulator.setModules(
     description: m.data.description,
   }))
 );
+// Wedge B-followup (W1) per ADR 0067 + design doc D1 + D7: push the
+// consumer-owned sections + units into the accumulator. Same
+// consumer-global semantics as setChapters / setModules. PRA-1
+// (Unit-aware) and SR-1 (section-validity) read from these
+// collections; <SpacedReview section=…> rendering reads via the
+// sectionStore / unitStore (hydrated below).
+indexAccumulator.setSections(sections.map((s) => s.data));
+indexAccumulator.setUnits(units.map((u) => u.data));
 const pedagogy = indexAccumulator.asPedagogyIndex();
 // PR-C4: run the systematic build-time audit pass once per build,
 // after the index is fully populated. Errors fail the build; warnings
@@ -276,6 +291,13 @@ __setFigureUsages(pedagogy.figureUsages);
 __setChapters(pedagogy.chapters);
 __setModules(pedagogy.modules);
 __setObjectives(pedagogy.objectives);
+// Wedge B-followup (W1) — hydrate the React-side sectionStore + unitStore
+// so <SpacedReview section=…> (and future SectionRef-style components)
+// can read the consumer-supplied content-collection data without
+// touching the Vite-only virtual:sophie/pedagogy-index. Per
+// ADR 0001 (framework purity) + ADR 0038 Revisions.
+__setSections(pedagogy.sections);
+__setUnits(pedagogy.units);
 // Serialize the same payloads into <script> tags so each role's
 // client-side store can hydrate after React mount. Server-side module
 // state doesn't survive to the wire, so without these script tags
@@ -321,6 +343,16 @@ const pedagogyModulesJson = JSON.stringify(pedagogy.modules).replace(
   "\\u003c"
 );
 const pedagogyObjectivesJson = JSON.stringify(pedagogy.objectives).replace(
+  /</g,
+  "\\u003c"
+);
+// Wedge B-followup (W1) — payloads for the new sectionStore + unitStore.
+// Same escape treatment.
+const pedagogySectionsJson = JSON.stringify(pedagogy.sections).replace(
+  /</g,
+  "\\u003c"
+);
+const pedagogyUnitsJson = JSON.stringify(pedagogy.units).replace(
   /</g,
   "\\u003c"
 );
@@ -449,6 +481,24 @@ const collapsedVars = [
   id='sophie-pedagogy-objectives'
   type='application/json'
   set:html={pedagogyObjectivesJson}
+/>
+
+{/* Wedge B-followup (W1) per ADR 0067 + design doc D1: SSR-emit the
+    Section + Unit collections so the sectionStore + unitStore can
+    auto-hydrate after React mount. Consumed by `<SpacedReview
+    section=…>` (filters Units by section_id → collects chapter
+    slugs → calls useInteractiveRangeMulti). */}
+<script
+  is:inline
+  id='sophie-pedagogy-sections'
+  type='application/json'
+  set:html={pedagogySectionsJson}
+/>
+<script
+  is:inline
+  id='sophie-pedagogy-units'
+  type='application/json'
+  set:html={pedagogyUnitsJson}
 />
 
 <div
