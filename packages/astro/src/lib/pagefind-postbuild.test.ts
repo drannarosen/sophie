@@ -48,13 +48,18 @@ describe("buildPagefindIndex (Layer 1.6)", () => {
       "./pedagogy-index/index.ts"
     );
     resetIndexAccumulator();
-    indexAccumulator.setModules([{ slug: "m", title: "M", order: 1 }]);
-    indexAccumulator.setChapters([
+    indexAccumulator.setSections([
+      { type: "module", slug: "m", title: "M", order: 1 },
+    ]);
+    indexAccumulator.setUnits([
       {
-        slug: "ch",
+        id: "ch",
+        type: "lecture",
         title: "Test chapter",
-        module: "m",
         order: 1,
+        prereqs: [],
+        section_id: "m",
+        chapter: "ch",
         status: "stable",
       },
     ]);
@@ -163,13 +168,18 @@ describe("pedagogy-index.json artifact (ADR 0045)", () => {
       "./pedagogy-index/index.ts"
     );
     resetIndexAccumulator();
-    indexAccumulator.setModules([{ slug: "m", title: "M", order: 1 }]);
-    indexAccumulator.setChapters([
+    indexAccumulator.setSections([
+      { type: "module", slug: "m", title: "M", order: 1 },
+    ]);
+    indexAccumulator.setUnits([
       {
-        slug: "ch",
+        id: "ch",
+        type: "lecture",
         title: "Test chapter",
-        module: "m",
         order: 1,
+        prereqs: [],
+        section_id: "m",
+        chapter: "ch",
         status: "stable",
       },
     ]);
@@ -195,13 +205,16 @@ describe("pedagogy-index.json artifact (ADR 0045)", () => {
 
     const parsed = JSON.parse(readFileSync(artifactPath, "utf-8"));
     expect(parsed).toMatchObject({
-      modules: [{ slug: "m", title: "M", order: 1 }],
-      chapters: [
+      sections: [{ type: "module", slug: "m", title: "M", order: 1 }],
+      units: [
         {
-          slug: "ch",
+          id: "ch",
+          type: "lecture",
           title: "Test chapter",
-          module: "m",
           order: 1,
+          prereqs: [],
+          section_id: "m",
+          chapter: "ch",
           status: "stable",
         },
       ],

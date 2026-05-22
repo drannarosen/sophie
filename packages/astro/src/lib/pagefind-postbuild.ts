@@ -73,8 +73,17 @@ export async function buildPagefindIndex(distPath: string): Promise<void> {
     throw new Error(`Pagefind HTML crawl errors: ${dirErrors.join("; ")}`);
   }
 
-  const chapterBySlug = new Map(pedagogyIndex.chapters.map((c) => [c.slug, c]));
-  const moduleBySlug = new Map(pedagogyIndex.modules.map((m) => [m.slug, m]));
+  // W2/D3 graduation: pedagogyIndex.chapters + .modules deleted.
+  // chapterBySlug now keys by `u.id` (== chapter slug per W2/D4 1:1);
+  // moduleBySlug keys by section slug (the W2 equivalent of module).
+  // Records carry section as "module" downstream for pagefind facet
+  // continuity until W4 rebrands the search facets.
+  const chapterBySlug = new Map(
+    pedagogyIndex.units.map((u) => [u.id, u] as const)
+  );
+  const moduleBySlug = new Map(
+    pedagogyIndex.sections.map((s) => [s.slug, s] as const)
+  );
   // Figures are 1:N to chapters; each FigureUsageEntry joins to
   // FigureRegistryEntry by `name` for src/alt/caption metadata.
   const registryByName = new Map(
@@ -104,7 +113,8 @@ export async function buildPagefindIndex(distPath: string): Promise<void> {
       const chapter = entityChapterSlug
         ? chapterBySlug.get(entityChapterSlug)
         : undefined;
-      const module = chapter ? moduleBySlug.get(chapter.module) : undefined;
+      // W2/D2: Unit's section binding is via section_id (was chapter.module).
+      const module = chapter ? moduleBySlug.get(chapter.section_id) : undefined;
       if (!chapter || !module) continue;
       const ctx = {
         chapterTitle: chapter.title,

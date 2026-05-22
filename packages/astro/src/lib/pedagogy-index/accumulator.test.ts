@@ -1,6 +1,5 @@
 import type {
   ArtifactEntry,
-  ChapterEntry,
   DeepDiveEntry,
   EquationCitationEntry,
   EquationEntry,
@@ -9,7 +8,6 @@ import type {
   InlineRefUsageEntry,
   KeyInsightEntry,
   MisconceptionEntry,
-  ModuleEntry,
   ObjectiveEntry,
   OMIFlowEntry,
   SectionEntry,
@@ -854,74 +852,9 @@ describe("indexAccumulator objectives (cross-chapter)", () => {
     );
   });
 });
-describe("indexAccumulator setChapters / setModules", () => {
-  // Mirror setFigureRegistry semantics: last-write-wins, consumer-global,
-  // NOT touched by clearChapter.
-
-  test("setChapters overwrites prior entries (last-write-wins)", () => {
-    const a: ChapterEntry = {
-      slug: "ch-a",
-      title: "Chapter A",
-      module: "mod-1",
-      status: "stable",
-    };
-    const b: ChapterEntry = {
-      slug: "ch-b",
-      title: "Chapter B",
-      module: "mod-1",
-      status: "stable",
-    };
-    const c: ChapterEntry = {
-      slug: "ch-c",
-      title: "Chapter C",
-      module: "mod-1",
-      status: "stable",
-    };
-
-    indexAccumulator.setChapters([a, b]);
-    expect(indexAccumulator.asPedagogyIndex().chapters).toEqual([a, b]);
-
-    indexAccumulator.setChapters([c]);
-    expect(indexAccumulator.asPedagogyIndex().chapters).toEqual([c]);
-  });
-
-  test("setModules overwrites prior entries (last-write-wins)", () => {
-    const a: ModuleEntry = {
-      slug: "mod-a",
-      title: "Module A",
-      order: 0,
-    };
-    const b: ModuleEntry = {
-      slug: "mod-b",
-      title: "Module B",
-      order: 1,
-    };
-
-    indexAccumulator.setModules([a]);
-    expect(indexAccumulator.asPedagogyIndex().modules).toEqual([a]);
-
-    indexAccumulator.setModules([a, b]);
-    expect(indexAccumulator.asPedagogyIndex().modules).toEqual([a, b]);
-  });
-
-  test("clearChapter does NOT touch chapters / modules (consumer-global)", () => {
-    const ch: ChapterEntry = {
-      slug: "ch-x",
-      title: "X",
-      module: "mod-1",
-      status: "stable",
-    };
-    const mod: ModuleEntry = { slug: "mod-1", title: "Module 1", order: 0 };
-
-    indexAccumulator.setChapters([ch]);
-    indexAccumulator.setModules([mod]);
-    indexAccumulator.clearChapter("ch-x");
-
-    const index = indexAccumulator.asPedagogyIndex();
-    expect(index.chapters).toEqual([ch]);
-    expect(index.modules).toEqual([mod]);
-  });
-});
+// W2/D3 — `setChapters` / `setModules` describe block deleted alongside
+// ChapterEntrySchema + ModuleEntrySchema. The W1 `setSections` /
+// `setUnits` + W2 `setArtifacts` blocks below replace it.
 
 describe("indexAccumulator setSections / setUnits (W1)", () => {
   // Per Wedge B-followup design doc D1 + D7. Mirror setChapters /
@@ -1156,13 +1089,22 @@ describe("indexAccumulator inlineRefUsages (cross-chapter)", () => {
     ).toBe("term-b");
   });
 });
-describe("asPedagogyIndex (PR-C4 collections)", () => {
-  test("returns all four new collections populated", () => {
-    indexAccumulator.setChapters([
-      { slug: "ch-x", title: "X", module: "mod-1", status: "stable" },
+describe("asPedagogyIndex (W2/D3 collections)", () => {
+  test("returns sections + units + objectives + inlineRefUsages populated", () => {
+    indexAccumulator.setSections([
+      { type: "module", slug: "mod-1", title: "Module 1", order: 0 },
     ]);
-    indexAccumulator.setModules([
-      { slug: "mod-1", title: "Module 1", order: 0 },
+    indexAccumulator.setUnits([
+      {
+        id: "ch-x",
+        type: "lecture",
+        title: "X",
+        order: 0,
+        prereqs: [],
+        section_id: "mod-1",
+        chapter: "ch-x",
+        status: "stable",
+      },
     ]);
     indexAccumulator.addObjectives([
       {
@@ -1178,8 +1120,8 @@ describe("asPedagogyIndex (PR-C4 collections)", () => {
     ]);
 
     const index = indexAccumulator.asPedagogyIndex();
-    expect(index.chapters).toHaveLength(1);
-    expect(index.modules).toHaveLength(1);
+    expect(index.sections).toHaveLength(1);
+    expect(index.units).toHaveLength(1);
     expect(index.objectives).toHaveLength(1);
     expect(index.inlineRefUsages).toHaveLength(1);
   });

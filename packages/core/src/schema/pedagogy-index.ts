@@ -4,7 +4,6 @@ import { InterventionEntrySchema } from "./intervention.ts";
 import { MultiRepIndexEntrySchema } from "./multirep.ts";
 import {
   ArtifactEntrySchema,
-  ChapterEntrySchema,
   ContractValidationEntrySchema,
   DeepDiveEntrySchema,
   DefinitionEntrySchema,
@@ -15,7 +14,6 @@ import {
   InlineRefUsageEntrySchema,
   KeyInsightEntrySchema,
   MisconceptionEntrySchema,
-  ModuleEntrySchema,
   ObjectiveEntrySchema,
   OMIFlowEntrySchema,
   RetrievalPromptEntrySchema,
@@ -98,10 +96,6 @@ export const PedagogyIndexSchema = z.object({
    * three slot bodies (observable / model / inference).
    */
   omiFlows: z.array(OMIFlowEntrySchema).readonly().default([]),
-  /** Consumer-app-owned chapter metadata, forwarded from `getCollection('chapters')`. */
-  chapters: z.array(ChapterEntrySchema).readonly(),
-  /** Consumer-app-owned module metadata, forwarded from `getCollection('modules')`. */
-  modules: z.array(ModuleEntrySchema).readonly(),
   /** Per-chapter learning objectives, populated by the extractor. */
   objectives: z.array(ObjectiveEntrySchema).readonly(),
   /** Per-chapter inline-ref callsites — populated by the extractor for the audit pass. */

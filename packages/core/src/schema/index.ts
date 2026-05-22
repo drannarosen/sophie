@@ -109,8 +109,6 @@ export { type PedagogyIndex, PedagogyIndexSchema } from "./pedagogy-index.js";
 export {
   type ArtifactEntry,
   ArtifactEntrySchema,
-  type ChapterEntry,
-  ChapterEntrySchema,
   type ContractValidationEntry,
   ContractValidationEntrySchema,
   type DeepDiveEntry,
@@ -133,8 +131,6 @@ export {
   KeyInsightEntrySchema,
   type MisconceptionEntry,
   MisconceptionEntrySchema,
-  type ModuleEntry,
-  ModuleEntrySchema,
   type ObjectiveEntry,
   ObjectiveEntrySchema,
   type OMIFlowEntry,

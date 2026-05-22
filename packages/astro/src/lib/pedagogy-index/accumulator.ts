@@ -1,7 +1,6 @@
 import type {
   ArtifactEntry,
   AuditFinding,
-  ChapterEntry,
   ContractValidationEntry,
   DeepDiveEntry,
   DefinitionEntry,
@@ -13,7 +12,6 @@ import type {
   InterventionEntry,
   KeyInsightEntry,
   MisconceptionEntry,
-  ModuleEntry,
   MultiRepIndexEntry,
   ObjectiveEntry,
   OMIFlowEntry,
@@ -80,18 +78,6 @@ interface GlobalIndexState {
    * objective with the same id (no semantic collision).
    */
   objectives: Map<string, ObjectiveEntry>;
-  /**
-   * Consumer-supplied chapters collection (PR-C4). Populated from
-   * `getCollection('chapters')` at TextbookLayout SSR-merge time.
-   * Last-write-wins; NOT touched by `clearChapter` (mirrors
-   * `figureRegistry`).
-   */
-  chapters: ReadonlyArray<ChapterEntry>;
-  /**
-   * Consumer-supplied modules collection (PR-C4). Same shape as
-   * `chapters`; populated from `getCollection('modules')`.
-   */
-  modules: ReadonlyArray<ModuleEntry>;
   /**
    * Consumer-supplied sections collection (Wedge B-followup W1).
    * Populated from `getCollection('sections')`. Same shape as
@@ -209,8 +195,6 @@ function getGlobalState(): GlobalIndexState {
       misconceptions: new Map(),
       figureRegistry: [],
       objectives: new Map(),
-      chapters: [],
-      modules: [],
       sections: [],
       units: [],
       artifacts: [],
@@ -526,27 +510,6 @@ class IndexAccumulator {
   }
 
   /**
-   * Push the consumer-supplied chapters collection into the accumulator
-   * (PR-C4). Mirrors `setFigureRegistry` semantics: last-write-wins,
-   * consumer-global, NOT touched by `clearChapter`. Called from
-   * TextbookLayout's frontmatter after `getCollection('chapters')`
-   * resolves so consumers see a populated chapters list.
-   */
-  setChapters(entries: ReadonlyArray<ChapterEntry>): void {
-    const state = getGlobalState();
-    state.chapters = entries;
-  }
-
-  /**
-   * Push the consumer-supplied modules collection into the accumulator
-   * (PR-C4). Same shape as `setChapters`.
-   */
-  setModules(entries: ReadonlyArray<ModuleEntry>): void {
-    const state = getGlobalState();
-    state.modules = entries;
-  }
-
-  /**
    * Push the consumer-supplied sections collection into the accumulator
    * (Wedge B-followup W1). Per ADR 0067 + design doc D1. Same shape as
    * `setChapters` / `setModules`: last-write-wins, consumer-global, NOT
@@ -790,8 +753,6 @@ class IndexAccumulator {
       figureRegistry: state.figureRegistry,
       figureUsages: Array.from(state.figureUsages.values()),
       misconceptions: Array.from(state.misconceptions.values()),
-      chapters: state.chapters,
-      modules: state.modules,
       objectives: Array.from(state.objectives.values()),
       inlineRefUsages: state.inlineRefUsages.slice(),
       contractValidations: state.contractValidations,
@@ -831,8 +792,6 @@ export function resetIndexAccumulator(): void {
   state.misconceptions.clear();
   state.figureRegistry = [];
   state.objectives.clear();
-  state.chapters = [];
-  state.modules = [];
   state.sections = [];
   state.units = [];
   state.artifacts = [];

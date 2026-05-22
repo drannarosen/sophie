@@ -22,10 +22,6 @@ export {
   ArtifactEntrySchema,
 } from "./artifact.ts";
 export {
-  type ChapterEntry,
-  ChapterEntrySchema,
-  type ModuleEntry,
-  ModuleEntrySchema,
   type ObjectiveEntry,
   ObjectiveEntrySchema,
 } from "./chapter-meta.ts";

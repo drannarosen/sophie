@@ -1,7 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { PedagogyIndexSchema } from "./pedagogy-index.ts";
 import {
-  ChapterEntrySchema,
   DeepDiveEntrySchema,
   DefinitionEntrySchema,
   EquationCitationEntrySchema,
@@ -12,7 +11,6 @@ import {
   InlineRefUsageEntrySchema,
   KeyInsightEntrySchema,
   MisconceptionEntrySchema,
-  ModuleEntrySchema,
   ObjectiveEntrySchema,
   OMIFlowEntrySchema,
 } from "./pedagogy-index-entries/index.ts";
@@ -714,111 +712,10 @@ describe("OMIFlowEntrySchema", () => {
   });
 });
 
-describe("ChapterEntrySchema", () => {
-  const validChapter = {
-    slug: "hydrostatic-equilibrium",
-    title: "Hydrostatic Equilibrium",
-    module: "stellar-structure",
-    order: 2,
-    description: "Pressure balance in a self-gravitating fluid.",
-    status: "stable" as const,
-  };
-
-  // PR-C4 T(N)
-  test("accepts a valid entry", () => {
-    expect(ChapterEntrySchema.safeParse(validChapter).success).toBe(true);
-  });
-
-  test("accepts a valid entry without optional order/description", () => {
-    expect(
-      ChapterEntrySchema.safeParse({
-        slug: validChapter.slug,
-        title: validChapter.title,
-        module: validChapter.module,
-        status: "stable",
-      }).success
-    ).toBe(true);
-  });
-
-  test("rejects an entry with empty slug", () => {
-    expect(
-      ChapterEntrySchema.safeParse({ ...validChapter, slug: "" }).success
-    ).toBe(false);
-  });
-
-  test("rejects an entry with empty title", () => {
-    expect(
-      ChapterEntrySchema.safeParse({ ...validChapter, title: "" }).success
-    ).toBe(false);
-  });
-
-  test("rejects an entry with non-integer order", () => {
-    expect(
-      ChapterEntrySchema.safeParse({ ...validChapter, order: 1.5 }).success
-    ).toBe(false);
-  });
-
-  test("rejects an entry with negative order", () => {
-    expect(
-      ChapterEntrySchema.safeParse({ ...validChapter, order: -1 }).success
-    ).toBe(false);
-  });
-
-  // ADR 0051: `status` is a required ChapterEntry field. The schema-
-  // layer requirement makes the audit's CS1 "missing status" invariant
-  // unreachable from below; the enum constraint upper-bounds the value
-  // space so audit code can `switch` exhaustively.
-  test("accepts each of draft, review, stable", () => {
-    for (const status of ["draft", "review", "stable"] as const) {
-      expect(
-        ChapterEntrySchema.safeParse({ ...validChapter, status }).success
-      ).toBe(true);
-    }
-  });
-
-  test("rejects an entry without a status field (CS1)", () => {
-    const { status: _status, ...withoutStatus } = validChapter;
-    expect(ChapterEntrySchema.safeParse(withoutStatus).success).toBe(false);
-  });
-
-  test("rejects an entry with an unknown status value", () => {
-    expect(
-      ChapterEntrySchema.safeParse({ ...validChapter, status: "published" })
-        .success
-    ).toBe(false);
-  });
-});
-
-describe("ModuleEntrySchema", () => {
-  const validModule = {
-    slug: "stellar-structure",
-    title: "Stellar Structure",
-    order: 1,
-    description: "How stars hold themselves together.",
-  };
-
-  // PR-C4 T(N+1)
-  test("accepts a valid entry", () => {
-    expect(ModuleEntrySchema.safeParse(validModule).success).toBe(true);
-  });
-
-  test("rejects an entry missing order (required — modules are ordered)", () => {
-    const { order: _order, ...rest } = validModule;
-    expect(ModuleEntrySchema.safeParse(rest).success).toBe(false);
-  });
-
-  test("rejects an entry with negative order", () => {
-    expect(
-      ModuleEntrySchema.safeParse({ ...validModule, order: -1 }).success
-    ).toBe(false);
-  });
-
-  test("rejects an entry with empty title", () => {
-    expect(
-      ModuleEntrySchema.safeParse({ ...validModule, title: "" }).success
-    ).toBe(false);
-  });
-});
+// W2/D3 — ChapterEntrySchema + ModuleEntrySchema deleted; their
+// W1-and-prior test blocks removed with them. Reading-shape data flows
+// through ArtifactEntry[type=reading] + UnitEntry; module metadata
+// graduates to SectionEntry[type=module] (tested in section.test.ts).
 
 describe("ObjectiveEntrySchema", () => {
   const validObjective = {
@@ -925,8 +822,6 @@ describe("PedagogyIndexSchema", () => {
     figureRegistry: [],
     figureUsages: [],
     misconceptions: [],
-    chapters: [],
-    modules: [],
     objectives: [],
     inlineRefUsages: [],
   };
@@ -950,17 +845,6 @@ describe("PedagogyIndexSchema", () => {
     expect(PedagogyIndexSchema.safeParse(withoutMisconceptions).success).toBe(
       false
     );
-  });
-
-  // PR-C4 T(N+4) — three new collections required.
-  test("rejects an index missing the new chapters collection", () => {
-    const { chapters: _chapters, ...withoutChapters } = emptyIndex;
-    expect(PedagogyIndexSchema.safeParse(withoutChapters).success).toBe(false);
-  });
-
-  test("rejects an index missing the new modules collection", () => {
-    const { modules: _modules, ...withoutModules } = emptyIndex;
-    expect(PedagogyIndexSchema.safeParse(withoutModules).success).toBe(false);
   });
 
   test("rejects an index missing the new objectives collection", () => {
