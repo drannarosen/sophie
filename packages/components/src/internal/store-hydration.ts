@@ -1,9 +1,9 @@
 /**
- * Internal store-hydration entry point — re-exports the seven setter
+ * Internal store-hydration entry point — re-exports the setter
  * functions @sophie/astro's `<TextbookLayout>` uses to push consumer-
  * supplied collections (chapters / modules / equations / glossary
- * definitions / figure registry / figure usages / objectives) into the
- * component-side stores at render time.
+ * definitions / figure registry / figure usages / objectives /
+ * sections / units) into the component-side stores at render time.
  *
  * **Not part of the public authoring API.** These setters were
  * previously exported from the root `@sophie/components` barrel with
@@ -17,7 +17,7 @@
  * Path: `@sophie/components/internal/store-hydration`.
  *
  * The `__` prefix on each symbol stays (a) for grep-locatability so
- * the eight callsites in TextbookLayout remain visually distinct from
+ * the TextbookLayout callsites remain visually distinct from
  * regular component imports and (b) so any future accidental import
  * from elsewhere is one extra warning sign that something's off-path.
  */
@@ -29,3 +29,9 @@ export { __setFigureRegistry } from "../components/FigureRef/figure-registry-sto
 export { __setFigureUsages } from "../components/FigureRef/figure-usages-store.ts";
 export { __setGlossaryDefinitions } from "../components/GlossaryTerm/definitions-store.ts";
 export { __setObjectives } from "../components/Objective/objectives-store.ts";
+// Wedge B-followup (W1) — Section + Unit consumer-supplied collections
+// per ADR 0067. Surfaced for `<SpacedReview section=…>` rendering and
+// the audit graduations (PRA-1 / SR-1). Stores live in `runtime/`
+// because the data is platform-wide, not tied to a specific component.
+export { __setSections } from "../runtime/sections-store.ts";
+export { __setUnits } from "../runtime/units-store.ts";

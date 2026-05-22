@@ -4,6 +4,7 @@ import type {
   PedagogyIndex,
 } from "@sophie/core/schema";
 import { describe, expect, test } from "vitest";
+import { buildPedagogyIndex } from "../test-helpers.ts";
 import type { FindingSink } from "../types.ts";
 import { checkOMIFlow } from "./omi-flow.ts";
 
@@ -18,28 +19,7 @@ const baseEntry: OMIFlowEntry = {
 };
 
 function emptyIndex(): PedagogyIndex {
-  return {
-    definitions: [],
-    equations: [],
-    equationCitations: [],
-    keyInsights: [],
-    figureRegistry: [],
-    figureUsages: [],
-    misconceptions: [],
-    chapters: [],
-    modules: [],
-    objectives: [],
-    inlineRefUsages: [],
-    contractValidations: [],
-    extractorFindings: [],
-    multiReps: [],
-    interventions: [],
-    deepDives: [],
-    omiFlows: [],
-    retrievalPrompts: [],
-    spacedReviews: [],
-    skillReviews: [],
-  };
+  return buildPedagogyIndex();
 }
 
 function emptySink(): FindingSink {

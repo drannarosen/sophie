@@ -9,6 +9,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { PedagogyIndex } from "@sophie/core/schema";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { buildPedagogyIndex } from "../pedagogy-audit/test-helpers.ts";
 import { writeValidationIndexMarkdown } from "./index-writer.ts";
 
 /**
@@ -27,28 +28,7 @@ import { writeValidationIndexMarkdown } from "./index-writer.ts";
  */
 
 function makeEmptyIndex(): PedagogyIndex {
-  return {
-    definitions: [],
-    equations: [],
-    equationCitations: [],
-    keyInsights: [],
-    figureRegistry: [],
-    figureUsages: [],
-    misconceptions: [],
-    chapters: [],
-    modules: [],
-    objectives: [],
-    inlineRefUsages: [],
-    contractValidations: [],
-    extractorFindings: [],
-    multiReps: [],
-    interventions: [],
-    deepDives: [],
-    omiFlows: [],
-    retrievalPrompts: [],
-    spacedReviews: [],
-    skillReviews: [],
-  };
+  return buildPedagogyIndex();
 }
 
 describe("writeValidationIndexMarkdown", () => {

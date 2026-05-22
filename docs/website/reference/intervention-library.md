@@ -14,9 +14,17 @@ tags:
   - library
   - lds
 validation:
-  status: unvalidated
-  last_validated_date: null
-  evidence: []
+  status: in-progress
+  last_validated_date: "2026-05-22"
+  evidence:
+    - kind: chapter
+      ref: examples/smoke/src/content/chapters/01-foundations/misconception-fixture.mdx
+      date: "2026-05-22"
+      notes: "Smoke fixture exercises 12 canonical intervention types + the custom escape hatch; MG3/MG4 audit invariants validate misconception-graph depth coverage."
+    - kind: test
+      ref: packages/astro/src/lib/pedagogy-audit/invariants/misconception-graph.test.ts
+      date: "2026-05-22"
+      notes: "I1-I3 + MG3/MG4 invariants tested against the 12-intervention library, including the custom escape hatch and depth-coverage roll-up."
 status: shipped
 ---
 

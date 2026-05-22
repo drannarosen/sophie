@@ -24,30 +24,30 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 | Status | Count |
 |---|---|
 | Validated | 14 |
-| In progress | 11 |
-| Unvalidated | 78 |
+| In progress | 14 |
+| Unvalidated | 76 |
 | Re-validation needed | 0 |
 | Missing block | 0 |
-| Total | 103 |
+| Total | 104 |
 
 ## Lifecycle summary
 
 | Lifecycle | Count |
 |---|---|
-| Shipped | 59 |
+| Shipped | 60 |
 | Accepted design | 34 |
 | Mixed | 1 |
 | Future package split | 9 |
 | No status | 0 |
-| Total | 103 |
+| Total | 104 |
 
 ## Evidence kinds
 
 | Kind | Count |
 |---|---|
-| test | 33 |
-| chapter | 4 |
-| review | 19 |
+| test | 36 |
+| chapter | 7 |
+| review | 20 |
 | deployment | 12 |
 | audit | 5 |
 | manual | 27 |
@@ -146,7 +146,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 |---|---|---|---|---|---|
 | [docs/website/reference/ai-contribution-schema.md](/ai-contribution-schema/) | unvalidated | accepted design | — | — |  |
 | [docs/website/reference/audit-baseline.md](/audit-baseline/) | unvalidated | shipped | — | — |  |
-| [docs/website/reference/chapter-components.md](/chapter-components/) | unvalidated | shipped | — | — |  |
+| [docs/website/reference/chapter-components.md](/chapter-components/) | in progress | shipped | 2026-05-22 | chapter, review, test |  |
 | [docs/website/reference/cli.md](/cli/) | unvalidated | mixed | — | — |  |
 | [docs/website/reference/component-contract.md](/component-contract/) | in progress | shipped | 2026-05-22 | manual, review, test |  |
 | [docs/website/reference/content-schema.md](/content-schema/) | unvalidated | shipped | — | — |  |
@@ -154,9 +154,9 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/reference/equation-biography-schema.md](/equation-biography-schema/) | unvalidated | shipped | — | — |  |
 | [docs/website/reference/equation-registry-schema.md](/equation-registry-schema/) | unvalidated | shipped | — | — |  |
 | [docs/website/reference/glossary.md](/glossary/) | unvalidated | shipped | — | — |  |
-| [docs/website/reference/intervention-library.md](/intervention-library/) | unvalidated | shipped | — | — |  |
+| [docs/website/reference/intervention-library.md](/intervention-library/) | in progress | shipped | 2026-05-22 | chapter, test |  |
 | [docs/website/reference/misconception-graph-schema.md](/misconception-graph-schema/) | unvalidated | shipped | — | — |  |
-| [docs/website/reference/multirep-component.md](/multirep-component/) | unvalidated | shipped | — | — |  |
+| [docs/website/reference/multirep-component.md](/multirep-component/) | in progress | shipped | 2026-05-22 | chapter, test |  |
 | [docs/website/reference/notation-registry-schema.md](/notation-registry-schema/) | unvalidated | shipped | — | — |  |
 | [docs/website/reference/pedagogical-change-taxonomy.md](/pedagogical-change-taxonomy/) | unvalidated | accepted design | — | — |  |
 | [docs/website/reference/pedagogy-contract-schema.md](/pedagogy-contract-schema/) | unvalidated | shipped | — | — |  |
@@ -170,3 +170,4 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/reference/teaching-moves.md](/teaching-moves/) | unvalidated | shipped | — | — |  |
 | [docs/website/reference/validation-tracker.md](/validation-tracker/) | validated | shipped | 2026-05-16 | audit, manual, test | Reference doc shipped in PR 6 Workstream A; specifies the schema + admonition contract + audit invariants + dashboard workflow. Graduated to validated alongside ADR 0056 itself after the curated-pass + V1/V2 promotion landed in the same PR. |
 | [docs/website/reference/visual-regression.md](/visual-regression/) | unvalidated | shipped | — | — |  |
+| [docs/website/reference/wcag-21-aa.md](/wcag-21-aa/) | unvalidated | shipped | — | — |  |

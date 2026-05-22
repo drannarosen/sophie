@@ -59,6 +59,18 @@ export class MemoryResponseStore implements ResponseStore {
     return out;
   }
 
+  async getAllMulti<T>(
+    profile: string,
+    chapters: ReadonlyArray<string>,
+    keyPrefix?: string
+  ): Promise<Record<string, StoredValue<T>>> {
+    if (chapters.length === 0) return {};
+    const perChapter = await Promise.all(
+      chapters.map((ch) => this.getAll<T>(profile, ch, keyPrefix))
+    );
+    return Object.assign({}, ...perChapter) as Record<string, StoredValue<T>>;
+  }
+
   async set<T>(
     profile: string,
     chapter: string,

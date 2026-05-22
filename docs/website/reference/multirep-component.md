@@ -15,9 +15,17 @@ tags:
   - multiple-representations
   - lds
 validation:
-  status: unvalidated
-  last_validated_date: null
-  evidence: []
+  status: in-progress
+  last_validated_date: "2026-05-22"
+  evidence:
+    - kind: chapter
+      ref: examples/smoke/src/content/chapters/01-foundations/measuring-the-sky.mdx
+      date: "2026-05-22"
+      notes: "Smoke fixture exercises <MultiRep> with verbal/equation/figure children; MR1-MR4 audit invariants validate the bindings + alt-text alignment."
+    - kind: test
+      ref: packages/astro/src/lib/pedagogy-audit/invariants/multirep.test.ts
+      date: "2026-05-22"
+      notes: "MR1-MR4 invariants tested across binding-uniqueness, concept-alignment, alt-text, and reference resolution paths."
 status: shipped
 ---
 

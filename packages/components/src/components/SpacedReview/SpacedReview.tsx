@@ -1,6 +1,8 @@
 import type { PracticeAttempt } from "@sophie/core/schema";
 import { Children, isValidElement, type ReactNode, useMemo } from "react";
+import { unitStore } from "../../runtime/units-store.ts";
 import { useInteractiveRange } from "../../runtime/useInteractiveRange.ts";
+import { useInteractiveRangeMulti } from "../../runtime/useInteractiveRangeMulti.ts";
 import { humanLabelFromTarget } from "../retrieval/humanLabel.ts";
 import { selectLeastRecentlyAttempted } from "../retrieval/lruScheduler.ts";
 import styles from "./SpacedReview.module.css.js";
@@ -9,6 +11,7 @@ import type { SpacedReviewProps } from "./SpacedReview.schema.ts";
 const EMPTY_SLOT = "SpacedReview.Empty";
 const DEFAULT_MAX = 3;
 const PRACTICE_ATTEMPT_PREFIX = "practice-attempt:";
+const NO_CHAPTERS: readonly string[] = [];
 
 function EmptySlot({ children }: { children: ReactNode }) {
   return <>{children}</>;
@@ -40,8 +43,12 @@ EmptySlot.displayName = EMPTY_SLOT;
  * over them (replaced by FSRS in Wedge D), and renders up to `max`
  * "Review: <target>" items per Wedge B1 design doc §1 option (1).
  *
- * `section`-scope is stubbed for Wedge B1; it currently returns no
- * items pending the Section/pedagogy-index lookup wire-up.
+ * `section`-scope (W1 graduation per Wedge B-followup design doc D2):
+ * resolves the section slug to its constituent chapter slugs via the
+ * `unitStore` (filter Units by `section_id`, collect `unit.chapter`),
+ * then calls `useInteractiveRangeMulti` to aggregate practice-attempt
+ * records across those chapters. The LRU runs over the merged set
+ * with the supplied `max`.
  */
 export function SpacedReview({
   course,
@@ -57,6 +64,23 @@ export function SpacedReview({
     PRACTICE_ATTEMPT_PREFIX
   );
 
+  // Section-scope (W1 graduation): resolve section → chapter list via
+  // the unitStore, then aggregate practice attempts across those
+  // chapters via useInteractiveRangeMulti. When `section` is undefined,
+  // pass an empty chapter array — the multi-hook short-circuits with
+  // no I/O. Memo by section identity so the hook deps stay stable.
+  const sectionChapters = useMemo<readonly string[]>(() => {
+    if (section === undefined) return NO_CHAPTERS;
+    return unitStore
+      .all()
+      .filter((u) => u.section_id === section)
+      .map((u) => u.chapter);
+  }, [section]);
+
+  const { values: multiRawValues } = useInteractiveRangeMulti<
+    readonly PracticeAttempt[]
+  >(course, sectionChapters, PRACTICE_ATTEMPT_PREFIX);
+
   // Flatten the per-target attempt arrays into a single list for the
   // scheduler; only `target_id` + `updated_at` are needed.
   const flatAttempts = useMemo(() => {
@@ -71,6 +95,21 @@ export function SpacedReview({
     }
     return out;
   }, [rawValues]);
+
+  // Multi-chapter flattened attempts for section-scope; built only
+  // when section is set (the hook returns {} otherwise).
+  const flatMultiAttempts = useMemo(() => {
+    const out: Array<{ target_id: string; updated_at: string }> = [];
+    for (const list of Object.values(multiRawValues)) {
+      for (const attempt of list) {
+        out.push({
+          target_id: attempt.target_id,
+          updated_at: attempt.updated_at,
+        });
+      }
+    }
+    return out;
+  }, [multiRawValues]);
 
   const dueTargets = useMemo(() => {
     if (target !== undefined) {
@@ -91,17 +130,17 @@ export function SpacedReview({
       return hit;
     }
     if (section !== undefined) {
-      // TODO Wedge B-follow-up: pedagogy-index lookup for section scope
-      // will resolve `section` to its constituent target_ids, then run
-      // `selectLeastRecentlyAttempted` with the supplied `max` over the
-      // resolved attempt set. For B1, the lookup is stubbed and `max` is
-      // unused on this path; surface no items so the empty-state
-      // placeholder renders.
-      void max;
-      return [];
+      // Section-scope (W1 graduation): the multi-hook has aggregated
+      // attempts across all chapters bound to this Section's Units.
+      // Run the LRU over the merged set with the supplied `max`.
+      // Distinct target_ids compete for the top-N slots.
+      return selectLeastRecentlyAttempted({
+        attempts: flatMultiAttempts,
+        max,
+      });
     }
     return [];
-  }, [flatAttempts, target, section, max]);
+  }, [flatAttempts, flatMultiAttempts, target, section, max]);
 
   const emptyChild = useMemo(() => {
     for (const child of Children.toArray(children)) {

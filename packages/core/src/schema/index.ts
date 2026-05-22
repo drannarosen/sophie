@@ -140,10 +140,14 @@ export {
   type OMIFlowSlot,
   type RetrievalPromptEntry,
   RetrievalPromptEntrySchema,
+  type SectionEntry,
+  SectionEntrySchema,
   type SkillReviewEntry,
   SkillReviewEntrySchema,
   type SpacedReviewEntry,
   SpacedReviewEntrySchema,
+  type UnitEntry,
+  UnitEntrySchema,
 } from "./pedagogy-index-entries/index.js";
 export {
   type PracticeAttempt,

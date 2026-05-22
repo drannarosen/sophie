@@ -4,30 +4,10 @@ import {
   __resetAuditCacheForTesting,
   runAuditOncePerProcess,
 } from "./audit-cache.ts";
+import { buildPedagogyIndex } from "./pedagogy-audit/test-helpers.ts";
 
 function emptyIndex(): PedagogyIndex {
-  return {
-    definitions: [],
-    equations: [],
-    equationCitations: [],
-    keyInsights: [],
-    figureRegistry: [],
-    figureUsages: [],
-    misconceptions: [],
-    chapters: [],
-    modules: [],
-    objectives: [],
-    inlineRefUsages: [],
-    contractValidations: [],
-    extractorFindings: [],
-    multiReps: [],
-    interventions: [],
-    deepDives: [],
-    omiFlows: [],
-    retrievalPrompts: [],
-    spacedReviews: [],
-    skillReviews: [],
-  };
+  return buildPedagogyIndex();
 }
 
 afterEach(() => {

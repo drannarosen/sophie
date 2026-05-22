@@ -7,8 +7,9 @@ import {
 } from "@testing-library/react";
 import { axe } from "jest-axe";
 import type { ReactNode } from "react";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { ProfileProvider } from "../../runtime/ProfileContext.tsx";
+import { __setUnits } from "../../runtime/units-store.ts";
 import { RetrievalPrompt } from "../RetrievalPrompt/RetrievalPrompt.tsx";
 import { SpacedReview } from "./SpacedReview.tsx";
 
@@ -151,7 +152,10 @@ describe("<SpacedReview>", () => {
     expect(screen.getByText(/Review: equation: target/i)).toBeInTheDocument();
   });
 
-  it("section-scope returns no items in Wedge B1 (pedagogy-index lookup stubbed)", () => {
+  it("section-scope renders empty when no Units are populated (forward-compat)", () => {
+    // Pre-W1 consumers don't populate unitStore; section-scope
+    // resolves to an empty chapter list → multi-hook short-circuits →
+    // empty state.
     render(
       withProfile(
         <SpacedReview
@@ -164,6 +168,137 @@ describe("<SpacedReview>", () => {
     expect(
       screen.getByText(/No items due for review yet/i)
     ).toBeInTheDocument();
+  });
+
+  describe("section-scope rendering (W1 graduation)", () => {
+    afterEach(() => {
+      __setUnits([]);
+    });
+
+    it("renders aggregated review items across chapters bound to a Section", async () => {
+      // Populate the unitStore: two Units in the same Section, each
+      // bound to a distinct chapter.
+      __setUnits([
+        {
+          id: "u1",
+          type: "lecture",
+          title: "U1",
+          order: 0,
+          prereqs: [],
+          section_id: "stars",
+          chapter: "ch-spectra",
+        },
+        {
+          id: "u2",
+          type: "lecture",
+          title: "U2",
+          order: 1,
+          prereqs: [],
+          section_id: "stars",
+          chapter: "ch-evolution",
+        },
+      ]);
+      // Seed practice attempts in BOTH chapters with distinct targets.
+      await seedAttempt("sr-section-1", "ch-spectra", "topic:logs");
+      await seedAttempt("sr-section-1", "ch-evolution", "topic:trig");
+
+      render(
+        withProfile(
+          <SpacedReview
+            course='sr-section-1'
+            chapter='ch-spectra'
+            section='stars'
+            max={3}
+          />
+        )
+      );
+      // Expect both targets to appear in the merged review list.
+      await waitFor(() =>
+        expect(screen.queryAllByTestId("spaced-review-item")).toHaveLength(2)
+      );
+    });
+
+    it("excludes attempts in chapters bound to OTHER Sections", async () => {
+      __setUnits([
+        {
+          id: "u-stars",
+          type: "lecture",
+          title: "Stars U",
+          order: 0,
+          prereqs: [],
+          section_id: "stars",
+          chapter: "ch-spectra",
+        },
+        // Galaxies has a Unit too, but the SpacedReview points at "stars"
+        // so galaxy attempts shouldn't surface.
+        {
+          id: "u-galaxies",
+          type: "lecture",
+          title: "Galaxies U",
+          order: 0,
+          prereqs: [],
+          section_id: "galaxies",
+          chapter: "ch-galaxies",
+        },
+      ]);
+      await seedAttempt("sr-section-2", "ch-spectra", "topic:logs");
+      await seedAttempt("sr-section-2", "ch-galaxies", "topic:redshift");
+
+      render(
+        withProfile(
+          <SpacedReview
+            course='sr-section-2'
+            chapter='ch-spectra'
+            section='stars'
+            max={3}
+          />
+        )
+      );
+      await waitFor(() =>
+        expect(screen.queryAllByTestId("spaced-review-item")).toHaveLength(1)
+      );
+      expect(screen.getByText(/Review:.*logs/i)).toBeInTheDocument();
+    });
+
+    it("honors max= in section-scope when more attempts would otherwise match", async () => {
+      __setUnits([
+        {
+          id: "u1",
+          type: "lecture",
+          title: "U1",
+          order: 0,
+          prereqs: [],
+          section_id: "stars",
+          chapter: "ch-a",
+        },
+        {
+          id: "u2",
+          type: "lecture",
+          title: "U2",
+          order: 1,
+          prereqs: [],
+          section_id: "stars",
+          chapter: "ch-b",
+        },
+      ]);
+      await seedAttempt("sr-section-3", "ch-a", "topic:logs");
+      await seedAttempt("sr-section-3", "ch-a", "topic:trig");
+      await seedAttempt("sr-section-3", "ch-b", "topic:exp");
+
+      render(
+        withProfile(
+          <SpacedReview
+            course='sr-section-3'
+            chapter='ch-a'
+            section='stars'
+            max={2}
+          />
+        )
+      );
+      await waitFor(() =>
+        expect(screen.queryAllByTestId("spaced-review-item")).toHaveLength(2)
+      );
+    });
   });
 
   it("has zero axe violations in empty state", async () => {

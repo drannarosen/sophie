@@ -122,4 +122,45 @@ describe("createPedagogyStore", () => {
     expect(store.lookup("alpha")).toBeUndefined();
     expect(errorSpy).not.toHaveBeenCalled();
   });
+
+  // Wedge B-followup (W1) — `all()` accessor enables iteration over the
+  // full collection (filter / map / reduce). Required by `<SpacedReview
+  // section=…>` to enumerate Units in a Section. Cockpit (ADR 0076) is
+  // the committed second caller — DRY pays off.
+  it("all() returns the populated entries after set() (W1)", () => {
+    const store = createPedagogyStore<SampleEntry>({
+      scriptId: "sophie-test-store-all-set",
+      logTag: "[test:all-set]",
+      keyOf: (e) => e.slug,
+    });
+
+    store.set([alpha, beta]);
+    expect(store.all()).toEqual([alpha, beta]);
+  });
+
+  it("all() returns [] before set() and with no script-tag hydration (W1)", () => {
+    const store = createPedagogyStore<SampleEntry>({
+      scriptId: "sophie-test-store-all-empty",
+      logTag: "[test:all-empty]",
+      keyOf: (e) => e.slug,
+    });
+
+    expect(store.all()).toEqual([]);
+  });
+
+  it("all() hydrates from the script tag on first call if no setter ran (W1)", () => {
+    const script = document.createElement("script");
+    script.id = "sophie-test-store-all-hydrate";
+    script.type = "application/json";
+    script.textContent = JSON.stringify([alpha, beta]);
+    document.head.appendChild(script);
+
+    const store = createPedagogyStore<SampleEntry>({
+      scriptId: "sophie-test-store-all-hydrate",
+      logTag: "[test:all-hydrate]",
+      keyOf: (e) => e.slug,
+    });
+
+    expect(store.all()).toEqual([alpha, beta]);
+  });
 });

@@ -10,9 +10,21 @@ tags:
   - mdx
   - reference
 validation:
-  status: unvalidated
-  last_validated_date: null
-  evidence: []
+  status: in-progress
+  last_validated_date: "2026-05-22"
+  evidence:
+    - kind: test
+      ref: packages/components/src/components/SpacedReview/SpacedReview.test.tsx
+      date: "2026-05-22"
+      notes: "<SpacedReview section=…> section-scope rendering graduated end-to-end (Wedge B-followup W1); 11 unit tests cover target= and section= paths."
+    - kind: chapter
+      ref: examples/smoke/src/content/chapters/02-stars/stellar-evolution.mdx
+      date: "2026-05-22"
+      notes: "<SpacedReview section=\"stars\"> callsite exercises the new section-scope render path in smoke; section_id resolves cleanly through SR-1."
+    - kind: review
+      ref: docs/reviews/2026-05-22-wedge-b1-retrieval-family.md
+      date: "2026-05-22"
+      notes: "Wedge B1 retrieval-family A- grade validated the component-contract pattern this doc describes; W1 graduations extend coverage to Unit-aware PRA-1 + section-validity SR-1."
 status: shipped
 ---
 
@@ -354,7 +366,7 @@ time, not at runtime.
 | A free-text reflection prompt | `<Reflection>` |
 | A "Deep Dive" disclosure block | `<CollapsibleCard>` |
 | In-flow recall prompt anchored to a pedagogy-graph node (equation / glossary / misconception / learning-objective / key-insight / topic) | `<RetrievalPrompt target="prefix:slug">` with required `<RetrievalPrompt.Prompt>` + `<RetrievalPrompt.Answer>` slot children. Amber left-band. Writes `practice_attempt` records via `useRetrievalAttempt`. Self-assess buttons (Got it / Partial / Missed it) render automatically below the revealed answer. Per Wedge B1 design doc §1. |
-| Queued review surface that resurfaces past-attempted targets due for review | `<SpacedReview target="prefix:slug" max={3} />` (single-target scope) or `<SpacedReview section="..." max={5} />` (Section-scope, stubbed in B1, pedagogy-index lookup wires in a follow-up). Exactly-one selection rule enforced by Zod refine. Cyan left-band. Optional `<SpacedReview.Empty>` slot overrides the default empty-state message. Wedge B1 ships an LRU stub scheduler; Wedge D's FSRS replaces the function body. |
+| Queued review surface that resurfaces past-attempted targets due for review | `<SpacedReview target="prefix:slug" max={3} />` (single-target scope) or `<SpacedReview section="<section-slug>" max={3} />` (Section-scope, **graduated in Wedge B-followup W1**). Section-scope resolves the slug → `UnitEntry`s in that Section → `unit.chapter` slugs → aggregates `practice_attempt` records via `useInteractiveRangeMulti`, then runs the LRU over the merged set with `max`. SR-1 audit invariant validates the section slug against `PedagogyIndex.sections`. Exactly-one selection rule (`target` xor `section`) enforced by Zod refine. Cyan left-band. Optional `<SpacedReview.Empty>` slot overrides the default empty-state message. Wedge B1 ships an LRU stub scheduler; Wedge D's FSRS replaces the function body. |
 | Inline prereq-bridge prompt at the point a prereq concept is invoked mid-reading | `<SkillReview target="topic:..." />` (self-closing form, B1 placeholder until Wedge C Library room ships) or `<SkillReview target="topic:...">` with optional `<SkillReview.Prompt>` + `<SkillReview.Answer>` + `<SkillReview.ReviewMore>` slot children (explicit form, works in B1). Violet left-band. Same `target` prefix convention as RetrievalPrompt + SpacedReview, unifying ADR 0068's previously-`topic`-only signature. |
 | Chapter-end roll-up of definitions | `<ChapterGlossary chapter="X" />` |
 | Chapter-end roll-up of equations | `<ChapterEquations chapter="X" />` |
@@ -366,6 +378,63 @@ time, not at runtime.
 
 Pick by pedagogical intent first; the static-vs-interactive split
 and the chapter-vs-course aggregation level follow automatically.
+
+## Section-scope `<SpacedReview>` lookup chain (W1)
+
+`<SpacedReview section="<slug>" max={3} />` resolves cross-chapter
+review aggregation through three hops, all build-time data exposed
+via the `PedagogyIndex`:
+
+```text
+section="stars"                         # author-supplied prop
+  ↓ filter UnitEntry by section_id
+unitStore.all().filter(u => u.section_id === "stars")
+  ↓ collect unit.chapter slugs
+["spectra-and-composition", "stellar-evolution", …]
+  ↓ useInteractiveRangeMulti(course, chapters, "practice-attempt:")
+merged Record<key, PracticeAttempt[]> across all chapters
+  ↓ selectLeastRecentlyAttempted({ attempts, max })
+[target_id, target_id, …]               # rendered as "Review:" items
+```
+
+**Authoring rules:**
+
+- Exactly one of `target=` or `section=` per callsite (Zod refine).
+- `section` must be a valid `SectionEntry.slug` in
+  [`PedagogyIndex.sections`](../../packages/core/src/schema/pedagogy-index.ts).
+  Invalid refs emit **SR-1 ERROR** at audit time.
+- `max` (default 3) caps the rendered list across all distinct
+  `target_id`s in the merged attempt set — distinct topics compete
+  for slots when more candidates exist than `max` allows.
+- The `<SpacedReview.Empty>` slot is honored when the merged set is
+  empty (no attempts yet in any chapter bound to a Unit in this
+  Section).
+
+**Cross-chapter LWW semantics:** identical unwrapped keys across
+chapters (e.g., two chapters both writing `practice-attempt:topic:logs`
+for distinct students of the same target) are merged last-chapter-wins
+in iteration order — documented in
+[`ResponseStore.getAllMulti`](../../packages/components/src/runtime/ResponseStore.ts).
+The `practice-attempt:<target_id>` key shape rarely collides across
+chapters in the same Section in practice (each chapter logs against
+its own surfaced targets).
+
+**Where the data flows from:**
+
+1. Build-time: `TextbookLayout` calls `getCollection('sections')` +
+   `getCollection('units')` and forwards via
+   `indexAccumulator.setSections()` / `setUnits()`.
+2. SSR-merge: `__setSections(pedagogy.sections)` +
+   `__setUnits(pedagogy.units)` hydrate the client-side stores;
+   `<script id="sophie-pedagogy-sections">` + `…-units` JSON payloads
+   support auto-hydration when no setter ran (e.g., direct island
+   mount).
+3. Render-time: `<SpacedReview section=…>` reads `unitStore.all()`
+   inside a `useMemo([section])` to derive the chapter list, then
+   the cross-chapter range hook fires.
+
+See [Wedge B-followup design doc D2](../../plans/2026-05-22-wedge-b-followup-design.md#d2--useinteractiverangemulti-hook-for-cross-chapter-range-reads)
+for the rationale + cross-call contract.
 
 ## Anchor convention
 
@@ -404,6 +473,7 @@ JSDoc:
 - [ADR 0060](../decisions/0060-registry-ecosystem.md) — Registry Ecosystem. Equation biographies move from chapter-inline to registry MDX bodies; `<KeyEquation refId>` + `<EquationRef refId>` cite the registry; R1–R4 audit invariants police citation/declaration integrity.
 - [ADR 0068](../decisions/0068-bridge-rooms-and-prereq-pedagogy.md) — Bridge rooms + prereq pedagogy. `<SkillReview>` lives here; Wedge B1 unifies its signature with the rest of the retrieval family (target prefix-typed: `topic:`, `eq:`, etc.).
 - [Wedge B1 design doc](../../plans/2026-05-21-wedge-b1-retrieval-family-design.md) — locked decisions for `<RetrievalPrompt>` + `<SpacedReview>` + `<SkillReview>`: shared `<RetrievalCard>` primitive, `practice_attempt` persistence shape, LRU stub scheduler, target-prefix convention, smoke chapter usage. PRA-1 / RET-1 / SR-1 curriculum-CI invariants.
+- [Wedge B-followup design doc](../../plans/2026-05-22-wedge-b-followup-design.md) — W1 graduation of PRA-1 (Unit-aware) + SR-1 (section-validity) + `<SpacedReview section=…>` end-to-end rendering. Adds `sections` + `units` collections to `PedagogyIndex` and the `useInteractiveRangeMulti` hook for cross-chapter range reads. Locks ADR 0067 as Sophie's canonical content shape via the four-wedge W1→W4 migration sequence.
 - [ADR 0061](../decisions/0061-ai-optimized-codebase-design.md) — AI-optimized codebase design (six rules including docs-atomic-with-code).
 - [equation-registry-schema](equation-registry-schema.md) — the registry MDX shape (frontmatter + biography body).
 - [Component contract](component-contract.md) — the TypeScript interface every component implements.

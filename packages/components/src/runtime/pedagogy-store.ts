@@ -40,6 +40,15 @@ export interface PedagogyStore<T> {
   set: (entries: ReadonlyArray<T>) => void;
   /** Client-side lookup. Auto-hydrates from the script tag on first call when no setter ran. */
   lookup: (key: string) => T | undefined;
+  /**
+   * Iterate the full collection. Auto-hydrates from the script tag on
+   * first call when no setter ran (mirrors `lookup`). Returns a stable
+   * frozen array snapshot — callers can `.filter` / `.map` without
+   * affecting the store. Added in Wedge B-followup (W1) for
+   * `<SpacedReview section=…>`'s Unit enumeration; Cockpit (ADR 0076)
+   * is the committed second caller.
+   */
+  all: () => ReadonlyArray<T>;
 }
 
 export function createPedagogyStore<T>(
@@ -91,6 +100,10 @@ export function createPedagogyStore<T>(
     lookup(key) {
       hydrateFromScriptTagIfPresent();
       return byKey.get(key);
+    },
+    all() {
+      hydrateFromScriptTagIfPresent();
+      return Array.from(byKey.values());
     },
   };
 }

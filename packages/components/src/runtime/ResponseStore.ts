@@ -38,6 +38,32 @@ export interface ResponseStore {
     chapter: string,
     keyPrefix?: string
   ): Promise<Record<string, StoredValue<T>>>;
+  /**
+   * Cross-chapter range read: returns merged (key → StoredValue) for
+   * every record across the listed `chapters` whose key starts with
+   * `keyPrefix`. Returned keys are unwrapped per `getAll`. Chapters
+   * outside the list are excluded; an empty `chapters` array returns
+   * `{}` without I/O. Default implementations fan out `getAll` per
+   * chapter and merge.
+   *
+   * Added 2026-05-22 in Wedge B-followup (W1) to back the
+   * `useInteractiveRangeMulti<T>` hook that powers `<SpacedReview
+   * section="…">` (section-scope rendering needs to aggregate
+   * practice_attempt records across the chapters bound to the
+   * Section's Units). Cockpit (ADR 0076) is the committed second
+   * caller.
+   *
+   * **Collision semantics:** if two chapters in the list both contain
+   * the same unwrapped `key`, the later-iterated chapter wins in the
+   * merge. In practice keys like `practice-attempt:<target_id>` are
+   * disjoint across chapters in the same Section (each chapter logs
+   * attempts against its own target_ids), so collisions are rare.
+   */
+  getAllMulti<T>(
+    profile: string,
+    chapters: ReadonlyArray<string>,
+    keyPrefix?: string
+  ): Promise<Record<string, StoredValue<T>>>;
   set<T>(
     profile: string,
     chapter: string,

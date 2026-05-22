@@ -148,4 +148,86 @@ describe("MemoryResponseStore", () => {
       expect(Object.keys(out)).toEqual(["practice-attempt:eq:sb"]);
     });
   });
+
+  describe("getAllMulti — cross-chapter range read (Wedge B-followup W1)", () => {
+    it("returns {} when chapters array is empty", async () => {
+      const store = new MemoryResponseStore("course-a");
+      await store.set("student", "ch1", "k1", { value: 1, ts: 1 });
+      const out = await store.getAllMulti("student", [], "practice-attempt:");
+      expect(out).toEqual({});
+    });
+
+    it("merges results across multiple chapters into one map", async () => {
+      const store = new MemoryResponseStore("course-a");
+      await store.set("student", "ch-a", "practice-attempt:logs", {
+        value: 1,
+        ts: 1,
+      });
+      await store.set("student", "ch-b", "practice-attempt:trig", {
+        value: 2,
+        ts: 2,
+      });
+      const out = await store.getAllMulti<number>(
+        "student",
+        ["ch-a", "ch-b"],
+        "practice-attempt:"
+      );
+      expect(out).toEqual({
+        "practice-attempt:logs": { value: 1, ts: 1 },
+        "practice-attempt:trig": { value: 2, ts: 2 },
+      });
+    });
+
+    it("excludes chapters not in the list", async () => {
+      const store = new MemoryResponseStore("course-a");
+      await store.set("student", "ch-a", "practice-attempt:logs", {
+        value: 1,
+        ts: 1,
+      });
+      await store.set("student", "ch-c", "practice-attempt:exp", {
+        value: 3,
+        ts: 3,
+      });
+      const out = await store.getAllMulti<number>(
+        "student",
+        ["ch-a"],
+        "practice-attempt:"
+      );
+      expect(Object.keys(out)).toEqual(["practice-attempt:logs"]);
+    });
+
+    it("applies the keyPrefix filter across all listed chapters", async () => {
+      const store = new MemoryResponseStore("course-a");
+      await store.set("student", "ch-a", "practice-attempt:x", {
+        value: 1,
+        ts: 1,
+      });
+      await store.set("student", "ch-a", "predict:y", { value: 2, ts: 2 });
+      await store.set("student", "ch-b", "practice-attempt:z", {
+        value: 3,
+        ts: 3,
+      });
+      const out = await store.getAllMulti<number>(
+        "student",
+        ["ch-a", "ch-b"],
+        "practice-attempt:"
+      );
+      expect(out).toEqual({
+        "practice-attempt:x": { value: 1, ts: 1 },
+        "practice-attempt:z": { value: 3, ts: 3 },
+      });
+    });
+
+    it("scopes to one profile only — sibling profiles excluded", async () => {
+      const store = new MemoryResponseStore("course-a");
+      await store.set("student", "ch-a", "k", { value: 1, ts: 1 });
+      await store.set("instructor", "ch-a", "k", { value: 2, ts: 2 });
+      const out = await store.getAllMulti<number>(
+        "student",
+        ["ch-a"],
+        undefined
+      );
+      expect(out).toEqual({ k: { value: 1, ts: 1 } });
+    });
+  });
 });

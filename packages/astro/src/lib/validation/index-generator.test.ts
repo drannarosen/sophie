@@ -1,5 +1,6 @@
 import type { PedagogyIndex } from "@sophie/core/schema";
 import { describe, expect, test } from "vitest";
+import { buildPedagogyIndex } from "../pedagogy-audit/test-helpers.ts";
 import { generateValidationIndex } from "./index-generator.ts";
 
 /**
@@ -18,29 +19,7 @@ import { generateValidationIndex } from "./index-generator.ts";
  */
 
 function makeIndex(partial: Partial<PedagogyIndex> = {}): PedagogyIndex {
-  return {
-    definitions: [],
-    equations: [],
-    equationCitations: [],
-    keyInsights: [],
-    figureRegistry: [],
-    figureUsages: [],
-    misconceptions: [],
-    chapters: [],
-    modules: [],
-    objectives: [],
-    inlineRefUsages: [],
-    contractValidations: [],
-    extractorFindings: [],
-    multiReps: [],
-    interventions: [],
-    deepDives: [],
-    omiFlows: [],
-    retrievalPrompts: [],
-    spacedReviews: [],
-    skillReviews: [],
-    ...partial,
-  };
+  return buildPedagogyIndex(partial);
 }
 
 describe("generateValidationIndex", () => {

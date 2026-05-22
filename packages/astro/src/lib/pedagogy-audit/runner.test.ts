@@ -18,6 +18,7 @@ import type {
 } from "@sophie/core/schema";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { auditExitCode, formatAuditReport, runPedagogyAudit } from "./index.ts";
+import { buildPedagogyIndex } from "./test-helpers.ts";
 
 /**
  * Tests for the systematic build-time pedagogy audit pass (PR-C4 Task
@@ -33,28 +34,7 @@ import { auditExitCode, formatAuditReport, runPedagogyAudit } from "./index.ts";
 
 /** Build an empty PedagogyIndex with all collections at []; tests override per-case. */
 function emptyIndex(): PedagogyIndex {
-  return {
-    definitions: [],
-    equations: [],
-    equationCitations: [],
-    keyInsights: [],
-    figureRegistry: [],
-    figureUsages: [],
-    misconceptions: [],
-    chapters: [],
-    modules: [],
-    objectives: [],
-    inlineRefUsages: [],
-    contractValidations: [],
-    extractorFindings: [],
-    multiReps: [],
-    interventions: [],
-    deepDives: [],
-    omiFlows: [],
-    retrievalPrompts: [],
-    spacedReviews: [],
-    skillReviews: [],
-  };
+  return buildPedagogyIndex();
 }
 
 const chFoundations: ChapterEntry = {

@@ -1,0 +1,9 @@
+{
+  "id": "stellar-evolution",
+  "type": "lecture",
+  "title": "Stellar Evolution",
+  "order": 1,
+  "prereqs": [],
+  "section_id": "stars",
+  "chapter": "stellar-evolution"
+}
