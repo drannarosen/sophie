@@ -36,6 +36,8 @@ import {
   RepEquation,
   RepFigure,
   RepVerbal,
+  RetrievalPrompt,
+  SkillReview,
   Units,
 } from "@sophie/components";
 import ChapterGlossary from "@sophie/astro/components/ChapterGlossary.astro";
@@ -401,6 +403,34 @@ Light produced and sent out by a source. Atoms in heated gas emit light at the s
 <Aside kind="key-insight">
 Color isn't decoration — it's encoded physics. Specific wavelengths = specific atoms = specific conditions.
 </Aside>
+
+<RetrievalPrompt
+  client:load
+  course="astr201"
+  chapter="spoiler-alerts"
+  target="ki:luminosity"
+>
+  <RetrievalPrompt.Prompt>
+    In one sentence, why does color encode physics? (Hint: it's not arbitrary — it's set by atomic structure.)
+  </RetrievalPrompt.Prompt>
+  <RetrievalPrompt.Answer>
+    Each element has a unique fingerprint of emission wavelengths because the photon energy of each transition is fixed by the atom's discrete energy levels. Detecting specific wavelengths tells you which atoms are present and, with line widths, the gas conditions.
+  </RetrievalPrompt.Answer>
+</RetrievalPrompt>
+
+<SkillReview
+  client:load
+  course="astr201"
+  chapter="spoiler-alerts"
+  target="topic:exponents"
+>
+  <SkillReview.Prompt>
+    Quick check before we keep going: what is $10^3$ in scientific notation, and what does the exponent tell you about the number's order of magnitude?
+  </SkillReview.Prompt>
+  <SkillReview.Answer>
+    $10^3 = 1000$. The exponent (3) is the number's order of magnitude — how many factors of 10 above 1 it sits. Astronomy lives in scientific notation because distances span ${\sim}10^{27}$ orders.
+  </SkillReview.Answer>
+</SkillReview>
 
 <Callout
   variant="deep-dive"

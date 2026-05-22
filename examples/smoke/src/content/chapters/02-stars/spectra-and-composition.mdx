@@ -36,6 +36,8 @@ import {
   OMIFlow,
   Predict,
   Reflection,
+  RetrievalPrompt,
+  SpacedReview,
 } from "@sophie/components";
 import ChapterGlossary from "@sophie/astro/components/ChapterGlossary.astro";
 
@@ -488,6 +490,20 @@ The exponential is ruthless: even modest temperature changes dramatically shift 
 <Aside kind="definition" title="Saha equation">
 The statistical-mechanics relation governing the ionization equilibrium of a gas: it sets the ratio of ionized to neutral atoms as a function of temperature, electron density, and the ionization energy of the species. At high temperature and low density, ionization wins; at low temperature and high density, recombination wins. Together with the Boltzmann distribution, it determines which absorption lines a stellar atmosphere can produce.
 </Aside>
+
+<RetrievalPrompt
+  client:load
+  course="astr201"
+  chapter="spectra-and-composition"
+  target="eq:saha-equation"
+>
+  <RetrievalPrompt.Prompt>
+    What two competing processes does the Saha equation set the balance between, and which variable controls the balance for a fixed-composition gas?
+  </RetrievalPrompt.Prompt>
+  <RetrievalPrompt.Answer>
+    Ionization (collisions strip electrons) vs. recombination (free electrons rejoin ions). At fixed composition the dominant control is **temperature** — high $T$ shifts the equilibrium toward ionization. Electron density also matters: denser gas recombines faster, so the same temperature can leave more or fewer neutrals depending on $n_e$.
+  </RetrievalPrompt.Answer>
+</RetrievalPrompt>
 
 **A stars ($7{,}500$–$10{,}000\ \text{K}$):** The Goldilocks temperature for hydrogen Balmer absorption. The Balmer line strength reflects a **competition between excitation and ionization**: the Boltzmann factor tells us what fraction of *neutral* atoms are in $n = 2$, but the Saha equation tells us what fraction of atoms are *neutral at all*. At A-star temperatures, enough hydrogen remains neutral *and* enough of that neutral hydrogen is excited to $n = 2$ that Balmer absorption is maximally efficient. **H lines are at their strongest** here. Helium lines are weakening (not hot enough for He excitation); metal lines are not yet prominent (too hot for many metal ions to survive un-ionized in the right states).
 
@@ -1131,6 +1147,18 @@ The James Webb Space Telescope uses exactly the infrared spectroscopy we've been
 **Interstellar absorption adds extra lines.** Gas and dust between us and a star can imprint *additional* absorption features (e.g., interstellar sodium D lines, diffuse interstellar bands). These must be separated from the star's own atmospheric lines — usually by checking whether the lines share the star's Doppler shift or not. (Interstellar lines have their own, different velocity.)
 
 **Part 7 takeaway.** Spectroscopy is robust but not foolproof. Binaries blend spectra, interstellar gas adds false lines, and precise composition requires careful modeling beyond simple line identification. These caveats don't undermine the method — they refine it.
+
+<SpacedReview
+  client:load
+  course="astr201"
+  chapter="spectra-and-composition"
+  target="topic:logarithms"
+  max={3}
+>
+  <SpacedReview.Empty>
+    Practice ahead on logarithms? They'll surface here once you've worked recall prompts above that touch the topic.
+  </SpacedReview.Empty>
+</SpacedReview>
 
 ## Summary
 
