@@ -3,6 +3,8 @@ import {
   ChapterSchema,
   EquationRegistryEntrySchema,
   SectionModuleVariantSchema,
+  SectionSchema,
+  UnitEntrySchema,
 } from "@sophie/core/schema";
 import { glob } from "astro/loaders";
 
@@ -26,6 +28,27 @@ const modules = defineCollection({
   schema: SectionModuleVariantSchema,
 });
 
+// Wedge B-followup (W1) per ADR 0067: top-level Section content per
+// the new hierarchy. The full discriminated union accepts
+// module / phase / track / unit-block / bridge variants. For W1 these
+// COEXIST with the legacy `modules` collection (each module has a
+// twin Section[type=module] with the same slug); W2 deletes
+// `modules`/`chapters` in favor of `sections`/`units` exclusively.
+const sections = defineCollection({
+  loader: glob({ pattern: "**/*.json", base: "./src/content/sections" }),
+  schema: SectionSchema,
+});
+
+// Wedge B-followup (W1) per ADR 0067 + design doc D7: per-Unit
+// content metadata. Each unit binds to its containing Section
+// (`section_id`) and to its reading artifact (`chapter`); the optional
+// `lecture` field binds to the slides artifact (slides extraction
+// lands post-W2). One unit per existing chapter in the W1 fixture.
+const units = defineCollection({
+  loader: glob({ pattern: "**/*.json", base: "./src/content/units" }),
+  schema: UnitEntrySchema,
+});
+
 // ADR 0060 registry ecosystem: per-equation MDX files at
 // `src/content/equations/<id>.mdx`. Frontmatter validates against
 // `EquationRegistryEntrySchema`; body holds the biography children
@@ -37,4 +60,4 @@ const equations = defineCollection({
   schema: EquationRegistryEntrySchema,
 });
 
-export const collections = { chapters, modules, equations };
+export const collections = { chapters, modules, sections, units, equations };

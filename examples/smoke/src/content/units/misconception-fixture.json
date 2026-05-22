@@ -1,0 +1,9 @@
+{
+  "id": "misconception-fixture",
+  "type": "lecture",
+  "title": "Misconceptions and Interventions",
+  "order": 2,
+  "prereqs": [],
+  "section_id": "foundations",
+  "chapter": "misconception-fixture"
+}

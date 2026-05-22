@@ -1,0 +1,7 @@
+{
+  "type": "module",
+  "slug": "foundations",
+  "title": "Foundations",
+  "order": 0,
+  "description": "The shared vocabulary every later module assumes — what astronomers measure, how, and what those measurements license us to claim."
+}

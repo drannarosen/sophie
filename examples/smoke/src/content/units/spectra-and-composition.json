@@ -1,0 +1,9 @@
+{
+  "id": "spectra-and-composition",
+  "type": "lecture",
+  "title": "Spectra & Composition",
+  "order": 0,
+  "prereqs": ["exponents"],
+  "section_id": "stars",
+  "chapter": "spectra-and-composition"
+}
