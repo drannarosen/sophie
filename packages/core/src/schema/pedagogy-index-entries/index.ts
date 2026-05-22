@@ -74,3 +74,7 @@ export {
   type SectionEntry,
   SectionEntrySchema,
 } from "./section.ts";
+export {
+  type UnitEntry,
+  UnitEntrySchema,
+} from "./unit.ts";
