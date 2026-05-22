@@ -9,11 +9,18 @@ tags: [roadmap, course-website, architecture, status]
 
 This document is the canonical roadmap for expanding Sophie from a
 schema-driven interactive-textbook authoring platform into a
-**model-based STEM learning environment** for full course delivery —
-one where readings, slides, equations, misconceptions, retrieval
-prompts, computational labs, and assessments are unified through a
-single pedagogy graph and the [eight-role epistemic component
-contract](../decisions/0058-epistemic-component-contract.md).
+**pedagogical compiler for scientific reasoning**: a model-based STEM
+learning environment where source content + Zod schemas + registries
++ typed components + curriculum-CI audits + AI-assisted authoring
+compose into multiple outputs (readings, slides, practice sets,
+computational labs, library spec pages, formula sheets, schedule
+calendars, SoTL telemetry). Every authored artifact — equation,
+glossary term, slide, reading passage, practice problem, worked
+example, assessment item — fits into one auditable pedagogy graph
+governed by the [eight-role epistemic component contract](../decisions/0058-epistemic-component-contract.md).
+Other platforms treat course content as disconnected document
+objects; Sophie makes the structure of scientific reasoning itself
+the platform's load-bearing data model.
 
 The goal is **not to replace Canvas as an institutional system of
 record.** Canvas remains the registrar / roster / official gradebook
@@ -97,6 +104,35 @@ future LTI/SoTL telemetry compatibility. Individually, parts exist
 elsewhere. Integrated, with the epistemic-role contract underneath,
 the combination is novel — and that integration is the defensible
 research claim for tenure / Cottrell / CAREER narratives.
+
+## Signature Sophie learning patterns
+
+Sophie's distinctive value is not any individual component — it's a
+small set of **reusable pedagogical patterns** that compose
+recurringly across courses, units, and content types. These patterns
+are how the platform encodes scientific reasoning into authorable
+shapes; together they form Sophie's pedagogical toolkit.
+
+| # | Pattern | What it teaches |
+| --- | --- | --- |
+| 1 | **Observable → Model → Inference** (OMI, [ADR 0063](../decisions/0063-omiflow-composite-primitive.md)) | Epistemic anatomy of a scientific claim |
+| 2 | **Prediction → Reveal → Explanation** (`<Predict>` + reveal) | Conceptual change; productive surprise |
+| 3 | **Worked Example → Faded Prompt → Independent Practice** (Sweller) | Quantitative skill acquisition with managed cognitive load |
+| 4 | **Misconception → Diagnosis → Repair** ([ADR 0044](../decisions/0044-misconception-graph-and-intervention-library.md)) | Conceptual repair from wrong-answer signals |
+| 5 | **Equation → Biography → Validity Domain → Clinic** ([ADR 0046](../decisions/0046-equation-biography.md)) | Equations as models with assumptions, limits, and common misuses — not magic spells |
+| 6 | **Assumption → Consequence → Failure Mode** (8-role contract per [ADR 0058](../decisions/0058-epistemic-component-contract.md)) | What breaks if a model's assumptions fail; scientific judgment |
+| 7 | **Model Comparison → Model Selection → Scientific Judgment** | Knowing *which* model applies, not just *how* to apply one |
+| 8 | **Pre-class → Live-class → Post-class** Learning Loop | Aligns Sophie surfaces to actual teaching workflow |
+| 9 | **Retrieval → Spacing → Mastery Update** (FSRS + BKT) | Long-term retention with adaptive surfacing |
+| 10 | **AI Draft → Instructor Curate → Curriculum-CI Audit** ([ADR 0030](../decisions/0030-audience-and-ai-author-model.md) + [ADR 0045](../decisions/0045-pedagogical-diff-curriculum-ci.md)) | Sustainable AI co-authoring with quality gates |
+
+Patterns 1–7 are *learning* patterns (what the student does);
+patterns 8–10 are *workflow* patterns (how Sophie supports the
+instructor + the class). Every Sophie component PR should be able
+to name which pattern it instantiates; components that don't fit any
+pattern are probably chrome, not pedagogy. The patterns are the
+elevator pitch — they describe what makes Sophie different from "a
+course site + some interactive widgets."
 
 ## Confirmed design decisions (14 foundation + 13 cluster-level)
 
@@ -1219,6 +1255,75 @@ content hierarchy + bridges + Section artifacts + Module template +
 Library, slides↔readings + killer features + `@sophie/slides`,
 Schedule, Assessment cluster, final cluster of migration + Instructor
 + telemetry + OER).
+
+## Future capabilities — staged additions
+
+The 27 settled decisions above are load-bearing for Tier 1 + 2 +
+the Tier 3 architecture. Additional capabilities have been
+*scoped* but not yet committed to specific wedges; they fold into
+the wedge sequence (B / C / D / E / F / G + new) as priorities
+sharpen. This section catalogs the genuinely-additive ideas to
+keep the roadmap honest about what's planned vs. what's still
+under consideration.
+
+These are tracked separately from the locked decisions because
+their *value* is clear but their *sequencing* is not — they should
+land where they fit the wedge plan, not by feature-by-feature whim.
+
+### Tier A — high-leverage, near-term candidates
+
+| Idea | What it adds | Likely wedge home | Status |
+| --- | --- | --- | --- |
+| **AI Authoring Packets** (`sophie export-ai-context`) | CLI + schema for packaged authoring context: unit goals + prereq skills + existing artifacts + equations + misconceptions + figures + instructor voice contract → handed to AI co-author. Unlocks ADR 0074's authoring-cost targets and ADR 0030's 4-role panel at scale. | Wedge G (AI co-author scaffold) | [ADR 0077 proposed](../decisions/0077-ai-authoring-packets.md) |
+| **Student Learning Cockpit** + **Absence Recovery Mode** | Student-side daily entry point (NOT instructor surveillance dashboard): "what's next" + due reviews + weak prereqs + recent progress + "before next lecture" + "catch-up after missing class." Tier 1, local-first, IndexedDB. | New wedge between B and C, or absorbed into late Wedge B | [ADR 0076 proposed](../decisions/0076-student-learning-cockpit.md) |
+| **Equation Clinic** | Couples Misconception Graph (ADR 0044) + Equation Biography (ADR 0046) + Worked Examples into a signature STEM-pedagogy surface: catches predictable equation errors (`L = σT⁴` missing surface area; units dropped; `=` vs `∝` confusion) and routes to diagnosis + worked-example fix. | Wedge C (Library room) or later Wedge B (component) | scoped |
+| **Model Card / Dataset Card registries** | New Library registries (`models`, `datasets`, `methods`) following ADR 0060's registry-ecosystem pattern. Massive value for ASTR 596 + future COMP courses. | Wedge C (Library expansion) | scoped |
+| **Epistemic Difficulty Tags** | `difficulty: { level, kind: algebraic \| conceptual \| representational \| computational \| statistical \| modeling \| metacognitive, bottleneck }` on practice items. Enables "conceptually-hard but algebraically-simple" AI authoring affordances. | Wedge B (component schemas) | scoped |
+
+### Tier B — medium-leverage, Tier 1/2 components
+
+| Idea | What it adds | Likely wedge home |
+| --- | --- | --- |
+| **Pre/In-class/Post-class Triads** | Unit-level `phases: { pre, live, post }` schema addition (extends ADR 0067; additive, not breaking). Pre = 5-min prep + prereq check + prediction question; Live = slides + demos + clicker prompts; Post = reading + worked examples + spaced review + practice set. | Wedge B (schema extension) |
+| **Misconception-Aware Feedback** | `feedback.misconception_triggers` schema on assessment items: pattern → diagnosis → remediation. Turns wrong answers into pedagogy signals. Couples ADR 0044 ↔ ADR 0073. | Wedge B/C (Assessment cluster) |
+| **Reasoning Trace component** | Either amends `<OMIFlow>` (ADR 0063) to add a `<Check>` slot (4-slot pattern), or ships a separate `<ReasoningTrace>` component for in-prose epistemic structure. | [ADR 0078 records the composition decision](../decisions/0078-reasoning-trace-composition.md); component lands in Wedge B/C |
+| **Pedagogical Learning Mode toggles** | Distinct from Sprint K's `<ViewModeToggle>` (visual). Pedagogical modes: First Pass / Deep Dive / Exam Review / I'm Lost / Catch-Up / Instructor Mode. Same content graph; different traversal. | Wedge B/C (UX layer) |
+| **Problem Variation / Isomorphic Practice** | `<ProblemFamily>` schema: one canonical problem + N surface variants. AI-authoring win for transfer + fair exam variants. | Wedge B/G |
+| **Worked Example Contrast Pairs** | `<ContrastPair>` component: two problems looking similar but requiring different models. Discrimination training; pairs with interleaving. | Wedge B |
+| **Model Comparison Blocks** | `<ModelComparison models={[...]} compareBy={[...]} />`. Depends on Models registry from Tier A. | Wedge C |
+| **Narrative Spine / Course Story Arc** | Course-level `narrative_spine` schema: central_question + recurring_models + culminating_capability. Useful for AI co-author context + student motivation. | Wedge B (schema) |
+| **"Why This Matters" Blocks** | Component with structured `{scientific, practical, course_future, research_connection}` slots. Engagement-focused. | Wedge B |
+| **Exemplars** ("what good looks like") | `<Exemplar type="solution \| plot \| README \| memo">` components for ASTR 596 + COMP-courses. Teaches discriminating quality. | Wedge B/C |
+
+### Tier C — sequencing-dependent / later wedges
+
+| Idea | Notes |
+| --- | --- |
+| **Instructor Reflection Logs** | Structured post-class reflection (what confused students / what worked / what to change). Lives in Tier 3 Instructor room (Prep tab); Tier 1 markdown-private version possible earlier. |
+| **Content Decay / Maintenance Audits** | Extends `sophie audit` (ADR 0045) with broken-link / outdated-reference / orphan-figure / unassessed-LO sweeps. Incremental; tracks `last_validated_date` patterns. |
+| **Authoring Recipes** (`sophie create lecture --recipe astr201-standard`) | Templated authoring workflows. Wait until core authoring loop is mature. |
+| **Course Design Patterns Library** | Meta-docs cataloging cross-course patterns. Could live in `docs/website/explanation/`; not a code feature. |
+| **Static Fallbacks** for interactive components | Component-PR-time engineering decision per ADR 0004 (axe-core gate); decided per component, not as architecture. |
+| **Validity Domain Visualizations** (`<ValidityMap>`) | Visual layer on top of ADR 0046's existing `<BreaksWhen>` data. Future component PR. |
+
+### Catalogued but already covered
+
+The following ideas surfaced during external review (ChatGPT
+2026-05-21) and are noted here because they look like additions but
+in fact intersect already-locked decisions:
+
+- **Assumption surfacing** → ADR 0058's 8-role contract already
+  makes Assumption a first-class role; ADR 0046 Equation Biography
+  has `<Assumption>` children. The new piece is a Library registry
+  page that auto-aggregates assumptions across the course (folds
+  into Wedge C, Tier A above).
+- **Scientific Judgment Prompts** → an instance of
+  `<RetrievalPrompt role="inference">` per ADR 0058, not a new
+  component category.
+- **Accessibility audit layer** → covered by ADR 0004 (axe-core gate),
+  ADR 0019 (Radix UI a11y primitives), ADR 0075 (UX cognitive-load
+  governance with curriculum-CI WARN thresholds), and this roadmap's
+  `Accessibility — Tier 1 commitment` section.
 
 ## References
 
