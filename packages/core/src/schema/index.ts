@@ -139,6 +139,10 @@ export {
   OMIFlowEntrySchema,
   type OMIFlowSlot,
 } from "./pedagogy-index-entries/index.js";
+export {
+  type PracticeAttempt,
+  PracticeAttemptSchema,
+} from "./practice-attempt.js";
 export { LangTag, NonEmptyString, Slug } from "./primitives.js";
 export { type RegistryBase, RegistryBaseSchema } from "./registry-base.js";
 export {
