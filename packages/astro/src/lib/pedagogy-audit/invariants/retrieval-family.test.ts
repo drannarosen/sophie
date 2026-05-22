@@ -25,6 +25,8 @@ function emptyIndex(): PedagogyIndex {
     retrievalPrompts: [],
     spacedReviews: [],
     skillReviews: [],
+    sections: [],
+    units: [],
   };
 }
 
@@ -102,6 +104,218 @@ describe("PRA-1 — prereq activation (WARN)", () => {
     const pra = sink.warnings.filter((w) => w.code === "PRA-1");
     expect(pra).toHaveLength(1);
     expect(pra[0]?.location?.chapter).toBe("ch1");
+  });
+});
+
+describe("PRA-1 — Unit-aware graduation (W1)", () => {
+  // Per Wedge B-followup design doc D1: when the index carries Units,
+  // PRA-1 traverses UnitEntry.prereqs[] and checks for SkillReview
+  // coverage in the same Section OR any prior Section (by Section.order).
+
+  test("no finding when UnitEntry prereq is covered by SkillReview in the SAME Section", () => {
+    const index: PedagogyIndex = {
+      ...emptyIndex(),
+      sections: [
+        { type: "module", slug: "stars", title: "Stars", order: 1 },
+      ],
+      units: [
+        {
+          id: "u1",
+          type: "lecture",
+          title: "U1",
+          order: 0,
+          prereqs: ["logs"],
+          section_id: "stars",
+          chapter: "u1-ch",
+        },
+      ],
+      skillReviews: [
+        {
+          chapter: "u1-ch",
+          anchor: "sk-1",
+          target_id: "topic:logs",
+          has_explicit_content: true,
+        },
+      ],
+    };
+    const sink = emptySink();
+    checkRetrievalFamily(index, sink);
+    expect(sink.warnings.filter((w) => w.code === "PRA-1")).toEqual([]);
+  });
+
+  test("no finding when SkillReview is in a PRIOR Section (by order)", () => {
+    const index: PedagogyIndex = {
+      ...emptyIndex(),
+      sections: [
+        { type: "bridge", slug: "math", title: "Math", order: 0 },
+        { type: "module", slug: "stars", title: "Stars", order: 1 },
+      ],
+      units: [
+        {
+          id: "math-u1",
+          type: "skill",
+          title: "Logs",
+          order: 0,
+          prereqs: [],
+          section_id: "math",
+          chapter: "math-ch",
+          topic_id: "logs",
+        },
+        {
+          id: "stars-u1",
+          type: "lecture",
+          title: "Spectra",
+          order: 0,
+          prereqs: ["logs"],
+          section_id: "stars",
+          chapter: "spectra-ch",
+        },
+      ],
+      skillReviews: [
+        {
+          chapter: "math-ch",
+          anchor: "sk-1",
+          target_id: "topic:logs",
+          has_explicit_content: true,
+        },
+      ],
+    };
+    const sink = emptySink();
+    checkRetrievalFamily(index, sink);
+    expect(sink.warnings.filter((w) => w.code === "PRA-1")).toEqual([]);
+  });
+
+  test("emits PRA-1 WARN when SkillReview is in a LATER Section (not prior)", () => {
+    const index: PedagogyIndex = {
+      ...emptyIndex(),
+      sections: [
+        { type: "module", slug: "stars", title: "Stars", order: 0 },
+        { type: "module", slug: "galaxies", title: "Galaxies", order: 1 },
+      ],
+      units: [
+        {
+          id: "stars-u1",
+          type: "lecture",
+          title: "Stars",
+          order: 0,
+          prereqs: ["logs"],
+          section_id: "stars",
+          chapter: "stars-ch",
+        },
+      ],
+      skillReviews: [
+        // SkillReview is in a chapter bound to the LATER Section (galaxies)
+        // — not eligible to bridge stars's prereq.
+        {
+          chapter: "galaxies-ch",
+          anchor: "sk-1",
+          target_id: "topic:logs",
+          has_explicit_content: true,
+        },
+      ],
+    };
+    // The galaxies-ch SkillReview chapter doesn't have a Unit, but we
+    // also need to wire one up so the chapter-section binding exists.
+    index.units = [
+      ...index.units,
+      {
+        id: "galaxies-u1",
+        type: "lecture",
+        title: "Galaxies",
+        order: 0,
+        prereqs: [],
+        section_id: "galaxies",
+        chapter: "galaxies-ch",
+      },
+    ];
+    const sink = emptySink();
+    checkRetrievalFamily(index, sink);
+    const pra = sink.warnings.filter((w) => w.code === "PRA-1");
+    expect(pra).toHaveLength(1);
+    expect(pra[0]?.location?.chapter).toBe("stars-ch");
+  });
+
+  test("emits PRA-1 WARN when no SkillReview covers the prereq topic anywhere", () => {
+    const index: PedagogyIndex = {
+      ...emptyIndex(),
+      sections: [
+        { type: "module", slug: "stars", title: "Stars", order: 0 },
+      ],
+      units: [
+        {
+          id: "u1",
+          type: "lecture",
+          title: "U1",
+          order: 0,
+          prereqs: ["logs"],
+          section_id: "stars",
+          chapter: "u1-ch",
+        },
+      ],
+      skillReviews: [],
+    };
+    const sink = emptySink();
+    checkRetrievalFamily(index, sink);
+    const pra = sink.warnings.filter((w) => w.code === "PRA-1");
+    expect(pra).toHaveLength(1);
+    expect(pra[0]?.message).toContain("logs");
+  });
+
+  test("falls back to chapter-level approximation when index has no Units (pre-W1)", () => {
+    // No units; PRA-1 should use the existing chapter-level logic.
+    // (RetrievalPrompt with topic ref + matching SkillReview in same
+    // chapter → no warning.)
+    const index: PedagogyIndex = {
+      ...emptyIndex(),
+      retrievalPrompts: [
+        { chapter: "ch1", anchor: "rp-1", target_id: "topic:logs" },
+      ],
+      skillReviews: [
+        {
+          chapter: "ch1",
+          anchor: "sk-1",
+          target_id: "topic:logs",
+          has_explicit_content: true,
+        },
+      ],
+    };
+    const sink = emptySink();
+    checkRetrievalFamily(index, sink);
+    expect(sink.warnings.filter((w) => w.code === "PRA-1")).toEqual([]);
+  });
+
+  test("multiple prereqs on one Unit → one WARN per uncovered prereq", () => {
+    const index: PedagogyIndex = {
+      ...emptyIndex(),
+      sections: [
+        { type: "module", slug: "stars", title: "Stars", order: 0 },
+      ],
+      units: [
+        {
+          id: "u1",
+          type: "lecture",
+          title: "U1",
+          order: 0,
+          prereqs: ["logs", "exponents"],
+          section_id: "stars",
+          chapter: "u1-ch",
+        },
+      ],
+      skillReviews: [
+        // Only one of the two prereqs is covered.
+        {
+          chapter: "u1-ch",
+          anchor: "sk-1",
+          target_id: "topic:logs",
+          has_explicit_content: true,
+        },
+      ],
+    };
+    const sink = emptySink();
+    checkRetrievalFamily(index, sink);
+    const pra = sink.warnings.filter((w) => w.code === "PRA-1");
+    expect(pra).toHaveLength(1);
+    expect(pra[0]?.message).toContain("exponents");
   });
 });
 

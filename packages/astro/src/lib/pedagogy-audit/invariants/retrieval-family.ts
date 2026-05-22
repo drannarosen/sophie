@@ -62,14 +62,38 @@ export function checkRetrievalFamily(
 }
 
 /**
- * PRA-1: every distinct `topic:` target_id referenced via
- * RetrievalPrompt or SpacedReview in a chapter should also have a
- * SkillReview surface in the same chapter.
+ * PRA-1: prereq activation invariant. Two paths depending on whether
+ * the index carries Section/Unit data (W1 graduation per Wedge
+ * B-followup design doc D1):
+ *
+ * - **Unit-aware path** (when `index.units.length > 0`): for each
+ *   `UnitEntry`, every `topic_id` in `prereqs[]` must be covered by at
+ *   least one `<SkillReview target="topic:<prereq>">` in the same
+ *   Section OR in any prior Section (by `Section.order`). Lookup chain:
+ *   `unit.section_id → section.order → cover-set for that order and below`.
+ *
+ * - **Chapter-level fallback** (when `index.units.length === 0`):
+ *   every distinct `topic:` target_id referenced via RetrievalPrompt
+ *   or SpacedReview in a chapter must have a `<SkillReview>` surface
+ *   in the same chapter. Preserves the pre-W1 behavior for consumers
+ *   that don't yet author Units.
  */
 function checkPRA1(index: PedagogyIndex, sink: FindingSink): void {
-  // Build per-chapter sets of topic refs that:
-  //   - appear in RetrievalPrompt OR SpacedReview targets
-  //   - appear in SkillReview targets (the "covered" set)
+  if (index.units.length === 0) {
+    checkPRA1ChapterLevel(index, sink);
+    return;
+  }
+  checkPRA1UnitAware(index, sink);
+}
+
+/**
+ * Chapter-level approximation — pre-W1 PRA-1 behavior. Stays as the
+ * fallback for consumers without Unit data.
+ */
+function checkPRA1ChapterLevel(
+  index: PedagogyIndex,
+  sink: FindingSink
+): void {
   const topicRefsByChapter = new Map<string, Set<string>>();
   const skillCoverByChapter = new Map<string, Set<string>>();
 
@@ -110,6 +134,59 @@ function checkPRA1(index: PedagogyIndex, sink: FindingSink): void {
         code: "PRA-1",
         message: `PRA-1: chapter "${chapter}" surfaces topic prereq "${ref}" via <RetrievalPrompt> or <SpacedReview> but has no matching <SkillReview target="${ref}"> to bridge the prereq. Resolution: add a <SkillReview target="${ref}"> earlier in the chapter, or remove the reference if the prereq is genuinely off-scope.`,
         location: { chapter },
+      });
+    }
+  }
+}
+
+/**
+ * Unit-aware path — W1 graduation. Each Unit's declared prereqs must
+ * be covered by a SkillReview in the same Section or any prior Section.
+ */
+function checkPRA1UnitAware(index: PedagogyIndex, sink: FindingSink): void {
+  // section.slug -> section.order
+  const sectionOrder = new Map<string, number>();
+  for (const s of index.sections) sectionOrder.set(s.slug, s.order);
+
+  // chapter -> section.order (via unit.chapter → unit.section_id → section.order)
+  const chapterSectionOrder = new Map<string, number>();
+  for (const u of index.units) {
+    const ord = sectionOrder.get(u.section_id);
+    if (ord !== undefined) chapterSectionOrder.set(u.chapter, ord);
+  }
+
+  // section.order -> Set<topic target_id> of SkillReviews in chapters bound to that order
+  const coverByOrder = new Map<number, Set<string>>();
+  for (const sr of index.skillReviews) {
+    if (parseTargetPrefix(sr.target_id) !== "topic") continue;
+    const ord = chapterSectionOrder.get(sr.chapter);
+    if (ord === undefined) continue;
+    let s = coverByOrder.get(ord);
+    if (s === undefined) {
+      s = new Set();
+      coverByOrder.set(ord, s);
+    }
+    s.add(sr.target_id);
+  }
+
+  for (const unit of index.units) {
+    const unitOrd = sectionOrder.get(unit.section_id);
+    if (unitOrd === undefined) continue;
+    for (const prereq of unit.prereqs) {
+      const target = `topic:${prereq}`;
+      let covered = false;
+      for (const [ord, covers] of coverByOrder) {
+        if (ord <= unitOrd && covers.has(target)) {
+          covered = true;
+          break;
+        }
+      }
+      if (covered) continue;
+      sink.warnings.push({
+        severity: "WARNING",
+        code: "PRA-1",
+        message: `PRA-1: Unit "${unit.id}" in Section "${unit.section_id}" declares prereq "${prereq}" but no <SkillReview target="topic:${prereq}"> exists in this Section or any prior Section. Resolution: add a <SkillReview target="topic:${prereq}"> in this Section or an earlier one, or remove the prereq if the topic is genuinely off-scope.`,
+        location: { chapter: unit.chapter },
       });
     }
   }

@@ -25,21 +25,21 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 |---|---|
 | Validated | 14 |
 | In progress | 11 |
-| Unvalidated | 78 |
+| Unvalidated | 79 |
 | Re-validation needed | 0 |
 | Missing block | 0 |
-| Total | 103 |
+| Total | 104 |
 
 ## Lifecycle summary
 
 | Lifecycle | Count |
 |---|---|
-| Shipped | 59 |
+| Shipped | 60 |
 | Accepted design | 34 |
 | Mixed | 1 |
 | Future package split | 9 |
 | No status | 0 |
-| Total | 103 |
+| Total | 104 |
 
 ## Evidence kinds
 
@@ -170,3 +170,4 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/reference/teaching-moves.md](/teaching-moves/) | unvalidated | shipped | — | — |  |
 | [docs/website/reference/validation-tracker.md](/validation-tracker/) | validated | shipped | 2026-05-16 | audit, manual, test | Reference doc shipped in PR 6 Workstream A; specifies the schema + admonition contract + audit invariants + dashboard workflow. Graduated to validated alongside ADR 0056 itself after the curated-pass + V1/V2 promotion landed in the same PR. |
 | [docs/website/reference/visual-regression.md](/visual-regression/) | unvalidated | shipped | — | — |  |
+| [docs/website/reference/wcag-21-aa.md](/wcag-21-aa/) | unvalidated | shipped | — | — |  |
