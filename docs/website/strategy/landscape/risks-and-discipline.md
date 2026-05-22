@@ -17,6 +17,34 @@ This page exists so the risks have *names*, *triggers*, and
 *mitigation plans* — not so they live as background anxiety. Last
 full review: **2026-05-22**.
 
+## Scope clarification (read first)
+
+Sophie is **teaching infrastructure that grew from existing
+practice**, not a research program designed around a thesis. Anna's
+primary research output remains astrophysics; Sophie supports the
+tenure case through teaching effectiveness and 1–2 SoTL papers, not
+by becoming a DBER career pivot. See
+[positioning § origin and scope](../positioning.md#origin-and-scope).
+
+This framing materially reduces several risks that would otherwise
+loom large:
+
+- **Longevity is a smaller concern.** Teaching-infrastructure tools
+  do not need foundation governance to exist usefully. AGPL + clean
+  documentation + ADR discipline is sufficient.
+- **PROSE Consortium positioning is lighter-weight.** A
+  collaboration overture is good practice; full consortium
+  integration is overkill.
+- **Adoption barrier is a teaching-budget question, not a research
+  question.** Sophie's first user is Anna; other adopters are bonus.
+- **Single-PI risk** changes character. A platform that survives a
+  PI sabbatical *for the PI's own teaching* is a lower bar than a
+  platform that survives for an external user base.
+
+Risks 3 (AI-authoring story is design-only) and 1 (OCG uncited)
+remain load-bearing regardless of scope, because they affect the
+1–2 SoTL papers and the grant narratives directly.
+
 ## The four risks Sophie underweights
 
 ### 1. The Open Cognitive Graph paper is uncited
@@ -50,30 +78,41 @@ reading a Sophie pitch that positions head-on against PROSE will
 score the proposal lower. A pitch that ignores PROSE entirely reads
 as either underprepared or arrogant.
 
-**The mitigation.** Position Sophie **additively** with PROSE, not
-against it:
+**The recalibrated severity.** Lower than originally flagged. Given
+Sophie's clarified scope as teaching infrastructure that produces
+1–2 SoTL papers (not a research program built around schema-driven-
+accessible-STEM-textbook competition), Sophie does not need to *win*
+the PROSE positioning. It needs to *acknowledge* PROSE accurately
+and frame Sophie as additive.
+
+**The mitigation.** Position Sophie **additively**:
 
 > "Sophie layers OCG-style epistemic semantics and an AI-authoring
 > contract on top of (or interoperable with) schema-driven publishing
 > traditions, of which PROSE is the leading exemplar."
 
-Concrete actions:
+Concrete actions, in priority order:
 
 - **Read the PreTeXt accessibility guide and the PROTEUS award page
-  before drafting any landscape paragraph.** See
-  [comparators § PreTeXt + Runestone](comparators.md).
-- **Reach out to a PROSE PI.** A 30-minute conversation about
-  interop possibilities is cheaper than a CAREER rejection. Likely
-  outcomes: (a) PROSE PI becomes a CAREER letter writer; (b)
-  collaboration becomes a future-work bullet; (c) PROSE PI surfaces
-  a critique now that would have been worse later.
-- **Treat PreTeXt's RELAX-NG schema as interop target.** Future
-  Sophie capability to import/export PreTeXt is a strong reviewer-
-  facing claim.
+  once before drafting any landscape paragraph.** See
+  [comparators § PreTeXt + Runestone](comparators.md). One-time
+  reading, not ongoing engagement.
+- **Send a single low-key outreach email to a PROSE PI.** Template
+  and talking points in [prose-outreach](prose-outreach.md). Goal:
+  introduction; a 30-minute conversation; an honest "this is
+  teaching infrastructure that overlaps with your work" framing.
+  Not consortium membership. Not collaboration commitment.
+  Possible upsides: PROSE PI becomes a CAREER letter writer; a
+  critique surfaces now that would have been worse later.
+- **Treat PreTeXt's RELAX-NG schema as an interop target *if and
+  only if* an adopter requests it.** Speculative interop work is
+  scope creep.
 
 **Trigger to escalate:** If a 2026 grant cycle closes without an
 explicit PROSE positioning paragraph in the proposal, the next cycle
-must include one.
+must include one. If a reviewer comment surfaces PROSE in a way
+that suggests the omission damaged the proposal, escalate to a
+2026-08 outreach + collaboration discussion.
 
 ### 3. The AI-authoring story is design-only
 
@@ -117,44 +156,54 @@ answer to the "prove the schema constrains AI usefully" critique.
 red-team report on the roadmap, scope discipline has slipped toward
 feature surface over evidence.
 
-### 4. Single-PI longevity has no documented answer
+### 4. Single-PI longevity — minimal-governance is the right answer
 
-**The risk.** PROSE has multiple PIs and NSF runway. Project Jupyter
-has formal governance. The Executable Books Project has Project
-Jupyter institutional backing. Sophie has one pre-tenure professor.
-The platform's longevity story has to address governance now, not at
-tenure-decision time.
+**The recalibrated risk.** Originally framed as a major reviewer
+concern. The clarified Sophie scope (teaching infrastructure that
+produces 1–2 SoTL papers; astrophysics primary research) materially
+reduces this risk. PROSE needs multi-PI governance because PROSE is
+a multi-institutional textbook-production consortium. Sophie does
+not need multi-PI governance because Sophie is one faculty member's
+teaching infrastructure that other instructors can adopt if they
+want.
 
-A reviewer asks: *"What happens to Sophie if Anna takes a
-sabbatical, gets pregnant, leaves SDSU, or hits a wall?"* AGPL is
-the right license choice but does not, by itself, answer this
-question.
+**What still matters to reviewers.** A CAREER reviewer can
+reasonably ask: *"What happens to this platform if Anna takes a
+sabbatical, gets pregnant, leaves SDSU?"* The answer is not "we
+have a foundation." The answer is:
 
-**The mitigation.** Map a governance path *before* CAREER review:
+1. **Sophie is AGPL-licensed and lives in a public git repo
+   ([drannarosen/sophie](https://github.com/drannarosen/sophie)).**
+   Anyone can fork it, run it, modify it.
+2. **Sophie ships with ADR + TDR + validation-tracker discipline.**
+   A determined contributor can pick it up without privileged
+   context.
+3. **Sophie has test coverage and CI gates** (axe-core, visual
+   regression, schema validation) sufficient to catch regressions
+   without the original maintainer.
+4. **If meaningful adoption happens outside SDSU**, governance
+   becomes a real question worth answering — not a hypothetical one.
 
-| Option | Effort | Timeline | Notes |
-| --- | --- | --- | --- |
-| **Foundation umbrella** (Mozilla Foundation MOSS, Apache Incubator, CZI EOSS) | Medium | 6–12 months application | EOSS most fitting for science-oriented projects |
-| **Project Jupyter / Executable Books integration** | High (governance + technical) | 12–18 months | Strong narrative; would require schema-format negotiation |
-| **PROSE Consortium merge or interop track** | Medium-High | 12 months | Strong reviewer story; risks subordinating Sophie's distinctive bundle |
-| **SDSU institutional commitment** | Low effort, low impact | Immediate | Useful as bridge; not sufficient as longevity claim |
-| **Co-PI recruitment** | Medium | 6 months | One additional PI (DBER or CS-ed) materially changes single-PI critique |
+That answer is honest and sufficient for a teaching-infrastructure
+tool. It is *not* the answer for a research-program centerpiece —
+and Sophie is the former, not the latter (see
+[positioning § origin and scope](../positioning.md#origin-and-scope)).
 
-**Recommended path:**
+**Optional moves, only if appropriate triggers fire:**
 
-1. **CZI EOSS application** for v1+. Their scope explicitly includes
-   open-source scientific tooling; the program has funded several
-   Jupyter-adjacent projects. Application is ~3 months.
-2. **One co-PI recruitment** before CAREER submission. Best fit:
-   a DBER researcher at SDSU or partnering CSU campus, or a
-   computer-science-education researcher with NSF CISE track
-   record.
-3. **Explicit governance section in `positioning.md`** naming the
-   path chosen. Reviewers should see the longevity answer at the
-   top of the positioning doc, not as a missing piece.
+| Move | Trigger to actually do it |
+| --- | --- |
+| **CZI EOSS application** | If Sophie has demonstrated external adoption (≥1 non-SDSU instructor pilot) and a 3–6 month application window opens |
+| **Co-PI recruitment** | If Anna decides Sophie warrants a second SoTL paper *and* a natural DBER or CS-ed collaborator exists at SDSU/CSU. Not pursued speculatively |
+| **PROSE Consortium engagement** | If a PROSE PI surfaces serious interest after the [outreach email](prose-outreach.md) |
+| **Foundation governance** (Apache, Mozilla, etc.) | Only if adoption + funding combine to make consortium-style governance pay for itself |
 
-**Trigger to escalate:** If CAREER submission lands without a named
-governance path, the proposal is at material risk.
+**Trigger to escalate:** If CAREER review surfaces single-PI risk
+in a way that suggests the *minimal-governance + honest scope*
+framing was unconvincing, the next proposal cycle needs to either
+recruit a co-PI or reframe the proposal as research-program
+(not infrastructure) — both of which change Sophie's identity. Do
+not pre-emptively make that change.
 
 ## The strongest critiques a reviewer will raise
 

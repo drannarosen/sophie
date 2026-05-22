@@ -286,6 +286,8 @@ project:
             - file: strategy/landscape/comparators.md
             - file: strategy/landscape/academic-prior-art.md
             - file: strategy/landscape/risks-and-discipline.md
+            - file: strategy/landscape/red-team-report-plan.md
+            - file: strategy/landscape/prose-outreach.md
     - title: Contributing
       children:
         - file: contributing/setup.md

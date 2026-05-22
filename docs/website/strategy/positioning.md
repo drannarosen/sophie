@@ -1,8 +1,8 @@
 ---
 title: Positioning
 short_title: Positioning
-description: Source-of-truth pitches and differentiators for Sophie — 1-sentence, 30-second, and reviewer-facing one-liners.
-tags: [strategy, positioning, pitch]
+description: Source-of-truth pitches and differentiators for Sophie — 1-sentence, 30-second, and reviewer-facing one-liners. Anchored in honest origin (teaching infrastructure that grew, not a research program in disguise).
+tags: [strategy, positioning, pitch, origin, governance]
 ---
 
 # Positioning
@@ -11,6 +11,35 @@ Source-of-truth pitches and differentiators for Sophie. Copy these into
 proposals, bios, conference intros, and reviewer-facing collateral.
 Keep this page authoritative; if a better phrasing emerges in a
 proposal, fold it back here.
+
+(origin-and-scope)=
+
+## Origin and scope — honest framing
+
+Sophie emerged from a working astrophysicist's teaching infrastructure
+problem: across ASTR 201 (intro astrophysics), ASTR 101 (intro
+astronomy), and COMP 521 (algorithms / data structures for non-CS
+majors), Anna Rosen was building a fresh course website per course,
+duplicating effort, and starting to rely on AI for chapter drafts
+without a system to constrain or audit the AI's output. Sophie is
+that system. The platform is teaching infrastructure first; the
+research and grant story is a downstream consequence, not the driver.
+
+This framing matters for proposal writing. Sophie's claims are
+**stronger** when grounded as "infrastructure that emerged from
+actual teaching practice" than as "a research program designed to
+prove a thesis." Astrophysics remains Anna's primary research output
+(observation, simulation, papers); Sophie supports the tenure case
+through (a) demonstrated teaching effectiveness, (b) 1–2 SoTL papers
+targeting JOSS + *Computers & Education* (see
+[Paper #1](papers/paper-1-methods.md)), and (c) potential
+infrastructure-grant alignment (Cottrell, Sloan, NSF IUSE). Sophie
+is *not* a pivot to DBER as a primary research identity.
+
+That makes the platform's positioning *more* credible, not less. A
+working faculty member who built and ships teaching infrastructure
+is a more believable steward than someone whose entire research
+program depends on the platform succeeding.
 
 ## 1-sentence pitch
 
@@ -36,16 +65,44 @@ proposal, fold it back here.
 ## Differentiator one-liners
 
 When a reviewer or colleague asks "why not just use X?", these are
-the answers.
+the answers. The [Landscape comparators page](landscape/comparators.md)
+holds the longer, citation-backed versions; copy from there for any
+proposal.
 
 | vs. | Sophie's distinct contribution |
 |-----|--------------------------------|
 | **MyST / Quarto** | They are rendering infrastructure. Sophie adds pedagogy-primitive components, AI-author workflow, persistence, and audit on top. |
+| **PreTeXt + PROSE Consortium** | PreTeXt has schema-driven publishing with native braille and a decade-plus track record. Sophie *adds* epistemic-role semantics, AI-authoring contract, and per-commit a11y enforcement; the two are additive, not competitive. |
 | **OpenStax** | Committee-authored static content. Sophie is instructor-authored, interactive, AI-augmented, and continuously revisable. |
+| **OLI Torus (CMU)** | Server-bound adaptive courseware. Sophie is file-based, git-versioned, static-site-publishable, with schema-driven pedagogy. Orthogonal, not competitive. |
+| **Khanmigo / Cognii / Querium** | AI-as-tutor over fixed curriculum. Sophie is AI-as-author bound by schema. Different abstraction layer. |
 | **ChatGPT-as-textbook-author** | No schema, no audit trail, no pedagogy primitives, no HITL structure. Sophie is what "use AI to write a textbook" should mean. |
 | **Publisher AI tutors (Cengage, Pearson, Top Hat)** | Closed, proprietary, accountable to shareholders. Sophie is AGPL, accountable to instructors and students. |
 | **Pressbooks** | OER hosting + flat content. Sophie targets the *interactive* layer: schema-validated components, persistent learner state, audit. |
 | **Jupyter Book / JOSS-style infra** | General-purpose scholarly publishing. Sophie is opinionated about pedagogy and authoring workflow. |
+
+## Sophie as a production implementation of Open Cognitive Graph
+
+> The need to "externalize pedagogical structure in forms aligned
+> with human educational reasoning" — making "the cognitive logic
+> governing AI behaviour inspectable and revisable" — was recently
+> articulated as the Open Cognitive Graph (OCG) framework
+> ([Li et al., 2026](https://arxiv.org/abs/2602.16949)). Sophie
+> operationalizes that argument in production: an MDX+Zod schema
+> contract, an explicit misconception graph with bound canonical
+> interventions, equation biographies that surface assumptions
+> and common misconceptions per equation, a per-PR axe-core
+> accessibility gate, and an AI authoring contract that constrains
+> LLM emission to schema-valid structures. Where OCG names the
+> theoretical requirement, Sophie tests whether such infrastructure
+> is implementable by a working faculty member with existing
+> teaching needs and bounded research time.
+
+Use this paragraph (or a tighter version) in any proposal that
+touches AI-in-education governance or schema-driven pedagogy. The
+mapping between OCG's theoretical claims and Sophie's concrete
+components lives in
+[Academic prior art § 1](landscape/academic-prior-art.md).
 
 ## AGPL one-liner (for skeptical reviewers)
 
@@ -99,6 +156,42 @@ To prevent misreading:
 - **Not a publisher.** Sophie produces course-author-owned content;
   authors retain copyright and license under CC BY (or whatever they
   choose).
+- **Not a pivot to DBER as a primary research identity.** Anna's
+  primary research output remains astrophysics. Sophie produces 1–2
+  SoTL papers; it is not the platform on which her tenure case is
+  built. See origin-and-scope above.
+
+## Governance and longevity
+
+Sophie's longevity story is intentionally minimal. The platform is
+**AGPL-3.0 licensed**, runs from a public git repository
+([drannarosen/sophie](https://github.com/drannarosen/sophie)), follows
+documented ADR + TDR + validation-tracker discipline, and ships with
+test coverage and CI gates sufficient that a determined contributor
+can pick it up without privileged context. That is the longevity
+story.
+
+Concretely:
+
+1. **Default:** AGPL + public repo + ADR discipline + clean
+   documentation. This is sufficient for a teaching-infrastructure
+   tool with an undergraduate-and-graduate-student-and-faculty user
+   base.
+2. **If a small infrastructure grant lands** (CZI EOSS, Sloan
+   Technology, or NSF IUSE infrastructure track): apply for the
+   institutional umbrella that the grant brings. Not pursued
+   speculatively.
+3. **If meaningful adoption happens outside SDSU**: revisit
+   governance as a real question, not a hypothetical one. Until
+   adoption exists, additional governance overhead is premature.
+
+Sophie does **not** need a foundation, a consortium, or a co-PI to
+exist and serve its purpose. The minimal-governance choice is a
+deliberate scope-discipline move; ambitious governance only makes
+sense if and when ambitious adoption arrives.
+
+The fuller analysis lives in
+[Risks and discipline § single-PI longevity](landscape/risks-and-discipline.md).
 
 ## See also
 
@@ -106,3 +199,6 @@ To prevent misreading:
 - [Audience and AI authoring model — ADR 0030](../decisions/0030-audience-and-ai-author-model.md)
 - [Pedagogical foundations](../explanation/pedagogical-foundations.md) — the research literature Sophie operationalizes
 - [Audit and AI authoring](../explanation/audit-and-ai-authoring.md) — how the platform enforces pedagogical correctness
+- [Landscape comparators](landscape/comparators.md) — citation-backed competitive landscape
+- [Academic prior art § OCG](landscape/academic-prior-art.md) — the full mapping between OCG and Sophie
+- [Risks and discipline](landscape/risks-and-discipline.md) — what to watch as Sophie evolves

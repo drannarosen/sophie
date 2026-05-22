@@ -21,47 +21,142 @@ review levels.
 
 Last full review: **2026-05-22**.
 
-## 1. The piece you must read first — Open Cognitive Graph
+## 1. Open Cognitive Graph — the theoretical articulation of Sophie's thesis
 
-> Open Cognitive Graph proposes "externalising pedagogical structure
-> in forms aligned with human educational reasoning" by "explicitly
-> representing concepts, prerequisite relations, misconceptions, and
-> scaffolding" so that "the cognitive logic governing AI behaviour is
-> inspectable and revisable."
+**Citation:** Li, C., Zhao, C., Wang, Y., & Hu, Y. (2026). *How
+should AI knowledge be governed? Epistemic authority, structural
+transparency, and the case for open cognitive graphs.* arXiv:2602.16949.
+Submitted 18 February 2026; revised 20 February 2026. *cs.CY
+(Computers and Society)*.
 
-**Citation:** Open Cognitive Graph (arXiv 2602.16949). *Retrieved
-2026-05-22.* PDF: <https://arxiv.org/pdf/2602.16949>.
+- **PDF:** <https://arxiv.org/pdf/2602.16949>
+- **Abstract page:** <https://arxiv.org/abs/2602.16949>
+- *Retrieved 2026-05-22.*
 
-**Why this is non-negotiable reading.** OCG is the *theoretical
-articulation* of Sophie's load-bearing thesis. It introduces a
-"trunk-branch governance model" for distributed expertise. It is
-conceptual — no implementation — and that is the opportunity. Sophie
-is in a position to claim: **"first production implementation of
-OCG-style infrastructure."** Without that framing, Sophie is
-vulnerable to "this is just OCG with code" as a one-line reviewer
-rejection note. With that framing, OCG becomes a credential Sophie
-holds.
+### The paper's core argument
 
-**Action items:**
-- Read OCG in full before drafting CAREER narrative.
-- Cite OCG in the Paper #1 introduction (methods/infrastructure
-  paper, Q4 2026 target).
-- Use OCG's terminology where it clarifies — "cognitive logic" is
-  the field's phrase for what Sophie calls "epistemic role contract."
+Li et al. argue that educational AI systems exercise **de facto
+epistemic authority** — they "judge whether a student's
+understanding is correct, determine the order in which concepts
+should be learned, and evaluate which explanations are suitable for
+a given student" — but operate outside the institutional
+accountability mechanisms (certification, peer review, appeal) that
+traditionally constrain human educators. They write:
 
-**Sophie's specific extensions beyond OCG:**
+> AI performs these expert functions at scale without inheriting
+> corresponding accountability mechanisms. It claims the exemption
+> associated with tools while exercising the authority of an agent.
+> ([§1 Introduction](https://arxiv.org/pdf/2602.16949))
 
-| OCG (theory) | Sophie (production) |
+The remedy they propose is **structural transparency through schema**:
+
+> We propose the Open Cognitive Graph (OCG) as a technical interface
+> that externalizes pedagogical structure in forms aligned with human
+> educational reasoning. By explicitly representing concepts,
+> prerequisite relations, misconceptions, and scaffolding, OCGs make
+> the cognitive logic governing AI behaviour inspectable and
+> revisable. ([Abstract](https://arxiv.org/abs/2602.16949))
+
+They pair the schema interface with a *trunk-branch governance
+model* — "which organizes epistemic authority across layers of
+consensus and pluralism" — drawing on open-source-software
+governance traditions.
+
+### The specific gap Sophie fills
+
+A critical sentence for Sophie's positioning, from §2.1:
+
+> When errors or systematic biases are identified, experts face
+> significant obstacles to correction, as targeted intervention at
+> the level of specific judgments is not technically feasible.
+
+Sophie's architecture is the direct technical answer to this
+sentence. Because Sophie's pedagogy is schema-encoded — eight-role
+epistemic contract ([ADR 0058](../../decisions/0058-epistemic-component-contract.md)),
+misconception graph ([ADR 0044](../../decisions/0044-misconception-graph-and-intervention-library.md)),
+intervention library, equation biographies
+([ADR 0046](../../decisions/0046-equation-biographies.md)) — *targeted
+intervention at the level of specific judgments is technically
+feasible*. An instructor can correct a specific misconception node,
+swap an intervention, refine an epistemic role binding, or amend an
+equation's "common misuse" entry, and the change propagates through
+the audit, the AI authoring context, and the rendered content. The
+cognitive logic is inspectable and revisable at the unit of the
+specific judgment.
+
+### What the paper is and is not
+
+The paper is **conceptual**. It proposes OCG as a technical
+interface, discusses governance, presents a case study of a
+"community-governed educational foundation model" as illustration,
+and concludes with implications for educational equity and AI
+policy. It is not an implementation. The keywords list (*AI
+governance, epistemic authority, educational infrastructure, open
+cognitive graphs, community co-creation*) signals the paper's
+intellectual home: AI-governance / STS / policy literature, not
+implementation engineering.
+
+That gap is the opportunity. Sophie can credibly claim to be **the
+first production implementation of OCG-style infrastructure**, with
+the schema contract, misconception graph, intervention library,
+equation biographies, axe-core a11y gate, and pedagogy-index audit
+as the concrete realization of the paper's theoretical proposal.
+
+### Sophie's specific extensions beyond OCG (concrete mapping)
+
+| OCG (theoretical proposal) | Sophie (production implementation) |
 | --- | --- |
-| "Externalised pedagogical structure" | Zod-typed schema across 33 components, audited per-PR |
-| "Explicitly representing misconceptions" | Misconception graph schema (ADR 0044) + intervention library (12 canonical interventions across 4 families) |
-| "Scaffolding represented" | Teaching Move Library (18 named moves across 7 families; ADR 0041) |
-| "Cognitive logic inspectable and revisable" | Pedagogy Index audit + pedagogical-diff CLI (ADR 0045) |
-| "Trunk-branch governance for distributed expertise" | AI as four roles (author / pedagogy / domain / brainstorming) with instructor as supervisor; ADR 0030 |
-| Theoretical proposal | AGPL-licensed production codebase with 78 ADRs, 177+ tests, axe-core CI gate, visual-regression baselines, working ASTR 201 pilot |
+| "Externalize pedagogical structure" | MDX + Zod-typed schema across 33 pedagogy components, with per-PR axe-core CI gate |
+| "Explicitly representing concepts" | Notation registry ([ADR 0043](../../decisions/0043-notation-registry-and-multirep.md)) + equation registry; one source of truth, MDX-referenced |
+| "Explicitly representing prerequisite relations" | Misconception graph schema with `prerequisite` / `related` edges; bridge-rooms + prereq-pedagogy ([ADR 0068](../../decisions/0068-bridge-rooms-and-prereq-pedagogy.md)) |
+| "Explicitly representing misconceptions" | Misconception graph ([ADR 0044](../../decisions/0044-misconception-graph-and-intervention-library.md)) with 12 canonical interventions across 4 families |
+| "Explicitly representing scaffolding" | Teaching Move Library ([ADR 0041](../../decisions/0041-teaching-move-library.md)) — 18 named moves across 7 families |
+| "Cognitive logic inspectable" | Pedagogy Index audit; pedagogical-diff CLI ([ADR 0045](../../decisions/0045-pedagogical-diff-curriculum-ci.md)) |
+| "Cognitive logic revisable at level of specific judgments" | Schema-driven authoring: editing a single misconception node or intervention propagates through audit, AI-authoring context, rendered content |
+| "Targeted intervention at level of specific judgments" | Component contract ([ADR 0004](../../decisions/0004-component-contract-revisions.md)) makes each pedagogical decision an isolatable, typed unit |
+| "Trunk-branch governance" | AI as four roles ([ADR 0030](../../decisions/0030-audience-and-ai-author-model.md)) with instructor as supervisor; AI Contribution Ledger ([ADR 0042](../../decisions/0042-pedagogy-contract-and-ai-ledger.md)) |
+| Theoretical proposal | AGPL-licensed codebase: 78 ADRs, 177+ tests, 500+ visual-regression baselines, working ASTR 201 pilot |
 
-This is the strongest single positioning move available to Sophie.
-Make it.
+### How to cite OCG in Sophie's writing
+
+**In the CAREER narrative or Paper #1 introduction:**
+
+> The need to "externalize pedagogical structure in forms aligned
+> with human educational reasoning" — making "the cognitive logic
+> governing AI behaviour inspectable and revisable" — was recently
+> articulated as the Open Cognitive Graph (OCG) framework (Li
+> et al., 2026). Sophie operationalizes this argument in
+> production: an MDX+Zod schema contract; an explicit misconception
+> graph with bound canonical interventions; equation biographies
+> that surface assumptions, validity domains, and common
+> misconceptions per equation; a per-PR axe-core accessibility
+> gate; and an AI authoring contract that constrains LLM emission
+> to schema-valid structures. Where OCG names the theoretical
+> requirement, Sophie tests whether such infrastructure is
+> implementable by a working faculty member with existing teaching
+> needs and bounded research time.
+
+That last sentence is load-bearing: it positions Sophie as honest
+about its origin (teaching infrastructure that emerged from a
+working astrophysicist's needs) rather than as a from-scratch
+research program.
+
+### Honest caveats about citing OCG
+
+- **The paper's home discipline is AI governance / STS, not
+  educational technology.** Reviewers from learning sciences may
+  not know it; reviewers from AI policy will. Match the citation
+  density to the venue.
+- **The OCG framework names governance as a load-bearing
+  feature; Sophie's governance story is minimal** (see
+  [risks and discipline § governance](risks-and-discipline.md)).
+  Cite OCG as the *technical interface* precedent; do not
+  overclaim alignment with their trunk-branch model unless Sophie
+  actually adopts one.
+- **OCG's authorship is Chinese (Northeast Normal University +
+  Southeast University) and New Zealand (Otago).** This is useful
+  context — the framework is international in origin, which
+  strengthens its credibility as a non-parochial precedent.
 
 ## 2. The intellectual lineage Sophie inherits — pedagogical pattern languages
 
