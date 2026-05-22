@@ -230,6 +230,8 @@ describe("pedagogy-index.json artifact (ADR 0045)", () => {
     // Every PedagogyIndex collection field is present (plain arrays —
     // no Maps, no Dates — already JSON-safe per
     // `indexAccumulator.asPedagogyIndex()`).
+    // W2/D3 graduation: chapters + modules deleted from PedagogyIndex;
+    // sections + units + artifacts replace them.
     for (const key of [
       "definitions",
       "equations",
@@ -237,8 +239,9 @@ describe("pedagogy-index.json artifact (ADR 0045)", () => {
       "figureRegistry",
       "figureUsages",
       "misconceptions",
-      "chapters",
-      "modules",
+      "sections",
+      "units",
+      "artifacts",
       "objectives",
       "inlineRefUsages",
     ]) {
