@@ -13,6 +13,17 @@ This is a living document. Calendar dates are projections, not
 commitments. Phase boundaries are decision points where we pause to
 reassess before continuing.
 
+:::{tip} Course-website platform roadmap
+The longer-horizon plan for expanding Sophie from
+interactive-textbook authoring to a full course-website platform
+(Tier 1/2/3 architecture, content hierarchy, Library room,
+slides↔readings, Schedule, Assessment, FSRS, OER reuse, LTI 1.3
+integration) lives in a dedicated roadmap:
+[Course-Website Platform Roadmap](./course-website-roadmap.md).
+27 architectural decisions settled 2026-05-21; multi-sprint
+implementation begins after that roadmap's 9 proposed ADRs land.
+:::
+
 ## Current status (2026-05-15)
 
 **Bucket B — chrome + foundation — is 10/10 done.**

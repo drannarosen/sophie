@@ -223,6 +223,7 @@ project:
     - title: Status
       children:
         - file: status/roadmap.md
+        - file: status/course-website-roadmap.md
         - file: status/phase-0-report.md
         - file: status/phase-1-plan.md
         - file: status/changelog.md
