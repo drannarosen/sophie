@@ -11,6 +11,8 @@ import type {
   ModuleEntry,
   ObjectiveEntry,
   OMIFlowEntry,
+  SectionEntry,
+  UnitEntry,
 } from "@sophie/core/schema";
 import { beforeEach, describe, expect, test } from "vitest";
 import { indexAccumulator, resetIndexAccumulator } from "./index.ts";
@@ -917,6 +919,114 @@ describe("indexAccumulator setChapters / setModules", () => {
     const index = indexAccumulator.asPedagogyIndex();
     expect(index.chapters).toEqual([ch]);
     expect(index.modules).toEqual([mod]);
+  });
+});
+
+describe("indexAccumulator setSections / setUnits (W1)", () => {
+  // Per Wedge B-followup design doc D1 + D7. Mirror setChapters /
+  // setModules semantics: last-write-wins, consumer-global, NOT touched
+  // by clearChapter.
+
+  test("setSections overwrites prior entries (last-write-wins)", () => {
+    const intro: SectionEntry = {
+      type: "module",
+      slug: "intro",
+      title: "Introduction",
+      order: 0,
+    };
+    const stars: SectionEntry = {
+      type: "module",
+      slug: "stars",
+      title: "Stars",
+      order: 1,
+    };
+    const bridge: SectionEntry = {
+      type: "bridge",
+      slug: "math",
+      title: "Math Prereqs",
+      order: 0,
+    };
+
+    indexAccumulator.setSections([intro, stars]);
+    expect(indexAccumulator.asPedagogyIndex().sections).toEqual([intro, stars]);
+
+    indexAccumulator.setSections([bridge]);
+    expect(indexAccumulator.asPedagogyIndex().sections).toEqual([bridge]);
+  });
+
+  test("setUnits overwrites prior entries (last-write-wins)", () => {
+    const u1: UnitEntry = {
+      id: "u1",
+      type: "lecture",
+      title: "U1",
+      order: 0,
+      prereqs: [],
+      section_id: "intro",
+      chapter: "u1-chapter",
+    };
+    const u2: UnitEntry = {
+      id: "u2",
+      type: "lecture",
+      title: "U2",
+      order: 1,
+      prereqs: ["logarithms"],
+      section_id: "stars",
+      chapter: "u2-chapter",
+      lecture: "u2-slides",
+    };
+
+    indexAccumulator.setUnits([u1]);
+    expect(indexAccumulator.asPedagogyIndex().units).toEqual([u1]);
+
+    indexAccumulator.setUnits([u1, u2]);
+    expect(indexAccumulator.asPedagogyIndex().units).toEqual([u1, u2]);
+  });
+
+  test("clearChapter does NOT touch sections / units (consumer-global)", () => {
+    const intro: SectionEntry = {
+      type: "module",
+      slug: "intro",
+      title: "Introduction",
+      order: 0,
+    };
+    const u1: UnitEntry = {
+      id: "u1",
+      type: "lecture",
+      title: "U1",
+      order: 0,
+      prereqs: [],
+      section_id: "intro",
+      chapter: "ch-x",
+    };
+
+    indexAccumulator.setSections([intro]);
+    indexAccumulator.setUnits([u1]);
+    indexAccumulator.clearChapter("ch-x");
+
+    const index = indexAccumulator.asPedagogyIndex();
+    expect(index.sections).toEqual([intro]);
+    expect(index.units).toEqual([u1]);
+  });
+
+  test("resetIndexAccumulator clears sections + units", () => {
+    indexAccumulator.setSections([
+      { type: "module", slug: "intro", title: "Intro", order: 0 },
+    ]);
+    indexAccumulator.setUnits([
+      {
+        id: "u1",
+        type: "lecture",
+        title: "U1",
+        order: 0,
+        prereqs: [],
+        section_id: "intro",
+        chapter: "u1",
+      },
+    ]);
+    resetIndexAccumulator();
+    const index = indexAccumulator.asPedagogyIndex();
+    expect(index.sections).toEqual([]);
+    expect(index.units).toEqual([]);
   });
 });
 

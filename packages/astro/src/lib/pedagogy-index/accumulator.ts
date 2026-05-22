@@ -18,8 +18,10 @@ import type {
   OMIFlowEntry,
   PedagogyIndex,
   RetrievalPromptEntry,
+  SectionEntry,
   SkillReviewEntry,
   SpacedReviewEntry,
+  UnitEntry,
 } from "@sophie/core/schema";
 
 /**
@@ -89,6 +91,21 @@ interface GlobalIndexState {
    * `chapters`; populated from `getCollection('modules')`.
    */
   modules: ReadonlyArray<ModuleEntry>;
+  /**
+   * Consumer-supplied sections collection (Wedge B-followup W1).
+   * Populated from `getCollection('sections')`. Same shape as
+   * `chapters` / `modules`: last-write-wins, consumer-global, NOT
+   * touched by `clearChapter`. Per ADR 0067 + design doc D1.
+   */
+  sections: ReadonlyArray<SectionEntry>;
+  /**
+   * Consumer-supplied units collection (Wedge B-followup W1).
+   * Populated from `getCollection('units')`. Each `UnitEntry` carries
+   * `section_id` (parent ref) + `chapter` (reading binding) + optional
+   * `lecture` (slides binding) per D7. Same `set*` semantics as
+   * `sections`.
+   */
+  units: ReadonlyArray<UnitEntry>;
   /**
    * Per-chapter inline-ref callsites (PR-C4). Append-only array
    * (NOT a Map) — the audit consumes the whole list and
@@ -183,6 +200,8 @@ function getGlobalState(): GlobalIndexState {
       objectives: new Map(),
       chapters: [],
       modules: [],
+      sections: [],
+      units: [],
       inlineRefUsages: [],
       contractValidations: [],
       extractorFindings: [],
@@ -516,6 +535,29 @@ class IndexAccumulator {
   }
 
   /**
+   * Push the consumer-supplied sections collection into the accumulator
+   * (Wedge B-followup W1). Per ADR 0067 + design doc D1. Same shape as
+   * `setChapters` / `setModules`: last-write-wins, consumer-global, NOT
+   * touched by `clearChapter`. Called from `TextbookLayout.astro`
+   * frontmatter once per build after `getCollection('sections')`
+   * resolves.
+   */
+  setSections(entries: ReadonlyArray<SectionEntry>): void {
+    const state = getGlobalState();
+    state.sections = entries;
+  }
+
+  /**
+   * Push the consumer-supplied units collection into the accumulator
+   * (Wedge B-followup W1). Per ADR 0067 + design doc D1 + D7. Same
+   * shape as `setSections`.
+   */
+  setUnits(entries: ReadonlyArray<UnitEntry>): void {
+    const state = getGlobalState();
+    state.units = entries;
+  }
+
+  /**
    * Append a chapter's inline-ref callsites. Append-only — the audit
    * consumes the whole list and usage-count facets later care about
    * callsite counts, not dedup'd keys. `clearChapter` filters out
@@ -736,6 +778,8 @@ class IndexAccumulator {
       retrievalPrompts: Array.from(state.retrievalPrompts.values()),
       spacedReviews: Array.from(state.spacedReviews.values()),
       skillReviews: Array.from(state.skillReviews.values()),
+      sections: state.sections,
+      units: state.units,
     };
   }
 }
@@ -763,6 +807,8 @@ export function resetIndexAccumulator(): void {
   state.objectives.clear();
   state.chapters = [];
   state.modules = [];
+  state.sections = [];
+  state.units = [];
   state.inlineRefUsages = [];
   state.contractValidations = [];
   state.extractorFindings = [];
