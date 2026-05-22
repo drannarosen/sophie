@@ -215,6 +215,12 @@ export {
 } from "./components/RetrievalPrompt/index.ts";
 export type { SearchResult } from "./components/Search/index.ts";
 export { SearchModal } from "./components/Search/index.ts";
+export type { SpacedReviewProps } from "./components/SpacedReview/index.ts";
+export {
+  SpacedReview,
+  SpacedReviewPropsSchema,
+  spacedReviewContract,
+} from "./components/SpacedReview/index.ts";
 export type { UnitsProps } from "./components/Units/index.ts";
 export {
   Units,
