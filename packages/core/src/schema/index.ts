@@ -1,14 +1,36 @@
 export {
+  type Artifact,
+  type ArtifactReferences,
+  ArtifactReferencesSchema,
+  ArtifactSchema,
+  type ArtifactScope,
+  ArtifactScopeSchema,
+  type ArtifactType,
+  ArtifactTypeSchema,
+} from "./artifact.js";
+export {
   type AsideAnchorKind,
   type DeriveAsideAnchorInput,
   deriveAsideAnchor,
 } from "./aside-anchor.js";
+export {
+  type Assessment,
+  type AssessmentItem,
+  AssessmentItemSchema,
+  type AssessmentItemType,
+  AssessmentItemTypeSchema,
+  AssessmentSchema,
+  type AssessmentType,
+  AssessmentTypeSchema,
+} from "./assessment.js";
 export {
   type AuditFinding,
   AuditFindingSchema,
   type AuditSeverity,
   AuditSeveritySchema,
 } from "./audit.js";
+export { type BaseRecord, BaseRecordSchema } from "./base-record.js";
+export { type BKTState, BKTStateSchema } from "./bkt-state.js";
 export { type Chapter, ChapterSchema, ChapterStatus } from "./chapter.js";
 export {
   EPISTEMIC_ROLES,
@@ -44,6 +66,12 @@ export {
   RelatedEquationSchema,
 } from "./equation-registry.js";
 export { type Figure, FigureSchema } from "./figure.js";
+export {
+  type FSRSRecord,
+  FSRSRecordSchema,
+  type FSRSTargetType,
+  FSRSTargetTypeSchema,
+} from "./fsrs-record.js";
 export {
   type InterventionDepth,
   InterventionDepthSchema,
@@ -110,9 +138,31 @@ export {
 } from "./pedagogy-index-entries/index.js";
 export { LangTag, NonEmptyString, Slug } from "./primitives.js";
 export { type RegistryBase, RegistryBaseSchema } from "./registry-base.js";
+export {
+  type Rubric,
+  type RubricCriterion,
+  RubricCriterionSchema,
+  type RubricScaleLevel,
+  RubricScaleLevelSchema,
+  RubricSchema,
+} from "./rubric.js";
 export type { EntityType } from "./search-facet.js";
 export { type Section, SectionSchema } from "./section.js";
 export { slugify } from "./slugify.js";
+export {
+  type Subsection,
+  type SubsectionAutoGrouped,
+  SubsectionAutoGroupedSchema,
+  type SubsectionExplicit,
+  SubsectionExplicitSchema,
+  SubsectionSchema,
+} from "./subsection.js";
+export {
+  type Unit,
+  UnitSchema,
+  type UnitType,
+  UnitTypeSchema,
+} from "./unit.js";
 export {
   type Validation,
   type ValidationEvidence,
