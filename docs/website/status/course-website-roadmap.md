@@ -8,9 +8,20 @@ tags: [roadmap, course-website, architecture, status]
 # Course-Website Platform Roadmap
 
 This document is the canonical roadmap for expanding Sophie from a
-schema-driven interactive-textbook authoring platform to a full
-course-website platform that can replace day-to-day Canvas usage for
-SDSU astrophysics + computational courses.
+schema-driven interactive-textbook authoring platform into a
+**model-based STEM learning environment** for full course delivery —
+one where readings, slides, equations, misconceptions, retrieval
+prompts, computational labs, and assessments are unified through a
+single pedagogy graph and the [eight-role epistemic component
+contract](../decisions/0058-epistemic-component-contract.md).
+
+The goal is **not to replace Canvas as an institutional system of
+record.** Canvas remains the registrar / roster / official gradebook
+(via LTI 1.3 AGS grade-back at Tier 3). What Sophie replaces is the
+*intellectual and pedagogical center* of the course — the surface
+students actually learn from — for SDSU astrophysics + computational
+courses. Day-to-day, the course lives in Sophie; institutional
+continuity lives in Canvas.
 
 **Status:** Brainstorming completed 2026-05-21 with 27 architectural
 decisions settled across 8 design clusters. Implementation begins as a
@@ -356,6 +367,110 @@ All integrate with the pedagogy graph
 [ADR 0046](../decisions/0046-equation-biography.md) equation
 biographies, [ADR 0058](../decisions/0058-epistemic-component-contract.md)
 8-role taxonomy) via typed target IDs.
+
+### Interleaving vs. blocked practice
+
+Both placements are deliberate. **Blocked practice builds initial
+fluency** (Unit-level `practice.mdx`): low cognitive load, focused
+on novel skill acquisition. **Interleaved practice builds
+discrimination and transfer** (Section-level `practice-set.mdx`):
+desirable difficulty, mixed topics, FSRS-scheduled. Sequencing
+matters — blocked first while skills are novel, interleaved once
+fluency exists. This is a real corrective: interleaved-too-early
+is a known pitfall (Dunlosky et al. 2013 rate interleaving as
+moderate-utility precisely because it depends on prerequisite
+fluency).
+
+## Cross-cutting design principles
+
+Three principles that govern every page Sophie ships, regardless of
+which cluster authored it.
+
+### Student UX — progressive disclosure, primary action per page
+
+Sophie has *many* pedagogy components. A naive page that surfaces
+all of them at once (retrieval prompts + skill reviews + equation
+specs + misconception cards + concept maps + Pyodide demos +
+adaptive warnings) is cognitive-load chaos for students. The
+governance principle (per [ADR 0075](../decisions/0075-student-ux-cognitive-load-governance.md)):
+
+- **Every page has a single primary learning action.** Reading prose,
+  working a worked example, attempting a practice problem — one
+  thing the student is *doing* on that page.
+- **Supporting pedagogy is collapsible, contextual, or sequenced.**
+  Use `<Aside>` / `<Spoiler>` / sidebar-toggle / inline-but-quiet
+  patterns. Surface secondary content on demand, not by default.
+- **Sophie reveals pedagogy at the moment of need**, not all
+  pedagogy all the time.
+- Per-page-type defaults: a Reading is "read the prose" with
+  retrieval prompts collapsed under reveal triggers; a Practice
+  page is "solve the problem" with hints behind progressive
+  reveals; a Slide is "see the concept" with speaker notes off-screen.
+
+This is the antidote to pedagogical maximalism — the trap of
+"if a component exists, every page should use it." A Sophie page
+that *looks* simple but rewards exploration with discoverable
+pedagogy is the design target.
+
+### Instructor authoring economics
+
+Sophie only works if authoring is fast enough to be the instructor's
+default channel rather than a sacrifice they make for pedagogical
+purity. The success criterion (per [ADR 0074](../decisions/0074-instructor-authoring-cost-metric.md))
+is concrete time-to-author targets, measured per Unit / Section /
+Module, that Sophie commits to hitting through AI co-authoring +
+schema scaffolding:
+
+- **New Unit (lecture-shape)**: < 30 min including reading skeleton,
+  slide outline, 1–2 retrieval prompts, LO declarations
+- **Revise existing Unit**: < 15 min for typical post-lecture
+  improvement (add equation cross-ref, refine LO wording, add a
+  worked example)
+- **Section-level practice-set draft**: < 15 min via the 4-role
+  AI co-author panel ([ADR 0030](../decisions/0030-authoring-model.md));
+  instructor then curates ~half the generated items
+- **Module curriculum-CI audit**: < 5 min via `sophie audit`
+- **Slide ↔ reading drift check**: < 5 min via `sophie diff`
+  ([ADR 0045](../decisions/0045-pedagogical-diff.md))
+
+These targets are tracked as instructor-side SoTL metrics
+(ADR 0074 extends ADR 0047's 8-metric measurement plan). If an
+authoring task slips past its target, that's an actionable signal
+that schema scaffolding or AI co-author prompts need
+re-engineering — Sophie's authoring ergonomics are a
+first-class research output, not a backstage concern.
+
+### Accessibility — Tier 1 commitment
+
+Accessibility ships with Tier 1, not as a later polish pass.
+Sophie's existing infrastructure already underwrites this:
+
+- [ADR 0004](../decisions/0004-component-contract-revisions.md):
+  every component PR runs **axe-core** tests; zero violations is
+  the merge gate.
+- [ADR 0019](../decisions/0019-radix-ui-a11y.md): **Radix UI
+  primitives** for menus / dialogs / tooltips / disclosures — ARIA
+  semantics + keyboard navigation are wired in by construction.
+
+Course-website-specific extensions Sophie commits to at Tier 1:
+
+- **MathML output** for `<KeyEquation>` (screen-reader-readable
+  equations; not just LaTeX → image)
+- **Authored alt text** required on every `<Figure>` registry
+  entry (curriculum-CI enforced via the pedagogy index)
+- **Keyboard navigation** through the slide ↔ reading split-screen
+  (Tier 1 killer feature item 1) — no mouse-required pathways
+- **Reduced-motion mode** respected for any animation
+- **Print / PDF fallback** for every page (handouts, formula
+  sheets, readings)
+- **Color contrast** validated via the theme tokens
+  ([ADR 0005](../decisions/0005-theming.md))
+
+Tier 2 / 3 extensions: transcripts + captions for any video / audio
+content; live captioning at Tier 3 (Web Speech API → server
+persistence). Accommodations workflow integration (per-student
+extended-time on `<Assessment>`) lands with the Instructor room
+at Tier 3.
 
 ## Library room — registry-driven Spec pages + Cheatsheets
 
@@ -902,6 +1017,20 @@ Tier 1/2 with opt-in export; Learning Record Store at Tier 3.**
   re-identification
 - Retention per IRB (typically 5–10 years post-publication)
 - PII never enters telemetry
+
+### Surveillance vs. study-tool
+
+Sophie's telemetry surfaces are designed to feel like **personal
+study tools, not surveillance**. The student-facing FSRS schedule,
+"export my SoTL data" button, and progress visualizations exist
+primarily for the student's own use; the SoTL research export is
+opt-in and bounded by IRB protocol. Tier 1/2 keep everything
+local-first (IndexedDB) — the student's device, not a server,
+holds the data. Tier 3 cohort-level analytics for instructors
+only ever surface aggregates above the n<5 cell-suppression
+threshold. This design choice is load-bearing for student trust;
+violating it would damage Sophie's research-instrument framing
+just as much as its day-to-day usability.
 
 ### Why xAPI
 
