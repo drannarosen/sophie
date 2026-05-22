@@ -86,7 +86,6 @@ export {
   type InterventionLibraryEntry,
   InterventionLibraryEntrySchema,
 } from "./intervention.js";
-export { type Module, ModuleSchema } from "./module.js";
 export { chaptersForModule } from "./module-nav.js";
 export {
   type MultiRep,
@@ -151,6 +150,22 @@ export {
   RubricSchema,
 } from "./rubric.js";
 export type { EntityType } from "./search-facet.js";
+export {
+  type Section,
+  type SectionBridgeVariant,
+  SectionBridgeVariantSchema,
+  type SectionModuleVariant,
+  SectionModuleVariantSchema,
+  type SectionPhaseVariant,
+  SectionPhaseVariantSchema,
+  SectionSchema,
+  type SectionTrackVariant,
+  SectionTrackVariantSchema,
+  type SectionType,
+  SectionTypeSchema,
+  type SectionUnitBlockVariant,
+  SectionUnitBlockVariantSchema,
+} from "./section.js";
 export { slugify } from "./slugify.js";
 export {
   type Subsection,
