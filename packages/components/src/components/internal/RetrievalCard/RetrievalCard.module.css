@@ -1,0 +1,124 @@
+/* RetrievalCard — left-edge color band; pixel polish iterated in
+   Storybook per Wedge B1 design doc §5. `--card-band-color` is bound
+   inline on the root by RetrievalCard.tsx to one of
+   --sophie-retrieval-band / --sophie-spaced-band / --sophie-skill-band. */
+
+.card {
+  --card-band-color: var(--sophie-status-neutral);
+  border-left: var(--sophie-card-rule-strong, 4px) solid var(--card-band-color);
+  border-radius: var(--sophie-radius-sm, 0.3125rem);
+  background: var(--sophie-surface-1, #fff);
+  padding: 0;
+  margin-block: var(--sophie-space-4, 1rem);
+  box-shadow: var(--sophie-shadow-card, 0 1px 3px rgba(0, 0, 0, 0.04));
+}
+
+.trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--sophie-space-2, 0.5rem) var(--sophie-space-4, 1rem);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  color: var(--sophie-text, inherit);
+}
+
+.trigger:focus-visible {
+  outline: var(--sophie-focus-width, 2px) solid
+    var(--sophie-focus-color, currentColor);
+  outline-offset: 2px;
+}
+
+.triggerLabel {
+  font-weight: var(--sophie-weight-medium, 500);
+}
+
+.chevron {
+  font-family: var(--sophie-font-mono, monospace);
+  color: var(--sophie-text-muted, #666);
+}
+
+.content {
+  padding: 0 var(--sophie-space-4, 1rem) var(--sophie-space-4, 1rem);
+}
+
+.prompt {
+  margin-block: 0 var(--sophie-space-3, 0.75rem);
+}
+
+.textarea {
+  width: 100%;
+  font-family: inherit;
+  font-size: var(--sophie-text-base, 1rem);
+  padding: var(--sophie-space-2, 0.5rem);
+  border: 1px solid var(--sophie-border, #ccc);
+  border-radius: var(--sophie-radius-sm, 0.3125rem);
+  margin-block: 0 var(--sophie-space-2, 0.5rem);
+  background: var(--sophie-surface-1, #fff);
+  color: var(--sophie-text, inherit);
+}
+
+.textarea:focus-visible {
+  outline: var(--sophie-focus-width, 2px) solid
+    var(--sophie-focus-color, currentColor);
+  outline-offset: 2px;
+}
+
+.revealButton {
+  padding: var(--sophie-space-1, 0.25rem) var(--sophie-space-4, 1rem);
+  cursor: pointer;
+  background: var(--card-band-color);
+  color: var(--sophie-text-on-accent, #fff);
+  border: none;
+  border-radius: var(--sophie-radius-sm, 0.3125rem);
+  font: inherit;
+  font-weight: var(--sophie-weight-medium, 500);
+}
+
+.revealButton:focus-visible {
+  outline: var(--sophie-focus-width, 2px) solid
+    var(--sophie-focus-color, currentColor);
+  outline-offset: 2px;
+}
+
+.answer {
+  margin-block: var(--sophie-space-4, 1rem) var(--sophie-space-3, 0.75rem);
+}
+
+.selfAssess {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sophie-space-2, 0.5rem);
+  align-items: baseline;
+  margin-block-start: var(--sophie-space-2, 0.5rem);
+}
+
+.selfAssessPrompt {
+  font-size: var(--sophie-text-small, 0.875rem);
+  color: var(--sophie-text-muted, #666);
+}
+
+.selfAssessButton {
+  padding: var(--sophie-space-1, 0.25rem) var(--sophie-space-3, 0.75rem);
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--card-band-color);
+  border-radius: var(--sophie-radius-sm, 0.3125rem);
+  color: var(--sophie-text, inherit);
+  font: inherit;
+}
+
+.selfAssessButton:focus-visible {
+  outline: var(--sophie-focus-width, 2px) solid
+    var(--sophie-focus-color, currentColor);
+  outline-offset: 2px;
+}
+
+.selfAssessButton[aria-pressed="true"] {
+  background: var(--card-band-color);
+  color: var(--sophie-text-on-accent, #fff);
+}
