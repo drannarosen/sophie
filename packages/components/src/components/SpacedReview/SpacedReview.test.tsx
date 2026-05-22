@@ -187,6 +187,7 @@ describe("<SpacedReview>", () => {
           prereqs: [],
           section_id: "stars",
           chapter: "ch-spectra",
+          status: "stable",
         },
         {
           id: "u2",
@@ -196,6 +197,7 @@ describe("<SpacedReview>", () => {
           prereqs: [],
           section_id: "stars",
           chapter: "ch-evolution",
+          status: "stable",
         },
       ]);
       // Seed practice attempts in BOTH chapters with distinct targets.
@@ -228,6 +230,7 @@ describe("<SpacedReview>", () => {
           prereqs: [],
           section_id: "stars",
           chapter: "ch-spectra",
+          status: "stable",
         },
         // Galaxies has a Unit too, but the SpacedReview points at "stars"
         // so galaxy attempts shouldn't surface.
@@ -239,6 +242,7 @@ describe("<SpacedReview>", () => {
           prereqs: [],
           section_id: "galaxies",
           chapter: "ch-galaxies",
+          status: "stable",
         },
       ]);
       await seedAttempt("sr-section-2", "ch-spectra", "topic:logs");
@@ -270,6 +274,7 @@ describe("<SpacedReview>", () => {
           prereqs: [],
           section_id: "stars",
           chapter: "ch-a",
+          status: "stable",
         },
         {
           id: "u2",
@@ -279,6 +284,7 @@ describe("<SpacedReview>", () => {
           prereqs: [],
           section_id: "stars",
           chapter: "ch-b",
+          status: "stable",
         },
       ]);
       await seedAttempt("sr-section-3", "ch-a", "topic:logs");

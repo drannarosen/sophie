@@ -21,8 +21,6 @@
  * regular component imports and (b) so any future accidental import
  * from elsewhere is one extra warning sign that something's off-path.
  */
-export { __setChapters } from "../components/ChapterRef/chapters-store.ts";
-export { __setModules } from "../components/ChapterRef/modules-store.ts";
 export { __setEquationCitations } from "../components/EquationRef/equation-citations-store.ts";
 export { __setEquations } from "../components/EquationRef/equations-store.ts";
 export { __setFigureRegistry } from "../components/FigureRef/figure-registry-store.ts";
