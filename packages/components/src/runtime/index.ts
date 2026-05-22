@@ -6,6 +6,7 @@ export type {
   BroadcastMessage,
 } from "./BroadcastChannel.ts";
 export { createBroadcastChannel } from "./BroadcastChannel.ts";
+export { getUserId } from "./getUserId.ts";
 export { IndexedDBResponseStore } from "./IndexedDBResponseStore.ts";
 export { MathText } from "./MathText.tsx";
 export type { Profile } from "./ProfileContext.tsx";

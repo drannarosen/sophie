@@ -26,6 +26,43 @@ if (typeof globalThis.ResizeObserver === "undefined") {
   } as unknown as typeof ResizeObserver;
 }
 
+// jsdom under vitest doesn't initialize a working Storage instance when
+// the JSDOM URL is `about:blank` (the default). Provide a minimal in-
+// memory Storage polyfill so `getUserId` and any future Web-Storage-
+// backed helpers work in unit tests. Real browser behavior is what
+// gets exercised in Playwright e2e.
+if (
+  typeof window !== "undefined" &&
+  (typeof window.localStorage !== "object" ||
+    typeof window.localStorage?.getItem !== "function")
+) {
+  const store = new Map<string, string>();
+  const storage: Storage = {
+    get length() {
+      return store.size;
+    },
+    clear() {
+      store.clear();
+    },
+    getItem(key: string) {
+      return store.has(key) ? (store.get(key) ?? null) : null;
+    },
+    key(index: number) {
+      return [...store.keys()][index] ?? null;
+    },
+    removeItem(key: string) {
+      store.delete(key);
+    },
+    setItem(key: string, value: string) {
+      store.set(key, String(value));
+    },
+  };
+  Object.defineProperty(window, "localStorage", {
+    configurable: true,
+    value: storage,
+  });
+}
+
 beforeEach(() => {
   __resetRuntimeCaches();
 });
