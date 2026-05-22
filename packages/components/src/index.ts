@@ -207,6 +207,12 @@ export {
   RepVerbalPropsSchema,
   repVerbalContract,
 } from "./components/RepVerbal/index.ts";
+export type { RetrievalPromptProps } from "./components/RetrievalPrompt/index.ts";
+export {
+  RetrievalPrompt,
+  RetrievalPromptPropsSchema,
+  retrievalPromptContract,
+} from "./components/RetrievalPrompt/index.ts";
 export type { SearchResult } from "./components/Search/index.ts";
 export { SearchModal } from "./components/Search/index.ts";
 export type { UnitsProps } from "./components/Units/index.ts";
