@@ -115,7 +115,7 @@ as the concrete realization of the paper's theoretical proposal.
 | "Cognitive logic revisable at level of specific judgments" | Schema-driven authoring: editing a single misconception node or intervention propagates through audit, AI-authoring context, rendered content |
 | "Targeted intervention at level of specific judgments" | Component contract ([ADR 0004](../../decisions/0004-component-contract-revisions.md)) makes each pedagogical decision an isolatable, typed unit |
 | "Trunk-branch governance" | AI as four roles ([ADR 0030](../../decisions/0030-audience-and-ai-author-model.md)) with instructor as supervisor; AI Contribution Ledger ([ADR 0042](../../decisions/0042-pedagogy-contract-and-ai-ledger.md)) |
-| Theoretical proposal | AGPL-licensed codebase: 78 ADRs, 177+ tests, 500+ visual-regression baselines, working ASTR 201 pilot |
+| Theoretical proposal | AGPL-licensed codebase: 77 ADRs (numbered 0001–0078, with 0050 a reserved gap), 177+ tests, 500+ visual-regression baselines, working ASTR 201 pilot |
 
 ### How to cite OCG in Sophie's writing
 

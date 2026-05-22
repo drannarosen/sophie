@@ -10,8 +10,9 @@ tags: [strategy, landscape, risk, scope, governance, prose]
 The previous pages locate Sophie in the field. This page names the
 risks. The audit that produced this section found that Sophie's
 technical scope is well-disciplined — vertical wedges, ADR-locked
-before code, zero contradicting decisions across 78 ADRs. The
-pedagogical and strategic scope is where the watchpoints live.
+before code, zero contradicting decisions across 77 ADRs (0001–0078
+with 0050 as a reserved gap). The pedagogical and strategic scope is
+where the watchpoints live.
 
 This page exists so the risks have *names*, *triggers*, and
 *mitigation plans* — not so they live as background anxiety. Last
