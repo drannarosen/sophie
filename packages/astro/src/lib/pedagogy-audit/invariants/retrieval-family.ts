@@ -79,7 +79,10 @@ export function checkRetrievalFamily(
  *   that don't yet author Units.
  */
 function checkPRA1(index: PedagogyIndex, sink: FindingSink): void {
-  if (index.units.length === 0) {
+  // Defensive: tests + pre-W1 fixtures may construct PedagogyIndex
+  // literals without going through Zod parse (which would default
+  // `units` to []). Treat missing/empty as the chapter-level path.
+  if (!index.units || index.units.length === 0) {
     checkPRA1ChapterLevel(index, sink);
     return;
   }
@@ -90,10 +93,7 @@ function checkPRA1(index: PedagogyIndex, sink: FindingSink): void {
  * Chapter-level approximation — pre-W1 PRA-1 behavior. Stays as the
  * fallback for consumers without Unit data.
  */
-function checkPRA1ChapterLevel(
-  index: PedagogyIndex,
-  sink: FindingSink
-): void {
+function checkPRA1ChapterLevel(index: PedagogyIndex, sink: FindingSink): void {
   const topicRefsByChapter = new Map<string, Set<string>>();
   const skillCoverByChapter = new Map<string, Set<string>>();
 
@@ -242,7 +242,8 @@ function checkRET1(index: PedagogyIndex, sink: FindingSink): void {
  *   check is a no-op for forward-compat.
  */
 function checkSR1(index: PedagogyIndex, sink: FindingSink): void {
-  const knownSections = new Set(index.sections.map((s) => s.slug));
+  // Defensive: pre-W1 fixtures may omit `sections`. Treat as empty.
+  const knownSections = new Set((index.sections ?? []).map((s) => s.slug));
   for (const e of index.spacedReviews) {
     if (e.target_id !== undefined) {
       const prefix = parseTargetPrefix(e.target_id);

@@ -160,9 +160,9 @@ describe("useInteractiveRangeMulti", () => {
       </ProfileWrapper>
     );
     await waitFor(() =>
-      expect(
-        screen.getByTestId("writer-ch-a-k-hydrated").textContent
-      ).toBe("true")
+      expect(screen.getByTestId("writer-ch-a-k-hydrated").textContent).toBe(
+        "true"
+      )
     );
     await act(async () => {
       screen.getByText("bump-ch-a-k").click();
@@ -202,9 +202,9 @@ describe("useInteractiveRangeMulti", () => {
       </ProfileWrapper>
     );
     await waitFor(() =>
-      expect(
-        screen.getByTestId("writer-ch-b-k:x-hydrated").textContent
-      ).toBe("true")
+      expect(screen.getByTestId("writer-ch-b-k:x-hydrated").textContent).toBe(
+        "true"
+      )
     );
     // Multi probe hydrated empty (no records seeded at mount time).
     await waitFor(() =>

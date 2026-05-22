@@ -115,9 +115,7 @@ describe("SR-1 — section-validity graduation (W1)", () => {
   test("no finding when section_id matches a known SectionEntry", () => {
     const index: PedagogyIndex = {
       ...emptyIndex(),
-      sections: [
-        { type: "module", slug: "stars", title: "Stars", order: 0 },
-      ],
+      sections: [{ type: "module", slug: "stars", title: "Stars", order: 0 }],
       spacedReviews: [
         {
           chapter: "ch1",
@@ -134,9 +132,7 @@ describe("SR-1 — section-validity graduation (W1)", () => {
   test("emits SR-1 ERROR when section_id refers to an unknown section", () => {
     const index: PedagogyIndex = {
       ...emptyIndex(),
-      sections: [
-        { type: "module", slug: "stars", title: "Stars", order: 0 },
-      ],
+      sections: [{ type: "module", slug: "stars", title: "Stars", order: 0 }],
       spacedReviews: [
         {
           chapter: "ch1",
@@ -182,9 +178,7 @@ describe("PRA-1 — Unit-aware graduation (W1)", () => {
   test("no finding when UnitEntry prereq is covered by SkillReview in the SAME Section", () => {
     const index: PedagogyIndex = {
       ...emptyIndex(),
-      sections: [
-        { type: "module", slug: "stars", title: "Stars", order: 1 },
-      ],
+      sections: [{ type: "module", slug: "stars", title: "Stars", order: 1 }],
       units: [
         {
           id: "u1",
@@ -305,9 +299,7 @@ describe("PRA-1 — Unit-aware graduation (W1)", () => {
   test("emits PRA-1 WARN when no SkillReview covers the prereq topic anywhere", () => {
     const index: PedagogyIndex = {
       ...emptyIndex(),
-      sections: [
-        { type: "module", slug: "stars", title: "Stars", order: 0 },
-      ],
+      sections: [{ type: "module", slug: "stars", title: "Stars", order: 0 }],
       units: [
         {
           id: "u1",
@@ -354,9 +346,7 @@ describe("PRA-1 — Unit-aware graduation (W1)", () => {
   test("multiple prereqs on one Unit → one WARN per uncovered prereq", () => {
     const index: PedagogyIndex = {
       ...emptyIndex(),
-      sections: [
-        { type: "module", slug: "stars", title: "Stars", order: 0 },
-      ],
+      sections: [{ type: "module", slug: "stars", title: "Stars", order: 0 }],
       units: [
         {
           id: "u1",
