@@ -60,6 +60,44 @@ productivity tool. "SoTA over simple" is the overriding design
 principle — every decision biases toward long-term-correct shape, not
 first-shippable hack.
 
+## Sophie in the landscape
+
+Sophie does not claim to invent any single capability listed in this
+roadmap. Spaced repetition, interactive textbooks, in-browser Python,
+LMS integration, social annotation, and OER assessment all exist
+already in mature platforms. **Sophie's distinguishing claim is the
+unifying contract underneath**: pedagogy components carry an explicit
+*epistemic role* (Observable / Model / Inference / Assumption /
+Approximation / Uncertainty / Numerical / Misconception) per
+[ADR 0058](../decisions/0058-epistemic-component-contract.md), and
+every authored artifact — equation, glossary term, slide, reading
+passage, practice problem, worked example, assessment item — fits into
+one auditable curriculum graph. That graph is what AI co-authoring,
+curriculum-CI, slide↔reading drift detection, mastery modeling, and
+the future Library room all build on. Other platforms treat content
+objects as fundamentally disconnected; Sophie makes the structure of
+scientific reasoning itself the platform's load-bearing data model.
+
+The closest neighbors, and where Sophie diverges:
+
+| Platform | What it does well | Where Sophie is different |
+| --- | --- | --- |
+| **[Runestone][runestone]** | Open interactive CS/math textbooks; exercises, analytics, authoring, integrated LMS-like system | Sophie is for *scientific reasoning* across astronomy/physics/computation; typed pedagogy graph + registries + AI-authoring workflow; local-first static at Tier 1/2 vs. Runestone's server-hosted model |
+| **[LibreTexts ADAPT][libretexts-adapt]** | Large OER homework / question-bank platform with LMS integration; auto-graded interactive assessments at scale | Sophie's Assessment cluster is instructor-authored + tightly coupled to the course's own pedagogy graph; not competing with ADAPT's question-bank scale |
+| **[OpenStax Kinetic][kinetic]** | Research infrastructure that connects higher-ed learners with learning-science studies in authentic environments | Sophie *is* the course environment, not a study layer on top of generic content; the research instrument and the teaching surface are the same artifact |
+| **[Perusall][perusall]** | Strong social annotation; engagement around shared readings, video, audio | Sophie's Discussions are deferred to Tier 3; near-term differentiation is *cognitive/pedagogical structure*, not social learning. Long-term, annotation tied to equation steps / figures / misconceptions / assumptions could be a natural extension |
+| **Quarto / MyST / Jupyter Book** | Excellent scientific-document authoring; markdown + executable code + reproducible output | Sophie is closer to a **pedagogical compiler** than a document generator: LOs, misconceptions, equation biographies, mastery records, FSRS scheduling, slide↔reading drift, AI co-authoring guardrails are all first-class, not optional add-ons |
+| **Canvas / Moodle / Blackboard** | Roster, gradebook, institutional compliance, announcements, integrations | Sophie is *not* an LMS replacement; it is the intellectual layer Canvas is bad at. Canvas remains the institutional system of record (via LTI 1.3 at Tier 3) |
+
+**Sophie's wedge is the combination**: schema-driven course structure
++ pedagogy graph + AI-assisted but instructor-curated authoring +
+interactive scientific computation + local-first learning state +
+slides/readings/practice/library sharing one conceptual backbone +
+future LTI/SoTL telemetry compatibility. Individually, parts exist
+elsewhere. Integrated, with the epistemic-role contract underneath,
+the combination is novel — and that integration is the defensible
+research claim for tenure / Cottrell / CAREER narratives.
+
 ## Confirmed design decisions (14 foundation + 13 cluster-level)
 
 The 14 foundational decisions settled during brainstorming, in
@@ -1181,3 +1219,64 @@ content hierarchy + bridges + Section artifacts + Module template +
 Library, slides↔readings + killer features + `@sophie/slides`,
 Schedule, Assessment cluster, final cluster of migration + Instructor
 + telemetry + OER).
+
+## References
+
+### Pedagogy / learning science
+
+- **Dunlosky, J. et al. (2013).** "Improving Students' Learning With
+  Effective Learning Techniques: Promising Directions From Cognitive
+  and Educational Psychology." *Psychological Science in the Public
+  Interest*. Rates practice testing + distributed practice as
+  high-utility across learners; interleaving as moderate-utility.
+  [link][dunlosky-2013]
+- **Cepeda, N. J. et al. (2008).** "Spacing effects in learning."
+  Foundational distributed-practice evidence.
+- **Cognitive load + worked examples** (recent meta-analysis on
+  solution-step learning). [link][worked-examples-meta]
+- **Interleaving in physics with collaboration** —
+  context-sensitivity of interleaving's benefit (2025). [link][interleaving-physics]
+- **Bayesian Knowledge Tracing — 25-year review.** Establishes BKT's
+  role as the interpretable knowledge-tracing baseline; surveys deep
+  KT successors. [link][bkt-review]
+- **Meyer, J. & Land, R. (2003).** Threshold concepts framework
+  (motivates Sophie's bridge rooms / `<SkillReview>`).
+- **Sweller, J.** Cognitive load theory (motivates worked-example →
+  faded-prompt → independent-practice progression).
+- **Corbett, A. T. & Anderson, J. R. (1995).** Original BKT paper.
+
+### Spaced repetition
+
+- **FSRS — Free Spaced Repetition Scheduler** (Open-Spaced-Repetition
+  community; head-to-head benchmarks against SuperMemo SM-2 on Anki
+  datasets).
+
+### Platform comparisons (cited in *Sophie in the landscape*)
+
+- **Runestone Academy** — open interactive textbooks. [link][runestone]
+- **LibreTexts ADAPT** — OER homework / question-bank platform.
+  [link][libretexts-adapt]
+- **OpenStax Kinetic** — research infrastructure for higher-ed
+  learning studies. [link][kinetic]
+- **Perusall** — social-annotation reading platform. [link][perusall]
+- **Pyodide** — Python distribution for browser + Node via
+  WebAssembly. [link][pyodide]
+
+### Standards
+
+- **IMS Global / 1EdTech: Learning Tools Interoperability (LTI 1.3 /
+  LTI Advantage)** — the modern standard for LMS-tool federation.
+  [link][lti]
+- **xAPI / Experience API** — open spec for learning-record events;
+  portable across Learning Record Stores.
+
+[dunlosky-2013]: https://pubmed.ncbi.nlm.nih.gov/26173288/
+[worked-examples-meta]: https://www.tandfonline.com/doi/full/10.1080/01443410.2023.2273762
+[interleaving-physics]: https://www.sciencedirect.com/science/article/pii/S0959475225002312
+[bkt-review]: https://dl.acm.org/doi/10.1007/s11257-023-09389-4
+[runestone]: https://runestone.academy/
+[libretexts-adapt]: https://asccc-oeri.org/2025/04/16/libretexts-adapt-homework-platform-and-the-new-discuss-it/
+[kinetic]: https://openstax.org/research/
+[perusall]: https://www.perusall.com/
+[pyodide]: https://github.com/pyodide/pyodide
+[lti]: https://www.1edtech.org/standards/lti
