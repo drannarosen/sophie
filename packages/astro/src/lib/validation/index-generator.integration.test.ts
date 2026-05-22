@@ -32,6 +32,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type { PedagogyIndex } from "@sophie/core/schema";
 import { describe, expect, it } from "vitest";
+import { buildPedagogyIndex } from "../pedagogy-audit/test-helpers.ts";
 import { extractContractValidations } from "./extractor.ts";
 import { generateValidationIndex } from "./index-generator.ts";
 
@@ -45,28 +46,7 @@ const REGEN_HINT =
   "commit the regenerated file.";
 
 function emptyIndexShape(): PedagogyIndex {
-  return {
-    chapters: [],
-    modules: [],
-    objectives: [],
-    keyInsights: [],
-    definitions: [],
-    equations: [],
-    equationCitations: [],
-    figureRegistry: [],
-    figureUsages: [],
-    inlineRefUsages: [],
-    misconceptions: [],
-    contractValidations: [],
-    extractorFindings: [],
-    multiReps: [],
-    interventions: [],
-    deepDives: [],
-    omiFlows: [],
-    retrievalPrompts: [],
-    spacedReviews: [],
-    skillReviews: [],
-  };
+  return buildPedagogyIndex();
 }
 
 describe("validation/index-generator integration (I3)", () => {

@@ -379,6 +379,63 @@ time, not at runtime.
 Pick by pedagogical intent first; the static-vs-interactive split
 and the chapter-vs-course aggregation level follow automatically.
 
+## Section-scope `<SpacedReview>` lookup chain (W1)
+
+`<SpacedReview section="<slug>" max={3} />` resolves cross-chapter
+review aggregation through three hops, all build-time data exposed
+via the `PedagogyIndex`:
+
+```text
+section="stars"                         # author-supplied prop
+  ↓ filter UnitEntry by section_id
+unitStore.all().filter(u => u.section_id === "stars")
+  ↓ collect unit.chapter slugs
+["spectra-and-composition", "stellar-evolution", …]
+  ↓ useInteractiveRangeMulti(course, chapters, "practice-attempt:")
+merged Record<key, PracticeAttempt[]> across all chapters
+  ↓ selectLeastRecentlyAttempted({ attempts, max })
+[target_id, target_id, …]               # rendered as "Review:" items
+```
+
+**Authoring rules:**
+
+- Exactly one of `target=` or `section=` per callsite (Zod refine).
+- `section` must be a valid `SectionEntry.slug` in
+  [`PedagogyIndex.sections`](../../packages/core/src/schema/pedagogy-index.ts).
+  Invalid refs emit **SR-1 ERROR** at audit time.
+- `max` (default 3) caps the rendered list across all distinct
+  `target_id`s in the merged attempt set — distinct topics compete
+  for slots when more candidates exist than `max` allows.
+- The `<SpacedReview.Empty>` slot is honored when the merged set is
+  empty (no attempts yet in any chapter bound to a Unit in this
+  Section).
+
+**Cross-chapter LWW semantics:** identical unwrapped keys across
+chapters (e.g., two chapters both writing `practice-attempt:topic:logs`
+for distinct students of the same target) are merged last-chapter-wins
+in iteration order — documented in
+[`ResponseStore.getAllMulti`](../../packages/components/src/runtime/ResponseStore.ts).
+The `practice-attempt:<target_id>` key shape rarely collides across
+chapters in the same Section in practice (each chapter logs against
+its own surfaced targets).
+
+**Where the data flows from:**
+
+1. Build-time: `TextbookLayout` calls `getCollection('sections')` +
+   `getCollection('units')` and forwards via
+   `indexAccumulator.setSections()` / `setUnits()`.
+2. SSR-merge: `__setSections(pedagogy.sections)` +
+   `__setUnits(pedagogy.units)` hydrate the client-side stores;
+   `<script id="sophie-pedagogy-sections">` + `…-units` JSON payloads
+   support auto-hydration when no setter ran (e.g., direct island
+   mount).
+3. Render-time: `<SpacedReview section=…>` reads `unitStore.all()`
+   inside a `useMemo([section])` to derive the chapter list, then
+   the cross-chapter range hook fires.
+
+See [Wedge B-followup design doc D2](../../plans/2026-05-22-wedge-b-followup-design.md#d2--useinteractiverangemulti-hook-for-cross-chapter-range-reads)
+for the rationale + cross-call contract.
+
 ## Anchor convention
 
 Every pedagogy-index entry has a stable anchor derived from its

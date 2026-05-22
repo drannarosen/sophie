@@ -1,33 +1,11 @@
 import type { PedagogyIndex } from "@sophie/core/schema";
 import { describe, expect, test } from "vitest";
+import { buildPedagogyIndex } from "../test-helpers.ts";
 import type { FindingSink } from "../types.ts";
 import { checkRetrievalFamily } from "./retrieval-family.ts";
 
 function emptyIndex(): PedagogyIndex {
-  return {
-    definitions: [],
-    equations: [],
-    equationCitations: [],
-    keyInsights: [],
-    figureRegistry: [],
-    figureUsages: [],
-    misconceptions: [],
-    chapters: [],
-    modules: [],
-    objectives: [],
-    inlineRefUsages: [],
-    contractValidations: [],
-    extractorFindings: [],
-    multiReps: [],
-    interventions: [],
-    deepDives: [],
-    omiFlows: [],
-    retrievalPrompts: [],
-    spacedReviews: [],
-    skillReviews: [],
-    sections: [],
-    units: [],
-  };
+  return buildPedagogyIndex();
 }
 
 function emptySink(): FindingSink {
@@ -120,6 +98,7 @@ describe("SR-1 — section-validity graduation (W1)", () => {
         {
           chapter: "ch1",
           anchor: "sp-1",
+          max: 3,
           section_id: "stars",
         },
       ],
@@ -137,6 +116,7 @@ describe("SR-1 — section-validity graduation (W1)", () => {
         {
           chapter: "ch1",
           anchor: "sp-1",
+          max: 3,
           section_id: "nonexistent",
         },
       ],
@@ -160,6 +140,7 @@ describe("SR-1 — section-validity graduation (W1)", () => {
         {
           chapter: "ch1",
           anchor: "sp-1",
+          max: 3,
           section_id: "stars",
         },
       ],

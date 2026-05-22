@@ -79,10 +79,11 @@ export function checkRetrievalFamily(
  *   that don't yet author Units.
  */
 function checkPRA1(index: PedagogyIndex, sink: FindingSink): void {
-  // Defensive: tests + pre-W1 fixtures may construct PedagogyIndex
-  // literals without going through Zod parse (which would default
-  // `units` to []). Treat missing/empty as the chapter-level path.
-  if (!index.units || index.units.length === 0) {
+  // `index.units` is guaranteed populated (possibly empty) by Zod's
+  // `.default([])` semantics at PedagogyIndexSchema.parse time. Tests
+  // build through `buildPedagogyIndex(…)` in test-helpers.ts; production
+  // builds parse the snapshot in TextbookLayout.astro.
+  if (index.units.length === 0) {
     checkPRA1ChapterLevel(index, sink);
     return;
   }
@@ -242,8 +243,10 @@ function checkRET1(index: PedagogyIndex, sink: FindingSink): void {
  *   check is a no-op for forward-compat.
  */
 function checkSR1(index: PedagogyIndex, sink: FindingSink): void {
-  // Defensive: pre-W1 fixtures may omit `sections`. Treat as empty.
-  const knownSections = new Set((index.sections ?? []).map((s) => s.slug));
+  // `index.sections` is guaranteed populated (possibly empty) by Zod's
+  // `.default([])` semantics — see `buildPedagogyIndex` in
+  // test-helpers.ts and TextbookLayout's snapshot parse.
+  const knownSections = new Set(index.sections.map((s) => s.slug));
   for (const e of index.spacedReviews) {
     if (e.target_id !== undefined) {
       const prefix = parseTargetPrefix(e.target_id);

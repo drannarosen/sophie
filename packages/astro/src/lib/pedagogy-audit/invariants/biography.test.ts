@@ -7,6 +7,7 @@ import type {
 } from "@sophie/core/schema";
 import { describe, expect, it } from "vitest";
 import { runPedagogyAudit } from "../index.ts";
+import { buildPedagogyIndex } from "../test-helpers.ts";
 
 /**
  * Tests for the EquationBiography audit invariants added in PR-δ per
@@ -30,28 +31,7 @@ import { runPedagogyAudit } from "../index.ts";
  */
 
 function emptyIndex(): PedagogyIndex {
-  return {
-    definitions: [],
-    equations: [],
-    equationCitations: [],
-    keyInsights: [],
-    figureRegistry: [],
-    figureUsages: [],
-    misconceptions: [],
-    chapters: [],
-    modules: [],
-    objectives: [],
-    inlineRefUsages: [],
-    contractValidations: [],
-    extractorFindings: [],
-    multiReps: [],
-    interventions: [],
-    deepDives: [],
-    omiFlows: [],
-    retrievalPrompts: [],
-    spacedReviews: [],
-    skillReviews: [],
-  };
+  return buildPedagogyIndex();
 }
 
 // Post-ADR-0060: EquationEntry is registry-shaped (id / title / tex /

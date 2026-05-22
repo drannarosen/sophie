@@ -3,7 +3,7 @@
   "type": "lecture",
   "title": "Spectra & Composition",
   "order": 0,
-  "prereqs": ["exponents"],
+  "prereqs": ["exponents", "logarithms"],
   "section_id": "stars",
   "chapter": "spectra-and-composition"
 }

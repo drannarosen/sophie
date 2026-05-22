@@ -68,8 +68,8 @@ production course. Its purpose is to exercise the full audit
 pipeline across every invariant family. The baseline at
 2026-05-22 (Wedge B-followup W1) is:
 
-```
-Pedagogy audit: 0 errors, 13 warnings, 7 infos
+```text
+Pedagogy audit: 0 errors, 14 warnings, 7 infos
 ```
 
 Breakdown:
@@ -78,6 +78,7 @@ Breakdown:
 |---|---:|---|---|
 | `D5` | 12 | WARNING | Orphan definitions in the `spoiler-alerts` fixture — intentionally seed many terms to exercise the D5 invariant without each one being a `<GlossaryTerm>` target in the smoke set. |
 | `O2` | 1 | WARNING | `misconception-fixture` chapter has zero learning objectives — fixture exercises O2 detection. |
+| `PRA-1` (Unit-aware) | 1 | WARNING | `spectra-and-composition` Unit declares `prereqs: ["exponents", "logarithms"]`; `exponents` is covered by `spoiler-alerts`'s `<SkillReview target="topic:exponents">` (prior Section, no WARN), but `logarithms` has no covering SkillReview anywhere — fires the W1-graduated Unit-aware path. Exercises both halves: "covered prereq → no WARN" + "uncovered prereq → WARN". |
 | `K1` | 3 | INFO | Chapters without key-insights — fixture has chapters intentionally lacking K1 content. |
 | `NR2` | 2 | INFO | Unreferenced notation-registry concepts — exercises NR2. |
 | `MG4` | 1 | INFO | Course-level depth-coverage summary (single-finding table per ADR 0044 §D3). |
@@ -87,12 +88,12 @@ Breakdown:
 
 | Code | Count | Status |
 |---|---:|---|
-| `PRA-1` (Unit-aware) | 0 | Quiet — `spectra-and-composition.json` Unit declares `prereqs: ["exponents"]` and `spoiler-alerts` has a covering `<SkillReview target="topic:exponents">` in a prior-or-same Section (per design doc D1's lookup chain). |
-| `SR-1` (section-validity) | 0 | Quiet — `stellar-evolution.mdx` has `<SpacedReview section="stars">` and `stars` resolves to a known `SectionEntry.slug`. |
+| `PRA-1` (Unit-aware) | 1 | Active — `spectra-and-composition` Unit's `["exponents", "logarithms"]` prereqs exercise BOTH the covered (no-WARN) + uncovered (WARN) paths in a single fixture. Verifies the graduated logic surfaces in production builds, not just unit tests. |
+| `SR-1` (section-validity) | 0 | Quiet — `stellar-evolution.mdx` has `<SpacedReview section="stars">` and `stars` resolves to a known `SectionEntry.slug`. Inverting to an unknown slug would emit SR-1 ERROR + fail the build; the fixture stays valid by design. |
 
 The smoke build IS "audit clean" by the v1 ship bar definition
 because no ERRORs fire and every WARNING / INFO is an intentional
-exercise of an invariant. **The 13-warnings / 7-infos count is the
+exercise of an invariant. **The 14-warnings / 7-infos count is the
 expected baseline, not a defect.** Any regression (e.g., +1
 warnings, or WARNINGs of unexpected codes) is a signal the audit
 picked up something new — that's the intended behavior.
@@ -104,7 +105,10 @@ Changes from the 2026-05-19 baseline (16 warnings, 9 infos):
 - R2 (1) + I1 (1) + MR4 (2) + E9 (1) findings retired by intervening
   PRs (Wedge A + A.5 + B1 smoke fixture edits).
 - RET-1 (1) added (Wedge B1 introduced the invariant).
-- Net: −3 warnings, −2 infos.
+- PRA-1 (1) added (Wedge B-followup W1 graduation; the smoke fixture
+  intentionally exercises the WARN path so the integration canary
+  proves the new audit logic surfaces in production builds).
+- Net: −2 warnings, −2 infos.
 
 ## CI exit-code mapping
 
