@@ -227,6 +227,9 @@ project:
         - file: decisions/0073-unified-assessment-schema.md
         - file: decisions/0074-instructor-authoring-cost-metric.md
         - file: decisions/0075-student-ux-cognitive-load-governance.md
+        - file: decisions/0076-student-learning-cockpit.md
+        - file: decisions/0077-ai-authoring-packets.md
+        - file: decisions/0078-reasoning-trace-composition.md
     - title: Pilots
       children:
         - file: pilots/_template.md
