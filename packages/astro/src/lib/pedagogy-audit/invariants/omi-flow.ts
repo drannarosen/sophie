@@ -32,21 +32,24 @@ export function checkOMIFlow(index: PedagogyIndex, sink: FindingSink): void {
     });
   }
 
-  // OF-2: per-chapter framing:"OMI" conformance ERROR. Two-pass:
-  // collect chapters with OMIFlow coverage, then iterate OMI-framed
-  // chapters and emit ERROR for any missing coverage. Strict-3 +
-  // slot-name-binds-role guarantee that one OMIFlow proves all three
-  // OMI roles are reached, so this is THE chapter-level invariant
-  // ADR 0058 §5 deferred.
+  // OF-2: per-Unit framing:"OMI" conformance ERROR. W2/D2 graduation:
+  // iterate index.units (was index.chapters); framing now lives on
+  // UnitEntry (was ChapterEntry). The per-callsite OMIFlowEntry still
+  // keys by chapter: string whose value equals u.id (W2 D4 1:1
+  // convention). Two-pass: collect Units with OMIFlow coverage, then
+  // iterate OMI-framed Units and emit ERROR for any missing coverage.
+  // Strict-3 + slot-name-binds-role guarantee that one OMIFlow proves
+  // all three OMI roles are reached, so this is THE Unit-level
+  // invariant ADR 0058 §5 deferred.
   const chaptersWithOMIFlow = new Set(index.omiFlows.map((e) => e.chapter));
-  for (const ch of index.chapters) {
-    if (ch.framing !== "OMI") continue;
-    if (chaptersWithOMIFlow.has(ch.slug)) continue;
+  for (const u of index.units) {
+    if (u.framing !== "OMI") continue;
+    if (chaptersWithOMIFlow.has(u.id)) continue;
     sink.errors.push({
       severity: "ERROR",
       code: "OF-2",
-      message: `OF-2: chapter "${ch.slug}" declares \`framing: "OMI"\` but renders zero <OMIFlow> callsites. Resolution: either author at least one <OMIFlow>…</OMIFlow> in the chapter MDX (per ADR 0063) so the OMI arc is visible on the page, or change the chapter's framing.`,
-      location: { chapter: ch.slug },
+      message: `OF-2: chapter "${u.id}" declares \`framing: "OMI"\` but renders zero <OMIFlow> callsites. Resolution: either author at least one <OMIFlow>…</OMIFlow> in the chapter MDX (per ADR 0063) so the OMI arc is visible on the page, or change the unit's framing.`,
+      location: { chapter: u.id },
     });
   }
 }

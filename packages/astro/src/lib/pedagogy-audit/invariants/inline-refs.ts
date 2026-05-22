@@ -78,14 +78,17 @@ export function checkInlineRefs(
     });
   }
 
-  // C1 — <ChapterRef slug="X"> for unknown chapter slug.
+  // C1 — <ChapterRef chapter="X"> for unknown chapter slug. W2/D3:
+  // prop renamed from `slug` → `chapter`; the resolution set comes
+  // from index.units[u.id] per context.ts (the W2 D4 1:1 convention
+  // means the chapter slug == unit id == reading-artifact id).
   for (const usage of index.inlineRefUsages) {
     if (usage.kind !== "chapter-ref") continue;
     if (ctx.chapterSlugs.has(usage.refKey)) continue;
     sink.errors.push({
       severity: "ERROR",
       code: "C1",
-      message: `C1: <ChapterRef slug="${usage.refKey}"> in chapter "${usage.chapter}" — no matching chapter in the chapters collection.`,
+      message: `C1: <ChapterRef chapter="${usage.refKey}"> in chapter "${usage.chapter}" — no matching unit in the units collection.`,
       location: { chapter: usage.chapter },
     });
   }

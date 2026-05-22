@@ -54,15 +54,17 @@ export function checkMisconceptionGraph(
     }
   }
 
-  // Chapter ordering. Use ChapterEntry.order when present; fall back to
-  // insertion-order index. Chapters not in the collection (which can
-  // happen when a chapter's misconception declares a prereq but the
-  // chapter itself isn't yet wired into the chapters collection)
-  // get a sentinel ordering of +Infinity so they never look "earlier"
-  // than anything else.
+  // Chapter ordering. W2/D2 graduation: derive from index.units (was
+  // index.chapters). UnitEntry.order is required (UnitSchema), so no
+  // optional fallback needed — but keep the insertion-order fallback
+  // for sentinel safety with literally-constructed test fixtures.
+  // Units not in the collection (which can happen when a chapter's
+  // misconception declares a prereq but the chapter itself isn't yet
+  // wired into the units collection) get a sentinel ordering of
+  // +Infinity so they never look "earlier" than anything else.
   const chapterOrder = new Map<string, number>();
-  index.chapters.forEach((ch, i) => {
-    chapterOrder.set(ch.slug, ch.order ?? i);
+  index.units.forEach((u, i) => {
+    chapterOrder.set(u.id, u.order ?? i);
   });
   const orderOf = (chapter: string): number =>
     chapterOrder.has(chapter)

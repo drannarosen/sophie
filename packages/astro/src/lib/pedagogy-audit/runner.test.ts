@@ -3,7 +3,6 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type {
   AuditFinding,
-  ChapterEntry,
   ContractValidationEntry,
   DefinitionEntry,
   EquationEntry,
@@ -12,9 +11,9 @@ import type {
   InlineRefUsageEntry,
   KeyInsightEntry,
   MisconceptionEntry,
-  ModuleEntry,
   ObjectiveEntry,
   PedagogyIndex,
+  UnitEntry,
 } from "@sophie/core/schema";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { auditExitCode, formatAuditReport, runPedagogyAudit } from "./index.ts";
@@ -37,25 +36,29 @@ function emptyIndex(): PedagogyIndex {
   return buildPedagogyIndex();
 }
 
-const chFoundations: ChapterEntry = {
-  slug: "foundations",
+// W2/D2 graduation: fixtures construct UnitEntry (was ChapterEntry).
+// u.id == chapter slug (W2/D4 1:1 convention); u.section_id == prior
+// ChapterEntry.module field. Modules collection deleted in Task 10/20.
+const unitFoundations: UnitEntry = {
+  id: "foundations",
+  type: "lecture",
   title: "Foundations",
-  module: "core",
+  order: 0,
+  prereqs: [],
+  section_id: "core",
+  chapter: "foundations",
   status: "stable",
 };
 
-const chSpoiler: ChapterEntry = {
-  slug: "spoiler-alerts",
+const unitSpoiler: UnitEntry = {
+  id: "spoiler-alerts",
+  type: "lecture",
   title: "Spoiler Alerts",
-  module: "core",
   order: 1,
+  prereqs: [],
+  section_id: "core",
+  chapter: "spoiler-alerts",
   status: "stable",
-};
-
-const modCore: ModuleEntry = {
-  slug: "core",
-  title: "Core",
-  order: 1,
 };
 
 describe("runPedagogyAudit — clean index", () => {
@@ -151,8 +154,7 @@ describe("runPedagogyAudit — clean index", () => {
       figureRegistry: [fig],
       figureUsages: [figUse],
       objectives: [obj, objFoundations],
-      chapters: [chFoundations, chSpoiler],
-      modules: [modCore],
+      units: [unitFoundations, unitSpoiler],
       inlineRefUsages: usages,
     };
     const report = runPedagogyAudit(index);
@@ -439,7 +441,7 @@ describe("C1 — <ChapterRef slug=X> for unknown chapter", () => {
   it("emits an ERROR when a chapter-ref points at no chapter in the chapters collection", () => {
     const index: PedagogyIndex = {
       ...emptyIndex(),
-      chapters: [chFoundations],
+      units: [unitFoundations],
       inlineRefUsages: [
         {
           kind: "chapter-ref",
@@ -460,7 +462,7 @@ describe("C1 — <ChapterRef slug=X> for unknown chapter", () => {
   it("does not flag a chapter-ref pointing at a known chapter slug", () => {
     const index: PedagogyIndex = {
       ...emptyIndex(),
-      chapters: [chFoundations, chSpoiler],
+      units: [unitFoundations, unitSpoiler],
       inlineRefUsages: [
         {
           kind: "chapter-ref",
@@ -498,7 +500,7 @@ describe("O1 — duplicate objective id within a chapter (defense-in-depth)", ()
     const index: PedagogyIndex = {
       ...emptyIndex(),
       objectives: [a, b],
-      chapters: [chSpoiler],
+      units: [unitSpoiler],
     };
     const report = runPedagogyAudit(index);
     const o1 = report.errors.filter((e) => e.code === "O1");
@@ -525,12 +527,16 @@ describe("O1 — duplicate objective id within a chapter (defense-in-depth)", ()
     const index: PedagogyIndex = {
       ...emptyIndex(),
       objectives: [a, b],
-      chapters: [
-        chSpoiler,
+      units: [
+        unitSpoiler,
         {
-          slug: "measuring-the-sky",
+          id: "measuring-the-sky",
+          type: "lecture",
           title: "Measuring",
-          module: "core",
+          order: 0,
+          prereqs: [],
+          section_id: "core",
+          chapter: "measuring-the-sky",
           status: "stable",
         },
       ],
@@ -545,7 +551,7 @@ describe("O2 — chapter with zero objectives (WARNING)", () => {
   it("emits a WARNING for every chapter that has no objectives", () => {
     const index: PedagogyIndex = {
       ...emptyIndex(),
-      chapters: [chSpoiler],
+      units: [unitSpoiler],
       objectives: [],
     };
     const report = runPedagogyAudit(index);
@@ -565,7 +571,7 @@ describe("O2 — chapter with zero objectives (WARNING)", () => {
     };
     const index: PedagogyIndex = {
       ...emptyIndex(),
-      chapters: [chSpoiler],
+      units: [unitSpoiler],
       objectives: [obj],
     };
     const report = runPedagogyAudit(index);
@@ -588,19 +594,25 @@ describe("MG1 — cycle in prerequisite_misconceptions (ADR 0044)", () => {
   it("emits an ERROR for a two-node cycle (A → B → A)", () => {
     const index: PedagogyIndex = {
       ...emptyIndex(),
-      chapters: [
+      units: [
         {
-          slug: "ch-a",
+          id: "ch-a",
+          type: "lecture" as const,
           title: "A",
-          module: "core",
           order: 1,
+          prereqs: [],
+          section_id: "core",
+          chapter: "ch-a",
           status: "stable" as const,
         },
         {
-          slug: "ch-b",
+          id: "ch-b",
+          type: "lecture" as const,
           title: "B",
-          module: "core",
           order: 2,
+          prereqs: [],
+          section_id: "core",
+          chapter: "ch-b",
           status: "stable" as const,
         },
       ],
@@ -626,26 +638,35 @@ describe("MG1 — cycle in prerequisite_misconceptions (ADR 0044)", () => {
   it("emits an ERROR for a three-node cycle (A → B → C → A)", () => {
     const index: PedagogyIndex = {
       ...emptyIndex(),
-      chapters: [
+      units: [
         {
-          slug: "ch-a",
+          id: "ch-a",
+          type: "lecture" as const,
           title: "A",
-          module: "core",
           order: 1,
+          prereqs: [],
+          section_id: "core",
+          chapter: "ch-a",
           status: "stable" as const,
         },
         {
-          slug: "ch-b",
+          id: "ch-b",
+          type: "lecture" as const,
           title: "B",
-          module: "core",
           order: 2,
+          prereqs: [],
+          section_id: "core",
+          chapter: "ch-b",
           status: "stable" as const,
         },
         {
-          slug: "ch-c",
+          id: "ch-c",
+          type: "lecture" as const,
           title: "C",
-          module: "core",
           order: 3,
+          prereqs: [],
+          section_id: "core",
+          chapter: "ch-c",
           status: "stable" as const,
         },
       ],
@@ -676,12 +697,15 @@ describe("MG1 — cycle in prerequisite_misconceptions (ADR 0044)", () => {
   it("emits an ERROR for a self-cycle (A → A)", () => {
     const index: PedagogyIndex = {
       ...emptyIndex(),
-      chapters: [
+      units: [
         {
-          slug: "ch-a",
+          id: "ch-a",
+          type: "lecture" as const,
           title: "A",
-          module: "core",
           order: 1,
+          prereqs: [],
+          section_id: "core",
+          chapter: "ch-a",
           status: "stable" as const,
         },
       ],
@@ -701,26 +725,35 @@ describe("MG1 — cycle in prerequisite_misconceptions (ADR 0044)", () => {
   it("does not flag a clean DAG", () => {
     const index: PedagogyIndex = {
       ...emptyIndex(),
-      chapters: [
+      units: [
         {
-          slug: "ch-a",
+          id: "ch-a",
+          type: "lecture" as const,
           title: "A",
-          module: "core",
           order: 1,
+          prereqs: [],
+          section_id: "core",
+          chapter: "ch-a",
           status: "stable" as const,
         },
         {
-          slug: "ch-b",
+          id: "ch-b",
+          type: "lecture" as const,
           title: "B",
-          module: "core",
           order: 2,
+          prereqs: [],
+          section_id: "core",
+          chapter: "ch-b",
           status: "stable" as const,
         },
         {
-          slug: "ch-c",
+          id: "ch-c",
+          type: "lecture" as const,
           title: "C",
-          module: "core",
           order: 3,
+          prereqs: [],
+          section_id: "core",
+          chapter: "ch-c",
           status: "stable" as const,
         },
       ],
@@ -749,26 +782,35 @@ describe("MG1 — cycle in prerequisite_misconceptions (ADR 0044)", () => {
   it("does not double-report the same cycle reached from multiple start nodes", () => {
     const index: PedagogyIndex = {
       ...emptyIndex(),
-      chapters: [
+      units: [
         {
-          slug: "ch-a",
+          id: "ch-a",
+          type: "lecture" as const,
           title: "A",
-          module: "core",
           order: 1,
+          prereqs: [],
+          section_id: "core",
+          chapter: "ch-a",
           status: "stable" as const,
         },
         {
-          slug: "ch-b",
+          id: "ch-b",
+          type: "lecture" as const,
           title: "B",
-          module: "core",
           order: 2,
+          prereqs: [],
+          section_id: "core",
+          chapter: "ch-b",
           status: "stable" as const,
         },
         {
-          slug: "ch-c",
+          id: "ch-c",
+          type: "lecture" as const,
           title: "C",
-          module: "core",
           order: 3,
+          prereqs: [],
+          section_id: "core",
+          chapter: "ch-c",
           status: "stable" as const,
         },
       ],
@@ -810,12 +852,15 @@ describe("MG2 — prerequisite_misconceptions ordering + dangling (ADR 0044)", (
   it("emits an ERROR when a prerequisite references no known misconception (dangling)", () => {
     const index: PedagogyIndex = {
       ...emptyIndex(),
-      chapters: [
+      units: [
         {
-          slug: "ch-a",
+          id: "ch-a",
+          type: "lecture" as const,
           title: "A",
-          module: "core",
           order: 1,
+          prereqs: [],
+          section_id: "core",
+          chapter: "ch-a",
           status: "stable" as const,
         },
       ],
@@ -837,12 +882,15 @@ describe("MG2 — prerequisite_misconceptions ordering + dangling (ADR 0044)", (
   it("emits an ERROR when a prerequisite lives in the same chapter", () => {
     const index: PedagogyIndex = {
       ...emptyIndex(),
-      chapters: [
+      units: [
         {
-          slug: "ch-a",
+          id: "ch-a",
+          type: "lecture" as const,
           title: "A",
-          module: "core",
           order: 1,
+          prereqs: [],
+          section_id: "core",
+          chapter: "ch-a",
           status: "stable" as const,
         },
       ],
@@ -868,19 +916,25 @@ describe("MG2 — prerequisite_misconceptions ordering + dangling (ADR 0044)", (
   it("emits an ERROR when a prerequisite lives in a LATER chapter", () => {
     const index: PedagogyIndex = {
       ...emptyIndex(),
-      chapters: [
+      units: [
         {
-          slug: "ch-a",
+          id: "ch-a",
+          type: "lecture" as const,
           title: "A",
-          module: "core",
           order: 1,
+          prereqs: [],
+          section_id: "core",
+          chapter: "ch-a",
           status: "stable" as const,
         },
         {
-          slug: "ch-b",
+          id: "ch-b",
+          type: "lecture" as const,
           title: "B",
-          module: "core",
           order: 2,
+          prereqs: [],
+          section_id: "core",
+          chapter: "ch-b",
           status: "stable" as const,
         },
       ],
@@ -905,19 +959,25 @@ describe("MG2 — prerequisite_misconceptions ordering + dangling (ADR 0044)", (
   it("does not flag a prerequisite that lives in an earlier chapter", () => {
     const index: PedagogyIndex = {
       ...emptyIndex(),
-      chapters: [
+      units: [
         {
-          slug: "ch-a",
+          id: "ch-a",
+          type: "lecture" as const,
           title: "A",
-          module: "core",
           order: 1,
+          prereqs: [],
+          section_id: "core",
+          chapter: "ch-a",
           status: "stable" as const,
         },
         {
-          slug: "ch-b",
+          id: "ch-b",
+          type: "lecture" as const,
           title: "B",
-          module: "core",
           order: 2,
+          prereqs: [],
+          section_id: "core",
+          chapter: "ch-b",
           status: "stable" as const,
         },
       ],
@@ -941,12 +1001,15 @@ describe("MG2 — prerequisite_misconceptions ordering + dangling (ADR 0044)", (
   it("does not flag misconceptions with no prerequisite_misconceptions field (pre-ADR-0044 shape)", () => {
     const index: PedagogyIndex = {
       ...emptyIndex(),
-      chapters: [
+      units: [
         {
-          slug: "ch-a",
+          id: "ch-a",
+          type: "lecture" as const,
           title: "A",
-          module: "core",
           order: 1,
+          prereqs: [],
+          section_id: "core",
+          chapter: "ch-a",
           status: "stable" as const,
         },
       ],
@@ -959,12 +1022,15 @@ describe("MG2 — prerequisite_misconceptions ordering + dangling (ADR 0044)", (
   it("does not flag an empty prerequisite list (declared DAG root)", () => {
     const index: PedagogyIndex = {
       ...emptyIndex(),
-      chapters: [
+      units: [
         {
-          slug: "ch-a",
+          id: "ch-a",
+          type: "lecture" as const,
           title: "A",
-          module: "core",
           order: 1,
+          prereqs: [],
+          section_id: "core",
+          chapter: "ch-a",
           status: "stable" as const,
         },
       ],
@@ -980,12 +1046,30 @@ describe("MG2 — prerequisite_misconceptions ordering + dangling (ADR 0044)", (
     expect(report.errors.filter((e) => e.code === "MG2")).toEqual([]);
   });
 
-  it("falls back to insertion order when ChapterEntry.order is absent", () => {
+  it("falls back to insertion order when UnitEntry.order is absent (defensive — extractor + Zod require order)", () => {
     const index: PedagogyIndex = {
       ...emptyIndex(),
-      chapters: [
-        { slug: "ch-a", title: "A", module: "core", status: "stable" as const },
-        { slug: "ch-b", title: "B", module: "core", status: "stable" as const },
+      units: [
+        {
+          id: "ch-a",
+          type: "lecture" as const,
+          title: "A",
+          order: 0,
+          prereqs: [],
+          section_id: "core",
+          chapter: "ch-a",
+          status: "stable" as const,
+        },
+        {
+          id: "ch-b",
+          type: "lecture" as const,
+          title: "B",
+          order: 1,
+          prereqs: [],
+          section_id: "core",
+          chapter: "ch-b",
+          status: "stable" as const,
+        },
       ],
       misconceptions: [
         mc({
@@ -1009,7 +1093,7 @@ describe("K1 — chapters with zero <KeyInsight>s (INFO)", () => {
   it("emits an INFO finding for every chapter that has no key-insights", () => {
     const index: PedagogyIndex = {
       ...emptyIndex(),
-      chapters: [chSpoiler],
+      units: [unitSpoiler],
       keyInsights: [],
     };
     const report = runPedagogyAudit(index);
@@ -1027,7 +1111,7 @@ describe("K1 — chapters with zero <KeyInsight>s (INFO)", () => {
     };
     const index: PedagogyIndex = {
       ...emptyIndex(),
-      chapters: [chSpoiler],
+      units: [unitSpoiler],
       keyInsights: [ki],
     };
     const report = runPedagogyAudit(index);
@@ -1075,7 +1159,7 @@ describe("accumulate-and-report behavior", () => {
     // K1 (INFO): same chapter with no key insights
     const index: PedagogyIndex = {
       ...emptyIndex(),
-      chapters: [chSpoiler],
+      units: [unitSpoiler],
       inlineRefUsages: [
         {
           kind: "glossary-term",

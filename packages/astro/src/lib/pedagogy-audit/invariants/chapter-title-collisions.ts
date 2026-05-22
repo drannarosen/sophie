@@ -51,21 +51,29 @@ export function checkChapterTitleCollisions(
   index: PedagogyIndex,
   sink: FindingSink
 ): void {
+  // W2/D2 graduation: iterate index.units (was index.chapters); map
+  // u.id → slug, u.title → title, u.section_id → module (the Section is
+  // the W2 equivalent of the deleted Module for nav-grouping purposes).
   // Per-module collision (CT-1)
   const byModuleAndPrefix = new Map<string, IndexedChapter[]>();
   // Course-wide collision (CT-2)
   const byPrefix = new Map<string, IndexedChapter[]>();
 
-  for (const ch of index.chapters) {
-    const prefix = extractLecturePrefix(ch.title);
+  for (const u of index.units) {
+    const prefix = extractLecturePrefix(u.title);
     if (!prefix) continue;
+    const indexed: IndexedChapter = {
+      slug: u.id,
+      title: u.title,
+      module: u.section_id,
+    };
     const normalized = prefix.toLowerCase().replace(/\s+/g, " ");
-    const moduleKey = `${ch.module}::${normalized}`;
+    const moduleKey = `${indexed.module}::${normalized}`;
     const moduleBucket = byModuleAndPrefix.get(moduleKey) ?? [];
-    moduleBucket.push(ch);
+    moduleBucket.push(indexed);
     byModuleAndPrefix.set(moduleKey, moduleBucket);
     const prefixBucket = byPrefix.get(normalized) ?? [];
-    prefixBucket.push(ch);
+    prefixBucket.push(indexed);
     byPrefix.set(normalized, prefixBucket);
   }
 
@@ -77,25 +85,25 @@ export function checkChapterTitleCollisions(
     sink.warnings.push({
       severity: "WARNING",
       code: "CT-1",
-      message: `CT-1: module "${moduleName}" has ${bucket.length} chapters sharing the same "${prefix}" lecture-number prefix: ${titles}. Sidebar entries will be visually indistinguishable. Resolution: renumber one of the chapters so each module's chapter titles carry a unique lecture-number prefix.`,
+      message: `CT-1: section "${moduleName}" has ${bucket.length} units sharing the same "${prefix}" lecture-number prefix: ${titles}. Sidebar entries will be visually indistinguishable. Resolution: renumber one of the units so each section's unit titles carry a unique lecture-number prefix.`,
       location: { chapter: bucket[0]?.slug ?? "(unknown)" },
     });
   }
 
   for (const [prefix, bucket] of byPrefix) {
     if (bucket.length < 2) continue;
-    // Skip the per-module case — CT-1 already covers when collisions
-    // are inside one module. CT-2 only fires when the collision spans
-    // modules (i.e., the bucket has chapters from 2+ distinct modules).
+    // Skip the per-section case — CT-1 already covers when collisions
+    // are inside one section. CT-2 only fires when the collision spans
+    // sections (i.e., the bucket has units from 2+ distinct sections).
     const modulesInBucket = new Set(bucket.map((c) => c.module));
     if (modulesInBucket.size < 2) continue;
     const titles = bucket
-      .map((c) => `"${c.title}" (module: ${c.module})`)
+      .map((c) => `"${c.title}" (section: ${c.module})`)
       .join(", ");
     sink.warnings.push({
       severity: "WARNING",
       code: "CT-2",
-      message: `CT-2: ${bucket.length} chapters across modules share the same "${prefix}" lecture-number prefix: ${titles}. Cross-module collisions weaken the lecture numbering's role as a unique reference handle. Resolution: align lecture numbers across modules (e.g., module 1 uses Lecture 1–3, module 2 uses Lecture 4–6) or drop the prefix from titles.`,
+      message: `CT-2: ${bucket.length} units across sections share the same "${prefix}" lecture-number prefix: ${titles}. Cross-section collisions weaken the lecture numbering's role as a unique reference handle. Resolution: align lecture numbers across sections (e.g., section 1 uses Lecture 1–3, section 2 uses Lecture 4–6) or drop the prefix from titles.`,
       location: { chapter: bucket[0]?.slug ?? "(unknown)" },
     });
   }
