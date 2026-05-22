@@ -5,5 +5,8 @@
   "order": 1,
   "prereqs": [],
   "section_id": "foundations",
-  "chapter": "spoiler-alerts"
+  "chapter": "spoiler-alerts",
+  "status": "stable",
+  "framing": "OMI",
+  "description": "A trailer for the semester: how astronomers turn photons into physical claims (and how we stay honest about assumptions)."
 }

@@ -5,5 +5,7 @@
   "order": 1,
   "prereqs": [],
   "section_id": "stars",
-  "chapter": "stellar-evolution"
+  "chapter": "stellar-evolution",
+  "status": "stable",
+  "description": "(stub — placeholder for nav demo) Birth, main-sequence life, and death of a star, told through the Hertzsprung–Russell diagram."
 }

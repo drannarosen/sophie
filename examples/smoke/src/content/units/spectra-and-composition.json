@@ -5,5 +5,8 @@
   "order": 0,
   "prereqs": ["exponents", "logarithms"],
   "section_id": "stars",
-  "chapter": "spectra-and-composition"
+  "chapter": "spectra-and-composition",
+  "status": "review",
+  "framing": "OMI",
+  "description": "What's it made of, and how is it moving? Stellar spectra as the working observable for inferring composition, temperature, and radial velocity. ASTR 201 Module 2 Lecture 3 — pilot conversion from Quarto to Sophie (ADR 0064 evidence base)."
 }
