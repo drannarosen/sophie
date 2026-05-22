@@ -107,6 +107,73 @@ describe("PRA-1 — prereq activation (WARN)", () => {
   });
 });
 
+describe("SR-1 — section-validity graduation (W1)", () => {
+  // Per Wedge B-followup design doc D1: <SpacedReview section="…">
+  // refs now resolve against PedagogyIndex.sections. Unknown section
+  // slugs emit SR-1 ERROR.
+
+  test("no finding when section_id matches a known SectionEntry", () => {
+    const index: PedagogyIndex = {
+      ...emptyIndex(),
+      sections: [
+        { type: "module", slug: "stars", title: "Stars", order: 0 },
+      ],
+      spacedReviews: [
+        {
+          chapter: "ch1",
+          anchor: "sp-1",
+          section_id: "stars",
+        },
+      ],
+    };
+    const sink = emptySink();
+    checkRetrievalFamily(index, sink);
+    expect(sink.errors.filter((e) => e.code === "SR-1")).toEqual([]);
+  });
+
+  test("emits SR-1 ERROR when section_id refers to an unknown section", () => {
+    const index: PedagogyIndex = {
+      ...emptyIndex(),
+      sections: [
+        { type: "module", slug: "stars", title: "Stars", order: 0 },
+      ],
+      spacedReviews: [
+        {
+          chapter: "ch1",
+          anchor: "sp-1",
+          section_id: "nonexistent",
+        },
+      ],
+    };
+    const sink = emptySink();
+    checkRetrievalFamily(index, sink);
+    const sr = sink.errors.filter((e) => e.code === "SR-1");
+    expect(sr).toHaveLength(1);
+    expect(sr[0]?.message).toMatch(/nonexistent/);
+    expect(sr[0]?.location?.chapter).toBe("ch1");
+    expect(sr[0]?.location?.anchor).toBe("sp-1");
+  });
+
+  test("emits no SR-1 error when no sections are populated (forward-compat with pre-W1)", () => {
+    // Pre-W1 consumers don't have a sections collection. <SpacedReview
+    // section=…> entries get no section-validity finding — the W1
+    // graduation only checks when both halves of the join exist.
+    const index: PedagogyIndex = {
+      ...emptyIndex(),
+      spacedReviews: [
+        {
+          chapter: "ch1",
+          anchor: "sp-1",
+          section_id: "stars",
+        },
+      ],
+    };
+    const sink = emptySink();
+    checkRetrievalFamily(index, sink);
+    expect(sink.errors.filter((e) => e.code === "SR-1")).toEqual([]);
+  });
+});
+
 describe("PRA-1 — Unit-aware graduation (W1)", () => {
   // Per Wedge B-followup design doc D1: when the index carries Units,
   // PRA-1 traverses UnitEntry.prereqs[] and checks for SkillReview

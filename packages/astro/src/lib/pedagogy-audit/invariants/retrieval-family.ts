@@ -230,11 +230,19 @@ function checkRET1(index: PedagogyIndex, sink: FindingSink): void {
 }
 
 /**
- * SR-1: every <SpacedReview target=...> uses a known prefix; <SpacedReview
- * section=...> is acknowledged as deferred. Misformed prefix-typed refs
- * are reported as ERROR.
+ * SR-1: <SpacedReview> ref-validity.
+ *
+ * - `target="prefix:slug"` refs: prefix must be known and slug must be
+ *   non-empty. Malformed refs are reported as ERROR.
+ *
+ * - `section="<slug>"` refs (W1 graduation per design doc D1):
+ *   the section slug must match a known `SectionEntry.slug` in
+ *   `PedagogyIndex.sections`. Unknown slugs are reported as ERROR.
+ *   When `index.sections` is empty (pre-W1 consumers), the section
+ *   check is a no-op for forward-compat.
  */
 function checkSR1(index: PedagogyIndex, sink: FindingSink): void {
+  const knownSections = new Set(index.sections.map((s) => s.slug));
   for (const e of index.spacedReviews) {
     if (e.target_id !== undefined) {
       const prefix = parseTargetPrefix(e.target_id);
@@ -256,7 +264,17 @@ function checkSR1(index: PedagogyIndex, sink: FindingSink): void {
         });
       }
     }
-    // section_id ref-validity is deferred until Section collection lands
-    // in PedagogyIndex (Wedge B-follow-up). No-op for B1.
+    if (e.section_id !== undefined && knownSections.size > 0) {
+      // W1 graduation: validate against known sections. Skip when
+      // sections collection is empty (pre-W1 forward-compat).
+      if (!knownSections.has(e.section_id)) {
+        sink.errors.push({
+          severity: "ERROR",
+          code: "SR-1",
+          message: `SR-1: <SpacedReview section="${e.section_id}"> in chapter "${e.chapter}" refers to an unknown section slug. Resolution: ensure src/content/sections/${e.section_id}.json exists with a matching slug, or fix the ref to point at an existing section.`,
+          location: { chapter: e.chapter, anchor: e.anchor },
+        });
+      }
+    }
   }
 }
