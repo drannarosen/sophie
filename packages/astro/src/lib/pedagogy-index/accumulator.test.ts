@@ -1073,7 +1073,9 @@ describe("indexAccumulator setArtifacts (W2)", () => {
     ]);
 
     indexAccumulator.setArtifacts([sectionIntro]);
-    expect(indexAccumulator.asPedagogyIndex().artifacts).toEqual([sectionIntro]);
+    expect(indexAccumulator.asPedagogyIndex().artifacts).toEqual([
+      sectionIntro,
+    ]);
   });
 
   test("clearChapter does NOT touch artifacts (consumer-global)", () => {
