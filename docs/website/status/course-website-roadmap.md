@@ -66,7 +66,7 @@ load-bearing order:
 | 8 | **Flexible labels for bridge rooms**: Prerequisites / Foundations / Bridge / Bootcamp / Fundamentals / custom | Generic type `bridge`; instructor picks display label per course; supports multiple bridge rooms |
 | 9 | **Instructor Console + Prep = one private "Instructor" room with two tabs, Tier 3** | Single private space; less surface area |
 | 10 | **Discussions in Tier 3** | GitHub Issues fills the gap in ASTR 596 today; acceptable defer |
-| 11 | **FSRS as the spaced-repetition algorithm** | Current SoTA per spaced-repetition research community; defensible empirical claim |
+| 11 | **FSRS as the spaced-repetition algorithm** | Modern, open-source, empirically motivated scheduler (Anki-community benchmarks beat SM-2); strong engineering choice for shipping evidence-based spacing |
 | 12 | **Section-level practice-set via AI co-authoring** | 4-role expert panel ([ADR 0030](../decisions/0030-authoring-model.md)) drafts; instructor curates |
 | 13 | **Auto-Subsection grouping by artifact type; explicit Subsection as opt-in** | Zero authoring overhead default; explicit when instructor wants commentary |
 | 14 | **Single top-level "Library" room** for registry cheatsheets | Coherent lookup-on-demand purpose; scales as registries grow |
@@ -97,11 +97,21 @@ integrated SoTA pattern (IMS Global Learning Consortium standard):
 
 **Pseudonymous-first data model**: LTI provides a pseudonymous `sub`
 claim (opaque stable ID, not name/email). Sophie's data model stores
-only the LTI sub claim as the user key. Real student record (name,
-email, SID, grades) lives in Canvas; Sophie holds no PII. This means
-Sophie is **not** a FERPA "education record custodian" in the
-regulatory sense — joining Sophie data to a student requires going
-through Canvas (already FERPA-audited).
+only the LTI sub claim as the user key. Real student records (name,
+email, SID, grades) live in Canvas; Sophie holds no PII directly.
+Joining Sophie data to a named student requires going through Canvas
+(already FERPA-audited).
+
+This design **minimizes** FERPA exposure but does not unilaterally
+exempt Sophie from FERPA scrutiny. Whether a specific Tier 3
+deployment qualifies as an "education record custodian" under
+institutional / OCR interpretation is decided per-campus with IT +
+legal; Sophie's architecture is designed to make that determination
+as favorable as possible (pseudonymous-first, PII-free storage, no
+direct identity records, real records in Canvas). The compliance
+path below assumes Sophie *will* be treated as a covered system for
+the purposes of audit logs, retention, and breach response — designing
+for the stricter interpretation is the safer default.
 
 **Compliance vocabulary** (documented for future-state, not Tier-1
 work): SOC 2 Type II, encryption at rest (AES-256), encryption in
@@ -286,8 +296,16 @@ that go beyond static reading. All Tier 1 unless noted.
 
 ### Spaced repetition (FSRS — Free Spaced Repetition Scheduler)
 
-- Current SoTA per spaced-repetition research; outperforms SuperMemo
-  SM-2 in head-to-head studies
+- Spacing itself is **evidence-based** (Dunlosky et al. 2013;
+  Cepeda et al. 2008; decades of distributed-practice literature).
+  Sophie treats spacing as a foundation, not a hypothesis.
+- FSRS is the **modern engineering implementation** of spacing
+  Sophie ships: actively maintained, open-source, empirically
+  motivated by Anki-community head-to-head benchmarks against
+  SuperMemo SM-2 (FSRS outperforms SM-2 on those datasets), and
+  more defensible than a hand-rolled review-interval heuristic.
+  "Strong engineering choice for shipping spacing," not "scientific
+  SoTA in spaced-repetition research" — those are separate claims.
 - Library-available, open source
 - Per-browser scheduling state at Tier 1+2 (IndexedDB)
 - Cross-device sync at Tier 3
@@ -394,8 +412,13 @@ extends from existing pedagogy components.
 
 ### Stack
 
-- **Pyodide**: Python compiled to WebAssembly; runs CPython + numpy +
-  scipy + pandas + matplotlib + scikit-learn + JAX in the browser
+- **Pyodide**: Python compiled to WebAssembly; runs CPython +
+  numpy + scipy + pandas + matplotlib + scikit-learn in the
+  browser. (JAX-in-browser is **not** assumed by Sophie's Tier 2
+  contract — XLA dependencies don't map cleanly onto WebAssembly,
+  and the Pyodide-JAX work is experimental. JAX-style demos in
+  Sophie use numpy in-browser; JAX proper continues to run locally
+  or on HPC, as ASTR 596 already does.)
 - **Plotly**: declarative charts; either via Pyodide's Plotly bindings
   or via react-plotly.js in React components
 - **No Jupyter notebook UI**: code cells are pedagogical components,
@@ -710,16 +733,25 @@ confirms.
 
 ### Mastery model — BKT (Bayesian Knowledge Tracing)
 
-**Decision: BKT for mastery tracking.**
+**Decision: BKT as the interpretable baseline mastery model.**
 
 - Per-(student, skill) probability with slip / guess / learn parameters
   (Corbett & Anderson 1995 + refinements)
-- SoTA standard for adaptive remediation in intelligent-tutoring-systems
-  literature; defensible SoTL research claim
+- Chosen for **interpretability**, not raw predictive performance —
+  instructors can read the parameters; small-data robust;
+  IRB-defensible; debuggable; modest LOC. Deep Knowledge Tracing
+  (DKT, 2015+) and successor neural models exist and would outperform
+  BKT on prediction at scale, but BKT is the right *first* model for
+  ASTR 201/596-sized cohorts where transparency + small-N stability
+  matter more than fractional gains in AUC.
 - ~200 LOC implementation; existing JS libraries available
 - Per-browser at Tier 1/2 (mastery state in IndexedDB)
 - Cohort-aggregated at Tier 3 (instructor view: "70% of students at
   <40% mastery on logarithms")
+- **Future:** layer DKT / Performance Factors Analysis / dynamic-BKT
+  variants once enrollment scales (Tier 3+) and IRB protocols permit
+  larger-N training data. BKT remains the first-line model; richer
+  models supplement, not replace.
 
 ### Adaptive surfacing
 
