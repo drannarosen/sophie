@@ -18,7 +18,6 @@ import { figures as figureRegistry } from "../content/figures";
 // Convert the consumer-owned figures registry (a named-keyed map; see
 // `src/content/figures.ts`) into the array shape `<TextbookLayout>`
 // expects so `<FigureRef>` can hydrate its registry store on every page.
-// PR-C3 decision #3 + Task 12 wiring.
 const figureRegistryArray = Object.values(figureRegistry);
 
 interface Props {
@@ -26,8 +25,8 @@ interface Props {
     title: string;
     /** Sprint K — optional editorial subtitle / deck. */
     subtitle?: string;
-    slug: string;
-    module: string;
+    /** W2/D1 — ArtifactEntry id (== unit id per W2/D4 1:1 convention). */
+    id: string;
     order?: number;
     lang?: string;
     description?: string;
@@ -48,7 +47,12 @@ interface Props {
       review_depth?: string;
     };
   };
-  /** Astro collection id of the chapter currently being rendered. */
+  /**
+   * Unit id of the chapter currently being rendered. Per W2/D4
+   * convention this is the same as the reading-artifact's id and the
+   * URL slug at `/units/<unit-id>/reading`. The prop name is retained
+   * for back-compat with non-W2 callers; W3 renames to `currentUnitId`.
+   */
   currentChapterSlug?: string;
   /** Chapter headings (h1-h6) extracted by Astro's render(). */
   headings?: ReadonlyArray<MarkdownHeading>;
@@ -57,52 +61,58 @@ interface Props {
 const { frontmatter, currentChapterSlug, headings = [] } = Astro.props;
 
 // Only populate the right-column slot when the chapter has H2 headings.
-// `<TocSidebar>` returns null otherwise, but `Astro.slots.has("right")`
-// would still see a populated slot — defeating the empty-slot-collapse
-// pattern in <TextbookLayout> (ADR 0034). Filter here so stub chapters
-// (no H2s) genuinely leave the slot empty and the column collapses.
 const hasToc = headings.some((h) => h.depth === 2);
 
-// Fetch every module + chapter from the content collections so the
-// sidebar nav can render the full tree on every chapter page. The
-// glob loader is cached by Astro across requests; no perf concern.
-const modules = (await getCollection("modules")).map((m) => m.data);
-const chapters = (await getCollection("chapters")).map((c) => ({
-  slug: c.id,
-  title: c.data.title,
-  module: c.data.module,
-  order: c.data.order,
-  chapter: c.data.chapter,
-  status: c.data.status,
+// W2/D1 — fetch sections + units from the new content collections.
+// ModuleNav still expects `{slug, title, module, order, chapter, status}`
+// chapter-shaped objects for sidebar grouping; derive that shape from
+// UnitEntry (u.id → slug, u.section_id → module, etc.) so ModuleNav
+// stays unchanged in W2. ModuleNav → SectionNav rename is a future
+// wedge.
+const sections = (await getCollection("sections")).map((s) => s.data);
+const units = (await getCollection("units")).map((u) => u.data);
+const modules = sections.map((s) => ({
+  slug: s.slug,
+  title: s.title,
+  order: s.order,
+  description: s.description,
+}));
+const chapters = units.map((u) => ({
+  slug: u.id,
+  title: u.title,
+  module: u.section_id,
+  order: u.order,
+  chapter: undefined as number | undefined,
+  status: u.status,
 }));
 
-// Sprint K — derive the topbar breadcrumb context from frontmatter.
-// `module: "stars"` (slug) resolves to the matching modules-collection
-// entry; its `order` field becomes the "MOD N" rung. `chapter: 3`
-// (numeric) from the chapter frontmatter becomes the "LECTURE M" rung.
-// `status` is the chapter maturity enum (draft | review | stable).
-const currentModule = modules.find((m) => m.slug === frontmatter.module);
+// W2/D2 — derive the topbar breadcrumb context. The current Unit's
+// section_id resolves to the matching Section; its `order` field
+// becomes the "MOD N" rung. `chapter: 3` (numeric) from the artifact
+// frontmatter becomes the "LECTURE M" rung. `status` is the Unit
+// maturity enum (draft | review | stable) per W2/D2 Placement 1.
+const currentUnit = units.find((u) => u.id === currentChapterSlug);
+const currentSection = currentUnit
+  ? sections.find((s) => s.slug === currentUnit.section_id)
+  : undefined;
 const chapterContext = {
-  moduleOrder: currentModule?.order,
+  moduleOrder: currentSection?.order,
   chapterNumber: frontmatter.chapter,
-  status: chapters.find((c) => c.slug === currentChapterSlug)?.status,
+  status: currentUnit?.status,
 };
 
-// Sprint I-C — adjacent-chapter resolution for prev/next pills.
-// Stable sort by (module index, order ?? 0, title) so the
-// pagination order matches the sidebar's visual order. Drafts
-// stay excluded from navigation per ADR 0051.
-const moduleOrder = new Map(modules.map((m, i) => [m.slug, i] as const));
+// Adjacent-unit resolution for prev/next pills. Stable sort by
+// (section order, unit order, title). Drafts stay excluded from
+// navigation.
+const sectionOrder = new Map(sections.map((s) => [s.slug, s.order] as const));
 const sortableChapters = chapters
   .filter((c) => c.status !== "draft")
   .slice()
   .sort((a, b) => {
-    const mA = moduleOrder.get(a.module) ?? Number.POSITIVE_INFINITY;
-    const mB = moduleOrder.get(b.module) ?? Number.POSITIVE_INFINITY;
+    const mA = sectionOrder.get(a.module) ?? Number.POSITIVE_INFINITY;
+    const mB = sectionOrder.get(b.module) ?? Number.POSITIVE_INFINITY;
     if (mA !== mB) return mA - mB;
-    const oA = a.order ?? 0;
-    const oB = b.order ?? 0;
-    if (oA !== oB) return oA - oB;
+    if (a.order !== b.order) return a.order - b.order;
     return a.title.localeCompare(b.title);
   });
 const currentIdx = currentChapterSlug
@@ -115,17 +125,16 @@ const nextRaw =
     ? sortableChapters[currentIdx + 1] ?? null
     : null;
 
-// Sprint I-C follow-up — pagination pill thumbnails. For each adjacent
-// chapter, resolve its first <Figure> callsite from the pedagogy index
-// and look up the registry entry for its src + alt. Pills without a
-// resolvable figure render text-only (the prev/next text + module
-// breadcrumb is always present).
+// Pagination pill thumbnails. For each adjacent unit, resolve its
+// first <Figure> callsite from the pedagogy index and look up the
+// registry entry for its src + alt. Pills without a resolvable figure
+// render text-only.
 const pedagogySnapshot = indexAccumulator.asPedagogyIndex();
 function firstFigureThumbnailFor(
-  chapterSlug: string
+  unitId: string
 ): { src: string; alt: string } | undefined {
   const usage = pedagogySnapshot.figureUsages
-    .filter((u) => u.chapter === chapterSlug)
+    .filter((u) => u.chapter === unitId)
     .sort((a, b) => a.number - b.number)[0];
   if (!usage) return undefined;
   const entry = figureRegistry[usage.name];
