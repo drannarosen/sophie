@@ -24,8 +24,8 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 | Status | Count |
 |---|---|
 | Validated | 14 |
-| In progress | 10 |
-| Unvalidated | 79 |
+| In progress | 11 |
+| Unvalidated | 78 |
 | Re-validation needed | 0 |
 | Missing block | 0 |
 | Total | 103 |
@@ -45,12 +45,12 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 
 | Kind | Count |
 |---|---|
-| test | 32 |
+| test | 33 |
 | chapter | 4 |
-| review | 18 |
+| review | 19 |
 | deployment | 12 |
 | audit | 5 |
-| manual | 25 |
+| manual | 27 |
 
 ## Extractor findings
 
@@ -148,7 +148,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/reference/audit-baseline.md](/audit-baseline/) | unvalidated | shipped | — | — |  |
 | [docs/website/reference/chapter-components.md](/chapter-components/) | unvalidated | shipped | — | — |  |
 | [docs/website/reference/cli.md](/cli/) | unvalidated | mixed | — | — |  |
-| [docs/website/reference/component-contract.md](/component-contract/) | unvalidated | shipped | — | — |  |
+| [docs/website/reference/component-contract.md](/component-contract/) | in progress | shipped | 2026-05-22 | manual, review, test |  |
 | [docs/website/reference/content-schema.md](/content-schema/) | unvalidated | shipped | — | — |  |
 | [docs/website/reference/course-schedule.md](/course-schedule/) | unvalidated | accepted design | — | — |  |
 | [docs/website/reference/equation-biography-schema.md](/equation-biography-schema/) | unvalidated | shipped | — | — |  |

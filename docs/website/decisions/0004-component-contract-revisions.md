@@ -145,6 +145,55 @@ Four revisions to the component contract:
 
 ## Revisions
 
+### R-2026-05-22 — Doc clarification pass (no code change)
+
+External review (2026-05-22) of the contract reference doc surfaced
+seven doctrine clarifications that were *implicit* in Sophie's shipped
+code but *unstated* in the reference doc. The
+[component-contract.md](../reference/component-contract.md) reference
+gained:
+
+1. **§3 "Minimal viable component"** — explicit floor (`kind` +
+   `schema` + `render.read`); helper factories (`defineStaticComponent`,
+   `defineInteractiveComponent`, `defineCalloutComponent`,
+   `defineRegistryBackedComponent`) called out as the ergonomic layer.
+2. **§4 print render-mode "static-fallback rule"** — every interactive
+   component must define a meaningful non-interactive print
+   representation; placeholder shape is locked.
+3. **§6 dual-reference-system clarification** — the `refs.consumes` /
+   `refs.produces` field handles intra-chapter component pairings;
+   [ADR 0060](./0060-registry-ecosystem.md)'s `refId` pattern handles
+   cross-document registry references. Two systems, one pedagogy
+   graph; new components pick whichever fits.
+4. **§7 "Component identity policy"** — the canonical anchor prefix
+   table at [packages/core/src/schema/pedagogy-index.ts:36-53](../../packages/core/src/schema/pedagogy-index.ts#L36-L53)
+   IS Sophie's identity policy; documented alongside the M1/M2/F3
+   uniqueness invariants.
+5. **§8 "Deterministic vs. AI audit boundary" — locked principle** —
+   deterministic checks for structure, AI checks for judgment;
+   surfaced as an `:::{important}` admonition.
+6. **§9 "Audit finding output schema"** — references
+   [`AuditFindingSchema`](../../packages/core/src/schema/audit.ts);
+   documents the locked shape (severity / code / message / location)
+   and the deferred Tier 3 extensions (category / rationale /
+   suggestedFix / confidence).
+7. **§10 "Source locations & patchability"** — current
+   chapter-keyed location shape is documented as a base; file / line /
+   column extension is a planned enhancement that lands when
+   extractors forward `mdast` positions.
+
+§14 (Open design questions) updated to reflect resolved items
+(composition rules, serialize contract, cross-page refs via ADR 0060)
+and four newly-named deferred items (Tier 3 AI check spec shape,
+source-location extension, profile visibility on the contract,
+security model for Pyodide embeds).
+
+No code changes in this revision. The contract's TypeScript shape
+(`PedagogyComponent<Props, State, Response>`) is unchanged.
+`AuditFindingSchema` stays at its W1-locked shape; future fields
+land with their first concrete AI-check consumer. This amendment is
+a documentation-rigor pass, not a contract revision.
+
 ### R-0058 — Amended by ADR 0058 (epistemic role contract, 2026-05-16)
 
 [ADR 0058](0058-epistemic-component-contract.md) adds an optional

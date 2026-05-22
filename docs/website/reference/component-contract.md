@@ -7,9 +7,25 @@ tags:
   - contract
   - reference
 validation:
-  status: unvalidated
-  last_validated_date: null
-  evidence: []
+  status: in-progress
+  last_validated_date: "2026-05-22"
+  evidence:
+    - kind: test
+      ref: packages/components/src/components/Predict/Predict.contract.test.ts
+      date: "2026-05-12"
+      notes: "Component-contract conformance tests on Predict; mirrored across LearningObjectives, Aside, Callout, etc."
+    - kind: manual
+      ref: packages/core/src/schema/audit.ts
+      date: "2026-05-22"
+      notes: "AuditFindingSchema (severity / code / message / location) is the locked output shape for both deterministic and future AI-driven audit checks."
+    - kind: manual
+      ref: packages/core/src/schema/pedagogy-index.ts
+      date: "2026-05-22"
+      notes: "Canonical anchor prefix table (lines 36-53) is the component-identity policy — per-kind prefix + uniqueness invariants (M1, M2, F3, etc.) enforced by audit."
+    - kind: review
+      ref: docs/reviews/2026-05-22-wedge-b1-retrieval-family.md
+      date: "2026-05-22"
+      notes: "Wedge B1 retrieval family (RetrievalPrompt + SpacedReview + SkillReview) followed the contract end-to-end; A− (90/100) grade validates the abstraction."
 status: shipped
 ---
 
@@ -30,14 +46,18 @@ This page covers:
 
 1. What the contract is and why it exists
 2. The contract itself (TypeScript)
-3. Three render modes + a serialize function
-4. State vs. response, and the `useInteractive` runtime helper
-5. Cross-component protocol (`refs.consumes` / `refs.produces`)
-6. Audit hooks (three tiers)
-7. The v1 component set
-8. Worked example: `<Prediction>` end-to-end
-9. Adding a new component (checklist)
-10. Open design questions
+3. Minimal viable component (smallest legal shape)
+4. Three render modes + a serialize function
+5. State vs. response, and the `useInteractive` runtime helper
+6. Cross-component protocol (`refs` field + ADR 0060 registry refs)
+7. Component identity policy (the canonical anchor prefix table)
+8. Audit hooks (three tiers) + the deterministic-vs-AI boundary
+9. Audit finding output schema
+10. Source locations & patchability
+11. The v1 component set
+12. Worked example: `<Prediction>` end-to-end
+13. Adding a new component (checklist)
+14. Open design questions
 
 ## 1. Why a contract
 
@@ -138,8 +158,55 @@ MDX renderer, and adds it to the audit's known-components list.
    declarations. See [ADR 0004](../decisions/0004-component-contract-revisions.md).
 :::
 
+(minimal-viable-component)=
+## 3. Minimal viable component
+
+The contract has many optional slots. Most components fill in only a
+small subset. The smallest legal component:
+
+```typescript
+import { registerComponent } from '@sophie/components';
+import { z } from 'zod';
+
+const NotePropsSchema = z.object({
+  children: z.any(),
+});
+
+export const Note = registerComponent({
+  kind: 'note',
+  schema: NotePropsSchema,
+  render: { read: NoteComponent },
+});
+```
+
+That's the floor: `kind` + `schema` + `render.read`. Everything else
+on the contract — `serialize`, `interactive`, `refs`, `composition`,
+`audit` — is opt-in. A static, non-interactive callout (`<Note>`,
+`<Tip>`, `<Warning>`) needs nothing more.
+
+Helper factories layered on top reduce the boilerplate further as
+patterns earn their abstractions
+(per [ADR 0061](../decisions/0061-ai-optimized-codebase-design.md)
+Rule 4 — extract helpers at the second caller, not the first):
+
+| Helper | Use when |
+|---|---|
+| `defineStaticComponent({...})` | No interactivity, no audit hooks beyond `requiredFields` |
+| `defineInteractiveComponent({...})` | Has `state` + `response`; composes the `interactive` block |
+| `defineCalloutComponent({...})` | Styled prose container with optional `variant` |
+| `defineRegistryBackedComponent({...})` | Pulls its primary data from a registry (equations, glossary, etc.) per [ADR 0060](../decisions/0060-registry-ecosystem.md) |
+
+The contract is sophisticated by design — it has to underwrite
+render, audit, persistence, AI authoring, and export uniformly — but
+**component authors should experience it as simple**. Full pedagogy
+components like `<Prediction>` (§12) exercise every slot; the
+[Wedge B1 retrieval family](../plans/2026-05-21-wedge-b1-retrieval-family-design.md)
+landed three new full-shape components by composing one shared
+`<RetrievalCard>` primitive — keeping per-component ceremony low even
+at the most-sophisticated end of the contract.
+
 (three-render-modes-plus-serialize)=
-## 3. Three render modes + a serialize function
+## 4. Three render modes + a serialize function
 
 Components declare which `render` modes they support. The renderer
 dispatches based on `import.meta.env.MODE` (set per build invocation,
@@ -170,6 +237,27 @@ worksheet bubbles with blank lines for free response. Components
 without a `print` implementation render `read` with a `.print` class
 that strips animation/interaction via CSS.
 
+:::{important} Static-fallback rule (interactive components)
+Every interactive component **shall** define a meaningful
+non-interactive representation. Acceptable shapes:
+
+| Component | Print fallback |
+|---|---|
+| `<Prediction>` | Worksheet prompt with blank response space |
+| `<RetrievalPrompt>` | Question text + space for written answer |
+| `<SpacedReview>` | Static list of due review items (no scheduling UI) |
+| `<PlotlyChart>` | Static image + alt text |
+| `<PythonCell>` | Code block + expected output or table |
+| `<ConceptMap>` | Static SVG or outline |
+
+Components that genuinely have no meaningful print representation
+**shall** declare `render.print` as a placeholder that emits
+`<aside class="print-omit-note">Interactive content; see web edition.</aside>`
+— never silently render the interactive variant in print. The audit
+catches missing `print` implementations on the v1 interactive set;
+the rule extends to every interactive component added going forward.
+:::
+
 ### `serialize` — structured representation for AI (separate from render)
 
 Not HTML; not a render mode. `serialize(props): AuditNode` produces a
@@ -196,7 +284,7 @@ type AuditNode = {
 };
 ```
 
-## 4. State vs. response (interactive components)
+## 5. State vs. response (interactive components)
 
 Two distinct shapes for interactive components.
 
@@ -266,7 +354,25 @@ The corresponding `defineInteractive<S, R>()` helper composes the
 component contract from a single declarative call, in the same spirit
 as Astro `defineCollection`.
 
-## 5. Cross-component protocol (`refs.consumes` / `refs.produces`)
+## 6. Cross-component protocol (`refs` field + ADR 0060 registry refs)
+
+Sophie has **two related-but-distinct reference systems**. Both
+underwrite the pedagogy graph, but they apply to different kinds of
+references and live in different layers of the contract:
+
+| System | What it references | Lives on | Audited by |
+|---|---|---|---|
+| `refs.consumes` / `refs.produces` (this section) | Other components within a chapter by `id` (`<SolutionKey for="…">` ⇄ `<Prediction id="…">`; `<CalibrationCurve>` ⇄ all `<Prediction>` on the page) | The component contract (`PedagogyComponent.refs`) | Tier 2 AST walk |
+| `refId` on registry-backed entries ([ADR 0060](../decisions/0060-registry-ecosystem.md)) | Registry entities in standalone content collections (`<KeyEquation refId="stefan-boltzmann">` resolves against `src/content/equations/stefan-boltzmann.mdx`) | Per-entry on the entry schema (`EquationCitationEntrySchema`, etc.) | R1 / R2 audit invariants |
+
+New components pick whichever system fits the reference shape. The
+`refs` field on the component contract handles **intra-chapter
+component pairings**; ADR 0060's `refId` pattern handles
+**cross-document references to registry entries** that live as
+standalone MDX/YAML files. The two coexist; the audit catches drift
+in both.
+
+### `refs.consumes` / `refs.produces` (intra-chapter component pairings)
 
 Some components reference others by ID. Examples:
 
@@ -311,7 +417,87 @@ references by ID, and verifies:
 - Reference cycles are flagged.
 - The student build doesn't reference instructor-only entities.
 
-## 6. Audit hooks (three tiers)
+## 7. Component identity policy
+
+Sophie's identity policy is **table-driven, not per-component**. The
+canonical anchor prefix table at
+[packages/core/src/schema/pedagogy-index.ts:36-53](../../packages/core/src/schema/pedagogy-index.ts#L36-L53)
+assigns each pedagogy entry kind a stable prefix; uniqueness
+invariants in the audit enforce the policy.
+
+### The table (lives in code; this is a snapshot)
+
+| Role | Prefix | Source |
+|---|---|---|
+| Definition | `def-` | author-supplied via title/id slug |
+| Equation | `eq-` | author-supplied via id slug |
+| Key insight | `ki-` | auto: `ki-${counter}` |
+| Figure | `fig-` | auto: `fig-${slug(name)}-${counter}` |
+| Misconception | `misc-` | auto: `misc-${counter}` (auto only) |
+| Deep dive | `dd-` | id ▸ slug(title) ▸ auto: `dd-${counter}` |
+| OMI flow | `omi-` | id ▸ `omi-${slug(concept)}` ▸ auto: `omi-${counter}` |
+| Chapter | `ch-` | passthrough chapter slug |
+| Objective | `lo-` | passthrough author id |
+| Retrieval prompt | `rp-` | auto: `rp-${counter}` (Wedge B1) |
+| Spaced review | `sp-` | auto: `sp-${counter}` (Wedge B1) |
+| Skill review | `sk-` | auto: `sk-${counter}` (Wedge B1) |
+
+Section + Unit entries (Wedge B-followup) key by `slug` / `id` rather
+than by anchor — they're consumer-supplied content-collection entries
+that flow into `PedagogyIndex.sections[]` / `units[]` wholesale; they
+don't appear in the prefix table because they have no chapter-keyed
+DOM anchors.
+
+### Uniqueness invariants
+
+The audit enforces three scopes of uniqueness:
+
+- **Intra-chapter (M1, F2, etc.)** — every anchor unique within a
+  chapter; collisions in extraction throw before the accumulator
+  writes.
+- **Cross-chapter for explicit-id-derived anchors (M2, D2, F3,
+  cross-chapter-OMIFlow)** — author-supplied `id` props must be
+  unique across the whole textbook. Auto-anchors (`misc-${N}`,
+  `dd-${N}`, `omi-${N}`) are chapter-scoped and exempt.
+- **Cross-chapter for slugs (CS1, definition-slug collisions)** —
+  per-kind slug uniqueness across chapters.
+
+### Why table-driven instead of per-component `identity` metadata
+
+An earlier draft (preserved in `_archive/component-contract.md`)
+proposed a per-component `identity?: { requiresId, scope, referenceable }`
+metadata block. Sophie's table-driven shape carries the same semantics
+with one source of truth — the prefix is the contract's
+identity-shape declaration; the audit invariant codes (M1/M2/F3/etc.)
+are the contract's enforcement. New components add a row to the
+table + a sibling audit invariant; the contract stays per-kind
+rather than per-component.
+
+## 8. Audit hooks (three tiers)
+
+:::{important} Deterministic vs. AI audit boundary (locked principle)
+
+- **Deterministic checks** handle **structure**: shape, references,
+  uniqueness, cadence, composition, contract conformance. Tier 1 +
+  Tier 2. Fast (milliseconds to seconds). Run on every save / every
+  PR. Every audit invariant Sophie has shipped to date is
+  deterministic.
+- **AI checks** handle **judgment**: clarity, correctness against
+  domain knowledge, pedagogical quality, cognitive load, alignment
+  with declared LOs. Tier 3. Expensive. Run on demand. Produce
+  patchable findings, not prose review.
+
+Authors writing new audit invariants should ask first: *is this rule
+mechanical?* If the answer is a clean yes (counting, referencing,
+shape-matching), it belongs in Tier 1/2. If it requires judgment
+about meaning or pedagogy, it belongs in Tier 3.
+
+This boundary keeps Sophie's audit story sound: deterministic checks
+catch real defects without flaky AI calls; AI checks add advisory
+judgment without replacing the deterministic layer. Sophie's
+distinguishing claim — *one auditable pedagogy graph* — depends on
+this separation staying clean.
+:::
 
 Each component declares what the audit can verify about it. The audit
 runs three tiers, in increasing cost order.
@@ -397,7 +583,118 @@ audit` runs in Tier 3 mode, it emits prompts to `.sophie-tasks/`.
 See [Audit and AI authoring](../explanation/audit-and-ai-authoring.md)
 for the full architecture, slash commands, and skills.
 
-## 7. The v1 component set
+## 9. Audit finding output schema
+
+Every audit invariant — Tier 1, Tier 2, or eventual Tier 3 AI checks —
+emits findings in one shared shape:
+[`AuditFindingSchema`](../../packages/core/src/schema/audit.ts) in
+`@sophie/core`. The shape is locked across deterministic and AI
+paths so the report aggregates uniformly.
+
+```typescript
+// packages/core/src/schema/audit.ts (current shape; W1 lock)
+export const AuditFindingSchema = z.object({
+  severity: z.enum(["ERROR", "WARNING", "INFO"]),
+  code: NonEmptyString,                     // stable invariant code (M1, V1, PRA-1, ...)
+  message: NonEmptyString,                  // human-readable explanation
+  location: z
+    .object({
+      chapter: z.string().optional(),       // chapter-keyed findings
+      anchor: z.string().optional(),        // DOM anchor inside the chapter
+      path: z.string().optional(),          // repo-root path for V0–V8 contract findings
+    })
+    .optional(),
+});
+```
+
+Severity contract:
+
+- `ERROR` fails the build (`auditExitCode` returns 1).
+- `WARNING` prints but the build continues.
+- `INFO` informational; never fails CI.
+
+The `code` field carries the invariant identifier (`M1`, `M2`, `F3`,
+`V1`–`V8`, `PRA-1`, `SR-1`, `RET-1`, `OF-2`, etc.); the full catalog
+lives at
+[packages/astro/src/lib/pedagogy-audit/invariants/](../../packages/astro/src/lib/pedagogy-audit/invariants/).
+Adding a new invariant means:
+
+1. Pick an unused short code (kind-prefixed where the codespace
+   gets crowded: `MR1`–`MR6` for MultiRep, `MG1`–`MG4` for
+   misconception-graph, etc.).
+2. Write the deterministic check in
+   `packages/astro/src/lib/pedagogy-audit/invariants/<group>.ts`.
+3. Emit findings via `sink.errors.push({...})` /
+   `sink.warnings.push({...})` / `sink.info.push({...})`.
+4. Add a row to
+   [audit-baseline.md](../../packages/astro/src/lib/pedagogy-audit/audit-baseline.md)
+   with the smoke-fixture count delta.
+
+### Future-friendly extensions (Tier 3 AI checks)
+
+When AI-driven audit invariants land (see deferred follow-up in §14),
+`AuditFindingSchema` extends with optional fields to carry AI-specific
+metadata:
+
+| Field | Purpose |
+|---|---|
+| `category` | `'clarity' \| 'correctness' \| 'pedagogy' \| 'accessibility' \| 'alignment' \| 'misconception' \| 'cognitive-load'` — partitions advisory findings for triage |
+| `rationale` | Why the AI flagged it (separate from `message`'s student-facing concern) |
+| `suggestedFix` | Patchable text the audit emits for AI patch workflows |
+| `confidence` | 0–1 confidence score from the model |
+
+These extensions are deliberately **deferred until a Tier 3 AI check
+actually lands** so the schema stays minimal in the deterministic
+era. Pre-launch, no consumers depend on them; adding them is a
+single Zod extension when the Tier 3 wedge starts.
+
+## 10. Source locations & patchability
+
+Findings carry coarse-grained source locations today:
+`{chapter, anchor, path}`. The chapter-keyed shape is sufficient for
+build-error messages ("M1: misconception slug X collides between
+chapter Y and chapter Z") because the chapter slug + anchor unambiguously
+identifies the offending node.
+
+**Future-direction (planned, not yet implemented):** for AI-patch
+workflows, audit-driven CLI fix commands, and editor-integrated
+red-squiggle UX, the location shape extends with file-level
+positions:
+
+```typescript
+// Planned extension; not yet on AuditFindingSchema
+location: {
+  chapter?: string;
+  anchor?: string;
+  path?: string;
+  // future:
+  file?: string;         // repo-root path to the source MDX
+  line?: number;
+  column?: number;
+  span?: [number, number];   // mdast position offsets
+}
+```
+
+The blocker is in the extractors: `mdast` carries position information
+on every node, but Sophie's extractors don't currently forward those
+positions into the per-callsite entries. A future enhancement
+threads `position.start.line` + `position.start.column` through
+`extractMisconceptions`, `extractKeyInsights`, etc., into the entry
+schemas, where the audit can lift them into findings.
+
+This unblocks:
+
+- **CLI patchability** — `sophie audit --fix` can rewrite the
+  offending file at the exact line.
+- **AI patch workflows** — Tier 3 AI checks emit `suggestedFix` with
+  a `file:line` target the agent applies mechanically.
+- **Editor integration** — language-server-style red squiggles on
+  the line that's offending.
+
+Until the extension lands, finding messages name the chapter + anchor
+in their human text; agents resolve from there.
+
+## 11. The v1 component set
 
 Fifteen components in v1, organized into six tiers.
 
@@ -452,7 +749,7 @@ Fifteen components in v1, organized into six tiers.
 Available for general use; not counted as pedagogy components.
 
 (worked-example-prediction)=
-## 8. Worked example: `<Prediction>` end-to-end
+## 12. Worked example: `<Prediction>` end-to-end
 
 The most architecturally complex of the v1 components. Walking
 through it stress-tests the contract.
@@ -740,7 +1037,7 @@ or shadow.
   instructor view.
 
 (adding-a-new-component-checklist)=
-## 9. Adding a new component (checklist)
+## 13. Adding a new component (checklist)
 
 When adding a component to the platform:
 
@@ -783,9 +1080,9 @@ When adding a component to the platform:
 - [ ] Component-specific theming tokens (consume `--color-<kind>-*` namespace).
 - [ ] Per-chapter or per-course defaults via Chapter schema.
 
-## 10. Open design questions
+## 14. Open design questions
 
-### 10.1 Composition rules — decided
+### 14.1 Composition rules — decided
 
 Each component declares `composition.containedIn` (kinds it MAY appear
 inside) and/or `composition.forbidsContaining` (kinds it MUST NOT
@@ -803,19 +1100,25 @@ contain). Audit Tier 2 walks the AST and enforces both. The seed rules:
 
 Rules grow as authoring surfaces violations.
 
-### 10.2 Cross-page references
+### 14.2 Cross-page references — partially resolved by ADR 0060
 
-The current `refs.consumes` / `refs.produces` protocol assumes
-references are within a chapter. What about cross-chapter?
+The original `refs.consumes` / `refs.produces` protocol assumed
+references stay within a chapter.
+[ADR 0060](../decisions/0060-registry-ecosystem.md) (Registry
+Ecosystem) handles the cross-document case: registry-backed
+entities (equations, glossary, misconceptions, key insights,
+figures, deep dives, interventions, OMI flows) live as standalone
+content collections, and per-callsite `refId` props resolve against
+those collections via the R1/R2 audit invariants. See §6 for the
+distinction between the two reference systems.
 
-- A Mission references a Demo by ID — same chapter or any chapter?
-- A `<ConceptRef>` (deferred to v2) references a glossary entry
-  globally.
+Still open for `<ConceptRef>`-style global references that aren't
+registry-backed (e.g., a chapter referencing an LO declared in
+another chapter): the graph-level audit that handles both intra-
+and inter-chapter component references uniformly has not yet
+landed.
 
-Need a graph-level audit that handles both intra- and inter-chapter
-references with different rules.
-
-### 10.3 The `serialize` contract — decided
+### 14.3 The `serialize` contract — decided
 
 `serialize(props): AuditNode` is a separate top-level function on the
 component contract (not a render mode). Resolved questions:
@@ -831,7 +1134,7 @@ component contract (not a render mode). Resolved questions:
   Sophie's prompt-emission layer adds chapter-level prose context
   separately when an AI check needs it.
 
-### 10.4 Schema versioning at the component level
+### 14.4 Schema versioning at the component level — deferred to post-launch
 
 Component schemas evolve. If `<Prediction>` adds a new field in v2:
 
@@ -840,10 +1143,17 @@ Component schemas evolve. If `<Prediction>` adds a new field in v2:
   migration.)
 - How do we deprecate fields without breaking existing chapters?
 
-A general policy needed: additive changes are fine, removals require
-a deprecation cycle and migration script.
+**Pre-launch posture (per `feedback_no_backcompat_prelaunch`):**
+hard-rename + migrate every author in the same PR. Component prop
+schema versioning becomes relevant post-launch when courses
+accumulate inertia across years. The platform already has
+`BaseRecordSchema.schema_version` for stored records
+([ADR 0007](../decisions/0007-persistence.md)) — that's the
+versioning that matters when student data outlives schema changes.
+A general component-prop-schema-evolution policy locks when courses
+go live; not now.
 
-### 10.5 Plugin / extension API for v3
+### 14.5 Plugin / extension API for v3
 
 When the platform opens to other instructors, third parties will want
 to add custom pedagogy components. The contract is already designed
@@ -856,6 +1166,65 @@ mechanism needs:
   audit).
 
 See [Plugin API reference](plugin-api.md) for the v1 surface.
+
+### 14.6 Tier 3 AI check spec shape — deferred until first AI check lands
+
+The current contract has `audit.aiPrompts: Record<string, AIQualityCheckPrompt>`
+— bare prompt templates. When the first Tier 3 AI invariant ships,
+this evolves into a structured `aiChecks: AIQualityCheck<Props>[]`
+shape:
+
+```typescript
+type AIQualityCheck<Props> = {
+  id: string;
+  purpose: string;
+  inputs: InputSelector[];
+  rubric: string[];
+  outputSchema: ZodSchema<AIQualityFinding>;
+  severityDefault: 'INFO' | 'WARNING' | 'ERROR';
+}
+```
+
+Locking the structured shape now, before any AI check has shipped,
+would over-specify. Locking it the moment the first AI invariant
+lands keeps Sophie's discipline intact: deterministic checks for
+structure (Tier 1/2), AI for judgment (Tier 3), each with structured
+output schemas the audit report aggregates uniformly.
+
+See also §9 — `AuditFindingSchema` gains optional `category` /
+`rationale` / `suggestedFix` / `confidence` fields at the same time
+to carry AI-specific metadata.
+
+### 14.7 Source locations on `AuditFinding` — planned extension
+
+The future-direction described in §10. Extractors gain
+`mdast`-position forwarding into entries; `AuditFinding.location`
+extends with `file` / `line` / `column` / `span`. Unblocks
+`sophie audit --fix`, AI patch workflows, and editor red-squiggle
+integration. Scoped as an enhancement file, not a wedge of its own.
+
+### 14.8 Profile visibility on the contract — currently handled outside
+
+Right now profile-aware rendering (`<SolutionKey>` rendering to
+`null` in the student build; `<InstructorNote>` similarly) is
+handled by per-component logic + the `ProfileContext` runtime helper,
+not by a declarative `visibility: { student, instructor, print }`
+field on the contract. The current pattern works at the v1 component
+set's scale.
+
+If a third-party plugin author (§14.5) needs to declare
+profile-aware visibility without writing per-component conditional
+render code, the contract grows a `visibility` field at that point.
+Until then, the runtime pattern is sufficient.
+
+### 14.9 Security model for executable embeds — deferred until Pyodide lands
+
+The component set today is safe: every component renders authored
+content. When the roadmap's Pyodide-driven `<PythonCell>` /
+`<PlotlyChart>` / `<ComputeOutput>` cluster lands at Tier 2, the
+contract gains a `security?: { allowsExternalEmbed?, sandboxRequired?,
+executesCode?, persistenceScope? }` field documenting the
+component's threat surface. Deferred until that wedge starts.
 
 ## What this contract gives us
 
