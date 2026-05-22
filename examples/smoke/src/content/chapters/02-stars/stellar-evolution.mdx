@@ -10,7 +10,7 @@ description: "(stub — placeholder for nav demo) Birth, main-sequence life, and
 tags: ["stars", "stellar-physics"]
 ---
 
-import { LearningObjectives, Objective } from "@sophie/components";
+import { LearningObjectives, Objective, SpacedReview } from "@sophie/components";
 
 This chapter is a **placeholder** wired into the Sophie smoke target so
 the sidebar module/chapter navigation has a real chapter under the
@@ -37,3 +37,23 @@ protostar to main sequence to whichever ending (white dwarf, neutron
 star, black hole) its mass earns.
 
 The real chapter would walk that trajectory in detail.
+
+{/* Wedge B-followup (W1) — section-scope SpacedReview: aggregates
+    practice_attempt records across every chapter bound to a Unit in
+    the "stars" Section (foundations/spectra-and-composition's
+    `topic:logarithms` attempts will surface here too, since they share
+    a Section ancestor via the Unit→Section binding when the student
+    has worked recall prompts upstream). The empty-state placeholder
+    renders until the student accumulates attempts. */}
+
+<SpacedReview
+  client:load
+  course="astr201"
+  chapter="stellar-evolution"
+  section="stars"
+  max={3}
+>
+  <SpacedReview.Empty>
+    Stars-section review queue is empty for now. Work through recall prompts in any "stars" chapter and they'll surface here for spaced review.
+  </SpacedReview.Empty>
+</SpacedReview>
