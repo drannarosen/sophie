@@ -1,4 +1,5 @@
 import type {
+  ArtifactEntry,
   AuditFinding,
   ChapterEntry,
   ContractValidationEntry,
@@ -107,6 +108,16 @@ interface GlobalIndexState {
    */
   units: ReadonlyArray<UnitEntry>;
   /**
+   * Consumer-supplied artifacts collection (Wedge B-followup W2).
+   * Populated from `getCollection('artifacts')` per ADR 0067 +
+   * design doc D1 (Path A). Discriminated union over `scope`
+   * (`unit` | `section`); unit-scope variants carry `unit_id` +
+   * `section_id`; section-scope variants carry `section_id` only.
+   * Same `set*` semantics as `sections` / `units`: last-write-wins,
+   * consumer-global, NOT touched by `clearChapter`.
+   */
+  artifacts: ReadonlyArray<ArtifactEntry>;
+  /**
    * Per-chapter inline-ref callsites (PR-C4). Append-only array
    * (NOT a Map) — the audit consumes the whole list and
    * usage-count facets care about callsite counts, not dedup'd keys.
@@ -202,6 +213,7 @@ function getGlobalState(): GlobalIndexState {
       modules: [],
       sections: [],
       units: [],
+      artifacts: [],
       inlineRefUsages: [],
       contractValidations: [],
       extractorFindings: [],
@@ -558,6 +570,19 @@ class IndexAccumulator {
   }
 
   /**
+   * Push the consumer-supplied artifacts collection into the
+   * accumulator (Wedge B-followup W2). Per ADR 0067 + design doc D1.
+   * Same shape as `setSections` / `setUnits`: last-write-wins,
+   * consumer-global, NOT touched by `clearChapter`. Called from
+   * `TextbookLayout.astro` frontmatter once per build after
+   * `getCollection('artifacts')` resolves.
+   */
+  setArtifacts(entries: ReadonlyArray<ArtifactEntry>): void {
+    const state = getGlobalState();
+    state.artifacts = entries;
+  }
+
+  /**
    * Append a chapter's inline-ref callsites. Append-only — the audit
    * consumes the whole list and usage-count facets later care about
    * callsite counts, not dedup'd keys. `clearChapter` filters out
@@ -780,6 +805,7 @@ class IndexAccumulator {
       skillReviews: Array.from(state.skillReviews.values()),
       sections: state.sections,
       units: state.units,
+      artifacts: state.artifacts,
     };
   }
 }
@@ -809,6 +835,7 @@ export function resetIndexAccumulator(): void {
   state.modules = [];
   state.sections = [];
   state.units = [];
+  state.artifacts = [];
   state.inlineRefUsages = [];
   state.contractValidations = [];
   state.extractorFindings = [];

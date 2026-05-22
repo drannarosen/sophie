@@ -1,4 +1,5 @@
 import type {
+  ArtifactEntry,
   ChapterEntry,
   DeepDiveEntry,
   EquationCitationEntry,
@@ -963,6 +964,7 @@ describe("indexAccumulator setSections / setUnits (W1)", () => {
       prereqs: [],
       section_id: "intro",
       chapter: "u1-chapter",
+      status: "stable",
     };
     const u2: UnitEntry = {
       id: "u2",
@@ -973,6 +975,7 @@ describe("indexAccumulator setSections / setUnits (W1)", () => {
       section_id: "stars",
       chapter: "u2-chapter",
       lecture: "u2-slides",
+      status: "stable",
     };
 
     indexAccumulator.setUnits([u1]);
@@ -997,6 +1000,7 @@ describe("indexAccumulator setSections / setUnits (W1)", () => {
       prereqs: [],
       section_id: "intro",
       chapter: "ch-x",
+      status: "stable",
     };
 
     indexAccumulator.setSections([intro]);
@@ -1021,12 +1025,71 @@ describe("indexAccumulator setSections / setUnits (W1)", () => {
         prereqs: [],
         section_id: "intro",
         chapter: "u1",
+        status: "stable",
       },
     ]);
     resetIndexAccumulator();
     const index = indexAccumulator.asPedagogyIndex();
     expect(index.sections).toEqual([]);
     expect(index.units).toEqual([]);
+  });
+});
+
+describe("indexAccumulator setArtifacts (W2)", () => {
+  // Per Wedge B-followup W2 design doc D1 (Path A). Mirrors setSections /
+  // setUnits semantics: last-write-wins, consumer-global, NOT touched by
+  // clearChapter. ArtifactEntry is a discriminated union over scope.
+
+  const unitReading: ArtifactEntry = {
+    id: "spectra-and-composition",
+    type: "reading",
+    scope: "unit",
+    title: "Spectra & Composition — reading",
+    source_path:
+      "src/content/sections/stars/units/spectra-and-composition/reading.mdx",
+    references: {},
+    section_id: "stars",
+    unit_id: "spectra-and-composition",
+  };
+
+  const sectionIntro: ArtifactEntry = {
+    id: "stars-intro",
+    type: "intro",
+    scope: "section",
+    title: "Stars — module intro",
+    source_path: "src/content/sections/stars/intro.mdx",
+    references: {},
+    section_id: "stars",
+  };
+
+  test("setArtifacts overwrites prior entries (last-write-wins)", () => {
+    indexAccumulator.setArtifacts([unitReading]);
+    expect(indexAccumulator.asPedagogyIndex().artifacts).toEqual([unitReading]);
+
+    indexAccumulator.setArtifacts([unitReading, sectionIntro]);
+    expect(indexAccumulator.asPedagogyIndex().artifacts).toEqual([
+      unitReading,
+      sectionIntro,
+    ]);
+
+    indexAccumulator.setArtifacts([sectionIntro]);
+    expect(indexAccumulator.asPedagogyIndex().artifacts).toEqual([sectionIntro]);
+  });
+
+  test("clearChapter does NOT touch artifacts (consumer-global)", () => {
+    indexAccumulator.setArtifacts([unitReading]);
+    indexAccumulator.clearChapter("spectra-and-composition");
+    expect(indexAccumulator.asPedagogyIndex().artifacts).toEqual([unitReading]);
+  });
+
+  test("resetIndexAccumulator clears artifacts", () => {
+    indexAccumulator.setArtifacts([unitReading, sectionIntro]);
+    resetIndexAccumulator();
+    expect(indexAccumulator.asPedagogyIndex().artifacts).toEqual([]);
+  });
+
+  test("asPedagogyIndex returns [] when setArtifacts never called", () => {
+    expect(indexAccumulator.asPedagogyIndex().artifacts).toEqual([]);
   });
 });
 
