@@ -25,21 +25,21 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 |---|---|
 | Validated | 14 |
 | In progress | 9 |
-| Unvalidated | 75 |
+| Unvalidated | 77 |
 | Re-validation needed | 0 |
 | Missing block | 0 |
-| Total | 98 |
+| Total | 100 |
 
 ## Lifecycle summary
 
 | Lifecycle | Count |
 |---|---|
 | Shipped | 59 |
-| Accepted design | 29 |
+| Accepted design | 31 |
 | Mixed | 1 |
 | Future package split | 9 |
 | No status | 0 |
-| Total | 98 |
+| Total | 100 |
 
 ## Evidence kinds
 
@@ -134,6 +134,8 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0071-pyodide-computational-labs.md](/pyodide-computational-labs/) | unvalidated | accepted design | — | — |  |
 | [docs/website/decisions/0072-three-tier-build-priority.md](/three-tier-build-priority/) | unvalidated | accepted design | — | — |  |
 | [docs/website/decisions/0073-unified-assessment-schema.md](/unified-assessment-schema/) | unvalidated | accepted design | — | — |  |
+| [docs/website/decisions/0074-instructor-authoring-cost-metric.md](/instructor-authoring-cost-metric/) | unvalidated | accepted design | — | — |  |
+| [docs/website/decisions/0075-student-ux-cognitive-load-governance.md](/student-ux-cognitive-load-governance/) | unvalidated | accepted design | — | — |  |
 
 ### Reference docs
 

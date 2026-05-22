@@ -225,6 +225,8 @@ project:
         - file: decisions/0071-pyodide-computational-labs.md
         - file: decisions/0072-three-tier-build-priority.md
         - file: decisions/0073-unified-assessment-schema.md
+        - file: decisions/0074-instructor-authoring-cost-metric.md
+        - file: decisions/0075-student-ux-cognitive-load-governance.md
     - title: Pilots
       children:
         - file: pilots/_template.md
