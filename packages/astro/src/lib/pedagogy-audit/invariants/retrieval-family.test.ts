@@ -12,80 +12,7 @@ function emptySink(): FindingSink {
   return { errors: [], warnings: [], info: [] };
 }
 
-describe("PRA-1 — prereq activation (WARN)", () => {
-  test("emits no finding when topic refs in RetrievalPrompt are bridged by SkillReview", () => {
-    const index: PedagogyIndex = {
-      ...emptyIndex(),
-      retrievalPrompts: [
-        { chapter: "ch1", anchor: "rp-1", target_id: "topic:logarithms" },
-      ],
-      skillReviews: [
-        {
-          chapter: "ch1",
-          anchor: "sk-1",
-          target_id: "topic:logarithms",
-          has_explicit_content: true,
-        },
-      ],
-    };
-    const sink = emptySink();
-    checkRetrievalFamily(index, sink);
-    expect(sink.warnings).toEqual([]);
-  });
-
-  test("emits one WARN per uncovered topic prereq", () => {
-    const index: PedagogyIndex = {
-      ...emptyIndex(),
-      retrievalPrompts: [
-        { chapter: "ch1", anchor: "rp-1", target_id: "topic:logarithms" },
-        { chapter: "ch1", anchor: "rp-2", target_id: "topic:exponents" },
-      ],
-      skillReviews: [],
-    };
-    const sink = emptySink();
-    checkRetrievalFamily(index, sink);
-    expect(sink.warnings).toHaveLength(2);
-    expect(sink.warnings.map((w) => w.code)).toEqual(["PRA-1", "PRA-1"]);
-  });
-
-  test("ignores non-topic prefixes (eq:, ki:, etc.)", () => {
-    const index: PedagogyIndex = {
-      ...emptyIndex(),
-      retrievalPrompts: [
-        { chapter: "ch1", anchor: "rp-1", target_id: "eq:stefan-boltzmann" },
-        { chapter: "ch1", anchor: "rp-2", target_id: "ki:luminosity" },
-      ],
-    };
-    const sink = emptySink();
-    checkRetrievalFamily(index, sink);
-    // Neither WARN nor ERROR — only `topic:` refs are eligible for PRA-1.
-    expect(sink.warnings.filter((w) => w.code === "PRA-1")).toEqual([]);
-  });
-
-  test("scopes coverage check per-chapter (SkillReview in ch2 doesn't cover ch1)", () => {
-    const index: PedagogyIndex = {
-      ...emptyIndex(),
-      retrievalPrompts: [
-        { chapter: "ch1", anchor: "rp-1", target_id: "topic:logs" },
-      ],
-      skillReviews: [
-        {
-          chapter: "ch2",
-          anchor: "sk-1",
-          target_id: "topic:logs",
-          has_explicit_content: true,
-        },
-      ],
-    };
-    const sink = emptySink();
-    checkRetrievalFamily(index, sink);
-    const pra = sink.warnings.filter((w) => w.code === "PRA-1");
-    expect(pra).toHaveLength(1);
-    expect(pra[0]?.location?.chapter).toBe("ch1");
-  });
-});
-
-describe("SR-1 — section-validity graduation (W1)", () => {
+describe("SR-1 — section-validity (W1)", () => {
   // Per Wedge B-followup design doc D1: <SpacedReview section="…">
   // refs now resolve against PedagogyIndex.sections. Unknown section
   // slugs emit SR-1 ERROR.
@@ -129,29 +56,9 @@ describe("SR-1 — section-validity graduation (W1)", () => {
     expect(sr[0]?.location?.chapter).toBe("ch1");
     expect(sr[0]?.location?.anchor).toBe("sp-1");
   });
-
-  test("emits no SR-1 error when no sections are populated (forward-compat with pre-W1)", () => {
-    // Pre-W1 consumers don't have a sections collection. <SpacedReview
-    // section=…> entries get no section-validity finding — the W1
-    // graduation only checks when both halves of the join exist.
-    const index: PedagogyIndex = {
-      ...emptyIndex(),
-      spacedReviews: [
-        {
-          chapter: "ch1",
-          anchor: "sp-1",
-          max: 3,
-          section_id: "stars",
-        },
-      ],
-    };
-    const sink = emptySink();
-    checkRetrievalFamily(index, sink);
-    expect(sink.errors.filter((e) => e.code === "SR-1")).toEqual([]);
-  });
 });
 
-describe("PRA-1 — Unit-aware graduation (W1)", () => {
+describe("PRA-1 — Unit-aware (W1)", () => {
   // Per Wedge B-followup design doc D1: when the index carries Units,
   // PRA-1 traverses UnitEntry.prereqs[] and checks for SkillReview
   // coverage in the same Section OR any prior Section (by Section.order).
@@ -301,23 +208,17 @@ describe("PRA-1 — Unit-aware graduation (W1)", () => {
     expect(pra[0]?.message).toContain("logs");
   });
 
-  test("falls back to chapter-level approximation when index has no Units (pre-W1)", () => {
-    // No units; PRA-1 should use the existing chapter-level logic.
-    // (RetrievalPrompt with topic ref + matching SkillReview in same
-    // chapter → no warning.)
+  test("no PRA-1 findings when index carries no Units (invariant is opt-in)", () => {
+    // Per W1 design doc D1: PRA-1 is opt-in via authoring Units; an
+    // empty units collection produces no findings (no fallback to
+    // chapter-level). RetrievalPrompt + SkillReview without Units are
+    // silently uninspected by PRA-1.
     const index: PedagogyIndex = {
       ...emptyIndex(),
       retrievalPrompts: [
         { chapter: "ch1", anchor: "rp-1", target_id: "topic:logs" },
       ],
-      skillReviews: [
-        {
-          chapter: "ch1",
-          anchor: "sk-1",
-          target_id: "topic:logs",
-          has_explicit_content: true,
-        },
-      ],
+      skillReviews: [],
     };
     const sink = emptySink();
     checkRetrievalFamily(index, sink);
@@ -481,9 +382,11 @@ describe("SR-1 — SpacedReview ref validity (ERROR)", () => {
     expect(sr[0]?.message).toMatch(/unknown prefix/i);
   });
 
-  test("no SR-1 finding for section-scoped SpacedReview (deferred to follow-up)", () => {
+  test("emits SR-1 ERROR for section-scoped SpacedReview pointing at an unknown section", () => {
+    // W1 graduation: section_id refs must resolve against PedagogyIndex.sections.
     const index: PedagogyIndex = {
       ...emptyIndex(),
+      sections: [{ type: "module", slug: "foundations", title: "F", order: 0 }],
       spacedReviews: [
         {
           chapter: "ch1",
@@ -495,6 +398,8 @@ describe("SR-1 — SpacedReview ref validity (ERROR)", () => {
     };
     const sink = emptySink();
     checkRetrievalFamily(index, sink);
-    expect(sink.errors.filter((e) => e.code === "SR-1")).toEqual([]);
+    const sr = sink.errors.filter((e) => e.code === "SR-1");
+    expect(sr).toHaveLength(1);
+    expect(sr[0]?.message).toMatch(/m1-foundations/);
   });
 });
