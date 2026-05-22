@@ -280,6 +280,12 @@ project:
             - file: strategy/papers/index.md
             - file: strategy/papers/paper-1-methods.md
             - file: strategy/papers/future-contributions.md
+        - title: Landscape
+          children:
+            - file: strategy/landscape/index.md
+            - file: strategy/landscape/comparators.md
+            - file: strategy/landscape/academic-prior-art.md
+            - file: strategy/landscape/risks-and-discipline.md
     - title: Contributing
       children:
         - file: contributing/setup.md
