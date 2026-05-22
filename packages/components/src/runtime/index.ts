@@ -24,6 +24,8 @@ export type {
   UseInteractiveResult,
 } from "./useInteractive.ts";
 export { useInteractive } from "./useInteractive.ts";
+export type { UseInteractiveRangeResult } from "./useInteractiveRange.ts";
+export { useInteractiveRange } from "./useInteractiveRange.ts";
 export type { SelfAssessmentWidget } from "./useSelfAssessment.ts";
 export { useSelfAssessment } from "./useSelfAssessment.ts";
 
