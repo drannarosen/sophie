@@ -24,8 +24,8 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 | Status | Count |
 |---|---|
 | Validated | 14 |
-| In progress | 9 |
-| Unvalidated | 80 |
+| In progress | 10 |
+| Unvalidated | 79 |
 | Re-validation needed | 0 |
 | Missing block | 0 |
 | Total | 103 |
@@ -50,7 +50,7 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 | review | 17 |
 | deployment | 12 |
 | audit | 5 |
-| manual | 23 |
+| manual | 25 |
 
 ## Extractor findings
 
@@ -127,7 +127,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0064-chapter-migration-playbook.md](/chapter-migration-playbook/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0065-lti-1-3-integration.md](/lti-1-3-integration/) | unvalidated | accepted design | — | — |  |
 | [docs/website/decisions/0066-pseudonymous-first-data-model.md](/pseudonymous-first-data-model/) | unvalidated | accepted design | — | — |  |
-| [docs/website/decisions/0067-section-level-artifacts.md](/section-level-artifacts/) | unvalidated | accepted design | — | — |  |
+| [docs/website/decisions/0067-section-level-artifacts.md](/section-level-artifacts/) | in progress | accepted design | 2026-05-21 | manual |  |
 | [docs/website/decisions/0068-bridge-rooms-and-prereq-pedagogy.md](/bridge-rooms-and-prereq-pedagogy/) | unvalidated | accepted design | — | — |  |
 | [docs/website/decisions/0069-fsrs-spaced-repetition-engine.md](/fsrs-spaced-repetition-engine/) | unvalidated | accepted design | — | — |  |
 | [docs/website/decisions/0070-library-room-and-registry-spec-pages.md](/library-room-and-registry-spec-pages/) | unvalidated | accepted design | — | — |  |
