@@ -33,6 +33,10 @@ export { type BaseRecord, BaseRecordSchema } from "./base-record.js";
 export { type BKTState, BKTStateSchema } from "./bkt-state.js";
 export { type Chapter, ChapterSchema, ChapterStatus } from "./chapter.js";
 export {
+  type ChapterSection,
+  ChapterSectionSchema,
+} from "./chapter-section.js";
+export {
   EPISTEMIC_ROLES,
   type EpistemicRole,
   EpistemicRoleSchema,
@@ -82,7 +86,6 @@ export {
   type InterventionLibraryEntry,
   InterventionLibraryEntrySchema,
 } from "./intervention.js";
-export { type Module, ModuleSchema } from "./module.js";
 export { chaptersForModule } from "./module-nav.js";
 export {
   type MultiRep,
@@ -147,7 +150,22 @@ export {
   RubricSchema,
 } from "./rubric.js";
 export type { EntityType } from "./search-facet.js";
-export { type Section, SectionSchema } from "./section.js";
+export {
+  type Section,
+  type SectionBridgeVariant,
+  SectionBridgeVariantSchema,
+  type SectionModuleVariant,
+  SectionModuleVariantSchema,
+  type SectionPhaseVariant,
+  SectionPhaseVariantSchema,
+  SectionSchema,
+  type SectionTrackVariant,
+  SectionTrackVariantSchema,
+  type SectionType,
+  SectionTypeSchema,
+  type SectionUnitBlockVariant,
+  SectionUnitBlockVariantSchema,
+} from "./section.js";
 export { slugify } from "./slugify.js";
 export {
   type Subsection,

@@ -8,9 +8,17 @@ tags:
   - reasoning-os
 status: accepted-design
 validation:
-  status: unvalidated
-  last_validated_date: null
-  evidence: []
+  status: in-progress
+  last_validated_date: "2026-05-21"
+  evidence:
+    - kind: manual
+      ref: "packages/core/src/schema/subsection.ts + unit.ts + artifact.ts"
+      date: "2026-05-21"
+      notes: "Wedge A (PR #154, merged 2026-05-21) shipped Subsection (auto-grouped + explicit variants), Unit (5-variant type discriminator), and Artifact (20 typed variants: 10 unit-level + 10 section-level) Zod schemas. Tested + barrel-exported."
+    - kind: manual
+      ref: "packages/core/src/schema/section.ts"
+      date: "2026-05-21"
+      notes: "Wedge A.5 shipped the SectionSchema discriminated union (module / phase / track / unit-block / bridge variants) replacing the previous ModuleSchema. ChapterSectionSchema renamed from the old SectionSchema (chapter-internal H2 concept). 14 unit tests + smoke consumer migration."
 ---
 
 # ADR 0067: Section / Subsection / Unit / Artifact content hierarchy

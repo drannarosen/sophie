@@ -1,4 +1,5 @@
 {
+  "type": "module",
   "slug": "foundations",
   "title": "Foundations",
   "order": 1,
