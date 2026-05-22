@@ -77,6 +77,24 @@ export class IndexedDBResponseStore implements ResponseStore {
     return out;
   }
 
+  async getAllMulti<T>(
+    profile: string,
+    chapters: ReadonlyArray<string>,
+    keyPrefix?: string
+  ): Promise<Record<string, StoredValue<T>>> {
+    if (chapters.length === 0) return {};
+    // Fan out to one getAll per chapter and merge. Each getAll opens
+    // its own short transaction; the IDB engine handles concurrency.
+    // Single broader cursor over multiple disjoint chapter ranges
+    // would need a discontinuous IDBKeyRange (not supported); the
+    // per-chapter fan-out keeps each transaction's range contiguous
+    // and lets the engine optimize within each.
+    const perChapter = await Promise.all(
+      chapters.map((ch) => this.getAll<T>(profile, ch, keyPrefix))
+    );
+    return Object.assign({}, ...perChapter) as Record<string, StoredValue<T>>;
+  }
+
   async set<T>(
     profile: string,
     chapter: string,

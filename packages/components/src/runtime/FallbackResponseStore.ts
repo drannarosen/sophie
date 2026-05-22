@@ -146,6 +146,22 @@ export class FallbackResponseStore implements ResponseStore {
     }
   }
 
+  async getAllMulti<T>(
+    profile: string,
+    chapters: ReadonlyArray<string>,
+    keyPrefix?: string
+  ): Promise<Record<string, StoredValue<T>>> {
+    if (this.fallbackEngaged) {
+      return this.fallback.getAllMulti<T>(profile, chapters, keyPrefix);
+    }
+    try {
+      return await this.primary.getAllMulti<T>(profile, chapters, keyPrefix);
+    } catch (err) {
+      this.engageFallback(err);
+      return this.fallback.getAllMulti<T>(profile, chapters, keyPrefix);
+    }
+  }
+
   async set<T>(
     profile: string,
     chapter: string,
