@@ -36,6 +36,16 @@ class BrowserBroadcast implements BroadcastChannelLayer {
   }
 
   post(message: BroadcastMessage): void {
+    // Fire same-tab subscribers synchronously so sibling hooks observing
+    // the same channel (e.g., `useInteractiveRange` aggregating writes
+    // committed by `useInteractive` in the same tab) update immediately.
+    // The browser `BroadcastChannel` API does NOT echo a tab's own
+    // `postMessage` back to its `onmessage` listener; without this
+    // local fan-out, same-tab cross-hook sync would silently fail.
+    // The `senderId` guard in subscribers prevents the originating
+    // hook from acting on its own message. Cross-tab delivery is
+    // unchanged — `postMessage` still posts to the channel.
+    for (const handler of this.handlers) handler(message);
     this.channel.postMessage(message);
   }
 

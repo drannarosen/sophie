@@ -85,4 +85,67 @@ describe("MemoryResponseStore", () => {
     const store = new MemoryResponseStore("astr201");
     expect(store.course).toBe("astr201");
   });
+
+  describe("getAll — range read across keys (Wedge B1)", () => {
+    it("returns {} when nothing is stored for the chapter", async () => {
+      const store = new MemoryResponseStore("course-a");
+      const out = await store.getAll("student", "ch1");
+      expect(out).toEqual({});
+    });
+
+    it("returns every (key → StoredValue) for the chapter when no prefix is given", async () => {
+      const store = new MemoryResponseStore("course-a");
+      await store.set("student", "ch1", "k1", { value: 1, ts: 1 });
+      await store.set("student", "ch1", "k2", { value: 2, ts: 2 });
+      const out = await store.getAll<number>("student", "ch1");
+      expect(out).toEqual({
+        k1: { value: 1, ts: 1 },
+        k2: { value: 2, ts: 2 },
+      });
+    });
+
+    it("filters by keyPrefix when supplied", async () => {
+      const store = new MemoryResponseStore("course-a");
+      await store.set("student", "ch1", "practice-attempt:eq:sb", {
+        value: "a",
+        ts: 1,
+      });
+      await store.set("student", "ch1", "practice-attempt:eq:saha", {
+        value: "b",
+        ts: 2,
+      });
+      await store.set("student", "ch1", "predict:p1:answer", {
+        value: "c",
+        ts: 3,
+      });
+      const out = await store.getAll<string>(
+        "student",
+        "ch1",
+        "practice-attempt:"
+      );
+      expect(out).toEqual({
+        "practice-attempt:eq:sb": { value: "a", ts: 1 },
+        "practice-attempt:eq:saha": { value: "b", ts: 2 },
+      });
+    });
+
+    it("scopes to one (profile, chapter) only — sibling profiles + chapters excluded", async () => {
+      const store = new MemoryResponseStore("course-a");
+      await store.set("student", "ch1", "k", { value: 1, ts: 1 });
+      await store.set("instructor", "ch1", "k", { value: 2, ts: 2 });
+      await store.set("student", "ch2", "k", { value: 3, ts: 3 });
+      const out = await store.getAll<number>("student", "ch1");
+      expect(out).toEqual({ k: { value: 1, ts: 1 } });
+    });
+
+    it("unwraps the composite-key wrapper — returned keys match the third get() arg", async () => {
+      const store = new MemoryResponseStore("course-a");
+      await store.set("student", "ch1", "practice-attempt:eq:sb", {
+        value: "x",
+        ts: 1,
+      });
+      const out = await store.getAll<string>("student", "ch1");
+      expect(Object.keys(out)).toEqual(["practice-attempt:eq:sb"]);
+    });
+  });
 });

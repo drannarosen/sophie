@@ -43,6 +43,9 @@ export {
 } from "./extractors/multireps.ts";
 export { extractObjectives } from "./extractors/objectives.ts";
 export { extractOMIFlows } from "./extractors/omi-flow.ts";
+export { extractRetrievalPrompts } from "./extractors/retrieval-prompt.ts";
+export { extractSkillReviews } from "./extractors/skill-review.ts";
+export { extractSpacedReviews } from "./extractors/spaced-review.ts";
 export {
   type PedagogyIndexRemarkPluginOptions,
   pedagogyIndexRemarkPlugin,

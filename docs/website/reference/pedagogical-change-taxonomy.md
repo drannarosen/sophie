@@ -333,7 +333,7 @@ type StructuralItem = {
   component: string;     // "Aside" | "KeyEquation" | "MultiRep" | "Intervention" | "Objective" | ...
   subtype?: string;      // "definition" | "key-insight" | "misconception" | "note" | ...
   chapter: string;
-  anchor: string;        // canonical anchor (def-, eq-, ki-, fig-, misc-, lo-, ...)
+  anchor: string;        // canonical anchor (def-, eq-, ki-, fig-, misc-, dd-, omi-, ch-, lo-, rp-, sp-, sk-) per pedagogy-index.ts
   title?: string;
   preview?: string;      // 1-2 sentence excerpt
 };

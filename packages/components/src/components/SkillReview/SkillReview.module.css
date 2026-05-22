@@ -1,0 +1,25 @@
+/* SkillReview — violet left-band signaling "prereq bridge" family
+   (Wedge B1 design doc §5). The placeholder variant (rendered when
+   slot children are absent + Library room not yet shipped) uses the
+   same band color but quieter Tier-3 chrome. */
+
+.placeholder {
+  border-left: var(--sophie-card-rule-light, 3px) solid
+    var(--sophie-skill-band, #8b5cf6);
+  background: var(--sophie-surface-2, #f5f5f4);
+  padding: var(--sophie-space-3, 0.75rem) var(--sophie-space-4, 1rem);
+  margin-block: var(--sophie-space-4, 1rem);
+  border-radius: var(--sophie-radius-sm, 0.3125rem);
+}
+
+.placeholderText {
+  margin: 0;
+  font-size: var(--sophie-text-small, 0.875rem);
+  color: var(--sophie-text-muted, #666);
+  font-style: italic;
+}
+
+.reviewMore {
+  margin-block-start: var(--sophie-space-2, 0.5rem);
+  font-size: var(--sophie-text-small, 0.875rem);
+}

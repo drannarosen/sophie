@@ -17,6 +17,9 @@ import {
   ModuleEntrySchema,
   ObjectiveEntrySchema,
   OMIFlowEntrySchema,
+  RetrievalPromptEntrySchema,
+  SkillReviewEntrySchema,
+  SpacedReviewEntrySchema,
 } from "./pedagogy-index-entries/index.ts";
 
 /**
@@ -31,17 +34,20 @@ import {
  * the author writes. Auto-generated anchors (key-insights, figures,
  * misconceptions) use these short prefixes:
  *
- * | Role          | Prefix  | Source                                                    |
- * |---------------|---------|-----------------------------------------------------------|
- * | Definition    | `def-`  | author-supplied via title/id slug                         |
- * | Equation      | `eq-`   | author-supplied via id slug                               |
- * | Key insight   | `ki-`   | auto: `ki-${counter}`                                     |
- * | Figure        | `fig-`  | auto: `fig-${slug(name)}-${counter}`                      |
- * | Misconception | `misc-` | auto: `misc-${counter}` (auto only)                       |
- * | Deep dive     | `dd-`   | id > slug(title) > auto: `dd-${counter}`                  |
- * | OMI flow      | `omi-`  | id > `omi-${slug(concept)}` > auto: `omi-${counter}`      |
- * | Chapter       | `ch-`   | passthrough chapter slug                                  |
- * | Objective     | `lo-`   | passthrough author id                                     |
+ * | Role             | Prefix  | Source                                                    |
+ * |------------------|---------|-----------------------------------------------------------|
+ * | Definition       | `def-`  | author-supplied via title/id slug                         |
+ * | Equation         | `eq-`   | author-supplied via id slug                               |
+ * | Key insight      | `ki-`   | auto: `ki-${counter}`                                     |
+ * | Figure           | `fig-`  | auto: `fig-${slug(name)}-${counter}`                      |
+ * | Misconception    | `misc-` | auto: `misc-${counter}` (auto only)                       |
+ * | Deep dive        | `dd-`   | id > slug(title) > auto: `dd-${counter}`                  |
+ * | OMI flow         | `omi-`  | id > `omi-${slug(concept)}` > auto: `omi-${counter}`      |
+ * | Chapter          | `ch-`   | passthrough chapter slug                                  |
+ * | Objective        | `lo-`   | passthrough author id                                     |
+ * | Retrieval prompt | `rp-`   | auto: `rp-${counter}` (Wedge B1)                          |
+ * | Spaced review    | `sp-`   | auto: `sp-${counter}` (Wedge B1)                          |
+ * | Skill review     | `sk-`   | auto: `sk-${counter}` (Wedge B1)                          |
  *
  * Authors can override any auto-generated anchor via explicit `id`
  * props on the source component. The anchor uniqueness invariants
@@ -136,5 +142,25 @@ export const PedagogyIndexSchema = z.object({
    * so all findings surface in one place. Defaults to `[]`.
    */
   extractorFindings: z.array(AuditFindingSchema).readonly().default([]),
+  /**
+   * Per-chapter `<RetrievalPrompt>` callsites (Wedge B1). Populated by
+   * `extractRetrievalPrompts`. Defaults to `[]` so consumer apps on the
+   * pre-Wedge-B1 path keep working. Consumed by RET-1 (retrieval-
+   * coverage invariant) and the Cockpit's per-chapter coverage view.
+   */
+  retrievalPrompts: z.array(RetrievalPromptEntrySchema).readonly().default([]),
+  /**
+   * Per-chapter `<SpacedReview>` callsites (Wedge B1). Populated by
+   * `extractSpacedReviews`. Defaults to `[]`. Consumed by SR-1
+   * (target_id / section_id ref-validity invariant).
+   */
+  spacedReviews: z.array(SpacedReviewEntrySchema).readonly().default([]),
+  /**
+   * Per-chapter `<SkillReview>` callsites (Wedge B1). Populated by
+   * `extractSkillReviews`. Defaults to `[]`. Consumed by PRA-1
+   * (prereq-activation invariant) and the Library room's Wedge C
+   * registry-resolution pass.
+   */
+  skillReviews: z.array(SkillReviewEntrySchema).readonly().default([]),
 });
 export type PedagogyIndex = z.infer<typeof PedagogyIndexSchema>;

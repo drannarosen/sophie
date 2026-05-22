@@ -17,6 +17,9 @@ import type {
   ObjectiveEntry,
   OMIFlowEntry,
   PedagogyIndex,
+  RetrievalPromptEntry,
+  SkillReviewEntry,
+  SpacedReviewEntry,
 } from "@sophie/core/schema";
 
 /**
@@ -144,6 +147,26 @@ interface GlobalIndexState {
    * separate per-slot rows.
    */
   omiFlows: Map<string, OMIFlowEntry>;
+  /**
+   * Per-chapter `<RetrievalPrompt>` callsites (Wedge B1). Keyed by
+   * `${chapter}#${anchor}` so two chapters can each have an `rp-1`
+   * auto-anchor without collision. Populated by
+   * `extractRetrievalPrompts`. Consumed by RET-1 (retrieval-coverage
+   * invariant).
+   */
+  retrievalPrompts: Map<string, RetrievalPromptEntry>;
+  /**
+   * Per-chapter `<SpacedReview>` callsites (Wedge B1). Keyed by
+   * `${chapter}#${anchor}`. Populated by `extractSpacedReviews`.
+   * Consumed by SR-1 (target_id / section_id ref-validity invariant).
+   */
+  spacedReviews: Map<string, SpacedReviewEntry>;
+  /**
+   * Per-chapter `<SkillReview>` callsites (Wedge B1). Keyed by
+   * `${chapter}#${anchor}`. Populated by `extractSkillReviews`.
+   * Consumed by PRA-1 (prereq-activation invariant).
+   */
+  skillReviews: Map<string, SkillReviewEntry>;
 }
 
 function getGlobalState(): GlobalIndexState {
@@ -167,6 +190,9 @@ function getGlobalState(): GlobalIndexState {
       interventions: new Map(),
       deepDives: new Map(),
       omiFlows: new Map(),
+      retrievalPrompts: new Map(),
+      spacedReviews: new Map(),
+      skillReviews: new Map(),
     };
   }
   return g[GLOBAL_KEY];
@@ -237,6 +263,21 @@ class IndexAccumulator {
     for (const [key, entry] of state.omiFlows) {
       if (entry.chapter === chapterSlug) {
         state.omiFlows.delete(key);
+      }
+    }
+    for (const [key, entry] of state.retrievalPrompts) {
+      if (entry.chapter === chapterSlug) {
+        state.retrievalPrompts.delete(key);
+      }
+    }
+    for (const [key, entry] of state.spacedReviews) {
+      if (entry.chapter === chapterSlug) {
+        state.spacedReviews.delete(key);
+      }
+    }
+    for (const [key, entry] of state.skillReviews) {
+      if (entry.chapter === chapterSlug) {
+        state.skillReviews.delete(key);
       }
     }
   }
@@ -628,6 +669,43 @@ class IndexAccumulator {
   }
 
   /**
+   * Add a chapter's extracted `<RetrievalPrompt>` entries (Wedge B1).
+   * Anchors are auto-generated (`rp-${counter}`) and chapter-scoped, so
+   * no cross-chapter collision check is required; the intra-chapter
+   * uniqueness check lives in `extractRetrievalPrompts` before this
+   * method runs. Keyed by `${chapter}#${anchor}` so two chapters can
+   * each have an `rp-1` without collision.
+   */
+  addRetrievalPrompts(entries: ReadonlyArray<RetrievalPromptEntry>): void {
+    const state = getGlobalState();
+    for (const entry of entries) {
+      state.retrievalPrompts.set(`${entry.chapter}#${entry.anchor}`, entry);
+    }
+  }
+
+  /**
+   * Add a chapter's extracted `<SpacedReview>` entries (Wedge B1).
+   * Same chapter-scoped semantics as `addRetrievalPrompts`.
+   */
+  addSpacedReviews(entries: ReadonlyArray<SpacedReviewEntry>): void {
+    const state = getGlobalState();
+    for (const entry of entries) {
+      state.spacedReviews.set(`${entry.chapter}#${entry.anchor}`, entry);
+    }
+  }
+
+  /**
+   * Add a chapter's extracted `<SkillReview>` entries (Wedge B1).
+   * Same chapter-scoped semantics as `addRetrievalPrompts`.
+   */
+  addSkillReviews(entries: ReadonlyArray<SkillReviewEntry>): void {
+    const state = getGlobalState();
+    for (const entry of entries) {
+      state.skillReviews.set(`${entry.chapter}#${entry.anchor}`, entry);
+    }
+  }
+
+  /**
    * Snapshot the current accumulator state as a PedagogyIndex.
    * Equations populate from PR-C2 onward; keyInsights, figureUsages,
    * and misconceptions populate from PR-C3 onward. `figureRegistry`
@@ -655,6 +733,9 @@ class IndexAccumulator {
       interventions: Array.from(state.interventions.values()),
       deepDives: Array.from(state.deepDives.values()),
       omiFlows: Array.from(state.omiFlows.values()),
+      retrievalPrompts: Array.from(state.retrievalPrompts.values()),
+      spacedReviews: Array.from(state.spacedReviews.values()),
+      skillReviews: Array.from(state.skillReviews.values()),
     };
   }
 }
@@ -689,4 +770,7 @@ export function resetIndexAccumulator(): void {
   state.interventions.clear();
   state.deepDives.clear();
   state.omiFlows.clear();
+  state.retrievalPrompts.clear();
+  state.spacedReviews.clear();
+  state.skillReviews.clear();
 }

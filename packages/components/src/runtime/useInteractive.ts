@@ -71,7 +71,16 @@ export interface UseInteractiveResult<T> {
 const stores = new Map<string, FallbackResponseStore>();
 const channels = new Map<string, BroadcastChannelLayer>();
 
-function getStore(course: string): FallbackResponseStore {
+/**
+ * Per-course `FallbackResponseStore` accessor. Exported `@internal` so
+ * sibling hooks in the same package (e.g., `useInteractiveRange` for
+ * Wedge B1) can share the per-course store cache rather than each
+ * creating its own. NOT part of the public `@sophie/components`
+ * surface; consumers should reach for the high-level hooks.
+ *
+ * @internal
+ */
+export function getStore(course: string): FallbackResponseStore {
   let store = stores.get(course);
   if (store === undefined) {
     store = new FallbackResponseStore(course);
@@ -80,7 +89,16 @@ function getStore(course: string): FallbackResponseStore {
   return store;
 }
 
-function getChannel(course: string, chapter: string): BroadcastChannelLayer {
+/**
+ * Per-(course, chapter) `BroadcastChannelLayer` accessor. Same internal-
+ * sharing rationale as `getStore`.
+ *
+ * @internal
+ */
+export function getChannel(
+  course: string,
+  chapter: string
+): BroadcastChannelLayer {
   const name = chapterChannelName(course, chapter);
   let channel = channels.get(name);
   if (channel === undefined) {

@@ -102,7 +102,7 @@ content." Uses the same Unit/Artifact contract as content sections.
 A pedagogy component embeddable anywhere in a reading or slide:
 
 ```mdx
-<SkillReview topic="logarithms" />
+<SkillReview target="topic:logarithms" />
 ```
 
 Renders as a collapsed affordance ("Need a quick refresher on
@@ -112,6 +112,15 @@ Interaction logs to FSRS ([ADR 0069](./0069-fsrs-spaced-repetition-engine.md))
 for spaced consolidation. Component salience adapts to per-student
 mastery (collapsed when strong; prominent when weak — Tier 2+).
 
+> **Signature update (Wedge B1, 2026-05-22):** `<SkillReview>` now
+> uses the same prefix-typed `target` convention as its retrieval-
+> family peers (`<RetrievalPrompt>`, `<SpacedReview>`). The original
+> `topic="..."` shape sketched in this ADR is replaced by
+> `target="topic:..."` (or any of the other known prefixes — `eq:`,
+> `gl:`, `misc:`, `lo:`, `ki:`). The unification means every
+> retrieval-family component shares one author-facing pattern and one
+> pedagogy-index ref shape. See [Wedge B1 design doc §1](../../plans/2026-05-21-wedge-b1-retrieval-family-design.md).
+
 ### Shared pedagogy graph
 
 All three scales reference the same pedagogy graph:
@@ -119,8 +128,9 @@ All three scales reference the same pedagogy graph:
 - A bridge `Unit[skill]` declares its `topic_id` (e.g.,
   `math-logarithms`)
 - An inline `Section[bridge]` declares its `topic_ids`
-- A `<SkillReview topic="logarithms" />` references the same
-  `topic_id`
+- A `<SkillReview target="topic:logarithms" />` references the same
+  `topic_id` via the prefix-typed `target` convention (signature
+  unified across the retrieval family in Wedge B1)
 - A content `Unit[lecture]` declares its `prereqs: [math-logarithms,
   physics-newton-2]`
 - The pedagogy-index extractor
@@ -184,8 +194,9 @@ Artifacts:
 - New Section type variant `bridge` added in
   [ADR 0067](./0067-section-level-artifacts.md)'s schema
 - New Unit type variant `skill` added similarly
-- New `<SkillReview topic="..." />` component in
-  `@sophie/components/src/components/SkillReview/`
+- `<SkillReview target="topic:..." />` component in
+  `@sophie/components/src/components/SkillReview/` (signature updated
+  in Wedge B1 to use the prefix-typed `target` convention)
 - Component renders collapsed by default; click expands to
   retrieval-first surface; FSRS logging on each interaction
 - Pedagogy-index extractor audit rule: every declared `prereqs:` topic

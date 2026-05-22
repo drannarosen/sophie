@@ -8,7 +8,7 @@ tags:
 status: shipped
 validation:
   status: validated
-  last_validated_date: "2026-05-18"
+  last_validated_date: "2026-05-22"
   evidence:
     - kind: test
       ref: packages/components/src/runtime/useInteractive.test.tsx
@@ -16,12 +16,16 @@ validation:
       notes: "Covers IndexedDB write/read cycle, hydration, profile/course namespacing, BroadcastChannel LWW (per ADR 0029 refinement). 2026-05-18 update (E1 PR): adds the `persistence` field happy-path test alongside the existing IDB-healthy assertions."
     - kind: test
       ref: packages/components/src/runtime/FallbackResponseStore.test.ts
-      date: "2026-05-18"
-      notes: "Wrapper-level contract for the IDB→memory downgrade per ADR 0007 + ADR 0053 CF5. Exercises engagement-on-first-failure, one-time console.warn, subscriber notification, and post-engagement memory-only routing. 13 test cases."
+      date: "2026-05-22"
+      notes: "Wrapper-level contract for the IDB→memory downgrade per ADR 0007 + ADR 0053 CF5. Exercises engagement-on-first-failure, one-time console.warn, subscriber notification, post-engagement memory-only routing, and the Wedge B1 getAll range-read contract (healthy IDB + fallback path). 18 test cases."
     - kind: test
       ref: packages/components/src/runtime/MemoryResponseStore.test.ts
-      date: "2026-05-18"
-      notes: "`MemoryResponseStore` unit tests — profile/chapter namespacing, delete, clearChapter scoping. 8 test cases."
+      date: "2026-05-22"
+      notes: "`MemoryResponseStore` unit tests — profile/chapter namespacing, delete, clearChapter scoping, and the Wedge B1 getAll range-read contract. 13 test cases."
+    - kind: test
+      ref: packages/components/src/runtime/useInteractiveRange.test.tsx
+      date: "2026-05-22"
+      notes: "Wedge B1 sibling hook for `useInteractive`: hydrated + per-key LWW-gated range read across a (course, chapter) keyspace, backed by the new `ResponseStore.getAll` contract addition. 6 test cases covering hydration empty, hydration with records, prefix filter, cross-tab broadcast merge, scope-mismatch filtering, and LWW gate on stale messages."
     - kind: chapter
       ref: examples/smoke/src/content/chapters/01-foundations/spoiler-alerts.mdx
       date: "2026-05-14"
@@ -186,6 +190,44 @@ fallback behavior.
 - `sophie upgrade` performs IDB schema migrations.
 - v3 backend choice (Cloudflare Workers / Supabase / Convex) is a
   separate decision deferred until v3 has a real consumer signal.
+
+### Amendment — 2026-05-22 (Wedge B1)
+
+The `ResponseStore` contract gains a single new method:
+
+```ts
+getAll<T>(
+  profile: string,
+  chapter: string,
+  keyPrefix?: string,
+): Promise<Record<string, StoredValue<T>>>;
+```
+
+Range read across every record for `(profile, chapter)` whose key
+starts with `keyPrefix` (or every record for the chapter when
+`keyPrefix === undefined`). Returned keys are the unwrapped form (the
+third arg to `get`/`set`), not the composite-key wrapper. Per-
+(profile, chapter) scoping is unchanged; cross-chapter aggregation
+remains deferred to Wedge D / the Cockpit work (ADR 0076).
+
+Backs the sibling `useInteractiveRange<T>(course, chapter, keyPrefix)`
+hook (per [Wedge B1 design doc §2b](../../plans/2026-05-21-wedge-b1-retrieval-family.md)),
+which powers `<SpacedReview>`'s queue-style aggregation read across
+all `practice-attempt:*` keys in a chapter. Sibling hook only — the
+existing single-key `useInteractive` is unchanged.
+
+Implementations:
+
+- **`IndexedDBResponseStore.getAll`**: read-only range cursor mirroring
+  the existing `clearChapter` cursor pattern; lex range capped at
+  `U+FFFF`.
+- **`MemoryResponseStore.getAll`**: `Map` filter by composite-key
+  prefix.
+- **`FallbackResponseStore.getAll`**: delegate to active store; on
+  primary failure, engage the in-memory fallback per CF5 (mirrors
+  the existing `get`/`set` fallback path).
+
+10 new store-layer unit tests landed alongside the contract addition.
 
 ## References
 

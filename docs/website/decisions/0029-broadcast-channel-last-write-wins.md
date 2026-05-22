@@ -8,7 +8,7 @@ tags:
 status: shipped
 validation:
   status: validated
-  last_validated_date: "2026-05-16"
+  last_validated_date: "2026-05-22"
   evidence:
     - kind: test
       ref: packages/components/src/runtime/useInteractive.test.tsx
@@ -17,7 +17,15 @@ validation:
     - kind: review
       ref: docs/reviews/2026-05-15-bucket-b-c-architecture-audit.md
       date: "2026-05-15"
-  notes: "ADR 0007 refinement; LWW timestamping confirmed via the useInteractive test suite. No cross-tab production cohort data yet (deferred to fa26)."
+    - kind: test
+      ref: packages/components/src/runtime/useInteractiveRange.test.tsx
+      date: "2026-05-22"
+      notes: "Wedge B1 amendment: BroadcastChannel.post now fires same-tab subscribers synchronously alongside cross-tab postMessage; senderId guard prevents originating-hook re-entrancy. 6 test cases cover the cross-tab and same-tab paths including per-key LWW gate."
+    - kind: review
+      ref: docs/reviews/2026-05-22-wedge-b1-retrieval-family.md
+      date: "2026-05-22"
+      notes: "Quality audit explicitly pressure-tested the local-fanout change against re-entrancy concerns; confirmed senderId guard is correct."
+  notes: "ADR 0007 refinement; LWW timestamping confirmed via the useInteractive + useInteractiveRange test suites. 2026-05-22 Wedge B1 amendment: same-tab local fan-out added to unblock sibling-hook same-tab sync (senderId guard preserves the no-self-echo semantic). No cross-tab production cohort data yet (deferred to fa26)."
 ---
 
 # ADR 0029: BroadcastChannel last-write-wins via per-write timestamps
@@ -219,6 +227,35 @@ readable.
 - ADR 0007 stays accepted; this ADR refines the BroadcastChannel
   behavior without superseding the storage choice.
 - Phase 5 dashboard work can assume IDB values are LWW-resolved.
+
+### Amendment — 2026-05-22 (Wedge B1)
+
+`BroadcastChannelLayer.post()` now **also fires same-tab subscribers
+synchronously** alongside the cross-tab `postMessage` call. The
+browser `BroadcastChannel` API does not echo a tab's own `postMessage`
+back to its own `onmessage` listener; without this local fan-out,
+sibling hooks subscribing to the same channel in the same tab would
+silently miss each other's writes.
+
+This unblocks the Wedge B1 pattern where `<SpacedReview>` (consumer of
+`useInteractiveRange`) observes writes posted by `<RetrievalPrompt>`
+(consumer of `useInteractive`) when both are mounted in the same
+chapter page — they share the same per-(course, chapter) channel via
+`getChannel()`, so without the local fan-out the SpacedReview snapshot
+would only refresh on cross-tab traffic or component remount.
+
+**LWW semantics unchanged.** Each subscriber's `senderId` guard still
+runs first, so the originating hook ignores its own broadcast; the
+per-key `ts` gate still rejects stale messages. Cross-tab delivery is
+unchanged. The change is **additive**: same-tab subscribers now get
+the broadcast too.
+
+Implementation: `BrowserBroadcast.post()` iterates the local
+`handlers` Set before calling `this.channel.postMessage(...)`. Code:
+[`packages/components/src/runtime/BroadcastChannel.ts`](../../../packages/components/src/runtime/BroadcastChannel.ts).
+6 new `useInteractiveRange` unit tests cover the cross-tab and same-
+tab paths; full 685-test `@sophie/components` suite stayed green when
+the change landed.
 
 ## References
 

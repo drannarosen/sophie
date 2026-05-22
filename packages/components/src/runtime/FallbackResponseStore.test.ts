@@ -185,4 +185,71 @@ describe("FallbackResponseStore", () => {
       });
     });
   });
+
+  describe("getAll — range read (Wedge B1)", () => {
+    it("returns {} when nothing is stored for the chapter", async () => {
+      const store = new FallbackResponseStore("getall-1");
+      const out = await store.getAll("student", "ch1");
+      expect(out).toEqual({});
+    });
+
+    it("returns every (key → StoredValue) for the chapter (healthy IDB)", async () => {
+      const store = new FallbackResponseStore("getall-2");
+      await store.set("student", "ch1", "k1", { value: 1, ts: 1 });
+      await store.set("student", "ch1", "k2", { value: 2, ts: 2 });
+      const out = await store.getAll<number>("student", "ch1");
+      expect(out).toEqual({
+        k1: { value: 1, ts: 1 },
+        k2: { value: 2, ts: 2 },
+      });
+    });
+
+    it("filters by keyPrefix (healthy IDB)", async () => {
+      const store = new FallbackResponseStore("getall-3");
+      await store.set("student", "ch1", "practice-attempt:eq:sb", {
+        value: "a",
+        ts: 1,
+      });
+      await store.set("student", "ch1", "practice-attempt:eq:saha", {
+        value: "b",
+        ts: 2,
+      });
+      await store.set("student", "ch1", "predict:p1:answer", {
+        value: "c",
+        ts: 3,
+      });
+      const out = await store.getAll<string>(
+        "student",
+        "ch1",
+        "practice-attempt:"
+      );
+      expect(out).toEqual({
+        "practice-attempt:eq:sb": { value: "a", ts: 1 },
+        "practice-attempt:eq:saha": { value: "b", ts: 2 },
+      });
+    });
+
+    it("scopes to (profile, chapter) — sibling profiles/chapters excluded (healthy IDB)", async () => {
+      const store = new FallbackResponseStore("getall-4");
+      await store.set("student", "ch1", "k", { value: 1, ts: 1 });
+      await store.set("instructor", "ch1", "k", { value: 2, ts: 2 });
+      await store.set("student", "ch2", "k", { value: 3, ts: 3 });
+      const out = await store.getAll<number>("student", "ch1");
+      expect(out).toEqual({ k: { value: 1, ts: 1 } });
+    });
+
+    it("delegates to memory fallback when IDB is unavailable", async () => {
+      vi.spyOn(IndexedDBResponseStore.prototype, "getAll").mockRejectedValue(
+        new Error("simulated IDB unavailability")
+      );
+      vi.spyOn(IndexedDBResponseStore.prototype, "set").mockRejectedValue(
+        new Error("simulated IDB unavailability")
+      );
+      const store = new FallbackResponseStore("getall-fallback");
+      await store.set("student", "ch1", "k1", { value: 7, ts: 10 });
+      const out = await store.getAll<number>("student", "ch1");
+      expect(out).toEqual({ k1: { value: 7, ts: 10 } });
+      expect(store.getPersistence()).toBe("session");
+    });
+  });
 });

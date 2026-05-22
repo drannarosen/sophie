@@ -6,6 +6,7 @@ export type {
   BroadcastMessage,
 } from "./BroadcastChannel.ts";
 export { createBroadcastChannel } from "./BroadcastChannel.ts";
+export { getUserId } from "./getUserId.ts";
 export { IndexedDBResponseStore } from "./IndexedDBResponseStore.ts";
 export { MathText } from "./MathText.tsx";
 export type { Profile } from "./ProfileContext.tsx";
@@ -24,6 +25,8 @@ export type {
   UseInteractiveResult,
 } from "./useInteractive.ts";
 export { useInteractive } from "./useInteractive.ts";
+export type { UseInteractiveRangeResult } from "./useInteractiveRange.ts";
+export { useInteractiveRange } from "./useInteractiveRange.ts";
 export type { SelfAssessmentWidget } from "./useSelfAssessment.ts";
 export { useSelfAssessment } from "./useSelfAssessment.ts";
 

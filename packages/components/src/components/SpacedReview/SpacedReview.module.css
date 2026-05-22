@@ -1,0 +1,43 @@
+/* SpacedReview — cyan left-band signaling "queued review" family
+   (Wedge B1 design doc §5). Visually quieter than RetrievalPrompt's
+   amber band: this is a list of pointers, not an interactive prompt. */
+
+.region {
+  border-left: var(--sophie-card-rule-light, 3px) solid
+    var(--sophie-spaced-band, #06b6d4);
+  border-radius: var(--sophie-radius-sm, 0.3125rem);
+  background: var(--sophie-surface-1, #fff);
+  padding: var(--sophie-space-3, 0.75rem) var(--sophie-space-4, 1rem);
+  margin-block: var(--sophie-space-4, 1rem);
+}
+
+.heading {
+  font-size: var(--sophie-text-md, 1.125rem);
+  font-weight: var(--sophie-weight-semibold, 600);
+  margin-block: 0 var(--sophie-space-2, 0.5rem);
+  color: var(--sophie-text, inherit);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sophie-space-1, 0.25rem);
+}
+
+.item {
+  padding: var(--sophie-space-1, 0.25rem) 0;
+  color: var(--sophie-text, inherit);
+}
+
+.itemLabel {
+  font-size: var(--sophie-text-base, 1rem);
+}
+
+.emptyDefault {
+  font-size: var(--sophie-text-small, 0.875rem);
+  color: var(--sophie-text-muted, #666);
+  margin: 0;
+}
