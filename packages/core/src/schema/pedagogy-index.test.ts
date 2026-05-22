@@ -1165,6 +1165,7 @@ describe("PedagogyIndexSchema", () => {
           prereqs: [],
           section_id: "intro",
           chapter: "u1-chapter",
+          status: "stable",
         },
         {
           id: "u2",
@@ -1175,6 +1176,7 @@ describe("PedagogyIndexSchema", () => {
           section_id: "stars",
           chapter: "u2-chapter",
           lecture: "u2-slides",
+          status: "stable",
         },
       ],
     });

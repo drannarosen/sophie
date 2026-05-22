@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ChapterFraming, ChapterStatus } from "./chapter.js";
 import { NonEmptyString, Slug } from "./primitives.js";
 
 /**
@@ -34,6 +35,20 @@ export type UnitType = z.infer<typeof UnitTypeSchema>;
  *
  * `estimated_duration_weeks` is optional metadata for Schedule
  * generation + AI co-author prompts.
+ *
+ * `status` (W2/D2) — Unit maturity. Reuses the `ChapterStatus` enum
+ * (`draft` | `review` | `stable`) per ADR 0051; the CS2 audit invariant
+ * surfaces `draft` Units in the audit report and the student-build
+ * filter (W2 graduation of `getStudentChapters`) excludes them. Required
+ * so authors always declare maturity (CS1's intent at the schema layer).
+ *
+ * `framing` (W2/D2) — optional Unit-level pedagogical framing
+ * declaration (per ADR 0063 §OF-2). When `"OMI"`, the OF-2 audit
+ * invariant requires the Unit's reading artifact to render at least
+ * one `<OMIFlow>` callsite. Reuses the `ChapterFraming` enum.
+ *
+ * `description` (W2/D2) — optional one-paragraph Unit summary;
+ * surfaces in `<ChapterRef>` hover-preview and Unit roll-up cards.
  */
 export const UnitSchema = z.object({
   id: Slug,
@@ -43,6 +58,9 @@ export const UnitSchema = z.object({
   prereqs: z.array(NonEmptyString).default([]),
   topic_id: NonEmptyString.optional(),
   estimated_duration_weeks: z.number().positive().optional(),
+  status: ChapterStatus,
+  framing: ChapterFraming.optional(),
+  description: z.string().optional(),
 });
 
 export type Unit = z.infer<typeof UnitSchema>;
