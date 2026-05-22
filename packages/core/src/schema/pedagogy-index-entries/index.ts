@@ -18,6 +18,10 @@
  */
 
 export {
+  type ArtifactEntry,
+  ArtifactEntrySchema,
+} from "./artifact.ts";
+export {
   type ChapterEntry,
   ChapterEntrySchema,
   type ModuleEntry,

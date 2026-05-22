@@ -107,6 +107,8 @@ export {
 export { type PageStatus, PageStatusSchema } from "./page-status.js";
 export { type PedagogyIndex, PedagogyIndexSchema } from "./pedagogy-index.js";
 export {
+  type ArtifactEntry,
+  ArtifactEntrySchema,
   type ChapterEntry,
   ChapterEntrySchema,
   type ContractValidationEntry,
