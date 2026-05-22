@@ -215,6 +215,12 @@ export {
 } from "./components/RetrievalPrompt/index.ts";
 export type { SearchResult } from "./components/Search/index.ts";
 export { SearchModal } from "./components/Search/index.ts";
+export type { SkillReviewProps } from "./components/SkillReview/index.ts";
+export {
+  SkillReview,
+  SkillReviewPropsSchema,
+  skillReviewContract,
+} from "./components/SkillReview/index.ts";
 export type { SpacedReviewProps } from "./components/SpacedReview/index.ts";
 export {
   SpacedReview,
