@@ -1205,4 +1205,69 @@ describe("PedagogyIndexSchema", () => {
     });
     expect(result.success).toBe(false);
   });
+
+  // Wedge B-followup (W2) — artifacts surfaces with default [].
+  test("artifacts defaults to [] when absent (forward-compat with pre-W2 indexes)", () => {
+    const result = PedagogyIndexSchema.safeParse(emptyIndex);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.artifacts).toEqual([]);
+    }
+  });
+
+  test("accepts a populated artifacts array with both scope variants (W2)", () => {
+    const result = PedagogyIndexSchema.safeParse({
+      ...emptyIndex,
+      artifacts: [
+        {
+          id: "spectra-and-composition",
+          type: "reading",
+          scope: "unit",
+          title: "Spectra & Composition — reading",
+          source_path:
+            "src/content/sections/stars/units/spectra-and-composition/reading.mdx",
+          references: {},
+          section_id: "stars",
+          unit_id: "spectra-and-composition",
+        },
+        {
+          id: "stars-intro",
+          type: "intro",
+          scope: "section",
+          title: "Stars — module intro",
+          source_path: "src/content/sections/stars/intro.mdx",
+          references: {},
+          section_id: "stars",
+        },
+      ],
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.artifacts).toHaveLength(2);
+      const unitArtifact = result.data.artifacts[0];
+      if (unitArtifact?.scope === "unit") {
+        expect(unitArtifact.unit_id).toBe("spectra-and-composition");
+      }
+      const sectionArtifact = result.data.artifacts[1];
+      expect(sectionArtifact?.scope).toBe("section");
+    }
+  });
+
+  test("rejects a unit-scope artifact missing unit_id (W2)", () => {
+    const result = PedagogyIndexSchema.safeParse({
+      ...emptyIndex,
+      artifacts: [
+        {
+          id: "x",
+          type: "reading",
+          scope: "unit",
+          title: "X",
+          source_path: "src/content/sections/s/units/u/reading.mdx",
+          references: {},
+          section_id: "s",
+        },
+      ],
+    });
+    expect(result.success).toBe(false);
+  });
 });

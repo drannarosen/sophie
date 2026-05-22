@@ -3,6 +3,7 @@ import { AuditFindingSchema } from "./audit.ts";
 import { InterventionEntrySchema } from "./intervention.ts";
 import { MultiRepIndexEntrySchema } from "./multirep.ts";
 import {
+  ArtifactEntrySchema,
   ChapterEntrySchema,
   ContractValidationEntrySchema,
   DeepDiveEntrySchema,
@@ -185,5 +186,17 @@ export const PedagogyIndexSchema = z.object({
    * NAMES are permanent across W1/W2/W3.
    */
   units: z.array(UnitEntrySchema).readonly().default([]),
+  /**
+   * Consumer-app-owned artifact metadata, forwarded from
+   * `getCollection('artifacts')` per ADR 0067. Wedge B-followup (W2)
+   * introduces this collection; consumers on the pre-W2 path see `[]`.
+   * `ArtifactEntry` is a discriminated union over `scope`
+   * (`unit` | `section`): unit-scope variants carry `unit_id` +
+   * `section_id`; section-scope variants carry `section_id` only.
+   * Authored content (reading.mdx, slides.mdx, intro.mdx, etc.) flows
+   * through here; consumed by `<ChapterRef>` hover-preview lookup +
+   * the post-W2 audit invariants that iterate per-artifact.
+   */
+  artifacts: z.array(ArtifactEntrySchema).readonly().default([]),
 });
 export type PedagogyIndex = z.infer<typeof PedagogyIndexSchema>;
