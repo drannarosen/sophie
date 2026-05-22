@@ -25,21 +25,21 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 |---|---|
 | Validated | 14 |
 | In progress | 9 |
-| Unvalidated | 66 |
+| Unvalidated | 75 |
 | Re-validation needed | 0 |
 | Missing block | 0 |
-| Total | 89 |
+| Total | 98 |
 
 ## Lifecycle summary
 
 | Lifecycle | Count |
 |---|---|
 | Shipped | 59 |
-| Accepted design | 20 |
+| Accepted design | 29 |
 | Mixed | 1 |
 | Future package split | 9 |
 | No status | 0 |
-| Total | 89 |
+| Total | 98 |
 
 ## Evidence kinds
 
@@ -125,6 +125,15 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0062-page-status-frontmatter-enum.md](/page-status-frontmatter-enum/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0063-omiflow-composite-primitive.md](/omiflow-composite-primitive/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0064-chapter-migration-playbook.md](/chapter-migration-playbook/) | unvalidated | shipped | — | — |  |
+| [docs/website/decisions/0065-lti-1-3-integration.md](/lti-1-3-integration/) | unvalidated | accepted design | — | — |  |
+| [docs/website/decisions/0066-pseudonymous-first-data-model.md](/pseudonymous-first-data-model/) | unvalidated | accepted design | — | — |  |
+| [docs/website/decisions/0067-section-level-artifacts.md](/section-level-artifacts/) | unvalidated | accepted design | — | — |  |
+| [docs/website/decisions/0068-bridge-rooms-and-prereq-pedagogy.md](/bridge-rooms-and-prereq-pedagogy/) | unvalidated | accepted design | — | — |  |
+| [docs/website/decisions/0069-fsrs-spaced-repetition-engine.md](/fsrs-spaced-repetition-engine/) | unvalidated | accepted design | — | — |  |
+| [docs/website/decisions/0070-library-room-and-registry-spec-pages.md](/library-room-and-registry-spec-pages/) | unvalidated | accepted design | — | — |  |
+| [docs/website/decisions/0071-pyodide-computational-labs.md](/pyodide-computational-labs/) | unvalidated | accepted design | — | — |  |
+| [docs/website/decisions/0072-three-tier-build-priority.md](/three-tier-build-priority/) | unvalidated | accepted design | — | — |  |
+| [docs/website/decisions/0073-unified-assessment-schema.md](/unified-assessment-schema/) | unvalidated | accepted design | — | — |  |
 
 ### Reference docs
 

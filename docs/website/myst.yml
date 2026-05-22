@@ -216,6 +216,15 @@ project:
         - file: decisions/0062-page-status-frontmatter-enum.md
         - file: decisions/0063-omiflow-composite-primitive.md
         - file: decisions/0064-chapter-migration-playbook.md
+        - file: decisions/0065-lti-1-3-integration.md
+        - file: decisions/0066-pseudonymous-first-data-model.md
+        - file: decisions/0067-section-level-artifacts.md
+        - file: decisions/0068-bridge-rooms-and-prereq-pedagogy.md
+        - file: decisions/0069-fsrs-spaced-repetition-engine.md
+        - file: decisions/0070-library-room-and-registry-spec-pages.md
+        - file: decisions/0071-pyodide-computational-labs.md
+        - file: decisions/0072-three-tier-build-priority.md
+        - file: decisions/0073-unified-assessment-schema.md
     - title: Pilots
       children:
         - file: pilots/_template.md
