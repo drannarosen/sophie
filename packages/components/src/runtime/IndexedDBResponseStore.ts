@@ -53,6 +53,30 @@ export class IndexedDBResponseStore implements ResponseStore {
     return stored as StoredValue<T> | undefined;
   }
 
+  async getAll<T>(
+    profile: string,
+    chapter: string,
+    keyPrefix?: string
+  ): Promise<Record<string, StoredValue<T>>> {
+    const db = await this.db();
+    const chapterPrefix = `${profile}:${chapter}:`;
+    const lower =
+      keyPrefix !== undefined ? `${chapterPrefix}${keyPrefix}` : chapterPrefix;
+    // U+FFFF caps the lex range so any string with this prefix sorts below it.
+    const upper = `${lower}￿`;
+    const out: Record<string, StoredValue<T>> = {};
+    const tx = db.transaction(STORE, "readonly");
+    let cursor = await tx.store.openCursor(IDBKeyRange.bound(lower, upper));
+    while (cursor !== null) {
+      const composite = cursor.key as string;
+      const key = composite.slice(chapterPrefix.length);
+      out[key] = cursor.value as StoredValue<T>;
+      cursor = await cursor.continue();
+    }
+    await tx.done;
+    return out;
+  }
+
   async set<T>(
     profile: string,
     chapter: string,

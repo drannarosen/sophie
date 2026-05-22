@@ -2,6 +2,16 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use `superpowers:executing-plans` to implement this plan task-by-task. The validated design contract is at [docs/plans/2026-05-21-wedge-b1-retrieval-family-design.md](./2026-05-21-wedge-b1-retrieval-family-design.md) — read it first; it locks the 9 architectural decisions this plan implements against.
 
+> **Plan amendment (2026-05-22):** During Task 2 execution, exploration of [packages/components/src/runtime/useInteractive.ts](../../packages/components/src/runtime/useInteractive.ts) + [packages/components/src/runtime/ResponseStore.ts](../../packages/components/src/runtime/ResponseStore.ts) revealed three gaps the original plan didn't anticipate.
+>
+> Three gaps surfaced and confirmed with Anna 2026-05-22:
+>
+> 1. **No range/aggregation read in `ResponseStore`** — `<SpacedReview>` needs to read all `practice-attempt:*` keys in the current chapter for the LRU stub to do anything meaningful. The single-key `useInteractive` API can't serve that. Extend `ResponseStore` with `getAll(profile, chapter, keyPrefix?)` + ship a sibling `useInteractiveRange` hook. This is additive — `useInteractive` is not modified.
+> 2. **`course` + `chapter` are required MDX props per [ADR 0027](../website/decisions/0027-no-config-context-mdx-ssr.md)** — Predict ships them explicitly. All 3 new components need them; their MDX usage examples in this plan should be read as additionally requiring `course="..." chapter="..."`.
+> 3. **No `getUserId()` helper exists** — `PracticeAttemptSchema` requires `user_id` (per `BaseRecordSchema`) but no helper generates one. Add a tiny localStorage-backed UUID generator at `packages/components/src/runtime/getUserId.ts`.
+>
+> Scope additions: **Task 2a** (`ResponseStore.getAll` + range cursor), **Task 2b** (`useInteractiveRange<T>` hook), **Task 2c** (`getUserId()` helper) before original Task 2.
+
 **Goal:** Ship three Tier 1 pedagogy components — `<RetrievalPrompt>`, `<SpacedReview>`, `<SkillReview>` — plus the shared `practice_attempt` persistence schema, `useRetrievalAttempt` hook, internal `<RetrievalCard>` primitive, 3 pedagogy-index entry types, 3 curriculum-CI invariants, smoke chapter usage, and doc updates.
 
 **Architecture:** All 3 public components compose a shared `<RetrievalCard>` internal primitive built on Radix `<Collapsible>` (per [ADR 0019](../website/decisions/0019-radix-ui-a11y.md)). Persistence flows through a new `useRetrievalAttempt` hook wrapping the existing `useInteractive` (per [ADR 0007](../website/decisions/0007-persistence-indexeddb.md)) — same IndexedDB + BroadcastChannel LWW (per [ADR 0029](../website/decisions/0029-broadcast-channel-last-write-wins.md)) machinery as `<Predict>`. Each component writes `practice_attempt` records (extending `BaseRecordSchema` from Wedge A). The MDX-AST extractor learns 3 new entry types feeding 3 new curriculum-CI invariants.

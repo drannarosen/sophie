@@ -20,6 +20,24 @@ export interface ResponseStore {
     chapter: string,
     key: string
   ): Promise<StoredValue<T> | undefined>;
+  /**
+   * Range read of every record for (profile, chapter) whose key starts
+   * with `keyPrefix` (or every record for the chapter when `keyPrefix`
+   * is omitted). Returned object is keyed by the *original* `key`
+   * argument used at `set` time (i.e., the composite-key wrapper is
+   * unwrapped before return).
+   *
+   * Added 2026-05-22 in Wedge B1 to back the `useInteractiveRange<T>`
+   * hook that powers `<SpacedReview>` (per ADR 0007 amendment in
+   * Wedge B1 plan). Same per-(profile, chapter) scoping as the rest
+   * of the interface; cross-chapter aggregation is deferred to Wedge
+   * D / the Cockpit work.
+   */
+  getAll<T>(
+    profile: string,
+    chapter: string,
+    keyPrefix?: string
+  ): Promise<Record<string, StoredValue<T>>>;
   set<T>(
     profile: string,
     chapter: string,

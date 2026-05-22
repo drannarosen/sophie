@@ -42,6 +42,23 @@ export class MemoryResponseStore implements ResponseStore {
     return record as StoredValue<T> | undefined;
   }
 
+  async getAll<T>(
+    profile: string,
+    chapter: string,
+    keyPrefix?: string
+  ): Promise<Record<string, StoredValue<T>>> {
+    const chapterPrefix = `${profile}:${chapter}:`;
+    const fullPrefix =
+      keyPrefix !== undefined ? `${chapterPrefix}${keyPrefix}` : chapterPrefix;
+    const out: Record<string, StoredValue<T>> = {};
+    for (const [composite, record] of this.records) {
+      if (!composite.startsWith(fullPrefix)) continue;
+      const key = composite.slice(chapterPrefix.length);
+      out[key] = record as StoredValue<T>;
+    }
+    return out;
+  }
+
   async set<T>(
     profile: string,
     chapter: string,
