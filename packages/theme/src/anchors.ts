@@ -302,6 +302,24 @@ export const tier3LabelBg = {
   "derivation-step": { accent: "brand-violet", tintPct: 6 },
 } as const;
 
+// Retrieval-family left-band colors (Wedge B1). One per public
+// component — `<RetrievalPrompt>` (amber, current-content recall),
+// `<SpacedReview>` (cyan, queued review), `<SkillReview>` (violet,
+// prereq bridge). Per Wedge B1 design doc §5: "Pick mid-saturation
+// colors at ~500-shade equivalent so the band is distinguishable
+// without dominating." Light values target Tailwind-500 family; dark
+// values lift to ~400 for legibility against surface-1 (Stone 800).
+//
+// These are NEW palette slots, not aliases for brand/status, because
+// the bands signal pedagogy-family membership (retrieval / spaced /
+// skill) — a coordinate orthogonal to brand-teal/rose/violet and
+// status-success/warning/danger.
+export const retrievalBands = {
+  retrieval: { light: "#f59e0b", dark: "#fbbf24" }, // amber-500 / amber-400
+  spaced: { light: "#06b6d4", dark: "#22d3ee" }, // cyan-500 / cyan-400
+  skill: { light: "#8b5cf6", dark: "#a78bfa" }, // violet-500 / violet-400
+} as const;
+
 // Validation tracker tint percentages (ADR 0056). Stripes reuse the
 // semantic status palette directly; backgrounds derive `tintPct%`-tinted
 // surfaces via color-mix on `transparent` so admonitions read as subtle

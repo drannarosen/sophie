@@ -14,6 +14,7 @@ import {
   leadings,
   lightSurfaces,
   radii,
+  retrievalBands,
   role,
   sizes,
   spacings,
@@ -133,6 +134,18 @@ function brandStatusBlock(scheme: Scheme): string {
 function roleBlock(scheme: Scheme): string {
   return Object.entries(role)
     .map(([name, variants]) => `--sophie-role-${name}: ${variants[scheme]};`)
+    .join("\n    ");
+}
+
+// Retrieval-family left-band slots per scheme (Wedge B1). Iterates the
+// `retrievalBands` map so new entries — if a future wedge adds a fourth
+// retrieval-family component — appear automatically in both schemes.
+// Emits e.g. `--sophie-retrieval-band` / `--sophie-spaced-band` /
+// `--sophie-skill-band`; the CSS Modules in <RetrievalCard> consume
+// the slot by name (set as `--card-band-color` at component root).
+function retrievalBandsBlock(scheme: Scheme): string {
+  return Object.entries(retrievalBands)
+    .map(([name, variants]) => `--sophie-${name}-band: ${variants[scheme]};`)
     .join("\n    ");
 }
 
@@ -278,6 +291,9 @@ export function generateCSS(): string {
   /* Epistemic role colors — light */
   ${roleBlock("light")}
 
+  /* Retrieval-family left-band colors — light (Wedge B1) */
+  ${retrievalBandsBlock("light")}
+
   /* Cross-reference / citation accent — light (plum) */
   ${citeBlock("light")}
 
@@ -325,6 +341,9 @@ export function generateCSS(): string {
   /* Epistemic role colors — dark */
   ${roleBlock("dark")}
 
+  /* Retrieval-family left-band colors — dark (Wedge B1) */
+  ${retrievalBandsBlock("dark")}
+
   /* Cross-reference / citation accent — dark (plum) */
   ${citeBlock("dark")}
 }
@@ -337,6 +356,7 @@ export function generateCSS(): string {
     ${calloutTitleBgBlock("dark")}
     ${validationTintsBlock("dark")}
     ${roleBlock("dark")}
+    ${retrievalBandsBlock("dark")}
   }
 }
 
@@ -351,6 +371,7 @@ export function generateCSS(): string {
     ${calloutTitleBgBlock("light")}
     ${validationTintsBlock("light")}
     ${roleBlock("light")}
+    ${retrievalBandsBlock("light")}
     color-scheme: light;
   }
 }

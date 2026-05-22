@@ -78,6 +78,30 @@ test.each([
   expect(matches).toHaveLength(1);
 });
 
+// Retrieval-family left-band colors (Wedge B1). One per public
+// component — RetrievalPrompt / SpacedReview / SkillReview. Light
+// values target Tailwind-500 family; dark lifts to ~400 for legibility
+// on Stone 800 surface-1.
+describe.each([
+  ["retrieval", "#f59e0b", "#fbbf24"], // amber-500 / amber-400
+  ["spaced", "#06b6d4", "#22d3ee"], // cyan-500 / cyan-400
+  ["skill", "#8b5cf6", "#a78bfa"], // violet-500 / violet-400
+])("retrieval band: %s", (band, hexLight, hexDark) => {
+  test(`emits --sophie-${band}-band in :root with ${hexLight}`, () => {
+    expect(css).toMatch(
+      new RegExp(`--sophie-${band}-band:\\s*${hexLight.replace("#", "#")}`)
+    );
+  });
+
+  test(`emits --sophie-${band}-band in [data-theme="dark"] with ${hexDark}`, () => {
+    expect(css).toMatch(
+      new RegExp(
+        `\\[data-theme="dark"\\][\\s\\S]*--sophie-${band}-band:\\s*${hexDark.replace("#", "#")}`
+      )
+    );
+  });
+});
+
 describe("typography tokens", () => {
   test("emits --sophie-text-pill at 0.6875rem", () => {
     expect(css).toMatch(/--sophie-text-pill:\s*0\.6875rem/);

@@ -36,6 +36,15 @@ export const tokens = {
       inference: v("role-inference"),
       approximation: v("role-approximation"),
     },
+    // Retrieval-family left-band colors (Wedge B1). One per public
+    // component — RetrievalPrompt / SpacedReview / SkillReview. CSS
+    // Modules consume the slot by name via the internal <RetrievalCard>
+    // primitive.
+    retrievalBand: {
+      retrieval: v("retrieval-band"),
+      spaced: v("spaced-band"),
+      skill: v("skill-band"),
+    },
     validation: {
       unvalidated: {
         stripe: v("validation-unvalidated-stripe"),
