@@ -385,12 +385,15 @@ operates on a stable list of chapter slugs derived from
 IDB key scheme. W3 will rename the key dimension `chapter` → `unit`
 (separate migration concern, out of W1 scope).
 
-**Audit graceful-degradation.** PRA-1 falls back to the chapter-level
-approximation when `index.units` is empty (pre-W1 consumers retain
-the existing behavior). The new Unit-aware path activates only when
-the consumer has populated the new collections — mirrors the
-pattern established for `equationCitations`, `multiReps`,
-`interventions`, `omiFlows`, and the other defaultable collections.
+**PRA-1 + SR-1 are opt-in via authoring Sections + Units.** Consumers
+with no Units in `PedagogyIndex` produce no PRA-1 findings (the
+invariant has nothing to iterate against); consumers with no Sections
+produce no SR-1 section-validity findings (no slugs to resolve
+against). This is not a fallback — there is no chapter-level
+approximation. Per `feedback_no_backcompat_prelaunch`: pre-launch
+Sophie has zero production students; consumers without Sections/Units
+either author them or accept that the corresponding audit invariants
+stay silent.
 
 **No back-compat past W3.** Per the saved
 `feedback_no_backcompat_prelaunch` and Anna's explicit 2026-05-22
