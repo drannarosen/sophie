@@ -17,6 +17,9 @@ import {
   ModuleEntrySchema,
   ObjectiveEntrySchema,
   OMIFlowEntrySchema,
+  RetrievalPromptEntrySchema,
+  SkillReviewEntrySchema,
+  SpacedReviewEntrySchema,
 } from "./pedagogy-index-entries/index.ts";
 
 /**
@@ -136,5 +139,25 @@ export const PedagogyIndexSchema = z.object({
    * so all findings surface in one place. Defaults to `[]`.
    */
   extractorFindings: z.array(AuditFindingSchema).readonly().default([]),
+  /**
+   * Per-chapter `<RetrievalPrompt>` callsites (Wedge B1). Populated by
+   * `extractRetrievalPrompts`. Defaults to `[]` so consumer apps on the
+   * pre-Wedge-B1 path keep working. Consumed by RET-1 (retrieval-
+   * coverage invariant) and the Cockpit's per-chapter coverage view.
+   */
+  retrievalPrompts: z.array(RetrievalPromptEntrySchema).readonly().default([]),
+  /**
+   * Per-chapter `<SpacedReview>` callsites (Wedge B1). Populated by
+   * `extractSpacedReviews`. Defaults to `[]`. Consumed by SR-1
+   * (target_id / section_id ref-validity invariant).
+   */
+  spacedReviews: z.array(SpacedReviewEntrySchema).readonly().default([]),
+  /**
+   * Per-chapter `<SkillReview>` callsites (Wedge B1). Populated by
+   * `extractSkillReviews`. Defaults to `[]`. Consumed by PRA-1
+   * (prereq-activation invariant) and the Library room's Wedge C
+   * registry-resolution pass.
+   */
+  skillReviews: z.array(SkillReviewEntrySchema).readonly().default([]),
 });
 export type PedagogyIndex = z.infer<typeof PedagogyIndexSchema>;

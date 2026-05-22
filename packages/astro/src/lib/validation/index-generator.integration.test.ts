@@ -63,6 +63,9 @@ function emptyIndexShape(): PedagogyIndex {
     interventions: [],
     deepDives: [],
     omiFlows: [],
+    retrievalPrompts: [],
+    spacedReviews: [],
+    skillReviews: [],
   };
 }
 

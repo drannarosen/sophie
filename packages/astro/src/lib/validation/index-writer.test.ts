@@ -45,6 +45,9 @@ function makeEmptyIndex(): PedagogyIndex {
     interventions: [],
     deepDives: [],
     omiFlows: [],
+    retrievalPrompts: [],
+    spacedReviews: [],
+    skillReviews: [],
   };
 }
 

@@ -62,3 +62,11 @@ export {
   OMIFlowEntrySchema,
   type OMIFlowSlot,
 } from "./omi-flow.ts";
+export {
+  type RetrievalPromptEntry,
+  RetrievalPromptEntrySchema,
+  type SkillReviewEntry,
+  SkillReviewEntrySchema,
+  type SpacedReviewEntry,
+  SpacedReviewEntrySchema,
+} from "./retrieval.ts";

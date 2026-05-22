@@ -18,6 +18,9 @@ import { extractMisconceptions } from "./extractors/misconceptions.ts";
 import { extractMultiReps } from "./extractors/multireps.ts";
 import { extractObjectives } from "./extractors/objectives.ts";
 import { extractOMIFlows } from "./extractors/omi-flow.ts";
+import { extractRetrievalPrompts } from "./extractors/retrieval-prompt.ts";
+import { extractSkillReviews } from "./extractors/skill-review.ts";
+import { extractSpacedReviews } from "./extractors/spaced-review.ts";
 import { markChapterOpener } from "./transforms/chapter-opener.ts";
 import { markFirstUseGlossaryTerms } from "./transforms/first-use-glossary.ts";
 import { transformIntervention } from "./transforms/intervention.ts";
@@ -214,6 +217,15 @@ export function pedagogyIndexRemarkPlugin(
     // exist yet (the React component lands in PR-B), so this is a
     // no-op until then.
     indexAccumulator.addOMIFlows(extractOMIFlows(tree, chapterSlug));
+    // Wedge B1 retrieval-family extractors. Each emits one entry per
+    // matching JSX flow element; pure read pass (no mutation). PRA-1
+    // (prereq activation), RET-1 (retrieval coverage), and SR-1
+    // (SpacedReview ref validity) consume these in the audit phase.
+    indexAccumulator.addRetrievalPrompts(
+      extractRetrievalPrompts(tree, chapterSlug)
+    );
+    indexAccumulator.addSpacedReviews(extractSpacedReviews(tree, chapterSlug));
+    indexAccumulator.addSkillReviews(extractSkillReviews(tree, chapterSlug));
     indexAccumulator.addObjectives(extractObjectives(tree, chapterSlug));
     indexAccumulator.addInlineRefUsages(
       extractInlineRefUsages(tree, chapterSlug)

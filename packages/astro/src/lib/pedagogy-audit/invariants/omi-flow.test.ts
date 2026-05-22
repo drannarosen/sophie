@@ -36,6 +36,9 @@ function emptyIndex(): PedagogyIndex {
     interventions: [],
     deepDives: [],
     omiFlows: [],
+    retrievalPrompts: [],
+    spacedReviews: [],
+    skillReviews: [],
   };
 }
 
@@ -119,6 +122,9 @@ describe("OF-2 — framing:'OMI' chapter requires ≥1 <OMIFlow> (ERROR)", () =>
       ...emptyIndex(),
       chapters: [chapter({ slug: "missing", framing: "OMI" })],
       omiFlows: [],
+      retrievalPrompts: [],
+      spacedReviews: [],
+      skillReviews: [],
     };
     const sink = emptySink();
     checkOMIFlow(index, sink);
@@ -137,6 +143,9 @@ describe("OF-2 — framing:'OMI' chapter requires ≥1 <OMIFlow> (ERROR)", () =>
       ...emptyIndex(),
       chapters: [chapter({ slug: "ch-a" /* framing omitted */ })],
       omiFlows: [],
+      retrievalPrompts: [],
+      spacedReviews: [],
+      skillReviews: [],
     };
     const sink = emptySink();
     checkOMIFlow(index, sink);

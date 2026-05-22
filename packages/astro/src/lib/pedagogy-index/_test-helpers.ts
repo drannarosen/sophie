@@ -132,6 +132,34 @@ export const mdxFlowEl = (
   children,
 });
 
+/**
+ * Build a synthetic JSX flow element by name with string + JSX-
+ * expression attrs and arbitrary children. Used by retrieval-family
+ * extractor tests (Wedge B1).
+ */
+export const mdxNamedFlow = (
+  name: string,
+  attrs: Record<string, string | number> = {},
+  children: ReadonlyArray<Record<string, unknown>> = []
+) => ({
+  type: "mdxJsxFlowElement",
+  name,
+  attributes: Object.entries(attrs).map(([attrName, value]) => {
+    if (typeof value === "number") {
+      return {
+        type: "mdxJsxAttribute",
+        name: attrName,
+        value: {
+          type: "mdxJsxAttributeValueExpression",
+          value: String(value),
+        },
+      };
+    }
+    return { type: "mdxJsxAttribute", name: attrName, value };
+  }),
+  children,
+});
+
 /** Build a synthetic `<LearningObjectives ...>` flow element. */
 export const mdxLearningObjectives = (
   attrs: Record<string, string>,
