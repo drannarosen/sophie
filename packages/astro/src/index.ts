@@ -6,10 +6,7 @@ export {
   defineSophieIntegration,
   type SophieIntegrationOptions,
 } from "./integration.ts";
-export {
-  getStudentChapters,
-  isStudentVisible,
-} from "./lib/get-student-chapters.ts";
+export { artifactsFromCollection } from "./lib/artifacts-from-collection.ts";
 export { indexAccumulator } from "./lib/pedagogy-index/accumulator.ts";
 export { extractDefinitions } from "./lib/pedagogy-index/extractors/definitions.ts";
 export {

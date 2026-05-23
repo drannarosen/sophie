@@ -2,8 +2,10 @@
   "id": "measuring-the-sky",
   "type": "lecture",
   "title": "Measuring the Sky",
-  "order": 0,
+  "order": 1,
   "prereqs": [],
   "section_id": "foundations",
-  "chapter": "measuring-the-sky"
+  "chapter": "measuring-the-sky",
+  "status": "stable",
+  "description": "(stub — placeholder for nav demo) Coordinates, magnitudes, angular sizes; the language that lets every later measurement be located in space."
 }

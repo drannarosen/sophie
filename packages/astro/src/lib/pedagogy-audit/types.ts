@@ -22,8 +22,10 @@ export interface AuditReport {
  * Optional inputs for the audit beyond the in-memory pedagogy index.
  * Threaded through TextbookLayout's audit call so the audit can surface
  * signals that aren't reachable from the (already-filtered) index — in
- * particular CS2 INFO, which reports `status: draft` chapters that
- * `getStudentChapters` excluded from the student build.
+ * particular CS2 INFO, which reports `status: draft` Units that
+ * the route-level filter (W2/D2 graduation; previously
+ * `getStudentChapters`, deleted with `ChapterEntrySchema` in W2/D3)
+ * excluded from the student build.
  */
 export interface AuditExtras {
   /**

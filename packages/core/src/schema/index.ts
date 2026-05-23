@@ -107,8 +107,8 @@ export {
 export { type PageStatus, PageStatusSchema } from "./page-status.js";
 export { type PedagogyIndex, PedagogyIndexSchema } from "./pedagogy-index.js";
 export {
-  type ChapterEntry,
-  ChapterEntrySchema,
+  type ArtifactEntry,
+  ArtifactEntrySchema,
   type ContractValidationEntry,
   ContractValidationEntrySchema,
   type DeepDiveEntry,
@@ -131,8 +131,6 @@ export {
   KeyInsightEntrySchema,
   type MisconceptionEntry,
   MisconceptionEntrySchema,
-  type ModuleEntry,
-  ModuleEntrySchema,
   type ObjectiveEntry,
   ObjectiveEntrySchema,
   type OMIFlowEntry,

@@ -1,12 +1,15 @@
 ---
 import type {
-  ChapterEntry,
-  ModuleEntry,
   ObjectiveEntry,
+  SectionEntry,
+  UnitEntry,
 } from "@sophie/core/schema";
 import { indexAccumulator } from "../lib/pedagogy-index/accumulator";
 
-const { modules, chapters, objectives } = indexAccumulator.asPedagogyIndex();
+// W2/D3 graduation: PedagogyIndex.modules/chapters deleted; iterate
+// index.sections + index.units instead. UnitEntry.section_id replaces
+// ChapterEntry.module; UnitEntry.id replaces ChapterEntry.slug.
+const { sections, units, objectives } = indexAccumulator.asPedagogyIndex();
 
 /**
  * `<CourseObjectives heading="..." />` — Astro consumer that produces
@@ -38,28 +41,28 @@ export interface Props {
 const { heading } = Astro.props;
 
 interface GroupedChapter {
-  chapter: ChapterEntry;
+  chapter: UnitEntry;
   objectives: ObjectiveEntry[];
 }
 
 interface GroupedModule {
-  module: ModuleEntry;
+  module: SectionEntry;
   chapters: GroupedChapter[];
 }
 
-// Group: module → chapters (sorted by order, stable) → objectives
+// Group: section → units (sorted by order, stable) → objectives
 // (authoring order, as emitted by the extractor).
-const grouped: GroupedModule[] = [...modules]
+const grouped: GroupedModule[] = [...sections]
   .sort((a, b) => a.order - b.order)
-  .map((mod) => ({
-    module: mod,
-    chapters: chapters
-      .filter((c) => c.module === mod.slug)
+  .map((sec) => ({
+    module: sec,
+    chapters: units
+      .filter((u) => u.section_id === sec.slug)
       .slice()
-      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-      .map((ch) => ({
-        chapter: ch,
-        objectives: objectives.filter((o) => o.chapter === ch.slug),
+      .sort((a, b) => a.order - b.order)
+      .map((u) => ({
+        chapter: u,
+        objectives: objectives.filter((o) => o.chapter === u.id),
       })),
   }));
 ---
@@ -86,7 +89,7 @@ const grouped: GroupedModule[] = [...modules]
             modChapters.map(({ chapter, objectives: chObjectives }) => (
               <article class='sophie-course-objectives__chapter'>
                 <h3 class='sophie-course-objectives__chapter-title'>
-                  <a href={`/chapters/${chapter.slug}`}>{chapter.title}</a>
+                  <a href={`/units/${chapter.id}/reading`}>{chapter.title}</a>
                 </h3>
                 {chObjectives.length === 0 ? (
                   <p class='sophie-course-objectives__empty'>

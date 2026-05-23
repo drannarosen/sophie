@@ -41,7 +41,7 @@ const sorted = [...definitions].sort((a, b) => a.term.localeCompare(b.term));
             <div set:html={entry.body} />
             <p class='sophie-course-glossary__backlink'>
               defined in{" "}
-              <a href={`/chapters/${entry.chapter}#${entry.anchor}`}>
+              <a href={`/units/${entry.chapter}/reading#${entry.anchor}`}>
                 <code>{entry.chapter}</code>
               </a>
             </p>

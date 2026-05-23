@@ -18,8 +18,12 @@ import { LangTag, NonEmptyString, Slug } from "./primitives.js";
  * INFO surfaces `status: draft` chapters in the audit report so
  * authors see what's been excluded from the student build.
  *
- * `status: draft` exclusion mechanism lives in
- * `@sophie/astro/lib/get-student-chapters.ts` (`getStudentChapters`).
+ * `status: draft` exclusion mechanism (post-W2/D2 graduation):
+ * `status` now lives on `UnitEntry`; the route-level filter
+ * (`examples/smoke/src/pages/units/[unit]/reading.astro:19-26`)
+ * drops draft Units from the student build. The W1-era
+ * `getStudentChapters` helper was deleted with `ChapterEntrySchema`
+ * in W2/D3.
  */
 export const ChapterStatus = z.enum(["draft", "review", "stable"]);
 export type ChapterStatus = z.infer<typeof ChapterStatus>;

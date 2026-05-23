@@ -36,16 +36,18 @@ export function checkObjectives(index: PedagogyIndex, sink: FindingSink): void {
     }
   }
 
-  // O2 — chapter with zero objectives.
+  // O2 — chapter with zero objectives. W2/D2 graduation: iterate
+  // index.units (was index.chapters); per-callsite ObjectiveEntry still
+  // keys by chapter: string whose value equals u.id.
   const chaptersWithObjectives = new Set<string>();
   for (const obj of index.objectives) chaptersWithObjectives.add(obj.chapter);
-  for (const ch of index.chapters) {
-    if (chaptersWithObjectives.has(ch.slug)) continue;
+  for (const u of index.units) {
+    if (chaptersWithObjectives.has(u.id)) continue;
     sink.warnings.push({
       severity: "WARNING",
       code: "O2",
-      message: `O2: chapter "${ch.slug}" has zero learning objectives. Pedagogical roll-up coverage will skip this chapter.`,
-      location: { chapter: ch.slug },
+      message: `O2: chapter "${u.id}" has zero learning objectives. Pedagogical roll-up coverage will skip this chapter.`,
+      location: { chapter: u.id },
     });
   }
 }

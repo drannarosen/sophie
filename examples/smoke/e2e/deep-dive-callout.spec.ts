@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-const CHAPTER_URL = "/chapters/spoiler-alerts";
+const CHAPTER_URL = "/units/spoiler-alerts/reading";
 
 /**
  * Migrated by Session 9 P3 (PR-A, 2026-05-19): the 4 Deep Dives in

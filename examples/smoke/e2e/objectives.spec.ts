@@ -15,7 +15,7 @@ const OBJECTIVES_URL = "/objectives";
  * `ModuleEntry.order`) → chapter (authoring order via
  * `ChapterEntry.order`) → objectives (extractor source-walk order).
  *
- * Chapter headings render as plain `<a href="/chapters/{slug}">` (not
+ * Chapter headings render as plain `<a href="/units/{slug}/reading">` (not
  * `<ChapterRef>` — see PR-C4 design doc "Chapter heading uses a plain
  * `<a href>`"; the page is pure Astro and ChapterRef is React, so we
  * preserve the clickable affordance without paying hydration cost).
@@ -65,7 +65,7 @@ test.describe("PR-C4: /objectives course roll-up", () => {
     ).toBeVisible();
   });
 
-  test("E7: each chapter heading is a clickable <a> to /chapters/{slug}", async ({
+  test("E7: each chapter heading is a clickable <a> to /units/{slug}/reading", async ({
     page,
   }) => {
     await page.goto(OBJECTIVES_URL);
@@ -76,7 +76,7 @@ test.describe("PR-C4: /objectives course roll-up", () => {
       .locator("a");
     await expect(spoilerAnchor).toHaveAttribute(
       "href",
-      "/chapters/spoiler-alerts"
+      "/units/spoiler-alerts/reading"
     );
 
     const measuringAnchor = page
@@ -85,7 +85,7 @@ test.describe("PR-C4: /objectives course roll-up", () => {
       .locator("a");
     await expect(measuringAnchor).toHaveAttribute(
       "href",
-      "/chapters/measuring-the-sky"
+      "/units/measuring-the-sky/reading"
     );
 
     const stellarAnchor = page
@@ -94,12 +94,12 @@ test.describe("PR-C4: /objectives course roll-up", () => {
       .locator("a");
     await expect(stellarAnchor).toHaveAttribute(
       "href",
-      "/chapters/stellar-evolution"
+      "/units/stellar-evolution/reading"
     );
 
     // Clicking navigates.
     await spoilerAnchor.click();
-    await expect(page).toHaveURL(/\/chapters\/spoiler-alerts$/);
+    await expect(page).toHaveURL(/\/units\/spoiler-alerts\/reading$/);
   });
 
   test("E8: objectives render with verb + body in authoring order", async ({
@@ -113,7 +113,7 @@ test.describe("PR-C4: /objectives course roll-up", () => {
     // fls, wavelength. Anchors: `lo-${id}`.
     const spoilerArticle = page
       .locator("article")
-      .filter({ has: page.locator('a[href="/chapters/spoiler-alerts"]') });
+      .filter({ has: page.locator('a[href="/units/spoiler-alerts/reading"]') });
     const spoilerItems = spoilerArticle.locator("li");
     await expect(spoilerItems).toHaveCount(5);
 
@@ -134,9 +134,9 @@ test.describe("PR-C4: /objectives course roll-up", () => {
     await expect(lastItem.locator("strong")).toHaveText("Give");
 
     // measuring-the-sky has 1 stub objective with verb "Recognize".
-    const measuringArticle = page
-      .locator("article")
-      .filter({ has: page.locator('a[href="/chapters/measuring-the-sky"]') });
+    const measuringArticle = page.locator("article").filter({
+      has: page.locator('a[href="/units/measuring-the-sky/reading"]'),
+    });
     const measuringItems = measuringArticle.locator("li");
     await expect(measuringItems).toHaveCount(1);
     await expect(measuringItems.first().locator("strong")).toHaveText(

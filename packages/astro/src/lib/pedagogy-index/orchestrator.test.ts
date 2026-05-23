@@ -29,7 +29,7 @@ describe("pedagogyIndexRemarkPlugin", () => {
     ]);
 
     plugin(tree as never, {
-      path: "/repo/src/content/chapters/test-chapter.mdx",
+      path: "/repo/src/content/sections/sec-a/units/test-chapter/reading.mdx",
     });
 
     const index = indexAccumulator.asPedagogyIndex();
@@ -38,21 +38,22 @@ describe("pedagogyIndexRemarkPlugin", () => {
     expect(found?.chapter).toBe("test-chapter");
   });
 
-  test("uses the default getChapterSlug which returns the basename (matching Astro 6's glob-loader id default)", () => {
+  test("uses the default getChapterSlug which returns the parent-Unit dir name (W2/D4 — Unit id)", () => {
     const plugin = pedagogyIndexRemarkPlugin();
     const tree = root([
       mdxAside({ kind: "definition", title: "Pulsar" }, [para("body")]),
     ]);
 
     plugin(tree as never, {
-      path: "/repo/src/content/chapters/module-a/test-chapter.mdx",
+      path: "/repo/src/content/sections/module-a/units/test-chapter/reading.mdx",
     });
 
     const entry = indexAccumulator
       .asPedagogyIndex()
       .definitions.find((d) => d.term === "Pulsar");
-    // Astro 6 default route uses basename → /chapters/test-chapter.
-    // The extractor's chapter slug must match for back-link hrefs.
+    // W2/D4 (Path A) graduation: the chapter slug is the parent UNIT
+    // dir name (= Unit id), not the file basename (which is `reading`).
+    // The same string indexes per-callsite entries + URL `/units/<unit-id>/reading`.
     expect(entry?.chapter).toBe("test-chapter");
   });
 
@@ -74,7 +75,9 @@ describe("pedagogyIndexRemarkPlugin", () => {
 
   test("re-parsing a chapter replaces its entries (clears stale on each run)", () => {
     const plugin = pedagogyIndexRemarkPlugin();
-    const fileCtx = { path: "/repo/src/content/chapters/hmr-test.mdx" };
+    const fileCtx = {
+      path: "/repo/src/content/sections/sec-a/units/hmr-test/reading.mdx",
+    };
 
     plugin(
       root([
@@ -130,7 +133,7 @@ describe("pedagogyIndexRemarkPlugin", () => {
     ]);
 
     plugin(tree as never, {
-      path: "/repo/src/content/chapters/dual-test.mdx",
+      path: "/repo/src/content/sections/sec-a/units/dual-test/reading.mdx",
     });
 
     const index = indexAccumulator.asPedagogyIndex();
@@ -158,7 +161,7 @@ describe("pedagogyIndexRemarkPlugin (figures)", () => {
     ]);
 
     plugin(tree as never, {
-      path: "/repo/src/content/chapters/fig-plugin.mdx",
+      path: "/repo/src/content/sections/sec-a/units/fig-plugin/reading.mdx",
     });
 
     const index = indexAccumulator.asPedagogyIndex();
@@ -196,7 +199,7 @@ describe("pedagogyIndexRemarkPlugin (objectives + inline-ref usages)", () => {
     ]);
 
     plugin(tree as never, {
-      path: "/repo/src/content/chapters/objectives-plugin.mdx",
+      path: "/repo/src/content/sections/sec-a/units/objectives-plugin/reading.mdx",
     });
 
     const index = indexAccumulator.asPedagogyIndex();

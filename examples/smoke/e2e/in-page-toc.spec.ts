@@ -1,8 +1,8 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-const SPOILER_ALERTS = "/chapters/spoiler-alerts";
-const STELLAR_EVOLUTION = "/chapters/stellar-evolution";
+const SPOILER_ALERTS = "/units/spoiler-alerts/reading";
+const STELLAR_EVOLUTION = "/units/stellar-evolution/reading";
 
 /**
  * PR 4 — In-page table of contents.

@@ -76,6 +76,7 @@ describe("PRA-1 — Unit-aware (W1)", () => {
           prereqs: ["logs"],
           section_id: "stars",
           chapter: "u1-ch",
+          status: "stable",
         },
       ],
       skillReviews: [
@@ -109,6 +110,7 @@ describe("PRA-1 — Unit-aware (W1)", () => {
           section_id: "math",
           chapter: "math-ch",
           topic_id: "logs",
+          status: "stable",
         },
         {
           id: "stars-u1",
@@ -118,6 +120,7 @@ describe("PRA-1 — Unit-aware (W1)", () => {
           prereqs: ["logs"],
           section_id: "stars",
           chapter: "spectra-ch",
+          status: "stable",
         },
       ],
       skillReviews: [
@@ -150,6 +153,7 @@ describe("PRA-1 — Unit-aware (W1)", () => {
           prereqs: ["logs"],
           section_id: "stars",
           chapter: "stars-ch",
+          status: "stable",
         },
       ],
       skillReviews: [
@@ -175,6 +179,7 @@ describe("PRA-1 — Unit-aware (W1)", () => {
         prereqs: [],
         section_id: "galaxies",
         chapter: "galaxies-ch",
+        status: "stable",
       },
     ];
     const sink = emptySink();
@@ -197,6 +202,7 @@ describe("PRA-1 — Unit-aware (W1)", () => {
           prereqs: ["logs"],
           section_id: "stars",
           chapter: "u1-ch",
+          status: "stable",
         },
       ],
       skillReviews: [],
@@ -238,6 +244,7 @@ describe("PRA-1 — Unit-aware (W1)", () => {
           prereqs: ["logs", "exponents"],
           section_id: "stars",
           chapter: "u1-ch",
+          status: "stable",
         },
       ],
       skillReviews: [

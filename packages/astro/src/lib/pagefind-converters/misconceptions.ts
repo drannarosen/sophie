@@ -5,7 +5,7 @@ import { stripHtml } from "./strip-html.ts";
 export const toMisconceptionRecord: EntityToPagefindRecord<
   MisconceptionEntry
 > = (entity, ctx) => ({
-  url: `/chapters/${entity.chapter}#${entity.anchor}`,
+  url: `/units/${entity.chapter}/reading#${entity.anchor}`,
   content: stripHtml(entity.body),
   language: "en",
   meta: {

@@ -18,10 +18,10 @@
  */
 
 export {
-  type ChapterEntry,
-  ChapterEntrySchema,
-  type ModuleEntry,
-  ModuleEntrySchema,
+  type ArtifactEntry,
+  ArtifactEntrySchema,
+} from "./artifact.ts";
+export {
   type ObjectiveEntry,
   ObjectiveEntrySchema,
 } from "./chapter-meta.ts";

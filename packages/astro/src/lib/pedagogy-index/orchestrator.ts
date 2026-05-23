@@ -29,35 +29,46 @@ import { transformMultiRep } from "./transforms/multirep.ts";
 import { transformOMIFlow } from "./transforms/omi-flow.ts";
 
 /**
- * Default chapter-slug deriver. Matches Astro 6's glob-loader
- * default: the chapter id is the file's BASENAME, without the
- * `.mdx` extension. For
- * `examples/smoke/src/content/chapters/01-foundations/spoiler-alerts.mdx`
- * this yields `"spoiler-alerts"` (matching the URL slug at
- * `/chapters/spoiler-alerts`).
+ * Default chapter-slug deriver. W2/D4 (Path A) graduation: the
+ * chapter slug per-callsite extractors carry is the Unit id, which
+ * equals the parent-directory name of the `reading.mdx` artifact. For
+ * `examples/smoke/src/content/sections/foundations/units/measuring-the-sky/reading.mdx`
+ * this yields `"measuring-the-sky"` (matching the URL at
+ * `/units/measuring-the-sky/reading`).
  *
- * Consumer apps with non-default content layouts (e.g. a glob
- * loader configured with `generateId: ...`) pass their own
+ * The W3 rename of per-callsite `chapter: string` → `unit: string` is
+ * out of W2 scope; this function keeps its name + return shape (the
+ * value is now a Unit id by interpretation).
+ *
+ * Consumer apps with non-default content layouts pass their own
  * `getChapterSlug` to `pedagogyIndexRemarkPlugin()`.
  */
 function defaultGetChapterSlug(filePath: string): string | undefined {
-  const match = filePath.match(/[/\\]([^/\\]+)\.mdx$/);
+  // W2 expected shape: `…/content/sections/<sec>/units/<unit>/reading.mdx` →
+  // capture `<unit>`. Future shapes (alternative artifact filenames per
+  // ADR 0067) widen the capture group.
+  const match = filePath.match(/[/\\]([^/\\]+)[/\\]reading\.mdx$/);
   if (!match) return undefined;
   return match[1];
 }
 
 /**
  * Path-detection helpers per ADR 0060. The remark plugin routes
- * `content/chapters/**` and `content/equations/**` to different
- * walkers (chapter citations vs registry declarations); other paths
- * are skipped. Pattern matches both POSIX (`/`) and Windows (`\\`)
- * separators.
+ * `content/sections/**` artifact MDX (W2 graduation) and
+ * `content/equations/**` registry MDX to different walkers; other
+ * paths are skipped. Pattern matches both POSIX (`/`) and Windows
+ * (`\\`) separators.
  */
-const CHAPTER_PATH_RE = /[/\\]content[/\\]chapters[/\\]/;
+const CHAPTER_PATH_RE = /[/\\]content[/\\]sections[/\\]/;
 const EQUATION_REGISTRY_PATH_RE = /[/\\]content[/\\]equations[/\\]/;
 
 function isChapterFilePath(filePath: string): boolean {
-  return CHAPTER_PATH_RE.test(filePath);
+  // W2/D1 (Path A): only `reading.mdx` artifacts under sections/<sec>/units/<unit>/
+  // route to the chapter pass. Section-level artifacts (intro.mdx,
+  // synthesis.mdx, etc.) and other unit-level artifacts (slides.mdx,
+  // spec.mdx, etc.) are NOT chapter-pass content — they get their own
+  // extractor surfaces in future wedges.
+  return CHAPTER_PATH_RE.test(filePath) && /[/\\]reading\.mdx$/.test(filePath);
 }
 
 function isEquationRegistryFilePath(filePath: string): boolean {

@@ -1,5 +1,5 @@
 import type {
-  ChapterEntry,
+  ArtifactEntry,
   DeepDiveEntry,
   EquationCitationEntry,
   EquationEntry,
@@ -8,7 +8,6 @@ import type {
   InlineRefUsageEntry,
   KeyInsightEntry,
   MisconceptionEntry,
-  ModuleEntry,
   ObjectiveEntry,
   OMIFlowEntry,
   SectionEntry,
@@ -853,74 +852,9 @@ describe("indexAccumulator objectives (cross-chapter)", () => {
     );
   });
 });
-describe("indexAccumulator setChapters / setModules", () => {
-  // Mirror setFigureRegistry semantics: last-write-wins, consumer-global,
-  // NOT touched by clearChapter.
-
-  test("setChapters overwrites prior entries (last-write-wins)", () => {
-    const a: ChapterEntry = {
-      slug: "ch-a",
-      title: "Chapter A",
-      module: "mod-1",
-      status: "stable",
-    };
-    const b: ChapterEntry = {
-      slug: "ch-b",
-      title: "Chapter B",
-      module: "mod-1",
-      status: "stable",
-    };
-    const c: ChapterEntry = {
-      slug: "ch-c",
-      title: "Chapter C",
-      module: "mod-1",
-      status: "stable",
-    };
-
-    indexAccumulator.setChapters([a, b]);
-    expect(indexAccumulator.asPedagogyIndex().chapters).toEqual([a, b]);
-
-    indexAccumulator.setChapters([c]);
-    expect(indexAccumulator.asPedagogyIndex().chapters).toEqual([c]);
-  });
-
-  test("setModules overwrites prior entries (last-write-wins)", () => {
-    const a: ModuleEntry = {
-      slug: "mod-a",
-      title: "Module A",
-      order: 0,
-    };
-    const b: ModuleEntry = {
-      slug: "mod-b",
-      title: "Module B",
-      order: 1,
-    };
-
-    indexAccumulator.setModules([a]);
-    expect(indexAccumulator.asPedagogyIndex().modules).toEqual([a]);
-
-    indexAccumulator.setModules([a, b]);
-    expect(indexAccumulator.asPedagogyIndex().modules).toEqual([a, b]);
-  });
-
-  test("clearChapter does NOT touch chapters / modules (consumer-global)", () => {
-    const ch: ChapterEntry = {
-      slug: "ch-x",
-      title: "X",
-      module: "mod-1",
-      status: "stable",
-    };
-    const mod: ModuleEntry = { slug: "mod-1", title: "Module 1", order: 0 };
-
-    indexAccumulator.setChapters([ch]);
-    indexAccumulator.setModules([mod]);
-    indexAccumulator.clearChapter("ch-x");
-
-    const index = indexAccumulator.asPedagogyIndex();
-    expect(index.chapters).toEqual([ch]);
-    expect(index.modules).toEqual([mod]);
-  });
-});
+// W2/D3 — `setChapters` / `setModules` describe block deleted alongside
+// ChapterEntrySchema + ModuleEntrySchema. The W1 `setSections` /
+// `setUnits` + W2 `setArtifacts` blocks below replace it.
 
 describe("indexAccumulator setSections / setUnits (W1)", () => {
   // Per Wedge B-followup design doc D1 + D7. Mirror setChapters /
@@ -963,6 +897,7 @@ describe("indexAccumulator setSections / setUnits (W1)", () => {
       prereqs: [],
       section_id: "intro",
       chapter: "u1-chapter",
+      status: "stable",
     };
     const u2: UnitEntry = {
       id: "u2",
@@ -973,6 +908,7 @@ describe("indexAccumulator setSections / setUnits (W1)", () => {
       section_id: "stars",
       chapter: "u2-chapter",
       lecture: "u2-slides",
+      status: "stable",
     };
 
     indexAccumulator.setUnits([u1]);
@@ -997,6 +933,7 @@ describe("indexAccumulator setSections / setUnits (W1)", () => {
       prereqs: [],
       section_id: "intro",
       chapter: "ch-x",
+      status: "stable",
     };
 
     indexAccumulator.setSections([intro]);
@@ -1021,12 +958,73 @@ describe("indexAccumulator setSections / setUnits (W1)", () => {
         prereqs: [],
         section_id: "intro",
         chapter: "u1",
+        status: "stable",
       },
     ]);
     resetIndexAccumulator();
     const index = indexAccumulator.asPedagogyIndex();
     expect(index.sections).toEqual([]);
     expect(index.units).toEqual([]);
+  });
+});
+
+describe("indexAccumulator setArtifacts (W2)", () => {
+  // Per Wedge B-followup W2 design doc D1 (Path A). Mirrors setSections /
+  // setUnits semantics: last-write-wins, consumer-global, NOT touched by
+  // clearChapter. ArtifactEntry is a discriminated union over scope.
+
+  const unitReading: ArtifactEntry = {
+    id: "spectra-and-composition",
+    type: "reading",
+    scope: "unit",
+    title: "Spectra & Composition — reading",
+    source_path:
+      "src/content/sections/stars/units/spectra-and-composition/reading.mdx",
+    references: {},
+    section_id: "stars",
+    unit_id: "spectra-and-composition",
+  };
+
+  const sectionIntro: ArtifactEntry = {
+    id: "stars-intro",
+    type: "intro",
+    scope: "section",
+    title: "Stars — module intro",
+    source_path: "src/content/sections/stars/intro.mdx",
+    references: {},
+    section_id: "stars",
+  };
+
+  test("setArtifacts overwrites prior entries (last-write-wins)", () => {
+    indexAccumulator.setArtifacts([unitReading]);
+    expect(indexAccumulator.asPedagogyIndex().artifacts).toEqual([unitReading]);
+
+    indexAccumulator.setArtifacts([unitReading, sectionIntro]);
+    expect(indexAccumulator.asPedagogyIndex().artifacts).toEqual([
+      unitReading,
+      sectionIntro,
+    ]);
+
+    indexAccumulator.setArtifacts([sectionIntro]);
+    expect(indexAccumulator.asPedagogyIndex().artifacts).toEqual([
+      sectionIntro,
+    ]);
+  });
+
+  test("clearChapter does NOT touch artifacts (consumer-global)", () => {
+    indexAccumulator.setArtifacts([unitReading]);
+    indexAccumulator.clearChapter("spectra-and-composition");
+    expect(indexAccumulator.asPedagogyIndex().artifacts).toEqual([unitReading]);
+  });
+
+  test("resetIndexAccumulator clears artifacts", () => {
+    indexAccumulator.setArtifacts([unitReading, sectionIntro]);
+    resetIndexAccumulator();
+    expect(indexAccumulator.asPedagogyIndex().artifacts).toEqual([]);
+  });
+
+  test("asPedagogyIndex returns [] when setArtifacts never called", () => {
+    expect(indexAccumulator.asPedagogyIndex().artifacts).toEqual([]);
   });
 });
 
@@ -1091,13 +1089,22 @@ describe("indexAccumulator inlineRefUsages (cross-chapter)", () => {
     ).toBe("term-b");
   });
 });
-describe("asPedagogyIndex (PR-C4 collections)", () => {
-  test("returns all four new collections populated", () => {
-    indexAccumulator.setChapters([
-      { slug: "ch-x", title: "X", module: "mod-1", status: "stable" },
+describe("asPedagogyIndex (W2/D3 collections)", () => {
+  test("returns sections + units + objectives + inlineRefUsages populated", () => {
+    indexAccumulator.setSections([
+      { type: "module", slug: "mod-1", title: "Module 1", order: 0 },
     ]);
-    indexAccumulator.setModules([
-      { slug: "mod-1", title: "Module 1", order: 0 },
+    indexAccumulator.setUnits([
+      {
+        id: "ch-x",
+        type: "lecture",
+        title: "X",
+        order: 0,
+        prereqs: [],
+        section_id: "mod-1",
+        chapter: "ch-x",
+        status: "stable",
+      },
     ]);
     indexAccumulator.addObjectives([
       {
@@ -1113,8 +1120,8 @@ describe("asPedagogyIndex (PR-C4 collections)", () => {
     ]);
 
     const index = indexAccumulator.asPedagogyIndex();
-    expect(index.chapters).toHaveLength(1);
-    expect(index.modules).toHaveLength(1);
+    expect(index.sections).toHaveLength(1);
+    expect(index.units).toHaveLength(1);
     expect(index.objectives).toHaveLength(1);
     expect(index.inlineRefUsages).toHaveLength(1);
   });

@@ -90,9 +90,9 @@ test.describe("PR-C3: <CourseKeyInsights /> on /key-insights", () => {
       els.map((el) => (el as HTMLAnchorElement).getAttribute("href") ?? "")
     );
     expect(hrefs).toEqual([
-      "/chapters/spectra-and-composition#why-is-h-alpha-red",
-      "/chapters/spoiler-alerts#ki-1",
-      "/chapters/spoiler-alerts#ki-2",
+      "/units/spectra-and-composition/reading#why-is-h-alpha-red",
+      "/units/spoiler-alerts/reading#ki-1",
+      "/units/spoiler-alerts/reading#ki-2",
     ]);
   });
 
@@ -105,7 +105,7 @@ test.describe("PR-C3: <CourseKeyInsights /> on /key-insights", () => {
       .first();
     await firstBacklink.click();
     await expect(page).toHaveURL(
-      /\/chapters\/spectra-and-composition#why-is-h-alpha-red$/
+      /\/units\/spectra-and-composition\/reading#why-is-h-alpha-red$/
     );
   });
 

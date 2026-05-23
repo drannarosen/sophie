@@ -2,34 +2,51 @@ import type { ReactNode } from "react";
 import { z } from "zod";
 
 /**
- * `<ChapterRef slug="..." />` or `<ChapterRef slug="...">custom text</ChapterRef>`
- * — inline cross-reference to a chapter in the build-time pedagogy
- * index (PR-C4). Hovers / clicks the trigger to show a popover with
- * the module-breadcrumb + chapter title + (optional) description;
- * clicks navigate to `/chapters/<slug>`.
+ * `<ChapterRef chapter="..." />` or `<ChapterRef chapter="...">custom text</ChapterRef>`
+ * — inline cross-reference to a reading-shape chapter in the build-
+ * time pedagogy index. Hovers / clicks the trigger to show a popover
+ * with the section breadcrumb + unit title + (optional) description;
+ * clicks navigate to `/units/<chapter>/reading`.
  *
- * Unlike `<EquationRef>` / `<FigureRef>`, the self-closing default renders
- * the chapter *title* (not an "Eq. N" / "Fig. N" ordinal). Chapters
- * reference *concepts* (named by title); equations and figures
- * reference *positions* (numbered for in-prose lookup). Locked by
- * PR-C4 brainstorm Q6.
+ * W2/D3 graduation per ADR 0067 + W1 design doc D7:
  *
- * `slug` matches a `ChapterEntry.slug` directly. Mismatch in PR-C4:
- * graceful fallback (render `children ?? slug` as bare prose; no
- * popover, no link; dev `console.warn`). PR-C4's audit invariant C1
- * elevates this to a build-time error.
+ * - Prop renamed `slug` → `chapter` to match `UnitEntry.chapter` field
+ *   name + the inline-ref convention (`<RetrievalPrompt target>`,
+ *   `<SpacedReview chapter>`). The value is the reading-artifact id
+ *   (which equals the unit id per W2/D4 1:1 convention).
+ *
+ * - Lookup chain reads from the W2 stores: `artifactStore.lookup(chapter)`
+ *   resolves to the `ArtifactEntry[type=reading]`; `unitStore.lookup(unit_id)`
+ *   resolves the parent `UnitEntry`; `sectionStore.lookup(section_id)`
+ *   resolves the parent `SectionEntry` for the hover-preview breadcrumb.
+ *
+ * - Unlike `<EquationRef>` / `<FigureRef>`, the self-closing default
+ *   renders the unit *title* (not an "Eq. N" / "Fig. N" ordinal).
+ *   Chapters reference *concepts* (named by title); equations and
+ *   figures reference *positions* (numbered for in-prose lookup).
+ *
+ * - `chapter` must resolve to an `ArtifactEntry` in the pedagogy
+ *   index. Mismatch: graceful fallback (render `children ?? chapter`
+ *   as bare prose; no popover, no link; dev `console.warn`). The
+ *   audit invariant C1 elevates this to a build-time error.
+ *
+ * `<LectureRef lecture="…">` is the future analog for slides
+ * artifacts; lands in the wedge that ships slides extraction.
  */
 export const ChapterRefPropsSchema = z.object({
-  /** Chapter slug — must resolve to a `ChapterEntry` in the pedagogy index. */
-  slug: z.string().min(1),
+  /**
+   * Reading-artifact id — must resolve to an `ArtifactEntry[type=reading]`
+   * in the pedagogy index. Per W2/D4 1:1 convention, this string equals
+   * both `UnitEntry.id` and `UnitEntry.chapter` for unit-bound readings.
+   */
+  chapter: z.string().min(1),
   /**
    * Optional link-text override. When omitted (self-closing
-   * `<ChapterRef slug="X" />`), renders the chapter title derived
+   * `<ChapterRef chapter="X" />`), renders the unit title derived
    * from the index entry. When provided, renders the children
-   * verbatim (e.g. `<ChapterRef slug="hydrostatic-equilibrium">the
+   * verbatim (e.g. `<ChapterRef chapter="hydrostatic-equilibrium">the
    * pressure-gravity balance</ChapterRef>`). Both modes render the
-   * same popover. Locked by PR-C4 brainstorm Q8 (dual-mode parity
-   * with EquationRef / FigureRef).
+   * same popover.
    */
   children: z.custom<ReactNode>().optional(),
 });

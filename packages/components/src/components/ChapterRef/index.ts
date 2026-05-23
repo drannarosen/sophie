@@ -4,8 +4,8 @@ export {
   ChapterRefPropsSchema,
 } from "./ChapterRef.schema.ts";
 export { ChapterRef } from "./ChapterRef.tsx";
-export { __setChapters } from "./chapters-store.ts";
-export { __setModules } from "./modules-store.ts";
-// NOTE: chapterStore / moduleStore (the lookup-bearing objects) are
-// internal (not re-exported), matching the GlossaryTerm / EquationRef /
-// FigureRef precedent. Consumers go through the React component.
+// W2/D3 — chapters-store + modules-store deleted; ChapterRef reads
+// from the W2 stores (artifactStore + unitStore + sectionStore in
+// runtime/) directly. __setArtifacts (the W2 graduation of
+// __setChapters/__setModules) lives in store-hydration's internal
+// subpath and is wired by TextbookLayout, not re-exported here.

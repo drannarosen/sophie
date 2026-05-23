@@ -1,7 +1,7 @@
 import type {
-  ChapterEntry,
   OMIFlowEntry,
   PedagogyIndex,
+  UnitEntry,
 } from "@sophie/core/schema";
 import { describe, expect, test } from "vitest";
 import { buildPedagogyIndex } from "../test-helpers.ts";
@@ -77,19 +77,25 @@ describe("OF-1 — OMIFlow slots out of canonical source order (WARN)", () => {
   });
 });
 
-describe("OF-2 — framing:'OMI' chapter requires ≥1 <OMIFlow> (ERROR)", () => {
-  const chapter = (overrides: Partial<ChapterEntry> = {}): ChapterEntry => ({
-    slug: "ch",
+describe("OF-2 — framing:'OMI' Unit requires ≥1 <OMIFlow> (ERROR)", () => {
+  // W2/D2 graduation: fixtures construct UnitEntry (was ChapterEntry).
+  // u.id == chapter slug (W2/D4 1:1 convention).
+  const unit = (overrides: Partial<UnitEntry> = {}): UnitEntry => ({
+    id: "ch",
+    type: "lecture",
     title: "Title",
-    module: "mod",
+    order: 0,
+    prereqs: [],
+    section_id: "mod",
+    chapter: "ch",
     status: "stable",
     ...overrides,
   });
 
-  test("emits no finding when an OMI-framed chapter has at least one OMIFlow", () => {
+  test("emits no finding when an OMI-framed Unit has at least one OMIFlow", () => {
     const index = {
       ...emptyIndex(),
-      chapters: [chapter({ slug: "covered", framing: "OMI" })],
+      units: [unit({ id: "covered", chapter: "covered", framing: "OMI" })],
       omiFlows: [{ ...baseEntry, chapter: "covered" }],
     };
     const sink = emptySink();
@@ -97,10 +103,10 @@ describe("OF-2 — framing:'OMI' chapter requires ≥1 <OMIFlow> (ERROR)", () =>
     expect(sink.errors).toEqual([]);
   });
 
-  test("emits one ERROR per OMI-framed chapter with zero OMIFlows", () => {
+  test("emits one ERROR per OMI-framed Unit with zero OMIFlows", () => {
     const index = {
       ...emptyIndex(),
-      chapters: [chapter({ slug: "missing", framing: "OMI" })],
+      units: [unit({ id: "missing", chapter: "missing", framing: "OMI" })],
       omiFlows: [],
       retrievalPrompts: [],
       spacedReviews: [],
@@ -118,10 +124,10 @@ describe("OF-2 — framing:'OMI' chapter requires ≥1 <OMIFlow> (ERROR)", () =>
     expect(sink.errors[0]?.message).toMatch(/zero/i);
   });
 
-  test("emits no finding for non-OMI-framed chapters regardless of OMIFlow presence", () => {
+  test("emits no finding for non-OMI-framed Units regardless of OMIFlow presence", () => {
     const index = {
       ...emptyIndex(),
-      chapters: [chapter({ slug: "ch-a" /* framing omitted */ })],
+      units: [unit({ id: "ch-a", chapter: "ch-a" /* framing omitted */ })],
       omiFlows: [],
       retrievalPrompts: [],
       spacedReviews: [],
@@ -132,13 +138,13 @@ describe("OF-2 — framing:'OMI' chapter requires ≥1 <OMIFlow> (ERROR)", () =>
     expect(sink.errors).toEqual([]);
   });
 
-  test("multiple OMI-framed chapters: each missing OMIFlow gets its own ERROR", () => {
+  test("multiple OMI-framed Units: each missing OMIFlow gets its own ERROR", () => {
     const index = {
       ...emptyIndex(),
-      chapters: [
-        chapter({ slug: "missing-a", framing: "OMI" }),
-        chapter({ slug: "covered", framing: "OMI" }),
-        chapter({ slug: "missing-b", framing: "OMI" }),
+      units: [
+        unit({ id: "missing-a", chapter: "missing-a", framing: "OMI" }),
+        unit({ id: "covered", chapter: "covered", framing: "OMI" }),
+        unit({ id: "missing-b", chapter: "missing-b", framing: "OMI" }),
       ],
       omiFlows: [{ ...baseEntry, chapter: "covered" }],
     };

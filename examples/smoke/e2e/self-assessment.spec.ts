@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-const CHAPTER_URL = "/chapters/spoiler-alerts";
+const CHAPTER_URL = "/units/spoiler-alerts/reading";
 
 test.describe("Self-assessment family in spoiler-alerts chapter", () => {
   test.beforeEach(async ({ context }) => {

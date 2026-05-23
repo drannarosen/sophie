@@ -6,7 +6,7 @@ export const toDefinitionRecord: EntityToPagefindRecord<DefinitionEntry> = (
   entity,
   ctx
 ) => ({
-  url: `/chapters/${entity.chapter}#${entity.anchor}`,
+  url: `/units/${entity.chapter}/reading#${entity.anchor}`,
   content: stripHtml(entity.body),
   language: "en",
   meta: {

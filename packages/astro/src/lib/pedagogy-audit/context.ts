@@ -12,7 +12,13 @@ import { slugify } from "@sophie/core/schema";
  * reads `ctx.definitionSlugs` not `index.definitions.map(...)`.
  */
 export interface AuditContext {
-  /** All chapter slugs in the consumer's chapters collection. */
+  /**
+   * All chapter slugs known to the audit. W2/D4 (Path A) graduation:
+   * sourced from `index.units` (each Unit's `id` IS the chapter slug
+   * for reading-artifact lookups under the W2 1:1 convention; the W3
+   * per-callsite rename `chapter` → `unit` keeps this set's semantic
+   * intact).
+   */
   chapterSlugs: ReadonlySet<string>;
   /** All defined-term slugs (powers D4 lookups). */
   definitionSlugs: ReadonlySet<string>;
@@ -40,7 +46,7 @@ export function buildAuditContext(index: PedagogyIndex): AuditContext {
   const definitionSlugs = new Set(index.definitions.map((d) => d.slug));
   const equationSlugs = new Set(index.equations.map((e) => e.id));
   const figureRegistryNames = new Set(index.figureRegistry.map((f) => f.name));
-  const chapterSlugs = new Set(index.chapters.map((c) => c.slug));
+  const chapterSlugs = new Set(index.units.map((u) => u.id));
 
   const glossaryRefSlugs = new Set<string>();
   const eqRefKeys = new Set<string>();

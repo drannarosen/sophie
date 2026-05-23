@@ -1,41 +1,25 @@
-import { defineCollection } from "astro:content";
+import { defineCollection, z } from "astro:content";
 import {
-  ChapterSchema,
+  ArtifactReferencesSchema,
   EquationRegistryEntrySchema,
-  SectionModuleVariantSchema,
+  NonEmptyString,
   SectionSchema,
   UnitEntrySchema,
 } from "@sophie/core/schema";
 import { glob } from "astro/loaders";
 
-// Astro 6 Content Layer: glob loaders pull every chapter MDX + every
-// module JSON + every equation MDX. The Zod schemas (from
-// @sophie/core/schema) are the source of truth for frontmatter;
+// Astro 6 Content Layer: glob loaders pull every section JSON, every
+// unit JSON, every equation MDX, and (W2) every artifact MDX from the
+// new `sections/<sec>/units/<unit>/<artifact>.mdx` (+ future
+// `sections/<sec>/<artifact>.mdx`) layout per ADR 0067. The Zod schemas
+// (from @sophie/core/schema) are the source of truth for frontmatter;
 // failures surface as build errors and dev-server warnings.
-const chapters = defineCollection({
-  loader: glob({ pattern: "**/*.mdx", base: "./src/content/chapters" }),
-  schema: ChapterSchema,
-});
-
-// Wedge A.5 (ADR 0067): the previous `ModuleSchema` is now the
-// `module`-variant of the new SectionSchema discriminated union.
-// Collection name stays "modules" (content-collection rename is a
-// separate concern, not coupled to the schema-rename PR). Each
-// module JSON now carries `"type": "module"` to satisfy the
-// discriminator.
-const modules = defineCollection({
-  loader: glob({ pattern: "**/*.json", base: "./src/content/modules" }),
-  schema: SectionModuleVariantSchema,
-});
 
 // Wedge B-followup (W1) per ADR 0067: top-level Section content per
 // the new hierarchy. The full discriminated union accepts
-// module / phase / track / unit-block / bridge variants. For W1 these
-// COEXIST with the legacy `modules` collection (each module has a
-// twin Section[type=module] with the same slug); W2 deletes
-// `modules`/`chapters` in favor of `sections`/`units` exclusively.
+// module / phase / track / unit-block / bridge variants.
 const sections = defineCollection({
-  loader: glob({ pattern: "**/*.json", base: "./src/content/sections" }),
+  loader: glob({ pattern: "*.json", base: "./src/content/sections" }),
   schema: SectionSchema,
 });
 
@@ -43,21 +27,43 @@ const sections = defineCollection({
 // content metadata. Each unit binds to its containing Section
 // (`section_id`) and to its reading artifact (`chapter`); the optional
 // `lecture` field binds to the slides artifact (slides extraction
-// lands post-W2). One unit per existing chapter in the W1 fixture.
+// lands post-W2). W2/D2: status (required) + framing? + description?
+// surfaced through UnitSchema.
 const units = defineCollection({
   loader: glob({ pattern: "**/*.json", base: "./src/content/units" }),
   schema: UnitEntrySchema,
 });
 
+// Wedge B-followup (W2/D1) per ADR 0067 (Path A): typed Artifact MDX
+// content. Glob walks `sections/<sec>/units/<unit>/*.mdx` (unit-scope)
+// and `sections/<sec>/*.mdx` (section-scope, future). Frontmatter
+// carries only what's NOT path-derivable: id, title, references, plus
+// optional chapter-display fields (subtitle, chapter-number,
+// reading-time, track, authors, updated, ai_contribution) that flow
+// through via .passthrough() until a richer schema lands.
+//
+// Path-derivation of type/scope/unit_id/section_id/source_path happens
+// at consumer time in @sophie/astro's TextbookLayout (Task 13). The
+// per-entry result is shaped into ArtifactEntry before pushing into the
+// pedagogy index via indexAccumulator.setArtifacts.
+const artifacts = defineCollection({
+  loader: glob({ pattern: "**/*.mdx", base: "./src/content/sections" }),
+  schema: z
+    .object({
+      id: NonEmptyString,
+      title: NonEmptyString,
+      references: ArtifactReferencesSchema.optional().default({}),
+    })
+    .passthrough(),
+});
+
 // ADR 0060 registry ecosystem: per-equation MDX files at
 // `src/content/equations/<id>.mdx`. Frontmatter validates against
 // `EquationRegistryEntrySchema`; body holds the biography children
-// (Observable, Assumption, BreaksWhen, CommonMisuse, DerivationStep)
-// extracted by the pedagogy-index-extractor in Batch 4. Empty for now;
-// populated in Batch 6 (PR-7's three equations migrate here).
+// (Observable, Assumption, BreaksWhen, CommonMisuse, DerivationStep).
 const equations = defineCollection({
   loader: glob({ pattern: "**/*.mdx", base: "./src/content/equations" }),
   schema: EquationRegistryEntrySchema,
 });
 
-export const collections = { chapters, modules, sections, units, equations };
+export const collections = { sections, units, artifacts, equations };

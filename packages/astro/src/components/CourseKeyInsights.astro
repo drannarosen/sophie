@@ -62,7 +62,7 @@ const sorted: KeyInsightEntry[] = [...keyInsights].sort((a, b) => {
             <div set:html={entry.body} />
             <p class='sophie-course-key-insights__backlink'>
               defined in{" "}
-              <a href={`/chapters/${entry.chapter}#${entry.anchor}`}>
+              <a href={`/units/${entry.chapter}/reading#${entry.anchor}`}>
                 <code>{entry.chapter}</code>
               </a>
             </p>

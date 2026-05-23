@@ -48,7 +48,7 @@ const hasAny = previous != null || next != null;
       {previous ? (
         <a
           class="sophie-chapter-pagination__pill sophie-chapter-pagination__pill--prev"
-          href={`/chapters/${previous.slug}`}
+          href={`/units/${previous.slug}/reading`}
           rel="prev"
         >
           {previous.thumbnail && (
@@ -84,7 +84,7 @@ const hasAny = previous != null || next != null;
       {next ? (
         <a
           class="sophie-chapter-pagination__pill sophie-chapter-pagination__pill--next"
-          href={`/chapters/${next.slug}`}
+          href={`/units/${next.slug}/reading`}
           rel="next"
         >
           <span class="sophie-chapter-pagination__body">

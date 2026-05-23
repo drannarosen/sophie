@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-const CHAPTER_URL = "/chapters/spoiler-alerts";
+const CHAPTER_URL = "/units/spoiler-alerts/reading";
 
 /**
  * PR-C1 — inline `<GlossaryTerm>` references.
@@ -9,7 +9,7 @@ const CHAPTER_URL = "/chapters/spoiler-alerts";
  * The smoke chapter wraps two terms ("dark matter", "redshift") in
  * `<GlossaryTerm>` inside the Doppler-preview paragraph. Each
  * trigger:
- *   - is an `<a>` whose href is `/chapters/<source>#<anchor>` of
+ *   - is an `<a>` whose href is `/units/<source>/reading#<anchor>` of
  *     the canonical definition (a different chapter is fine; here
  *     both definitions live in spoiler-alerts itself);
  *   - on hover OR focus, opens a Radix HoverCard exposing the
@@ -25,10 +25,10 @@ test.describe("PR-C1: <GlossaryTerm> on the smoke chapter", () => {
   }) => {
     await page.goto(CHAPTER_URL);
     const darkMatter = page
-      .locator('a[href="/chapters/spoiler-alerts#dark-matter"]')
+      .locator('a[href="/units/spoiler-alerts/reading#dark-matter"]')
       .first();
     const redshift = page
-      .locator('a[href="/chapters/spoiler-alerts#redshift"]')
+      .locator('a[href="/units/spoiler-alerts/reading#redshift"]')
       .first();
     await expect(darkMatter).toBeAttached();
     await expect(redshift).toBeAttached();
@@ -39,7 +39,7 @@ test.describe("PR-C1: <GlossaryTerm> on the smoke chapter", () => {
   }) => {
     await page.goto(CHAPTER_URL);
     const trigger = page
-      .locator('a[href="/chapters/spoiler-alerts#dark-matter"]')
+      .locator('a[href="/units/spoiler-alerts/reading#dark-matter"]')
       .first();
     const icon = trigger.locator("svg");
     await expect(icon).toBeAttached();
@@ -60,7 +60,7 @@ test.describe("PR-C1: <GlossaryTerm> on the smoke chapter", () => {
     // this specific trigger is still pre-hydration (followup #10).
     // Mirrors chapter-ref.spec.ts (PR-C4 Task 11) scoped pattern.
     const trigger = page
-      .locator('a[href="/chapters/spoiler-alerts#dark-matter"]')
+      .locator('a[href="/units/spoiler-alerts/reading#dark-matter"]')
       .first();
     await trigger.waitFor({ state: "attached" });
     await trigger.scrollIntoViewIfNeeded();
@@ -93,7 +93,7 @@ test.describe("PR-C1: <GlossaryTerm> on the smoke chapter", () => {
     // the subsequent hover to fire before Radix's listeners are
     // attached (followup #10, full-suite race).
     const trigger = page
-      .locator('a[href="/chapters/spoiler-alerts#redshift"]')
+      .locator('a[href="/units/spoiler-alerts/reading#redshift"]')
       .first();
     await trigger.waitFor({ state: "attached" });
     await trigger.scrollIntoViewIfNeeded();
@@ -118,10 +118,12 @@ test.describe("PR-C1: <GlossaryTerm> on the smoke chapter", () => {
   }) => {
     await page.goto(CHAPTER_URL);
     const trigger = page
-      .locator('a[href="/chapters/spoiler-alerts#dark-matter"]')
+      .locator('a[href="/units/spoiler-alerts/reading#dark-matter"]')
       .first();
     await trigger.click();
-    await expect(page).toHaveURL(/\/chapters\/spoiler-alerts#dark-matter$/);
+    await expect(page).toHaveURL(
+      /\/units\/spoiler-alerts\/reading#dark-matter$/
+    );
   });
 
   test("GlossaryTerm trigger (closed state) is axe-clean", async ({ page }) => {
@@ -141,7 +143,7 @@ test.describe("PR-C1: <GlossaryTerm> on the smoke chapter", () => {
     await page.goto(CHAPTER_URL);
     await page.waitForLoadState("networkidle");
     const trigger = page
-      .locator('a[href="/chapters/spoiler-alerts#redshift"]')
+      .locator('a[href="/units/spoiler-alerts/reading#redshift"]')
       .first();
     await expect(trigger).toBeAttached();
     const results = await new AxeBuilder({ page })

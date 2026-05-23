@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-const CHAPTER_URL = "/chapters/measuring-the-sky";
+const CHAPTER_URL = "/units/measuring-the-sky/reading";
 
 /**
  * PR 10 — chapter-print polish.

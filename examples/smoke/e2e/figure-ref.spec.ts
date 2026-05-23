@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-const CHAPTER_URL = "/chapters/spoiler-alerts";
+const CHAPTER_URL = "/units/spoiler-alerts/reading";
 
 /**
  * PR-C3 — inline `<FigureRef>` cross-references.
@@ -26,7 +26,7 @@ const CHAPTER_URL = "/chapters/spoiler-alerts";
  *
  * Each trigger:
  *   - is an `<a>` whose href is
- *     `/chapters/spoiler-alerts#fig-{slugify(name)}-{number}`
+ *     `/units/spoiler-alerts/reading#fig-{slugify(name)}-{number}`
  *     (the canonical usage's anchor; in v1 the smoke chapter is
  *     the only chapter, so the canonical IS the first usage);
  *   - carries a presentational Lucide ImageIcon (`aria-hidden`,
@@ -55,7 +55,7 @@ test.describe("PR-C3: <FigureRef> on the smoke chapter", () => {
   }) => {
     await page.goto(CHAPTER_URL);
     const trigger = page
-      .locator('a[href="/chapters/spoiler-alerts#fig-decoder-ring-16"]')
+      .locator('a[href="/units/spoiler-alerts/reading#fig-decoder-ring-16"]')
       .first();
     await expect(trigger).toBeAttached();
     // Sprint F label form ("Fig. C.N") fires when the chapter declares
@@ -69,7 +69,7 @@ test.describe("PR-C3: <FigureRef> on the smoke chapter", () => {
     // `<astro-island await-children>` (Astro defers child-slot
     // evaluation for `client:load` React islands with slotted
     // children). The anchor + slotted text DO ship in the built
-    // HTML (verified: grep finds `<a href="/chapters/spoiler-alerts
+    // HTML (verified: grep finds `<a href="/units/spoiler-alerts/reading
     // #fig-cosmic-distance-ladder-4"><astro-slot>This distance
     // ladder</astro-slot>...</a>`), but Playwright's selector
     // engine — across both attribute (`a[href=...]`) and ARIA-role
@@ -91,7 +91,7 @@ test.describe("PR-C3: <FigureRef> on the smoke chapter", () => {
   }) => {
     await page.goto(CHAPTER_URL);
     const trigger = page
-      .locator('a[href="/chapters/spoiler-alerts#fig-decoder-ring-16"]')
+      .locator('a[href="/units/spoiler-alerts/reading#fig-decoder-ring-16"]')
       .first();
     const icon = trigger.locator("svg");
     await expect(icon).toBeAttached();
@@ -118,7 +118,7 @@ test.describe("PR-C3: <FigureRef> on the smoke chapter", () => {
     // in full-suite runs (followup #10). Mirrors chapter-ref.spec.ts
     // (PR-C4 Task 11) scoped pattern.
     const trigger = page
-      .locator('a[href="/chapters/spoiler-alerts#fig-decoder-ring-16"]')
+      .locator('a[href="/units/spoiler-alerts/reading#fig-decoder-ring-16"]')
       .first();
     await trigger.waitFor({ state: "attached" });
     await trigger.scrollIntoViewIfNeeded();
@@ -165,11 +165,11 @@ test.describe("PR-C3: <FigureRef> on the smoke chapter", () => {
   }) => {
     await page.goto(CHAPTER_URL);
     const trigger = page
-      .locator('a[href="/chapters/spoiler-alerts#fig-decoder-ring-16"]')
+      .locator('a[href="/units/spoiler-alerts/reading#fig-decoder-ring-16"]')
       .first();
     await trigger.click();
     await expect(page).toHaveURL(
-      /\/chapters\/spoiler-alerts#fig-decoder-ring-16$/
+      /\/units\/spoiler-alerts\/reading#fig-decoder-ring-16$/
     );
   });
 

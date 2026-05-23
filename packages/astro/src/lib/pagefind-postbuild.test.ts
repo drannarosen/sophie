@@ -48,13 +48,18 @@ describe("buildPagefindIndex (Layer 1.6)", () => {
       "./pedagogy-index/index.ts"
     );
     resetIndexAccumulator();
-    indexAccumulator.setModules([{ slug: "m", title: "M", order: 1 }]);
-    indexAccumulator.setChapters([
+    indexAccumulator.setSections([
+      { type: "module", slug: "m", title: "M", order: 1 },
+    ]);
+    indexAccumulator.setUnits([
       {
-        slug: "ch",
+        id: "ch",
+        type: "lecture",
         title: "Test chapter",
-        module: "m",
         order: 1,
+        prereqs: [],
+        section_id: "m",
+        chapter: "ch",
         status: "stable",
       },
     ]);
@@ -163,13 +168,18 @@ describe("pedagogy-index.json artifact (ADR 0045)", () => {
       "./pedagogy-index/index.ts"
     );
     resetIndexAccumulator();
-    indexAccumulator.setModules([{ slug: "m", title: "M", order: 1 }]);
-    indexAccumulator.setChapters([
+    indexAccumulator.setSections([
+      { type: "module", slug: "m", title: "M", order: 1 },
+    ]);
+    indexAccumulator.setUnits([
       {
-        slug: "ch",
+        id: "ch",
+        type: "lecture",
         title: "Test chapter",
-        module: "m",
         order: 1,
+        prereqs: [],
+        section_id: "m",
+        chapter: "ch",
         status: "stable",
       },
     ]);
@@ -195,13 +205,16 @@ describe("pedagogy-index.json artifact (ADR 0045)", () => {
 
     const parsed = JSON.parse(readFileSync(artifactPath, "utf-8"));
     expect(parsed).toMatchObject({
-      modules: [{ slug: "m", title: "M", order: 1 }],
-      chapters: [
+      sections: [{ type: "module", slug: "m", title: "M", order: 1 }],
+      units: [
         {
-          slug: "ch",
+          id: "ch",
+          type: "lecture",
           title: "Test chapter",
-          module: "m",
           order: 1,
+          prereqs: [],
+          section_id: "m",
+          chapter: "ch",
           status: "stable",
         },
       ],
@@ -217,6 +230,8 @@ describe("pedagogy-index.json artifact (ADR 0045)", () => {
     // Every PedagogyIndex collection field is present (plain arrays —
     // no Maps, no Dates — already JSON-safe per
     // `indexAccumulator.asPedagogyIndex()`).
+    // W2/D3 graduation: chapters + modules deleted from PedagogyIndex;
+    // sections + units + artifacts replace them.
     for (const key of [
       "definitions",
       "equations",
@@ -224,8 +239,9 @@ describe("pedagogy-index.json artifact (ADR 0045)", () => {
       "figureRegistry",
       "figureUsages",
       "misconceptions",
-      "chapters",
-      "modules",
+      "sections",
+      "units",
+      "artifacts",
       "objectives",
       "inlineRefUsages",
     ]) {

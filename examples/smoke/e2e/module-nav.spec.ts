@@ -1,9 +1,9 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-const SPOILER_ALERTS = "/chapters/spoiler-alerts";
-const MEASURING_THE_SKY = "/chapters/measuring-the-sky";
-const STELLAR_EVOLUTION = "/chapters/stellar-evolution";
+const SPOILER_ALERTS = "/units/spoiler-alerts/reading";
+const MEASURING_THE_SKY = "/units/measuring-the-sky/reading";
+const STELLAR_EVOLUTION = "/units/stellar-evolution/reading";
 
 /**
  * PR 3 — Sidebar module/chapter navigation.
@@ -79,7 +79,10 @@ test.describe("PR 3: Module/chapter sidebar nav", () => {
     await page.goto(SPOILER_ALERTS);
     const active = page.locator(".sophie-chapter-list a[aria-current='page']");
     await expect(active).toHaveCount(1);
-    await expect(active).toHaveAttribute("href", "/chapters/spoiler-alerts");
+    await expect(active).toHaveAttribute(
+      "href",
+      "/units/spoiler-alerts/reading"
+    );
   });
 
   test("clicking another chapter navigates and active state moves", async ({

@@ -4,20 +4,19 @@ import "../styles/textbook-layout.css";
 // Rule 4 + 2026-05-19 architecture audit P2 #3). TextbookLayout is
 // the only consumer; consumer apps never call these directly.
 import {
-  __setChapters,
+  __setArtifacts,
   __setEquationCitations,
   __setEquations,
   __setFigureRegistry,
   __setFigureUsages,
   __setGlossaryDefinitions,
-  __setModules,
   __setObjectives,
   __setSections,
   __setUnits,
 } from "@sophie/components/internal/store-hydration";
 import type { FigureRegistryEntry } from "@sophie/core/schema";
 import { type CollectionEntry, getCollection, render } from "astro:content";
-import { getStudentChapters } from "../lib/get-student-chapters";
+import { artifactsFromCollection } from "../lib/artifacts-from-collection";
 import {
   auditExitCode,
   formatAuditReport,
@@ -114,23 +113,17 @@ const {
 // definitions and equations through its `__setGlossaryDefinitions`
 // and `__setEquations` setters rather than importing the virtual
 // module itself.
-// ADR 0051: read the full chapters collection (drafts included) so we
-// can surface CS2 INFO for any drafts; then filter to the student-
-// visible subset for everything that ships to students — the pedagogy
-// index, the client-side `__setChapters` store, and the routes (the
-// route filter lives in the consumer-app's [...slug].astro). Drafts
-// still run per-chapter audit because `render(c)` triggers the MDX
-// remark plugin against EVERY chapter (per ADR 0051 §"DOES still run
-// per-chapter audit").
-const allChapters: CollectionEntry<"chapters">[] =
-  await getCollection("chapters");
-const modules: CollectionEntry<"modules">[] = await getCollection("modules");
-// Wedge B-followup (W1) per ADR 0067: read the new Section + Unit
-// content collections. Coexist with chapters/ + modules/ for W1; W2
-// deletes those in favor of these two.
+// W2/D1 (Path A) per ADR 0067: read the canonical Section + Unit +
+// Artifact content collections. ADR 0051 draft semantics now live on
+// UnitEntry.status (per W2/D2 Placement 1) — read ALL units so the
+// audit can surface CS2 INFO for any drafts; the route filter
+// (in consumer-app's pages/units/[unit]/reading.astro) does the
+// student-build filter at routing time.
 const sections: CollectionEntry<"sections">[] = await getCollection("sections");
 const units: CollectionEntry<"units">[] = await getCollection("units");
-await Promise.all(allChapters.map((c) => render(c)));
+const allArtifacts: CollectionEntry<"artifacts">[] =
+  await getCollection("artifacts");
+await Promise.all(allArtifacts.map((a) => render(a)));
 // ADR 0060 registry pattern: force every equation registry MDX through
 // our remark plugin BEFORE the audit runs, so R1/R4 see a complete
 // declarations-vs-citations picture. In production, Astro pre-renders
@@ -139,11 +132,10 @@ await Promise.all(allChapters.map((c) => render(c)));
 // lazily on request — without this eager render, requesting a chapter
 // before any /equations/<id> page fires R1 ("citation without
 // declaration") because the registry MDX hasn't been processed yet.
-// Mirrors the chapters eager-render above.
+// Mirrors the artifacts eager-render above.
 const equationEntries: CollectionEntry<"equations">[] =
   await getCollection("equations");
 await Promise.all(equationEntries.map((e) => render(e)));
-const chapters = getStudentChapters(allChapters);
 // Push the consumer-supplied figure registry into the accumulator
 // BEFORE snapshotting / before the slot renders so that
 // <CourseFigures> and <ChapterFigures> (which read figureRegistry via
@@ -152,41 +144,16 @@ const chapters = getStudentChapters(allChapters);
 // in-MDX <Figure> walks; the registry of canonical image metadata
 // is consumer-owned content (smoke's `src/content/figures.ts`).
 indexAccumulator.setFigureRegistry(figureRegistry);
-// PR-C4: push the consumer-owned chapters + modules collections into
-// the accumulator. Both are consumer-global (last-write-wins, NOT
-// touched by `clearChapter`) — mirrors `figureRegistry`. Read here
-// once per layout render after `getCollection` resolves so the audit
-// pass (below) sees populated chapters + modules.
-indexAccumulator.setChapters(
-  chapters.map((c) => ({
-    slug: c.data.slug,
-    title: c.data.title,
-    module: c.data.module,
-    order: c.data.order,
-    description: c.data.description,
-    status: c.data.status,
-    // ADR 0063 — surfaces `framing: "OMI"` to the OF-2 audit invariant.
-    // Other framings (PMI, custom) are reserved by the schema enum but
-    // not yet emitted by chapters; this passthrough is forward-compat.
-    framing: c.data.framing,
-  }))
-);
-indexAccumulator.setModules(
-  modules.map((m) => ({
-    slug: m.data.slug,
-    title: m.data.title,
-    order: m.data.order,
-    description: m.data.description,
-  }))
-);
-// Wedge B-followup (W1) per ADR 0067 + design doc D1 + D7: push the
-// consumer-owned sections + units into the accumulator. Same
-// consumer-global semantics as setChapters / setModules. PRA-1
-// (Unit-aware) and SR-1 (section-validity) read from these
-// collections; <SpacedReview section=…> rendering reads via the
-// sectionStore / unitStore (hydrated below).
+// W2/D1 per ADR 0067 + design doc D1 + D7: push the consumer-owned
+// sections + units + artifacts into the accumulator. Same
+// consumer-global semantics as setFigureRegistry: last-write-wins,
+// NOT touched by `clearChapter`. The audit reads these for the
+// graduated invariants (PRA-1 Unit-aware, SR-1 section-validity,
+// OF-2 framing on UnitEntry, CT-1/CT-2/K1/O2/MG2 all iterating
+// index.units now).
 indexAccumulator.setSections(sections.map((s) => s.data));
 indexAccumulator.setUnits(units.map((u) => u.data));
+indexAccumulator.setArtifacts(artifactsFromCollection(allArtifacts));
 const pedagogy = indexAccumulator.asPedagogyIndex();
 // PR-C4: run the systematic build-time audit pass once per build,
 // after the index is fully populated. Errors fail the build; warnings
@@ -199,13 +166,15 @@ const pedagogy = indexAccumulator.asPedagogyIndex();
 // `draftChapterSlugs` from `allChapters`, populating the accumulator
 // with contract validations, and reporting the audit's verdict.
 //
-// ADR 0051 CS2: drafts were filtered out of `chapters` (and therefore
-// out of `pedagogy.chapters`) by `getStudentChapters`. Compute the
-// draft slug list from the unfiltered `allChapters` so the audit can
-// emit CS2 INFO for each excluded chapter.
-const draftChapterSlugs = allChapters
-  .filter((c) => c.data.status === "draft")
-  .map((c) => c.data.slug);
+// ADR 0051 CS2 graduated to W2/D2 (Placement 1): draft status now
+// lives on UnitEntry. The audit's `index.units` still carries drafts
+// (no pre-filter in TextbookLayout post-W2 — route-level filtering
+// happens in pages/units/[unit]/reading.astro instead). Compute the
+// draft id list from `units` so CS2 INFO surfaces with the same shape
+// authors see today.
+const draftChapterSlugs = units
+  .filter((u) => u.data.status === "draft")
+  .map((u) => u.data.id);
 
 // ADR 0056 PR 3: walk docs/website/{decisions,reference}/ to collect
 // contract validations (V0+V8 surfaced as extractor findings; V1–V7
@@ -279,25 +248,23 @@ __setEquations(pedagogy.equations);
 __setEquationCitations(pedagogy.equationCitations);
 __setFigureRegistry(figureRegistry);
 __setFigureUsages(pedagogy.figureUsages);
-// PR-C4: three new setters wired alongside the four PR-C1/C2/C3
-// setters above. chapters + modules support `<ChapterRef>`'s
-// hover-preview (module breadcrumb + chapter title + description).
 // objectives ships as a stub store for pattern uniformity — no v1
 // React consumer (the `/objectives` page is server-rendered Astro
 // that reads the accumulator directly); the setter + script tag
 // anticipate future client-side consumers (PR 7 faceted search, a
 // `<CourseObjectives client:visible>` widget, etc.) without
 // rewiring TextbookLayout later.
-__setChapters(pedagogy.chapters);
-__setModules(pedagogy.modules);
 __setObjectives(pedagogy.objectives);
-// Wedge B-followup (W1) — hydrate the React-side sectionStore + unitStore
-// so <SpacedReview section=…> (and future SectionRef-style components)
-// can read the consumer-supplied content-collection data without
-// touching the Vite-only virtual:sophie/pedagogy-index. Per
-// ADR 0001 (framework purity) + ADR 0038 Revisions.
+// W1 + W2/D1 — hydrate the React-side sectionStore + unitStore +
+// artifactStore so <ChapterRef chapter=…> (W2 prop rename per D3),
+// <SpacedReview section=…> (W1 graduation), and future
+// <LectureRef> / <ArtifactRef> components can read the consumer-supplied
+// content-collection data without touching the Vite-only
+// virtual:sophie/pedagogy-index. Per ADR 0001 (framework purity) +
+// ADR 0038 Revisions.
 __setSections(pedagogy.sections);
 __setUnits(pedagogy.units);
+__setArtifacts(pedagogy.artifacts);
 // Serialize the same payloads into <script> tags so each role's
 // client-side store can hydrate after React mount. Server-side module
 // state doesn't survive to the wire, so without these script tags
@@ -332,27 +299,21 @@ const pedagogyFigureUsagesJson = JSON.stringify(pedagogy.figureUsages).replace(
   /</g,
   "\\u003c"
 );
-// PR-C4: three new payloads for client-side store hydration. Same
-// escape treatment as the four PR-C1/C2/C3 payloads above.
-const pedagogyChaptersJson = JSON.stringify(pedagogy.chapters).replace(
-  /</g,
-  "\\u003c"
-);
-const pedagogyModulesJson = JSON.stringify(pedagogy.modules).replace(
-  /</g,
-  "\\u003c"
-);
+// Objectives payload — same escape treatment as the payloads above.
 const pedagogyObjectivesJson = JSON.stringify(pedagogy.objectives).replace(
   /</g,
   "\\u003c"
 );
-// Wedge B-followup (W1) — payloads for the new sectionStore + unitStore.
-// Same escape treatment.
+// W1 + W2/D1 — payloads for the new sectionStore + unitStore + artifactStore.
 const pedagogySectionsJson = JSON.stringify(pedagogy.sections).replace(
   /</g,
   "\\u003c"
 );
 const pedagogyUnitsJson = JSON.stringify(pedagogy.units).replace(
+  /</g,
+  "\\u003c"
+);
+const pedagogyArtifactsJson = JSON.stringify(pedagogy.artifacts).replace(
   /</g,
   "\\u003c"
 );
@@ -451,26 +412,6 @@ const collapsedVars = [
   type='application/json'
   set:html={pedagogyFigureUsagesJson}
 />
-{/* Chapters collection payload (PR-C4):
-    consumer-app-owned chapter metadata forwarded from
-    `getCollection('chapters')`. Hydrates <ChapterRef>'s chapters
-    store for hover-preview lookups (module + title + description). */}
-<script
-  is:inline
-  id='sophie-pedagogy-chapters'
-  type='application/json'
-  set:html={pedagogyChaptersJson}
-/>
-{/* Modules collection payload (PR-C4):
-    consumer-app-owned module metadata forwarded from
-    `getCollection('modules')`. Hydrates <ChapterRef>'s modules
-    store so the hover-preview's module-breadcrumb resolves. */}
-<script
-  is:inline
-  id='sophie-pedagogy-modules'
-  type='application/json'
-  set:html={pedagogyModulesJson}
-/>
 {/* Objectives collection payload (PR-C4):
     per-chapter learning objectives. v1 has no React consumer for the
     objectives store; ships alongside chapters/modules for pattern
@@ -499,6 +440,17 @@ const collapsedVars = [
   id='sophie-pedagogy-units'
   type='application/json'
   set:html={pedagogyUnitsJson}
+/>
+{/* W2/D1 (Path A) per ADR 0067 — SSR-emit the Artifact collection so
+    the artifactStore can auto-hydrate after React mount. Consumed by
+    `<ChapterRef chapter=…>` (W2 prop rename per D3): looks up the
+    reading-artifact id, then walks to unitStore + sectionStore for
+    hover-preview. */}
+<script
+  is:inline
+  id='sophie-pedagogy-artifacts'
+  type='application/json'
+  set:html={pedagogyArtifactsJson}
 />
 
 <div

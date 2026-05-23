@@ -75,12 +75,12 @@ describe("<FigureRef>", () => {
   // precedent.
 
   // T33 — trigger structure (HoverCard.Root → Trigger asChild → <a>).
-  it("renders an anchor with href=/chapters/<chapter>#<anchor> when registry + canonical resolve", () => {
+  it("renders an anchor with href=/units/<unit>/reading#<anchor> when registry + canonical resolve (W2/D5 route shape)", () => {
     render(<FigureRef name='cosmic-distance-ladder' />);
     const link = screen.getByRole("link", { name: /fig\. 1/i });
     expect(link.tagName).toBe("A");
     expect(link.getAttribute("href")).toBe(
-      "/chapters/spoiler-alerts#fig-cosmic-distance-ladder"
+      "/units/spoiler-alerts/reading#fig-cosmic-distance-ladder"
     );
   });
 

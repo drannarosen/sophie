@@ -18,6 +18,7 @@ describe("UnitSchema", () => {
     type: "lecture",
     title: "Why ASTR 201 is Different",
     order: 1,
+    status: "stable",
   };
 
   it("accepts a minimal lecture", () => {
@@ -33,6 +34,7 @@ describe("UnitSchema", () => {
         order: 1,
         prereqs: ["math-logarithms", "physics-newton-2"],
         estimated_duration_weeks: 1.5,
+        status: "review",
       })
     ).not.toThrow();
   });
@@ -45,6 +47,7 @@ describe("UnitSchema", () => {
         title: "Logarithms",
         order: 1,
         topic_id: "math-logarithms",
+        status: "stable",
       })
     ).not.toThrow();
   });
@@ -62,5 +65,48 @@ describe("UnitSchema", () => {
   it("defaults prereqs to empty array when omitted", () => {
     const parsed = UnitSchema.parse(minimalLecture);
     expect(parsed.prereqs).toEqual([]);
+  });
+
+  it("rejects when status is missing (W2/D2: status is required)", () => {
+    const { status: _, ...withoutStatus } = minimalLecture;
+    expect(() => UnitSchema.parse(withoutStatus)).toThrow();
+  });
+
+  it("accepts each declared status value (W2/D2: ChapterStatus reuse)", () => {
+    for (const status of ["draft", "review", "stable"]) {
+      expect(() =>
+        UnitSchema.parse({ ...minimalLecture, status })
+      ).not.toThrow();
+    }
+  });
+
+  it("rejects unknown status value", () => {
+    expect(() =>
+      UnitSchema.parse({ ...minimalLecture, status: "published" })
+    ).toThrow();
+  });
+
+  it("accepts optional framing: OMI (W2/D2)", () => {
+    const parsed = UnitSchema.parse({ ...minimalLecture, framing: "OMI" });
+    expect(parsed.framing).toBe("OMI");
+  });
+
+  it("treats framing as omittable (W2/D2: optional)", () => {
+    const parsed = UnitSchema.parse(minimalLecture);
+    expect(parsed.framing).toBeUndefined();
+  });
+
+  it("rejects unknown framing value", () => {
+    expect(() =>
+      UnitSchema.parse({ ...minimalLecture, framing: "PMI" })
+    ).toThrow();
+  });
+
+  it("accepts optional description (W2/D2)", () => {
+    const parsed = UnitSchema.parse({
+      ...minimalLecture,
+      description: "One-paragraph Unit summary.",
+    });
+    expect(parsed.description).toBe("One-paragraph Unit summary.");
   });
 });

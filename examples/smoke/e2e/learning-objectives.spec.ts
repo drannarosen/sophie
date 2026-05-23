@@ -46,7 +46,7 @@ import { expect, test } from "@playwright/test";
  * contract.
  */
 
-const CHAPTER_URL = "/chapters/measuring-the-sky/";
+const CHAPTER_URL = "/units/measuring-the-sky/reading/";
 const LO_UL_SELECTOR = 'section[aria-labelledby="lo-heading"] ul';
 const LO_CHECKBOX_SELECTOR = `${LO_UL_SELECTOR} input[type="checkbox"]`;
 

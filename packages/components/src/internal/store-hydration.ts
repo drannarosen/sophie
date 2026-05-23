@@ -1,9 +1,11 @@
 /**
  * Internal store-hydration entry point — re-exports the setter
  * functions @sophie/astro's `<TextbookLayout>` uses to push consumer-
- * supplied collections (chapters / modules / equations / glossary
- * definitions / figure registry / figure usages / objectives /
- * sections / units) into the component-side stores at render time.
+ * supplied collections (equations / glossary definitions / figure
+ * registry / figure usages / objectives / sections / units / artifacts)
+ * into the component-side stores at render time. W2/D3 deleted
+ * `__setChapters` + `__setModules` (the chapters/modules collections
+ * graduated to sections/units + the artifacts collection).
  *
  * **Not part of the public authoring API.** These setters were
  * previously exported from the root `@sophie/components` barrel with
@@ -21,14 +23,18 @@
  * regular component imports and (b) so any future accidental import
  * from elsewhere is one extra warning sign that something's off-path.
  */
-export { __setChapters } from "../components/ChapterRef/chapters-store.ts";
-export { __setModules } from "../components/ChapterRef/modules-store.ts";
 export { __setEquationCitations } from "../components/EquationRef/equation-citations-store.ts";
 export { __setEquations } from "../components/EquationRef/equations-store.ts";
 export { __setFigureRegistry } from "../components/FigureRef/figure-registry-store.ts";
 export { __setFigureUsages } from "../components/FigureRef/figure-usages-store.ts";
 export { __setGlossaryDefinitions } from "../components/GlossaryTerm/definitions-store.ts";
 export { __setObjectives } from "../components/Objective/objectives-store.ts";
+// Wedge B-followup (W2/D1) — Artifact consumer-supplied collection per
+// ADR 0067 (Path A). Surfaced for `<ChapterRef chapter="…">` reading-
+// artifact lookup, post-W2 audit invariants, and future `<LectureRef>`
+// / `<ArtifactRef>` consumers. ArtifactEntry is a discriminated union
+// over scope (unit | section).
+export { __setArtifacts } from "../runtime/artifacts-store.ts";
 // Wedge B-followup (W1) — Section + Unit consumer-supplied collections
 // per ADR 0067. Surfaced for `<SpacedReview section=…>` rendering and
 // the audit graduations (PRA-1 / SR-1). Stores live in `runtime/`

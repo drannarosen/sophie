@@ -1,69 +1,63 @@
 import * as HoverCard from "@radix-ui/react-hover-card";
 import { BookMarked } from "lucide-react";
+import { artifactStore } from "../../runtime/artifacts-store.ts";
+import { sectionStore } from "../../runtime/sections-store.ts";
+import { unitStore } from "../../runtime/units-store.ts";
 import { useHydrated } from "../../runtime/useHydrated.ts";
 import styles from "./ChapterRef.module.css.js";
 import type { ChapterRefProps } from "./ChapterRef.schema.ts";
-import { chapterStore } from "./chapters-store.ts";
-import { moduleStore } from "./modules-store.ts";
 
 /**
- * `<ChapterRef slug="..." />` or `<ChapterRef slug="...">custom text</ChapterRef>`
+ * `<ChapterRef chapter="..." />` or `<ChapterRef chapter="...">custom text</ChapterRef>`
  * — the chapter analog of `<GlossaryTerm>` / `<EquationRef>` /
- * `<FigureRef>`. PR-C4 first instance of the inline chapter
- * cross-reference. Renders an inline anchor; HoverCard exposes a
- * three-line preview card (module breadcrumb + chapter title +
- * optional description, per PR-C4 brainstorm Q2).
+ * `<FigureRef>`. Inline cross-reference to a reading-shape artifact;
+ * renders an inline anchor whose HoverCard exposes a three-line preview
+ * (section breadcrumb + unit title + optional description).
  *
- * Trigger text: when `children` is omitted, renders the chapter
- * title (per PR-C4 brainstorm Q6 — diverges from EquationRef / FigureRef
- * ordinal-by-default because chapters reference *concepts* named by
- * title, not *positions* numbered for in-prose lookup). When
- * `children` is provided, renders the children verbatim (e.g. for
- * in-prose mentions like "the pressure-gravity balance"). Both forms
- * render the same popover (PR-C4 brainstorm Q8 — dual-mode parity
- * with EquationRef / FigureRef).
+ * W2/D3 graduation: the lookup chain reads from the W2 stores
+ * `artifactStore → unitStore → sectionStore` (was `chapterStore` +
+ * `moduleStore` pre-W2). Per W2/D4 1:1 convention, the `chapter` prop
+ * value equals both the ArtifactEntry id and the parent UnitEntry id.
+ *
+ * Trigger text: when `children` is omitted, renders the unit title
+ * (chapters reference *concepts* named by title, not *positions*
+ * numbered for in-prose lookup). When `children` is provided, renders
+ * the children verbatim. Both forms render the same popover.
  *
  * Trigger icon: presentational `BookMarked` from `lucide-react`
  * (aria-hidden); the link text is the accessible name. `BookMarked`
  * (rather than `BookOpen` — used by `<GlossaryTerm>`) so the two
  * book-themed inline refs are visually distinguishable side-by-side.
- * ADR 0039 pedagogy-side Lucide adoption, fourth consumer.
  *
- * On miss (no matching chapter): renders `children ?? slug` as bare
+ * On miss (no matching artifact): renders `children ?? chapter` as bare
  * text with no anchor / popover; dev-only `console.warn` flags
- * authoring drift. PR-C4's audit invariant C1 elevates this to a
- * build error.
+ * authoring drift. The audit invariant C1 elevates this to a build
+ * error.
  */
-export function ChapterRef({ slug, children }: ChapterRefProps) {
-  const chapter = chapterStore.lookup(slug);
-  const module = chapter ? moduleStore.lookup(chapter.module) : undefined;
-  // E2E hydration signal (followup #10): see useHydrated.ts and
-  // GlossaryTerm.tsx for rationale.
+export function ChapterRef({ chapter, children }: ChapterRefProps) {
+  const artifact = artifactStore.lookup(chapter);
+  const unit =
+    artifact && artifact.scope === "unit" && artifact.unit_id
+      ? unitStore.lookup(artifact.unit_id)
+      : undefined;
+  const section = unit ? sectionStore.lookup(unit.section_id) : undefined;
+  // E2E hydration signal — see GlossaryTerm.tsx for rationale.
   const hydrated = useHydrated();
 
-  if (!chapter) {
-    // Dev-only signal so authoring drift is visible. Production
-    // pages stay silent — the bare-prose fallback degrades
-    // gracefully. PR-C4's audit invariant C1 elevates this to a
-    // build error.
-    // SSR-pass-tolerant warning — same Sprint K pattern as
-    // GlossaryTerm / EquationRef / FigureRef. Astro dev SSR ordering
-    // means the chapters/modules stores aren't populated when chapter
-    // MDX renders server-side. Suppress SSR warning so only
-    // client-side real misses surface in dev console.
+  if (!artifact || !unit) {
     if (
       typeof document !== "undefined" &&
       (typeof process === "undefined" || process.env?.NODE_ENV !== "production")
     ) {
       console.warn(
-        `[ChapterRef] No chapter found for slug "${slug}". Rendering bare prose.`
+        `[ChapterRef] No reading artifact found for chapter "${chapter}". Rendering bare prose.`
       );
     }
-    return <>{children ?? slug}</>;
+    return <>{children ?? chapter}</>;
   }
 
-  const href = `/chapters/${slug}`;
-  const linkText = children ?? chapter.title;
+  const href = `/units/${chapter}/reading`;
+  const linkText = children ?? unit.title;
 
   return (
     <HoverCard.Root openDelay={150} closeDelay={120}>
@@ -89,10 +83,12 @@ export function ChapterRef({ slug, children }: ChapterRefProps) {
           data-sophie-chapter-popover=''
           sideOffset={6}
         >
-          {module ? <p className={styles.breadcrumb}>{module.title}</p> : null}
-          <strong className={styles.title}>{chapter.title}</strong>
-          {chapter.description ? (
-            <p className={styles.description}>{chapter.description}</p>
+          {section ? (
+            <p className={styles.breadcrumb}>{section.title}</p>
+          ) : null}
+          <strong className={styles.title}>{unit.title}</strong>
+          {unit.description ? (
+            <p className={styles.description}>{unit.description}</p>
           ) : null}
           <HoverCard.Arrow className={styles.arrow} />
         </HoverCard.Content>

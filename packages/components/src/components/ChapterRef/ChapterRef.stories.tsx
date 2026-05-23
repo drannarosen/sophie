@@ -1,33 +1,73 @@
+import type {
+  ArtifactEntry,
+  SectionEntry,
+  UnitEntry,
+} from "@sophie/core/schema";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { __setArtifacts } from "../../runtime/artifacts-store.ts";
+import { __setSections } from "../../runtime/sections-store.ts";
+import { __setUnits } from "../../runtime/units-store.ts";
 import { ChapterRef } from "./ChapterRef.tsx";
-import { __setChapters } from "./chapters-store.ts";
-import { __setModules } from "./modules-store.ts";
 
-// Story-level fixtures. Mirror the smoke-target shape so the popover
-// renders against realistic content. Decision Q6: self-closing
-// `<ChapterRef />` renders the chapter title.
-const chapterFixture = [
+// Story-level fixtures. W2/D3 graduation — populate the W2 stores
+// (artifactStore + unitStore + sectionStore) directly. Production
+// hydration runs via @sophie/astro <TextbookLayout>'s SSR→CSR
+// script-tag transfer (ADR 0038); Storybook runs outside that
+// pipeline.
+const artifactFixture: ArtifactEntry[] = [
   {
-    slug: "hydrostatic-equilibrium",
-    title: "Hydrostatic Equilibrium",
-    module: "stellar-structure",
-    order: 1,
-    description:
-      "How a star's pressure gradient balances gravity from core to photosphere.",
-    status: "stable" as const,
+    id: "hydrostatic-equilibrium",
+    type: "reading",
+    scope: "unit",
+    title: "Hydrostatic Equilibrium — reading",
+    source_path:
+      "src/content/sections/stellar-structure/units/hydrostatic-equilibrium/reading.mdx",
+    references: {},
+    section_id: "stellar-structure",
+    unit_id: "hydrostatic-equilibrium",
   },
   {
-    slug: "radiative-transfer",
+    id: "radiative-transfer",
+    type: "reading",
+    scope: "unit",
+    title: "Radiative Transfer — reading",
+    source_path:
+      "src/content/sections/stellar-structure/units/radiative-transfer/reading.mdx",
+    references: {},
+    section_id: "stellar-structure",
+    unit_id: "radiative-transfer",
+  },
+];
+
+const unitFixture: UnitEntry[] = [
+  {
+    id: "hydrostatic-equilibrium",
+    type: "lecture",
+    title: "Hydrostatic Equilibrium",
+    order: 1,
+    prereqs: [],
+    section_id: "stellar-structure",
+    chapter: "hydrostatic-equilibrium",
+    status: "stable",
+    description:
+      "How a star's pressure gradient balances gravity from core to photosphere.",
+  },
+  {
+    id: "radiative-transfer",
+    type: "lecture",
     title: "Radiative Transfer",
-    module: "stellar-structure",
     order: 2,
-    status: "stable" as const,
+    prereqs: [],
+    section_id: "stellar-structure",
+    chapter: "radiative-transfer",
+    status: "stable",
     // No description — exercises the popover's skip-when-absent branch.
   },
 ];
 
-const moduleFixture = [
+const sectionFixture: SectionEntry[] = [
   {
+    type: "module",
     slug: "stellar-structure",
     title: "Stellar Structure",
     order: 1,
@@ -42,16 +82,13 @@ const meta = {
     layout: "padded",
   },
   argTypes: {
-    slug: { control: { type: "text" } },
+    chapter: { control: { type: "text" } },
   },
-  // Seed the stores before each story. Production populates them
-  // via the @sophie/astro <TextbookLayout> SSR→CSR script-tag
-  // transfer (ADR 0038); Storybook runs outside that pipeline, so
-  // we wire the same setters directly.
   decorators: [
     (Story) => {
-      __setChapters(chapterFixture);
-      __setModules(moduleFixture);
+      __setArtifacts(artifactFixture);
+      __setUnits(unitFixture);
+      __setSections(sectionFixture);
       return <Story />;
     },
   ],
@@ -61,13 +98,13 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * Self-closing default. Trigger text is the chapter title (Q6 —
+ * Self-closing default. Trigger text is the unit title (W2/D3 —
  * chapters reference concepts named by title, not positions
  * numbered for in-prose lookup).
  */
 export const SelfClosingDefault: Story = {
   args: {
-    slug: "hydrostatic-equilibrium",
+    chapter: "hydrostatic-equilibrium",
   },
   render: (args) => (
     <p>
@@ -79,11 +116,11 @@ export const SelfClosingDefault: Story = {
 /**
  * Children-form. The link text matches the surrounding prose,
  * preserving readability when the author names the concept in
- * the sentence rather than the chapter title.
+ * the sentence rather than the unit title.
  */
 export const WithChildrenProse: Story = {
   args: {
-    slug: "hydrostatic-equilibrium",
+    chapter: "hydrostatic-equilibrium",
     children: "the pressure-gravity balance",
   },
   render: (args) => (
@@ -95,12 +132,12 @@ export const WithChildrenProse: Story = {
 };
 
 /**
- * Chapter without a description. The popover collapses to two
- * lines (module breadcrumb + title); no awkward empty paragraph.
+ * Unit without a description. The popover collapses to two
+ * lines (section breadcrumb + title); no awkward empty paragraph.
  */
 export const WithoutDescription: Story = {
   args: {
-    slug: "radiative-transfer",
+    chapter: "radiative-transfer",
   },
   render: (args) => (
     <p>
@@ -111,15 +148,15 @@ export const WithoutDescription: Story = {
 };
 
 /**
- * When the slug doesn't match any chapter in the index, the
- * component gracefully falls back to plain prose (no anchor, no
- * popover). PR-C4 audit invariant C1 elevates this to a build-time
- * error; this story keeps in-flight chapters renderable while
- * authoring is underway.
+ * When the `chapter` prop doesn't match any reading artifact in the
+ * index, the component gracefully falls back to plain prose (no
+ * anchor, no popover). Audit invariant C1 elevates this to a
+ * build-time error; this story keeps in-flight chapters renderable
+ * while authoring is underway.
  */
 export const MissBareProseFallback: Story = {
   args: {
-    slug: "does-not-exist",
+    chapter: "does-not-exist",
     children: "missing chapter",
   },
   render: (args) => (

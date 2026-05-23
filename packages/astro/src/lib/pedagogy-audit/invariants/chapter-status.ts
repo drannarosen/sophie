@@ -3,17 +3,20 @@ import type { AuditExtras, FindingSink } from "../types.ts";
 /**
  * Chapter-status audit invariant (CS2) per ADR 0051.
  *
- *   CS2 INFO — chapter has `status: draft` — excluded from the student
+ *   CS2 INFO — Unit has `status: draft` — excluded from the student
  *              build. Surfaces in audit so the author sees what's been
  *              filtered out.
  *
- * The slug list comes via `extras.draftChapterSlugs` because
- * TextbookLayout filters drafts BEFORE setChapters; the audit's
- * `index.chapters` is the student-visible subset, so the unfiltered
- * slugs come from outside the index.
+ * W2/D2 graduation: `status` lives on `UnitEntry` now (was the
+ * deleted `ChapterEntry`). The slug list comes via
+ * `extras.draftChapterSlugs` which TextbookLayout populates from
+ * `units.filter(u => u.data.status === 'draft').map(u => u.data.id)`.
+ * Per W2/D4's 1:1 convention the unit id equals the chapter slug,
+ * so the `draftChapterSlugs` field name persists through W2; W3
+ * will rename it to `draftUnitIds`.
  *
- * CS1 (chapter MDX missing required `status:` frontmatter) is enforced
- * upstream at the `ChapterSchema` Zod layer — the audit never fires
+ * CS1 (Unit metadata missing required `status:` field) is enforced
+ * upstream at the `UnitSchema` Zod layer — the audit never fires
  * that code because the build fails earlier.
  */
 export function checkChapterStatus(

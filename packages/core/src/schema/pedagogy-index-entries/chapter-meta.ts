@@ -2,71 +2,23 @@ import { z } from "zod";
 import { NonEmptyString } from "../primitives.ts";
 
 /**
- * Chapter-meta pedagogy entries — chapter / module / objective. These
- * three roles are sourced from the consumer app's content collections
- * (`chapters`, `modules`) and from `<LearningObjectives>`-nested
- * `<Objective>` flow elements in chapter MDX.
+ * Chapter-meta pedagogy entries — scoped to `ObjectiveEntry` after
+ * W2/D3 deleted `ChapterEntrySchema` + `ModuleEntrySchema`.
  *
- * Co-located here because all three populate the "what's in this
- * course" navigation surface (chapter list, module sequence, learning-
- * objective roll-up) and the audit treats them as one coordinated
- * family (CS1/CS2 for chapter status; O1/O2 for objectives).
+ * Pre-W2 this file co-located Chapter / Module / Objective entries
+ * because all three populated the "what's in this course" navigation
+ * surface. Post-W2/D1 (Path A) + D3:
+ *
+ *   - `ChapterEntry` → DELETED; reading-shape artifact data flows
+ *     through `ArtifactEntry[type=reading]` and `UnitEntry`.
+ *   - `ModuleEntry` → DELETED; module metadata graduates to
+ *     `SectionEntry[type=module]`.
+ *
+ * `ObjectiveEntry` stays — per-callsite extractor output keyed by
+ * chapter slug (= unit id per W2/D4). The `chapter` field name is
+ * preserved through W2; W3 renames per-callsite `chapter: string` →
+ * `unit: string` across all extractor entry schemas.
  */
-
-/**
- * A chapter entry — one per chapter in the consumer's Astro
- * `chapters` content collection. Populated at SSR-merge time by
- * `TextbookLayout` from `getCollection('chapters')`; never written by
- * the remark extractor (chapters are consumer-app-owned, like
- * `figureRegistry`). Powers `<ChapterRef>` hover-preview and the
- * `/objectives` course roll-up.
- */
-export const ChapterEntrySchema = z.object({
-  /** Chapter slug (matches the content-collection entry id). */
-  slug: NonEmptyString,
-  /** Human-readable chapter title. */
-  title: NonEmptyString,
-  /** Module slug — FK to `ModuleEntry.slug`. */
-  module: NonEmptyString,
-  /** Optional in-module ordering. Chapter order within a module is authoring-driven; absent => sort-stable insertion order. */
-  order: z.number().int().nonnegative().optional(),
-  /** Optional single-paragraph chapter description for hover-preview + roll-up cards. */
-  description: z.string().optional(),
-  /**
-   * Chapter maturity (ADR 0051). Mirrors `ChapterSchema.status`.
-   * Required so the audit's CS2 INFO finding (draft chapters present)
-   * has a signal to read; routing-level draft-exclusion lives in
-   * `@sophie/astro/lib/get-student-chapters.ts`.
-   */
-  status: z.enum(["draft", "review", "stable"]),
-  /**
-   * Optional pedagogical framing declaration (ADR 0063 + accepted-
-   * features §A8). Mirrors `ChapterSchema.framing`. v1 only models
-   * `"OMI"`; OF-2 audit invariant fires when this is `"OMI"` but the
-   * chapter renders zero `<OMIFlow>` callsites.
-   */
-  framing: z.enum(["OMI"]).optional(),
-});
-export type ChapterEntry = z.infer<typeof ChapterEntrySchema>;
-
-/**
- * A module entry — one per top-level course module in the consumer's
- * Astro `modules` content collection. Populated at SSR-merge time from
- * `getCollection('modules')`. Modules are ordered (the course outline
- * is a sequence), so `order` is required — distinct from chapters,
- * where order within a module is optional.
- */
-export const ModuleEntrySchema = z.object({
-  /** Module slug (matches the content-collection entry id). */
-  slug: NonEmptyString,
-  /** Human-readable module title. */
-  title: NonEmptyString,
-  /** Required course-outline ordering. */
-  order: z.number().int().nonnegative(),
-  /** Optional single-paragraph module description. */
-  description: z.string().optional(),
-});
-export type ModuleEntry = z.infer<typeof ModuleEntrySchema>;
 
 /**
  * A learning-objective entry — extracted from `<Objective>` flow
@@ -82,7 +34,7 @@ export const ObjectiveEntrySchema = z.object({
   verb: NonEmptyString,
   /** Pre-rendered HTML of the objective body. Consumers embed via `set:html`. */
   body: NonEmptyString,
-  /** Chapter slug containing the source <Objective>. */
+  /** Chapter slug (= unit id per W2/D4) containing the source <Objective>. */
   chapter: NonEmptyString,
   /** DOM id; passthrough `lo-${id}`. */
   anchor: NonEmptyString,

@@ -6,10 +6,10 @@ tags:
   - artifacts
   - course-website
   - reasoning-os
-status: accepted-design
+status: shipped
 validation:
   status: in-progress
-  last_validated_date: "2026-05-21"
+  last_validated_date: "2026-05-22"
   evidence:
     - kind: manual
       ref: "packages/core/src/schema/subsection.ts + unit.ts + artifact.ts"
@@ -19,13 +19,21 @@ validation:
       ref: "packages/core/src/schema/section.ts"
       date: "2026-05-21"
       notes: "Wedge A.5 shipped the SectionSchema discriminated union (module / phase / track / unit-block / bridge variants) replacing the previous ModuleSchema. ChapterSectionSchema renamed from the old SectionSchema (chapter-internal H2 concept). 14 unit tests + smoke consumer migration."
+    - kind: manual
+      ref: "Wedge B-followup W1 (PR #157, merged 2026-05-22 as 7f9b25f)"
+      date: "2026-05-22"
+      notes: "Surfaced Section[] + Unit[] in PedagogyIndex; graduated PRA-1 (Unit-aware) + SR-1 (section-validity); <SpacedReview section> end-to-end render. Smoke ADDED sections/ + units/ collections; chapters/ + modules/ stayed (transitional)."
+    - kind: manual
+      ref: "Wedge B-followup W2 (feat/wedge-b-followup-w2)"
+      date: "2026-05-22"
+      notes: "File-layout migration activated. Smoke chapter MDX MOVED to sections/<sec>/units/<unit>/reading.mdx; ArtifactEntry surfaced in PedagogyIndex as a discriminated union over scope; ChapterEntrySchema + ModuleEntrySchema deleted; routes graduated to /units/<unit-id>/reading; UnitSchema gained status + framing + description per W2/D2 Placement 1; <ChapterRef> prop slug → chapter (W2/D3). Smoke build green at 12 pages / 125 pedagogy entries / 0 errors / 14 warnings / 7 infos (audit baseline holds)."
 ---
 
 # ADR 0067: Section / Subsection / Unit / Artifact content hierarchy
 
 :::{admonition} ADR metadata
 
-- **Status**: accepted
+- **Status**: shipped (Wedge B-followup W2, 2026-05-22)
 - **Deciders**: anna
 - **Amends**: [0003](./0003-zod-as-source-of-truth.md) (extends Zod schemas with new typed entities), [0038](./0038-pedagogy-index-pattern.md) (pedagogy-index extractor expands to handle Section/Unit/Artifact entities)
 - **Related**: [0004](./0004-component-contract-revisions.md), [0030](./0030-audience-and-ai-author-model.md), [0058](./0058-epistemic-component-contract.md), [0060](./0060-registry-ecosystem.md), [0064](./0064-chapter-migration-playbook.md), [0073](./0073-unified-assessment-schema.md)

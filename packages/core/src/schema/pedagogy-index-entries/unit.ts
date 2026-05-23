@@ -28,6 +28,20 @@ import { UnitSchema } from "../unit.ts";
  * Both `chapter` and `lecture` field NAMES are **permanent** — they
  * persist past W2/W3. Only their string values change as the
  * file-layout migration moves artifacts around.
+ *
+ * W2/D2 — `UnitEntrySchema` auto-surfaces three new fields from
+ * `UnitSchema`:
+ *
+ * - `status: 'draft' | 'review' | 'stable'` (required) — Unit maturity,
+ *   reusing `ChapterStatus` per ADR 0051; consumed by CS2.
+ * - `framing?: 'OMI'` (optional) — Unit-level pedagogical framing per
+ *   ADR 0063; consumed by OF-2.
+ * - `description?: string` (optional) — surfaces in `<ChapterRef>`
+ *   hover-preview.
+ *
+ * Both `status` and `framing` migrated from the deleted
+ * `ChapterEntrySchema` (W2 deletion target); the audit invariants
+ * iterating `index.chapters[]` rewrite to iterate `index.units[]`.
  */
 export const UnitEntrySchema = UnitSchema.extend({
   section_id: NonEmptyString,

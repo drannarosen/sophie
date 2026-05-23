@@ -20,7 +20,7 @@ import { expect, test } from "@playwright/test";
  * the label starts with `<expectedPart>.<expectedSub>`.
  */
 
-const CHAPTER_URL = "/chapters/spectra-and-composition";
+const CHAPTER_URL = "/units/spectra-and-composition/reading";
 
 interface Expectation {
   /** Heading ID (Astro-auto-generated slug). */

@@ -1,16 +1,16 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-const CHAPTER_URL = "/chapters/spoiler-alerts";
+const CHAPTER_URL = "/units/spoiler-alerts/reading";
 
 // Scope to the ChapterRef-rendered trigger anchor inside the
 // `<astro-island component-export="ChapterRef">` wrapper. The
-// sidebar ModuleNav ALSO renders `<a href="/chapters/measuring-
+// sidebar ModuleNav ALSO renders `<a href="/units/measuring-/reading
 // the-sky">` for navigation, so a bare `a[href=...]` selector
 // would match both; the chapter-body trigger lives inside the
 // astro-island, the sidebar link doesn't.
 const SELF_CLOSING_TRIGGER =
-  'astro-island[component-export="ChapterRef"] a[href="/chapters/measuring-the-sky"]';
+  'astro-island[component-export="ChapterRef"] a[href="/units/measuring-the-sky/reading"]';
 
 /**
  * PR-C4 — inline `<ChapterRef>` cross-references.
@@ -32,7 +32,7 @@ const SELF_CLOSING_TRIGGER =
  *     prose linking to the chapter)
  *
  * Each trigger:
- *   - is an `<a>` whose href is `/chapters/{slug}` (the destination
+ *   - is an `<a>` whose href is `/units/{slug}/reading` (the destination
  *     chapter route — not an in-page anchor; ChapterRef navigates
  *     across pages, unlike EqRef/FigureRef which anchor within the
  *     same chapter);
@@ -41,7 +41,7 @@ const SELF_CLOSING_TRIGGER =
  *   - on hover, opens a Radix HoverCard exposing the module
  *     breadcrumb (muted) + chapter title (prominent) + description
  *     (when present) per PR-C4 brainstorm Q2;
- *   - on click, navigates to `/chapters/{slug}`.
+ *   - on click, navigates to `/units/{slug}/reading`.
  *
  * Tests **deliberately skipped** in this file (with rationale):
  *
@@ -53,7 +53,7 @@ const SELF_CLOSING_TRIGGER =
  */
 
 test.describe("PR-C4: <ChapterRef> on the smoke chapter", () => {
-  test("E1: renders the self-closing cite as a link to /chapters/measuring-the-sky with chapter title", async ({
+  test("E1: renders the self-closing cite as a link to /units/measuring-the-sky/reading with chapter title", async ({
     page,
   }) => {
     await page.goto(CHAPTER_URL);
@@ -118,13 +118,13 @@ test.describe("PR-C4: <ChapterRef> on the smoke chapter", () => {
     await expect(popover).toContainText(/Coordinates, magnitudes/);
   });
 
-  test("E4: clicking the trigger navigates to /chapters/{slug}", async ({
+  test("E4: clicking the trigger navigates to /units/{slug}/reading", async ({
     page,
   }) => {
     await page.goto(CHAPTER_URL);
     const trigger = page.locator(SELF_CLOSING_TRIGGER).first();
     await trigger.click();
-    await expect(page).toHaveURL(/\/chapters\/measuring-the-sky$/);
+    await expect(page).toHaveURL(/\/units\/measuring-the-sky\/reading$/);
     // The destination chapter should actually have loaded — confirm
     // a marker from measuring-the-sky.mdx is visible. The chapter
     // body mentions the "astronomical sky is a sphere".
