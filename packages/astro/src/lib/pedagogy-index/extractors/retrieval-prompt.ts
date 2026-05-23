@@ -31,6 +31,13 @@ export function extractRetrievalPrompts(
     if (el.name !== "RetrievalPrompt") return;
 
     const target = readStringAttr(el, "target");
+    // R7 disposition: a `<RetrievalPrompt>` with no `target=` attribute
+    // is malformed JSX — TypeScript prop-type check should flag it at
+    // the call site (the prop is required per the component schema).
+    // We silently skip here rather than emit a finding because the
+    // finding would be confusing for an author who's mid-edit (no
+    // target yet); the prop-type gate is the better surface for this
+    // error.
     if (target === undefined) return;
 
     counter += 1;
