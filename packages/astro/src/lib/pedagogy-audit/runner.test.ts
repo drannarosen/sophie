@@ -99,6 +99,7 @@ describe("runPedagogyAudit — clean index", () => {
       body: "<p>Stars are physics labs.</p>",
       unit: "spoiler-alerts",
       anchor: "ki-1",
+      slug: "spoiler-alerts-ki-1",
     };
     const obj: ObjectiveEntry = {
       id: "lo-1",
@@ -118,6 +119,7 @@ describe("runPedagogyAudit — clean index", () => {
       body: "<p>Foundations insight.</p>",
       unit: "foundations",
       anchor: "ki-1",
+      slug: "foundations-ki-1",
     };
     const usages: InlineRefUsageEntry[] = [
       { kind: "glossary-term", refKey: "Photon", unit: "spoiler-alerts" },
@@ -1108,6 +1110,7 @@ describe("K1 — chapters with zero <KeyInsight>s (INFO)", () => {
       body: "<p>x</p>",
       unit: "spoiler-alerts",
       anchor: "ki-1",
+      slug: "spoiler-alerts-ki-1",
     };
     const index: PedagogyIndex = {
       ...emptyIndex(),

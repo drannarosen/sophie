@@ -243,6 +243,7 @@ describe("indexAccumulator key-insights (cross-chapter)", () => {
     body: "",
     unit: "ch-a",
     anchor: "default-anchor",
+    slug: "default",
     ...overrides,
   });
 

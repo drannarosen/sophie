@@ -12,6 +12,7 @@ const fixture: KeyInsightEntry = {
   body: "Distance hides itself in every photometric measurement.",
   unit: "measuring-the-sky",
   anchor: "ki-3",
+  slug: "measuring-the-sky-ki-3",
 };
 
 describe("toKeyInsightRecord", () => {

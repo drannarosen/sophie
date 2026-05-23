@@ -296,6 +296,7 @@ describe("KeyInsightEntrySchema", () => {
         body: "<p>Color is encoded physics.</p>",
         unit: "spoiler-alerts",
         anchor: "color-physics",
+        slug: "color-is-encoded-physics",
       }).success
     ).toBe(true);
   });
@@ -307,6 +308,7 @@ describe("KeyInsightEntrySchema", () => {
         body: "<p>Color is encoded physics.</p>",
         unit: "spoiler-alerts",
         anchor: "color-physics",
+        slug: "spoiler-alerts-color-physics",
       }).success
     ).toBe(true);
   });
