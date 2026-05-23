@@ -166,9 +166,10 @@ gained:
    cross-document registry references. Two systems, one pedagogy
    graph; new components pick whichever fits.
 4. **§7 "Component identity policy"** — the canonical anchor prefix
-   table at [packages/core/src/schema/pedagogy-index.ts:36-53](../../packages/core/src/schema/pedagogy-index.ts#L36-L53)
-   IS Sophie's identity policy; documented alongside the M1/M2/F3
-   uniqueness invariants.
+   table at [`packages/core/src/schema/pedagogy-index.ts`](../../packages/core/src/schema/pedagogy-index.ts)
+   (search for the `PedagogyIndex` type declaration) IS Sophie's
+   identity policy; documented alongside the M1/M2/F3 uniqueness
+   invariants.
 5. **§8 "Deterministic vs. AI audit boundary" — locked principle** —
    deterministic checks for structure, AI checks for judgment;
    surfaced as an `:::{important}` admonition.
