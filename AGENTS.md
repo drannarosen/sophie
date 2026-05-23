@@ -316,7 +316,8 @@ to every PR, every design decision, every refactor.
   - **R9-production — one canonical declaration per named
     interface (hard rule).** Every named interface has exactly
     one declaration in `packages/**/src/**/*.ts` excluding
-    tests. Pre-merge grep gate: `grep -rE "^(export )?interface <Name>" packages/*/src/`
+    tests. Pre-merge grep gate (substitute the interface in
+    question for `FindingSink`): `grep -rE "^(export )?interface FindingSink" packages/*/src/ --include='*.ts' --exclude='*.test.ts'`
     returns 1. Originating finding: W4b R+CR C2.
   - **R9-test — prefer canonical import in tests (preference).**
     Test files import the canonical type rather than
@@ -325,8 +326,9 @@ to every PR, every design decision, every refactor.
     post-W4b audit A2-R9 (test-mock duplications across 6 test
     files).
 
-  See [feedback_review_rules_r6_r9.md](~/.claude/projects/-Users-anna-Teaching-sophie/memory/feedback_review_rules_r6_r9.md)
-  for origin story + class-of-issue patterns each rule formalizes.
+  See `feedback_review_rules_r6_r9.md` (under
+  `~/.claude/projects/-Users-anna-Teaching-sophie/memory/`) for origin
+  story + class-of-issue patterns each rule formalizes.
 
 ## Style
 
