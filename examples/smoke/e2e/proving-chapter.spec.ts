@@ -27,33 +27,33 @@ const INDEX_PATH = resolve(
 );
 const indexJson = readFileSync(INDEX_PATH, "utf8");
 const index = JSON.parse(indexJson) as {
-  definitions: { chapter: string; slug: string; anchor: string }[];
-  keyInsights: { chapter: string; anchor: string }[];
-  misconceptions: { chapter: string; anchor: string }[];
-  interventions: { chapter: string; anchor: string }[];
-  figureUsages: { chapter: string; anchor: string }[];
-  equationCitations: { chapter: string; anchor: string }[];
-  deepDives: { chapter: string; anchor: string; title: string }[];
+  definitions: { unit: string; slug: string; anchor: string }[];
+  keyInsights: { unit: string; anchor: string }[];
+  misconceptions: { unit: string; anchor: string }[];
+  interventions: { unit: string; anchor: string }[];
+  figureUsages: { unit: string; anchor: string }[];
+  equationCitations: { unit: string; anchor: string }[];
+  deepDives: { unit: string; anchor: string; title: string }[];
   omiFlows: {
-    chapter: string;
+    unit: string;
     anchor: string;
     concept?: string;
   }[];
 };
 
 const chapterEntries = {
-  definitions: index.definitions.filter((d) => d.chapter === CHAPTER_SLUG),
-  keyInsights: index.keyInsights.filter((k) => k.chapter === CHAPTER_SLUG),
+  definitions: index.definitions.filter((d) => d.unit === CHAPTER_SLUG),
+  keyInsights: index.keyInsights.filter((k) => k.unit === CHAPTER_SLUG),
   misconceptions: index.misconceptions.filter(
-    (m) => m.chapter === CHAPTER_SLUG
+    (m) => m.unit === CHAPTER_SLUG
   ),
-  interventions: index.interventions.filter((i) => i.chapter === CHAPTER_SLUG),
-  figureUsages: index.figureUsages.filter((f) => f.chapter === CHAPTER_SLUG),
+  interventions: index.interventions.filter((i) => i.unit === CHAPTER_SLUG),
+  figureUsages: index.figureUsages.filter((f) => f.unit === CHAPTER_SLUG),
   equationCitations: index.equationCitations.filter(
-    (e) => e.chapter === CHAPTER_SLUG
+    (e) => e.unit === CHAPTER_SLUG
   ),
-  deepDives: index.deepDives.filter((d) => d.chapter === CHAPTER_SLUG),
-  omiFlows: index.omiFlows.filter((o) => o.chapter === CHAPTER_SLUG),
+  deepDives: index.deepDives.filter((d) => d.unit === CHAPTER_SLUG),
+  omiFlows: index.omiFlows.filter((o) => o.unit === CHAPTER_SLUG),
 };
 
 /**

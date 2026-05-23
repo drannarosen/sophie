@@ -62,7 +62,7 @@ export interface Props {
 const { chapter, order = "alphabetical", heading } = Astro.props;
 
 const inChapter: MultiRepIndexEntry[] = multiReps.filter(
-  (mr) => mr.chapter === chapter
+  (mr) => mr.unit === chapter
 );
 
 // O(1) concept lookup keyed by `id`. `null` registry → empty map → all

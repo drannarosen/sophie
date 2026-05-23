@@ -62,7 +62,7 @@ const grouped: GroupedModule[] = [...sections]
       .sort((a, b) => a.order - b.order)
       .map((u) => ({
         chapter: u,
-        objectives: objectives.filter((o) => o.chapter === u.id),
+        objectives: objectives.filter((o) => o.unit === u.id),
       })),
   }));
 ---

@@ -41,7 +41,7 @@ const {
 const HeadingTag = `h${headingLevel}` as const;
 
 const inChapter: DefinitionEntry[] = definitions.filter(
-  (d) => d.chapter === chapter
+  (d) => d.unit === chapter
 );
 
 const sorted =
