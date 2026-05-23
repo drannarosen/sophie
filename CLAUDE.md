@@ -104,15 +104,11 @@ for the thesis and [`docs/website/explanation/scientific-reasoning-os.md`](docs/
 for the author-facing how-to.
 
 **Scope and origin (honest framing).** Sophie is **teaching
-infrastructure** that emerged from Anna's need to author across
-multiple courses (ASTR 201, ASTR 101, COMP 521) without rebuilding
-per-course websites. Astrophysics remains Anna's primary research
-output; Sophie supports the tenure case through teaching
-effectiveness and 1–2 SoTL papers, not by being the centerpiece of
-a research program. This framing is load-bearing for proposal
-voice and scope decisions — see
-[`strategy/positioning.md` § origin and scope](docs/website/strategy/positioning.md#origin-and-scope)
-for the full version.
+infrastructure** that grew from Anna's multi-course authoring needs
+(ASTR 201, ASTR 101, COMP 521). Astrophysics remains her primary
+research output; Sophie supports the tenure case through teaching
+effectiveness and 1–2 SoTL papers, not as a DBER pivot. Full version:
+[`strategy/positioning.md` § origin and scope](docs/website/strategy/positioning.md#origin-and-scope).
 
 - **Platform repo (current location)**: `drannarosen/sophie` on GitHub.
   May move to a more official org later; treat the current location as
@@ -148,94 +144,44 @@ npx mystmd build --html   # static build → _build/html/
 
 ## Consumer course migrations
 
-Courses are separate repos per ADR 0001. The instructor's working
-directories sit alongside `sophie/`; cross-repo migration work happens
-in those directories, not here, but Sophie tracks the plan so platform
-decisions can anticipate real-content needs.
+Courses are separate repos per ADR 0001. Cross-repo migration work
+happens in the per-course directories, not here.
 
-| Course                        | Lecture-reading source                        | Status                                            |
+| Course                        | Source                                        | Status                                            |
 | ----------------------------- | --------------------------------------------- | ------------------------------------------------- |
 | ASTR 201 (Intro Astrophysics) | `/Users/anna/Teaching/astr201-sp26/modules/`  | Quarto `.qmd`; migration to Sophie `.mdx` planned |
 
-**Migration strategy — locked in [ADR 0064](docs/website/decisions/0064-chapter-migration-playbook.md) (shipped 2026-05-21).**
-The first pilot (ASTR 201 Module 2 Lecture 3 — Spectra & Composition,
-the motivating chapter for ADR 0063 `<OMIFlow>`) landed in
-[PR #143](https://github.com/drannarosen/sophie/pull/143); the
-[pilot report](docs/website/pilots/m2-l3-spectra-composition.md) is the
-worked example for ADR 0064's TDR template.
+Migration protocol locked in [ADR 0064](docs/website/decisions/0064-chapter-migration-playbook.md);
+worked-example pilot is [`pilots/m2-l3-spectra-composition.md`](docs/website/pilots/m2-l3-spectra-composition.md).
+Read ADR 0064 before scoping the next migration — it carries the
+six rules, the seven-step protocol, the fixed pilot-report
+template, and the structural-density rotation rule.
 
-Per ADR 0064's six locked rules, future chapter migrations follow a
-seven-step protocol, produce a fixed-template pilot report under
-`docs/website/pilots/`, halt on missing-component gaps (no inline
-workarounds), and the next pilot must differ in structural-density
-profile from M2-L3 (no two consecutive pilots exercise the same
-dominant component-density profile). Read ADR 0064 before scoping
-the next migration.
-
-## Locked decisions — ADRs 0001–0060
+## Locked decisions — most-cited ADRs
 
 Read the relevant ADR before proposing changes that touch its area.
-This table is a load-bearing-decisions index, not a complete listing —
-not every ADR appears here. Browse `docs/website/decisions/` for the
-full set (0001–0078, with 0050 a reserved gap; 77 ADRs total as of
-2026-05-23).
+The 15 ADRs below are selected for routine-reasoning citability;
+the other ~60 are discoverable via the docs-site Decisions nav.
+Full catalog: `docs/website/decisions/` (77 ADRs as of 2026-05-23,
+numbered 0001–0078 with 0050 a reserved gap).
 
 | Concern                          | ADR  | Decision                                                                                                                  |
 | -------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------- |
 | Repo shape                       | 0001 | Standalone platform; courses are *separate* consumer repos                                                                |
-| Renderer                         | 0002 | Astro 6 + MDX (was Astro 5; see ADR 0002 revision note)                                                                   |
 | Schema                           | 0003 | Zod as source of truth                                                                                                    |
 | Component contract               | 0004 | `serialize` separate from render; axe-core for a11y; `useInteractive` helper; composition rules                           |
 | Theming                          | 0005 | TS tokens → CSS vars + Tailwind preset; CSS Modules in components                                                         |
-| Slides                           | 0006 | Reveal.js + thin Astro adapter (Spectacle on radar)                                                                       |
-| Persistence                      | 0007 | IndexedDB + `ResponseStore` repository + BroadcastChannel                                                                 |
-| Demos                            | 0008 | Cosmic Playground manifest + iframe + postMessage                                                                         |
-| i18n                             | 0009 | `Chapter.lang` reserved; no real i18n in v1                                                                               |
-| Docs site                        | 0010 | MyST for design docs (transitional → Sophie-hosted later)                                                                 |
 | JS package mgr                   | 0011 | **pnpm** (never npm/yarn)                                                                                                 |
-| Python                           | 0012 | **uv**                                                                                                                    |
 | Lint+format                      | 0013 | **Biome** (replaces ESLint+Prettier)                                                                                      |
-| Monorepo orchestration           | 0014 | **Turborepo**                                                                                                             |
-| Dev preview                      | 0015 | `sophie dev` + Storybook + Playwright MCP                                                                                 |
-| Concept maps                     | 0016 | React Flow (**proposed**, v2+)                                                                                            |
-| Naming                           | 0017 | Renamed Sophia → Sophie                                                                                                   |
-| Code editor                      | 0018 | CodeMirror 6 inside `<CodeCell>`                                                                                          |
 | A11y primitives                  | 0019 | Radix UI                                                                                                                  |
-| Syntax highlight                 | 0020 | Shiki via rehype-pretty-code                                                                                              |
-| Data viz                         | 0021 | Observable Plot                                                                                                           |
-| Library bundler                  | 0022 | tsup                                                                                                                      |
 | Build order                      | 0023 | **Vertical-slice-first**: lean Phase 0, refactor outward as patterns emerge                                               |
-| License                          | 0024 | AGPL — rules out paid recurring SaaS for the platform's CI gate                                                           |
-| Tailwind                         | 0026 | Tailwind v4 CSS-first                                                                                                     |
-| Storybook                        | 0028 | Storybook with axe-core; visual regression deferred (superseded by 0057)                                                  |
-| BroadcastChannel LWW             | 0029 | Per-write `Date.now()` timestamps; `useInteractive` ignores stale incoming writes (refines ADR 0007)                      |
 | Audience + AI authoring          | 0030 | AI as primary author; four AI roles (author/pedagogy/domain/brainstorm); instructor as supervisor (HITL)                  |
-| Compound component primitives    | 0031 | Compound component layout primitives                                                                                      |
 | Pedagogy-index pattern           | 0038 | Pedagogy index serialized from MDX AST; consumed by audit, diff, AI authoring                                             |
-| Teaching Decision Records (TDRs) | 0040 | Curriculum-side audit trail in consumer repos' `teaching-decisions/`                                                      |
-| Teaching Move Library            | 0041 | 18 named teaching moves across 7 families; `pedagogy_intent` declared against the library                                 |
-| Pedagogy Contract + AI Ledger    | 0042 | `pedagogy-contract.yaml` at consumer repo root; AI contribution provenance public-facing by default                       |
-| Notation Registry + MultiRep     | 0043 | Symbol/unit registry as external source of truth; alignment audit                                                         |
-| Misconception Graph              | 0044 | Misconceptions as graph nodes with prerequisite/related edges; 12 canonical interventions in platform library             |
-| Pedagogical Diff / Curriculum CI | 0045 | `sophie diff` with two-axis taxonomy (granularity × severity)                                                             |
-| Equation Biography               | 0046 | Per-equation children declaring observable / assumption / units / validity-domain / common-misuse                         |
-| Empirical validation             | 0047 | 2-paper SoTL plan with 8 metrics                                                                                          |
-| LDS Content Plugin System        | 0048 | Plugin contract for cross-course content (concepts, misconceptions, equations)                                            |
-| Conformance Failure Modes        | 0053 | 5-mode taxonomy + `audit_overrides`                                                                                       |
 | Squash-merge convention          | 0055 | Squash-merge for code PRs                                                                                                 |
 | Validation tracker               | 0056 | ADR frontmatter `validation:` block (status / last_validated_date / evidence)                                             |
-| Visual regression baseline       | 0057 | Self-hosted `@storybook/test-runner` + Playwright; CI Linux as canonical baseline (supersedes 0028 VR deferral)           |
 | **Epistemic Component Contract** | 0058 | **Eight-role taxonomy** (optional, additive); amends 0003/0004/0044/0046; underwrites Reasoning-OS thesis                  |
-| **Linked-representation state**  | 0059 | **A11 graduated**: Zustand page-local store + `useLinkedParameter` + `<ParameterCursor>` + `<ParameterSlider>`             |
-| **Registry ecosystem**           | 0060 | **Universal+reusable → registry; one-shot → inline (collection)**: 6 shared conventions; amends 0038/0043/0044/0046/0048    |
 | **AI-optimized codebase design** | 0061 | **AI is primary author of platform code, not just content**: 6 rules (focused files, Write-over-Edit, LOC budget 300/500/800, filename routing, atomic docs, tests split with source); amends 0023/0030 |
-| **`<OMIFlow>` composite (A8)**   | 0063 | **Compound component with slot-name-binds-role** (3 slots: `<OMIFlow.{Observable,Model,Inference}>`); pure-layout v1; lands ADR 0058's deferred chapter-level audit invariant as **OF-2**               |
 | **Chapter migration playbook**   | 0064 | Six locked rules + seven-step protocol; fixed-template pilot report under `docs/website/pilots/`; halt on missing-component gaps (no inline workarounds); next pilot must differ in structural density |
-| **Section hierarchy**            | 0067 | Section / Subsection / Unit / Artifact content hierarchy; replaces ad-hoc nesting; substrate for the course-website roadmap                                                                            |
-| **FSRS spaced-repetition**       | 0069 | FSRS as the algorithm for `<SpacedReview>` scheduling; LRU stub today, FSRS proper as Wedge B1 follow-on                                                                                               |
-| **Three-tier build priority**    | 0072 | Tier 1 / Tier 2 / Tier 3 sequencing governs the course-website 27-decision roadmap; Tier-1 commitments are non-negotiable                                                                              |
-| **Unified Assessment schema**    | 0073 | Single schema with type-variants (assignment / practice / diagnostic / exam) + BKT mastery model; load-bearing for the assessment cluster                                                              |
-| **AI Authoring Packets**         | 0077 | Packaged context for the AI co-author panel; schema exists, workflow planned; substrate for the AI-emission red-team report (see `strategy/landscape/red-team-report-plan.md`)                          |
 
 ## Engineering principles
 
@@ -245,34 +191,21 @@ to every PR, every design decision, every refactor.
 - **SoTA over simple.** When choosing between a working-but-naive
   approach and a more robust state-of-the-art shape, choose SoTA.
   Sophie is a long-lived platform; "what's simple now" tends to
-  become "what's causing more work later." Recent examples:
-  - **Condition-based waiting** (`expect(el).toHaveAttribute("data-state", "open")`)
-    over arbitrary `{ timeout: N }` knobs in e2e tests — wait on Radix's
-    actual state-machine signals, not on clock time. The naive fix
-    masked a real production scroll-spy bug; the SoTA fix surfaced it.
-  - **Structural fixes** over targeted patches — invert source-of-truth
-    on the in-page-ToC scroll-spy (observe what's *in the ToC*, not all
-    headings) so the fix defends against the whole class of "stray
-    `h2[id]` in chapter content" rather than the single instance.
-  - **AI-authoring-friendly source-component patterns**
-    (`<Parent><Child>...</Child></Parent>`) over inline prop arrays
-    (`<Parent items={[…]}/>`) — extraction is mechanical, AI scaffolding
-    is reliable, and the JSX is more readable for human authors too.
-    See `<LearningObjectives>` PR-C4 refactor.
+  become "what's causing more work later." Two patterns this rule
+  enforces:
+  - **Condition-based waiting over time-based.** Wait on actual
+    state-machine signals (`expect(el).toHaveAttribute("data-state", "open")`),
+    not on `{ timeout: N }` clock guesses. Naive timeouts mask real
+    bugs; condition waits surface them.
+  - **Structural fixes over targeted patches.** When a bug has a
+    class (not a single instance), invert source-of-truth to defend
+    against the whole class. Pattern, not patch.
 
 - **Pre-launch; no backwards compatibility.** Sophie has zero
   production students. Hard renames are the right shape; drop legacy
   shapes and migrate all consumers in the same PR. No back-compat
-  shims, no "if-old-then-new" branches, no deprecation cycles.
-  Bucket C examples:
-  - PR-C3 hard-renamed `<MiniGlossary>` to the pedagogy-index pattern;
-    every consumer migrated in the same PR.
-  - PR-C4 dropped `LearningObjectives.objectives[]` prop entirely;
-    three smoke chapter callsites migrated to children-mode in the
-    same commit.
-  - Phase 1 (PR #39) unified anchor prefixes (`key-insight-N` → `ki-N`,
-    `misconception-N` → `misc-N`) without a shim; production code and
-    tests updated together.
+  shims, no "if-old-then-new" branches, no deprecation cycles. When
+  a schema changes, the schema changes everywhere in one commit.
 
 - **DRY, YAGNI, clean code.** Three practical applications:
   - **DRY**: extract reusable patterns (`createPedagogyStore<T>`
