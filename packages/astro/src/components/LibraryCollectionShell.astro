@@ -1,0 +1,54 @@
+---
+/**
+ * `<LibraryCollectionShell>` — chrome wrapper for every Library-room
+ * component (per W4c design D2). Renders the outer `<main>` landmark
+ * with heading + the three documented slot extension points.
+ *
+ * Hybrid API split:
+ *   - text props (collection / heading / emptyText / isEmpty) for the
+ *     primitive scalars the shell owns,
+ *   - named slots (`intro`, default content, `secondary-nav`) for rich
+ *     content the consumer owns.
+ *
+ * The `data-sophie-library-collection="<collection>"` attribute is
+ * forward-compat for the Tier-2 filter UI per W4c design D8; no Tier-2
+ * consumer exists yet, but anchoring the attribute now lets the filter
+ * land later without a re-emit pass across all Library rooms.
+ *
+ * `<CourseObjectives>` stays OUTSIDE this shell per W4c design D1
+ * (3-level objective grouping is an exception; the shell's
+ * primitives-and-slots split doesn't fit it). Documented in the
+ * ADR 0070 revision-history entry that Batch 10 will land.
+ */
+export interface Props {
+  collection: string;
+  heading: string;
+  emptyText: string;
+  isEmpty: boolean;
+}
+
+const { collection, heading, emptyText, isEmpty } = Astro.props;
+const rootClass = `sophie-library-collection sophie-library-collection--${collection}`;
+const headingId = `sophie-library-collection-heading-${collection}`;
+---
+
+<main
+  class={rootClass}
+  data-sophie-library-collection={collection}
+  aria-labelledby={headingId}
+>
+  <header class='sophie-library-collection__header'>
+    <h1 id={headingId} class='sophie-library-collection__heading'>
+      {heading}
+    </h1>
+    <slot name='intro' />
+  </header>
+  <slot name='secondary-nav' />
+  {
+    isEmpty ? (
+      <p class='sophie-library-collection__empty'>{emptyText}</p>
+    ) : (
+      <slot />
+    )
+  }
+</main>
