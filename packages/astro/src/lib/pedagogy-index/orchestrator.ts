@@ -2,6 +2,8 @@ import { readFileSync } from "node:fs";
 import {
   type EquationRegistryEntry,
   EquationRegistryEntrySchema,
+  type TopicEntry,
+  TopicEntrySchema,
 } from "@sophie/core/schema";
 import type { Root } from "mdast";
 import { parse as parseYaml } from "yaml";
@@ -21,6 +23,7 @@ import { extractOMIFlows } from "./extractors/omi-flow.ts";
 import { extractRetrievalPrompts } from "./extractors/retrieval-prompt.ts";
 import { extractSkillReviews } from "./extractors/skill-review.ts";
 import { extractSpacedReviews } from "./extractors/spaced-review.ts";
+import { extractTopicAndCards } from "./extractors/topic.ts";
 import { markChapterOpener } from "./transforms/chapter-opener.ts";
 import { markFirstUseGlossaryTerms } from "./transforms/first-use-glossary.ts";
 import { transformIntervention } from "./transforms/intervention.ts";
@@ -61,6 +64,7 @@ function defaultGetChapterSlug(filePath: string): string | undefined {
  */
 const CHAPTER_PATH_RE = /[/\\]content[/\\]sections[/\\]/;
 const EQUATION_REGISTRY_PATH_RE = /[/\\]content[/\\]equations[/\\]/;
+const TOPIC_REGISTRY_PATH_RE = /[/\\]content[/\\]topics[/\\]/;
 
 function isChapterFilePath(filePath: string): boolean {
   // W2/D1 (Path A): only `reading.mdx` artifacts under sections/<sec>/units/<unit>/
@@ -73,6 +77,36 @@ function isChapterFilePath(filePath: string): boolean {
 
 function isEquationRegistryFilePath(filePath: string): boolean {
   return EQUATION_REGISTRY_PATH_RE.test(filePath);
+}
+
+function isTopicRegistryFilePath(filePath: string): boolean {
+  return TOPIC_REGISTRY_PATH_RE.test(filePath);
+}
+
+/**
+ * Read + validate a topic file's YAML frontmatter per ADR 0079
+ * (Design F). Same fs-direct rationale as
+ * `readEquationRegistryFrontmatter`: by the time our plugin sees
+ * the mdast tree, `remark-frontmatter` + `remark-mdx-frontmatter`
+ * have already hoisted the YAML into an ESM export, so re-reading
+ * the file gives us the original validated-against-Zod shape.
+ */
+function readTopicFrontmatter(filePath: string): TopicEntry {
+  const source = readFileSync(filePath, "utf8");
+  const match = source.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n/);
+  if (!match) {
+    throw new Error(
+      `Topic file "${filePath}" is missing YAML frontmatter. Per ADR 0079, every topic MDX must declare \`id\`, \`label\`, \`summary\`, and a \`cards: [{...}]\` list in frontmatter.`,
+    );
+  }
+  const raw = parseYaml(match[1] ?? "");
+  const parsed = TopicEntrySchema.safeParse(raw);
+  if (!parsed.success) {
+    throw new Error(
+      `Topic file "${filePath}" has invalid frontmatter. Validation errors: ${parsed.error.message}`,
+    );
+  }
+  return parsed.data;
 }
 
 /**
@@ -183,6 +217,20 @@ export function pedagogyIndexRemarkPlugin(
       const frontmatter = readEquationRegistryFrontmatter(filePath);
       const entry = extractEquationRegistryDeclaration(tree, frontmatter);
       indexAccumulator.addEquations([entry]);
+      return;
+    }
+
+    // Topic-registry path (ADR 0079): assemble one TopicEntry +
+    // CardEntry[] from the topic file's frontmatter + body
+    // <SkillReview.Card> blocks; clear stale cards before re-adding so
+    // file re-parses (e.g., during dev-server HMR) don't accumulate
+    // removed cards.
+    if (isTopicRegistryFilePath(filePath)) {
+      const frontmatter = readTopicFrontmatter(filePath);
+      const { topic, cards } = extractTopicAndCards(tree, frontmatter);
+      indexAccumulator.clearTopic(topic.id);
+      indexAccumulator.addTopic(topic);
+      indexAccumulator.addCards(cards);
       return;
     }
 

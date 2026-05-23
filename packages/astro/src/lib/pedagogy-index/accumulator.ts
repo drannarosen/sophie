@@ -1,6 +1,7 @@
 import type {
   ArtifactEntry,
   AuditFinding,
+  CardEntry,
   ContractValidationEntry,
   DeepDiveEntry,
   DefinitionEntry,
@@ -20,6 +21,7 @@ import type {
   SectionEntry,
   SkillReviewEntry,
   SpacedReviewEntry,
+  TopicEntry,
   UnitEntry,
 } from "@sophie/core/schema";
 
@@ -181,6 +183,21 @@ interface GlobalIndexState {
    * Consumed by PRA-1 (prereq-activation invariant).
    */
   skillReviews: Map<string, SkillReviewEntry>;
+  /**
+   * Topic entries (ADR 0079). Keyed by topic `id`. Populated by the
+   * topic extractor at MDX-compile time from `src/content/topics/
+   * <category>/<topic-id>.mdx` frontmatter. Cross-chapter scope —
+   * `clearUnit` does NOT touch topics (registry-sourced like
+   * equations per ADR 0060).
+   */
+  topics: Map<string, TopicEntry>;
+  /**
+   * Card entries (ADR 0079). Keyed by `${topic_id}#${id}` so cards
+   * from different topics with the same card id don't collide.
+   * Populated by the topic extractor from `<SkillReview.Card>` JSX
+   * blocks in topic file bodies.
+   */
+  cards: Map<string, CardEntry>;
 }
 
 function getGlobalState(): GlobalIndexState {
@@ -208,6 +225,8 @@ function getGlobalState(): GlobalIndexState {
       retrievalPrompts: new Map(),
       spacedReviews: new Map(),
       skillReviews: new Map(),
+      topics: new Map(),
+      cards: new Map(),
     };
   }
   return g[GLOBAL_KEY];
@@ -727,6 +746,45 @@ class IndexAccumulator {
   }
 
   /**
+   * Add a topic entry (ADR 0079). Keyed by topic `id`; re-adding
+   * with the same id overwrites (last-write-wins, mirroring the
+   * `addEquations` registry pattern per ADR 0060). Cross-chapter
+   * scope — `clearUnit` does not affect topics.
+   */
+  addTopic(entry: TopicEntry): void {
+    const state = getGlobalState();
+    state.topics.set(entry.id, entry);
+  }
+
+  /**
+   * Add card entries (ADR 0079). Keyed by `${topic_id}#${id}` so
+   * cards from different topics with the same card id don't
+   * collide. Typically called once per topic file with the
+   * topic's full card list from `extractTopicAndCards`.
+   */
+  addCards(entries: ReadonlyArray<CardEntry>): void {
+    const state = getGlobalState();
+    for (const entry of entries) {
+      state.cards.set(`${entry.topic_id}#${entry.id}`, entry);
+    }
+  }
+
+  /**
+   * Drop a topic and all its cards. Called by the topic-collection
+   * iteration before re-extracting a topic file (so re-parses don't
+   * accumulate stale cards if a card is removed from the file).
+   */
+  clearTopic(topicId: string): void {
+    const state = getGlobalState();
+    state.topics.delete(topicId);
+    for (const [key, entry] of state.cards) {
+      if (entry.topic_id === topicId) {
+        state.cards.delete(key);
+      }
+    }
+  }
+
+  /**
    * Snapshot the current accumulator state as a PedagogyIndex.
    * Equations populate from PR-C2 onward; keyInsights, figureUsages,
    * and misconceptions populate from PR-C3 onward. `figureRegistry`
@@ -755,11 +813,8 @@ class IndexAccumulator {
       retrievalPrompts: Array.from(state.retrievalPrompts.values()),
       spacedReviews: Array.from(state.spacedReviews.values()),
       skillReviews: Array.from(state.skillReviews.values()),
-      // ADR 0079 (W4b): topics + cards populated by the topic
-      // extractor (Batch 3 Task 11 adds addTopic/addCard methods).
-      // Empty arrays here keep the build green between batches.
-      topics: [],
-      cards: [],
+      topics: Array.from(state.topics.values()),
+      cards: Array.from(state.cards.values()),
       sections: state.sections,
       units: state.units,
       artifacts: state.artifacts,
@@ -801,4 +856,6 @@ export function resetIndexAccumulator(): void {
   state.retrievalPrompts.clear();
   state.spacedReviews.clear();
   state.skillReviews.clear();
+  state.topics.clear();
+  state.cards.clear();
 }

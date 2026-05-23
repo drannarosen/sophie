@@ -109,6 +109,8 @@ export { type PedagogyIndex, PedagogyIndexSchema } from "./pedagogy-index.js";
 export {
   type ArtifactEntry,
   ArtifactEntrySchema,
+  type CardEntry,
+  CardEntrySchema,
   type ContractValidationEntry,
   ContractValidationEntrySchema,
   type DeepDiveEntry,
@@ -144,6 +146,10 @@ export {
   SkillReviewEntrySchema,
   type SpacedReviewEntry,
   SpacedReviewEntrySchema,
+  type TopicCardMetadata,
+  TopicCardMetadataSchema,
+  type TopicEntry,
+  TopicEntrySchema,
   type UnitEntry,
   UnitEntrySchema,
 } from "./pedagogy-index-entries/index.js";
