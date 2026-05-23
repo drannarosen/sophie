@@ -136,9 +136,18 @@ importers:
       lucide-static:
         specifier: ^1.14.0
         version: 1.14.0
+      mdast-util-from-markdown:
+        specifier: ^2.0.3
+        version: 2.0.3
+      mdast-util-mdx:
+        specifier: ^3.0.0
+        version: 3.0.0
       mdast-util-to-hast:
         specifier: ^13.2.1
         version: 13.2.1
+      micromark-extension-mdxjs:
+        specifier: ^3.0.0
+        version: 3.0.0
       pagefind:
         specifier: ^1.5.2
         version: 1.5.2
