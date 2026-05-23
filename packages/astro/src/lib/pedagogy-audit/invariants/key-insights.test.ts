@@ -104,6 +104,27 @@ describe("KI-slug-unique audit — KeyInsight slug uniqueness (ADR 0070 W4c D4)"
     expect(sink.errors[0]?.message).toMatch(/non-alphanumeric|pathological/i);
   });
 
+  test("does not flag pathological-non-alnum cause when colliding titles are real text 'term'", () => {
+    // slugify("Term") === "term" via the normal lowercase path (not the
+    // non-alnum fallback). Two KeyInsights literally titled "Term" derive
+    // the same slug via literal equality, NOT via the pathological
+    // non-alphanumeric collapse. The hint must stay silent so authors are
+    // not falsely told their titles contain only non-alphanumerics.
+    const index: PedagogyIndex = {
+      ...emptyIndex(),
+      keyInsights: [
+        ki({ unit: "u1", anchor: "ki-1", title: "Term", slug: "term" }),
+        ki({ unit: "u2", anchor: "ki-2", title: "term", slug: "term" }),
+      ],
+    };
+    const sink = emptySink();
+    checkKISlugUnique(index, sink);
+    expect(sink.errors).toHaveLength(1);
+    // Hint MUST NOT appear (titles slugify to "term" via literal-equality,
+    // not via non-alphanumeric collapse).
+    expect(sink.errors[0]?.message).not.toMatch(/non-alphanumeric/i);
+  });
+
   test("emits one finding per colliding slug (not per collision pair)", () => {
     const index: PedagogyIndex = {
       ...emptyIndex(),

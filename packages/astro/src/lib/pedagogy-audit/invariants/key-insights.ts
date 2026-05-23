@@ -1,4 +1,8 @@
-import type { KeyInsightEntry, PedagogyIndex } from "@sophie/core/schema";
+import {
+  type KeyInsightEntry,
+  type PedagogyIndex,
+  slugify,
+} from "@sophie/core/schema";
 import type { FindingSink } from "../types.ts";
 
 /**
@@ -82,9 +86,20 @@ export function checkKISlugUnique(
     // slug is "term", surface the offending titles + the cause so the
     // author connects the dots; without this hint the derivation is
     // opaque (the title field is "!!!" but the slug field is "term").
+    //
+    // Guard: fire ONLY when at least one colliding title slugifies to
+    // "term" but is NOT literally "term" — i.e., the cause is the
+    // non-alnum collapse, not literal equality. Without this tightening
+    // two KeyInsights literally titled "Term" would falsely trigger the
+    // hint (their titles contain alphanumerics; the collision is
+    // literal-slug equality, not the fallback path).
     const isPathologicalTermCollision =
       slug === "term" &&
-      entries.some((e) => e.title !== undefined && e.title.trim().length > 0);
+      entries.some((e) => {
+        const t = e.title?.trim();
+        if (!t) return false; // fallback-shape, not slugify-shape
+        return slugify(t) === "term" && t.toLowerCase() !== "term";
+      });
     const pathologicalHint = isPathologicalTermCollision
       ? ' Note: slug "term" is the slugify fallback for titles composed only of non-alphanumeric characters (see slugify.ts). The colliding titles slugify to "term" because they contain no [a-z0-9] after lowercasing; retitle them with alphanumeric content to derive distinct slugs.'
       : "";
@@ -93,7 +108,12 @@ export function checkKISlugUnique(
       severity: "ERROR",
       code: "KI-slug-unique",
       message: `KI-slug-unique: ${entries.length} <KeyInsight>s derive the same slug "${slug}" — they would shadow each other at /library/key-insights/${slug}/. Colliding callsites: ${callsites}. Resolution: retitle one of the colliding KeyInsights so its slug derives uniquely (slug is slugify(title) when title is present, else \`\${unit}-\${anchor}\`).${pathologicalHint}`,
-      location: { anchor: slug },
+      location: {
+        // anchor = slug because no single (unit, anchor) pair is canonical
+        // for a cross-unit collision finding; the slug IS the colliding
+        // identifier.
+        anchor: slug,
+      },
     });
   }
 }
