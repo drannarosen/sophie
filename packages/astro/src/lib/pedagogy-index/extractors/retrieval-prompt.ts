@@ -11,9 +11,11 @@ import { type MdxJsxFlowElement, readStringAttr } from "../jsx-utils.ts";
  * as `rp-${counter}` (per-chapter sequential); the canonical prefix
  * table lives at `@sophie/core/schema/pedagogy-index.ts`.
  *
- * Skips elements with no `target` attribute (the curriculum-CI
- * RET-1 invariant flags the omission separately; the extractor's
- * job is to surface what's there, not to gate authoring).
+ * Missing required props (e.g., a bare `<RetrievalPrompt>` with no
+ * `target=`) are silently skipped at the visit site; see the R7
+ * disposition comment in the visitor for the rationale (TypeScript
+ * prop-type check at the call site is the authoritative surface;
+ * emitting a finding here would confuse mid-edit authors).
  *
  * Throws on intra-chapter anchor collisions (defense-in-depth,
  * mirrors the existing extractors' guards).
