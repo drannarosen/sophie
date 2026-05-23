@@ -14,6 +14,7 @@ import {
 } from "./invariants/key-insights.ts";
 import { checkMisconceptionGraph } from "./invariants/misconception-graph.ts";
 import { checkMisconceptionPairing } from "./invariants/misconception-pairing.ts";
+import { checkMisconceptionSlugUnique } from "./invariants/misconceptions.ts";
 import { checkMultiRep } from "./invariants/multirep.ts";
 import {
   buildNotationDerivedState,
@@ -144,6 +145,14 @@ export function runPedagogyAudit(
   // page URLs are `/library/key-insights/<slug>/`, so collisions
   // would silently shadow.
   checkKISlugUnique(index, sink);
+
+  // W4c Batch 1b (mirrors KI-slug-unique) — Misconception-slug-unique:
+  // Misconception slug uniqueness. Same failure class as KI-slug-unique:
+  // the label-derived slug shape is not globally unique, and the
+  // pathological non-alphanumeric collapse to "term" is the same. Per-
+  // Spec-page URLs are `/library/misconceptions/<slug>/` (W4c Batch 7
+  // Task 7.2), so collisions would silently shadow.
+  checkMisconceptionSlugUnique(index, sink);
 
   return {
     errors: sink.errors,
