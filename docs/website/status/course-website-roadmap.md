@@ -247,14 +247,14 @@ Course (top level)
 │                        high-stakes stay in Canvas until Tier 3)
 ├─ Computational Labs ── Pyodide-driven (Tier 2)
 ├─ Library            ── Registry cheatsheets + Spec pages:
-│   ├─ Equations      ── /equations/ + /equations/<slug>/
-│   ├─ Glossary       ── /glossary/ + /glossary/<term>/
-│   ├─ Misconceptions ── /misconceptions/ + /misconceptions/<slug>/
-│   ├─ Key Insights   ── /insights/ + /insights/<slug>/
-│   ├─ Figures        ── /figures/ + /figures/<slug>/
-│   ├─ Deep Dives     ── /deep-dives/ + /deep-dives/<slug>/
-│   ├─ Interventions  ── /interventions/ + /interventions/<slug>/
-│   └─ OMI flows      ── /omi/ + /omi/<slug>/
+│   ├─ Equations      ── /library/equations/ + /library/equations/<slug>/
+│   ├─ Glossary       ── /library/glossary/ + /library/glossary/<term>/
+│   ├─ Misconceptions ── /library/misconceptions/ + /library/misconceptions/<slug>/
+│   ├─ Key Insights   ── /library/key-insights/ + /library/key-insights/<slug>/
+│   ├─ Figures        ── /library/figures/ + /library/figures/<slug>/
+│   ├─ Deep Dives     ── /library/deep-dives/ + /library/deep-dives/<slug>/
+│   ├─ Interventions  ── /library/interventions/ + /library/interventions/<slug>/
+│   └─ OMI flows      ── /library/omi/ + /library/omi/<slug>/
 ├─ Resources          ── Utility: formula PDFs (now auto-generated from
 │                        Equations registry), handouts, external links
 ├─ Discussions        (Tier 3)
@@ -561,7 +561,7 @@ templates once per registry type; the registry data populates everything.
 
 ### Per-registry Spec pages (auto-generated, one URL per entry)
 
-Example: `/equations/stefan-boltzmann/` renders the canonical Equation
+Example: `/library/equations/stefan-boltzmann/` renders the canonical Equation
 Spec page from registry entry + Equation Biography children +
 cross-references:
 
@@ -1221,8 +1221,9 @@ Most leverage for least risk:
   - Evolved `<SkillReview>` with retrieval-first surface
   - FSRS scheduler core (per-browser, IndexedDB-backed)
 - **Astro pages** (`@sophie/astro`):
-  - Library room infrastructure: `/equations/`, `/equations/<slug>/`,
-    `/glossary/`, `/misconceptions/`, etc. (auto-routed from
+  - Library room infrastructure: `/library/equations/`,
+    `/library/equations/<slug>/`, `/library/glossary/`,
+    `/library/misconceptions/`, etc. (auto-routed from
     registries)
   - `<EquationSpecPage>` template + Cheatsheet template with PDF
     export

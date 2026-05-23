@@ -224,9 +224,9 @@ per-type literature, and cross-discipline overlap (astrophysics
 vs scientific-computing) makes a single platform catalog
 premature; v2 can promote if authoring data shows the need.
 (Q3) All three existing rendering surfaces detail-tuned —
-`<EquationRef>` hover compact summary, `<ChapterEquations>` + `/equations`
+`<EquationRef>` hover compact summary, `<ChapterEquations>` + `/library/equations`
 full biography with `<details>` disclosure for `<CommonMisuse>`
-lists; dedicated `/equations/<slug>` page deferred to future
+lists; dedicated `/library/equations/<slug>` page deferred to future
 "Equation Pages" ADR. (Q4) Three new E-prefix audit invariants
 (E7 INFO, E8 WARNING, E9 INFO) — extending PR-C2's E-prefix
 family rather than carving a new EB-prefix; new prefixes earn

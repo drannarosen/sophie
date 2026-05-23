@@ -172,7 +172,7 @@ JSDoc note).
 | `<CourseFigures />` | `/library/figures` | Every figure (canonical entries from registry) |
 | `<CourseKeyInsights />` | `/library/key-insights` | All key insights across the course |
 | `<CourseMisconceptions />` | `/library/misconceptions` | All misconceptions across the course |
-| `<CourseObjectives />` | `/library/objectives` | Hierarchical Module → Chapter → Objectives roll-up. Chapter headings link to each `/chapters/X` route. (PR-C4) |
+| `<CourseObjectives />` | `/library/objectives` | Hierarchical Module → Chapter → Objectives roll-up. Chapter headings link to each `/units/<unit-id>/reading` route. (PR-C4) |
 
 Course consumers are imported into the Astro page for their route
 (`examples/smoke/src/pages/library/{glossary,equations,figures,key-insights,misconceptions,objectives}.astro`),

@@ -90,7 +90,7 @@ revisions.
 
 | A-label | ADR | Reference doc(s) | Description |
 |---|---|---|---|
-| **A7** | [0046](../decisions/0046-equation-biography.md) | [equation-biography-schema](../reference/equation-biography-schema.md) | Equation Biography — children-mode extension to `<KeyEquation>` with six biography children (`<Observable>`, `<Assumption>` with optional `type=` slot, `<Units symbol unit>`, `<BreaksWhen>`, `<CommonMisuse>` with optional `misconception=` cross-ref). Three rendering surfaces detail-tuned (compact hover, full chapter-end, full /equations route). Three new E-prefix audit invariants (E7 INFO, E8 WARNING — fires only when NR is opted-in, E9 INFO). Universal scope; per-equation opt-in. |
+| **A7** | [0046](../decisions/0046-equation-biography.md) | [equation-biography-schema](../reference/equation-biography-schema.md) | Equation Biography — children-mode extension to `<KeyEquation>` with six biography children (`<Observable>`, `<Assumption>` with optional `type=` slot, `<Units symbol unit>`, `<BreaksWhen>`, `<CommonMisuse>` with optional `misconception=` cross-ref). Three rendering surfaces detail-tuned (compact hover, full chapter-end, full /library/equations route). Three new E-prefix audit invariants (E7 INFO, E8 WARNING — fires only when NR is opted-in, E9 INFO). Universal scope; per-equation opt-in. |
 
 ### Foundation hardening + cross-cutting ADRs (2026-05-15)
 

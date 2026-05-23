@@ -13,6 +13,7 @@ related:
   - "[Wedge B-followup W1 Design](2026-05-22-wedge-b-followup-design.md)"
   - "[Wedge B-followup W3 Design](2026-05-22-wedge-b-followup-w3-design.md)"
   - "[Wedge B-followup W3 Pilot Report](../website/pilots/wedge-b-followup-w3-callsite-rename.md)"
+  - "[ADR 0070 — Library room + registry-driven Spec pages](../website/decisions/0070-library-room-and-registry-spec-pages.md)"
   - "[ADR 0067 — Section / Subsection / Unit / Artifact](../decisions/0067-section-level-artifacts.md)"
   - "[ADR 0064 — Chapter-Migration Playbook](../decisions/0064-chapter-migration-playbook.md)"
   - "[ADR 0055 — Squash-merge convention](../decisions/0055-squash-merge-convention.md)"

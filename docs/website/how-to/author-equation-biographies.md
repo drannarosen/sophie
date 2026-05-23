@@ -32,7 +32,7 @@ Add biography children to a `<KeyEquation>` when:
 - The equation is **commonly misapplied** in ways the chapter
   addresses.
 - You want the equation to show up usefully in the chapter-end
-  `<ChapterEquations>` roll-up and the course-wide `/equations`
+  `<ChapterEquations>` roll-up and the course-wide `/library/equations`
   route.
 
 Skip biography children when:
@@ -144,7 +144,7 @@ below the math:
 
 ### ChapterEquations + CourseEquations (full)
 
-The chapter-end roll-up and the course-wide `/equations` route render
+The chapter-end roll-up and the course-wide `/library/equations` route render
 full biography sections per equation:
 
 ```
