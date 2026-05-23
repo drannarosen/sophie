@@ -31,7 +31,9 @@ import { visit } from "unist-util-visit";
  *      sees the populated index after extraction completes.
  *
  * Both directions emit findings under the same `PRA-2` code so
- * authors learn a single concept.
+ * authors learn a single concept. Both directions also honor
+ * `TopicEntry.audit_overrides` per ADR 0053 (W4c D5: per-card anchor;
+ * no whole-topic wildcard — overrides must name the card id).
  */
 export function extractTopicAndCards(
   tree: Root,
@@ -42,6 +44,9 @@ export function extractTopicAndCards(
   );
   const cards: CardEntry[] = [];
   const findings: AuditFinding[] = [];
+  // Per ADR 0053 + W4c D5: per-card-id anchor only (no whole-topic
+  // wildcard for PRA-2 — every override must name a specific card).
+  const overrides = topic.audit_overrides ?? [];
 
   visit(tree, "mdxJsxFlowElement", (node) => {
     if (node.name !== "SkillReview.Card") return;
@@ -57,12 +62,17 @@ export function extractTopicAndCards(
     if (!idAttr || typeof idAttr.value !== "string") return;
     const declared = declaredCardsById.get(idAttr.value);
     if (!declared) {
-      findings.push({
-        severity: "ERROR",
-        code: "PRA-2",
-        message: `PRA-2: Topic "${topic.id}" body has <SkillReview.Card id="${idAttr.value}"> but card is not declared in frontmatter cards: [] list. Resolution: add { id: "${idAttr.value}", label: "..." } to the topic's frontmatter cards list, OR remove the orphan block from the body (per ADR 0079).`,
-        location: { unit: topic.id, anchor: idAttr.value },
-      });
+      const suppressed = overrides.some(
+        (o) => o.invariant === "PRA-2" && o.anchor === idAttr.value
+      );
+      if (!suppressed) {
+        findings.push({
+          severity: "ERROR",
+          code: "PRA-2",
+          message: `PRA-2: Topic "${topic.id}" body has <SkillReview.Card id="${idAttr.value}"> but card is not declared in frontmatter cards: [] list. Resolution: add { id: "${idAttr.value}", label: "..." } to the topic's frontmatter cards list, OR remove the orphan block from the body (per ADR 0079).`,
+          location: { unit: topic.id, anchor: idAttr.value },
+        });
+      }
       return;
     }
     cards.push({

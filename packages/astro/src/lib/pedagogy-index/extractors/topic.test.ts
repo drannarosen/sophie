@@ -129,6 +129,62 @@ describe("extractTopicAndCards (ADR 0079)", () => {
     expect(result.findings).toEqual([]);
   });
 
+  test("PRA-2 extractor honors audit_overrides on TopicEntry — override suppresses finding (W4c D5)", () => {
+    const tree = root([
+      mdxNamedFlow("SkillReview.Card", { id: "product-rule" }),
+    ]);
+    const result = extractTopicAndCards(tree as never, {
+      id: "logarithms",
+      label: "Logarithms",
+      summary: "Inverse of exponentiation.",
+      prereq_topic_ids: [],
+      linked_equation_ids: [],
+      linked_misconception_ids: [],
+      cards: [],
+      audit_overrides: [
+        {
+          invariant: "PRA-2",
+          anchor: "product-rule",
+          tdr: "TDR-W4c-2.3-test",
+          reason: "fixture: mid-edit card body in flight",
+        },
+      ],
+    });
+    // Body→frontmatter orphan is suppressed by the matching override.
+    expect(result.cards).toEqual([]);
+    expect(result.findings).toEqual([]);
+  });
+
+  test("PRA-2 extractor still fires when override anchor doesn't match body card id", () => {
+    const tree = root([
+      mdxNamedFlow("SkillReview.Card", { id: "product-rule" }),
+    ]);
+    const result = extractTopicAndCards(tree as never, {
+      id: "logarithms",
+      label: "Logarithms",
+      summary: "Inverse of exponentiation.",
+      prereq_topic_ids: [],
+      linked_equation_ids: [],
+      linked_misconception_ids: [],
+      cards: [],
+      audit_overrides: [
+        {
+          invariant: "PRA-2",
+          anchor: "different-card",
+          tdr: "TDR-W4c-2.3-test",
+          reason: "fixture: override targets a different card id",
+        },
+      ],
+    });
+    expect(result.cards).toEqual([]);
+    expect(result.findings).toHaveLength(1);
+    expect(result.findings[0]).toMatchObject({
+      severity: "ERROR",
+      code: "PRA-2",
+      location: { unit: "logarithms", anchor: "product-rule" },
+    });
+  });
+
   test("returns empty cards[] and empty findings[] when tree has no SkillReview.Card", () => {
     const tree = root([mdxNamedFlow("RetrievalPrompt", { target: "topic:x" })]);
     const result = extractTopicAndCards(tree as never, {
