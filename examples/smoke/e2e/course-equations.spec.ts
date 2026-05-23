@@ -1,10 +1,10 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-const EQUATIONS_URL = "/equations";
+const EQUATIONS_URL = "/library/equations";
 
 /**
- * `<CourseEquations />` on `/equations` per ADR 0060.
+ * `<CourseEquations />` on `/library/equations` per ADR 0060.
  *
  * Post-ADR-0060: declaration-driven aggregator. Reads every
  * `EquationEntry` declared in the equation registry
@@ -26,7 +26,7 @@ const EQUATIONS_URL = "/equations";
  * source chapter was deleted in Batch 6).
  */
 
-test.describe("<CourseEquations /> on /equations (ADR 0060)", () => {
+test.describe("<CourseEquations /> on /library/equations (ADR 0060)", () => {
   test("renders the page with all registry equation entries", async ({
     page,
   }) => {
@@ -86,7 +86,7 @@ test.describe("<CourseEquations /> on /equations (ADR 0060)", () => {
     ]);
   });
 
-  test("/equations is axe-clean", async ({ page }) => {
+  test("/library/equations is axe-clean", async ({ page }) => {
     await page.goto(EQUATIONS_URL);
     const results = await new AxeBuilder({ page })
       .exclude("astro-island")

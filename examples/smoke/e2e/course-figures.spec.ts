@@ -1,10 +1,10 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-const FIGURES_URL = "/figures";
+const FIGURES_URL = "/library/figures";
 
 /**
- * PR-C3 — `<CourseFigures />` on `/figures`.
+ * PR-C3 — `<CourseFigures />` on `/library/figures`.
  *
  * Covers TDD test list row T38 from the PR-C3 design doc
  * (`docs/plans/2026-05-14-pr-c3-design.md`).
@@ -25,7 +25,7 @@ const FIGURES_URL = "/figures";
  * figures model in decision #3 + the `<CourseFigures>` template.
  */
 
-test.describe("PR-C3: <CourseFigures /> on /figures", () => {
+test.describe("PR-C3: <CourseFigures /> on /library/figures", () => {
   test("T38: renders all 34 figures across both smoke chapters with registry-resolved <img> tags", async ({
     page,
   }) => {
@@ -114,7 +114,7 @@ test.describe("PR-C3: <CourseFigures /> on /figures", () => {
     }
   });
 
-  test("/figures is axe-clean", async ({ page }) => {
+  test("/library/figures is axe-clean", async ({ page }) => {
     await page.goto(FIGURES_URL);
     const results = await new AxeBuilder({ page })
       .exclude("astro-island")

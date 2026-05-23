@@ -15,7 +15,7 @@ const CHAPTER_URL = "/units/spoiler-alerts/reading";
  * the chapter route.
  *
  * Sort/render behavior of `<ChapterMisconceptions>` itself is exercised
- * indirectly by `<CourseMisconceptions>` on `/misconceptions` (same
+ * indirectly by `<CourseMisconceptions>` on `/library/misconceptions` (same
  * data shape; see `course-misconceptions.spec.ts`).
  */
 
@@ -54,6 +54,6 @@ test.describe("PR-7: misconception Asides on the smoke chapter", () => {
     // `<ChapterMisconceptions chapter="spoiler-alerts" />`.
     // Adding an inline chapter-end misconceptions summary is a
     // content-authoring decision. Sort/render behavior is exercised
-    // on /misconceptions via `<CourseMisconceptions />`.
+    // on /library/misconceptions via `<CourseMisconceptions />`.
   });
 });
