@@ -8,18 +8,50 @@ tags:
   - mdx-remark-plugin
   - library
   - reasoning-os
-status: proposed
+status: accepted-design
 validation:
-  status: unvalidated
-  last_validated_date: null
-  evidence: []
+  status: in-progress
+  last_validated_date: "2026-05-23"
+  evidence:
+    - kind: test
+      ref: packages/core/src/schema/pedagogy-index-entries/topic.test.ts
+      date: "2026-05-23"
+      notes: "TopicEntry + TopicCardMetadata + CardEntry Zod schemas (12 tests)."
+    - kind: test
+      ref: packages/astro/src/lib/mdx-plugins/skill-review-resolver.test.ts
+      date: "2026-05-23"
+      notes: "Resolver invoked via unified().use().run() against fixture topics — covers single-card auto-pick, explicit fragment, bare-multi-card ERROR with curated message, unknown topic ERROR, unknown card ERROR, explicit-children non-destructive."
+    - kind: test
+      ref: packages/astro/src/lib/mdx-plugins/skill-review-resolver-vite.test.ts
+      date: "2026-05-23"
+      notes: "Companion Vite plugin handleHotUpdate — surgical chapter invalidation via chapter→topic dep map populated by the remark plugin."
+    - kind: test
+      ref: packages/astro/src/lib/pedagogy-index/extractors/topic.test.ts
+      date: "2026-05-23"
+      notes: "Topic extractor emits PRA-2 finding for orphan body cards (body→frontmatter direction)."
+    - kind: test
+      ref: packages/astro/src/lib/pedagogy-audit/invariants/topic-consistency.test.ts
+      date: "2026-05-23"
+      notes: "PRA-2 audit covers the inverse (frontmatter→body) direction."
+    - kind: test
+      ref: packages/astro/src/lib/pedagogy-audit/invariants/bridge-uniqueness.test.ts
+      date: "2026-05-23"
+      notes: "BR-1 covers bridge slug collisions against other Sections, Units, and reserved structural paths."
+    - kind: deployment
+      ref: examples/smoke/dist/library/topics/logarithms/index.html
+      date: "2026-05-23"
+      notes: "Smoke build emits Topic Spec pages for both `exponents` and `logarithms`; PRA-1 ERROR baseline = 0 (both prereqs covered by self-closing callsites)."
+    - kind: review
+      ref: docs/website/pilots/wedge-b-followup-w4b-affordances.md
+      date: "2026-05-23"
+      notes: "W4b pilot report (Shape α); R+CR APPROVE WITH FIXES → all Critical + Important resolved before PR open."
 ---
 
 # ADR 0079: Topic registry + registry-resolution pattern
 
 :::{admonition} ADR metadata
 
-- **Status**: proposed
+- **Status**: accepted-design (2026-05-23 — landed in W4b)
 - **Deciders**: anna
 - **Amends**: [0038](./0038-pedagogy-index-pattern.md) (pedagogy-index gains TopicEntry + CardEntry), [0053](./0053-conformance-failure-modes.md) (PRA-1 graduation honors `audit_overrides`), [0060](./0060-registry-ecosystem.md) (topic registry is the fourth registry type), [0067](./0067-section-level-artifacts.md) (PRA-1 enforces topic coverage at Unit-prereq level), [0068](./0068-bridge-rooms-and-prereq-pedagogy.md) (`<SkillReview target="topic:..." />` self-closing form lands, bridge rooms render via [bridgeSlug].astro), [0070](./0070-library-room-and-registry-spec-pages.md) (Topics room added to Library hierarchy)
 - **Related**: [0023](./0023-vertical-slice-first.md) (YAGNI for v1 schema), [0044](./0044-misconception-graph.md) (future use of resolution-pattern), [0046](./0046-equation-biography.md) (future use of resolution-pattern), [0061](./0061-ai-optimized-codebase-design.md) (focused-files; topic file as the focus unit), [0069](./0069-fsrs-spaced-repetition-engine.md) (cards are FSRS scheduling units)

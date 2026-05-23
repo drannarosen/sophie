@@ -66,10 +66,10 @@ issues; pedagogical soundness is the instructor's responsibility.
 The repo's smoke build at `examples/smoke/` is a fixture, not a
 production course. Its purpose is to exercise the full audit
 pipeline across every invariant family. The baseline at
-2026-05-22 (Wedge B-followup W1) is:
+2026-05-23 (Wedge B-followup W4b) is:
 
 ```text
-Pedagogy audit: 0 errors, 14 warnings, 7 infos
+Pedagogy audit: 0 errors, 14 warnings, 8 infos
 ```
 
 Breakdown:
@@ -77,9 +77,11 @@ Breakdown:
 | Code | Count | Severity | Rationale |
 |---|---:|---|---|
 | `D5` | 12 | WARNING | Orphan definitions in the `spoiler-alerts` fixture — intentionally seed many terms to exercise the D5 invariant without each one being a `<GlossaryTerm>` target in the smoke set. |
-| `O2` | 1 | WARNING | `misconception-fixture` chapter has zero learning objectives — fixture exercises O2 detection. |
-| `PRA-1` (Unit-aware) | 1 | WARNING | `spectra-and-composition` Unit declares `prereqs: ["exponents", "logarithms"]`; `exponents` is covered by `spoiler-alerts`'s `<SkillReview target="topic:exponents">` (prior Section, no WARN), but `logarithms` has no covering SkillReview anywhere — fires the W1-graduated Unit-aware path. Exercises both halves: "covered prereq → no WARN" + "uncovered prereq → WARN". |
-| `K1` | 3 | INFO | Chapters without key-insights — fixture has chapters intentionally lacking K1 content. |
+| `O2` | 2 | WARNING | `misconception-fixture` + `logarithms-skill` chapters have zero learning objectives. The bridge-room unit `logarithms-skill` (W4b smoke fixture) was added with no `<LearningObjectives>`, exercising O2 on a Unit[type=skill] surface in addition to the existing chapter-level fixture. |
+| `PRA-1` (Unit-aware, ERROR) | 0 | ERROR | `spectra-and-composition` Unit declares `prereqs: ["exponents", "logarithms"]`; W4b's smoke `<SkillReview target="topic:exponents#power-laws" />` + `<SkillReview target="topic:logarithms#product-rule" />` self-closing callsites cover both prereqs (per ADR 0079's fragment-strip coverage rule). Severity graduated WARN → ERROR per ADR 0079 (W4b); baseline stays at 0 ERRORs because the covering callsites land in the same PR. Pre-W4b baseline fired 1 WARN for the missing `logarithms` coverage. |
+| `PRA-2` (topic frontmatter↔body) | 0 | ERROR | New invariant per ADR 0079 (W4b). Smoke topics `topics/math/exponents.mdx` + `topics/math/logarithms.mdx` are well-formed (frontmatter `cards: []` matches body `<SkillReview.Card id="…">` blocks 1:1). Splits between the topic extractor (body→frontmatter direction, surfaced via `extractorFindings`) and `topic-consistency.ts` (frontmatter→body direction). Both directions emit findings under the same `PRA-2` code. |
+| `BR-1` (bridge slug uniqueness) | 0 | ERROR | New invariant per ADR 0079 + 0068 (W4b). Smoke has one bridge `Section[type=bridge]` with slug `math-fundamentals`; doesn't collide with any other Section slug, Unit id, or reserved Library path. Opt-in invariant — courses without bridge rooms produce zero BR-1 findings. |
+| `K1` | 4 | INFO | Chapters without key-insights. `logarithms-skill` (W4b bridge fixture) joins `measuring-the-sky`, `misconception-fixture`, `stellar-evolution`. |
 | `NR2` | 2 | INFO | Unreferenced notation-registry concepts — exercises NR2. |
 | `MG4` | 1 | INFO | Course-level depth-coverage summary (single-finding table per ADR 0044 §D3). |
 | `RET-1` | 1 | INFO | `misconception-fixture` chapter carries pedagogy content but no `<RetrievalPrompt>`/`<SpacedReview>`/`<SkillReview>` surface — Wedge B1 retrieval-coverage nudge. |
@@ -88,8 +90,18 @@ Breakdown:
 
 | Code | Count | Status |
 |---|---:|---|
-| `PRA-1` (Unit-aware) | 1 | Active — `spectra-and-composition` Unit's `["exponents", "logarithms"]` prereqs exercise BOTH the covered (no-WARN) + uncovered (WARN) paths in a single fixture. Verifies the graduated logic surfaces in production builds, not just unit tests. |
+| `PRA-1` (Unit-aware) | 0 | Graduated to ERROR severity in W4b (see below); previously fired 1 WARN on the missing `logarithms` coverage. |
 | `SR-1` (section-validity) | 0 | Quiet — `stellar-evolution.mdx` has `<SpacedReview section="stars">` and `stars` resolves to a known `SectionEntry.slug`. Inverting to an unknown slug would emit SR-1 ERROR + fail the build; the fixture stays valid by design. |
+
+**Wedge B-followup (W4b) graduation status:**
+
+W4b shipped three audit changes per [ADR 0079](../decisions/0079-topic-registry-and-resolution-pattern.md):
+
+| Code | Migration | Status |
+|---|---|---|
+| `PRA-1` | Severity WARN → ERROR. Coverage check unchanged (fragment-strip means `topic:X#card` covers a prereq of `X`). Honors `audit_overrides` per ADR 0053 (Unit frontmatter declares `{ invariant: PRA-1, anchor: <topic>, tdr: <TDR-ID>, reason: "..." }` to opt out per-callsite). | Quiet — smoke fixture's covering self-closing callsites + the new topic content collection clear the previously-failing `logarithms` prereq. |
+| `PRA-2` (NEW) | Topic frontmatter↔body card consistency. Split detection: topic extractor catches body→frontmatter orphan cards (emitted via `extractorFindings`); `topic-consistency.ts` catches frontmatter→body orphans (frontmatter declares a card with no matching `<SkillReview.Card>` block). Both directions ERROR; same code so authors learn a single concept. | Quiet — smoke topics are well-formed. |
+| `BR-1` (NEW) | Bridge slug uniqueness across Sections (bridge + regular) + Unit ids + reserved Library structural paths (`library`, `sections`, `units`, `topics`). Opt-in via authoring a `Section[type=bridge]`. | Quiet — smoke's `math-fundamentals` bridge slug doesn't collide. |
 
 **Wedge B-followup (W2) graduation status:**
 
@@ -133,7 +145,20 @@ Changes from the 2026-05-19 baseline (16 warnings, 9 infos):
 - PRA-1 (1) added (Wedge B-followup W1 graduation; the smoke fixture
   intentionally exercises the WARN path so the integration canary
   proves the new audit logic surfaces in production builds).
-- Net: −2 warnings, −2 infos.
+- Net at W1: −2 warnings, −2 infos.
+
+Changes from the 2026-05-22 baseline at W1 (14 warnings, 7 infos) to
+the 2026-05-23 W4b baseline (14 warnings, 8 infos):
+
+- PRA-1 cleared (1 → 0): smoke's W4b self-closing callsites cover
+  both prereqs (`exponents` + `logarithms`).
+- O2 added (1 → 2): bridge-room Unit `logarithms-skill` has no
+  `<LearningObjectives>` — fixture exercises O2 on Unit[type=skill].
+- K1 added (3 → 4): same bridge-room unit has no `<KeyInsight>`s.
+- PRA-2 (0) + BR-1 (0) added but stay quiet — smoke fixtures are
+  intentionally clean for both invariants.
+- Net at W4b: warnings unchanged (12 D5 + 2 O2 = 14), infos +1 (one
+  more K1).
 
 ## CI exit-code mapping
 

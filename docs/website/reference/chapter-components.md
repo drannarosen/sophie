@@ -173,11 +173,24 @@ JSDoc note).
 | `<CourseKeyInsights />` | `/library/key-insights` | All key insights across the course |
 | `<CourseMisconceptions />` | `/library/misconceptions` | All misconceptions across the course |
 | `<CourseObjectives />` | `/library/objectives` | Hierarchical Module → Chapter → Objectives roll-up. Chapter headings link to each `/units/<unit-id>/reading` route. (PR-C4) |
+| _Topic Spec page_ | `/library/topics/<topic-id>` | Per-topic Spec page rendered via Astro dynamic route `pages/library/topics/[topicId].astro` (W4b; ADR 0079). Lists frontmatter metadata + cards + cross-references. No `<CourseTopics />` aggregator yet — W4c may add one alongside the `<LibraryCollectionShell>` extraction. |
 
 Course consumers are imported into the Astro page for their route
-(`examples/smoke/src/pages/library/{glossary,equations,figures,key-insights,misconceptions,objectives}.astro`),
+(`examples/smoke/src/pages/library/{glossary,equations,figures,key-insights,misconceptions,objectives,topics/[topicId]}.astro`),
 each slotted into `TextbookLayout`. They are **never** imported into
 MDX chapter content.
+
+#### Library hub + bridge rooms (W4a + W4b)
+
+| Route | Astro page | Purpose |
+|---|---|---|
+| `/library/` | `pages/library/index.astro` | Library hub — links to the 7 Course-level rooms above (W4a + W4b Topics row). |
+| `/<bridge-slug>/` | `pages/[bridgeSlug].astro` | Bridge Room render per ADR 0068 Scale 1 (W4b). Single-param dynamic route; one path per `Section[type=bridge]`. URL slug comes from `section.yaml`; optional `course.yaml` override sets the display label only. BR-1 audit invariant enforces course-wide slug uniqueness against other Sections + Unit ids + reserved Library paths (`library` / `sections` / `units` / `topics`). |
+
+The two route shapes use `buildModuleNavInputs(sections, units)`
+from `@sophie/astro` to derive `<ModuleNav>`'s
+`{modules, chapters}` props — the same helper all six W4a rooms
+use, so adding new sidebar-bearing routes is one helper call.
 
 ## The import patterns
 
@@ -379,7 +392,7 @@ time, not at runtime.
 | A "Deep Dive" disclosure block | `<CollapsibleCard>` |
 | In-flow recall prompt anchored to a pedagogy-graph node (equation / glossary / misconception / learning-objective / key-insight / topic) | `<RetrievalPrompt target="prefix:slug">` with required `<RetrievalPrompt.Prompt>` + `<RetrievalPrompt.Answer>` slot children. Amber left-band. Writes `practice_attempt` records via `useRetrievalAttempt`. Self-assess buttons (Got it / Partial / Missed it) render automatically below the revealed answer. Per Wedge B1 design doc §1. |
 | Queued review surface that resurfaces past-attempted targets due for review | `<SpacedReview target="prefix:slug" max={3} />` (single-target scope) or `<SpacedReview section="<section-slug>" max={3} />` (Section-scope, **graduated in Wedge B-followup W1**). Section-scope resolves the slug → `UnitEntry`s in that Section → `unit.chapter` slugs → aggregates `practice_attempt` records via `useInteractiveRangeMulti`, then runs the LRU over the merged set with `max`. SR-1 audit invariant validates the section slug against `PedagogyIndex.sections`. Exactly-one selection rule (`target` xor `section`) enforced by Zod refine. Cyan left-band. Optional `<SpacedReview.Empty>` slot overrides the default empty-state message. Wedge B1 ships an LRU stub scheduler; Wedge D's FSRS replaces the function body. |
-| Inline prereq-bridge prompt at the point a prereq concept is invoked mid-reading | `<SkillReview target="topic:..." />` (self-closing form, B1 placeholder until Wedge C Library room ships) or `<SkillReview target="topic:...">` with optional `<SkillReview.Prompt>` + `<SkillReview.Answer>` + `<SkillReview.ReviewMore>` slot children (explicit form, works in B1). Violet left-band. Same `target` prefix convention as RetrievalPrompt + SpacedReview, unifying ADR 0068's previously-`topic`-only signature. |
+| Inline prereq-bridge prompt at the point a prereq concept is invoked mid-reading | `<SkillReview target="topic:X" />` or `<SkillReview target="topic:X#card-id" />` (self-closing form, resolved at MDX compile time by the topic-registry resolver — see *Topic registry + `<SkillReview>` self-closing form* below), OR `<SkillReview target="topic:X">` with inline `<SkillReview.Prompt>` + `<SkillReview.Answer>` + `<SkillReview.ReviewMore>` slot children (explicit form). Violet left-band. Same `target` prefix convention as RetrievalPrompt + SpacedReview. |
 | Chapter-end roll-up of definitions | `<ChapterGlossary chapter="X" />` |
 | Chapter-end roll-up of equations | `<ChapterEquations chapter="X" />` |
 | Chapter-end roll-up of figures | `<ChapterFigures chapter="X" />` |
@@ -447,6 +460,196 @@ its own surfaced targets).
 
 See [Wedge B-followup design doc D2](../../plans/2026-05-22-wedge-b-followup-design.md#d2--useinteractiverangemulti-hook-for-cross-chapter-range-reads)
 for the rationale + cross-call contract.
+
+## Topic registry + `<SkillReview>` self-closing form (W4b)
+
+Per [ADR 0079](../decisions/0079-topic-registry-and-resolution-pattern.md),
+Sophie ships a Topics content collection plus a SkillReview
+self-closing resolver. The two land together because the
+self-closing form is the resolver pattern's first user.
+
+### Topic file shape (Design F: sub-grouped flat + inline cards)
+
+Topic files live at
+`src/content/topics/<category>/<topic-id>.mdx`. Category
+subdirectories (`math/`, `physics/`, `astronomy/`, ...) are
+**author convenience** only — they do NOT appear in URLs
+(`/library/topics/<topic-id>` is flat) and have no semantic
+meaning in the pedagogy graph. The "math fundamentals contains
+logarithms" intuition is owned by **bridge rooms** (ADR 0068
+Scale 1; below) one layer up, not by topic nesting.
+
+Per-topic file shape:
+
+```mdx
+---
+id: logarithms
+label: Logarithms
+summary: |
+  Functions that invert exponentiation; map products to sums.
+prereq_topic_ids: [exponents]
+linked_equation_ids:
+  - stefan-boltzmann
+linked_misconception_ids:
+  - logarithm-as-multiplication
+cards:
+  - id: product-rule
+    label: Product rule
+    difficulty: easy
+  - id: power-rule
+    label: Power rule
+    difficulty: medium
+---
+
+<SkillReview.Card id="product-rule">
+  <SkillReview.Prompt>
+    What does $\log_b(xy)$ equal?
+  </SkillReview.Prompt>
+  <SkillReview.Answer>
+    $\log_b(x) + \log_b(y)$ — logarithms turn products into sums.
+  </SkillReview.Answer>
+</SkillReview.Card>
+
+<SkillReview.Card id="power-rule">
+  <SkillReview.Prompt>...</SkillReview.Prompt>
+  <SkillReview.Answer>...</SkillReview.Answer>
+</SkillReview.Card>
+```
+
+The frontmatter `cards: []` array is the source of truth for
+card metadata. Body `<SkillReview.Card id="X">` blocks must
+match 1:1; **PRA-2** audit invariant catches mismatches in both
+directions (frontmatter→body via `topic-consistency.ts`; body→
+frontmatter via the topic extractor's `extractorFindings` push).
+
+### `<SkillReview.Card>` slot vocabulary
+
+Three named JSX nodes appear inside a topic file's body:
+
+| Tag | Purpose |
+|---|---|
+| `<SkillReview.Card id="X">` | Card container; `id` must match a frontmatter entry. |
+| `<SkillReview.Prompt>` | Required slot inside each card. The question shown to the student. Math + components render naturally. |
+| `<SkillReview.Answer>` | Required slot inside each card. The answer + brief explanation. Often pairs with a quick "why this matters" sentence. |
+
+Authors do **not** import these components — they're routed by
+the chapter components map at compile time.
+
+### Self-closing form: `<SkillReview target="topic:..." />`
+
+In chapter MDX, authors invoke a topic-registry card via a
+self-closing tag:
+
+```mdx
+{/* Single-card topic — auto-picks the one card. */}
+<SkillReview target="topic:exponents" course="astr-201" unit="spoiler-alerts" />
+
+{/* Multi-card topic — explicit fragment required. */}
+<SkillReview target="topic:logarithms#product-rule" course="astr-201" unit="spoiler-alerts" />
+```
+
+At MDX compile time, the resolver remark plugin (lives in
+`@sophie/astro` at
+`packages/astro/src/lib/mdx-plugins/skill-review-resolver.ts`)
+expands the self-closing form by lifting the matching card's
+`<SkillReview.Prompt>` + `<SkillReview.Answer>` slot children
+into the chapter tree. The SkillReview component itself is
+unchanged.
+
+**Bare target against a multi-card topic = ERROR** (per ADR
+0079 Q6): the build fails with a curated message naming the
+available cards. Authors must specify a fragment or use the
+explicit-children form. The strict-ERROR-with-curated-message
+shape carves room for Wedge D's adaptive selection (FSRS-driven
+card pick) without retroactively redefining bare-target
+semantics.
+
+**Explicit-children form still works.** If a chapter wants a
+one-off prompt that doesn't warrant a topic-registry entry, the
+author writes:
+
+```mdx
+<SkillReview target="topic:exponents" course="..." unit="...">
+  <SkillReview.Prompt>What does $b^m \cdot b^n$ equal?</SkillReview.Prompt>
+  <SkillReview.Answer>$b^{m+n}$.</SkillReview.Answer>
+</SkillReview>
+```
+
+The resolver is non-destructive on the explicit-children form
+(it triggers only when the tag has zero children).
+
+### PRA-1 graduation (WARN → ERROR; W4b)
+
+`<SkillReview target="topic:X[#card]" />` now contributes
+prereq-coverage in the **PRA-1 ERROR** invariant. A Unit
+declaring `prereqs: [topic-id]` MUST have at least one
+`<SkillReview target="topic:topic-id…">` in the same or prior
+Section. The optional `#card` fragment is addressing detail —
+PRA-1 strips it for the coverage check, so any callsite
+referencing `topic:X` covers a prereq of `X` regardless of card.
+
+Per ADR 0053, authors can opt out per-callsite via Unit
+frontmatter:
+
+```yaml
+audit_overrides:
+  - invariant: PRA-1
+    anchor: nonexistent-topic
+    tdr: TDR-XX
+    reason: |
+      Deliberately uncovered for fixture/test purposes.
+```
+
+The mandatory `tdr:` field anchors every override to a
+Teaching Decision Record (provenance trail per ADR 0053 CF2).
+
+## Bridge rooms (W4b)
+
+Per [ADR 0068](../decisions/0068-bridge-rooms-and-prereq-pedagogy.md)
+Scale 1, a Course can host bridge rooms — top-level pages
+rendering a `Section[type=bridge]` from the sections content
+collection. Each bridge slug becomes a Course-root URL segment
+(e.g., `/math-fundamentals/`).
+
+### Authoring a bridge section
+
+```yaml
+# src/content/sections/math-fundamentals/section.json
+id: math-fundamentals
+slug: math-fundamentals
+title: Math Fundamentals
+type: bridge
+order: 0
+description: |
+  Math prerequisites for ASTR 201 — logarithms, exponents,
+  basic algebra. Refresh before the first content section.
+```
+
+Bridge rooms render via `pages/[bridgeSlug].astro` — a
+single-param dynamic route that walks the sections collection
+and emits one path per `Section[type=bridge]`. Section title
++ description + a list of contained `Unit[type=skill]` entries
+render in v1; per-unit artifact rendering lands in a future
+wedge.
+
+### BR-1 audit invariant — slug uniqueness
+
+Bridge slugs collide with other routes if not unique. **BR-1**
+catches this at build time. A bridge slug MUST NOT match:
+
+- Any other Section's slug (bridge or regular).
+- Any Unit's id (W3/D7 convention: Unit id is its slug).
+- Reserved structural paths: `library`, `sections`, `units`,
+  `topics`.
+
+Fix the collision by renaming the bridge slug — the audit
+output names the colliding entity.
+
+### Scale 2 (inline `Section[type=bridge]`) — deferred
+
+ADR 0068 also defines Scale 2 (inline mid-Section bridge
+blocks). Per [W4 meta-plan Q3](../../../.claude/plans/sophie-wedge-b-followup-w4-tranquil-glade.md),
+Scale 2 is deferred until a curriculum pilot demands it.
 
 ## Anchor convention
 

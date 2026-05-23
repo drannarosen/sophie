@@ -24,8 +24,8 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 | Status | Count |
 |---|---|
 | Validated | 14 |
-| In progress | 14 |
-| Unvalidated | 77 |
+| In progress | 15 |
+| Unvalidated | 76 |
 | Re-validation needed | 0 |
 | Missing block | 0 |
 | Total | 105 |
@@ -35,32 +35,26 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 | Lifecycle | Count |
 |---|---|
 | Shipped | 61 |
-| Accepted design | 33 |
+| Accepted design | 34 |
 | Mixed | 1 |
 | Future package split | 9 |
-| No status | 1 |
+| No status | 0 |
 | Total | 105 |
 
 ## Evidence kinds
 
 | Kind | Count |
 |---|---|
-| test | 36 |
+| test | 42 |
 | chapter | 7 |
-| review | 20 |
-| deployment | 12 |
+| review | 21 |
+| deployment | 13 |
 | audit | 5 |
 | manual | 29 |
 
 ## Extractor findings
 
-| Code | Count |
-|---|---|
-| S0 | 1 |
-
-### Findings list
-
-- **INFO S0** — S0: docs/website/decisions/0079-topic-registry-and-resolution-pattern.md: page-level 'status:' field has unknown value (got: "proposed"; expected one of: shipped, accepted-design, mixed, future-package-split). (docs/website/decisions/0079-topic-registry-and-resolution-pattern.md)
+_No extractor findings (V0 + V8) surfaced during this build._
 
 ## Contracts
 
@@ -145,7 +139,7 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 | [docs/website/decisions/0076-student-learning-cockpit.md](/student-learning-cockpit/) | unvalidated | accepted design | — | — |  |
 | [docs/website/decisions/0077-ai-authoring-packets.md](/ai-authoring-packets/) | unvalidated | accepted design | — | — |  |
 | [docs/website/decisions/0078-reasoning-trace-composition.md](/reasoning-trace-composition/) | unvalidated | accepted design | — | — |  |
-| [docs/website/decisions/0079-topic-registry-and-resolution-pattern.md](/topic-registry-and-resolution-pattern/) | unvalidated | — | — | — |  |
+| [docs/website/decisions/0079-topic-registry-and-resolution-pattern.md](/topic-registry-and-resolution-pattern/) | in progress | accepted design | 2026-05-23 | deployment, review, test |  |
 
 ### Reference docs
 
