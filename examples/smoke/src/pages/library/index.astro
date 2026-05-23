@@ -1,5 +1,5 @@
 ---
-import { buildModuleNavInputs } from "@sophie/astro";
+import { buildModuleNavInputs, indexAccumulator } from "@sophie/astro";
 import ModuleNav from "@sophie/astro/components/ModuleNav.astro";
 import TextbookHead from "@sophie/astro/components/TextbookHead.astro";
 import TextbookLayout from "@sophie/astro/components/TextbookLayout.astro";
@@ -10,12 +10,29 @@ import { figures as figureRegistry } from "../../content/figures";
 /**
  * `/library/` — Library hub.
  *
- * Lists the 6 course-level rollup rooms migrated in Wedge B-followup
- * W4a per ADR 0067 §2.1. W4b adds Topics; W4c adds Observables /
- * Models / Inferences + per-entry Spec pages.
+ * Surfaces all 10 Library rooms per W4c design doc §6:
+ *   - 6 W4a rollups (Glossary, Equations, Figures, Misconceptions,
+ *     KeyInsights, Objectives)
+ *   - Topics (W4b, ADR 0079)
+ *   - 3 OMI-triad rollups (Observables, Models, Inferences)
+ *     mounted per W4c Batch 5 + this batch's new route files.
  *
- * Minimal placeholder per W4a design doc §2 D3 — shell extraction
- * and faceted nav land in W4c.
+ * Counts derive from `indexAccumulator.asPedagogyIndex()` so each
+ * tile reflects the actual room contents. Figures count uses unique
+ * canonical names (matching `<CourseFigures>` dedupe — one card per
+ * unique figure name). The three OMI rollups all share
+ * `omiFlows.length` because each iterates the same collection (one
+ * entry per OMIFlow callsite); per-slot divergence is a future
+ * refinement if curriculum demands it.
+ *
+ * The Topics tile links to the first topic's Spec page (alphabetical
+ * by id) because no `/library/topics/` index route exists in v1
+ * (deferred per W4b). Topics' count is the number of registered
+ * topic Spec pages.
+ *
+ * Per W4c D8 the hub does not emit forward-compat data attrs of its
+ * own; the room cards link out to per-room rollups where the data
+ * attrs live.
  */
 
 const figureRegistryArray = Object.values(figureRegistry);
@@ -24,42 +41,76 @@ const sections = (await getCollection("sections")).map((s) => s.data);
 const units = (await getCollection("units")).map((u) => u.data);
 const { modules, chapters } = buildModuleNavInputs(sections, units);
 
+const topicCollection = (await getCollection("topics")).map((t) => t.data);
+const firstTopicId = [...topicCollection]
+  .sort((a, b) => a.id.localeCompare(b.id))[0]
+  ?.id;
+
+const index = indexAccumulator.asPedagogyIndex();
+const figureCount = new Set(index.figureUsages.map((u) => u.name)).size;
+const omiCount = index.omiFlows.length;
+
 const rooms = [
   {
     href: "/library/glossary",
     title: "Glossary",
     description: "All definitions across the course, alphabetical.",
+    count: index.definitions.length,
   },
   {
     href: "/library/equations",
     title: "Equations",
     description: "All equations across the course.",
+    count: index.equations.length,
   },
   {
     href: "/library/figures",
     title: "Figures",
     description: "Every figure (canonical entries from the registry).",
+    count: figureCount,
   },
   {
     href: "/library/key-insights",
     title: "Key insights",
     description: "All key insights across the course.",
+    count: index.keyInsights.length,
   },
   {
     href: "/library/misconceptions",
     title: "Misconceptions",
     description: "All misconceptions across the course.",
+    count: index.misconceptions.length,
   },
   {
     href: "/library/objectives",
     title: "Objectives",
     description: "Hierarchical Module → Chapter → Objectives roll-up.",
+    count: index.objectives.length,
   },
   {
-    href: "/library/topics/logarithms",
+    href: firstTopicId ? `/library/topics/${firstTopicId}` : "/library/",
     title: "Topics",
     description:
       "Prerequisite skill-review cards (ADR 0079). One topic page per registered topic; cards land via <SkillReview target='topic:X#card' /> in chapter MDX.",
+    count: topicCollection.length,
+  },
+  {
+    href: "/library/observables",
+    title: "Observables",
+    description: "OMIFlow observable slots (empirical anchoring).",
+    count: omiCount,
+  },
+  {
+    href: "/library/models",
+    title: "Models",
+    description: "OMIFlow model slots (formal/mechanistic frame).",
+    count: omiCount,
+  },
+  {
+    href: "/library/inferences",
+    title: "Inferences",
+    description: "OMIFlow inference slots (what the model lets us conclude).",
+    count: omiCount,
   },
 ];
 ---
@@ -71,7 +122,7 @@ const rooms = [
     <title>Library</title>
     <meta
       name='description'
-      content='Course-wide reference rooms: glossary, equations, figures, key insights, misconceptions, objectives.'
+      content='Course-wide reference rooms: glossary, equations, figures, key insights, misconceptions, objectives, topics, observables, models, inferences.'
     />
     <TextbookHead />
   </head>
@@ -90,7 +141,11 @@ const rooms = [
           {
             rooms.map((room) => (
               <li>
-                <a href={room.href}>{room.title}</a> — {room.description}
+                <a href={room.href}>{room.title}</a>{" "}
+                <span aria-label={`${room.count} entries`}>
+                  ({room.count})
+                </span>{" "}
+                — {room.description}
               </li>
             ))
           }

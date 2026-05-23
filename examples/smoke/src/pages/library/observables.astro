@@ -1,0 +1,49 @@
+---
+import { buildModuleNavInputs } from "@sophie/astro";
+import CourseObservables from "@sophie/astro/components/CourseObservables.astro";
+import ModuleNav from "@sophie/astro/components/ModuleNav.astro";
+import TextbookHead from "@sophie/astro/components/TextbookHead.astro";
+import TextbookLayout from "@sophie/astro/components/TextbookLayout.astro";
+import { SophieChapter } from "@sophie/astro/client";
+import { getCollection } from "astro:content";
+import { figures as figureRegistry } from "../../content/figures";
+
+const figureRegistryArray = Object.values(figureRegistry);
+
+/**
+ * `/library/observables` — course-wide rollup of the `observable` slot of
+ * every `<OMIFlow>` callsite across the textbook (Batch 5 / W4c Task 5.1).
+ * Reads `omiFlows` via `indexAccumulator` inside `<CourseObservables>`;
+ * sorted by unit slug → anchor; each entry back-links to its source unit
+ * anchor. Mirrors the shape of `/library/glossary` et al.; sibling routes
+ * `/library/models` and `/library/inferences` surface the other two
+ * slots of the same OMI triad per ADR 0058's eight-role contract.
+ */
+
+const sections = (await getCollection("sections")).map((s) => s.data);
+const units = (await getCollection("units")).map((u) => u.data);
+const { modules, chapters } = buildModuleNavInputs(sections, units);
+---
+
+<html lang='en'>
+  <head>
+    <meta charset='utf-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1' />
+    <title>Observables</title>
+    <meta
+      name='description'
+      content='Course-wide rollup of the observable slot of every OMIFlow.'
+    />
+    <TextbookHead />
+  </head>
+  <body>
+    <SophieChapter client:load>
+      <TextbookLayout figureRegistry={figureRegistryArray}>
+        <Fragment slot='sidebar'>
+          <ModuleNav modules={modules} chapters={chapters} />
+        </Fragment>
+        <CourseObservables heading='Observables' />
+      </TextbookLayout>
+    </SophieChapter>
+  </body>
+</html>
