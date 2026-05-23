@@ -40,6 +40,51 @@ When in doubt: **stop and ask**. The platform is being built carefully
 on purpose; speed is not the goal — correctness, long-term shape, and
 documented rationale are.
 
+## Working principles
+
+Four rules layered on top of the HITL mandate. Numbered for
+citability — reviewers can write "W3 violation" in a PR comment
+and reference the exact standard. These apply to every task,
+including ones the user calls "quick" or "simple."
+
+- **W1 — Don't assume. Don't hide confusion. Surface tradeoffs.**
+  When something is ambiguous, say so out loud. When you face a
+  real tradeoff, name both sides and pick the one you'd recommend;
+  don't paper over uncertainty with confident-sounding prose.
+  Hidden confusion ships as bugs, scope creep, or wasted iterations.
+
+- **W2 — Minimum code that solves the problem. Nothing speculative.**
+  W2 governs *amount of code*, not architectural shape. SoTA-over-
+  simple (below) and "build the best now, plan ahead" still win on
+  *structural* decisions (which dependency, which data model, which
+  component pattern, which abstraction layer). W2 says: once you've
+  picked the SoTA shape, write only the code that satisfies the
+  stated requirement — no abstractions for hypothetical second
+  callers, no flags toggling features that don't exist yet, no
+  error-handling for branches the code cannot reach, no
+  "while-I'm-here" cleanups in unrelated files.
+
+  Order of precedence: **SoTA shape (always) > W2 (within that
+  shape) > YAGNI (within that code).** If W2 ever seems to argue
+  for a simpler-but-worse architectural choice, you are misreading
+  W2. Sophie is built future-forward; W2 is a code-volume
+  discipline, not a shape-conservatism discipline.
+
+- **W3 — Touch only what you must. Clean up only your own mess.**
+  Scope discipline at the change level: the diff is the minimum set
+  of files that satisfies the goal. Unrelated cleanups go in their
+  own commit. Pre-existing issues are not yours to fix unless they
+  block the current change. Conversely, *your own* mess — debug
+  prints, scratch files, half-finished commits, dead branches — is
+  yours to clean before declaring done.
+
+- **W4 — Define success criteria. Loop until verified.**
+  Before starting non-trivial work, write down what "done" looks
+  like (test passes, build green, axe-core clean, specific behavior
+  observable, etc.). After implementation, loop: verify against the
+  criteria, fix what fails, re-verify. "I think it works" is not
+  verification. Evidence beats assertion.
+
 ## What Sophie is
 
 Sophie is a schema-driven, AI-authorable platform for interactive
@@ -58,6 +103,17 @@ locked by ADR 0058. See [`docs/website/vision/reasoning-os/`](docs/website/visio
 for the thesis and [`docs/website/explanation/scientific-reasoning-os.md`](docs/website/explanation/scientific-reasoning-os.md)
 for the author-facing how-to.
 
+**Scope and origin (honest framing).** Sophie is **teaching
+infrastructure** that emerged from Anna's need to author across
+multiple courses (ASTR 201, ASTR 101, COMP 521) without rebuilding
+per-course websites. Astrophysics remains Anna's primary research
+output; Sophie supports the tenure case through teaching
+effectiveness and 1–2 SoTL papers, not by being the centerpiece of
+a research program. This framing is load-bearing for proposal
+voice and scope decisions — see
+[`strategy/positioning.md` § origin and scope](docs/website/strategy/positioning.md#origin-and-scope)
+for the full version.
+
 - **Platform repo (current location)**: `drannarosen/sophie` on GitHub.
   May move to a more official org later; treat the current location as
   authoritative for now.
@@ -74,9 +130,12 @@ for the author-facing how-to.
 | Design docs (canonical) | `docs/website/` (MyST site) |
 | ADRs (decision audit trail) | `docs/website/decisions/` |
 | Chapter-author component reference | `docs/website/reference/chapter-components.md` |
+| Accessibility reference (WCAG 2.1 AA) | `docs/website/reference/wcag-21-aa.md` |
+| Competitive landscape + scope discipline | `docs/website/strategy/landscape/` |
+| Strategic positioning + origin/scope | `docs/website/strategy/positioning.md` |
 | Roadmap | `docs/website/status/roadmap.md` |
 | Pre-conversion historical docs | `_archive/` (read-only; do **not** edit) |
-| Implementation plan (most recent) | `~/.claude/plans/read-all-of-the-sharded-sky.md` |
+| Implementation plans (per session) | `~/.claude/plans/` |
 | Project memory | `~/.claude/projects/-Users-anna-Teaching-sophie/memory/` |
 
 To run the docs site:
@@ -118,7 +177,8 @@ the next migration.
 Read the relevant ADR before proposing changes that touch its area.
 This table is a load-bearing-decisions index, not a complete listing —
 not every ADR appears here. Browse `docs/website/decisions/` for the
-full set (0001–0060 at last count).
+full set (0001–0078, with 0050 a reserved gap; 77 ADRs total as of
+2026-05-23).
 
 | Concern                          | ADR  | Decision                                                                                                                  |
 | -------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------- |
@@ -170,6 +230,12 @@ full set (0001–0060 at last count).
 | **Registry ecosystem**           | 0060 | **Universal+reusable → registry; one-shot → inline (collection)**: 6 shared conventions; amends 0038/0043/0044/0046/0048    |
 | **AI-optimized codebase design** | 0061 | **AI is primary author of platform code, not just content**: 6 rules (focused files, Write-over-Edit, LOC budget 300/500/800, filename routing, atomic docs, tests split with source); amends 0023/0030 |
 | **`<OMIFlow>` composite (A8)**   | 0063 | **Compound component with slot-name-binds-role** (3 slots: `<OMIFlow.{Observable,Model,Inference}>`); pure-layout v1; lands ADR 0058's deferred chapter-level audit invariant as **OF-2**               |
+| **Chapter migration playbook**   | 0064 | Six locked rules + seven-step protocol; fixed-template pilot report under `docs/website/pilots/`; halt on missing-component gaps (no inline workarounds); next pilot must differ in structural density |
+| **Section hierarchy**            | 0067 | Section / Subsection / Unit / Artifact content hierarchy; replaces ad-hoc nesting; substrate for the course-website roadmap                                                                            |
+| **FSRS spaced-repetition**       | 0069 | FSRS as the algorithm for `<SpacedReview>` scheduling; LRU stub today, FSRS proper as Wedge B1 follow-on                                                                                               |
+| **Three-tier build priority**    | 0072 | Tier 1 / Tier 2 / Tier 3 sequencing governs the course-website 27-decision roadmap; Tier-1 commitments are non-negotiable                                                                              |
+| **Unified Assessment schema**    | 0073 | Single schema with type-variants (assignment / practice / diagnostic / exam) + BKT mastery model; load-bearing for the assessment cluster                                                              |
+| **AI Authoring Packets**         | 0077 | Packaged context for the AI co-author panel; schema exists, workflow planned; substrate for the AI-emission red-team report (see `strategy/landscape/red-team-report-plan.md`)                          |
 
 ## Engineering principles
 
@@ -228,7 +294,10 @@ to every PR, every design decision, every refactor.
   more work later.** Anna's saved feedback preference, restated for
   emphasis. "The best" is decided collaboratively (HITL mandate);
   "now" means in this PR rather than deferred to a hypothetical
-  follow-up that never lands.
+  follow-up that never lands. **W2 above governs amount of code
+  *within* the SoTA shape this rule picks.** If W2 ever seems to
+  argue for a simpler-but-worse architectural choice, you are
+  misreading W2 — SoTA shape always wins.
 
 - **Epistemic legibility is a first-class concern.** When designing
   any new pedagogy component, ask: what epistemic role does this
@@ -282,6 +351,27 @@ to every PR, every design decision, every refactor.
   `nav-markers.scss`, `dashboard.scss`, `glossary.scss`,
   `collapsible-cards.scss` from `astr101-sp26/`, `astr201-sp26/`,
   `comp536-sp26/`. (ADR 0005)
+- **Docs don't drift from code.** Any code change that touches
+  anything in `docs/website/` (ADR examples, reference doc
+  snippets, MyST TOC entries, validation dashboards) updates the
+  docs in the **same PR** as the code. No follow-up "docs catch-up"
+  PRs — they don't land. The 12-file `<EqRef>` drift caught in the
+  2026-05-18 audit is the failure mode this rule prevents.
+- **Branch and PR scope.** Code changes go through the full PR
+  flow (branch + PR + squash-merge per ADR 0055). Pure docs
+  changes, dated reviews, and registry updates land directly on
+  `main`. When unsure which category a change falls in, default to
+  PR.
+- **Biome verification.** When running `pnpm exec biome check`,
+  tail-only output is insufficient — a "1 file checked" line at
+  the end does not mean zero warnings. Either check the exit code
+  explicitly (`$?` non-zero = failure) or grep the full output for
+  `"error"` / `"warning"` before declaring the run clean.
+- **Validation-dashboard regen on ADR status change.** Any PR
+  that touches an ADR's `status:` or `validation:` block must
+  regenerate `docs/website/status/validation.md` in the same PR.
+  Integration test I3 catches this on the unit job; catching it
+  locally first is faster.
 
 ## Style
 
