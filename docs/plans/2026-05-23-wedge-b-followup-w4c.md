@@ -19,6 +19,7 @@
 ## Standing discipline (apply throughout)
 
 - **TDD per task.** Write test → run-fail → minimal-impl → run-pass → commit. No exceptions.
+- **Per-task biome check on touched files BEFORE commit.** Each task's verification loop MUST include `pnpm exec biome check <list-of-touched-files> 2>&1 | grep -cE "(error|warning)"` returning 0. Lesson from Task 1.1: per-package gates can pass while a specific file carries a warning; per-file check is the catch.
 - **Pre-batch gates.** Before opening any batch's first task: `pnpm exec biome check 2>&1 | grep -cE "(error|warning)"` must be 0.
 - **HITL.** After each batch, summarize what changed; wait for Anna's confirm before starting the next batch.
 - **R6–R9 standing checklist on every code change:**
@@ -246,16 +247,18 @@ pnpm turbo run test --filter='@sophie/*' --force          # expect green
 ### Task 1.1 — KeyInsightEntry.slug derivation (red)
 
 **Files:**
-- Modify: `packages/core/src/schema/pedagogy-index-entries/key-insight.ts`
-- Test: `packages/core/src/schema/pedagogy-index-entries/key-insight.test.ts`
+- Modify: `packages/core/src/schema/pedagogy-index-entries/inline-content.ts`
+  (KeyInsightEntrySchema lives in the inline-content cluster per ADR 0061
+  domain grouping — NOT in a separate `key-insight.ts`)
+- Test: `packages/core/src/schema/pedagogy-index-entries/inline-content.test.ts`
 
 **Step 1.** Read the existing schema + test file. Note current shape (title?, body, unit, anchor).
 
-**Step 2.** Write failing test:
+**Step 2.** Write failing test (use `it()` per the file's prevailing convention):
 
 ```ts
-import { describe, expect, test } from "vitest";
-import { KeyInsightEntrySchema } from "./key-insight";
+import { describe, expect, it } from "vitest";
+import { KeyInsightEntrySchema } from "./inline-content";
 
 describe("KeyInsightEntry slug derivation", () => {
   test("requires a slug field", () => {
@@ -280,7 +283,7 @@ describe("KeyInsightEntry slug derivation", () => {
 });
 ```
 
-**Step 3.** Run: `pnpm --filter @sophie/core test key-insight -- --run` — expect FAIL ("slug field undefined").
+**Step 3.** Run: `pnpm --filter @sophie/core exec vitest run inline-content` — expect FAIL ("slug field undefined").
 
 **Step 4.** Add `slug: Slug` field to the schema:
 
@@ -291,13 +294,13 @@ export const KeyInsightEntrySchema = z.object({
 });
 ```
 
-**Step 5.** Run: `pnpm --filter @sophie/core test key-insight -- --run` — expect PASS.
+**Step 5.** Run: `pnpm --filter @sophie/core exec vitest run inline-content` — expect PASS.
 
 **Step 6.** Commit:
 
 ```bash
-git add packages/core/src/schema/pedagogy-index-entries/key-insight.ts \
-        packages/core/src/schema/pedagogy-index-entries/key-insight.test.ts
+git add packages/core/src/schema/pedagogy-index-entries/inline-content.ts \
+        packages/core/src/schema/pedagogy-index-entries/inline-content.test.ts
 git commit -m "feat(W4c): KeyInsightEntry gains required slug field
 
 Per W4c design doc D4. Slug derived at extraction time (Batch 2
