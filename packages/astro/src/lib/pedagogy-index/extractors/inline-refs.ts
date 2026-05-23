@@ -27,11 +27,18 @@ const INLINE_REF_TARGETS: Record<
  * Inline-refs can appear inline within prose (mdxJsxTextElement) OR
  * standalone as block elements (mdxJsxFlowElement); both shapes count.
  *
- * Empty / missing lookup props are silently skipped — the audit pass
- * (D4 / E4 / F2 / C1) surfaces those as their own ERROR codes against
- * the populated target collections. Append-only: no dedup. The same
- * `refKey` referenced N times in one chapter yields N entries (useful
- * for usage-count facets later).
+ * Empty / missing lookup props are silently dropped — the
+ * authoring shape (e.g., `<GlossaryTerm>` with no `name=`) is
+ * malformed JSX that TypeScript's prop-type check should flag
+ * at the call site. The audit pass D4/E4/F2/C1 invariants do
+ * catch *different* shapes: they check that referenced target
+ * IDs resolve to populated registry entries (a missing
+ * glossary entry, a missing equation refId). Bare-source-side
+ * malformed JSX is out of scope here.
+ *
+ * Append-only: no dedup. The same `refKey` referenced N times
+ * in one chapter yields N entries (useful for usage-count
+ * facets later).
  */
 export function extractInlineRefUsages(
   tree: Root,
