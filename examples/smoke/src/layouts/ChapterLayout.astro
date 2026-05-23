@@ -9,7 +9,7 @@ import TextbookHead from "@sophie/astro/components/TextbookHead.astro";
 import TextbookLayout from "@sophie/astro/components/TextbookLayout.astro";
 import TocDrawer from "@sophie/astro/components/TocDrawer.astro";
 import TocSidebar from "@sophie/astro/components/TocSidebar.astro";
-import { indexAccumulator } from "@sophie/astro";
+import { buildModuleNavInputs, indexAccumulator } from "@sophie/astro";
 import { SophieChapter } from "@sophie/astro/client";
 import { getCollection } from "astro:content";
 import type { MarkdownHeading } from "astro";
@@ -64,27 +64,34 @@ const { frontmatter, currentChapterSlug, headings = [] } = Astro.props;
 const hasToc = headings.some((h) => h.depth === 2);
 
 // W2/D1 — fetch sections + units from the new content collections.
-// ModuleNav still expects `{slug, title, module, order, chapter, status}`
-// chapter-shaped objects for sidebar grouping; derive that shape from
-// UnitEntry (u.id → slug, u.section_id → module, etc.) so ModuleNav
-// stays unchanged in W2. ModuleNav → SectionNav rename is a future
-// wedge.
+// Use the shared `buildModuleNavInputs` helper (W4b R+CR I5 follow-
+// up) so bridge sections (ADR 0068 Scale 1, W4b) stay out of the
+// module → chapter sidebar tree — bridges render at Course root
+// and don't share the `/units/<u>/reading` URL pattern that
+// ModuleNav links into.
 const sections = (await getCollection("sections")).map((s) => s.data);
 const units = (await getCollection("units")).map((u) => u.data);
-const modules = sections.map((s) => ({
-  slug: s.slug,
-  title: s.title,
-  order: s.order,
-  description: s.description,
-}));
-const chapters = units.map((u) => ({
-  slug: u.id,
-  title: u.title,
-  module: u.section_id,
-  order: u.order,
-  chapter: undefined as number | undefined,
-  status: u.status,
-}));
+const { modules, chapters: navChapters } = buildModuleNavInputs(
+  sections,
+  units,
+);
+// Pagination sort needs `status` to filter drafts; the helper drops
+// that field for nav-purity. Derive a paginable list with the same
+// bridge-filtering applied (so prev/next never points at a bridge
+// Unit whose `/units/<u>/reading` URL doesn't exist).
+const bridgeSectionSlugs = new Set(
+  sections.filter((s) => s.type === "bridge").map((s) => s.slug),
+);
+const chapters = units
+  .filter((u) => !bridgeSectionSlugs.has(u.section_id))
+  .map((u) => ({
+    slug: u.id,
+    title: u.title,
+    module: u.section_id,
+    order: u.order,
+    chapter: undefined as number | undefined,
+    status: u.status,
+  }));
 
 // W2/D2 — derive the topbar breadcrumb context. The current Unit's
 // section_id resolves to the matching Section; its `order` field
@@ -171,7 +178,7 @@ const next = nextRaw
         <Fragment slot='sidebar'>
           <ModuleNav
             modules={modules}
-            chapters={chapters}
+            chapters={navChapters}
             currentChapterSlug={currentChapterSlug}
           />
         </Fragment>

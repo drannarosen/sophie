@@ -73,6 +73,47 @@ describe("buildModuleNavInputs (W4b R+CR I5 follow-up)", () => {
     ]);
   });
 
+  test("filters bridge sections out of modules (ADR 0068 Scale 1; bridges render at Course root, not in module tree)", () => {
+    const sections = [
+      section("math-fundamentals", {
+        type: "bridge",
+        title: "Math Fundamentals",
+      }),
+      section("foundations", {
+        type: "module",
+        title: "Foundations",
+        order: 0,
+      }),
+      section("stars", { type: "module", title: "Stars", order: 1 }),
+    ];
+    const result = buildModuleNavInputs(sections, []);
+    expect(result.modules.map((m) => m.slug)).toEqual(["foundations", "stars"]);
+    // Bridge slug must not appear as a module.
+    expect(
+      result.modules.find((m) => m.slug === "math-fundamentals")
+    ).toBeUndefined();
+  });
+
+  test("filters chapters whose section_id points at a filtered bridge section", () => {
+    // logarithms-skill is a Unit[type=skill] under math-fundamentals (a
+    // bridge). It must NOT appear in the chapter list — its parent
+    // module is filtered out, and surfacing the chapter alone would
+    // 404 on the /units/<u>/reading link.
+    const sections = [
+      section("math-fundamentals", { type: "bridge" }),
+      section("foundations", { type: "module" }),
+    ];
+    const units = [
+      unit("logarithms-skill", "math-fundamentals"),
+      unit("intro", "foundations"),
+    ];
+    const result = buildModuleNavInputs(sections, units);
+    expect(result.chapters.map((c) => c.slug)).toEqual(["intro"]);
+    expect(
+      result.chapters.find((c) => c.slug === "logarithms-skill")
+    ).toBeUndefined();
+  });
+
   test("returns empty arrays when no sections/units provided", () => {
     const result = buildModuleNavInputs([], []);
     expect(result.modules).toEqual([]);
