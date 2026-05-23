@@ -44,9 +44,7 @@ const index = JSON.parse(indexJson) as {
 const chapterEntries = {
   definitions: index.definitions.filter((d) => d.unit === CHAPTER_SLUG),
   keyInsights: index.keyInsights.filter((k) => k.unit === CHAPTER_SLUG),
-  misconceptions: index.misconceptions.filter(
-    (m) => m.unit === CHAPTER_SLUG
-  ),
+  misconceptions: index.misconceptions.filter((m) => m.unit === CHAPTER_SLUG),
   interventions: index.interventions.filter((i) => i.unit === CHAPTER_SLUG),
   figureUsages: index.figureUsages.filter((f) => f.unit === CHAPTER_SLUG),
   equationCitations: index.equationCitations.filter(
