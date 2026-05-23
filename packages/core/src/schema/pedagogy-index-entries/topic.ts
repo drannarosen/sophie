@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { AuditOverrideSchema } from "../audit-override.ts";
 import { NonEmptyString, Slug } from "../primitives.ts";
 
 /**
@@ -45,5 +46,6 @@ export const TopicEntrySchema = z.object({
   linked_equation_ids: z.array(Slug).default([]),
   linked_misconception_ids: z.array(Slug).default([]),
   cards: z.array(TopicCardMetadataSchema).default([]),
+  audit_overrides: z.array(AuditOverrideSchema).optional(),
 });
 export type TopicEntry = z.infer<typeof TopicEntrySchema>;

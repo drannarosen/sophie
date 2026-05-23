@@ -53,6 +53,40 @@ describe("TopicEntrySchema (ADR 0079)", () => {
       })
     ).toThrow();
   });
+
+  it("accepts optional audit_overrides per ADR 0053", () => {
+    const result = TopicEntrySchema.parse({
+      id: "logarithms",
+      label: "Logarithms",
+      summary: "Inverses of exponentiation.",
+      cards: [],
+      prereq_topic_ids: [],
+      linked_equation_ids: [],
+      linked_misconception_ids: [],
+      audit_overrides: [
+        {
+          invariant: "PRA-2",
+          anchor: "product-rule",
+          tdr: "TDR-W4c-test-fixture",
+          reason: "Mid-refactor card body in flight before frontmatter update.",
+        },
+      ],
+    });
+    expect(result.audit_overrides).toHaveLength(1);
+  });
+
+  it("TopicEntry.audit_overrides defaults to undefined when omitted", () => {
+    const result = TopicEntrySchema.parse({
+      id: "logarithms",
+      label: "Logarithms",
+      summary: "Inverses of exponentiation.",
+      cards: [],
+      prereq_topic_ids: [],
+      linked_equation_ids: [],
+      linked_misconception_ids: [],
+    });
+    expect(result.audit_overrides).toBeUndefined();
+  });
 });
 
 describe("TopicCardMetadataSchema (ADR 0079)", () => {
