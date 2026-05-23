@@ -7,7 +7,7 @@ import { createPedagogyStore } from "../../runtime/pedagogy-store.ts";
  * forwarded by `<TextbookLayout>` from the populated
  * `PedagogyIndex.objectives` collection.
  *
- * v1 has no React consumer for this store — the `/objectives` page is
+ * v1 has no React consumer for this store — the `/library/objectives` page is
  * server-rendered Astro that reads the accumulator directly, and no
  * `<ObjectiveRef>` inline-ref component exists yet. The store ships
  * for pattern uniformity with `__setSections` / `__setUnits` /

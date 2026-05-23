@@ -501,7 +501,7 @@ back-coupling.
   `TextbookLayout.astro`'s frontmatter, *after* `render(chapter)`
   Promise.all (which triggers MDX parsing → populates accumulator).
   Reading `indexAccumulator.asPedagogyIndex()` from a *page*
-  frontmatter (e.g., `/objectives.astro`) yields empty arrays
+  frontmatter (e.g., `/library/objectives.astro`) yields empty arrays
   because Astro evaluates page frontmatter before child-component
   frontmatter. Pages consume the index via a child component
   slotted into `TextbookLayout` (the established `<Course*>`

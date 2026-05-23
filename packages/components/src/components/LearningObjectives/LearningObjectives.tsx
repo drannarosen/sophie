@@ -41,7 +41,7 @@ const EMPTY_RECORD: Record<string, boolean> = Object.freeze({});
  * value is `Record<objectiveId, boolean>`. Centralizing state in the
  * parent lets the parent own the shared `useInteractive` call (and
  * its hydration-loading gate); `<Objective>` stays a pure-display
- * primitive that also serves the `/objectives` roll-up route.
+ * primitive that also serves the `/library/objectives` roll-up route.
  */
 export function LearningObjectives({
   course,

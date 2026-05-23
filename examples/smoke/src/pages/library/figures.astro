@@ -10,14 +10,14 @@ import { figures as figureRegistry } from "../../content/figures";
 const figureRegistryArray = Object.values(figureRegistry);
 
 /**
- * `/figures` — course-wide figure index auto-generated from the
+ * `/library/figures` — course-wide figure index auto-generated from the
  * pedagogy index (ADR 0038; PR-C3). Reads `figureUsages` +
  * `figureRegistry` via `indexAccumulator` inside `<CourseFigures>`;
  * chapter-order by default (per design decision #9: figure lookup is
- * topic/chapter-anchored, mirroring `/equations` and diverging from
- * `/glossary`'s alphabetical default); each figure appears once (the
+ * topic/chapter-anchored, mirroring `/library/equations` and diverging from
+ * `/library/glossary`'s alphabetical default); each figure appears once (the
  * canonical usage) and back-links to its canonical chapter anchor.
- * Mirrors the shape of `/equations`.
+ * Mirrors the shape of `/library/equations`.
  */
 
 // W2/D1 graduation: chapters + modules collections deleted; derive

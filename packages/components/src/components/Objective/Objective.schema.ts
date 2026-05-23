@@ -9,7 +9,7 @@ import { z } from "zod";
  *   (a) Inside `<LearningObjectives>` after the remark transform has
  *       harvested it into the parent's `objectives` prop. The parent
  *       renders Objective itself with `checked` + `onToggle` wired up.
- *   (b) On the `/objectives` course-wide roll-up page, server-rendered
+ *   (b) On the `/library/objectives` course-wide roll-up page, server-rendered
  *       from `PedagogyIndex.objectives`. `checked`/`onToggle` omitted —
  *       pure display, no checkbox.
  *

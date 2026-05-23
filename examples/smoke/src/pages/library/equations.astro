@@ -10,13 +10,13 @@ import { figures as figureRegistry } from "../../content/figures";
 const figureRegistryArray = Object.values(figureRegistry);
 
 /**
- * `/equations` — course-wide equation index auto-generated from the
+ * `/library/equations` — course-wide equation index auto-generated from the
  * pedagogy index (ADR 0038; PR-C2). Reads `equations` via
  * `indexAccumulator` inside `<CourseEquations>`; chapter-order by
  * default (per design decision #7: equation lookup is
  * topic/chapter-anchored, diverging from glossary's alphabetical
  * default); each entry back-links to its source `<KeyEquation>` in
- * the source chapter. Mirrors the shape of `/glossary`.
+ * the source chapter. Mirrors the shape of `/library/glossary`.
  */
 
 // W2/D1 graduation: chapters + modules collections deleted; derive

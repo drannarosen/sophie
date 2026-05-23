@@ -10,11 +10,11 @@ import { figures as figureRegistry } from "../../content/figures";
 const figureRegistryArray = Object.values(figureRegistry);
 
 /**
- * `/misconceptions` — course-wide misconceptions index auto-generated
+ * `/library/misconceptions` — course-wide misconceptions index auto-generated
  * from the pedagogy index (ADR 0038; PR-C3). Reads `misconceptions`
  * via `indexAccumulator` inside `<CourseMisconceptions>`; chapter-order
  * by default (per design decision #9: misconception lookup is
- * reading-flow-anchored, mirroring `/equations` and `/figures`); each
+ * reading-flow-anchored, mirroring `/library/equations` and `/library/figures`); each
  * entry back-links to its source `<Aside kind="misconception">` or
  * `<Callout variant="misconception">` in the source chapter. Length
  * discriminator visual class (decision #12) preserved.

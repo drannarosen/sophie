@@ -10,13 +10,13 @@ import { figures as figureRegistry } from "../../content/figures";
 const figureRegistryArray = Object.values(figureRegistry);
 
 /**
- * `/key-insights` — course-wide key-insights index auto-generated from
+ * `/library/key-insights` — course-wide key-insights index auto-generated from
  * the pedagogy index (ADR 0038; PR-C3). Reads `keyInsights` via
  * `indexAccumulator` inside `<CourseKeyInsights>`; appearance order
  * only (per design decision #9: untitled key-insights can't
  * alphabetize); each entry back-links to its source `<Aside
  * kind="key-insight">` in the source chapter. Mirrors the shape of
- * `/equations`.
+ * `/library/equations`.
  */
 
 // W2/D1 graduation: chapters + modules collections deleted; derive
