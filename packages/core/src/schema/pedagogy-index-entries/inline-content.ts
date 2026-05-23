@@ -47,6 +47,13 @@ export const KeyInsightEntrySchema = z.object({
   /** Parent Unit id (W3 rename from `chapter`). */
   unit: Slug,
   anchor: NonEmptyString,
+  /**
+   * URL-safe slug. Derived at extraction time (W4c D4): slugified
+   * `title` when present; falls back to `${unit}-${anchor}` when
+   * absent. Required; the `KI-slug-unique` audit invariant catches
+   * collisions across units that the fallback could otherwise allow.
+   */
+  slug: Slug,
 });
 export type KeyInsightEntry = z.infer<typeof KeyInsightEntrySchema>;
 
