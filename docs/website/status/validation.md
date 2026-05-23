@@ -25,10 +25,10 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 |---|---|
 | Validated | 14 |
 | In progress | 14 |
-| Unvalidated | 76 |
+| Unvalidated | 77 |
 | Re-validation needed | 0 |
 | Missing block | 0 |
-| Total | 104 |
+| Total | 105 |
 
 ## Lifecycle summary
 
@@ -38,8 +38,8 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 | Accepted design | 33 |
 | Mixed | 1 |
 | Future package split | 9 |
-| No status | 0 |
-| Total | 104 |
+| No status | 1 |
+| Total | 105 |
 
 ## Evidence kinds
 
@@ -54,7 +54,13 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 
 ## Extractor findings
 
-_No extractor findings (V0 + V8) surfaced during this build._
+| Code | Count |
+|---|---|
+| S0 | 1 |
+
+### Findings list
+
+- **INFO S0** — S0: docs/website/decisions/0079-topic-registry-and-resolution-pattern.md: page-level 'status:' field has unknown value (got: "proposed"; expected one of: shipped, accepted-design, mixed, future-package-split). (docs/website/decisions/0079-topic-registry-and-resolution-pattern.md)
 
 ## Contracts
 
@@ -139,6 +145,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0076-student-learning-cockpit.md](/student-learning-cockpit/) | unvalidated | accepted design | — | — |  |
 | [docs/website/decisions/0077-ai-authoring-packets.md](/ai-authoring-packets/) | unvalidated | accepted design | — | — |  |
 | [docs/website/decisions/0078-reasoning-trace-composition.md](/reasoning-trace-composition/) | unvalidated | accepted design | — | — |  |
+| [docs/website/decisions/0079-topic-registry-and-resolution-pattern.md](/topic-registry-and-resolution-pattern/) | unvalidated | — | — | — |  |
 
 ### Reference docs
 
