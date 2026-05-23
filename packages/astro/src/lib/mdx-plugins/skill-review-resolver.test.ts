@@ -1,9 +1,10 @@
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import type { Root } from "mdast";
 import { fromMarkdown } from "mdast-util-from-markdown";
 import { mdxFromMarkdown } from "mdast-util-mdx";
 import { mdxjs } from "micromark-extension-mdxjs";
-import type { Root } from "mdast";
+import { unified } from "unified";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import {
   resetSkillReviewResolverCache,
@@ -12,29 +13,29 @@ import {
 
 const FIXTURE_TOPICS_DIR = resolve(
   dirname(fileURLToPath(import.meta.url)),
-  "__fixtures__/topics",
+  "__fixtures__/topics"
 );
 
 function parseChapter(source: string): Root {
   return fromMarkdown(source, {
     extensions: [mdxjs()],
     mdastExtensions: [mdxFromMarkdown()],
-  });
+  }) as Root;
 }
 
-function applyResolver(source: string): Root {
+/**
+ * Run the resolver through unified's `run` pipeline against an
+ * in-memory tree. This exercises the plugin's actual unified
+ * `Plugin<>` signature end-to-end (I4 follow-up) rather than
+ * casting the transformer's `this` context. The `path` field on
+ * the synthetic vfile is what the resolver records into its
+ * chapter→topic dependency map.
+ */
+async function applyResolver(source: string): Promise<Root> {
   const tree = parseChapter(source);
-  // The plugin's factory returns a unified Plugin; we treat it as a
-  // synchronous transformer for tests (it doesn't return a Promise).
-  // The double-cast through `unknown` widens past unified's `Processor`
-  // `this` context requirement, which doesn't apply when we invoke the
-  // transformer directly with the AST.
-  const transformer = (skillReviewResolverRemarkPlugin as unknown as (
-    options: { topicsDir: string },
-  ) => (tree: Root, file: { path: string }) => void)({
-    topicsDir: FIXTURE_TOPICS_DIR,
-  });
-  transformer(tree, { path: "test-chapter.mdx" });
+  await unified()
+    .use(skillReviewResolverRemarkPlugin, { topicsDir: FIXTURE_TOPICS_DIR })
+    .run(tree, { path: "test-chapter.mdx" } as never);
   return tree;
 }
 
@@ -46,63 +47,63 @@ afterEach(() => {
 });
 
 describe("skillReviewResolverRemarkPlugin (ADR 0079)", () => {
-  test("resolves single-card topic with bare target — auto-picks the card", () => {
-    const tree = applyResolver(
-      `<SkillReview course="c" unit="u" target="topic:exponents" />`,
+  test("resolves single-card topic with bare target — auto-picks the card", async () => {
+    const tree = await applyResolver(
+      `<SkillReview course="c" unit="u" target="topic:exponents" />`
     );
     const skillReview = tree.children[0] as { children: unknown[] };
     expect(skillReview.children).toHaveLength(2);
     const names = (skillReview.children as Array<{ name?: string }>).map(
-      (c) => c.name,
+      (c) => c.name
     );
     expect(names).toEqual(["SkillReview.Prompt", "SkillReview.Answer"]);
   });
 
-  test("resolves specific card with topic:X#card target", () => {
-    const tree = applyResolver(
-      `<SkillReview course="c" unit="u" target="topic:logarithms#product-rule" />`,
+  test("resolves specific card with topic:X#card target", async () => {
+    const tree = await applyResolver(
+      `<SkillReview course="c" unit="u" target="topic:logarithms#product-rule" />`
     );
     const skillReview = tree.children[0] as { children: unknown[] };
     expect(skillReview.children).toHaveLength(2);
   });
 
-  test("throws ERROR for bare topic against multi-card topic with curated available-cards message", () => {
-    expect(() =>
+  test("throws ERROR for bare topic against multi-card topic; message leads with the rule, then lists available cards", async () => {
+    await expect(
       applyResolver(
-        `<SkillReview course="c" unit="u" target="topic:logarithms" />`,
-      ),
-    ).toThrow(
-      /topic[\s\S]*logarithms[\s\S]*has 3 cards[\s\S]*product-rule[\s\S]*power-rule[\s\S]*change-of-base/,
+        `<SkillReview course="c" unit="u" target="topic:logarithms" />`
+      )
+    ).rejects.toThrow(
+      /bare topic targets auto-pick only when the topic has exactly one card[\s\S]*has 3 cards[\s\S]*#card.*fragment[\s\S]*product-rule[\s\S]*power-rule[\s\S]*change-of-base/
     );
   });
 
-  test("throws ERROR for unknown topic id", () => {
-    expect(() =>
+  test("throws ERROR for unknown topic id", async () => {
+    await expect(
       applyResolver(
-        `<SkillReview course="c" unit="u" target="topic:nonexistent" />`,
-      ),
-    ).toThrow(/unknown topic.*nonexistent/i);
+        `<SkillReview course="c" unit="u" target="topic:nonexistent" />`
+      )
+    ).rejects.toThrow(/unknown topic.*nonexistent/i);
   });
 
-  test("throws ERROR for unknown card id within a known topic", () => {
-    expect(() =>
+  test("throws ERROR for unknown card id within a known topic", async () => {
+    await expect(
       applyResolver(
-        `<SkillReview course="c" unit="u" target="topic:logarithms#bogus-card" />`,
-      ),
-    ).toThrow(/card.*bogus-card.*not found.*logarithms/i);
+        `<SkillReview course="c" unit="u" target="topic:logarithms#bogus-card" />`
+      )
+    ).rejects.toThrow(/card.*bogus-card.*not found.*logarithms/i);
   });
 
-  test("leaves explicit-children SkillReview untouched (resolver only triggers on self-closing form)", () => {
+  test("leaves explicit-children SkillReview untouched (resolver only triggers on self-closing form)", async () => {
     const source = `<SkillReview course="c" unit="u" target="topic:exponents">
   <SkillReview.Prompt>Custom prompt</SkillReview.Prompt>
   <SkillReview.Answer>Custom answer</SkillReview.Answer>
 </SkillReview>`;
-    const tree = applyResolver(source);
+    const tree = await applyResolver(source);
     const skillReview = tree.children[0] as { children: unknown[] };
     // Children preserved verbatim — resolver did NOT lift anything.
     // The explicit-children form gets parsed with the inner JSX slots
-    // as nested mdxJsxFlowElement nodes; we just verify both slot
-    // names are present somewhere in the subtree.
+    // as nested mdxJsxFlowElement nodes; verify both slot names
+    // appear somewhere in the subtree.
     const childNames = new Set<string>();
     const collect = (n: { children?: unknown[]; name?: string }): void => {
       if (n.name) childNames.add(n.name);
@@ -113,15 +114,15 @@ describe("skillReviewResolverRemarkPlugin (ADR 0079)", () => {
     expect(childNames.has("SkillReview.Answer")).toBe(true);
   });
 
-  test("throws ERROR for non-topic target prefix (reserved for future ADRs)", () => {
-    expect(() =>
-      applyResolver(`<SkillReview course="c" unit="u" target="eq:foo" />`),
-    ).toThrow(/non-topic targets reserved/i);
+  test("throws ERROR for non-topic target prefix (reserved for future ADRs)", async () => {
+    await expect(
+      applyResolver(`<SkillReview course="c" unit="u" target="eq:foo" />`)
+    ).rejects.toThrow(/non-topic targets reserved/i);
   });
 
-  test("ignores non-SkillReview JSX elements", () => {
-    const tree = applyResolver(
-      `<RetrievalPrompt target="topic:logarithms" />`,
+  test("ignores non-SkillReview JSX elements", async () => {
+    const tree = await applyResolver(
+      `<RetrievalPrompt target="topic:logarithms" />`
     );
     const node = tree.children[0] as { children: unknown[]; name?: string };
     expect(node.name).toBe("RetrievalPrompt");

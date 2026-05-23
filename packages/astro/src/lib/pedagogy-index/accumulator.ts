@@ -122,12 +122,21 @@ interface GlobalIndexState {
    */
   contractValidations: ReadonlyArray<ContractValidationEntry>;
   /**
-   * Extractor-layer audit findings (V0 + V8; ADR 0056 PR 3).
-   * Populated together with `contractValidations`. Flows into
-   * `PedagogyIndex.extractorFindings` so `runPedagogyAudit` can
-   * merge them into the report at the same call.
+   * Contract-validation findings (V0 + V8; ADR 0056 PR 3). Set
+   * atomically with `contractValidations` via `setContractValidations`
+   * (last-write-wins, consumer-global).
    */
-  extractorFindings: ReadonlyArray<AuditFinding>;
+  contractValidationFindings: ReadonlyArray<AuditFinding>;
+  /**
+   * Append-mode extractor findings emitted by per-file extractors
+   * (e.g., topic extractor's PRA-2 orphan-body-card finding). Stored
+   * separately from `contractValidationFindings` so the two sources
+   * don't clobber each other regardless of call order; they
+   * concatenate at `asPedagogyIndex` time into the canonical
+   * `PedagogyIndex.extractorFindings` slot. Cleared per-topic by
+   * `clearTopic` and per-chapter by `clearUnit`.
+   */
+  appendedExtractorFindings: AuditFinding[];
   /**
    * Per-unit `<MultiRep>` concept-binding entries (ADR 0043 +
    * 2026-05-17 design hardening). Keyed by `${unit}#${id}` so
@@ -217,7 +226,8 @@ function getGlobalState(): GlobalIndexState {
       artifacts: [],
       inlineRefUsages: [],
       contractValidations: [],
-      extractorFindings: [],
+      contractValidationFindings: [],
+      appendedExtractorFindings: [],
       multiReps: new Map(),
       interventions: new Map(),
       deepDives: new Map(),
@@ -314,6 +324,14 @@ class IndexAccumulator {
         state.skillReviews.delete(key);
       }
     }
+    // Filter out any append-mode extractor findings whose location
+    // points at this chapter so re-parses don't accumulate stale
+    // findings. Findings without a `location.unit` survive (they're
+    // not chapter-scoped); contractValidationFindings are managed
+    // separately by `setContractValidations`.
+    state.appendedExtractorFindings = state.appendedExtractorFindings.filter(
+      (f) => f.location?.unit !== unitId
+    );
   }
 
   /**
@@ -588,7 +606,7 @@ class IndexAccumulator {
   ): void {
     const state = getGlobalState();
     state.contractValidations = entries;
-    state.extractorFindings = findings;
+    state.contractValidationFindings = findings;
   }
 
   /**
@@ -773,6 +791,8 @@ class IndexAccumulator {
    * Drop a topic and all its cards. Called by the topic-collection
    * iteration before re-extracting a topic file (so re-parses don't
    * accumulate stale cards if a card is removed from the file).
+   * Also drops any topic-scoped append-mode findings (e.g., PRA-2
+   * orphan-body-card findings emitted by the topic extractor).
    */
   clearTopic(topicId: string): void {
     const state = getGlobalState();
@@ -782,6 +802,28 @@ class IndexAccumulator {
         state.cards.delete(key);
       }
     }
+    state.appendedExtractorFindings = state.appendedExtractorFindings.filter(
+      (f) => f.location?.unit !== topicId
+    );
+  }
+
+  /**
+   * Append per-file extractor findings (ADR 0079 + ADR 0056). Used
+   * by extractors that need to surface audit-level findings whose
+   * cause is structurally invisible from the populated PedagogyIndex
+   * (e.g., the topic extractor's PRA-2 orphan-body-card finding —
+   * the extractor refuses to materialize the orphan card, so the
+   * audit phase can't see the drift via index.cards alone).
+   *
+   * Findings flow through `PedagogyIndex.extractorFindings` and are
+   * surfaced by `passthroughExtractorFindings` in the audit runner.
+   * Last-write-DOES-NOT-win: appends accumulate across calls.
+   * `clearUnit` and `clearTopic` filter by `location.unit` so
+   * re-parses stay idempotent.
+   */
+  addExtractorFindings(entries: ReadonlyArray<AuditFinding>): void {
+    const state = getGlobalState();
+    state.appendedExtractorFindings.push(...entries);
   }
 
   /**
@@ -805,7 +847,10 @@ class IndexAccumulator {
       objectives: Array.from(state.objectives.values()),
       inlineRefUsages: state.inlineRefUsages.slice(),
       contractValidations: state.contractValidations,
-      extractorFindings: state.extractorFindings,
+      extractorFindings: [
+        ...state.contractValidationFindings,
+        ...state.appendedExtractorFindings,
+      ],
       multiReps: Array.from(state.multiReps.values()),
       interventions: Array.from(state.interventions.values()),
       deepDives: Array.from(state.deepDives.values()),
@@ -848,7 +893,8 @@ export function resetIndexAccumulator(): void {
   state.artifacts = [];
   state.inlineRefUsages = [];
   state.contractValidations = [];
-  state.extractorFindings = [];
+  state.contractValidationFindings = [];
+  state.appendedExtractorFindings = [];
   state.multiReps.clear();
   state.interventions.clear();
   state.deepDives.clear();

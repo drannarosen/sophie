@@ -36,6 +36,7 @@ describe("extractTopicAndCards (ADR 0079)", () => {
         difficulty: "medium",
       },
     ]);
+    expect(result.findings).toEqual([]);
   });
 
   test("emits CardEntry without difficulty when frontmatter omits it", () => {
@@ -56,9 +57,10 @@ describe("extractTopicAndCards (ADR 0079)", () => {
       label: "C1",
     });
     expect(result.cards[0]?.difficulty).toBeUndefined();
+    expect(result.findings).toEqual([]);
   });
 
-  test("skips SkillReview.Card with id not declared in frontmatter (PRA-2 surfaces this)", () => {
+  test("emits PRA-2 finding for orphan SkillReview.Card whose id isn't declared in frontmatter", () => {
     const tree = root([
       mdxNamedFlow("SkillReview.Card", { id: "declared" }),
       mdxNamedFlow("SkillReview.Card", { id: "orphan" }),
@@ -72,11 +74,23 @@ describe("extractTopicAndCards (ADR 0079)", () => {
       linked_misconception_ids: [],
       cards: [{ id: "declared", label: "Declared" }],
     });
+    // Orphan card is NOT materialized in `cards` — refuses to lie
+    // about the registry shape.
     expect(result.cards).toHaveLength(1);
     expect(result.cards[0]?.id).toBe("declared");
+    // Orphan IS surfaced as a PRA-2 finding so the audit phase fails
+    // the build with curated remediation guidance.
+    expect(result.findings).toHaveLength(1);
+    expect(result.findings[0]).toMatchObject({
+      severity: "ERROR",
+      code: "PRA-2",
+      location: { unit: "t", anchor: "orphan" },
+    });
+    expect(result.findings[0]?.message).toContain("orphan");
+    expect(result.findings[0]?.message).toContain("body has");
   });
 
-  test("skips SkillReview.Card with no id attribute", () => {
+  test("skips SkillReview.Card with no id attribute (no finding)", () => {
     const tree = root([
       mdxNamedFlow("SkillReview.Card", {}),
       mdxNamedFlow("SkillReview.Card", { id: "c1" }),
@@ -92,6 +106,7 @@ describe("extractTopicAndCards (ADR 0079)", () => {
     });
     expect(result.cards).toHaveLength(1);
     expect(result.cards[0]?.id).toBe("c1");
+    expect(result.findings).toEqual([]);
   });
 
   test("ignores elements with other JSX names", () => {
@@ -111,9 +126,10 @@ describe("extractTopicAndCards (ADR 0079)", () => {
     });
     expect(result.cards).toHaveLength(1);
     expect(result.cards[0]?.id).toBe("c1");
+    expect(result.findings).toEqual([]);
   });
 
-  test("returns empty cards[] when tree has no SkillReview.Card", () => {
+  test("returns empty cards[] and empty findings[] when tree has no SkillReview.Card", () => {
     const tree = root([mdxNamedFlow("RetrievalPrompt", { target: "topic:x" })]);
     const result = extractTopicAndCards(tree as never, {
       id: "t",
@@ -125,5 +141,6 @@ describe("extractTopicAndCards (ADR 0079)", () => {
       cards: [],
     });
     expect(result.cards).toEqual([]);
+    expect(result.findings).toEqual([]);
   });
 });

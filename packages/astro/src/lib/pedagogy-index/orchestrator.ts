@@ -96,14 +96,14 @@ function readTopicFrontmatter(filePath: string): TopicEntry {
   const match = source.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n/);
   if (!match) {
     throw new Error(
-      `Topic file "${filePath}" is missing YAML frontmatter. Per ADR 0079, every topic MDX must declare \`id\`, \`label\`, \`summary\`, and a \`cards: [{...}]\` list in frontmatter.`,
+      `Topic file "${filePath}" is missing YAML frontmatter. Per ADR 0079, every topic MDX must declare \`id\`, \`label\`, \`summary\`, and a \`cards: [{...}]\` list in frontmatter.`
     );
   }
   const raw = parseYaml(match[1] ?? "");
   const parsed = TopicEntrySchema.safeParse(raw);
   if (!parsed.success) {
     throw new Error(
-      `Topic file "${filePath}" has invalid frontmatter. Validation errors: ${parsed.error.message}`,
+      `Topic file "${filePath}" has invalid frontmatter. Validation errors: ${parsed.error.message}`
     );
   }
   return parsed.data;
@@ -227,10 +227,14 @@ export function pedagogyIndexRemarkPlugin(
     // removed cards.
     if (isTopicRegistryFilePath(filePath)) {
       const frontmatter = readTopicFrontmatter(filePath);
-      const { topic, cards } = extractTopicAndCards(tree, frontmatter);
+      const { topic, cards, findings } = extractTopicAndCards(
+        tree,
+        frontmatter
+      );
       indexAccumulator.clearTopic(topic.id);
       indexAccumulator.addTopic(topic);
       indexAccumulator.addCards(cards);
+      if (findings.length > 0) indexAccumulator.addExtractorFindings(findings);
       return;
     }
 

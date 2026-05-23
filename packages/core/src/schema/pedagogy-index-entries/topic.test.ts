@@ -40,7 +40,7 @@ describe("TopicEntrySchema (ADR 0079)", () => {
         label: "Logarithms",
         summary: "x",
         prereq_topic_ids: ["Has Spaces"],
-      }),
+      })
     ).toThrow();
   });
 
@@ -50,7 +50,7 @@ describe("TopicEntrySchema (ADR 0079)", () => {
         id: "logarithms",
         label: "",
         summary: "x",
-      }),
+      })
     ).toThrow();
   });
 });
@@ -82,7 +82,7 @@ describe("TopicCardMetadataSchema (ADR 0079)", () => {
         id: "c1",
         label: "C1",
         difficulty: "expert",
-      }),
+      })
     ).toThrow();
   });
 });

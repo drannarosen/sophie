@@ -1,13 +1,10 @@
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import type { Root } from "mdast";
-import type {
-  MdxJsxAttribute,
-  MdxJsxFlowElement,
-} from "mdast-util-mdx-jsx";
 import { fromMarkdown } from "mdast-util-from-markdown";
 import { mathFromMarkdown } from "mdast-util-math";
 import { mdxFromMarkdown } from "mdast-util-mdx";
+import type { MdxJsxFlowElement, MdxJsxTextElement } from "mdast-util-mdx-jsx";
 import { math } from "micromark-extension-math";
 import { mdxjs } from "micromark-extension-mdxjs";
 import type { Plugin } from "unified";
@@ -36,6 +33,19 @@ import { parse as parseYaml } from "yaml";
  * a build-time ERROR with a curated message naming the available
  * cards. Bare `topic:X` against a single-card topic auto-picks the
  * one card.
+ *
+ * AST mutation: per unified's transformer contract the plugin
+ * mutates the input tree in place (`flow.children = [prompt, answer]`).
+ * The Prompt + Answer slot nodes are reused verbatim from the topic
+ * file's parsed AST; their descendants — text, math, components —
+ * render naturally in the chapter's MDX compilation pass.
+ *
+ * Module-scoped caches (topic AST, topic-id ↔ path, chapter→topic
+ * dep map) survive across compiles within a single process. In
+ * production builds (one-shot) that's a pure win. In dev mode HMR
+ * the caches MUST be invalidated when a topic file changes — see
+ * `skill-review-resolver-vite.ts` for the companion Vite plugin
+ * that calls `invalidateTopicFile` from `handleHotUpdate`.
  */
 
 export interface SkillReviewResolverOptions {
@@ -47,14 +57,48 @@ export interface SkillReviewResolverOptions {
 const topicPathCacheByDir = new Map<string, Map<string, string>>();
 /** Cached `topic-file-path → parsed Root` per file. */
 const topicAstCache = new Map<string, Root>();
+/**
+ * Tracks which chapter (or registry) MDX files referenced which
+ * topic files during compilation. Populated by the remark plugin
+ * each time it lifts a topic's card body into a chapter. Consumed
+ * by the companion Vite plugin's `handleHotUpdate` (ADR 0079 C3
+ * follow-up) to surgically invalidate dependent chapters when a
+ * topic file changes in dev mode. Key: topic file absolute path.
+ * Value: set of chapter file absolute paths that depend on it.
+ */
+const topicToDependentChapters = new Map<string, Set<string>>();
 
 /**
- * Test-only: wipe both caches. Used by vitest `beforeEach` /
- * `afterEach` to keep test runs independent.
+ * Test-only: wipe all resolver caches + dependency map. Used by
+ * vitest `beforeEach` / `afterEach` to keep test runs independent.
  */
 export function resetSkillReviewResolverCache(): void {
   topicPathCacheByDir.clear();
   topicAstCache.clear();
+  topicToDependentChapters.clear();
+}
+
+/**
+ * Invalidate the resolver's cached state for a single topic file.
+ * Called by the companion Vite plugin's `handleHotUpdate` when a
+ * topic file changes in dev mode. Returns the set of chapter file
+ * paths that depended on the topic at last compile — the Vite
+ * plugin uses these to invalidate dependent modules so Vite
+ * re-runs the resolver against the fresh topic content.
+ *
+ * The `topicPathCacheByDir` is cleared wholesale (a single file
+ * change can move/add/delete an id↔path mapping that's
+ * directory-scoped). The chapter→topic dep map is also pruned of
+ * any edges whose target was this topic — dependent chapters will
+ * re-register their deps on the next compile pass.
+ */
+export function invalidateTopicFile(filePath: string): string[] {
+  topicAstCache.delete(filePath);
+  topicPathCacheByDir.clear();
+  const dependents = topicToDependentChapters.get(filePath);
+  topicToDependentChapters.delete(filePath);
+  if (!dependents) return [];
+  return [...dependents];
 }
 
 /** Walk `topicsDir` recursively for `.mdx` files. */
@@ -125,7 +169,7 @@ function getTopicAst(topicFilePath: string): Root {
 
 function readStringAttribute(
   node: MdxJsxFlowElement,
-  name: string,
+  name: string
 ): string | null {
   for (const attr of node.attributes) {
     if (attr.type !== "mdxJsxAttribute") continue;
@@ -145,7 +189,7 @@ function parseTopicTarget(target: string): [string, string | null] {
 
 /** Find all `<SkillReview.Card id="X">` blocks in a topic AST. */
 function findCardBlocks(
-  ast: Root,
+  ast: Root
 ): Array<{ id: string; node: MdxJsxFlowElement }> {
   const cards: Array<{ id: string; node: MdxJsxFlowElement }> = [];
   visit(ast, "mdxJsxFlowElement", (node) => {
@@ -160,17 +204,19 @@ function findCardBlocks(
 
 /**
  * Find a slot child (`<SkillReview.Prompt>` or `<SkillReview.Answer>`)
- * anywhere inside a card subtree. Both flow-level
- * (`mdxJsxFlowElement`) and text-level (`mdxJsxTextElement`) match
- * — MDX parses inline JSX like `<Slot>text</Slot>` as text-level
- * even when wrapped in paragraphs, so the slot search must traverse
- * the full subtree.
+ * anywhere inside a card subtree. Returns either an
+ * `mdxJsxFlowElement` (block-level slot) or an `mdxJsxTextElement`
+ * (inline slot) — MDX parses inline JSX like `<Slot>text</Slot>` as
+ * text-level even when wrapped in paragraphs, so the slot search
+ * traverses the full subtree and returns whichever variant it finds
+ * first. The chapter's MDX pipeline handles both variants downstream
+ * so the caller doesn't need to discriminate.
  */
 function findSlotChild(
   card: MdxJsxFlowElement,
-  slotName: string,
-): MdxJsxFlowElement | null {
-  let found: MdxJsxFlowElement | null = null;
+  slotName: string
+): MdxJsxFlowElement | MdxJsxTextElement | null {
+  let found: MdxJsxFlowElement | MdxJsxTextElement | null = null;
   visit(card, (node) => {
     if (found) return;
     if (
@@ -178,7 +224,7 @@ function findSlotChild(
         node.type === "mdxJsxTextElement") &&
       (node as { name?: string }).name === slotName
     ) {
-      found = node as unknown as MdxJsxFlowElement;
+      found = node as MdxJsxFlowElement | MdxJsxTextElement;
     }
   });
   return found;
@@ -187,8 +233,17 @@ function findSlotChild(
 export const skillReviewResolverRemarkPlugin: Plugin<
   [SkillReviewResolverOptions],
   Root
-> = (options) => (tree) => {
+> = (options) => (tree, file) => {
   const { topicsDir } = options;
+  // file.path is the chapter (or registry) MDX being compiled.
+  // Tracked for HMR surgical-invalidation; absent only when callers
+  // invoke the transformer directly with a synthetic vfile (tests),
+  // in which case no dep is recorded — safe no-op.
+  const chapterFilePath =
+    typeof (file as { path?: unknown }).path === "string"
+      ? ((file as { path: string }).path as string)
+      : undefined;
+
   visit(tree, "mdxJsxFlowElement", (node) => {
     const flow = node as MdxJsxFlowElement;
     if (flow.name !== "SkillReview") return;
@@ -197,12 +252,12 @@ export const skillReviewResolverRemarkPlugin: Plugin<
     const target = readStringAttribute(flow, "target");
     if (!target) {
       throw new Error(
-        `<SkillReview ... /> self-closing form requires a "target" attribute (per ADR 0079).`,
+        `<SkillReview ... /> self-closing form requires a "target" attribute (per ADR 0079).`
       );
     }
     if (!target.startsWith("topic:")) {
       throw new Error(
-        `<SkillReview target="${target}" /> uses a non-topic target prefix. Non-topic targets reserved for future ADRs (per ADR 0079).`,
+        `<SkillReview target="${target}" /> uses a non-topic target prefix. Non-topic targets reserved for future ADRs (per ADR 0079).`
       );
     }
 
@@ -211,14 +266,26 @@ export const skillReviewResolverRemarkPlugin: Plugin<
     const topicFilePath = topicPaths.get(topicId);
     if (!topicFilePath) {
       throw new Error(
-        `<SkillReview target="${target}" />: unknown topic "${topicId}". No topic file found in ${topicsDir} declaring this id in frontmatter (per ADR 0079).`,
+        `<SkillReview target="${target}" />: unknown topic "${topicId}". No topic file found in ${topicsDir} declaring this id in frontmatter (per ADR 0079).`
       );
     }
+    // Record chapter→topic dep for HMR surgical invalidation. Built
+    // up across compile passes; pruned by `invalidateTopicFile` when
+    // a topic file changes in dev mode.
+    if (chapterFilePath) {
+      let dependents = topicToDependentChapters.get(topicFilePath);
+      if (!dependents) {
+        dependents = new Set();
+        topicToDependentChapters.set(topicFilePath, dependents);
+      }
+      dependents.add(chapterFilePath);
+    }
+
     const topicAst = getTopicAst(topicFilePath);
     const cards = findCardBlocks(topicAst);
     if (cards.length === 0) {
       throw new Error(
-        `<SkillReview target="${target}" />: topic "${topicId}" has no <SkillReview.Card> blocks in its body. Topic files must declare at least one card (per ADR 0079).`,
+        `<SkillReview target="${target}" />: topic "${topicId}" has no <SkillReview.Card> blocks in its body. Topic files must declare at least one card (per ADR 0079).`
       );
     }
 
@@ -229,14 +296,18 @@ export const skillReviewResolverRemarkPlugin: Plugin<
         throw new Error(
           `<SkillReview target="${target}" />: card "${cardId}" not found in topic "${topicId}". Available cards: ${cards
             .map((c) => c.id)
-            .join(", ")}.`,
+            .join(", ")}.`
         );
       }
     } else {
       if (cards.length > 1) {
+        // I3 wording (R+CR follow-up): lead with the rule, not the
+        // symptom — bare-form auto-pick only resolves for single-card
+        // topics, so authors learn the invariant alongside the
+        // available-cards list.
         const lines = cards.map((c) => `  - topic:${topicId}#${c.id}`);
         throw new Error(
-          `<SkillReview target="${target}" /> is ambiguous. Topic "${topicId}" has ${cards.length} cards; specify one (per ADR 0079 Q6):\n${lines.join("\n")}`,
+          `<SkillReview target="${target}" />: bare topic targets auto-pick only when the topic has exactly one card. Topic "${topicId}" has ${cards.length} cards — specify one explicitly with a "#card" fragment (per ADR 0079 Q6):\n${lines.join("\n")}`
         );
       }
       chosen = cards[0];
@@ -244,7 +315,7 @@ export const skillReviewResolverRemarkPlugin: Plugin<
     if (!chosen) {
       // Defensive — should be unreachable given prior branches.
       throw new Error(
-        `<SkillReview target="${target}" />: failed to select a card from topic "${topicId}".`,
+        `<SkillReview target="${target}" />: failed to select a card from topic "${topicId}".`
       );
     }
 
@@ -252,7 +323,7 @@ export const skillReviewResolverRemarkPlugin: Plugin<
     const answer = findSlotChild(chosen.node, "SkillReview.Answer");
     if (!prompt || !answer) {
       throw new Error(
-        `Topic "${topicId}" card "${chosen.id}" is missing required <SkillReview.Prompt> or <SkillReview.Answer> slot child (per ADR 0079).`,
+        `Topic "${topicId}" card "${chosen.id}" is missing required <SkillReview.Prompt> or <SkillReview.Answer> slot child (per ADR 0079).`
       );
     }
 

@@ -106,12 +106,12 @@ function checkPRA1(index: PedagogyIndex, sink: FindingSink): void {
     // per-anchor when anchor matches the prereq's topic id).
     const overrides = unit.audit_overrides ?? [];
     const overridesAll = overrides.some(
-      (o) => o.invariant === "PRA-1" && !o.anchor,
+      (o) => o.invariant === "PRA-1" && !o.anchor
     );
     const overriddenAnchors = new Set(
       overrides
         .filter((o) => o.invariant === "PRA-1" && o.anchor)
-        .map((o) => o.anchor as string),
+        .map((o) => o.anchor as string)
     );
     if (overridesAll) continue;
     for (const prereq of unit.prereqs) {

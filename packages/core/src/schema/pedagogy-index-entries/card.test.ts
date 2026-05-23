@@ -29,7 +29,7 @@ describe("CardEntrySchema (ADR 0079)", () => {
         id: "Has Spaces",
         topic_id: "logarithms",
         label: "X",
-      }),
+      })
     ).toThrow();
   });
 
@@ -39,7 +39,7 @@ describe("CardEntrySchema (ADR 0079)", () => {
         id: "product-rule",
         topic_id: "Has Spaces",
         label: "X",
-      }),
+      })
     ).toThrow();
   });
 
@@ -49,7 +49,7 @@ describe("CardEntrySchema (ADR 0079)", () => {
         id: "product-rule",
         topic_id: "logarithms",
         label: "",
-      }),
+      })
     ).toThrow();
   });
 });

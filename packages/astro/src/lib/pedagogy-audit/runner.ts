@@ -1,6 +1,7 @@
 import type { PedagogyIndex } from "@sophie/core/schema";
 import { buildAuditContext } from "./context.ts";
 import { checkBiography } from "./invariants/biography.ts";
+import { checkBR1 } from "./invariants/bridge-uniqueness.ts";
 import { checkChapterStatus } from "./invariants/chapter-status.ts";
 import { checkChapterTitleCollisions } from "./invariants/chapter-title-collisions.ts";
 import { checkEquationRegistry } from "./invariants/equation-registry.ts";
@@ -18,7 +19,6 @@ import {
 import { checkObjectives } from "./invariants/objectives.ts";
 import { checkOMIFlow } from "./invariants/omi-flow.ts";
 import { checkOrphans } from "./invariants/orphans.ts";
-import { checkBR1 } from "./invariants/bridge-uniqueness.ts";
 import { checkRetrievalFamily } from "./invariants/retrieval-family.ts";
 import { checkPRA2 } from "./invariants/topic-consistency.ts";
 import { checkValidation } from "./invariants/validation.ts";
@@ -120,19 +120,17 @@ export function runPedagogyAudit(
   checkRetrievalFamily(index, sink);
 
   // ADR 0079 (W4b) — PRA-2: topic frontmatter ↔ body card consistency.
-  // Topic files must declare every <SkillReview.Card> body block in
-  // their `cards: []` frontmatter list (and vice-versa). Drift breaks
-  // the registry-resolution contract.
-  // biome-ignore lint/suspicious/noExplicitAny: sink shape matches FindingSink
-  checkPRA2(index, sink as any);
+  // The extractor catches body→frontmatter orphans by emitting findings
+  // into extractorFindings (surfaced via passthroughExtractorFindings
+  // above); PRA-2 here covers the inverse axis (frontmatter→body).
+  checkPRA2(index, sink);
 
   // ADR 0079 + 0068 (W4b) — BR-1: bridge slug uniqueness. Each
   // Section[type=bridge] renders at Course root via
   // [bridgeSlug].astro; slug collisions with regular Sections, Unit
   // ids, or reserved Library paths would silently shadow other
   // routes.
-  // biome-ignore lint/suspicious/noExplicitAny: sink shape matches FindingSink
-  checkBR1(index, sink as any);
+  checkBR1(index, sink);
 
   return {
     errors: sink.errors,

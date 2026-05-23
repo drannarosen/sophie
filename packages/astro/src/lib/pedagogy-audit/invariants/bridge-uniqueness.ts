@@ -1,10 +1,5 @@
-import type { AuditFinding, PedagogyIndex } from "@sophie/core/schema";
-
-interface FindingSink {
-  errors: AuditFinding[];
-  warnings: AuditFinding[];
-  infos: AuditFinding[];
-}
+import type { PedagogyIndex } from "@sophie/core/schema";
+import type { FindingSink } from "../types.ts";
 
 /**
  * Reserved top-level Library / structural URL prefixes. A bridge

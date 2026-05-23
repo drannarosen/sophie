@@ -373,7 +373,7 @@ of self-closing vs explicit-children form). Cards are
 addressing detail; topics are the coverage unit.
 
 **Escape via `audit_overrides`:** per
-[ADR 0053 §"audit_overrides chapter frontmatter"](./0053-conformance-failure-modes.md#L103),
+[ADR 0053 §"audit_overrides chapter frontmatter"](./0053-conformance-failure-modes.md#audit_overrides-chapter-frontmatter),
 authors opt out per-callsite:
 
 ```yaml
