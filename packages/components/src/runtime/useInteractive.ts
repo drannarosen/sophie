@@ -2,8 +2,8 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import {
   type BroadcastChannelLayer,
   type BroadcastMessage,
-  chapterChannelName,
   createBroadcastChannel,
+  unitChannelName,
 } from "./BroadcastChannel.ts";
 import {
   FallbackResponseStore,
@@ -99,7 +99,7 @@ export function getChannel(
   course: string,
   unit: string
 ): BroadcastChannelLayer {
-  const name = chapterChannelName(course, unit);
+  const name = unitChannelName(course, unit);
   let channel = channels.get(name);
   if (channel === undefined) {
     channel = createBroadcastChannel(name);

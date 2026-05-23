@@ -1126,13 +1126,13 @@ describe("CS2 — draft chapters excluded from student build (ADR 0051)", () => 
   });
 
   it("emits no CS2 finding for an empty draft slug array", () => {
-    const report = runPedagogyAudit(emptyIndex(), { draftChapterSlugs: [] });
+    const report = runPedagogyAudit(emptyIndex(), { draftUnitIds: [] });
     expect(report.info.filter((i) => i.code === "CS2")).toEqual([]);
   });
 
   it("emits one INFO per draft chapter slug", () => {
     const report = runPedagogyAudit(emptyIndex(), {
-      draftChapterSlugs: ["in-progress", "scratch-chapter"],
+      draftUnitIds: ["in-progress", "scratch-chapter"],
     });
     const cs2 = report.info.filter((i) => i.code === "CS2");
     expect(cs2).toHaveLength(2);
@@ -1144,7 +1144,7 @@ describe("CS2 — draft chapters excluded from student build (ADR 0051)", () => 
 
   it("CS2 message mentions student-build exclusion + ADR 0051", () => {
     const report = runPedagogyAudit(emptyIndex(), {
-      draftChapterSlugs: ["wip"],
+      draftUnitIds: ["wip"],
     });
     const cs2 = report.info.find((i) => i.code === "CS2");
     expect(cs2?.message).toMatch(/excluded from the student build/i);

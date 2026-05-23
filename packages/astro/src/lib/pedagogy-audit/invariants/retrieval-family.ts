@@ -124,22 +124,22 @@ function checkRET1(index: PedagogyIndex, sink: FindingSink): void {
   // in the chapter. Chapters that have only navigation entries (chapter
   // metadata, learning objectives) without any inline pedagogy aren't
   // candidates for retrieval coverage — they're roadmap-shaped.
-  const chaptersWithContent = new Set<string>();
-  for (const e of index.definitions) chaptersWithContent.add(e.unit);
-  for (const e of index.equationCitations) chaptersWithContent.add(e.unit);
-  for (const e of index.keyInsights) chaptersWithContent.add(e.unit);
-  for (const e of index.misconceptions) chaptersWithContent.add(e.unit);
-  for (const e of index.deepDives) chaptersWithContent.add(e.unit);
-  for (const e of index.omiFlows) chaptersWithContent.add(e.unit);
+  const unitsWithContent = new Set<string>();
+  for (const e of index.definitions) unitsWithContent.add(e.unit);
+  for (const e of index.equationCitations) unitsWithContent.add(e.unit);
+  for (const e of index.keyInsights) unitsWithContent.add(e.unit);
+  for (const e of index.misconceptions) unitsWithContent.add(e.unit);
+  for (const e of index.deepDives) unitsWithContent.add(e.unit);
+  for (const e of index.omiFlows) unitsWithContent.add(e.unit);
 
-  const chaptersWithRetrieval = new Set<string>();
-  for (const e of index.retrievalPrompts) chaptersWithRetrieval.add(e.unit);
-  for (const e of index.spacedReviews) chaptersWithRetrieval.add(e.unit);
-  for (const e of index.skillReviews) chaptersWithRetrieval.add(e.unit);
+  const unitsWithRetrieval = new Set<string>();
+  for (const e of index.retrievalPrompts) unitsWithRetrieval.add(e.unit);
+  for (const e of index.spacedReviews) unitsWithRetrieval.add(e.unit);
+  for (const e of index.skillReviews) unitsWithRetrieval.add(e.unit);
 
   // Sort for deterministic finding order across runs.
-  const offenders = [...chaptersWithContent]
-    .filter((c) => !chaptersWithRetrieval.has(c))
+  const offenders = [...unitsWithContent]
+    .filter((c) => !unitsWithRetrieval.has(c))
     .sort();
   for (const unitId of offenders) {
     sink.info.push({

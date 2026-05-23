@@ -75,6 +75,6 @@ export function createBroadcastChannel(name: string): BroadcastChannelLayer {
   return new BrowserBroadcast(name);
 }
 
-export function chapterChannelName(course: string, unit: string): string {
+export function unitChannelName(course: string, unit: string): string {
   return `sophie-${course}:${unit}`;
 }
