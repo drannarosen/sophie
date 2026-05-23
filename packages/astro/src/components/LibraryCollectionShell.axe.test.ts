@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * axe-core a11y test for `<LibraryCollectionShell>` (W4c design D2; ADR
  * 0004 mandate). The shell is a hybrid component — text props for
@@ -5,117 +6,63 @@
  * Library-room consumer (5 Course* refactored in Batch 4 + 3 new CourseX
  * in Batch 5 + 8 Spec routes in Batches 7–8).
  *
- * Two scenarios cover the shell's two branches:
+ * ## Rendering pattern: Container API
+ *
+ * Each test renders the real `.astro` template via
+ * `experimental_AstroContainer`, mounts the result in JSDOM's
+ * `document.body`, and asserts axe-core has zero violations. The earlier
+ * hand-crafted-HTML mirror has been retired (W4c Batch 3b) so axe runs
+ * against the actual template — template drift is now caught at the
+ * unit-test level rather than relying on smoke e2e as the only defense.
+ *
+ * See `src/test-utils/container-axe.ts` for the helper's pragma + globals
+ * setup. The `// @vitest-environment node` pragma above is required
+ * (Astro's Vite plugin refuses to load `.astro` modules under a `client`-
+ * tagged environment such as jsdom).
+ *
+ * Four scenarios cover the shell's branches:
  *   1. content branch — default slot rendered with a real list,
- *   2. empty branch — `isEmpty: true` shows the empty-state `<p>`.
- *
- * ## Why hand-crafted HTML mirror, not Astro Container
- *
- * The W4c plan suggested `experimental_AstroContainer` for component
- * axe tests. This package's Vitest config does NOT carry the Astro
- * Vite plugin (it's a library, not an Astro project — no `pages/`,
- * no routesList), so `.astro` files cannot be imported at test time
- * (Vite fails with "invalid JS syntax"). Wiring `getViteConfig` here
- * would either fail at config-resolve (no Astro project root) or
- * require fabricating an Astro project shell just for tests.
- *
- * Instead, this file mirrors `admonition-plugin.axe.test.ts`: render
- * the expected HTML output as a string, mount it into jsdom's
- * `document.body`, and run axe against the live DOM. Same rigor for
- * the a11y-mandated surface (axe verifies the actual rendered shape),
- * lower coupling cost (no Container plumbing). The Astro file is
- * exercised at the smoke target's e2e level (Playwright) where a
- * full Astro build is already running.
- *
- * The HTML mirror must track the `.astro` template. If the shell's
- * template changes, update `renderShellAsHtml()` below to match.
- * The shape is short (~10 lines of template) so drift risk is low,
- * and the smoke e2e is the second line of defense.
+ *   2. empty branch — `isEmpty: true` shows the empty-state `<p>`,
+ *   3. composed-into-`<main>` regression guard (Library page wrapping),
+ *   4. intro slot populated alongside default slot.
  */
 
-import { axe, toHaveNoViolations } from "jest-axe";
-import { afterAll, beforeAll, describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test } from "vitest";
+import { renderAstroToBody, setupAxeDom } from "../test-utils/container-axe.ts";
+import LibraryCollectionShell from "./LibraryCollectionShell.astro";
 
-expect.extend(toHaveNoViolations);
+const { axe, toHaveNoViolations } = setupAxeDom();
+expect.extend(toHaveNoViolations as never);
 
-type ShellArgs = {
-  collection: string;
-  heading: string;
-  emptyText: string;
-  isEmpty: boolean;
-  defaultSlot?: string;
-  introSlot?: string;
-  secondaryNavSlot?: string;
-};
-
-function renderShellAsHtml(args: ShellArgs): string {
-  const {
-    collection,
-    heading,
-    emptyText,
-    isEmpty,
-    defaultSlot = "",
-    introSlot = "",
-    secondaryNavSlot = "",
-  } = args;
-  const headingId = `sophie-library-collection-heading-${collection}`;
-  const rootClass = `sophie-library-collection sophie-library-collection--${collection}`;
-  const body = isEmpty
-    ? `<p class="sophie-library-collection__empty">${escapeHtml(emptyText)}</p>`
-    : defaultSlot;
-  return `
-    <section class="${rootClass}"
-          data-sophie-library-collection="${collection}"
-          aria-labelledby="${headingId}">
-      <header class="sophie-library-collection__header">
-        <h1 id="${headingId}" class="sophie-library-collection__heading">${escapeHtml(heading)}</h1>
-        ${introSlot}
-      </header>
-      ${secondaryNavSlot}
-      ${body}
-    </section>
-  `;
-}
-
-function escapeHtml(text: string): string {
-  return text
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;");
-}
+afterEach(() => {
+  document.body.innerHTML = "";
+});
 
 describe("LibraryCollectionShell — axe-core a11y", () => {
-  let container: HTMLDivElement;
-
-  beforeAll(() => {
-    container = document.createElement("div");
-    document.body.appendChild(container);
-  });
-
-  afterAll(() => {
-    container.remove();
-  });
-
   test("renders heading + content slot with zero violations", async () => {
-    container.innerHTML = renderShellAsHtml({
-      collection: "glossary",
-      heading: "Glossary",
-      emptyText: "No definitions yet.",
-      isEmpty: false,
-      defaultSlot: "<dl><dt>term</dt><dd>def</dd></dl>",
+    await renderAstroToBody(LibraryCollectionShell, {
+      props: {
+        collection: "glossary",
+        heading: "Glossary",
+        emptyText: "No definitions yet.",
+        isEmpty: false,
+      },
+      slots: { default: "<dl><dt>term</dt><dd>def</dd></dl>" },
     });
-    const results = await axe(container);
+    const results = await axe(document.body);
     expect(results).toHaveNoViolations();
   });
 
   test("renders empty-state with zero violations", async () => {
-    container.innerHTML = renderShellAsHtml({
-      collection: "glossary",
-      heading: "Glossary",
-      emptyText: "No definitions yet.",
-      isEmpty: true,
+    await renderAstroToBody(LibraryCollectionShell, {
+      props: {
+        collection: "glossary",
+        heading: "Glossary",
+        emptyText: "No definitions yet.",
+        isEmpty: true,
+      },
     });
-    const results = await axe(container);
+    const results = await axe(document.body);
     expect(results).toHaveNoViolations();
   });
 
@@ -124,25 +71,21 @@ describe("LibraryCollectionShell — axe-core a11y", () => {
     // would render <main><main>...</main></main> once consumed by
     // Library pages that route through TextbookLayout → ContentColumn.
     // The shell now emits <section> (region landmark) precisely so this
-    // composition is clean. Test verifies axe is happy with the composed
-    // markup any Library page will render in production. Future refactor
-    // that reverts the outer element to <main> would break this test.
-    container.innerHTML = `
-      <main class="sophie-content">
-        <section
-          class="sophie-library-collection sophie-library-collection--glossary"
-          data-sophie-library-collection="glossary"
-          aria-labelledby="sophie-library-collection-heading-glossary"
-        >
-          <header class="sophie-library-collection__header">
-            <h1 id="sophie-library-collection-heading-glossary"
-                class="sophie-library-collection__heading">Glossary</h1>
-          </header>
-          <dl><dt>term</dt><dd>def</dd></dl>
-        </section>
-      </main>
-    `;
-    const results = await axe(container);
+    // composition is clean. `wrap` puts the rendered shell inside a
+    // `<main>` so axe sees the production composition.
+    await renderAstroToBody(LibraryCollectionShell, {
+      props: {
+        collection: "glossary",
+        heading: "Glossary",
+        emptyText: "No definitions yet.",
+        isEmpty: false,
+      },
+      slots: { default: "<dl><dt>term</dt><dd>def</dd></dl>" },
+      wrap: (html) => `<main class="sophie-content">${html}</main>`,
+    });
+    const results = (await axe(document.body)) as {
+      violations: Array<{ id: string }>;
+    };
     expect(results).toHaveNoViolations();
     const duplicateMainViolation = results.violations.find(
       (v) => v.id === "landmark-no-duplicate-main"
@@ -151,21 +94,24 @@ describe("LibraryCollectionShell — axe-core a11y", () => {
   });
 
   test("renders with intro slot populated — no heading-order or aria violations", async () => {
-    // Mirror the populated-state test but with intro content rendered
-    // inside <header> AFTER the <h1> (matches the shell's template:
-    // <header><h1>…</h1><slot name="intro" /></header>). Confirms
-    // heading-order isn't disrupted by intro content and any aria-orphan
-    // issues are caught.
-    container.innerHTML = renderShellAsHtml({
-      collection: "glossary",
-      heading: "Glossary",
-      emptyText: "No definitions yet.",
-      isEmpty: false,
-      defaultSlot: "<dl><dt>term</dt><dd>def</dd></dl>",
-      introSlot:
-        '<p class="sophie-library-collection__intro">Introductory text about this collection.</p>',
+    // Intro content renders inside <header> AFTER the <h1> per the
+    // shell's template (`<header><h1>…</h1><slot name="intro" /></header>`).
+    // Confirms heading-order isn't disrupted by intro content and any
+    // aria-orphan issues are caught.
+    await renderAstroToBody(LibraryCollectionShell, {
+      props: {
+        collection: "glossary",
+        heading: "Glossary",
+        emptyText: "No definitions yet.",
+        isEmpty: false,
+      },
+      slots: {
+        default: "<dl><dt>term</dt><dd>def</dd></dl>",
+        intro:
+          '<p class="sophie-library-collection__intro">Introductory text about this collection.</p>',
+      },
     });
-    const results = await axe(container);
+    const results = await axe(document.body);
     expect(results).toHaveNoViolations();
   });
 });
