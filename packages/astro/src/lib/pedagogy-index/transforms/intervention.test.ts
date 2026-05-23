@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { extractInterventions, transformIntervention } from "../index.ts";
+import type { MdxJsxFlowElement } from "../jsx-utils.ts";
 
 /**
  * Synthetic-mdast tests for `extractInterventions` + `transformIntervention`,
@@ -18,7 +19,21 @@ import { extractInterventions, transformIntervention } from "../index.ts";
  *    identical anchors so hash navigation lands on the rendered DOM.
  */
 
-interface MdxAttribute {
+/**
+ * `TestMdxAttribute` + `MdastChild` + `TestRoot` are the test-side
+ * synthetic-tree shape we hand to `extractInterventions` /
+ * `transformIntervention` via `tree as never`. `MdxJsxFlowElement` is
+ * imported from the canonical home (`../jsx-utils.ts`) per R9-test.
+ *
+ * `TestMdxAttribute` stays test-local with a narrower `value` union
+ * because the `exprValue` factory below needs to construct an
+ * `mdxJsxAttributeValueExpression` shape and have callers read
+ * `.data?.estree` — wider than canonical's `{ type: string }`.
+ * `TestRoot` stays test-local because mdast's `Root` types `children`
+ * as `BlockContent[]`, which is wider than the factory-output union
+ * we need to keep assignment-checked at construction sites.
+ */
+interface TestMdxAttribute {
   type: "mdxJsxAttribute";
   name: string;
   value:
@@ -29,14 +44,8 @@ interface MdxAttribute {
         data?: { estree?: unknown };
       };
 }
-interface MdxJsxFlowElement {
-  type: "mdxJsxFlowElement";
-  name: string;
-  attributes: MdxAttribute[];
-  children: ReadonlyArray<MdastChild>;
-}
 type MdastChild = MdxJsxFlowElement | Record<string, unknown>;
-interface Root {
+interface TestRoot {
   type: "root";
   children: MdastChild[];
 }
@@ -46,7 +55,7 @@ const para = (text: string) => ({
   children: [{ type: "text", value: text }],
 });
 
-const root = (children: ReadonlyArray<MdastChild>): Root => ({
+const root = (children: ReadonlyArray<MdastChild>): TestRoot => ({
   type: "root",
   children: [...children],
 });
@@ -60,7 +69,7 @@ const root = (children: ReadonlyArray<MdastChild>): Root => ({
  * normalization); `data.estree` is intentionally omitted because
  * the extractor reads `value` directly.
  */
-const exprValue = (raw: string): MdxAttribute["value"] => ({
+const exprValue = (raw: string): TestMdxAttribute["value"] => ({
   type: "mdxJsxAttributeValueExpression",
   value: raw,
 });

@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { transformLearningObjectives } from "../index.ts";
+import type { MdxJsxFlowElement } from "../jsx-utils.ts";
 
 /**
  * Tests over synthetic mdast trees, matching the convention in
@@ -9,30 +10,17 @@ import { transformLearningObjectives } from "../index.ts";
  * asserts the post-mutation parent shape: `children === []` and an
  * `objectives` mdxJsxAttribute carrying a JSON-stringified array of
  * `{ id, verb, body }` entries.
+ *
+ * Per R9-test rule (AGENTS.md Conventions): `MdxJsxFlowElement` is
+ * imported from the canonical home (`../jsx-utils.ts`) rather than
+ * redeclared. `TestRoot` + `MdastChild` stay test-local because the
+ * canonical mdast `Root` types `children` as `BlockContent[]`, which
+ * is wider than the factory-output union we need to keep
+ * assignment-checked at construction sites.
  */
 
-interface MdxAttribute {
-  type: "mdxJsxAttribute";
-  name: string;
-  value: string;
-}
-interface MdxJsxFlowElement {
-  type: "mdxJsxFlowElement";
-  name: string;
-  attributes: MdxAttribute[];
-  children: ReadonlyArray<MdastChild>;
-}
-/**
- * `MdastChild` is the test-side union of node shapes we hand to
- * `transformLearningObjectives` via `tree as never`. The factories
- * (`mdxLearningObjectives`, `mdxObjective`) return `MdxJsxFlowElement`,
- * while inline text/paragraph nodes flow through as the open
- * `Record<string, unknown>` shape. The union keeps factory outputs
- * assignable to `children` slots without weakening the structural
- * types the assertions read.
- */
 type MdastChild = MdxJsxFlowElement | Record<string, unknown>;
-interface Root {
+interface TestRoot {
   type: "root";
   children: ReadonlyArray<MdastChild>;
 }
@@ -42,7 +30,7 @@ const para = (text: string) => ({
   children: [{ type: "text", value: text }],
 });
 
-const root = (children: ReadonlyArray<MdastChild>): Root => ({
+const root = (children: ReadonlyArray<MdastChild>): TestRoot => ({
   type: "root",
   children,
 });
@@ -75,7 +63,7 @@ const mdxObjective = (
   children,
 });
 
-function findLO(tree: Root): MdxJsxFlowElement | undefined {
+function findLO(tree: TestRoot): MdxJsxFlowElement | undefined {
   for (const node of tree.children) {
     const n = node as unknown as MdxJsxFlowElement;
     if (n.type === "mdxJsxFlowElement" && n.name === "LearningObjectives") {

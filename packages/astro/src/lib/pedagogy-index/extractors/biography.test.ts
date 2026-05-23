@@ -1,6 +1,7 @@
 import type { EquationEntry } from "@sophie/core/schema";
 import { describe, expect, test } from "vitest";
 import { extractEquationRegistryDeclaration } from "../index.ts";
+import type { MdxJsxFlowElement } from "../jsx-utils.ts";
 
 /**
  * Tests over synthetic mdast trees, exercising the biography walker.
@@ -15,7 +16,21 @@ import { extractEquationRegistryDeclaration } from "../index.ts";
  * `docs/plans/2026-05-17-equation-biography-design.md`.
  */
 
-interface MdxAttribute {
+/**
+ * `TestMdxAttribute` + `MdastChild` + `TestRoot` are the test-side
+ * synthetic-tree shape. `MdxJsxFlowElement` is imported from the
+ * canonical home (`../jsx-utils.ts`) per R9-test.
+ *
+ * `TestMdxAttribute` stays test-local with a richer `value` union
+ * because factories pass attrs by name (`jsxAttr`, `mdxKeyEquation`,
+ * `mdxBiographyChild`) and the symbols-parse assertion path needs
+ * `{ type: "mdxJsxAttributeValueExpression"; value: string }`
+ * structurally readable. `TestRoot` stays test-local because mdast's
+ * `Root` types `children` as `BlockContent[]`, which is wider than
+ * the factory-output union we need to keep assignment-checked at
+ * construction sites.
+ */
+interface TestMdxAttribute {
   type: "mdxJsxAttribute";
   name: string;
   value:
@@ -23,19 +38,13 @@ interface MdxAttribute {
     | { type: "mdxJsxAttributeValueExpression"; value: string }
     | null;
 }
-interface MdxJsxFlowElement {
-  type: "mdxJsxFlowElement";
-  name: string;
-  attributes: MdxAttribute[];
-  children: ReadonlyArray<MdastChild>;
-}
 type MdastChild = MdxJsxFlowElement | Record<string, unknown>;
-interface Root {
+interface TestRoot {
   type: "root";
   children: ReadonlyArray<MdastChild>;
 }
 
-const root = (children: ReadonlyArray<MdastChild>): Root => ({
+const root = (children: ReadonlyArray<MdastChild>): TestRoot => ({
   type: "root",
   children,
 });
@@ -49,14 +58,14 @@ const mathBlock = (value: string) => ({ type: "math", value });
 
 const whitespace = () => ({ type: "text", value: "\n  " });
 
-const jsxAttr = (name: string, value: string): MdxAttribute => ({
+const jsxAttr = (name: string, value: string): TestMdxAttribute => ({
   type: "mdxJsxAttribute",
   name,
   value,
 });
 
 const mdxKeyEquation = (
-  attrs: MdxAttribute[],
+  attrs: TestMdxAttribute[],
   children: ReadonlyArray<MdastChild>
 ): MdxJsxFlowElement => ({
   type: "mdxJsxFlowElement",
@@ -67,7 +76,7 @@ const mdxKeyEquation = (
 
 const mdxBiographyChild = (
   name: string,
-  attrs: MdxAttribute[],
+  attrs: TestMdxAttribute[],
   children: ReadonlyArray<MdastChild> = []
 ): MdxJsxFlowElement => ({
   type: "mdxJsxFlowElement",
@@ -86,7 +95,7 @@ const mdxBiographyChild = (
  * Returns an array (length 0 or 1) so the legacy `const [entry] = ...`
  * destructuring still works.
  */
-function extractEquations(tree: Root, _unitId: string): EquationEntry[] {
+function extractEquations(tree: TestRoot, _unitId: string): EquationEntry[] {
   for (const child of tree.children) {
     const el = child as MdxJsxFlowElement;
     if (el.type !== "mdxJsxFlowElement" || el.name !== "KeyEquation") continue;
