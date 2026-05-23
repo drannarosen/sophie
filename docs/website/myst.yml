@@ -294,6 +294,7 @@ project:
         - file: contributing/adr-process.md
         - file: contributing/docs-style-guide.md
         - file: contributing/coding-standards.md
+        - file: contributing/claude-md-maintenance.md
   # Local JS plugins (loaded by mystmd from `.mjs` files at build).
   #
   # The validation-admonition plugin renders ADR 0056's per-contract
