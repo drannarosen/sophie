@@ -134,7 +134,7 @@ function firstFigureThumbnailFor(
   unitId: string
 ): { src: string; alt: string } | undefined {
   const usage = pedagogySnapshot.figureUsages
-    .filter((u) => u.chapter === unitId)
+    .filter((u) => u.unit === unitId)
     .sort((a, b) => a.number - b.number)[0];
   if (!usage) return undefined;
   const entry = figureRegistry[usage.name];
