@@ -48,6 +48,12 @@ export function extractTopicAndCards(
     const idAttr = node.attributes.find(
       (a) => a.type === "mdxJsxAttribute" && a.name === "id"
     );
+    // R7 disposition: a `<SkillReview.Card>` with no `id=` attribute is
+    // malformed JSX — TypeScript prop-type check should flag it at the
+    // call site (the prop is required per the component schema). We
+    // silently skip here rather than emit a PRA-2 finding because the
+    // finding would be confusing for an author who's mid-edit (no id
+    // yet); the prop-type gate is the better surface for this error.
     if (!idAttr || typeof idAttr.value !== "string") return;
     const declared = declaredCardsById.get(idAttr.value);
     if (!declared) {
