@@ -8,7 +8,10 @@ import { checkEquationRegistry } from "./invariants/equation-registry.ts";
 import { passthroughExtractorFindings } from "./invariants/extractor-findings.ts";
 import { checkInlineRefs } from "./invariants/inline-refs.ts";
 import { checkInterventions } from "./invariants/interventions.ts";
-import { checkKeyInsights } from "./invariants/key-insights.ts";
+import {
+  checkKeyInsights,
+  checkKISlugUnique,
+} from "./invariants/key-insights.ts";
 import { checkMisconceptionGraph } from "./invariants/misconception-graph.ts";
 import { checkMisconceptionPairing } from "./invariants/misconception-pairing.ts";
 import { checkMultiRep } from "./invariants/multirep.ts";
@@ -131,6 +134,16 @@ export function runPedagogyAudit(
   // ids, or reserved Library paths would silently shadow other
   // routes.
   checkBR1(index, sink);
+
+  // ADR 0070 (W4c D4) — KI-slug-unique: KeyInsight slug uniqueness.
+  // The W4c derived-slug fallback (`${unit}-${anchor}` when title
+  // absent) is globally unique, but the title-derived shape is not —
+  // two KeyInsights in different chapters can share a title (and
+  // `slugify("!!!") === "term"` per slugify.ts:19 makes any pair of
+  // non-alphanumeric-only titles collapse to the same slug). Per-Spec-
+  // page URLs are `/library/key-insights/<slug>/`, so collisions
+  // would silently shadow.
+  checkKISlugUnique(index, sink);
 
   return {
     errors: sink.errors,

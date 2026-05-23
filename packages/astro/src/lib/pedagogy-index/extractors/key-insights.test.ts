@@ -116,4 +116,17 @@ describe("extractKeyInsights (pure)", () => {
     expect(entries[0]?.anchor).toBe("ki-1");
     expect(entries[0]?.slug).toBe("spectra-and-composition-ki-1");
   });
+
+  // W4c Task 2.2 reviewer Minor #1: whitespace-only title trims to
+  // empty, which `attrs.title?.trim() || undefined` collapses to
+  // `undefined` — so the slug fallback must still fire.
+  test("slug falls back to '<unit>-<anchor>' when title is whitespace-only", () => {
+    const tree = root([
+      mdxAside({ kind: "key-insight", title: "   " }, [para("body")]),
+    ]);
+
+    const entries = extractKeyInsights(tree as never, "x");
+    expect(entries[0]?.title).toBeUndefined();
+    expect(entries[0]?.slug).toBe("x-ki-1");
+  });
 });
