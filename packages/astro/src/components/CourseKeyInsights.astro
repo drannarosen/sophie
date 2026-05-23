@@ -34,7 +34,7 @@ const { heading } = Astro.props;
 // source-walk order WITHIN each chapter (stable sort guaranteed by
 // ECMAScript spec since 2019).
 const sorted: KeyInsightEntry[] = [...keyInsights].sort((a, b) => {
-  if (a.chapter !== b.chapter) return a.chapter.localeCompare(b.chapter);
+  if (a.unit !== b.unit) return a.unit.localeCompare(b.unit);
   return 0; // preserve insertion order within chapter
 });
 ---
@@ -62,8 +62,8 @@ const sorted: KeyInsightEntry[] = [...keyInsights].sort((a, b) => {
             <div set:html={entry.body} />
             <p class='sophie-course-key-insights__backlink'>
               defined in{" "}
-              <a href={`/units/${entry.chapter}/reading#${entry.anchor}`}>
-                <code>{entry.chapter}</code>
+              <a href={`/units/${entry.unit}/reading#${entry.anchor}`}>
+                <code>{entry.unit}</code>
               </a>
             </p>
           </dd>

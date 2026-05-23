@@ -11,7 +11,7 @@ const ctx = {
 const fixture: ObjectiveEntry = {
   id: "thesis",
   anchor: "lo-thesis",
-  chapter: "measuring-the-sky",
+  unit: "measuring-the-sky",
   verb: "State",
   body: "the course thesis in one sentence.",
 };

@@ -33,22 +33,22 @@ describe("extractInlineRefUsages (pure)", () => {
         {
           kind: "glossary-term",
           refKey: "Parallax",
-          chapter: "spoiler-alerts",
+          unit: "spoiler-alerts",
         },
         {
           kind: "eq-ref",
           refKey: "wiens-law",
-          chapter: "spoiler-alerts",
+          unit: "spoiler-alerts",
         },
         {
           kind: "figure-ref",
           refKey: "hr-diagram",
-          chapter: "spoiler-alerts",
+          unit: "spoiler-alerts",
         },
         {
           kind: "chapter-ref",
           refKey: "hydrostatic-equilibrium",
-          chapter: "spoiler-alerts",
+          unit: "spoiler-alerts",
         },
       ])
     );
@@ -68,7 +68,7 @@ describe("extractInlineRefUsages (pure)", () => {
     expect(entries[0]).toEqual({
       kind: "chapter-ref",
       refKey: "hydrostatic-equilibrium",
-      chapter: "ch",
+      unit: "ch",
     });
   });
 
@@ -89,7 +89,7 @@ describe("extractInlineRefUsages (pure)", () => {
     expect(entries[0]).toEqual({
       kind: "figure-ref",
       refKey: "valid",
-      chapter: "ch",
+      unit: "ch",
     });
   });
 

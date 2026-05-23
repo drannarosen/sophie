@@ -9,7 +9,7 @@ import { LearningObjectives } from "./LearningObjectives.tsx";
  * Persistence state shape: `Record<objectiveId, checked>`. Keyed by
  * the author-supplied `<Objective id>` so reorders/edits don't
  * corrupt student state. One IndexedDB record per
- * (course, chapter, id) tuple under
+ * (course, unit, id) tuple under
  * `learning-objectives:${id}:checked`.
  *
  * The LO parent reads/writes the full record; the build-time

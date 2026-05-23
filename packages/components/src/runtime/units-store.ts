@@ -9,7 +9,9 @@ import { createPedagogyStore } from "./pedagogy-store.ts";
  *
  * Each `UnitEntry` carries:
  *   - `section_id`: parent ref to its `SectionEntry.slug`
- *   - `chapter`: binding to the reading artifact (the "chapter")
+ *   - `chapter`: binding to the reading artifact (the "chapter" per
+ *     W2/D7 vocabulary lock — D7 keeps this field NAME permanently;
+ *     W3's per-callsite chapter→unit rename does NOT touch this).
  *   - `lecture?`: optional binding to the slides artifact (the
  *     "lecture")
  *   - `prereqs`: topic_ids the Unit depends on; PRA-1 traverses

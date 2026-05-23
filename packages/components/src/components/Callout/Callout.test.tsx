@@ -243,7 +243,7 @@ describe("<InteractiveCallout>", () => {
       withProfile(
         <InteractiveCallout
           course='test-course'
-          chapter='test-chapter'
+          unit='test-chapter'
           id='tip-1'
           variant='tip'
         >
@@ -269,7 +269,7 @@ describe("<InteractiveCallout>", () => {
       withProfile(
         <InteractiveCallout
           course='test-course'
-          chapter='test-chapter'
+          unit='test-chapter'
           id='ax-1'
           variant='info'
         >
@@ -292,7 +292,7 @@ describe("<InteractiveCallout>", () => {
       withProfile(
         <InteractiveCallout
           course='test-course'
-          chapter='test-chapter'
+          unit='test-chapter'
           id='no-title'
           variant='info'
         >
@@ -312,7 +312,7 @@ describe("<InteractiveCallout>", () => {
       withProfile(
         <InteractiveCallout
           course='test-course'
-          chapter='test-chapter'
+          unit='test-chapter'
           id='my-anchor'
           variant='info'
         >
@@ -329,7 +329,7 @@ describe("<InteractiveCallout>", () => {
       withProfile(
         <InteractiveCallout
           course='test-course'
-          chapter='test-chapter'
+          unit='test-chapter'
           id='with-title'
           variant='info'
           title='Important context'

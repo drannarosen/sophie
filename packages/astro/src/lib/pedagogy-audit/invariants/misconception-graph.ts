@@ -37,18 +37,18 @@ export function checkMisconceptionGraph(
   // "universe-with-a-center"; cross-references use that same slug).
   const misconceptionByAnchor = new Map<
     string,
-    { chapter: string; anchor: string }
+    { unit: string; anchor: string }
   >();
   for (const m of index.misconceptions) {
     // First-seen wins. M2 (extractor-level) already prevents cross-
-    // chapter explicit-id collisions; auto-anchors (`misc-N`) are
-    // chapter-scoped so different chapters can both have a `misc-1`,
+    // unit explicit-id collisions; auto-anchors (`misc-N`) are
+    // unit-scoped so different units can both have a `misc-1`,
     // but those auto-anchors aren't valid reference targets across
-    // chapters anyway — authors who want to declare a graph edge use
+    // units anyway — authors who want to declare a graph edge use
     // explicit slugs.
     if (!misconceptionByAnchor.has(m.anchor)) {
       misconceptionByAnchor.set(m.anchor, {
-        chapter: m.chapter,
+        unit: m.unit,
         anchor: m.anchor,
       });
     }
@@ -80,8 +80,8 @@ export function checkMisconceptionGraph(
         sink.errors.push({
           severity: "ERROR",
           code: "MG2",
-          message: `MG2: misconception "${m.anchor}" in chapter "${m.chapter}" declares prerequisite "${prereqAnchor}", but no misconception with that anchor is declared anywhere in the textbook. Resolution: either declare the prerequisite misconception in an earlier chapter, or remove the dangling reference.`,
-          location: { chapter: m.chapter, anchor: m.anchor },
+          message: `MG2: misconception "${m.anchor}" in chapter "${m.unit}" declares prerequisite "${prereqAnchor}", but no misconception with that anchor is declared anywhere in the textbook. Resolution: either declare the prerequisite misconception in an earlier chapter, or remove the dangling reference.`,
+          location: { unit: m.unit, anchor: m.anchor },
         });
         continue;
       }
@@ -89,18 +89,18 @@ export function checkMisconceptionGraph(
       // is a degenerate cycle of length 1. MG1 catches it below too,
       // but we surface it as MG2 here for the clearer dangling-style
       // diagnostic since it's also "no earlier chapter introduces it".
-      if (target.anchor === m.anchor && target.chapter === m.chapter) {
+      if (target.anchor === m.anchor && target.unit === m.unit) {
         // Skip — let MG1 surface it as a cycle.
         continue;
       }
-      const prereqOrder = orderOf(target.chapter);
-      const selfOrder = orderOf(m.chapter);
+      const prereqOrder = orderOf(target.unit);
+      const selfOrder = orderOf(m.unit);
       if (!(prereqOrder < selfOrder)) {
         sink.errors.push({
           severity: "ERROR",
           code: "MG2",
-          message: `MG2: misconception "${m.anchor}" in chapter "${m.chapter}" declares prerequisite "${prereqAnchor}" (in chapter "${target.chapter}"), but that prerequisite is not introduced in an earlier chapter (by the chapters collection's declared order). Resolution: either reorder the chapters so the prerequisite is introduced first, or remove the prerequisite declaration.`,
-          location: { chapter: m.chapter, anchor: m.anchor },
+          message: `MG2: misconception "${m.anchor}" in chapter "${m.unit}" declares prerequisite "${prereqAnchor}" (in chapter "${target.unit}"), but that prerequisite is not introduced in an earlier chapter (by the chapters collection's declared order). Resolution: either reorder the chapters so the prerequisite is introduced first, or remove the prerequisite declaration.`,
+          location: { unit: m.unit, anchor: m.anchor },
         });
       }
     }
@@ -175,7 +175,7 @@ export function checkMisconceptionGraph(
             code: "MG1",
             message: `MG1: cycle in prerequisite_misconceptions graph: ${rotated.join(" → ")} → ${rotated[0] ?? next}. Curriculum bug — a misconception cannot be both a prerequisite of another AND depend on it. Resolution: remove one of the prerequisite edges.`,
             location: home
-              ? { chapter: home.chapter, anchor: home.anchor }
+              ? { unit: home.unit, anchor: home.anchor }
               : undefined,
           });
         }

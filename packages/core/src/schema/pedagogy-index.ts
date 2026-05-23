@@ -64,12 +64,12 @@ export const PedagogyIndexSchema = z.object({
   definitions: z.array(DefinitionEntrySchema).readonly(),
   equations: z.array(EquationEntrySchema).readonly(),
   /**
-   * Per-chapter `<KeyEquation refId="..." />` citation entries per ADR 0060.
-   * One entry per chapter-side callsite; the declaration data lives on
-   * `equations[]`. Audit invariants R1 (dangling refId) and R2 (orphan
-   * declaration) consume the citation/declaration cross-product. Defaults
-   * to `[]` so consumer apps on the pre-registry path keep working through
-   * the cutover.
+   * Per-unit `<KeyEquation refId="..." />` citation entries per ADR 0060.
+   * One entry per unit-side callsite (W3 rename from chapter-side); the
+   * declaration data lives on `equations[]`. Audit invariants R1 (dangling
+   * refId) and R2 (orphan declaration) consume the citation/declaration
+   * cross-product. Defaults to `[]` so consumer apps on the pre-registry
+   * path keep working through the cutover.
    */
   equationCitations: z
     .array(EquationCitationEntrySchema)
@@ -78,11 +78,11 @@ export const PedagogyIndexSchema = z.object({
   keyInsights: z.array(KeyInsightEntrySchema).readonly(),
   /** Consumer-app-owned asset data, forwarded into the index at SSR-merge time. */
   figureRegistry: z.array(FigureRegistryEntrySchema).readonly(),
-  /** Per-chapter usage records, populated by the extractor (renamed from `figures` in PR-C3). */
+  /** Per-unit usage records, populated by the extractor (renamed from `figures` in PR-C3; field key renamed `chapter → unit` in W3). */
   figureUsages: z.array(FigureUsageEntrySchema).readonly(),
   misconceptions: z.array(MisconceptionEntrySchema).readonly(),
   /**
-   * Per-chapter `<Callout variant="deep-dive">` entries (ADR 0058
+   * Per-unit `<Callout variant="deep-dive">` entries (ADR 0058
    * §R-deep-dive). Populated by `extractDeepDives`. Optional with
    * default `[]` so consumer apps on the pre-PR-B path keep working.
    * The-more-you-know callouts are intentionally NOT included here —
@@ -90,18 +90,18 @@ export const PedagogyIndexSchema = z.object({
    */
   deepDives: z.array(DeepDiveEntrySchema).readonly().default([]),
   /**
-   * Per-chapter `<OMIFlow>` callsites (ADR 0063). Populated by
+   * Per-unit `<OMIFlow>` callsites (ADR 0063). Populated by
    * `extractOMIFlows`. Optional with default `[]` so consumer apps on
    * the pre-A8 path keep working. One entry per callsite carrying all
    * three slot bodies (observable / model / inference).
    */
   omiFlows: z.array(OMIFlowEntrySchema).readonly().default([]),
-  /** Per-chapter learning objectives, populated by the extractor. */
+  /** Per-unit learning objectives, populated by the extractor. */
   objectives: z.array(ObjectiveEntrySchema).readonly(),
-  /** Per-chapter inline-ref callsites — populated by the extractor for the audit pass. */
+  /** Per-unit inline-ref callsites — populated by the extractor for the audit pass. */
   inlineRefUsages: z.array(InlineRefUsageEntrySchema).readonly(),
   /**
-   * Per-chapter MultiRep concept-binding entries (ADR 0043 +
+   * Per-unit MultiRep concept-binding entries (ADR 0043 +
    * 2026-05-17 design hardening). Populated by `extractMultiReps`;
    * consumed by audit invariants MR1–MR4/MR6 (and NR1–NR4 via the
    * Notation Registry loader, PR-δ). Defaults to `[]` so consumer
@@ -109,7 +109,7 @@ export const PedagogyIndexSchema = z.object({
    */
   multiReps: z.array(MultiRepIndexEntrySchema).readonly().default([]),
   /**
-   * Per-chapter `<Intervention>` callsite entries (ADR 0044 +
+   * Per-unit `<Intervention>` callsite entries (ADR 0044 +
    * 2026-05-17 design hardening). Populated by `extractInterventions`;
    * consumed by audit invariants MG3/MG4/I1/I2/I3 (PR-δ). Defaults to
    * `[]` so consumer apps that don't pair misconceptions with
@@ -140,20 +140,20 @@ export const PedagogyIndexSchema = z.object({
    */
   extractorFindings: z.array(AuditFindingSchema).readonly().default([]),
   /**
-   * Per-chapter `<RetrievalPrompt>` callsites (Wedge B1). Populated by
+   * Per-unit `<RetrievalPrompt>` callsites (Wedge B1). Populated by
    * `extractRetrievalPrompts`. Defaults to `[]` so consumer apps on the
    * pre-Wedge-B1 path keep working. Consumed by RET-1 (retrieval-
-   * coverage invariant) and the Cockpit's per-chapter coverage view.
+   * coverage invariant) and the Cockpit's per-unit coverage view.
    */
   retrievalPrompts: z.array(RetrievalPromptEntrySchema).readonly().default([]),
   /**
-   * Per-chapter `<SpacedReview>` callsites (Wedge B1). Populated by
+   * Per-unit `<SpacedReview>` callsites (Wedge B1). Populated by
    * `extractSpacedReviews`. Defaults to `[]`. Consumed by SR-1
    * (target_id / section_id ref-validity invariant).
    */
   spacedReviews: z.array(SpacedReviewEntrySchema).readonly().default([]),
   /**
-   * Per-chapter `<SkillReview>` callsites (Wedge B1). Populated by
+   * Per-unit `<SkillReview>` callsites (Wedge B1). Populated by
    * `extractSkillReviews`. Defaults to `[]`. Consumed by PRA-1
    * (prereq-activation invariant) and the Library room's Wedge C
    * registry-resolution pass.
@@ -164,8 +164,8 @@ export const PedagogyIndexSchema = z.object({
    * `getCollection('sections')` per ADR 0067. Wedge B-followup (W1)
    * introduces this collection; consumers on the pre-W1 path see `[]`.
    * Powers PRA-1's "same Section or prior Section" prereq lookup and
-   * `<SpacedReview section="…">` rendering's section→units→chapters
-   * traversal. `SectionEntry` is a verbatim alias of `SectionSchema`
+   * `<SpacedReview section="…">` rendering's section→units traversal.
+   * `SectionEntry` is a verbatim alias of `SectionSchema`
    * (5 typed variants: module / phase / track / unit-block / bridge).
    */
   sections: z.array(SectionEntrySchema).readonly().default([]),
@@ -177,7 +177,8 @@ export const PedagogyIndexSchema = z.object({
    * `UnitEntry.chapter` binds to the reading artifact (the "chapter")
    * and `UnitEntry.lecture?` binds to the slides artifact (the
    * "lecture") per design doc D7. The `chapter` + `lecture` field
-   * NAMES are permanent across W1/W2/W3.
+   * NAMES are permanent across W1/W2/W3 (D7 vocabulary lock — distinct
+   * from W3's per-callsite `chapter → unit` parent-ref rename).
    */
   units: z.array(UnitEntrySchema).readonly().default([]),
   /**

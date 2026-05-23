@@ -42,7 +42,7 @@ vi.mock("./figure-usages-store.ts", () => ({
     if (name === "cosmic-distance-ladder") {
       return {
         name: "cosmic-distance-ladder",
-        chapter: "spoiler-alerts",
+        unit: "spoiler-alerts",
         anchor: "fig-cosmic-distance-ladder",
         number: 1,
         canonical: true,
@@ -51,7 +51,7 @@ vi.mock("./figure-usages-store.ts", () => ({
     if (name === "m51-optical-radio") {
       return {
         name: "m51-optical-radio",
-        chapter: "galaxies",
+        unit: "galaxies",
         anchor: "fig-m51",
         number: 4,
         canonical: false,

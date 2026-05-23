@@ -15,7 +15,7 @@ describe("<InteractiveCheckbox>", () => {
       withProfile(
         <InteractiveCheckbox
           course='ic-course'
-          chapter='ic-chapter'
+          unit='ic-chapter'
           id='ic-render'
         >
           Mark as understood
@@ -32,7 +32,7 @@ describe("<InteractiveCheckbox>", () => {
       withProfile(
         <InteractiveCheckbox
           course='ic-course'
-          chapter='ic-chapter'
+          unit='ic-chapter'
           id='ic-loading'
         >
           Loading guard
@@ -49,7 +49,7 @@ describe("<InteractiveCheckbox>", () => {
       withProfile(
         <InteractiveCheckbox
           course='ic-course'
-          chapter='ic-chapter'
+          unit='ic-chapter'
           id='ic-toggle'
         >
           Toggle me
@@ -70,7 +70,7 @@ describe("<InteractiveCheckbox>", () => {
       withProfile(
         <InteractiveCheckbox
           course='ic-persist-course'
-          chapter='ic-persist-chapter'
+          unit='ic-persist-chapter'
           id='ic-persist'
         >
           Persistence
@@ -89,7 +89,7 @@ describe("<InteractiveCheckbox>", () => {
       withProfile(
         <InteractiveCheckbox
           course='ic-persist-course'
-          chapter='ic-persist-chapter'
+          unit='ic-persist-chapter'
           id='ic-persist'
         >
           Persistence
@@ -106,7 +106,7 @@ describe("<InteractiveCheckbox>", () => {
       withProfile(
         <InteractiveCheckbox
           course='ic-course'
-          chapter='ic-chapter'
+          unit='ic-chapter'
           id='ic-initial'
           initial={true}
         >
@@ -122,11 +122,7 @@ describe("<InteractiveCheckbox>", () => {
   it("has zero axe violations", async () => {
     const { container } = render(
       withProfile(
-        <InteractiveCheckbox
-          course='ic-course'
-          chapter='ic-chapter'
-          id='ic-axe'
-        >
+        <InteractiveCheckbox course='ic-course' unit='ic-chapter' id='ic-axe'>
           Accessible by default
         </InteractiveCheckbox>
       )

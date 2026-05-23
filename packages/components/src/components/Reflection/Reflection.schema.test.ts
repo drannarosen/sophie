@@ -4,7 +4,7 @@ import { ReflectionPropsSchema } from "./Reflection.schema.ts";
 describe("ReflectionPropsSchema", () => {
   const valid = {
     course: "test",
-    chapter: "test",
+    unit: "test",
     id: "refl-1",
     prompt: "What surprised you?",
   };
@@ -23,7 +23,7 @@ describe("ReflectionPropsSchema", () => {
   });
 
   it("rejects empty required strings", () => {
-    for (const field of ["course", "chapter", "id", "prompt"] as const) {
+    for (const field of ["course", "unit", "id", "prompt"] as const) {
       expect(
         ReflectionPropsSchema.safeParse({ ...valid, [field]: "" }).success
       ).toBe(false);

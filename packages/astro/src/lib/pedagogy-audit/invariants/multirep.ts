@@ -30,8 +30,8 @@ export function checkMultiRep(
     sink.errors.push({
       severity: "ERROR",
       code: "MR1",
-      message: `MR1: <MultiRep concept="${mr.concept}"> in chapter "${mr.chapter}" — concept not present in notation-registry.yaml. Resolution: declare the concept (per docs/website/reference/notation-registry-schema.md), or fix the concept slug typo.`,
-      location: { chapter: mr.chapter, anchor: mr.id },
+      message: `MR1: <MultiRep concept="${mr.concept}"> in chapter "${mr.unit}" — concept not present in notation-registry.yaml. Resolution: declare the concept (per docs/website/reference/notation-registry-schema.md), or fix the concept slug typo.`,
+      location: { unit: mr.unit, anchor: mr.id },
     });
   }
 
@@ -48,8 +48,8 @@ export function checkMultiRep(
       sink.warnings.push({
         severity: "WARNING",
         code: "MR2",
-        message: `MR2: <MultiRep concept="${mr.concept}"> in chapter "${mr.chapter}" — <RepEquation refKey="${rep.refKey}" symbol="${rep.symbol}"> doesn't match the registry's canonical_symbol "${concept.canonical_symbol}". Resolution: change the rep's symbol to match the registry, or update the registry if the symbol drifted intentionally.`,
-        location: { chapter: mr.chapter, anchor: mr.id },
+        message: `MR2: <MultiRep concept="${mr.concept}"> in chapter "${mr.unit}" — <RepEquation refKey="${rep.refKey}" symbol="${rep.symbol}"> doesn't match the registry's canonical_symbol "${concept.canonical_symbol}". Resolution: change the rep's symbol to match the registry, or update the registry if the symbol drifted intentionally.`,
+        location: { unit: mr.unit, anchor: mr.id },
       });
     }
   }
@@ -78,8 +78,8 @@ export function checkMultiRep(
       sink.info.push({
         severity: "INFO",
         code: "MR4",
-        message: `MR4: <MultiRep concept="${mr.concept}"> in chapter "${mr.chapter}" — figure "${rep.refName}" alt text doesn't mention the concept's verbal_label ("${concept.verbal_label}") or canonical_symbol ("${concept.canonical_symbol}"). Authoring nudge — readers using screen-readers lose the binding context.`,
-        location: { chapter: mr.chapter, anchor: mr.id },
+        message: `MR4: <MultiRep concept="${mr.concept}"> in chapter "${mr.unit}" — figure "${rep.refName}" alt text doesn't mention the concept's verbal_label ("${concept.verbal_label}") or canonical_symbol ("${concept.canonical_symbol}"). Authoring nudge — readers using screen-readers lose the binding context.`,
+        location: { unit: mr.unit, anchor: mr.id },
       });
     }
   }
@@ -96,10 +96,9 @@ export function checkMultiRep(
   // chapter-side authoring intent.
   const equationsByChapterSlug = new Map<string, Set<string>>();
   for (const citation of index.equationCitations) {
-    const set =
-      equationsByChapterSlug.get(citation.chapter) ?? new Set<string>();
+    const set = equationsByChapterSlug.get(citation.unit) ?? new Set<string>();
     set.add(citation.refId);
-    equationsByChapterSlug.set(citation.chapter, set);
+    equationsByChapterSlug.set(citation.unit, set);
   }
   for (const mr of index.multiReps) {
     const sameMrEquationRefKeys = new Set<string>();
@@ -107,7 +106,7 @@ export function checkMultiRep(
       if (rep.kind === "equation") sameMrEquationRefKeys.add(rep.refKey);
     }
     const chapterEquationSlugs =
-      equationsByChapterSlug.get(mr.chapter) ?? new Set<string>();
+      equationsByChapterSlug.get(mr.unit) ?? new Set<string>();
     for (const rep of mr.reps) {
       if (rep.kind !== "equation") continue;
       if (rep.equivalent_to === undefined) continue;
@@ -116,8 +115,8 @@ export function checkMultiRep(
       sink.info.push({
         severity: "INFO",
         code: "MR6",
-        message: `MR6: <MultiRep concept="${mr.concept}"> in chapter "${mr.chapter}" — <RepEquation refKey="${rep.refKey}" equivalent_to="${rep.equivalent_to}"> doesn't resolve to a <KeyEquation> in the chapter or to another <RepEquation> in the same MultiRep. Authoring nudge — declare the equivalent equation explicitly so the binding holds.`,
-        location: { chapter: mr.chapter, anchor: mr.id },
+        message: `MR6: <MultiRep concept="${mr.concept}"> in chapter "${mr.unit}" — <RepEquation refKey="${rep.refKey}" equivalent_to="${rep.equivalent_to}"> doesn't resolve to a <KeyEquation> in the chapter or to another <RepEquation> in the same MultiRep. Authoring nudge — declare the equivalent equation explicitly so the binding holds.`,
+        location: { unit: mr.unit, anchor: mr.id },
       });
     }
   }

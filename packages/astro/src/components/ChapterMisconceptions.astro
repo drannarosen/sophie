@@ -46,7 +46,7 @@ const { chapter, heading, headingLevel = 2 } = Astro.props;
 const HeadingTag = `h${headingLevel}` as const;
 
 const inChapter: MisconceptionEntry[] = misconceptions.filter(
-  (m) => m.chapter === chapter
+  (m) => m.unit === chapter
 );
 // Appearance-order sort: entries are already in source-walk order; no resort.
 ---

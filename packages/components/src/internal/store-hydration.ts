@@ -30,7 +30,7 @@ export { __setFigureUsages } from "../components/FigureRef/figure-usages-store.t
 export { __setGlossaryDefinitions } from "../components/GlossaryTerm/definitions-store.ts";
 export { __setObjectives } from "../components/Objective/objectives-store.ts";
 // Wedge B-followup (W2/D1) — Artifact consumer-supplied collection per
-// ADR 0067 (Path A). Surfaced for `<ChapterRef chapter="…">` reading-
+// ADR 0067 (Path A). Surfaced for `<ChapterRef unit="…">` reading-
 // artifact lookup, post-W2 audit invariants, and future `<LectureRef>`
 // / `<ArtifactRef>` consumers. ArtifactEntry is a discriminated union
 // over scope (unit | section).

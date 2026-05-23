@@ -21,7 +21,7 @@ const m51: FigureRegistryEntry = {
 
 const ladderCh1: FigureUsageEntry = {
   name: "cosmic-distance-ladder",
-  chapter: "spoiler-alerts",
+  unit: "spoiler-alerts",
   anchor: "fig-cosmic-distance-ladder",
   number: 1,
   canonical: true,
@@ -29,7 +29,7 @@ const ladderCh1: FigureUsageEntry = {
 
 const ladderCh2: FigureUsageEntry = {
   name: "cosmic-distance-ladder",
-  chapter: "standard-candles",
+  unit: "standard-candles",
   anchor: "fig-cosmic-distance-ladder-2",
   number: 3,
   canonical: false,
@@ -37,7 +37,7 @@ const ladderCh2: FigureUsageEntry = {
 
 const m51Ch1: FigureUsageEntry = {
   name: "m51-optical-radio",
-  chapter: "spoiler-alerts",
+  unit: "spoiler-alerts",
   anchor: "fig-m51-optical-radio",
   number: 2,
   canonical: false,
@@ -45,7 +45,7 @@ const m51Ch1: FigureUsageEntry = {
 
 const m51Ch2: FigureUsageEntry = {
   name: "m51-optical-radio",
-  chapter: "galaxies",
+  unit: "galaxies",
   anchor: "fig-m51-again",
   number: 1,
   canonical: false,
@@ -149,7 +149,7 @@ describe("figure-usages-store", () => {
     );
 
     // Neither m51 usage is canonical. Chapters: "galaxies" < "spoiler-alerts"
-    // alphabetically, so m51Ch2 (chapter="galaxies") should win.
+    // alphabetically, so m51Ch2 (unit="galaxies") should win.
     __setFigureUsages([m51Ch1, m51Ch2]);
 
     expect(lookupCanonicalUsageByName("m51-optical-radio")).toEqual(m51Ch2);

@@ -16,7 +16,7 @@ describe("extractFigures (pure)", () => {
     expect(entries).toHaveLength(1);
     expect(entries[0]).toMatchObject({
       name: "decoder-ring",
-      chapter: "spoiler-alerts",
+      unit: "spoiler-alerts",
       anchor: "fig-decoder-ring-1",
       number: 1,
       canonical: false,

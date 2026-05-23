@@ -31,7 +31,7 @@ describe("<LearningObjectives>", () => {
       withProfile(
         <LearningObjectives
           course='test-course'
-          chapter='test-chapter'
+          unit='test-chapter'
           id='lo-1'
           objectives={sampleObjectives()}
         />
@@ -47,7 +47,7 @@ describe("<LearningObjectives>", () => {
       withProfile(
         <LearningObjectives
           course='test-course'
-          chapter='test-chapter'
+          unit='test-chapter'
           id='lo-2'
           objectives={sampleObjectives()}
         />
@@ -64,7 +64,7 @@ describe("<LearningObjectives>", () => {
       withProfile(
         <LearningObjectives
           course='test-course'
-          chapter='test-chapter'
+          unit='test-chapter'
           id='lo-checkboxes'
           objectives={sampleObjectives()}
         />
@@ -82,7 +82,7 @@ describe("<LearningObjectives>", () => {
       withProfile(
         <LearningObjectives
           course='persist-course'
-          chapter='persist-chapter'
+          unit='persist-chapter'
           id='lo-persist'
           objectives={sampleObjectives()}
         />
@@ -111,7 +111,7 @@ describe("<LearningObjectives>", () => {
       withProfile(
         <LearningObjectives
           course='persist-course'
-          chapter='persist-chapter'
+          unit='persist-chapter'
           id='lo-persist'
           objectives={sampleObjectives()}
         />
@@ -129,7 +129,7 @@ describe("<LearningObjectives>", () => {
       withProfile(
         <LearningObjectives
           course='test-course'
-          chapter='test-chapter'
+          unit='test-chapter'
           id='lo-heading'
           heading='By the end of this lecture'
           objectives={sampleObjectives()}
@@ -147,7 +147,7 @@ describe("<LearningObjectives>", () => {
   it("schema rejects missing course / chapter / id", () => {
     expect(
       LearningObjectivesPropsSchema.safeParse({
-        chapter: "c",
+        unit: "c",
         id: "i",
         objectives: [],
       }).success
@@ -162,7 +162,7 @@ describe("<LearningObjectives>", () => {
     expect(
       LearningObjectivesPropsSchema.safeParse({
         course: "c",
-        chapter: "c",
+        unit: "c",
         objectives: [],
       }).success
     ).toBe(false);
@@ -172,7 +172,7 @@ describe("<LearningObjectives>", () => {
     expect(
       LearningObjectivesPropsSchema.safeParse({
         course: "astr201",
-        chapter: "spoiler-alerts",
+        unit: "spoiler-alerts",
         id: "lo",
         objectives: [
           { id: "thesis", verb: "State", body: "the course thesis." },
@@ -186,7 +186,7 @@ describe("<LearningObjectives>", () => {
       withProfile(
         <LearningObjectives
           course='test-course'
-          chapter='test-chapter'
+          unit='test-chapter'
           id='lo-axe'
           objectives={sampleObjectives()}
         />

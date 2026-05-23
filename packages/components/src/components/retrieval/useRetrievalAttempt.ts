@@ -11,7 +11,7 @@ const SCHEMA_VERSION = "1.0.0";
 
 export interface UseRetrievalAttemptArgs {
   course: string;
-  chapter: string;
+  unit: string;
   target_id: string;
   component: PracticeAttempt["component"];
 }
@@ -53,12 +53,12 @@ export interface UseRetrievalAttemptReturn {
 export function useRetrievalAttempt(
   args: UseRetrievalAttemptArgs
 ): UseRetrievalAttemptReturn {
-  const { course, chapter, target_id, component } = args;
+  const { course, unit, target_id, component } = args;
   const componentKey = `practice-attempt:${target_id}`;
 
   const { value, setValue, hydrated, controlProps } = useInteractive<
     readonly PracticeAttempt[]
-  >(course, chapter, componentKey, []);
+  >(course, unit, componentKey, []);
 
   const attempts = value;
   const attemptSeq = attempts.length + 1;

@@ -21,7 +21,7 @@ const registry: FigureRegistryEntry = {
 
 const usage: FigureUsageEntry = {
   name: "hr-diagram",
-  chapter: "measuring-the-sky",
+  unit: "measuring-the-sky",
   anchor: "fig-hr-diagram-1",
   number: 1,
   canonical: true,

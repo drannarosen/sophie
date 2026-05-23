@@ -19,7 +19,7 @@ describe("<SkillReview>", () => {
   it("renders the explicit Prompt + Answer through the card flow", () => {
     render(
       withProfile(
-        <SkillReview course='sk-test-1' chapter='ch1' target='topic:logarithms'>
+        <SkillReview course='sk-test-1' unit='ch1' target='topic:logarithms'>
           <SkillReview.Prompt>What is log10(1000)?</SkillReview.Prompt>
           <SkillReview.Answer>3.</SkillReview.Answer>
         </SkillReview>
@@ -38,11 +38,7 @@ describe("<SkillReview>", () => {
   it("renders the Library placeholder when slot children are absent", () => {
     render(
       withProfile(
-        <SkillReview
-          course='sk-test-2'
-          chapter='ch1'
-          target='topic:exponents'
-        />
+        <SkillReview course='sk-test-2' unit='ch1' target='topic:exponents' />
       )
     );
     expect(
@@ -56,7 +52,7 @@ describe("<SkillReview>", () => {
   it("renders the placeholder + ReviewMore link when only ReviewMore is provided", () => {
     render(
       withProfile(
-        <SkillReview course='sk-test-3' chapter='ch1' target='topic:exponents'>
+        <SkillReview course='sk-test-3' unit='ch1' target='topic:exponents'>
           <SkillReview.ReviewMore>
             <a href='/library/exponents'>Refresher on exponents →</a>
           </SkillReview.ReviewMore>
@@ -72,7 +68,7 @@ describe("<SkillReview>", () => {
   it("renders ReviewMore inside the card's answer area when all 3 slots are provided", () => {
     render(
       withProfile(
-        <SkillReview course='sk-test-4' chapter='ch1' target='topic:logarithms'>
+        <SkillReview course='sk-test-4' unit='ch1' target='topic:logarithms'>
           <SkillReview.Prompt>What is log10(1000)?</SkillReview.Prompt>
           <SkillReview.Answer>3 — because 10³ = 1000.</SkillReview.Answer>
           <SkillReview.ReviewMore>
@@ -96,7 +92,7 @@ describe("<SkillReview>", () => {
   it("persists practice_attempt with component='skill-review' on self-assess", async () => {
     render(
       withProfile(
-        <SkillReview course='sk-test-5' chapter='ch1' target='topic:logarithms'>
+        <SkillReview course='sk-test-5' unit='ch1' target='topic:logarithms'>
           <SkillReview.Prompt>log10(100)?</SkillReview.Prompt>
           <SkillReview.Answer>2.</SkillReview.Answer>
         </SkillReview>
@@ -128,7 +124,7 @@ describe("<SkillReview>", () => {
         withProfile(
           <SkillReview
             course='sk-test-6'
-            chapter='ch1'
+            unit='ch1'
             target='logarithms-no-prefix'
           >
             <SkillReview.Prompt>Q?</SkillReview.Prompt>
@@ -147,7 +143,7 @@ describe("<SkillReview>", () => {
       withProfile(
         <SkillReview
           course='sk-test-axe-1'
-          chapter='ch1'
+          unit='ch1'
           target='topic:exponents'
         />
       )
@@ -161,7 +157,7 @@ describe("<SkillReview>", () => {
       withProfile(
         <SkillReview
           course='sk-test-axe-2'
-          chapter='ch1'
+          unit='ch1'
           target='topic:logarithms'
         >
           <SkillReview.Prompt>What is log10(10000)?</SkillReview.Prompt>

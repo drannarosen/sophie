@@ -27,8 +27,8 @@ export function checkOMIFlow(index: PedagogyIndex, sink: FindingSink): void {
     sink.warnings.push({
       severity: "WARNING",
       code: "OF-1",
-      message: `OF-1: OMIFlow "${entry.anchor}" in chapter "${entry.chapter}" — slots authored in source order [${entry.sourceOrder.join(", ")}]. Renderer emits canonical observable → model → inference; this warning flags a likely typo or mid-refactor state. Resolution: reorder the <OMIFlow.{Observable,Model,Inference}> children to O → M → I in the MDX source.`,
-      location: { chapter: entry.chapter, anchor: entry.anchor },
+      message: `OF-1: OMIFlow "${entry.anchor}" in chapter "${entry.unit}" — slots authored in source order [${entry.sourceOrder.join(", ")}]. Renderer emits canonical observable → model → inference; this warning flags a likely typo or mid-refactor state. Resolution: reorder the <OMIFlow.{Observable,Model,Inference}> children to O → M → I in the MDX source.`,
+      location: { unit: entry.unit, anchor: entry.anchor },
     });
   }
 
@@ -41,7 +41,7 @@ export function checkOMIFlow(index: PedagogyIndex, sink: FindingSink): void {
   // Strict-3 + slot-name-binds-role guarantee that one OMIFlow proves
   // all three OMI roles are reached, so this is THE Unit-level
   // invariant ADR 0058 §5 deferred.
-  const chaptersWithOMIFlow = new Set(index.omiFlows.map((e) => e.chapter));
+  const chaptersWithOMIFlow = new Set(index.omiFlows.map((e) => e.unit));
   for (const u of index.units) {
     if (u.framing !== "OMI") continue;
     if (chaptersWithOMIFlow.has(u.id)) continue;
@@ -49,7 +49,7 @@ export function checkOMIFlow(index: PedagogyIndex, sink: FindingSink): void {
       severity: "ERROR",
       code: "OF-2",
       message: `OF-2: chapter "${u.id}" declares \`framing: "OMI"\` but renders zero <OMIFlow> callsites. Resolution: either author at least one <OMIFlow>…</OMIFlow> in the chapter MDX (per ADR 0063) so the OMI arc is visible on the page, or change the unit's framing.`,
-      location: { chapter: u.id },
+      location: { unit: u.id },
     });
   }
 }

@@ -56,7 +56,7 @@ const {
 const HeadingTag = `h${headingLevel}` as const;
 
 const inChapter: FigureUsageEntry[] = figureUsages.filter(
-  (u) => u.chapter === chapter
+  (u) => u.unit === chapter
 );
 
 // O(1) registry lookup by name. May be empty during PR-C3 build steps

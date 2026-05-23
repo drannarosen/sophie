@@ -50,7 +50,7 @@ interface CitationWithEntry {
 
 const declarationById = new Map(equations.map((e) => [e.id, e]));
 const citationsInChapter: CitationWithEntry[] = equationCitations
-  .filter((c) => c.chapter === chapter)
+  .filter((c) => c.unit === chapter)
   .map((c) => {
     const entry = declarationById.get(c.refId);
     return entry ? { citation: c, entry } : null;

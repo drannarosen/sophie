@@ -186,20 +186,20 @@ export function pedagogyIndexRemarkPlugin(
       return;
     }
 
-    // Chapter pass. Two routes to chapterSlug:
+    // Chapter pass. Two routes to unitId:
     //   1. Caller-provided `options.getChapterSlug` — consumer apps with
     //      non-standard layouts (e.g. tests passing arbitrary paths)
     //      assert "treat this file as a chapter MDX and use slug X."
     //   2. Default basename-from-path + `content/chapters/**` filter —
     //      avoids mis-typed extraction on `examples/` sandbox files or
     //      docs MDX that aren't part of any chapter collection.
-    let chapterSlug: string | undefined;
+    let unitId: string | undefined;
     if (options.getChapterSlug) {
-      chapterSlug = options.getChapterSlug(filePath);
+      unitId = options.getChapterSlug(filePath);
     } else if (isChapterFilePath(filePath)) {
-      chapterSlug = defaultGetChapterSlug(filePath);
+      unitId = defaultGetChapterSlug(filePath);
     }
-    if (!chapterSlug) return;
+    if (!unitId) return;
 
     // Sprint F — read the chapter's display `chapter` number from
     // frontmatter once per chapter pass and thread it to extractors
@@ -207,53 +207,47 @@ export function pedagogyIndexRemarkPlugin(
     // absent, extractors fall back to within-chapter-only numbering.
     const chapterNumber = readChapterNumberFromFrontmatter(filePath);
 
-    indexAccumulator.clearChapter(chapterSlug);
-    indexAccumulator.addDefinitions(extractDefinitions(tree, chapterSlug));
+    indexAccumulator.clearUnit(unitId);
+    indexAccumulator.addDefinitions(extractDefinitions(tree, unitId));
     indexAccumulator.addEquationCitations(
-      extractEquationCitations(tree, chapterSlug, chapterNumber)
+      extractEquationCitations(tree, unitId, chapterNumber)
     );
-    indexAccumulator.addKeyInsights(extractKeyInsights(tree, chapterSlug));
+    indexAccumulator.addKeyInsights(extractKeyInsights(tree, unitId));
     indexAccumulator.addFigureUsages(
-      extractFigures(tree, chapterSlug, chapterNumber)
+      extractFigures(tree, unitId, chapterNumber)
     );
-    indexAccumulator.addMisconceptions(
-      extractMisconceptions(tree, chapterSlug)
-    );
+    indexAccumulator.addMisconceptions(extractMisconceptions(tree, unitId));
     // ADR 0058 §R-deep-dive — <Callout variant="deep-dive"> tracking
     // (PR-B follow-up to PR-A's renderer surface). The-more-you-know
     // callouts are intentionally NOT walked.
-    indexAccumulator.addDeepDives(extractDeepDives(tree, chapterSlug));
+    indexAccumulator.addDeepDives(extractDeepDives(tree, unitId));
     // ADR 0063 — A8 <OMIFlow> composite primitive. Extractor walks
     // future <OMIFlow> JSX and emits OMIFlowEntry rows; no callsites
     // exist yet (the React component lands in PR-B), so this is a
     // no-op until then.
-    indexAccumulator.addOMIFlows(extractOMIFlows(tree, chapterSlug));
+    indexAccumulator.addOMIFlows(extractOMIFlows(tree, unitId));
     // Wedge B1 retrieval-family extractors. Each emits one entry per
     // matching JSX flow element; pure read pass (no mutation). PRA-1
     // (prereq activation), RET-1 (retrieval coverage), and SR-1
     // (SpacedReview ref validity) consume these in the audit phase.
-    indexAccumulator.addRetrievalPrompts(
-      extractRetrievalPrompts(tree, chapterSlug)
-    );
-    indexAccumulator.addSpacedReviews(extractSpacedReviews(tree, chapterSlug));
-    indexAccumulator.addSkillReviews(extractSkillReviews(tree, chapterSlug));
-    indexAccumulator.addObjectives(extractObjectives(tree, chapterSlug));
-    indexAccumulator.addInlineRefUsages(
-      extractInlineRefUsages(tree, chapterSlug)
-    );
-    indexAccumulator.addMultiReps(extractMultiReps(tree, chapterSlug));
+    indexAccumulator.addRetrievalPrompts(extractRetrievalPrompts(tree, unitId));
+    indexAccumulator.addSpacedReviews(extractSpacedReviews(tree, unitId));
+    indexAccumulator.addSkillReviews(extractSkillReviews(tree, unitId));
+    indexAccumulator.addObjectives(extractObjectives(tree, unitId));
+    indexAccumulator.addInlineRefUsages(extractInlineRefUsages(tree, unitId));
+    indexAccumulator.addMultiReps(extractMultiReps(tree, unitId));
     // Intervention PR-γ — pair the misconception graph with cognitive-
     // science-grounded remediation moves (ADR 0044). Read-only harvest
     // BEFORE the LO/MultiRep transform passes that mutate the tree;
     // `<Intervention>` is rendered by React via its children, so the
     // extract pass reads body prose from `el.children` un-rewritten.
-    indexAccumulator.addInterventions(extractInterventions(tree, chapterSlug));
+    indexAccumulator.addInterventions(extractInterventions(tree, unitId));
 
     // PR 10 print-polish: mark the first <GlossaryTerm> per slug per
     // chapter with `data-first-use="true"`. Downstream GlossaryTerm.tsx
     // reads the prop and renders an inline footnote span; the @media
     // print rules in textbook-layout.css reveal the span in print.
-    markFirstUseGlossaryTerms(tree, chapterSlug);
+    markFirstUseGlossaryTerms(tree, unitId);
 
     // Sprint H follow-up — stamp `data-chapter-opener="true"` on the
     // first non-chrome h2 so the chapter-opening ornament rule in
@@ -268,23 +262,23 @@ export function pedagogyIndexRemarkPlugin(
     // HTML, breaking children-mode interactivity). Runs last so all
     // read-only harvesters see the unmutated tree. See
     // docs/plans/2026-05-14-lo-checkbox-remark-extraction-design.md.
-    transformLearningObjectives(tree, chapterSlug);
+    transformLearningObjectives(tree, unitId);
     // Rewrite <MultiRep> AST shape on the same terminal pass — the
     // runtime <MultiRep> dispatches over a `reps` prop populated from
     // serialized child attrs, paralleling the LO pattern. Per the
     // 2026-05-17 MultiRep design hardening §D5.
-    transformMultiRep(tree, chapterSlug);
+    transformMultiRep(tree, unitId);
     // Inject `id={anchor}` on every `<Intervention>` so the rendered
     // <aside> carries the same anchor stored in the pedagogy-index
     // entry — hash navigation lands on the rendered DOM and the
     // :target outline fires. Runs after the read-only extractInterventions
     // (above) so the JSX-DFS numbering agrees.
-    transformIntervention(tree, chapterSlug);
+    transformIntervention(tree, unitId);
     // Hoist <OMIFlow> slot children into explicit observable/model/
     // inference props (ADR 0063). The slot marker components return
     // null at runtime; without this transform Astro's MDX integration
     // discards the slot bodies before the outer <OMIFlow> runs. Same
     // shape + same shared parser as extractOMIFlows (above).
-    transformOMIFlow(tree, chapterSlug);
+    transformOMIFlow(tree, unitId);
   };
 }

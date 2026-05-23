@@ -15,7 +15,7 @@ describe("<ComprehensionGate>", () => {
       withProfile(
         <ComprehensionGate
           course='c'
-          chapter='ch'
+          unit='ch'
           id='cg-default'
           prompt='How well do you understand this section?'
         />
@@ -36,7 +36,7 @@ describe("<ComprehensionGate>", () => {
       withProfile(
         <ComprehensionGate
           course='c'
-          chapter='ch'
+          unit='ch'
           id='cg-initial'
           prompt='How well?'
         />
@@ -54,7 +54,7 @@ describe("<ComprehensionGate>", () => {
       withProfile(
         <ComprehensionGate
           course='c'
-          chapter='ch'
+          unit='ch'
           id='cg-loading'
           prompt='How well?'
         />
@@ -71,7 +71,7 @@ describe("<ComprehensionGate>", () => {
       withProfile(
         <ComprehensionGate
           course='c'
-          chapter='ch'
+          unit='ch'
           id='cg-persist'
           prompt='How well?'
         />
@@ -89,7 +89,7 @@ describe("<ComprehensionGate>", () => {
       withProfile(
         <ComprehensionGate
           course='c'
-          chapter='ch'
+          unit='ch'
           id='cg-persist'
           prompt='How well?'
         />
@@ -105,7 +105,7 @@ describe("<ComprehensionGate>", () => {
       withProfile(
         <ComprehensionGate
           course='c'
-          chapter='ch'
+          unit='ch'
           id='cg-axe'
           prompt='How well?'
         />

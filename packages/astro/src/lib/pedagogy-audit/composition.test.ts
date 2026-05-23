@@ -77,7 +77,7 @@ describe("cross-family composition — KeyEquation ↔ MultiRep ↔ Aside ↔ In
     //     (peak-wavelength via MultiRep; temperature via KeyEquation.symbols
     //     per PR-δ NR2 modification)
 
-    const chapter = "01-foundations/wiens-law-fixture";
+    const unitId = "wiens-law-fixture";
 
     const wiensLaw: EquationEntry = {
       id: "wiens-law",
@@ -117,7 +117,7 @@ describe("cross-family composition — KeyEquation ↔ MultiRep ↔ Aside ↔ In
     const peakWavelengthMultiRep: MultiRepIndexEntry = {
       concept: "peak-wavelength",
       id: "mr-peak-wavelength",
-      chapter,
+      unit: unitId,
       reps: [
         {
           kind: "equation",
@@ -129,7 +129,7 @@ describe("cross-family composition — KeyEquation ↔ MultiRep ↔ Aside ↔ In
 
     const misconception: MisconceptionEntry = {
       body: "<p>Wien's law applied to absorption-line spectra.</p>",
-      chapter,
+      unit: unitId,
       anchor: "wiens-law-absorption-spectra",
       length: "short",
     };
@@ -142,7 +142,7 @@ describe("cross-family composition — KeyEquation ↔ MultiRep ↔ Aside ↔ In
       addresses: ["wiens-law-absorption-spectra"],
       body: "<p>Compare a thermal continuum to an absorption-line spectrum.</p>",
       depth: "substantial",
-      chapter,
+      unit: unitId,
       anchor: "intervention-contrasting-cases-1",
     };
 
@@ -175,7 +175,7 @@ describe("cross-family composition — KeyEquation ↔ MultiRep ↔ Aside ↔ In
     // MultiRep's refKey="wiens-law" resolves silent.
     index.equationCitations = [
       {
-        chapter,
+        unit: unitId,
         refId: "wiens-law",
         anchor: "wiens-law-citation-1",
         number: 1,
@@ -236,7 +236,7 @@ describe("cross-family composition — KeyEquation ↔ MultiRep ↔ Aside ↔ In
     // (consumed by E10 + I1 + MG3) to confirm both invariants surface
     // the same kind of regression independently — proving the single-
     // source-of-truth shape is wired into both audit branches.
-    const chapter = "01-foundations/broken-composition";
+    const unitId = "broken-composition";
 
     const index = emptyIndex();
     index.equations = [
@@ -260,7 +260,7 @@ describe("cross-family composition — KeyEquation ↔ MultiRep ↔ Aside ↔ In
     ];
     index.equationCitations = [
       {
-        chapter,
+        unit: unitId,
         refId: "wiens-law",
         anchor: "wiens-law-citation-1",
         number: 1,
@@ -269,7 +269,7 @@ describe("cross-family composition — KeyEquation ↔ MultiRep ↔ Aside ↔ In
     index.misconceptions = [
       {
         body: "<p>real misconception</p>",
-        chapter,
+        unit: unitId,
         anchor: "wiens-law-absorption-spectra",
         length: "short",
       },
@@ -280,7 +280,7 @@ describe("cross-family composition — KeyEquation ↔ MultiRep ↔ Aside ↔ In
         addresses: ["wiens-law-misuse"], // typo: doesn't match declared anchor
         body: "<p>intervention</p>",
         depth: "light",
-        chapter,
+        unit: unitId,
         anchor: "intervention-contrasting-cases-1",
       },
     ];

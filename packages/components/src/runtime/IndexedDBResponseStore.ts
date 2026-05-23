@@ -45,21 +45,21 @@ export class IndexedDBResponseStore implements ResponseStore {
 
   async get<T>(
     profile: string,
-    chapter: string,
+    unit: string,
     key: string
   ): Promise<StoredValue<T> | undefined> {
     const db = await this.db();
-    const stored = await db.get(STORE, compositeKey(profile, chapter, key));
+    const stored = await db.get(STORE, compositeKey(profile, unit, key));
     return stored as StoredValue<T> | undefined;
   }
 
   async getAll<T>(
     profile: string,
-    chapter: string,
+    unit: string,
     keyPrefix?: string
   ): Promise<Record<string, StoredValue<T>>> {
     const db = await this.db();
-    const chapterPrefix = `${profile}:${chapter}:`;
+    const chapterPrefix = `${profile}:${unit}:`;
     const lower =
       keyPrefix !== undefined ? `${chapterPrefix}${keyPrefix}` : chapterPrefix;
     // U+FFFF caps the lex range so any string with this prefix sorts below it.
@@ -79,25 +79,25 @@ export class IndexedDBResponseStore implements ResponseStore {
 
   async getAllMulti<T>(
     profile: string,
-    chapters: ReadonlyArray<string>,
+    units: ReadonlyArray<string>,
     keyPrefix?: string
   ): Promise<Record<string, StoredValue<T>>> {
-    if (chapters.length === 0) return {};
-    // Fan out to one getAll per chapter and merge. Each getAll opens
+    if (units.length === 0) return {};
+    // Fan out to one getAll per unit and merge. Each getAll opens
     // its own short transaction; the IDB engine handles concurrency.
-    // Single broader cursor over multiple disjoint chapter ranges
+    // Single broader cursor over multiple disjoint unit ranges
     // would need a discontinuous IDBKeyRange (not supported); the
-    // per-chapter fan-out keeps each transaction's range contiguous
+    // per-unit fan-out keeps each transaction's range contiguous
     // and lets the engine optimize within each.
     const perChapter = await Promise.all(
-      chapters.map((ch) => this.getAll<T>(profile, ch, keyPrefix))
+      units.map((ch) => this.getAll<T>(profile, ch, keyPrefix))
     );
     return Object.assign({}, ...perChapter) as Record<string, StoredValue<T>>;
   }
 
   async set<T>(
     profile: string,
-    chapter: string,
+    unit: string,
     key: string,
     stored: StoredValue<T>
   ): Promise<void> {
@@ -105,18 +105,18 @@ export class IndexedDBResponseStore implements ResponseStore {
     await db.put(
       STORE,
       stored as StoredValue<unknown>,
-      compositeKey(profile, chapter, key)
+      compositeKey(profile, unit, key)
     );
   }
 
-  async delete(profile: string, chapter: string, key: string): Promise<void> {
+  async delete(profile: string, unit: string, key: string): Promise<void> {
     const db = await this.db();
-    await db.delete(STORE, compositeKey(profile, chapter, key));
+    await db.delete(STORE, compositeKey(profile, unit, key));
   }
 
-  async clearChapter(profile: string, chapter: string): Promise<void> {
+  async clearUnit(profile: string, unit: string): Promise<void> {
     const db = await this.db();
-    const { lower, upper } = chapterKeyRange(profile, chapter);
+    const { lower, upper } = chapterKeyRange(profile, unit);
     const tx = db.transaction(STORE, "readwrite");
     let cursor = await tx.store.openKeyCursor(IDBKeyRange.bound(lower, upper));
     while (cursor !== null) {

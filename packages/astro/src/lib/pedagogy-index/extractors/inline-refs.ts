@@ -35,7 +35,7 @@ const INLINE_REF_TARGETS: Record<
  */
 export function extractInlineRefUsages(
   tree: Root,
-  chapterSlug: string
+  unitId: string
 ): InlineRefUsageEntry[] {
   const out: InlineRefUsageEntry[] = [];
 
@@ -58,7 +58,7 @@ export function extractInlineRefUsages(
     out.push({
       kind: target.kind,
       refKey,
-      chapter: chapterSlug,
+      unit: unitId,
     });
   };
 

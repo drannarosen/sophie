@@ -84,9 +84,9 @@ const sorted =
         return aLabel.localeCompare(bLabel);
       })
     : [...uniqueUsages].sort((a, b) =>
-        a.chapter === b.chapter
+        a.unit === b.unit
           ? a.number - b.number
-          : a.chapter.localeCompare(b.chapter)
+          : a.unit.localeCompare(b.unit)
       );
 ---
 
@@ -128,8 +128,8 @@ const sorted =
             )}
             <p class='sophie-course-figures__backlink'>
               in{" "}
-              <a href={`/units/${usage.chapter}/reading#${usage.anchor}`}>
-                <code>{usage.chapter}</code>
+              <a href={`/units/${usage.unit}/reading#${usage.anchor}`}>
+                <code>{usage.unit}</code>
               </a>
             </p>
           </li>

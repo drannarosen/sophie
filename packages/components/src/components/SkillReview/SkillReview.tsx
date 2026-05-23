@@ -36,7 +36,7 @@ ReviewMoreSlot.displayName = REVIEW_MORE_SLOT;
  * <SkillReview
  *   client:load
  *   course="astr201"
- *   chapter="spoiler-alerts"
+ *   unit="spoiler-alerts"
  *   target="topic:exponents"
  * >
  *   <SkillReview.Prompt>Quick check: what is 10³?</SkillReview.Prompt>
@@ -44,7 +44,7 @@ ReviewMoreSlot.displayName = REVIEW_MORE_SLOT;
  * </SkillReview>
  *
  * {/* Self-closing form — auto-resolves from topic registry (Wedge C) *\/}
- * <SkillReview course="astr201" chapter="ch1" target="topic:logarithms" />
+ * <SkillReview course="astr201" unit="ch1" target="topic:logarithms" />
  * ```
  *
  * Composes the internal <RetrievalCard> primitive with the violet
@@ -54,13 +54,13 @@ ReviewMoreSlot.displayName = REVIEW_MORE_SLOT;
  */
 export function SkillReview({
   course,
-  chapter,
+  unit,
   target,
   children,
 }: SkillReviewProps) {
   const { record } = useRetrievalAttempt({
     course,
-    chapter,
+    unit,
     target_id: target,
     component: "skill-review",
   });

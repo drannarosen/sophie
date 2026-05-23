@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { NonEmptyString } from "../primitives.ts";
+import { NonEmptyString, Slug } from "../primitives.ts";
 
 /**
  * Chapter-meta pedagogy entries — scoped to `ObjectiveEntry` after
@@ -15,9 +15,14 @@ import { NonEmptyString } from "../primitives.ts";
  *     `SectionEntry[type=module]`.
  *
  * `ObjectiveEntry` stays — per-callsite extractor output keyed by
- * chapter slug (= unit id per W2/D4). The `chapter` field name is
- * preserved through W2; W3 renames per-callsite `chapter: string` →
- * `unit: string` across all extractor entry schemas.
+ * parent `unit` id. W3 renamed the per-callsite parent-ref field
+ * `chapter: NonEmptyString` → `unit: Slug` across all extractor
+ * entry schemas; `UnitEntry.chapter` (the D7 reading-artifact
+ * binding) is unaffected.
+ *
+ * Filename retained — historical co-location of Chapter/Module/Objective
+ * makes it the load-bearing name; cosmetic rename to `objective-meta.ts`
+ * is a deferred hygiene PR.
  */
 
 /**
@@ -34,8 +39,8 @@ export const ObjectiveEntrySchema = z.object({
   verb: NonEmptyString,
   /** Pre-rendered HTML of the objective body. Consumers embed via `set:html`. */
   body: NonEmptyString,
-  /** Chapter slug (= unit id per W2/D4) containing the source <Objective>. */
-  chapter: NonEmptyString,
+  /** Parent Unit id containing the source `<Objective>` (W3 rename from `chapter`). */
+  unit: Slug,
   /** DOM id; passthrough `lo-${id}`. */
   anchor: NonEmptyString,
 });

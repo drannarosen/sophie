@@ -35,7 +35,7 @@ describe("pedagogyIndexRemarkPlugin", () => {
     const index = indexAccumulator.asPedagogyIndex();
     const found = index.definitions.find((d) => d.term === "Cepheid variable");
     expect(found).toBeDefined();
-    expect(found?.chapter).toBe("test-chapter");
+    expect(found?.unit).toBe("test-chapter");
   });
 
   test("uses the default getChapterSlug which returns the parent-Unit dir name (W2/D4 — Unit id)", () => {
@@ -54,7 +54,7 @@ describe("pedagogyIndexRemarkPlugin", () => {
     // W2/D4 (Path A) graduation: the chapter slug is the parent UNIT
     // dir name (= Unit id), not the file basename (which is `reading`).
     // The same string indexes per-callsite entries + URL `/units/<unit-id>/reading`.
-    expect(entry?.chapter).toBe("test-chapter");
+    expect(entry?.unit).toBe("test-chapter");
   });
 
   test("honors a custom getChapterSlug", () => {
@@ -70,7 +70,7 @@ describe("pedagogyIndexRemarkPlugin", () => {
     const entry = indexAccumulator
       .asPedagogyIndex()
       .definitions.find((d) => d.term === "Quasar");
-    expect(entry?.chapter).toBe("custom-slug");
+    expect(entry?.unit).toBe("custom-slug");
   });
 
   test("re-parsing a chapter replaces its entries (clears stale on each run)", () => {
@@ -88,7 +88,7 @@ describe("pedagogyIndexRemarkPlugin", () => {
     expect(
       indexAccumulator
         .asPedagogyIndex()
-        .definitions.filter((d) => d.chapter === "hmr-test")
+        .definitions.filter((d) => d.unit === "hmr-test")
     ).toHaveLength(1);
 
     plugin(
@@ -99,7 +99,7 @@ describe("pedagogyIndexRemarkPlugin", () => {
     );
     const hmrEntries = indexAccumulator
       .asPedagogyIndex()
-      .definitions.filter((d) => d.chapter === "hmr-test");
+      .definitions.filter((d) => d.unit === "hmr-test");
     expect(hmrEntries).toHaveLength(1);
     expect(hmrEntries[0]?.term).toBe("Replaced");
   });
@@ -139,10 +139,10 @@ describe("pedagogyIndexRemarkPlugin", () => {
     const index = indexAccumulator.asPedagogyIndex();
     const def = index.definitions.find((d) => d.term === "Standard candle");
     expect(def).toBeDefined();
-    expect(def?.chapter).toBe("dual-test");
+    expect(def?.unit).toBe("dual-test");
 
     const citation = index.equationCitations.find(
-      (c) => c.refId === "wiens-law" && c.chapter === "dual-test"
+      (c) => c.refId === "wiens-law" && c.unit === "dual-test"
     );
     expect(citation).toBeDefined();
     expect(citation?.number).toBe(1);
@@ -165,7 +165,7 @@ describe("pedagogyIndexRemarkPlugin (figures)", () => {
     });
 
     const index = indexAccumulator.asPedagogyIndex();
-    const inCh = index.figureUsages.filter((u) => u.chapter === "fig-plugin");
+    const inCh = index.figureUsages.filter((u) => u.unit === "fig-plugin");
     expect(inCh).toHaveLength(2);
     expect(inCh.map((u) => u.name).sort()).toEqual([
       "plugin-fig-canonical",
@@ -204,10 +204,10 @@ describe("pedagogyIndexRemarkPlugin (objectives + inline-ref usages)", () => {
 
     const index = indexAccumulator.asPedagogyIndex();
     const objectives = index.objectives.filter(
-      (o) => o.chapter === "objectives-plugin"
+      (o) => o.unit === "objectives-plugin"
     );
     const usages = index.inlineRefUsages.filter(
-      (u) => u.chapter === "objectives-plugin"
+      (u) => u.unit === "objectives-plugin"
     );
     expect(objectives).toHaveLength(1);
     expect(objectives[0]?.id).toBe("lo-1");

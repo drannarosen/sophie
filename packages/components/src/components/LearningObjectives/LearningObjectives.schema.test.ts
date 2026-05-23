@@ -4,7 +4,7 @@ import { LearningObjectivesPropsSchema } from "./LearningObjectives.schema.ts";
 describe("LearningObjectivesPropsSchema", () => {
   const valid = {
     course: "test",
-    chapter: "test",
+    unit: "test",
     id: "lo",
     objectives: [{ id: "o1", verb: "State", body: "the thesis." }],
   };
@@ -29,7 +29,7 @@ describe("LearningObjectivesPropsSchema", () => {
   });
 
   it("rejects empty required strings", () => {
-    for (const field of ["course", "chapter", "id"] as const) {
+    for (const field of ["course", "unit", "id"] as const) {
       expect(
         LearningObjectivesPropsSchema.safeParse({ ...valid, [field]: "" })
           .success

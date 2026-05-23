@@ -6,7 +6,7 @@ describe("learningObjectivesContract", () => {
     expect(learningObjectivesContract.audit).toBeDefined();
     const findings = learningObjectivesContract.audit?.({
       course: "test",
-      chapter: "test",
+      unit: "test",
       id: "lo",
       objectives: [],
     });
@@ -16,7 +16,7 @@ describe("learningObjectivesContract", () => {
   it("serializes to { type, props, state }", () => {
     const props = {
       course: "test",
-      chapter: "test",
+      unit: "test",
       id: "lo",
       objectives: [{ id: "o1", verb: "State", body: "the thesis." }],
     };

@@ -12,7 +12,7 @@ const fixture: DefinitionEntry = {
   term: "luminosity",
   slug: "luminosity",
   body: "Total radiant power emitted by a body.",
-  chapter: "measuring-the-sky",
+  unit: "measuring-the-sky",
   anchor: "def-luminosity",
 };
 
@@ -43,7 +43,7 @@ describe("toDefinitionRecord", () => {
     expect(toDefinitionRecord(fixture, ctx).filters.type).toEqual(["term"]);
   });
 
-  test("filters.chapter and filters.module are arrays", () => {
+  test("filters.unit and filters.module are arrays", () => {
     const record = toDefinitionRecord(fixture, ctx);
     expect(record.filters.chapter).toEqual(["measuring-the-sky"]);
     expect(record.filters.module).toEqual(["01-foundations"]);

@@ -29,10 +29,7 @@ import {
  * `<Parent><Child>` source-component pair. See the design doc's
  * §10 "Pattern precedent" for codified guidance.
  */
-export function transformLearningObjectives(
-  tree: Root,
-  chapterSlug: string
-): void {
+export function transformLearningObjectives(tree: Root, unitId: string): void {
   visit(tree, "mdxJsxFlowElement", (node: unknown) => {
     const parent = node as MdxJsxFlowElement & {
       attributes: Array<{
@@ -64,12 +61,12 @@ export function transformLearningObjectives(
       const el = child as MdxJsxFlowElement;
       if (!el || typeof el !== "object" || el.type !== "mdxJsxFlowElement") {
         throw new Error(
-          `transform: <LearningObjectives> in chapter "${chapterSlug}" contains a non-JSX child. Only <Objective> JSX flow elements are allowed.`
+          `transform: <LearningObjectives> in chapter "${unitId}" contains a non-JSX child. Only <Objective> JSX flow elements are allowed.`
         );
       }
       if (el.name !== "Objective") {
         throw new Error(
-          `transform: <LearningObjectives> in chapter "${chapterSlug}" contains an unexpected child <${el.name}>. Only <Objective> children are allowed.`
+          `transform: <LearningObjectives> in chapter "${unitId}" contains an unexpected child <${el.name}>. Only <Objective> children are allowed.`
         );
       }
 
@@ -78,23 +75,23 @@ export function transformLearningObjectives(
       const verb = attrs.verb?.trim();
       if (!id) {
         throw new Error(
-          `transform: <Objective> in chapter "${chapterSlug}" is missing a non-empty \`id\`.`
+          `transform: <Objective> in chapter "${unitId}" is missing a non-empty \`id\`.`
         );
       }
       if (!verb) {
         throw new Error(
-          `transform: <Objective id="${id}"> in chapter "${chapterSlug}" is missing a non-empty \`verb\`.`
+          `transform: <Objective id="${id}"> in chapter "${unitId}" is missing a non-empty \`verb\`.`
         );
       }
       const body = renderChildrenToHtml(el.children);
       if (body.trim().length === 0) {
         throw new Error(
-          `transform: <Objective id="${id}"> in chapter "${chapterSlug}" has an empty body.`
+          `transform: <Objective id="${id}"> in chapter "${unitId}" has an empty body.`
         );
       }
       if (seenIds.has(id)) {
         throw new Error(
-          `transform O1: duplicate <Objective id="${id}"> within one <LearningObjectives> in chapter "${chapterSlug}".`
+          `transform O1: duplicate <Objective id="${id}"> within one <LearningObjectives> in chapter "${unitId}".`
         );
       }
       seenIds.add(id);
@@ -103,7 +100,7 @@ export function transformLearningObjectives(
 
     if (items.length === 0) {
       throw new Error(
-        `transform: <LearningObjectives> in chapter "${chapterSlug}" has no <Objective> children. An empty LO block is a content bug.`
+        `transform: <LearningObjectives> in chapter "${unitId}" has no <Objective> children. An empty LO block is a content bug.`
       );
     }
 

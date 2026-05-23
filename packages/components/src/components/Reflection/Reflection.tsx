@@ -14,7 +14,7 @@ import type { ReflectionProps } from "./Reflection.schema.ts";
  */
 export function Reflection({
   course,
-  chapter,
+  unit,
   id,
   prompt,
   placeholder,
@@ -22,7 +22,7 @@ export function Reflection({
   const textareaId = useId();
   const { value, setValue, hydrated, controlProps } = useSelfAssessment<string>(
     course,
-    chapter,
+    unit,
     "reflection",
     id,
     ""

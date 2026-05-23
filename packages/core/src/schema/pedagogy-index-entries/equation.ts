@@ -47,8 +47,8 @@ export type EquationEntry = z.infer<typeof EquationEntrySchema>;
  */
 export const EquationCitationEntrySchema = z
   .object({
-    /** Chapter slug containing the citation. */
-    chapter: Slug,
+    /** Parent Unit id containing the citation (W3 rename from `chapter`). */
+    unit: Slug,
     /** Registry entry id this citation resolves to (R1 audit target). */
     refId: Slug,
     /** DOM id on the chapter-side `<section>`; back-link target. */

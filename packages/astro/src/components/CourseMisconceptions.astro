@@ -47,7 +47,7 @@ const sorted: MisconceptionEntry[] =
         return aLabel.localeCompare(bLabel);
       })
     : [...misconceptions].sort((a, b) => {
-        if (a.chapter !== b.chapter) return a.chapter.localeCompare(b.chapter);
+        if (a.unit !== b.unit) return a.unit.localeCompare(b.unit);
         return 0; // preserve insertion order within chapter
       });
 ---
@@ -80,8 +80,8 @@ const sorted: MisconceptionEntry[] =
             <div set:html={entry.body} />
             <p class='sophie-course-misconceptions__backlink'>
               from{" "}
-              <a href={`/units/${entry.chapter}/reading#${entry.anchor}`}>
-                <code>{entry.chapter}</code>
+              <a href={`/units/${entry.unit}/reading#${entry.anchor}`}>
+                <code>{entry.unit}</code>
               </a>
             </p>
           </dd>

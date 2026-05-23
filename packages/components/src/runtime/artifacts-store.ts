@@ -17,7 +17,7 @@ import { createPedagogyStore } from "./pedagogy-store.ts";
  *   - `scope: "section"` — carries `section_id` only. Examples:
  *     intro.mdx, synthesis.mdx, equation-collection.mdx, practice-set.mdx.
  *
- * Used by `<ChapterRef chapter="…">` to look up the reading artifact
+ * Used by `<ChapterRef unit="…">` to look up the reading artifact
  * by id (W2 D4 1:1 convention: reading-artifact id equals unit id);
  * future `<LectureRef>` and `<ArtifactRef>` consumers read the same
  * way.

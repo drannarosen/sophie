@@ -57,8 +57,9 @@ export function FigureRef({ name, children }: FigureRefProps) {
   }
 
   // W2/D5 route shape: /units/<unit-id>/reading#<anchor>.
-  // canonical.chapter holds the unit id per W2/D4's 1:1 convention.
-  const href = `/units/${canonical.chapter}/reading#${canonical.anchor}`;
+  // canonical.unit holds the parent Unit id (W3 rename; under W2/D4
+  // 1:1 the unit id equals the reading-artifact slug).
+  const href = `/units/${canonical.unit}/reading#${canonical.anchor}`;
   // Sprint F — prefer "Fig. C.N" when the chapter declares a display
   // chapter number; fall back to within-chapter "Fig. N" otherwise.
   const figLabel =

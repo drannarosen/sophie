@@ -28,8 +28,8 @@ export const DefinitionEntrySchema = z.object({
   slug: Slug,
   /** Pre-rendered HTML of the aside body. Embedded by consumers via `set:html`. May be empty. */
   body: z.string(),
-  /** Chapter slug containing the source aside. */
-  chapter: Slug,
+  /** Parent Unit id containing the source aside (W3 rename from `chapter`). */
+  unit: Slug,
   /** DOM id on the source <details> element; back-link target. */
   anchor: NonEmptyString,
 });
@@ -44,7 +44,8 @@ export const KeyInsightEntrySchema = z.object({
   title: z.string().optional(),
   /** Pre-rendered HTML of the aside body. */
   body: z.string(),
-  chapter: Slug,
+  /** Parent Unit id (W3 rename from `chapter`). */
+  unit: Slug,
   anchor: NonEmptyString,
 });
 export type KeyInsightEntry = z.infer<typeof KeyInsightEntrySchema>;
@@ -61,7 +62,8 @@ export type KeyInsightEntry = z.infer<typeof KeyInsightEntrySchema>;
  */
 export const MisconceptionEntrySchema = z.object({
   body: z.string(),
-  chapter: Slug,
+  /** Parent Unit id (W3 rename from `chapter`). */
+  unit: Slug,
   anchor: NonEmptyString,
   /** "short" = from <Aside kind="misconception">; "long" = from <Callout variant="misconception">. */
   length: z.enum(["short", "long"]),
@@ -106,7 +108,8 @@ export type MisconceptionEntry = z.infer<typeof MisconceptionEntrySchema>;
  * The extractor does not emit entries for those callouts.
  */
 export const DeepDiveEntrySchema = z.object({
-  chapter: Slug,
+  /** Parent Unit id (W3 rename from `chapter`). */
+  unit: Slug,
   anchor: NonEmptyString,
   /** Authored title. May be empty (renderer falls back to "Deep Dive" default). */
   title: z.string(),

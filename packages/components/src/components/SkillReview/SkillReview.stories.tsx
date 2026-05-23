@@ -21,7 +21,7 @@ type Story = StoryObj<typeof meta>;
 
 const ns = {
   course: "storybook",
-  chapter: "skillreview",
+  unit: "skillreview",
 };
 
 export const ExplicitContent: Story = {

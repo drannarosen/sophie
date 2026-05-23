@@ -147,7 +147,7 @@ indexAccumulator.setFigureRegistry(figureRegistry);
 // W2/D1 per ADR 0067 + design doc D1 + D7: push the consumer-owned
 // sections + units + artifacts into the accumulator. Same
 // consumer-global semantics as setFigureRegistry: last-write-wins,
-// NOT touched by `clearChapter`. The audit reads these for the
+// NOT touched by `clearUnit`. The audit reads these for the
 // graduated invariants (PRA-1 Unit-aware, SR-1 section-validity,
 // OF-2 framing on UnitEntry, CT-1/CT-2/K1/O2/MG2 all iterating
 // index.units now).
@@ -163,7 +163,7 @@ const pedagogy = indexAccumulator.asPedagogyIndex();
 // The cache decision (run once in prod, every render in dev) lives in
 // `runAuditOncePerProcess` (lib/audit-cache.ts). This caller only does
 // the steps that depend on the .astro frontmatter: collecting
-// `draftChapterSlugs` from `allChapters`, populating the accumulator
+// `draftUnitIds` from `allChapters`, populating the accumulator
 // with contract validations, and reporting the audit's verdict.
 //
 // ADR 0051 CS2 graduated to W2/D2 (Placement 1): draft status now
@@ -172,7 +172,7 @@ const pedagogy = indexAccumulator.asPedagogyIndex();
 // happens in pages/units/[unit]/reading.astro instead). Compute the
 // draft id list from `units` so CS2 INFO surfaces with the same shape
 // authors see today.
-const draftChapterSlugs = units
+const draftUnitIds = units
   .filter((u) => u.data.status === "draft")
   .map((u) => u.data.id);
 
@@ -208,7 +208,7 @@ const { registry: notationRegistry } = loadConsumerRegistry(repoRoot);
 const pedagogyWithContracts = indexAccumulator.asPedagogyIndex();
 const auditReport = runAuditOncePerProcess(
   pedagogyWithContracts,
-  { draftChapterSlugs, repoRoot, notationRegistry },
+  { draftUnitIds, repoRoot, notationRegistry },
   import.meta.env.PROD,
 );
 if (auditReport !== null) {

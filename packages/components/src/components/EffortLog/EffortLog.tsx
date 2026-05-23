@@ -17,12 +17,12 @@ const OPTIONS: ReadonlyArray<{ value: EffortLevel; label: string }> = [
  * prompt in the pale-brand-teal title bar; radio pills below.
  * Same shape as ComprehensionGate; same Tier-1 anatomy.
  */
-export function EffortLog({ course, chapter, id, prompt }: EffortLogProps) {
+export function EffortLog({ course, unit, id, prompt }: EffortLogProps) {
   const groupName = useId();
   const labelId = useId();
   const { value, setValue, hydrated, controlProps } = useSelfAssessment<
     EffortLevel | ""
-  >(course, chapter, "effort", id, "");
+  >(course, unit, "effort", id, "");
 
   return (
     <div

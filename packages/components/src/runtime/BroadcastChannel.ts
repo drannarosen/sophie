@@ -1,6 +1,6 @@
 /**
  * Typed wrapper around the browser's BroadcastChannel for cross-tab
- * useInteractive sync. One channel per chapter; messages carry the
+ * useInteractive sync. One channel per unit; messages carry the
  * composite key + new value + a senderId so the originating tab can
  * ignore its own broadcast.
  *
@@ -75,6 +75,6 @@ export function createBroadcastChannel(name: string): BroadcastChannelLayer {
   return new BrowserBroadcast(name);
 }
 
-export function chapterChannelName(course: string, chapter: string): string {
-  return `sophie-${course}:${chapter}`;
+export function unitChannelName(course: string, unit: string): string {
+  return `sophie-${course}:${unit}`;
 }

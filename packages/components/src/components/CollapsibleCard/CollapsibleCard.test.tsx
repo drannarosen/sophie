@@ -21,7 +21,7 @@ describe("<CollapsibleCard>", () => {
       withProfile(
         <CollapsibleCard
           course='cc-course'
-          chapter='cc-chapter'
+          unit='cc-chapter'
           id='cc-default-closed'
           title='Deep Dive: Hydrogen'
         >
@@ -48,7 +48,7 @@ describe("<CollapsibleCard>", () => {
       withProfile(
         <CollapsibleCard
           course='cc-course'
-          chapter='cc-chapter'
+          unit='cc-chapter'
           id='cc-default-open'
           title='Open by default'
           defaultOpen
@@ -73,7 +73,7 @@ describe("<CollapsibleCard>", () => {
       withProfile(
         <CollapsibleCard
           course='cc-course'
-          chapter='cc-chapter'
+          unit='cc-chapter'
           id='cc-toggle'
           title='Click me'
         >
@@ -106,7 +106,7 @@ describe("<CollapsibleCard>", () => {
       withProfile(
         <CollapsibleCard
           course='cc-course'
-          chapter='cc-chapter'
+          unit='cc-chapter'
           id='cc-loading'
           title='Loading guard'
         >
@@ -124,7 +124,7 @@ describe("<CollapsibleCard>", () => {
       withProfile(
         <CollapsibleCard
           course='cc-persist-course'
-          chapter='cc-persist-chapter'
+          unit='cc-persist-chapter'
           id='cc-persist'
           title='Persistence'
         >
@@ -146,7 +146,7 @@ describe("<CollapsibleCard>", () => {
       withProfile(
         <CollapsibleCard
           course='cc-persist-course'
-          chapter='cc-persist-chapter'
+          unit='cc-persist-chapter'
           id='cc-persist'
           title='Persistence'
         >
@@ -166,7 +166,7 @@ describe("<CollapsibleCard>", () => {
         <>
           <CollapsibleCard
             course='cc-iso'
-            chapter='cc-iso'
+            unit='cc-iso'
             id='card-a'
             title='Card A'
           >
@@ -174,7 +174,7 @@ describe("<CollapsibleCard>", () => {
           </CollapsibleCard>
           <CollapsibleCard
             course='cc-iso'
-            chapter='cc-iso'
+            unit='cc-iso'
             id='card-b'
             title='Card B'
           >
@@ -205,7 +205,7 @@ describe("<CollapsibleCard>", () => {
       withProfile(
         <CollapsibleCard
           course='cc-escape'
-          chapter='cc-escape'
+          unit='cc-escape'
           id='cc-escape-1'
           title='Esc closes me'
           defaultOpen
@@ -233,7 +233,7 @@ describe("<CollapsibleCard>", () => {
       withProfile(
         <CollapsibleCard
           course='cc-escape-noop'
-          chapter='cc-escape-noop'
+          unit='cc-escape-noop'
           id='cc-escape-noop-1'
           title='Closed already'
         >
@@ -256,7 +256,7 @@ describe("<CollapsibleCard>", () => {
       withProfile(
         <CollapsibleCard
           course='cc-axe'
-          chapter='cc-axe'
+          unit='cc-axe'
           id='cc-axe-closed'
           title='Axe check'
         >
@@ -275,7 +275,7 @@ describe("<CollapsibleCard>", () => {
       withProfile(
         <CollapsibleCard
           course='cc-axe'
-          chapter='cc-axe'
+          unit='cc-axe'
           id='cc-axe-open'
           title='Axe check open'
           defaultOpen

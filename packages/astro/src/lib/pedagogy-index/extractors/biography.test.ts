@@ -86,7 +86,7 @@ const mdxBiographyChild = (
  * Returns an array (length 0 or 1) so the legacy `const [entry] = ...`
  * destructuring still works.
  */
-function extractEquations(tree: Root, _chapterSlug: string): EquationEntry[] {
+function extractEquations(tree: Root, _unitId: string): EquationEntry[] {
   for (const child of tree.children) {
     const el = child as MdxJsxFlowElement;
     if (el.type !== "mdxJsxFlowElement" || el.name !== "KeyEquation") continue;

@@ -24,7 +24,7 @@ const OPTIONS: ReadonlyArray<{ value: ComprehensionLevel; label: string }> = [
  */
 export function ComprehensionGate({
   course,
-  chapter,
+  unit,
   id,
   prompt,
 }: ComprehensionGateProps) {
@@ -32,7 +32,7 @@ export function ComprehensionGate({
   const labelId = useId();
   const { value, setValue, hydrated, controlProps } = useSelfAssessment<
     ComprehensionLevel | ""
-  >(course, chapter, "comprehension", id, "");
+  >(course, unit, "comprehension", id, "");
 
   return (
     <div

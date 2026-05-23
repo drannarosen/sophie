@@ -5,7 +5,7 @@ import { stripHtml } from "./strip-html.ts";
 export const toMisconceptionRecord: EntityToPagefindRecord<
   MisconceptionEntry
 > = (entity, ctx) => ({
-  url: `/units/${entity.chapter}/reading#${entity.anchor}`,
+  url: `/units/${entity.unit}/reading#${entity.anchor}`,
   content: stripHtml(entity.body),
   language: "en",
   meta: {
@@ -16,7 +16,7 @@ export const toMisconceptionRecord: EntityToPagefindRecord<
   },
   filters: {
     type: ["misconception"],
-    chapter: [entity.chapter],
+    chapter: [entity.unit],
     module: [ctx.moduleSlug],
   },
 });

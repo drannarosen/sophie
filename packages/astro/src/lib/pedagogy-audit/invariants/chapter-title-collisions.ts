@@ -86,7 +86,7 @@ export function checkChapterTitleCollisions(
       severity: "WARNING",
       code: "CT-1",
       message: `CT-1: section "${moduleName}" has ${bucket.length} units sharing the same "${prefix}" lecture-number prefix: ${titles}. Sidebar entries will be visually indistinguishable. Resolution: renumber one of the units so each section's unit titles carry a unique lecture-number prefix.`,
-      location: { chapter: bucket[0]?.slug ?? "(unknown)" },
+      location: { unit: bucket[0]?.slug ?? "(unknown)" },
     });
   }
 
@@ -104,7 +104,7 @@ export function checkChapterTitleCollisions(
       severity: "WARNING",
       code: "CT-2",
       message: `CT-2: ${bucket.length} units across sections share the same "${prefix}" lecture-number prefix: ${titles}. Cross-section collisions weaken the lecture numbering's role as a unique reference handle. Resolution: align lecture numbers across sections (e.g., section 1 uses Lecture 1–3, section 2 uses Lecture 4–6) or drop the prefix from titles.`,
-      location: { chapter: bucket[0]?.slug ?? "(unknown)" },
+      location: { unit: bucket[0]?.slug ?? "(unknown)" },
     });
   }
 }

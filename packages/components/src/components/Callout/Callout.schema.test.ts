@@ -83,7 +83,7 @@ describe("CalloutPropsSchema", () => {
 describe("InteractiveCalloutPropsSchema", () => {
   const valid = {
     course: "test",
-    chapter: "test",
+    unit: "test",
     id: "tip-1",
     children: null,
   };
@@ -92,13 +92,13 @@ describe("InteractiveCalloutPropsSchema", () => {
     expect(InteractiveCalloutPropsSchema.safeParse(valid).success).toBe(true);
   });
 
-  it("rejects missing course/chapter/id", () => {
+  it("rejects missing course/unit/id", () => {
     const { course: _course, ...noCourse } = valid;
     expect(InteractiveCalloutPropsSchema.safeParse(noCourse).success).toBe(
       false
     );
     expect(
-      InteractiveCalloutPropsSchema.safeParse({ ...valid, chapter: "" }).success
+      InteractiveCalloutPropsSchema.safeParse({ ...valid, unit: "" }).success
     ).toBe(false);
     expect(
       InteractiveCalloutPropsSchema.safeParse({ ...valid, id: "" }).success

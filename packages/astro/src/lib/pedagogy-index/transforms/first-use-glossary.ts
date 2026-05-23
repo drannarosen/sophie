@@ -18,10 +18,7 @@ import { readStringAttr } from "../jsx-utils.ts";
  * span when `data-first-use="true"` is present on its element. CSS in
  * `textbook-layout.css` reveals the span under `@media print`.
  */
-export function markFirstUseGlossaryTerms(
-  tree: Root,
-  _chapterSlug: string
-): void {
+export function markFirstUseGlossaryTerms(tree: Root, _unitId: string): void {
   const seenSlugs = new Set<string>();
 
   const visitor = (node: unknown) => {

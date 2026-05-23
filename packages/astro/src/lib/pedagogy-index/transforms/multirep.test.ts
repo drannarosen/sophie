@@ -110,7 +110,7 @@ describe("extractMultiReps", () => {
     expect(entries[0]).toMatchObject({
       concept: "orbital-radius",
       id: "mr-orbital-radius",
-      chapter: "module-02/lecture-04",
+      unit: "module-02/lecture-04",
       reps: [
         { kind: "verbal" },
         { kind: "equation", refKey: "kepler-3rd-law", symbol: "r" },

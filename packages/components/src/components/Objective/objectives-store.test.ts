@@ -5,7 +5,7 @@ const photons: ObjectiveEntry = {
   id: "lo-1",
   verb: "Recognize",
   body: "Photons carry energy quanta.",
-  chapter: "spoiler-alerts",
+  unit: "spoiler-alerts",
   anchor: "lo-lo-1",
 };
 
@@ -13,7 +13,7 @@ const wavelengths: ObjectiveEntry = {
   id: "lo-2",
   verb: "Understand",
   body: "Wavelength is the spatial period of an EM wave.",
-  chapter: "spoiler-alerts",
+  unit: "spoiler-alerts",
   anchor: "lo-lo-2",
 };
 

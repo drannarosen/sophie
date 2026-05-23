@@ -21,7 +21,7 @@ import { type MdxJsxFlowElement, readStringAttr } from "../jsx-utils.ts";
  * compiles to `reps={}` (JSXEmptyExpression → undefined) and SSR
  * crashes.
  */
-export function transformMultiRep(tree: Root, chapterSlug: string): void {
+export function transformMultiRep(tree: Root, unitId: string): void {
   visit(tree, "mdxJsxFlowElement", (node: unknown) => {
     const parent = node as MdxJsxFlowElement & {
       attributes: Array<{
@@ -44,18 +44,18 @@ export function transformMultiRep(tree: Root, chapterSlug: string): void {
     const concept = readStringAttr(parent, "concept");
     if (!concept) {
       throw new Error(
-        `transform: <MultiRep> in chapter "${chapterSlug}" is missing a non-empty \`concept\` attr.`
+        `transform: <MultiRep> in chapter "${unitId}" is missing a non-empty \`concept\` attr.`
       );
     }
 
     const reps = buildRepsFromMultiRepChildren(
       parent,
-      `<MultiRep concept="${concept}"> in chapter "${chapterSlug}"`
+      `<MultiRep concept="${concept}"> in chapter "${unitId}"`
     );
 
     if (reps.length === 0) {
       throw new Error(
-        `transform: <MultiRep concept="${concept}"> in chapter "${chapterSlug}" has no Rep children. An empty MultiRep is a content bug.`
+        `transform: <MultiRep concept="${concept}"> in chapter "${unitId}" has no Rep children. An empty MultiRep is a content bug.`
       );
     }
 

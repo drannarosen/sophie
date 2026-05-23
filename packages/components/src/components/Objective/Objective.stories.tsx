@@ -46,7 +46,7 @@ export const InsideLearningObjectives: Story = {
     <ProfileProvider profile='student'>
       <LearningObjectives
         course='storybook'
-        chapter='objective'
+        unit='objective'
         id='inside-lo'
         objectives={[
           {

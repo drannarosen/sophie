@@ -10,7 +10,7 @@ describe("predictContract.audit", () => {
   it("returns no findings for prompts with unique ids", () => {
     const findings = audit({
       course: "test",
-      chapter: "test",
+      unit: "test",
       id: "predict-1",
       prompts: [
         { id: "colors", label: "What do the colors mean?" },
@@ -23,7 +23,7 @@ describe("predictContract.audit", () => {
   it("returns an error finding when two prompts share an id", () => {
     const findings = audit({
       course: "test",
-      chapter: "test",
+      unit: "test",
       id: "predict-1",
       prompts: [
         { id: "colors", label: "What do the colors mean?" },
@@ -38,7 +38,7 @@ describe("predictContract.audit", () => {
   it("reports every duplicated prompt id, not just the first", () => {
     const findings = audit({
       course: "test",
-      chapter: "test",
+      unit: "test",
       id: "predict-1",
       prompts: [
         { id: "a", label: "x" },

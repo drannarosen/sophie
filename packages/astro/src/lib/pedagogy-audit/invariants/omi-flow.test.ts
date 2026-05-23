@@ -10,7 +10,7 @@ import { checkOMIFlow } from "./omi-flow.ts";
 
 const slot = { title: "", body: "" };
 const baseEntry: OMIFlowEntry = {
-  chapter: "ch",
+  unit: "ch",
   anchor: "x",
   observable: slot,
   model: slot,
@@ -52,7 +52,7 @@ describe("OF-1 — OMIFlow slots out of canonical source order (WARN)", () => {
     expect(sink.warnings[0]).toMatchObject({
       severity: "WARNING",
       code: "OF-1",
-      location: { chapter: "ch", anchor: "ooo" },
+      location: { unit: "ch", anchor: "ooo" },
     });
     expect(sink.warnings[0]?.message).toMatch(/source order/i);
     expect(sink.warnings[0]?.message).toMatch(/model.*observable.*inference/i);
@@ -96,7 +96,7 @@ describe("OF-2 — framing:'OMI' Unit requires ≥1 <OMIFlow> (ERROR)", () => {
     const index = {
       ...emptyIndex(),
       units: [unit({ id: "covered", chapter: "covered", framing: "OMI" })],
-      omiFlows: [{ ...baseEntry, chapter: "covered" }],
+      omiFlows: [{ ...baseEntry, unit: "covered" }],
     };
     const sink = emptySink();
     checkOMIFlow(index, sink);
@@ -118,7 +118,7 @@ describe("OF-2 — framing:'OMI' Unit requires ≥1 <OMIFlow> (ERROR)", () => {
     expect(sink.errors[0]).toMatchObject({
       severity: "ERROR",
       code: "OF-2",
-      location: { chapter: "missing" },
+      location: { unit: "missing" },
     });
     expect(sink.errors[0]?.message).toMatch(/framing.*OMI/);
     expect(sink.errors[0]?.message).toMatch(/zero/i);
@@ -146,12 +146,12 @@ describe("OF-2 — framing:'OMI' Unit requires ≥1 <OMIFlow> (ERROR)", () => {
         unit({ id: "covered", chapter: "covered", framing: "OMI" }),
         unit({ id: "missing-b", chapter: "missing-b", framing: "OMI" }),
       ],
-      omiFlows: [{ ...baseEntry, chapter: "covered" }],
+      omiFlows: [{ ...baseEntry, unit: "covered" }],
     };
     const sink = emptySink();
     checkOMIFlow(index, sink);
     expect(sink.errors).toHaveLength(2);
-    const offenders = sink.errors.map((e) => e.location?.chapter).sort();
+    const offenders = sink.errors.map((e) => e.location?.unit).sort();
     expect(offenders).toEqual(["missing-a", "missing-b"]);
   });
 });

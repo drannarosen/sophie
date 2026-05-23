@@ -37,7 +37,7 @@ const EMPTY_RECORD: Record<string, boolean> = Object.freeze({});
  * production and zero checkboxes rendered. Per ADR 0027, data crosses
  * the MDX render boundary as props, not as React children.
  *
- * Per-objective state shape: one IDB record per (course, chapter, id),
+ * Per-objective state shape: one IDB record per (course, unit, id),
  * value is `Record<objectiveId, boolean>`. Centralizing state in the
  * parent lets the parent own the shared `useInteractive` call (and
  * its hydration-loading gate); `<Objective>` stays a pure-display
@@ -45,7 +45,7 @@ const EMPTY_RECORD: Record<string, boolean> = Object.freeze({});
  */
 export function LearningObjectives({
   course,
-  chapter,
+  unit,
   id,
   heading = "Learning Objectives",
   objectives,
@@ -56,7 +56,7 @@ export function LearningObjectives({
     controlProps,
   } = useInteractive<Record<string, boolean>>(
     course,
-    chapter,
+    unit,
     `learning-objectives:${id}:checked`,
     EMPTY_RECORD
   );

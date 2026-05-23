@@ -12,7 +12,7 @@ vi.mock("./definitions-store.ts", () => ({
         term: "Standard candle",
         slug: "standard-candle",
         body: "<p>An object whose intrinsic luminosity is known.</p>",
-        chapter: "spoiler-alerts",
+        unit: "spoiler-alerts",
         anchor: "standard-candle",
       };
     }
@@ -21,7 +21,7 @@ vi.mock("./definitions-store.ts", () => ({
         term: "Parallax",
         slug: "parallax",
         body: "<p>Apparent shift of a star against background.</p>",
-        chapter: "spoiler-alerts",
+        unit: "spoiler-alerts",
         anchor: "parallax",
       };
     }
@@ -34,7 +34,7 @@ vi.mock("./definitions-store.ts", () => ({
         term: "Block-rich",
         slug: "block-rich",
         body: "<p><h3>Heading inside</h3><ul><li>one</li><li>two</li></ul><blockquote>quoted</blockquote>tail text.</p>",
-        chapter: "spoiler-alerts",
+        unit: "spoiler-alerts",
         anchor: "block-rich",
       };
     }

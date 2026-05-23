@@ -29,7 +29,7 @@ describe("indexAccumulator (cross-chapter)", () => {
         term: "Parallax",
         slug: "parallax",
         body: "",
-        chapter: "ch-a",
+        unit: "ch-a",
         anchor: "parallax",
       },
     ]);
@@ -38,7 +38,7 @@ describe("indexAccumulator (cross-chapter)", () => {
         term: "Flux",
         slug: "flux",
         body: "",
-        chapter: "ch-b",
+        unit: "ch-b",
         anchor: "flux",
       },
     ]);
@@ -55,7 +55,7 @@ describe("indexAccumulator (cross-chapter)", () => {
         term: "Standard candle",
         slug: "standard-candle",
         body: "",
-        chapter: "ch-a",
+        unit: "ch-a",
         anchor: "standard-candle",
       },
     ]);
@@ -66,50 +66,50 @@ describe("indexAccumulator (cross-chapter)", () => {
           term: "Standard candle",
           slug: "standard-candle",
           body: "",
-          chapter: "ch-b",
+          unit: "ch-b",
           anchor: "standard-candle",
         },
       ])
     ).toThrow(/multiple chapters/i);
   });
 
-  test("clearChapter removes only that chapter's entries", () => {
+  test("clearUnit removes only that chapter's entries", () => {
     indexAccumulator.addDefinitions([
       {
         term: "Alpha",
         slug: "alpha",
         body: "",
-        chapter: "ch-a",
+        unit: "ch-a",
         anchor: "alpha",
       },
       {
         term: "Beta",
         slug: "beta",
         body: "",
-        chapter: "ch-b",
+        unit: "ch-b",
         anchor: "beta",
       },
     ]);
 
-    indexAccumulator.clearChapter("ch-a");
+    indexAccumulator.clearUnit("ch-a");
     const index = indexAccumulator.asPedagogyIndex();
-    const inA = index.definitions.filter((d) => d.chapter === "ch-a");
-    const inB = index.definitions.filter((d) => d.chapter === "ch-b");
+    const inA = index.definitions.filter((d) => d.unit === "ch-a");
+    const inB = index.definitions.filter((d) => d.unit === "ch-b");
     expect(inA).toHaveLength(0);
     expect(inB).toHaveLength(1);
   });
 
-  test("re-adding a chapter's entries after clearChapter does not throw cross-chapter", () => {
+  test("re-adding a chapter's entries after clearUnit does not throw cross-chapter", () => {
     indexAccumulator.addDefinitions([
       {
         term: "Gamma",
         slug: "gamma",
         body: "",
-        chapter: "ch-a",
+        unit: "ch-a",
         anchor: "gamma",
       },
     ]);
-    indexAccumulator.clearChapter("ch-a");
+    indexAccumulator.clearUnit("ch-a");
 
     expect(() =>
       indexAccumulator.addDefinitions([
@@ -117,7 +117,7 @@ describe("indexAccumulator (cross-chapter)", () => {
           term: "Gamma",
           slug: "gamma",
           body: "",
-          chapter: "ch-a",
+          unit: "ch-a",
           anchor: "gamma",
         },
       ])
@@ -161,11 +161,11 @@ describe("indexAccumulator equations (registry-sourced per ADR 0060)", () => {
     expect(index.equations).toEqual([]);
   });
 
-  test("clearChapter does NOT touch the registry equations slot", () => {
+  test("clearUnit does NOT touch the registry equations slot", () => {
     // Post-ADR-0060: equations are registry-global; chapter clears only
     // touch chapter-keyed collections + equationCitations.
     indexAccumulator.addEquations([makeEq({ id: "wiens-law" })]);
-    indexAccumulator.clearChapter("any-chapter");
+    indexAccumulator.clearUnit("any-chapter");
     const index = indexAccumulator.asPedagogyIndex();
     expect(index.equations).toHaveLength(1);
   });
@@ -174,7 +174,7 @@ describe("indexAccumulator equationCitations (per-chapter)", () => {
   const makeCitation = (
     overrides: Partial<EquationCitationEntry> = {}
   ): EquationCitationEntry => ({
-    chapter: "ch-a",
+    unit: "ch-a",
     refId: "wiens-law",
     anchor: "wiens-law-citation-1",
     number: 1,
@@ -183,20 +183,20 @@ describe("indexAccumulator equationCitations (per-chapter)", () => {
 
   test("addEquationCitations appends citations from any chapter", () => {
     indexAccumulator.addEquationCitations([
-      makeCitation({ chapter: "ch-a", refId: "wiens-law" }),
+      makeCitation({ unit: "ch-a", refId: "wiens-law" }),
     ]);
     indexAccumulator.addEquationCitations([
-      makeCitation({ chapter: "ch-b", refId: "stefan-boltzmann", number: 1 }),
+      makeCitation({ unit: "ch-b", refId: "stefan-boltzmann", number: 1 }),
     ]);
     const index = indexAccumulator.asPedagogyIndex();
     expect(index.equationCitations).toHaveLength(2);
   });
 
-  test("clearChapterCitations removes only that chapter's citations", () => {
+  test("clearUnitCitations removes only that chapter's citations", () => {
     indexAccumulator.addEquationCitations([
-      makeCitation({ chapter: "ch-a", refId: "alpha" }),
+      makeCitation({ unit: "ch-a", refId: "alpha" }),
       makeCitation({
-        chapter: "ch-a",
+        unit: "ch-a",
         refId: "beta",
         number: 2,
         anchor: "beta-citation-2",
@@ -204,34 +204,34 @@ describe("indexAccumulator equationCitations (per-chapter)", () => {
     ]);
     indexAccumulator.addEquationCitations([
       makeCitation({
-        chapter: "ch-b",
+        unit: "ch-b",
         refId: "gamma",
         anchor: "gamma-citation-1",
       }),
     ]);
 
-    indexAccumulator.clearChapterCitations("ch-a");
+    indexAccumulator.clearUnitCitations("ch-a");
     const index = indexAccumulator.asPedagogyIndex();
     expect(index.equationCitations).toHaveLength(1);
-    expect(index.equationCitations[0]?.chapter).toBe("ch-b");
+    expect(index.equationCitations[0]?.unit).toBe("ch-b");
   });
 
-  test("clearChapter also clears that chapter's citations", () => {
+  test("clearUnit also clears that chapter's citations", () => {
     indexAccumulator.addEquationCitations([
-      makeCitation({ chapter: "ch-a", refId: "alpha" }),
+      makeCitation({ unit: "ch-a", refId: "alpha" }),
       makeCitation({
-        chapter: "ch-b",
+        unit: "ch-b",
         refId: "beta",
         anchor: "beta-citation-1",
       }),
     ]);
-    indexAccumulator.clearChapter("ch-a");
+    indexAccumulator.clearUnit("ch-a");
     const index = indexAccumulator.asPedagogyIndex();
     expect(
-      index.equationCitations.filter((c) => c.chapter === "ch-a")
+      index.equationCitations.filter((c) => c.unit === "ch-a")
     ).toHaveLength(0);
     expect(
-      index.equationCitations.filter((c) => c.chapter === "ch-b")
+      index.equationCitations.filter((c) => c.unit === "ch-b")
     ).toHaveLength(1);
   });
 });
@@ -239,53 +239,53 @@ describe("indexAccumulator key-insights (cross-chapter)", () => {
   const ki = (overrides: Partial<KeyInsightEntry> = {}): KeyInsightEntry => ({
     title: "Default",
     body: "",
-    chapter: "ch-a",
+    unit: "ch-a",
     anchor: "default-anchor",
     ...overrides,
   });
 
   test("addKeyInsights populates keyInsights collection accessible via asPedagogyIndex", () => {
     indexAccumulator.addKeyInsights([
-      ki({ title: "Alpha", chapter: "ki-ch-a", anchor: "alpha" }),
-      ki({ title: "Beta", chapter: "ki-ch-b", anchor: "beta" }),
+      ki({ title: "Alpha", unit: "ki-ch-a", anchor: "alpha" }),
+      ki({ title: "Beta", unit: "ki-ch-b", anchor: "beta" }),
     ]);
 
     const index = indexAccumulator.asPedagogyIndex();
     const titles = index.keyInsights
-      .filter((k) => k.chapter === "ki-ch-a" || k.chapter === "ki-ch-b")
+      .filter((k) => k.unit === "ki-ch-a" || k.unit === "ki-ch-b")
       .map((k) => k.title)
       .sort();
     expect(titles).toEqual(["Alpha", "Beta"]);
   });
 
-  test("clearChapter removes key-insights for the target chapter; other chapters survive", () => {
+  test("clearUnit removes key-insights for the target chapter; other chapters survive", () => {
     indexAccumulator.addKeyInsights([
-      ki({ title: "Insight A", chapter: "ki-clear-a", anchor: "insight-a" }),
-      ki({ title: "Insight B", chapter: "ki-clear-b", anchor: "insight-b" }),
+      ki({ title: "Insight A", unit: "ki-clear-a", anchor: "insight-a" }),
+      ki({ title: "Insight B", unit: "ki-clear-b", anchor: "insight-b" }),
     ]);
 
-    indexAccumulator.clearChapter("ki-clear-a");
+    indexAccumulator.clearUnit("ki-clear-a");
 
     const index = indexAccumulator.asPedagogyIndex();
     expect(
-      index.keyInsights.filter((k) => k.chapter === "ki-clear-a")
+      index.keyInsights.filter((k) => k.unit === "ki-clear-a")
     ).toHaveLength(0);
-    expect(
-      index.keyInsights.find((k) => k.chapter === "ki-clear-b")?.title
-    ).toBe("Insight B");
+    expect(index.keyInsights.find((k) => k.unit === "ki-clear-b")?.title).toBe(
+      "Insight B"
+    );
   });
 
   test("two chapters can share an auto-anchor (e.g. 'ki-1') without collision", () => {
     indexAccumulator.addKeyInsights([
-      ki({ chapter: "ki-share-a", anchor: "ki-1" }),
+      ki({ unit: "ki-share-a", anchor: "ki-1" }),
     ]);
     indexAccumulator.addKeyInsights([
-      ki({ chapter: "ki-share-b", anchor: "ki-1" }),
+      ki({ unit: "ki-share-b", anchor: "ki-1" }),
     ]);
 
     const index = indexAccumulator.asPedagogyIndex();
     const shared = index.keyInsights.filter((k) => k.anchor === "ki-1");
-    const chapters = shared.map((k) => k.chapter).sort();
+    const chapters = shared.map((k) => k.unit).sort();
     expect(chapters).toContain("ki-share-a");
     expect(chapters).toContain("ki-share-b");
   });
@@ -315,7 +315,7 @@ const _mdxFigure = (
 describe("indexAccumulator figures (cross-chapter)", () => {
   const fu = (overrides: Partial<FigureUsageEntry> = {}): FigureUsageEntry => ({
     name: "decoder-ring",
-    chapter: "ch-a",
+    unit: "ch-a",
     anchor: "fig-decoder-ring-1",
     number: 1,
     canonical: false,
@@ -327,7 +327,7 @@ describe("indexAccumulator figures (cross-chapter)", () => {
     indexAccumulator.addFigureUsages([
       fu({
         name: "decoder-ring",
-        chapter: "fig-a",
+        unit: "fig-a",
         anchor: "fig-decoder-ring-1",
         canonical: true,
       }),
@@ -337,7 +337,7 @@ describe("indexAccumulator figures (cross-chapter)", () => {
       indexAccumulator.addFigureUsages([
         fu({
           name: "decoder-ring",
-          chapter: "fig-b",
+          unit: "fig-b",
           anchor: "fig-decoder-ring-1",
           canonical: true,
         }),
@@ -348,7 +348,7 @@ describe("indexAccumulator figures (cross-chapter)", () => {
       indexAccumulator.addFigureUsages([
         fu({
           name: "decoder-ring",
-          chapter: "fig-b",
+          unit: "fig-b",
           anchor: "fig-decoder-ring-1",
           canonical: true,
         }),
@@ -358,7 +358,7 @@ describe("indexAccumulator figures (cross-chapter)", () => {
       indexAccumulator.addFigureUsages([
         fu({
           name: "decoder-ring",
-          chapter: "fig-b",
+          unit: "fig-b",
           anchor: "fig-decoder-ring-1",
           canonical: true,
         }),
@@ -372,13 +372,13 @@ describe("indexAccumulator figures (cross-chapter)", () => {
       indexAccumulator.addFigureUsages([
         fu({
           name: "spectrum",
-          chapter: "fig-batch-a",
+          unit: "fig-batch-a",
           anchor: "fig-spectrum-1",
           canonical: true,
         }),
         fu({
           name: "spectrum",
-          chapter: "fig-batch-b",
+          unit: "fig-batch-b",
           anchor: "fig-spectrum-1",
           canonical: true,
         }),
@@ -390,7 +390,7 @@ describe("indexAccumulator figures (cross-chapter)", () => {
     indexAccumulator.addFigureUsages([
       fu({
         name: "hr-diagram",
-        chapter: "fig-ok-a",
+        unit: "fig-ok-a",
         anchor: "fig-hr-diagram-1",
         canonical: true,
       }),
@@ -399,7 +399,7 @@ describe("indexAccumulator figures (cross-chapter)", () => {
       indexAccumulator.addFigureUsages([
         fu({
           name: "hr-diagram",
-          chapter: "fig-ok-b",
+          unit: "fig-ok-b",
           anchor: "fig-hr-diagram-1",
           canonical: false,
         }),
@@ -417,7 +417,7 @@ describe("indexAccumulator figures (cross-chapter)", () => {
     indexAccumulator.addFigureUsages([
       fu({
         name: "x",
-        chapter: "fig-pre-a",
+        unit: "fig-pre-a",
         anchor: "fig-x-1",
         canonical: true,
       }),
@@ -429,13 +429,13 @@ describe("indexAccumulator figures (cross-chapter)", () => {
       indexAccumulator.addFigureUsages([
         fu({
           name: "fresh-fig",
-          chapter: "fig-pre-b",
+          unit: "fig-pre-b",
           anchor: "fig-fresh-fig-1",
           canonical: false,
         }),
         fu({
           name: "x",
-          chapter: "fig-pre-b",
+          unit: "fig-pre-b",
           anchor: "fig-x-1",
           canonical: true,
         }),
@@ -452,13 +452,13 @@ describe("indexAccumulator figures (cross-chapter)", () => {
     indexAccumulator.addFigureUsages([
       fu({
         name: "hr-diagram",
-        chapter: "ch-fig-dupe",
+        unit: "ch-fig-dupe",
         anchor: "fig-hr-diagram-1",
         canonical: false,
       }),
       fu({
         name: "hr-diagram",
-        chapter: "ch-fig-dupe",
+        unit: "ch-fig-dupe",
         anchor: "fig-hr-diagram-2",
         number: 2,
         canonical: false,
@@ -467,7 +467,7 @@ describe("indexAccumulator figures (cross-chapter)", () => {
     const usages = indexAccumulator
       .asPedagogyIndex()
       .figureUsages.filter(
-        (u) => u.chapter === "ch-fig-dupe" && u.name === "hr-diagram"
+        (u) => u.unit === "ch-fig-dupe" && u.name === "hr-diagram"
       );
     expect(usages).toHaveLength(2);
     expect(usages.map((u) => u.anchor).sort()).toEqual([
@@ -477,44 +477,44 @@ describe("indexAccumulator figures (cross-chapter)", () => {
   });
 
   // T32
-  test("clearChapter removes figureUsages for that chapter; other chapters survive", () => {
+  test("clearUnit removes figureUsages for that chapter; other chapters survive", () => {
     indexAccumulator.addFigureUsages([
       fu({
         name: "fig-a",
-        chapter: "fig-clr-a",
+        unit: "fig-clr-a",
         anchor: "fig-fig-a-1",
         canonical: false,
       }),
       fu({
         name: "fig-b",
-        chapter: "fig-clr-b",
+        unit: "fig-clr-b",
         anchor: "fig-fig-b-1",
         canonical: false,
       }),
     ]);
 
-    indexAccumulator.clearChapter("fig-clr-a");
+    indexAccumulator.clearUnit("fig-clr-a");
 
     const index = indexAccumulator.asPedagogyIndex();
     expect(
-      index.figureUsages.filter((u) => u.chapter === "fig-clr-a")
+      index.figureUsages.filter((u) => u.unit === "fig-clr-a")
     ).toHaveLength(0);
-    expect(
-      index.figureUsages.find((u) => u.chapter === "fig-clr-b")?.name
-    ).toBe("fig-b");
+    expect(index.figureUsages.find((u) => u.unit === "fig-clr-b")?.name).toBe(
+      "fig-b"
+    );
   });
 
   test("asPedagogyIndex returns populated figureUsages (was empty `[]` in earlier PRs)", () => {
     indexAccumulator.addFigureUsages([
       fu({
         name: "fig-1",
-        chapter: "fig-ap-a",
+        unit: "fig-ap-a",
         anchor: "fig-fig-1-1",
         canonical: false,
       }),
       fu({
         name: "fig-2",
-        chapter: "fig-ap-a",
+        unit: "fig-ap-a",
         anchor: "fig-fig-2-2",
         number: 2,
         canonical: false,
@@ -522,7 +522,7 @@ describe("indexAccumulator figures (cross-chapter)", () => {
     ]);
 
     const index = indexAccumulator.asPedagogyIndex();
-    const inChApA = index.figureUsages.filter((u) => u.chapter === "fig-ap-a");
+    const inChApA = index.figureUsages.filter((u) => u.unit === "fig-ap-a");
     expect(inChApA).toHaveLength(2);
     expect(inChApA.map((u) => u.name).sort()).toEqual(["fig-1", "fig-2"]);
   });
@@ -531,7 +531,7 @@ describe("indexAccumulator figures (cross-chapter)", () => {
     indexAccumulator.addFigureUsages([
       fu({
         name: "anything",
-        chapter: "fig-reg-a",
+        unit: "fig-reg-a",
         anchor: "fig-anything-1",
         canonical: false,
       }),
@@ -574,7 +574,7 @@ describe("indexAccumulator setFigureRegistry / figureRegistry", () => {
     expect(indexAccumulator.asPedagogyIndex().figureRegistry).toEqual([entryC]);
   });
 
-  test("clearChapter does NOT touch figureRegistry (consumer-global, not per-chapter)", () => {
+  test("clearUnit does NOT touch figureRegistry (consumer-global, not per-chapter)", () => {
     const entry: FigureRegistryEntry = {
       name: "clr-fr-x",
       src: "/x.png",
@@ -582,7 +582,7 @@ describe("indexAccumulator setFigureRegistry / figureRegistry", () => {
     };
     indexAccumulator.setFigureRegistry([entry]);
 
-    indexAccumulator.clearChapter("some-chapter");
+    indexAccumulator.clearUnit("some-chapter");
     expect(indexAccumulator.asPedagogyIndex().figureRegistry).toEqual([entry]);
   });
 });
@@ -648,7 +648,7 @@ describe("indexAccumulator misconceptions (cross-chapter)", () => {
     overrides: Partial<MisconceptionEntry> = {}
   ): MisconceptionEntry => ({
     body: "",
-    chapter: "mc-ch-a",
+    unit: "mc-ch-a",
     anchor: "default-anchor",
     length: "short",
     ...overrides,
@@ -657,13 +657,13 @@ describe("indexAccumulator misconceptions (cross-chapter)", () => {
   test("addMisconceptions populates misconceptions collection accessible via asPedagogyIndex", () => {
     indexAccumulator.addMisconceptions([
       mc({
-        chapter: "mc-pop-a",
+        unit: "mc-pop-a",
         anchor: "alpha",
         label: "Alpha",
         length: "short",
       }),
       mc({
-        chapter: "mc-pop-b",
+        unit: "mc-pop-b",
         anchor: "beta",
         label: "Beta",
         length: "long",
@@ -672,7 +672,7 @@ describe("indexAccumulator misconceptions (cross-chapter)", () => {
 
     const index = indexAccumulator.asPedagogyIndex();
     const labels = index.misconceptions
-      .filter((m) => m.chapter === "mc-pop-a" || m.chapter === "mc-pop-b")
+      .filter((m) => m.unit === "mc-pop-a" || m.unit === "mc-pop-b")
       .map((m) => m.label)
       .sort();
     expect(labels).toEqual(["Alpha", "Beta"]);
@@ -680,23 +680,23 @@ describe("indexAccumulator misconceptions (cross-chapter)", () => {
 
   test("M2 — throws on cross-chapter explicit-id anchor collision", () => {
     indexAccumulator.addMisconceptions([
-      mc({ chapter: "mc-m2-a", anchor: "shared-explicit-id" }),
+      mc({ unit: "mc-m2-a", anchor: "shared-explicit-id" }),
     ]);
 
     expect(() =>
       indexAccumulator.addMisconceptions([
-        mc({ chapter: "mc-m2-b", anchor: "shared-explicit-id" }),
+        mc({ unit: "mc-m2-b", anchor: "shared-explicit-id" }),
       ])
     ).toThrow(/M2 invariant/);
     // Error names BOTH chapter slugs.
     expect(() =>
       indexAccumulator.addMisconceptions([
-        mc({ chapter: "mc-m2-b", anchor: "shared-explicit-id" }),
+        mc({ unit: "mc-m2-b", anchor: "shared-explicit-id" }),
       ])
     ).toThrow(/mc-m2-a/);
     expect(() =>
       indexAccumulator.addMisconceptions([
-        mc({ chapter: "mc-m2-b", anchor: "shared-explicit-id" }),
+        mc({ unit: "mc-m2-b", anchor: "shared-explicit-id" }),
       ])
     ).toThrow(/mc-m2-b/);
   });
@@ -707,28 +707,28 @@ describe("indexAccumulator misconceptions (cross-chapter)", () => {
     // The tightened `/^misc-\d+$/` matches only the literal auto-anchor
     // shape, so explicit ids like `misc-orbital` still validate.
     indexAccumulator.addMisconceptions([
-      mc({ chapter: "mc-misc-a", anchor: "misc-orbital" }),
+      mc({ unit: "mc-misc-a", anchor: "misc-orbital" }),
     ]);
     expect(() =>
       indexAccumulator.addMisconceptions([
-        mc({ chapter: "mc-misc-b", anchor: "misc-orbital" }),
+        mc({ unit: "mc-misc-b", anchor: "misc-orbital" }),
       ])
     ).toThrow(/M2 invariant/);
   });
 
   test("M2 — auto-anchors ('misc-N') do NOT trigger cross-chapter collision", () => {
     indexAccumulator.addMisconceptions([
-      mc({ chapter: "mc-auto-a", anchor: "misc-1" }),
+      mc({ unit: "mc-auto-a", anchor: "misc-1" }),
     ]);
     expect(() =>
       indexAccumulator.addMisconceptions([
-        mc({ chapter: "mc-auto-b", anchor: "misc-1" }),
+        mc({ unit: "mc-auto-b", anchor: "misc-1" }),
       ])
     ).not.toThrow();
 
     const index = indexAccumulator.asPedagogyIndex();
     const shared = index.misconceptions.filter((m) => m.anchor === "misc-1");
-    const chapters = shared.map((m) => m.chapter).sort();
+    const chapters = shared.map((m) => m.unit).sort();
     expect(chapters).toContain("mc-auto-a");
     expect(chapters).toContain("mc-auto-b");
   });
@@ -736,52 +736,52 @@ describe("indexAccumulator misconceptions (cross-chapter)", () => {
   test("addMisconceptions validates the whole batch BEFORE mutating", () => {
     // Seed.
     indexAccumulator.addMisconceptions([
-      mc({ chapter: "mc-pre-a", anchor: "seeded-id" }),
+      mc({ unit: "mc-pre-a", anchor: "seeded-id" }),
     ]);
 
     // Batch: entry 1 is a fresh non-colliding misconception; entry 2 collides.
     expect(() =>
       indexAccumulator.addMisconceptions([
-        mc({ chapter: "mc-pre-b", anchor: "fresh-id" }),
-        mc({ chapter: "mc-pre-b", anchor: "seeded-id" }),
+        mc({ unit: "mc-pre-b", anchor: "fresh-id" }),
+        mc({ unit: "mc-pre-b", anchor: "seeded-id" }),
       ])
     ).toThrow(/M2 invariant/);
 
     const index = indexAccumulator.asPedagogyIndex();
     expect(
       index.misconceptions.find(
-        (m) => m.chapter === "mc-pre-b" && m.anchor === "fresh-id"
+        (m) => m.unit === "mc-pre-b" && m.anchor === "fresh-id"
       )
     ).toBeUndefined();
   });
 
-  test("clearChapter removes misconceptions for the target chapter; other chapters survive", () => {
+  test("clearUnit removes misconceptions for the target chapter; other chapters survive", () => {
     indexAccumulator.addMisconceptions([
-      mc({ chapter: "mc-clr-a", anchor: "mc-a-1", label: "A" }),
-      mc({ chapter: "mc-clr-b", anchor: "mc-b-1", label: "B" }),
+      mc({ unit: "mc-clr-a", anchor: "mc-a-1", label: "A" }),
+      mc({ unit: "mc-clr-b", anchor: "mc-b-1", label: "B" }),
     ]);
 
-    indexAccumulator.clearChapter("mc-clr-a");
+    indexAccumulator.clearUnit("mc-clr-a");
 
     const index = indexAccumulator.asPedagogyIndex();
     expect(
-      index.misconceptions.filter((m) => m.chapter === "mc-clr-a")
+      index.misconceptions.filter((m) => m.unit === "mc-clr-a")
     ).toHaveLength(0);
-    expect(
-      index.misconceptions.find((m) => m.chapter === "mc-clr-b")?.label
-    ).toBe("B");
+    expect(index.misconceptions.find((m) => m.unit === "mc-clr-b")?.label).toBe(
+      "B"
+    );
   });
 
   test("asPedagogyIndex returns populated misconceptions (was empty `[]` before Task 7)", () => {
     indexAccumulator.addMisconceptions([
       mc({
-        chapter: "mc-ap-a",
+        unit: "mc-ap-a",
         anchor: "ap-1",
         label: "AP One",
         length: "short",
       }),
       mc({
-        chapter: "mc-ap-a",
+        unit: "mc-ap-a",
         anchor: "ap-2",
         label: "AP Two",
         length: "long",
@@ -789,7 +789,7 @@ describe("indexAccumulator misconceptions (cross-chapter)", () => {
     ]);
 
     const index = indexAccumulator.asPedagogyIndex();
-    const inCh = index.misconceptions.filter((m) => m.chapter === "mc-ap-a");
+    const inCh = index.misconceptions.filter((m) => m.unit === "mc-ap-a");
     expect(inCh).toHaveLength(2);
     expect(inCh.map((m) => m.label).sort()).toEqual(["AP One", "AP Two"]);
   });
@@ -801,53 +801,53 @@ describe("indexAccumulator objectives (cross-chapter)", () => {
     id: "lo-1",
     verb: "Recognize",
     body: "<p>body</p>",
-    chapter: "obj-ch-a",
+    unit: "obj-ch-a",
     anchor: "lo-lo-1",
     ...overrides,
   });
 
   test("addObjectives keyed by chapter+anchor; two chapters can each declare 'lo-1'", () => {
     indexAccumulator.addObjectives([
-      objective({ id: "lo-1", chapter: "obj-share-a", anchor: "lo-lo-1" }),
+      objective({ id: "lo-1", unit: "obj-share-a", anchor: "lo-lo-1" }),
     ]);
     indexAccumulator.addObjectives([
-      objective({ id: "lo-1", chapter: "obj-share-b", anchor: "lo-lo-1" }),
+      objective({ id: "lo-1", unit: "obj-share-b", anchor: "lo-lo-1" }),
     ]);
 
     const index = indexAccumulator.asPedagogyIndex();
     const shared = index.objectives.filter((o) => o.id === "lo-1");
-    const chapters = shared.map((o) => o.chapter).sort();
+    const chapters = shared.map((o) => o.unit).sort();
     expect(chapters).toContain("obj-share-a");
     expect(chapters).toContain("obj-share-b");
   });
 
   test("addObjectives — multiple objectives within one chapter coexist", () => {
     indexAccumulator.addObjectives([
-      objective({ id: "lo-1", chapter: "obj-multi", anchor: "lo-lo-1" }),
-      objective({ id: "lo-2", chapter: "obj-multi", anchor: "lo-lo-2" }),
+      objective({ id: "lo-1", unit: "obj-multi", anchor: "lo-lo-1" }),
+      objective({ id: "lo-2", unit: "obj-multi", anchor: "lo-lo-2" }),
     ]);
 
     const index = indexAccumulator.asPedagogyIndex();
-    const inCh = index.objectives.filter((o) => o.chapter === "obj-multi");
+    const inCh = index.objectives.filter((o) => o.unit === "obj-multi");
     expect(inCh).toHaveLength(2);
     expect(inCh.map((o) => o.id).sort()).toEqual(["lo-1", "lo-2"]);
   });
 
-  test("clearChapter removes objectives for the target chapter; other chapters survive", () => {
+  test("clearUnit removes objectives for the target chapter; other chapters survive", () => {
     indexAccumulator.addObjectives([
-      objective({ id: "lo-a", chapter: "obj-clr-a", anchor: "lo-lo-a" }),
+      objective({ id: "lo-a", unit: "obj-clr-a", anchor: "lo-lo-a" }),
     ]);
     indexAccumulator.addObjectives([
-      objective({ id: "lo-b", chapter: "obj-clr-b", anchor: "lo-lo-b" }),
+      objective({ id: "lo-b", unit: "obj-clr-b", anchor: "lo-lo-b" }),
     ]);
 
-    indexAccumulator.clearChapter("obj-clr-a");
+    indexAccumulator.clearUnit("obj-clr-a");
 
     const index = indexAccumulator.asPedagogyIndex();
-    expect(
-      index.objectives.filter((o) => o.chapter === "obj-clr-a")
-    ).toHaveLength(0);
-    expect(index.objectives.find((o) => o.chapter === "obj-clr-b")?.id).toBe(
+    expect(index.objectives.filter((o) => o.unit === "obj-clr-a")).toHaveLength(
+      0
+    );
+    expect(index.objectives.find((o) => o.unit === "obj-clr-b")?.id).toBe(
       "lo-b"
     );
   });
@@ -859,7 +859,7 @@ describe("indexAccumulator objectives (cross-chapter)", () => {
 describe("indexAccumulator setSections / setUnits (W1)", () => {
   // Per Wedge B-followup design doc D1 + D7. Mirror setChapters /
   // setModules semantics: last-write-wins, consumer-global, NOT touched
-  // by clearChapter.
+  // by clearUnit.
 
   test("setSections overwrites prior entries (last-write-wins)", () => {
     const intro: SectionEntry = {
@@ -890,7 +890,7 @@ describe("indexAccumulator setSections / setUnits (W1)", () => {
 
   test("setUnits overwrites prior entries (last-write-wins)", () => {
     const u1: UnitEntry = {
-      id: "u1",
+      id: "u1-chapter",
       type: "lecture",
       title: "U1",
       order: 0,
@@ -900,7 +900,7 @@ describe("indexAccumulator setSections / setUnits (W1)", () => {
       status: "stable",
     };
     const u2: UnitEntry = {
-      id: "u2",
+      id: "u2-chapter",
       type: "lecture",
       title: "U2",
       order: 1,
@@ -918,7 +918,7 @@ describe("indexAccumulator setSections / setUnits (W1)", () => {
     expect(indexAccumulator.asPedagogyIndex().units).toEqual([u1, u2]);
   });
 
-  test("clearChapter does NOT touch sections / units (consumer-global)", () => {
+  test("clearUnit does NOT touch sections / units (consumer-global)", () => {
     const intro: SectionEntry = {
       type: "module",
       slug: "intro",
@@ -926,7 +926,7 @@ describe("indexAccumulator setSections / setUnits (W1)", () => {
       order: 0,
     };
     const u1: UnitEntry = {
-      id: "u1",
+      id: "ch-x",
       type: "lecture",
       title: "U1",
       order: 0,
@@ -938,7 +938,7 @@ describe("indexAccumulator setSections / setUnits (W1)", () => {
 
     indexAccumulator.setSections([intro]);
     indexAccumulator.setUnits([u1]);
-    indexAccumulator.clearChapter("ch-x");
+    indexAccumulator.clearUnit("ch-x");
 
     const index = indexAccumulator.asPedagogyIndex();
     expect(index.sections).toEqual([intro]);
@@ -971,7 +971,7 @@ describe("indexAccumulator setSections / setUnits (W1)", () => {
 describe("indexAccumulator setArtifacts (W2)", () => {
   // Per Wedge B-followup W2 design doc D1 (Path A). Mirrors setSections /
   // setUnits semantics: last-write-wins, consumer-global, NOT touched by
-  // clearChapter. ArtifactEntry is a discriminated union over scope.
+  // clearUnit. ArtifactEntry is a discriminated union over scope.
 
   const unitReading: ArtifactEntry = {
     id: "spectra-and-composition",
@@ -1011,9 +1011,9 @@ describe("indexAccumulator setArtifacts (W2)", () => {
     ]);
   });
 
-  test("clearChapter does NOT touch artifacts (consumer-global)", () => {
+  test("clearUnit does NOT touch artifacts (consumer-global)", () => {
     indexAccumulator.setArtifacts([unitReading]);
-    indexAccumulator.clearChapter("spectra-and-composition");
+    indexAccumulator.clearUnit("spectra-and-composition");
     expect(indexAccumulator.asPedagogyIndex().artifacts).toEqual([unitReading]);
   });
 
@@ -1054,38 +1054,38 @@ describe("indexAccumulator inlineRefUsages (cross-chapter)", () => {
   ): InlineRefUsageEntry => ({
     kind: "glossary-term",
     refKey: "Parallax",
-    chapter: "iru-ch-a",
+    unit: "iru-ch-a",
     ...overrides,
   });
 
   test("addInlineRefUsages appends entries; same (kind, refKey) duplicates coexist", () => {
     indexAccumulator.addInlineRefUsages([
-      usage({ chapter: "iru-multi" }),
-      usage({ chapter: "iru-multi" }),
-      usage({ kind: "eq-ref", refKey: "wiens-law", chapter: "iru-multi" }),
+      usage({ unit: "iru-multi" }),
+      usage({ unit: "iru-multi" }),
+      usage({ kind: "eq-ref", refKey: "wiens-law", unit: "iru-multi" }),
     ]);
 
     const index = indexAccumulator.asPedagogyIndex();
-    const inCh = index.inlineRefUsages.filter((u) => u.chapter === "iru-multi");
+    const inCh = index.inlineRefUsages.filter((u) => u.unit === "iru-multi");
     expect(inCh).toHaveLength(3);
     const glossary = inCh.filter((u) => u.kind === "glossary-term");
     expect(glossary).toHaveLength(2);
   });
 
-  test("clearChapter removes inlineRefUsages for that chapter; others survive", () => {
+  test("clearUnit removes inlineRefUsages for that chapter; others survive", () => {
     indexAccumulator.addInlineRefUsages([
-      usage({ chapter: "iru-clr-a", refKey: "term-a" }),
-      usage({ chapter: "iru-clr-b", refKey: "term-b" }),
+      usage({ unit: "iru-clr-a", refKey: "term-a" }),
+      usage({ unit: "iru-clr-b", refKey: "term-b" }),
     ]);
 
-    indexAccumulator.clearChapter("iru-clr-a");
+    indexAccumulator.clearUnit("iru-clr-a");
 
     const index = indexAccumulator.asPedagogyIndex();
     expect(
-      index.inlineRefUsages.filter((u) => u.chapter === "iru-clr-a")
+      index.inlineRefUsages.filter((u) => u.unit === "iru-clr-a")
     ).toHaveLength(0);
     expect(
-      index.inlineRefUsages.find((u) => u.chapter === "iru-clr-b")?.refKey
+      index.inlineRefUsages.find((u) => u.unit === "iru-clr-b")?.refKey
     ).toBe("term-b");
   });
 });
@@ -1111,12 +1111,12 @@ describe("asPedagogyIndex (W2/D3 collections)", () => {
         id: "lo-1",
         verb: "Recognize",
         body: "<p>body</p>",
-        chapter: "ch-x",
+        unit: "ch-x",
         anchor: "lo-lo-1",
       },
     ]);
     indexAccumulator.addInlineRefUsages([
-      { kind: "chapter-ref", refKey: "ch-x", chapter: "ch-y" },
+      { kind: "chapter-ref", refKey: "ch-x", unit: "ch-y" },
     ]);
 
     const index = indexAccumulator.asPedagogyIndex();
@@ -1129,7 +1129,7 @@ describe("asPedagogyIndex (W2/D3 collections)", () => {
 
 describe("indexAccumulator deepDives (cross-chapter)", () => {
   const dd = (overrides: Partial<DeepDiveEntry> = {}): DeepDiveEntry => ({
-    chapter: "dd-ch-a",
+    unit: "dd-ch-a",
     anchor: "default-anchor",
     title: "Default Title",
     body: "<p>body</p>",
@@ -1138,13 +1138,13 @@ describe("indexAccumulator deepDives (cross-chapter)", () => {
 
   test("addDeepDives populates deepDives collection accessible via asPedagogyIndex", () => {
     indexAccumulator.addDeepDives([
-      dd({ chapter: "dd-pop-a", anchor: "alpha", title: "Alpha" }),
-      dd({ chapter: "dd-pop-b", anchor: "beta", title: "Beta" }),
+      dd({ unit: "dd-pop-a", anchor: "alpha", title: "Alpha" }),
+      dd({ unit: "dd-pop-b", anchor: "beta", title: "Beta" }),
     ]);
 
     const index = indexAccumulator.asPedagogyIndex();
     const titles = index.deepDives
-      .filter((d) => d.chapter === "dd-pop-a" || d.chapter === "dd-pop-b")
+      .filter((d) => d.unit === "dd-pop-a" || d.unit === "dd-pop-b")
       .map((d) => d.title)
       .sort();
     expect(titles).toEqual(["Alpha", "Beta"]);
@@ -1152,74 +1152,70 @@ describe("indexAccumulator deepDives (cross-chapter)", () => {
 
   test("D2 — throws on cross-chapter explicit-id anchor collision", () => {
     indexAccumulator.addDeepDives([
-      dd({ chapter: "dd-d2-a", anchor: "shared-explicit-id" }),
+      dd({ unit: "dd-d2-a", anchor: "shared-explicit-id" }),
     ]);
 
     expect(() =>
       indexAccumulator.addDeepDives([
-        dd({ chapter: "dd-d2-b", anchor: "shared-explicit-id" }),
+        dd({ unit: "dd-d2-b", anchor: "shared-explicit-id" }),
       ])
     ).toThrow(/D2 invariant/);
     expect(() =>
       indexAccumulator.addDeepDives([
-        dd({ chapter: "dd-d2-b", anchor: "shared-explicit-id" }),
+        dd({ unit: "dd-d2-b", anchor: "shared-explicit-id" }),
       ])
     ).toThrow(/dd-d2-a/);
     expect(() =>
       indexAccumulator.addDeepDives([
-        dd({ chapter: "dd-d2-b", anchor: "shared-explicit-id" }),
+        dd({ unit: "dd-d2-b", anchor: "shared-explicit-id" }),
       ])
     ).toThrow(/dd-d2-b/);
   });
 
   test("D2 — auto-anchors ('dd-N') do NOT trigger cross-chapter collision", () => {
-    indexAccumulator.addDeepDives([
-      dd({ chapter: "dd-auto-a", anchor: "dd-1" }),
-    ]);
+    indexAccumulator.addDeepDives([dd({ unit: "dd-auto-a", anchor: "dd-1" })]);
     expect(() =>
-      indexAccumulator.addDeepDives([
-        dd({ chapter: "dd-auto-b", anchor: "dd-1" }),
-      ])
+      indexAccumulator.addDeepDives([dd({ unit: "dd-auto-b", anchor: "dd-1" })])
     ).not.toThrow();
     const index = indexAccumulator.asPedagogyIndex();
     expect(
       index.deepDives.filter(
-        (d) => d.chapter === "dd-auto-a" || d.chapter === "dd-auto-b"
+        (d) => d.unit === "dd-auto-a" || d.unit === "dd-auto-b"
       )
     ).toHaveLength(2);
   });
 
   test("D2 — explicit id 'dd-orbital' (non-numeric) DOES trigger cross-chapter collision", () => {
     indexAccumulator.addDeepDives([
-      dd({ chapter: "dd-explicit-a", anchor: "dd-orbital" }),
+      dd({ unit: "dd-explicit-a", anchor: "dd-orbital" }),
     ]);
     expect(() =>
       indexAccumulator.addDeepDives([
-        dd({ chapter: "dd-explicit-b", anchor: "dd-orbital" }),
+        dd({ unit: "dd-explicit-b", anchor: "dd-orbital" }),
       ])
     ).toThrow(/D2 invariant/);
   });
 
-  test("clearChapter drops deep-dive entries for the chapter", () => {
+  test("clearUnit drops deep-dive entries for the chapter", () => {
     indexAccumulator.addDeepDives([
-      dd({ chapter: "dd-clear-a", anchor: "a-entry" }),
-      dd({ chapter: "dd-clear-b", anchor: "b-entry" }),
+      dd({ unit: "dd-clear-a", anchor: "a-entry" }),
+      dd({ unit: "dd-clear-b", anchor: "b-entry" }),
     ]);
-    indexAccumulator.clearChapter("dd-clear-a");
+    indexAccumulator.clearUnit("dd-clear-a");
     const index = indexAccumulator.asPedagogyIndex();
-    expect(
-      index.deepDives.filter((d) => d.chapter === "dd-clear-a")
-    ).toHaveLength(0);
-    expect(
-      index.deepDives.filter((d) => d.chapter === "dd-clear-b")
-    ).toHaveLength(1);
+    expect(index.deepDives.filter((d) => d.unit === "dd-clear-a")).toHaveLength(
+      0
+    );
+    expect(index.deepDives.filter((d) => d.unit === "dd-clear-b")).toHaveLength(
+      1
+    );
   });
 });
 
 describe("indexAccumulator omiFlows (cross-chapter)", () => {
   const slot = { title: "x", body: "<p>x</p>" };
   const omi = (overrides: Partial<OMIFlowEntry> = {}): OMIFlowEntry => ({
-    chapter: "omi-ch-a",
+    unit: "omi-ch-a",
     anchor: "default-anchor",
     observable: slot,
     model: slot,
@@ -1230,41 +1226,39 @@ describe("indexAccumulator omiFlows (cross-chapter)", () => {
 
   test("addOMIFlows populates collection accessible via asPedagogyIndex", () => {
     indexAccumulator.addOMIFlows([
-      omi({ chapter: "omi-pop-a", anchor: "alpha" }),
-      omi({ chapter: "omi-pop-b", anchor: "beta" }),
+      omi({ unit: "omi-pop-a", anchor: "alpha" }),
+      omi({ unit: "omi-pop-b", anchor: "beta" }),
     ]);
     const index = indexAccumulator.asPedagogyIndex();
     const anchors = index.omiFlows
-      .filter((e) => e.chapter === "omi-pop-a" || e.chapter === "omi-pop-b")
+      .filter((e) => e.unit === "omi-pop-a" || e.unit === "omi-pop-b")
       .map((e) => e.anchor)
       .sort();
     expect(anchors).toEqual(["alpha", "beta"]);
   });
 
   test("OF — throws on cross-chapter explicit-id anchor collision", () => {
-    indexAccumulator.addOMIFlows([omi({ chapter: "ch-a", anchor: "shared" })]);
+    indexAccumulator.addOMIFlows([omi({ unit: "ch-a", anchor: "shared" })]);
     expect(() =>
-      indexAccumulator.addOMIFlows([omi({ chapter: "ch-b", anchor: "shared" })])
+      indexAccumulator.addOMIFlows([omi({ unit: "ch-b", anchor: "shared" })])
     ).toThrow(/cross-chapter.*OMIFlow/i);
   });
 
   test("OF — auto-anchors (omi-N) do NOT trigger cross-chapter collision", () => {
-    indexAccumulator.addOMIFlows([omi({ chapter: "auto-a", anchor: "omi-1" })]);
+    indexAccumulator.addOMIFlows([omi({ unit: "auto-a", anchor: "omi-1" })]);
     expect(() =>
-      indexAccumulator.addOMIFlows([
-        omi({ chapter: "auto-b", anchor: "omi-1" }),
-      ])
+      indexAccumulator.addOMIFlows([omi({ unit: "auto-b", anchor: "omi-1" })])
     ).not.toThrow();
   });
 
-  test("clearChapter drops OMIFlow entries for the chapter", () => {
+  test("clearUnit drops OMIFlow entries for the chapter", () => {
     indexAccumulator.addOMIFlows([
-      omi({ chapter: "clr-a", anchor: "a-entry" }),
-      omi({ chapter: "clr-b", anchor: "b-entry" }),
+      omi({ unit: "clr-a", anchor: "a-entry" }),
+      omi({ unit: "clr-b", anchor: "b-entry" }),
     ]);
-    indexAccumulator.clearChapter("clr-a");
+    indexAccumulator.clearUnit("clr-a");
     const index = indexAccumulator.asPedagogyIndex();
-    expect(index.omiFlows.filter((e) => e.chapter === "clr-a")).toHaveLength(0);
-    expect(index.omiFlows.filter((e) => e.chapter === "clr-b")).toHaveLength(1);
+    expect(index.omiFlows.filter((e) => e.unit === "clr-a")).toHaveLength(0);
+    expect(index.omiFlows.filter((e) => e.unit === "clr-b")).toHaveLength(1);
   });
 });

@@ -14,7 +14,7 @@ export const toKeyInsightRecord: EntityToPagefindRecord<KeyInsightEntry> = (
       ? stripped
       : `${stripped.slice(0, TITLE_MAX)}…`;
   return {
-    url: `/units/${entity.chapter}/reading#${entity.anchor}`,
+    url: `/units/${entity.unit}/reading#${entity.anchor}`,
     content: stripped,
     language: "en",
     meta: {
@@ -23,7 +23,7 @@ export const toKeyInsightRecord: EntityToPagefindRecord<KeyInsightEntry> = (
     },
     filters: {
       type: ["keyInsight"],
-      chapter: [entity.chapter],
+      chapter: [entity.unit],
       module: [ctx.moduleSlug],
     },
   };

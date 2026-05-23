@@ -32,7 +32,7 @@ export interface AuditExtras {
    * Slugs of chapters with `status: draft` (ADR 0051). The audit emits
    * one CS2 INFO finding per slug. Empty / undefined => no CS2 output.
    */
-  draftChapterSlugs?: ReadonlyArray<string>;
+  draftUnitIds?: ReadonlyArray<string>;
   /**
    * Repo-root path against which evidence refs in `contractValidations`
    * are resolved (V5 — ADR 0056). Defaults to `process.cwd()` when

@@ -177,12 +177,12 @@ function resolveVisibleTitle(
 
 /**
  * Persistence-bearing Callout. Use with `client:load` in MDX so each
- * instance becomes its own React island. course/chapter/id thread the
+ * instance becomes its own React island. course/unit/id thread the
  * state into per-course IndexedDB.
  */
 export function InteractiveCallout({
   course,
-  chapter,
+  unit,
   id,
   variant = "info",
   title,
@@ -201,7 +201,7 @@ export function InteractiveCallout({
       <div className={styles.body}>{children}</div>
       <ReviewedRow
         course={course}
-        chapter={chapter}
+        unit={unit}
         calloutId={id}
         variant={variant}
       />
@@ -211,12 +211,12 @@ export function InteractiveCallout({
 
 function ReviewedRow({
   course,
-  chapter,
+  unit,
   calloutId,
   variant,
 }: {
   course: string;
-  chapter: string;
+  unit: string;
   calloutId: string;
   variant: CalloutVariant;
 }) {
@@ -229,7 +229,7 @@ function ReviewedRow({
     setValue: setReviewed,
     hydrated,
     controlProps,
-  } = useInteractive(course, chapter, `callout:${calloutId}:reviewed`, false);
+  } = useInteractive(course, unit, `callout:${calloutId}:reviewed`, false);
 
   return (
     <div className={styles.reviewedRow}>

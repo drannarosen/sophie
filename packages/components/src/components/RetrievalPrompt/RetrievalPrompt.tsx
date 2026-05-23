@@ -25,7 +25,7 @@ AnswerSlot.displayName = ANSWER_SLOT;
  * <RetrievalPrompt
  *   client:load
  *   course="astr201"
- *   chapter="spoiler-alerts"
+ *   unit="spoiler-alerts"
  *   target="eq:stefan-boltzmann"
  * >
  *   <RetrievalPrompt.Prompt>
@@ -45,13 +45,13 @@ AnswerSlot.displayName = ANSWER_SLOT;
  */
 export function RetrievalPrompt({
   course,
-  chapter,
+  unit,
   target,
   children,
 }: RetrievalPromptProps) {
   const { record } = useRetrievalAttempt({
     course,
-    chapter,
+    unit,
     target_id: target,
     component: "retrieval-prompt",
   });

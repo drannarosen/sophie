@@ -11,16 +11,16 @@ function ProfileWrapper({ children }: { children: ReactNode }) {
 
 function MultiProbe({
   course,
-  chapters,
+  units,
   keyPrefix,
 }: {
   course: string;
-  chapters: readonly string[];
+  units: readonly string[];
   keyPrefix?: string;
 }) {
   const { values, status, hydrated } = useInteractiveRangeMulti<number>(
     course,
-    chapters,
+    units,
     keyPrefix
   );
   return (
@@ -35,41 +35,41 @@ function MultiProbe({
 
 function WriterProbe({
   course,
-  chapter,
+  unit,
   keyName,
   initial,
 }: {
   course: string;
-  chapter: string;
+  unit: string;
   keyName: string;
   initial: number;
 }) {
   const { value, setValue, hydrated } = useInteractive<number>(
     course,
-    chapter,
+    unit,
     keyName,
     initial
   );
   return (
     <div>
-      <span data-testid={`writer-${chapter}-${keyName}-value`}>
+      <span data-testid={`writer-${unit}-${keyName}-value`}>
         {String(value)}
       </span>
-      <span data-testid={`writer-${chapter}-${keyName}-hydrated`}>
+      <span data-testid={`writer-${unit}-${keyName}-hydrated`}>
         {String(hydrated)}
       </span>
       <button type='button' onClick={() => setValue(value + 1)}>
-        bump-{chapter}-{keyName}
+        bump-{unit}-{keyName}
       </button>
     </div>
   );
 }
 
 describe("useInteractiveRangeMulti", () => {
-  it("hydrates to {} for an empty chapters array (no I/O)", async () => {
+  it("hydrates to {} for an empty units array (no I/O)", async () => {
     render(
       <ProfileWrapper>
-        <MultiProbe course='multi-empty-list' chapters={[]} />
+        <MultiProbe course='multi-empty-list' units={[]} />
       </ProfileWrapper>
     );
     await waitFor(() =>
@@ -79,25 +79,25 @@ describe("useInteractiveRangeMulti", () => {
     expect(screen.getByTestId("values").textContent).toBe("{}");
   });
 
-  it("merges records across multiple chapters into one values map", async () => {
+  it("merges records across multiple units into one values map", async () => {
     function SeededScene() {
       return (
         <>
           <WriterProbe
             course='multi-merge'
-            chapter='ch-a'
+            unit='ch-a'
             keyName='practice-attempt:logs'
             initial={1}
           />
           <WriterProbe
             course='multi-merge'
-            chapter='ch-b'
+            unit='ch-b'
             keyName='practice-attempt:trig'
             initial={2}
           />
           <MultiProbe
             course='multi-merge'
-            chapters={["ch-a", "ch-b"]}
+            units={["ch-a", "ch-b"]}
             keyPrefix='practice-attempt:'
           />
         </>
@@ -134,23 +134,23 @@ describe("useInteractiveRangeMulti", () => {
     expect(values["practice-attempt:trig"]).toBe(3);
   });
 
-  it("excludes chapters not in the list", async () => {
+  it("excludes units not in the list", async () => {
     function SeededScene() {
       return (
         <>
           <WriterProbe
             course='multi-exclude'
-            chapter='ch-a'
+            unit='ch-a'
             keyName='k'
             initial={1}
           />
           <WriterProbe
             course='multi-exclude'
-            chapter='ch-c'
+            unit='ch-c'
             keyName='k'
             initial={99}
           />
-          <MultiProbe course='multi-exclude' chapters={["ch-a"]} />
+          <MultiProbe course='multi-exclude' units={["ch-a"]} />
         </>
       );
     }
@@ -178,18 +178,18 @@ describe("useInteractiveRangeMulti", () => {
     expect(values.k).toBe(2);
   });
 
-  it("subscribes to broadcast updates from every listed chapter", async () => {
+  it("subscribes to broadcast updates from every listed unit", async () => {
     function Scene() {
       return (
         <>
           <MultiProbe
             course='multi-broadcast'
-            chapters={["ch-a", "ch-b"]}
+            units={["ch-a", "ch-b"]}
             keyPrefix='k:'
           />
           <WriterProbe
             course='multi-broadcast'
-            chapter='ch-b'
+            unit='ch-b'
             keyName='k:x'
             initial={100}
           />

@@ -24,12 +24,12 @@ function withProfile(node: ReactNode) {
  */
 async function seedAttempt(
   course: string,
-  chapter: string,
+  unit: string,
   target: string
 ): Promise<void> {
   const { unmount } = render(
     withProfile(
-      <RetrievalPrompt course={course} chapter={chapter} target={target}>
+      <RetrievalPrompt course={course} unit={unit} target={target}>
         <RetrievalPrompt.Prompt>Q?</RetrievalPrompt.Prompt>
         <RetrievalPrompt.Answer>A.</RetrievalPrompt.Answer>
       </RetrievalPrompt>
@@ -56,7 +56,7 @@ describe("<SpacedReview>", () => {
       withProfile(
         <SpacedReview
           course='sr-test-1'
-          chapter='ch1'
+          unit='ch1'
           target='topic:never-attempted'
         />
       )
@@ -71,7 +71,7 @@ describe("<SpacedReview>", () => {
       withProfile(
         <SpacedReview
           course='sr-test-2'
-          chapter='ch1'
+          unit='ch1'
           target='topic:nothing-here-yet'
         >
           <SpacedReview.Empty>Practice ahead on logarithms?</SpacedReview.Empty>
@@ -93,7 +93,7 @@ describe("<SpacedReview>", () => {
       withProfile(
         <SpacedReview
           course='sr-test-3'
-          chapter='ch1'
+          unit='ch1'
           target='eq:stefan-boltzmann'
         />
       )
@@ -112,12 +112,7 @@ describe("<SpacedReview>", () => {
 
     render(
       withProfile(
-        <SpacedReview
-          course='sr-test-4'
-          chapter='ch1'
-          target='eq:saha'
-          max={1}
-        />
+        <SpacedReview course='sr-test-4' unit='ch1' target='eq:saha' max={1} />
       )
     );
     await waitFor(() =>
@@ -140,7 +135,7 @@ describe("<SpacedReview>", () => {
       withProfile(
         <SpacedReview
           course='sr-test-regression'
-          chapter='ch1'
+          unit='ch1'
           target='eq:target'
           max={1}
         />
@@ -158,11 +153,7 @@ describe("<SpacedReview>", () => {
     // empty state.
     render(
       withProfile(
-        <SpacedReview
-          course='sr-test-5'
-          chapter='ch1'
-          section='m1-foundations'
-        />
+        <SpacedReview course='sr-test-5' unit='ch1' section='m1-foundations' />
       )
     );
     expect(
@@ -180,7 +171,7 @@ describe("<SpacedReview>", () => {
       // bound to a distinct chapter.
       __setUnits([
         {
-          id: "u1",
+          id: "ch-spectra",
           type: "lecture",
           title: "U1",
           order: 0,
@@ -190,7 +181,7 @@ describe("<SpacedReview>", () => {
           status: "stable",
         },
         {
-          id: "u2",
+          id: "ch-evolution",
           type: "lecture",
           title: "U2",
           order: 1,
@@ -208,7 +199,7 @@ describe("<SpacedReview>", () => {
         withProfile(
           <SpacedReview
             course='sr-section-1'
-            chapter='ch-spectra'
+            unit='ch-spectra'
             section='stars'
             max={3}
           />
@@ -223,7 +214,7 @@ describe("<SpacedReview>", () => {
     it("excludes attempts in chapters bound to OTHER Sections", async () => {
       __setUnits([
         {
-          id: "u-stars",
+          id: "ch-spectra",
           type: "lecture",
           title: "Stars U",
           order: 0,
@@ -235,7 +226,7 @@ describe("<SpacedReview>", () => {
         // Galaxies has a Unit too, but the SpacedReview points at "stars"
         // so galaxy attempts shouldn't surface.
         {
-          id: "u-galaxies",
+          id: "ch-galaxies",
           type: "lecture",
           title: "Galaxies U",
           order: 0,
@@ -252,7 +243,7 @@ describe("<SpacedReview>", () => {
         withProfile(
           <SpacedReview
             course='sr-section-2'
-            chapter='ch-spectra'
+            unit='ch-spectra'
             section='stars'
             max={3}
           />
@@ -267,7 +258,7 @@ describe("<SpacedReview>", () => {
     it("honors max= in section-scope when more attempts would otherwise match", async () => {
       __setUnits([
         {
-          id: "u1",
+          id: "ch-a",
           type: "lecture",
           title: "U1",
           order: 0,
@@ -277,7 +268,7 @@ describe("<SpacedReview>", () => {
           status: "stable",
         },
         {
-          id: "u2",
+          id: "ch-b",
           type: "lecture",
           title: "U2",
           order: 1,
@@ -295,7 +286,7 @@ describe("<SpacedReview>", () => {
         withProfile(
           <SpacedReview
             course='sr-section-3'
-            chapter='ch-a'
+            unit='ch-a'
             section='stars'
             max={2}
           />
@@ -310,11 +301,7 @@ describe("<SpacedReview>", () => {
   it("has zero axe violations in empty state", async () => {
     const { container } = render(
       withProfile(
-        <SpacedReview
-          course='sr-test-axe-1'
-          chapter='ch1'
-          target='topic:logs'
-        />
+        <SpacedReview course='sr-test-axe-1' unit='ch1' target='topic:logs' />
       )
     );
     const results = await axe(container);
@@ -325,7 +312,7 @@ describe("<SpacedReview>", () => {
     await seedAttempt("sr-test-axe-2", "ch1", "eq:gauss");
     const { container } = render(
       withProfile(
-        <SpacedReview course='sr-test-axe-2' chapter='ch1' target='eq:gauss' />
+        <SpacedReview course='sr-test-axe-2' unit='ch1' target='eq:gauss' />
       )
     );
     await waitFor(() =>

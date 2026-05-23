@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { NonEmptyString } from "../primitives.ts";
+import { NonEmptyString, Slug } from "../primitives.ts";
 
 /**
  * Inline-ref pedagogy entries — kind discriminator + usage callsite.
@@ -40,7 +40,7 @@ export const InlineRefUsageEntrySchema = z.object({
   kind: InlineRefKindSchema,
   /** The looked-up name/slug; matched against the target collection. */
   refKey: NonEmptyString,
-  /** Origin chapter slug — where the callsite lives. */
-  chapter: NonEmptyString,
+  /** Parent Unit id — where the callsite lives (W3 rename from `chapter`). */
+  unit: Slug,
 });
 export type InlineRefUsageEntry = z.infer<typeof InlineRefUsageEntrySchema>;

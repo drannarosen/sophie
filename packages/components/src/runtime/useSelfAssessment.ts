@@ -19,19 +19,19 @@ export type SelfAssessmentWidget =
  * `controlProps` per the coding-standards "Persistence-bearing controls"
  * rule.
  *
- * Per ADR 0027: course/chapter/id thread per-instance hydration across
+ * Per ADR 0027: course/unit/id thread per-instance hydration across
  * the Astro MDX render boundary.
  */
 export function useSelfAssessment<T>(
   course: string,
-  chapter: string,
+  unit: string,
   widget: SelfAssessmentWidget,
   id: string,
   initial: T
 ): UseInteractiveResult<T> {
   return useInteractive(
     course,
-    chapter,
+    unit,
     `self-assessment:${widget}:${id}`,
     initial
   );

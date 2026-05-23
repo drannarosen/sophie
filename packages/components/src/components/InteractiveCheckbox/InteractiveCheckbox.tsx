@@ -12,7 +12,7 @@ import type { InteractiveCheckboxProps } from "./InteractiveCheckbox.schema.ts";
  */
 export function InteractiveCheckbox({
   course,
-  chapter,
+  unit,
   id,
   initial = false,
   children,
@@ -25,7 +25,7 @@ export function InteractiveCheckbox({
     controlProps,
   } = useInteractive(
     course,
-    chapter,
+    unit,
     `interactive-checkbox:${id}:checked`,
     initial
   );

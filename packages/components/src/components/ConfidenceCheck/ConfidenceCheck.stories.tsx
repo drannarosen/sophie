@@ -16,7 +16,7 @@ type Story = StoryObj<typeof meta>;
 
 const ns = {
   course: "storybook",
-  chapter: "confidencecheck",
+  unit: "confidencecheck",
 };
 
 export const FivePoint: Story = {

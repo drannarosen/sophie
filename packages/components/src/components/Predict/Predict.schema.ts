@@ -27,7 +27,7 @@ export type PredictPrompt = z.infer<typeof PredictPromptSchema>;
  */
 export const PredictPropsSchema = z.object({
   course: z.string().min(1),
-  chapter: z.string().min(1),
+  unit: z.string().min(1),
   id: z.string().min(1),
   description: z.string().min(1).optional(),
   prompts: z.array(PredictPromptSchema).min(1),

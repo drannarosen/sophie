@@ -11,13 +11,13 @@ describe("extractSpacedReviews (pure)", () => {
     const entries = extractSpacedReviews(tree as never, "spoiler-alerts");
     expect(entries).toHaveLength(2);
     expect(entries[0]).toEqual({
-      chapter: "spoiler-alerts",
+      unit: "spoiler-alerts",
       anchor: "sp-1",
       target_id: "topic:logs",
       max: 3,
     });
     expect(entries[1]).toEqual({
-      chapter: "spoiler-alerts",
+      unit: "spoiler-alerts",
       anchor: "sp-2",
       target_id: "topic:exponents",
       max: 5,
@@ -31,7 +31,7 @@ describe("extractSpacedReviews (pure)", () => {
     const entries = extractSpacedReviews(tree as never, "ch");
     expect(entries).toHaveLength(1);
     expect(entries[0]).toEqual({
-      chapter: "ch",
+      unit: "ch",
       anchor: "sp-1",
       section_id: "m1-foundations",
       max: 5,

@@ -13,7 +13,7 @@ import type { PredictPrompt, PredictProps } from "./Predict.schema.ts";
  * `useInteractive`. When `children` are provided, a "Reveal" button gates
  * the children content until all prompts have non-empty answers.
  *
- * Per ADR 0027: course/chapter/id are required (per-instance hydration).
+ * Per ADR 0027: course/unit/id are required (per-instance hydration).
  * Per coding-standards "Persistence-bearing controls", textareas spread
  * `controlProps` so the disabled-while-loading hydration guard is the
  * default path. Self-assessment widgets (confidence, comprehension,
@@ -21,7 +21,7 @@ import type { PredictPrompt, PredictProps } from "./Predict.schema.ts";
  */
 export function Predict({
   course,
-  chapter,
+  unit,
   id,
   description,
   prompts,
@@ -58,7 +58,7 @@ export function Predict({
           <PromptRow
             key={p.id}
             course={course}
-            chapter={chapter}
+            unit={unit}
             componentId={id}
             prompt={p}
             onValue={updateValue}
@@ -72,7 +72,7 @@ export function Predict({
         {children !== undefined && (
           <RevealGate
             course={course}
-            chapter={chapter}
+            unit={unit}
             componentId={id}
             enabled={allFilled}
           >
@@ -86,13 +86,13 @@ export function Predict({
 
 function PromptRow({
   course,
-  chapter,
+  unit,
   componentId,
   prompt,
   onValue,
 }: {
   course: string;
-  chapter: string;
+  unit: string;
   componentId: string;
   prompt: PredictPrompt;
   onValue: (id: string, value: string) => void;
@@ -100,7 +100,7 @@ function PromptRow({
   const textareaId = useId();
   const { value, setValue, hydrated, controlProps } = useInteractive(
     course,
-    chapter,
+    unit,
     `predict:${componentId}:${prompt.id}:answer`,
     ""
   );
@@ -132,13 +132,13 @@ function PromptRow({
 
 function RevealGate({
   course,
-  chapter,
+  unit,
   componentId,
   enabled,
   children,
 }: {
   course: string;
-  chapter: string;
+  unit: string;
   componentId: string;
   enabled: boolean;
   children: React.ReactNode;
@@ -148,7 +148,7 @@ function RevealGate({
     setValue: setRevealed,
     hydrated,
     controlProps,
-  } = useInteractive(course, chapter, `predict:${componentId}:revealed`, false);
+  } = useInteractive(course, unit, `predict:${componentId}:revealed`, false);
 
   // Two disable reasons must compose: (a) the hydration guard from
   // useInteractive's controlProps; (b) the business-logic gate

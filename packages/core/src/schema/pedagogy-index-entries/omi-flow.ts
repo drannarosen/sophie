@@ -30,7 +30,8 @@ type OMIFlowSlot = z.infer<typeof OMIFlowSlotSchema>;
  * v1 carries no audit invariant on it.
  */
 export const OMIFlowEntrySchema = z.object({
-  chapter: Slug,
+  /** Parent Unit id (W3 rename from `chapter`). */
+  unit: Slug,
   anchor: NonEmptyString,
   /** Optional Notation Registry concept binding. */
   concept: z.string().optional(),

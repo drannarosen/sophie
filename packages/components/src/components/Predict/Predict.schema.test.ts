@@ -21,7 +21,7 @@ describe("PredictPromptSchema", () => {
 describe("PredictPropsSchema", () => {
   const valid = {
     course: "test",
-    chapter: "test",
+    unit: "test",
     id: "predict-1",
     prompts: [{ id: "p1", label: "Predict X" }],
   };
@@ -44,8 +44,8 @@ describe("PredictPropsSchema", () => {
     }
   });
 
-  it("rejects empty required strings (course, chapter, id)", () => {
-    for (const field of ["course", "chapter", "id"] as const) {
+  it("rejects empty required strings (course, unit, id)", () => {
+    for (const field of ["course", "unit", "id"] as const) {
       expect(
         PredictPropsSchema.safeParse({ ...valid, [field]: "" }).success
       ).toBe(false);

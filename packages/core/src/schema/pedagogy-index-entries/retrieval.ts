@@ -8,11 +8,11 @@ import { NonEmptyString, Slug } from "../primitives.ts";
  * Anchor convention (per the canonical prefix table in
  * `pedagogy-index.ts`):
  *
- * | Component        | Prefix  | Source                                |
- * |------------------|---------|---------------------------------------|
- * | RetrievalPrompt  | `rp-`   | auto: `rp-${counter}` (per chapter)   |
- * | SpacedReview     | `sp-`   | auto: `sp-${counter}` (per chapter)   |
- * | SkillReview      | `sk-`   | auto: `sk-${counter}` (per chapter)   |
+ * | Component        | Prefix  | Source                              |
+ * |------------------|---------|-------------------------------------|
+ * | RetrievalPrompt  | `rp-`   | auto: `rp-${counter}` (per unit)    |
+ * | SpacedReview     | `sp-`   | auto: `sp-${counter}` (per unit)    |
+ * | SkillReview      | `sk-`   | auto: `sk-${counter}` (per unit)    |
  *
  * Each entry carries the prefix-typed `target_id` (or in
  * SpacedReview's case `section_id`) so the curriculum-CI invariants
@@ -26,7 +26,8 @@ import { NonEmptyString, Slug } from "../primitives.ts";
  * "what targets did this chapter ask the student to recall?" view.
  */
 export const RetrievalPromptEntrySchema = z.object({
-  chapter: Slug,
+  /** Parent Unit id (W3 rename from `chapter`). */
+  unit: Slug,
   anchor: NonEmptyString,
   target_id: NonEmptyString,
 });
@@ -43,7 +44,8 @@ export type RetrievalPromptEntry = z.infer<typeof RetrievalPromptEntrySchema>;
  */
 export const SpacedReviewEntrySchema = z
   .object({
-    chapter: Slug,
+    /** Parent Unit id (W3 rename from `chapter`). */
+    unit: Slug,
     anchor: NonEmptyString,
     target_id: NonEmptyString.optional(),
     section_id: NonEmptyString.optional(),
@@ -70,7 +72,8 @@ export type SpacedReviewEntry = z.infer<typeof SpacedReviewEntrySchema>;
  * has ≥1 SkillReview surface in the same Section).
  */
 export const SkillReviewEntrySchema = z.object({
-  chapter: Slug,
+  /** Parent Unit id (W3 rename from `chapter`). */
+  unit: Slug,
   anchor: NonEmptyString,
   target_id: NonEmptyString,
   has_explicit_content: z.boolean(),

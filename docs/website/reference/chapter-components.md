@@ -96,6 +96,18 @@ This page is the chapter author's quick reference.
 
 #### Persistence-bearing (IndexedDB state)
 
+> **W3 prop-name convention (locked 2026-05-22):** All persistence-
+> bearing components take `course`, `unit`, `id` as their IDB-key
+> dimension props (W3 D1 — parent-ref family). Pre-W3 the second
+> prop was named `chapter`; the rename `chapter` → `unit` reflects
+> that the value identifies the parent Unit (matching
+> `UnitEntry.id`), not a reading-artifact slug. The artifact-ref
+> family (`<ChapterRef>`, `<ChapterGlossary>` + 6 chrome roll-ups,
+> `<ChapterMultiReps>`) preserves the prop name `chapter` because
+> its value is a reading-artifact slug (= `UnitEntry.chapter` D7
+> binding). Per W2/D4 1:1 these strings happen to be equal in
+> production; the W3 split decouples them at the type/prop layer.
+
 | Component | Use case |
 |---|---|
 | `<InteractiveCallout>` | Side info with a reviewed-state toggle |
@@ -118,7 +130,7 @@ This page is the chapter author's quick reference.
 | `<GlossaryTerm name="X">term</GlossaryTerm>` | `definitions` | The element's children (always; `name` is the lookup key) | Children-only |
 | `<EquationRef refId="X" />` | `equations` (registry collection) | Equation title with hover preview (KaTeX-rendered tex + title + compact biography summary). Clicks navigate to `/equations/<refId>` registry route. | Self-closing or children |
 | `<FigureRef name="X" />` | `figureRegistry` + `figureUsages` | "Fig. N" (ordinal) with hover preview (thumbnail + caption) | Self-closing or children |
-| `<ChapterRef chapter="X" />` | `artifacts` + `units` + `sections` | Unit title with hover preview (section breadcrumb + title + description); links to `/units/X/reading`. W2/D3 prop rename (`slug` → `chapter`); per W2/D4 the prop value equals both the reading-artifact id and the parent Unit id. | Self-closing or children |
+| `<ChapterRef chapter="X" />` | `artifacts` + `units` + `sections` | Unit title with hover preview (section breadcrumb + title + description); links to `/units/X/reading`. W2/D3 prop rename (`slug` → `chapter`); W3/D1 KEEPS the prop name `chapter` (artifact-ref family — references the reading-artifact slug, not the parent Unit id). Per W2/D4 the prop value equals both the reading-artifact id and the parent Unit id. | Self-closing or children |
 | `<TDRRef num="14" />` | `tdrReferences` (Teaching Decision Records) | `TDR-N: [title]` with hover preview (title + evidence_type + evidence_strength + 1-line summary) | Self-closing or children |
 
 `<TDRRef>` respects per-ADR-0040 visibility rules: in student-facing

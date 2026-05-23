@@ -98,20 +98,20 @@ export async function buildPagefindIndex(distPath: string): Promise<void> {
     const entities = pedagogyIndex[entitySource] ?? [];
     const converter = converters[entitySource];
     for (const entity of entities) {
-      // Post-ADR-0060: equations are registry-sourced (no `chapter` on
+      // Post-ADR-0060: equations are registry-sourced (no `unit` on
       // the entry). Look up the first citation to derive the module
       // context for the locator string; skip orphan declarations.
-      let entityChapterSlug: string | undefined;
+      let entityUnitId: string | undefined;
       if (entitySource === "equations") {
         const eq = entity as { id: string };
-        entityChapterSlug = pedagogyIndex.equationCitations.find(
+        entityUnitId = pedagogyIndex.equationCitations.find(
           (c) => c.refId === eq.id
-        )?.chapter;
+        )?.unit;
       } else {
-        entityChapterSlug = (entity as { chapter?: string }).chapter;
+        entityUnitId = (entity as { unit?: string }).unit;
       }
-      const chapter = entityChapterSlug
-        ? chapterBySlug.get(entityChapterSlug)
+      const chapter = entityUnitId
+        ? chapterBySlug.get(entityUnitId)
         : undefined;
       // W2/D2: Unit's section binding is via section_id (was chapter.module).
       const module = chapter ? moduleBySlug.get(chapter.section_id) : undefined;

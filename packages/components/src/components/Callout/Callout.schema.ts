@@ -85,7 +85,7 @@ export type CalloutProps = z.infer<typeof CalloutPropsSchema>;
  */
 export const InteractiveCalloutPropsSchema = z.object({
   course: z.string().min(1),
-  chapter: z.string().min(1),
+  unit: z.string().min(1),
   id: z.string().min(1),
   variant: CalloutVariant.optional(),
   title: z.string().optional(),

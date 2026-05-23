@@ -12,7 +12,7 @@ describe("extractEquationCitations (pure, chapter walker)", () => {
     const citations = extractEquationCitations(tree as never, "spoiler-alerts");
     expect(citations).toHaveLength(1);
     expect(citations[0]).toMatchObject({
-      chapter: "spoiler-alerts",
+      unit: "spoiler-alerts",
       refId: "wiens-law",
       anchor: "wiens-law-citation-1",
       number: 1,

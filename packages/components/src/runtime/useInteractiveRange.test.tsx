@@ -11,16 +11,16 @@ function ProfileWrapper({ children }: { children: ReactNode }) {
 
 function RangeProbe({
   course,
-  chapter,
+  unit,
   keyPrefix,
 }: {
   course: string;
-  chapter: string;
+  unit: string;
   keyPrefix?: string;
 }) {
   const { values, status, hydrated } = useInteractiveRange<number>(
     course,
-    chapter,
+    unit,
     keyPrefix
   );
   return (
@@ -36,18 +36,18 @@ function RangeProbe({
 /** Writer probe that uses useInteractive to seed values into the store. */
 function WriterProbe({
   course,
-  chapter,
+  unit,
   keyName,
   initial,
 }: {
   course: string;
-  chapter: string;
+  unit: string;
   keyName: string;
   initial: number;
 }) {
   const { value, setValue, hydrated } = useInteractive<number>(
     course,
-    chapter,
+    unit,
     keyName,
     initial
   );
@@ -63,10 +63,10 @@ function WriterProbe({
 }
 
 describe("useInteractiveRange", () => {
-  it("hydrates to {} for a chapter with no records", async () => {
+  it("hydrates to {} for a unit with no records", async () => {
     render(
       <ProfileWrapper>
-        <RangeProbe course='range-empty' chapter='ch1' />
+        <RangeProbe course='range-empty' unit='ch1' />
       </ProfileWrapper>
     );
     await waitFor(() =>
@@ -76,8 +76,8 @@ describe("useInteractiveRange", () => {
     expect(screen.getByTestId("values").textContent).toBe("{}");
   });
 
-  it("hydrates with all matching records for the chapter (no keyPrefix)", async () => {
-    // Seed via two writer probes that share the same (course, chapter)
+  it("hydrates with all matching records for the unit (no keyPrefix)", async () => {
+    // Seed via two writer probes that share the same (course, unit)
     // — they'll write through useInteractive, which uses the same store
     // cache as useInteractiveRange.
     function SeededScene() {
@@ -85,17 +85,17 @@ describe("useInteractiveRange", () => {
         <>
           <WriterProbe
             course='range-seeded'
-            chapter='ch1'
+            unit='ch1'
             keyName='k1'
             initial={10}
           />
           <WriterProbe
             course='range-seeded'
-            chapter='ch1'
+            unit='ch1'
             keyName='k2'
             initial={20}
           />
-          <RangeProbe course='range-seeded' chapter='ch1' />
+          <RangeProbe course='range-seeded' unit='ch1' />
         </>
       );
     }
@@ -142,25 +142,25 @@ describe("useInteractiveRange", () => {
         <>
           <WriterProbe
             course='range-prefix'
-            chapter='ch1'
+            unit='ch1'
             keyName='practice-attempt:eq:sb'
             initial={1}
           />
           <WriterProbe
             course='range-prefix'
-            chapter='ch1'
+            unit='ch1'
             keyName='practice-attempt:eq:saha'
             initial={2}
           />
           <WriterProbe
             course='range-prefix'
-            chapter='ch1'
+            unit='ch1'
             keyName='predict:p1:answer'
             initial={99}
           />
           <RangeProbe
             course='range-prefix'
-            chapter='ch1'
+            unit='ch1'
             keyPrefix='practice-attempt:'
           />
         </>
@@ -198,7 +198,7 @@ describe("useInteractiveRange", () => {
       <ProfileWrapper>
         <RangeProbe
           course='range-bc'
-          chapter='ch1'
+          unit='ch1'
           keyPrefix='practice-attempt:'
         />
       </ProfileWrapper>
@@ -234,7 +234,7 @@ describe("useInteractiveRange", () => {
       <ProfileWrapper>
         <RangeProbe
           course='range-bc-scope'
-          chapter='ch1'
+          unit='ch1'
           keyPrefix='practice-attempt:'
         />
       </ProfileWrapper>
@@ -266,13 +266,13 @@ describe("useInteractiveRange", () => {
         <>
           <WriterProbe
             course='range-lww'
-            chapter='ch1'
+            unit='ch1'
             keyName='practice-attempt:eq:sb'
             initial={5}
           />
           <RangeProbe
             course='range-lww'
-            chapter='ch1'
+            unit='ch1'
             keyPrefix='practice-attempt:'
           />
         </>

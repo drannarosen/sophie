@@ -74,7 +74,7 @@ describe("runPedagogyAudit — clean index", () => {
       term: "Photon",
       slug: "photon",
       body: "<p>A quantum of EM radiation.</p>",
-      chapter: "spoiler-alerts",
+      unit: "spoiler-alerts",
       anchor: "photon",
     };
     const isq: EquationEntry = {
@@ -90,51 +90,51 @@ describe("runPedagogyAudit — clean index", () => {
     };
     const figUse: FigureUsageEntry = {
       name: "three-big-questions",
-      chapter: "spoiler-alerts",
+      unit: "spoiler-alerts",
       anchor: "fig-three-big-questions-1",
       number: 1,
       canonical: true,
     };
     const ki: KeyInsightEntry = {
       body: "<p>Stars are physics labs.</p>",
-      chapter: "spoiler-alerts",
+      unit: "spoiler-alerts",
       anchor: "ki-1",
     };
     const obj: ObjectiveEntry = {
       id: "lo-1",
       verb: "Recognize",
       body: "Photons are quanta.",
-      chapter: "spoiler-alerts",
+      unit: "spoiler-alerts",
       anchor: "lo-lo-1",
     };
     const objFoundations: ObjectiveEntry = {
       id: "lo-f1",
       verb: "Recognize",
       body: "Foundations objective.",
-      chapter: "foundations",
+      unit: "foundations",
       anchor: "lo-lo-f1",
     };
     const kiFoundations: KeyInsightEntry = {
       body: "<p>Foundations insight.</p>",
-      chapter: "foundations",
+      unit: "foundations",
       anchor: "ki-1",
     };
     const usages: InlineRefUsageEntry[] = [
-      { kind: "glossary-term", refKey: "Photon", chapter: "spoiler-alerts" },
+      { kind: "glossary-term", refKey: "Photon", unit: "spoiler-alerts" },
       {
         kind: "eq-ref",
         refKey: "inverse-square-law",
-        chapter: "spoiler-alerts",
+        unit: "spoiler-alerts",
       },
       {
         kind: "figure-ref",
         refKey: "three-big-questions",
-        chapter: "spoiler-alerts",
+        unit: "spoiler-alerts",
       },
       {
         kind: "chapter-ref",
         refKey: "foundations",
-        chapter: "spoiler-alerts",
+        unit: "spoiler-alerts",
       },
     ];
     const index: PedagogyIndex = {
@@ -144,7 +144,7 @@ describe("runPedagogyAudit — clean index", () => {
       // Cite the registry entry from a chapter so R2 (orphan) stays silent.
       equationCitations: [
         {
-          chapter: "spoiler-alerts",
+          unit: "spoiler-alerts",
           refId: "inverse-square-law",
           anchor: "inverse-square-law-citation-1",
           number: 1,
@@ -172,7 +172,7 @@ describe("D4 — undefined <GlossaryTerm name=X>", () => {
         {
           kind: "glossary-term",
           refKey: "Dark matter",
-          chapter: "spoiler-alerts",
+          unit: "spoiler-alerts",
         },
       ],
     };
@@ -184,7 +184,7 @@ describe("D4 — undefined <GlossaryTerm name=X>", () => {
     });
     expect(report.errors[0]?.message).toContain("Dark matter");
     expect(report.errors[0]?.location).toMatchObject({
-      chapter: "spoiler-alerts",
+      unit: "spoiler-alerts",
     });
   });
 
@@ -193,7 +193,7 @@ describe("D4 — undefined <GlossaryTerm name=X>", () => {
       term: "Dark matter",
       slug: "dark-matter",
       body: "",
-      chapter: "spoiler-alerts",
+      unit: "spoiler-alerts",
       anchor: "dark-matter",
     };
     const index: PedagogyIndex = {
@@ -204,7 +204,7 @@ describe("D4 — undefined <GlossaryTerm name=X>", () => {
         {
           kind: "glossary-term",
           refKey: "DARK MATTER",
-          chapter: "spoiler-alerts",
+          unit: "spoiler-alerts",
         },
       ],
     };
@@ -219,7 +219,7 @@ describe("D5 — orphan definitions (WARNING)", () => {
       term: "Aphelion",
       slug: "aphelion",
       body: "",
-      chapter: "spoiler-alerts",
+      unit: "spoiler-alerts",
       anchor: "aphelion",
     };
     const index: PedagogyIndex = {
@@ -241,14 +241,14 @@ describe("D5 — orphan definitions (WARNING)", () => {
       term: "Photon",
       slug: "photon",
       body: "",
-      chapter: "spoiler-alerts",
+      unit: "spoiler-alerts",
       anchor: "photon",
     };
     const index: PedagogyIndex = {
       ...emptyIndex(),
       definitions: [def],
       inlineRefUsages: [
-        { kind: "glossary-term", refKey: "Photon", chapter: "spoiler-alerts" },
+        { kind: "glossary-term", refKey: "Photon", unit: "spoiler-alerts" },
       ],
     };
     const report = runPedagogyAudit(index);
@@ -265,7 +265,7 @@ describe("E4 — undefined <EquationRef refId=X>", () => {
         {
           kind: "eq-ref",
           refKey: "inverse-square-law",
-          chapter: "spoiler-alerts",
+          unit: "spoiler-alerts",
         },
       ],
     };
@@ -289,7 +289,7 @@ describe("E4 — undefined <EquationRef refId=X>", () => {
       ...emptyIndex(),
       equations: [eq],
       inlineRefUsages: [
-        { kind: "eq-ref", refKey: "wiens-law", chapter: "spoiler-alerts" },
+        { kind: "eq-ref", refKey: "wiens-law", unit: "spoiler-alerts" },
       ],
     };
     const report = runPedagogyAudit(index);
@@ -301,7 +301,7 @@ describe("F1 — <Figure name=X> with X not in registry", () => {
   it("emits an ERROR when a figureUsage references a name not in figureRegistry", () => {
     const figUse: FigureUsageEntry = {
       name: "missing-from-registry",
-      chapter: "spoiler-alerts",
+      unit: "spoiler-alerts",
       anchor: "fig-missing-from-registry-1",
       number: 1,
       canonical: false,
@@ -319,7 +319,7 @@ describe("F1 — <Figure name=X> with X not in registry", () => {
     });
     expect(report.errors[0]?.message).toContain("missing-from-registry");
     expect(report.errors[0]?.location).toMatchObject({
-      chapter: "spoiler-alerts",
+      unit: "spoiler-alerts",
     });
   });
 });
@@ -333,7 +333,7 @@ describe("F2 — <FigureRef name=X> for X not in registry", () => {
         {
           kind: "figure-ref",
           refKey: "phantom-figure",
-          chapter: "spoiler-alerts",
+          unit: "spoiler-alerts",
         },
       ],
     };
@@ -361,7 +361,7 @@ describe("F2 — <FigureRef name=X> for X not in registry", () => {
         {
           kind: "figure-ref",
           refKey: "registered-only",
-          chapter: "spoiler-alerts",
+          unit: "spoiler-alerts",
         },
       ],
     };
@@ -400,7 +400,7 @@ describe("F4 — registry figure with zero usages (WARNING)", () => {
     };
     const use: FigureUsageEntry = {
       name: "used-figure",
-      chapter: "spoiler-alerts",
+      unit: "spoiler-alerts",
       anchor: "fig-used-figure-1",
       number: 1,
       canonical: false,
@@ -428,7 +428,7 @@ describe("F4 — registry figure with zero usages (WARNING)", () => {
         {
           kind: "figure-ref",
           refKey: "ref-only-figure",
-          chapter: "spoiler-alerts",
+          unit: "spoiler-alerts",
         },
       ],
     };
@@ -446,7 +446,7 @@ describe("C1 — <ChapterRef slug=X> for unknown chapter", () => {
         {
           kind: "chapter-ref",
           refKey: "does-not-exist",
-          chapter: "spoiler-alerts",
+          unit: "spoiler-alerts",
         },
       ],
     };
@@ -467,7 +467,7 @@ describe("C1 — <ChapterRef slug=X> for unknown chapter", () => {
         {
           kind: "chapter-ref",
           refKey: "foundations",
-          chapter: "spoiler-alerts",
+          unit: "spoiler-alerts",
         },
       ],
     };
@@ -487,14 +487,14 @@ describe("O1 — duplicate objective id within a chapter (defense-in-depth)", ()
       id: "lo-1",
       verb: "Recognize",
       body: "first",
-      chapter: "spoiler-alerts",
+      unit: "spoiler-alerts",
       anchor: "lo-lo-1",
     };
     const b: ObjectiveEntry = {
       id: "lo-1",
       verb: "Understand",
       body: "second",
-      chapter: "spoiler-alerts",
+      unit: "spoiler-alerts",
       anchor: "lo-lo-1",
     };
     const index: PedagogyIndex = {
@@ -514,14 +514,14 @@ describe("O1 — duplicate objective id within a chapter (defense-in-depth)", ()
       id: "lo-1",
       verb: "Recognize",
       body: "first",
-      chapter: "spoiler-alerts",
+      unit: "spoiler-alerts",
       anchor: "lo-lo-1",
     };
     const b: ObjectiveEntry = {
       id: "lo-1",
       verb: "Understand",
       body: "second",
-      chapter: "measuring-the-sky",
+      unit: "measuring-the-sky",
       anchor: "lo-lo-1",
     };
     const index: PedagogyIndex = {
@@ -566,7 +566,7 @@ describe("O2 — chapter with zero objectives (WARNING)", () => {
       id: "lo-1",
       verb: "Recognize",
       body: "body",
-      chapter: "spoiler-alerts",
+      unit: "spoiler-alerts",
       anchor: "lo-lo-1",
     };
     const index: PedagogyIndex = {
@@ -585,7 +585,7 @@ describe("MG1 — cycle in prerequisite_misconceptions (ADR 0044)", () => {
     overrides: Partial<MisconceptionEntry> = {}
   ): MisconceptionEntry => ({
     body: "<p>x</p>",
-    chapter: "ch-a",
+    unit: "ch-a",
     anchor: "default",
     length: "short",
     ...overrides,
@@ -618,12 +618,12 @@ describe("MG1 — cycle in prerequisite_misconceptions (ADR 0044)", () => {
       ],
       misconceptions: [
         mc({
-          chapter: "ch-a",
+          unit: "ch-a",
           anchor: "alpha",
           prerequisite_misconceptions: ["beta"],
         }),
         mc({
-          chapter: "ch-b",
+          unit: "ch-b",
           anchor: "beta",
           prerequisite_misconceptions: ["alpha"],
         }),
@@ -672,17 +672,17 @@ describe("MG1 — cycle in prerequisite_misconceptions (ADR 0044)", () => {
       ],
       misconceptions: [
         mc({
-          chapter: "ch-a",
+          unit: "ch-a",
           anchor: "alpha",
           prerequisite_misconceptions: ["gamma"],
         }),
         mc({
-          chapter: "ch-b",
+          unit: "ch-b",
           anchor: "beta",
           prerequisite_misconceptions: ["alpha"],
         }),
         mc({
-          chapter: "ch-c",
+          unit: "ch-c",
           anchor: "gamma",
           prerequisite_misconceptions: ["beta"],
         }),
@@ -711,7 +711,7 @@ describe("MG1 — cycle in prerequisite_misconceptions (ADR 0044)", () => {
       ],
       misconceptions: [
         mc({
-          chapter: "ch-a",
+          unit: "ch-a",
           anchor: "alpha",
           prerequisite_misconceptions: ["alpha"],
         }),
@@ -759,17 +759,17 @@ describe("MG1 — cycle in prerequisite_misconceptions (ADR 0044)", () => {
       ],
       misconceptions: [
         mc({
-          chapter: "ch-a",
+          unit: "ch-a",
           anchor: "alpha",
           prerequisite_misconceptions: [],
         }),
         mc({
-          chapter: "ch-b",
+          unit: "ch-b",
           anchor: "beta",
           prerequisite_misconceptions: ["alpha"],
         }),
         mc({
-          chapter: "ch-c",
+          unit: "ch-c",
           anchor: "gamma",
           prerequisite_misconceptions: ["alpha", "beta"],
         }),
@@ -816,17 +816,17 @@ describe("MG1 — cycle in prerequisite_misconceptions (ADR 0044)", () => {
       ],
       misconceptions: [
         mc({
-          chapter: "ch-a",
+          unit: "ch-a",
           anchor: "alpha",
           prerequisite_misconceptions: ["beta"],
         }),
         mc({
-          chapter: "ch-b",
+          unit: "ch-b",
           anchor: "beta",
           prerequisite_misconceptions: ["alpha"],
         }),
         mc({
-          chapter: "ch-c",
+          unit: "ch-c",
           anchor: "gamma",
           prerequisite_misconceptions: ["alpha"],
         }),
@@ -843,7 +843,7 @@ describe("MG2 — prerequisite_misconceptions ordering + dangling (ADR 0044)", (
     overrides: Partial<MisconceptionEntry> = {}
   ): MisconceptionEntry => ({
     body: "<p>x</p>",
-    chapter: "ch-a",
+    unit: "ch-a",
     anchor: "default",
     length: "short",
     ...overrides,
@@ -866,7 +866,7 @@ describe("MG2 — prerequisite_misconceptions ordering + dangling (ADR 0044)", (
       ],
       misconceptions: [
         mc({
-          chapter: "ch-a",
+          unit: "ch-a",
           anchor: "alpha",
           prerequisite_misconceptions: ["does-not-exist"],
         }),
@@ -896,12 +896,12 @@ describe("MG2 — prerequisite_misconceptions ordering + dangling (ADR 0044)", (
       ],
       misconceptions: [
         mc({
-          chapter: "ch-a",
+          unit: "ch-a",
           anchor: "alpha",
           prerequisite_misconceptions: [],
         }),
         mc({
-          chapter: "ch-a",
+          unit: "ch-a",
           anchor: "beta",
           prerequisite_misconceptions: ["alpha"],
         }),
@@ -940,12 +940,12 @@ describe("MG2 — prerequisite_misconceptions ordering + dangling (ADR 0044)", (
       ],
       misconceptions: [
         mc({
-          chapter: "ch-a",
+          unit: "ch-a",
           anchor: "alpha",
           prerequisite_misconceptions: ["beta"],
         }),
         mc({
-          chapter: "ch-b",
+          unit: "ch-b",
           anchor: "beta",
           prerequisite_misconceptions: [],
         }),
@@ -983,12 +983,12 @@ describe("MG2 — prerequisite_misconceptions ordering + dangling (ADR 0044)", (
       ],
       misconceptions: [
         mc({
-          chapter: "ch-a",
+          unit: "ch-a",
           anchor: "alpha",
           prerequisite_misconceptions: [],
         }),
         mc({
-          chapter: "ch-b",
+          unit: "ch-b",
           anchor: "beta",
           prerequisite_misconceptions: ["alpha"],
         }),
@@ -1013,7 +1013,7 @@ describe("MG2 — prerequisite_misconceptions ordering + dangling (ADR 0044)", (
           status: "stable" as const,
         },
       ],
-      misconceptions: [mc({ chapter: "ch-a", anchor: "alpha" })],
+      misconceptions: [mc({ unit: "ch-a", anchor: "alpha" })],
     };
     const report = runPedagogyAudit(index);
     expect(report.errors.filter((e) => e.code === "MG2")).toEqual([]);
@@ -1036,7 +1036,7 @@ describe("MG2 — prerequisite_misconceptions ordering + dangling (ADR 0044)", (
       ],
       misconceptions: [
         mc({
-          chapter: "ch-a",
+          unit: "ch-a",
           anchor: "alpha",
           prerequisite_misconceptions: [],
         }),
@@ -1073,12 +1073,12 @@ describe("MG2 — prerequisite_misconceptions ordering + dangling (ADR 0044)", (
       ],
       misconceptions: [
         mc({
-          chapter: "ch-a",
+          unit: "ch-a",
           anchor: "alpha",
           prerequisite_misconceptions: [],
         }),
         mc({
-          chapter: "ch-b",
+          unit: "ch-b",
           anchor: "beta",
           prerequisite_misconceptions: ["alpha"],
         }),
@@ -1106,7 +1106,7 @@ describe("K1 — chapters with zero <KeyInsight>s (INFO)", () => {
   it("does not flag a chapter that has at least one key-insight", () => {
     const ki: KeyInsightEntry = {
       body: "<p>x</p>",
-      chapter: "spoiler-alerts",
+      unit: "spoiler-alerts",
       anchor: "ki-1",
     };
     const index: PedagogyIndex = {
@@ -1126,25 +1126,25 @@ describe("CS2 — draft chapters excluded from student build (ADR 0051)", () => 
   });
 
   it("emits no CS2 finding for an empty draft slug array", () => {
-    const report = runPedagogyAudit(emptyIndex(), { draftChapterSlugs: [] });
+    const report = runPedagogyAudit(emptyIndex(), { draftUnitIds: [] });
     expect(report.info.filter((i) => i.code === "CS2")).toEqual([]);
   });
 
   it("emits one INFO per draft chapter slug", () => {
     const report = runPedagogyAudit(emptyIndex(), {
-      draftChapterSlugs: ["in-progress", "scratch-chapter"],
+      draftUnitIds: ["in-progress", "scratch-chapter"],
     });
     const cs2 = report.info.filter((i) => i.code === "CS2");
     expect(cs2).toHaveLength(2);
     expect(cs2[0]).toMatchObject({ severity: "INFO", code: "CS2" });
     expect(cs2[0]?.message).toContain("in-progress");
-    expect(cs2[0]?.location).toMatchObject({ chapter: "in-progress" });
+    expect(cs2[0]?.location).toMatchObject({ unit: "in-progress" });
     expect(cs2[1]?.message).toContain("scratch-chapter");
   });
 
   it("CS2 message mentions student-build exclusion + ADR 0051", () => {
     const report = runPedagogyAudit(emptyIndex(), {
-      draftChapterSlugs: ["wip"],
+      draftUnitIds: ["wip"],
     });
     const cs2 = report.info.find((i) => i.code === "CS2");
     expect(cs2?.message).toMatch(/excluded from the student build/i);
@@ -1164,7 +1164,7 @@ describe("accumulate-and-report behavior", () => {
         {
           kind: "glossary-term",
           refKey: "Undefined-term",
-          chapter: "spoiler-alerts",
+          unit: "spoiler-alerts",
         },
       ],
     };
@@ -1196,7 +1196,7 @@ describe("formatAuditReport", () => {
           severity: "ERROR",
           code: "D4",
           message: 'Undefined glossary term "Foo".',
-          location: { chapter: "spoiler-alerts" },
+          location: { unit: "spoiler-alerts" },
         },
       ],
       warnings: [

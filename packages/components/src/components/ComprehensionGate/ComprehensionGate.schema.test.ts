@@ -4,7 +4,7 @@ import { ComprehensionGatePropsSchema } from "./ComprehensionGate.schema.ts";
 describe("ComprehensionGatePropsSchema", () => {
   const valid = {
     course: "test",
-    chapter: "test",
+    unit: "test",
     id: "cg-1",
     prompt: "How comfortable are you with this section?",
   };
@@ -14,7 +14,7 @@ describe("ComprehensionGatePropsSchema", () => {
   });
 
   it("rejects empty required strings", () => {
-    for (const field of ["course", "chapter", "id", "prompt"] as const) {
+    for (const field of ["course", "unit", "id", "prompt"] as const) {
       expect(
         ComprehensionGatePropsSchema.safeParse({ ...valid, [field]: "" })
           .success

@@ -16,18 +16,18 @@ function ProfileWrapper({
 
 function Probe({
   course = "test-course",
-  chapter = "test-chapter",
+  unit = "test-unit",
   keyName,
   initial,
 }: {
   course?: string;
-  chapter?: string;
+  unit?: string;
   keyName: string;
   initial: boolean;
 }) {
   const { value, setValue, status } = useInteractive(
     course,
-    chapter,
+    unit,
     keyName,
     initial
   );
@@ -47,7 +47,7 @@ describe("useInteractive", () => {
     function HydrationProbe({ keyName }: { keyName: string }) {
       const { hydrated, controlProps } = useInteractive(
         "hydration-course",
-        "hydration-chapter",
+        "hydration-unit",
         keyName,
         false
       );
@@ -89,7 +89,7 @@ describe("useInteractive", () => {
     expect(screen.getByTestId("value").textContent).toBe("false");
   });
 
-  it("persists value across remount within same course/profile/chapter", async () => {
+  it("persists value across remount within same course/profile/unit", async () => {
     const { unmount } = render(
       <ProfileWrapper>
         <Probe keyName='probe:persist' initial={false} />
@@ -212,7 +212,7 @@ describe("useInteractive", () => {
       <ProfileWrapper>
         <Probe
           course='lww-course'
-          chapter='lww-chapter'
+          unit='lww-unit'
           keyName='probe:lww-older'
           initial={false}
         />
@@ -230,8 +230,8 @@ describe("useInteractive", () => {
     );
 
     // Stale broadcast from another "tab" with ts=1 (ancient).
-    const channelName = "sophie-lww-course:lww-chapter";
-    const compositeKey = "student:lww-chapter:probe:lww-older";
+    const channelName = "sophie-lww-course:lww-unit";
+    const compositeKey = "student:lww-unit:probe:lww-older";
     const otherTab = new BroadcastChannel(channelName);
     await act(async () => {
       otherTab.postMessage({
@@ -250,7 +250,7 @@ describe("useInteractive", () => {
 
   it("updates when a same-name BroadcastChannel from elsewhere posts a matching message", async () => {
     // Simulates a second tab: create our own BroadcastChannel with the
-    // same chapter-channel name and post a message. The hook's
+    // same unit-channel name and post a message. The hook's
     // subscription should pick it up and update the local state.
     // Same-channel echo doesn't fire (browser BC API), so we don't try
     // to test that with two intra-tab instances — only cross-channel
@@ -259,7 +259,7 @@ describe("useInteractive", () => {
       <ProfileWrapper>
         <Probe
           course='cross-tab'
-          chapter='cross-chapter'
+          unit='cross-unit'
           keyName='probe:bc'
           initial={false}
         />
@@ -270,8 +270,8 @@ describe("useInteractive", () => {
     );
     expect(screen.getByTestId("value").textContent).toBe("false");
 
-    const channelName = "sophie-cross-tab:cross-chapter";
-    const compositeKey = "student:cross-chapter:probe:bc";
+    const channelName = "sophie-cross-tab:cross-unit";
+    const compositeKey = "student:cross-unit:probe:bc";
     const otherTab = new BroadcastChannel(channelName);
     await act(async () => {
       otherTab.postMessage({
@@ -293,7 +293,7 @@ describe("useInteractive", () => {
     function WritePendingProbe({ keyName }: { keyName: string }) {
       const { value, setValue, controlProps, hydrated } = useInteractive(
         "write-pending-course",
-        "write-pending-chapter",
+        "write-pending-unit",
         keyName,
         false
       );

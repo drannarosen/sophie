@@ -54,8 +54,8 @@ interface GlobalIndexState {
    */
   equations: Map<string, EquationEntry>;
   /**
-   * Per-chapter `<KeyEquation refId>` citation callsites per ADR 0060.
-   * Append-only array (mirrors `inlineRefUsages`); `clearChapterCitations`
+   * Per-unit `<KeyEquation refId>` citation callsites per ADR 0060.
+   * Append-only array (mirrors `inlineRefUsages`); `clearUnitCitations`
    * filters out entries with the cleared chapter slug.
    */
   equationCitations: EquationCitationEntry[];
@@ -73,8 +73,8 @@ interface GlobalIndexState {
    */
   figureRegistry: ReadonlyArray<FigureRegistryEntry>;
   /**
-   * Per-chapter learning objectives (PR-C4). Keyed by
-   * `${chapter}#${anchor}` so different chapters can each declare an
+   * Per-unit learning objectives (PR-C4). Keyed by
+   * `${unit}#${anchor}` so different chapters can each declare an
    * objective with the same id (no semantic collision).
    */
   objectives: Map<string, ObjectiveEntry>;
@@ -82,7 +82,7 @@ interface GlobalIndexState {
    * Consumer-supplied sections collection (Wedge B-followup W1).
    * Populated from `getCollection('sections')`. Same shape as
    * `chapters` / `modules`: last-write-wins, consumer-global, NOT
-   * touched by `clearChapter`. Per ADR 0067 + design doc D1.
+   * touched by `clearUnit`. Per ADR 0067 + design doc D1.
    */
   sections: ReadonlyArray<SectionEntry>;
   /**
@@ -100,20 +100,20 @@ interface GlobalIndexState {
    * (`unit` | `section`); unit-scope variants carry `unit_id` +
    * `section_id`; section-scope variants carry `section_id` only.
    * Same `set*` semantics as `sections` / `units`: last-write-wins,
-   * consumer-global, NOT touched by `clearChapter`.
+   * consumer-global, NOT touched by `clearUnit`.
    */
   artifacts: ReadonlyArray<ArtifactEntry>;
   /**
-   * Per-chapter inline-ref callsites (PR-C4). Append-only array
+   * Per-unit inline-ref callsites (PR-C4). Append-only array
    * (NOT a Map) — the audit consumes the whole list and
    * usage-count facets care about callsite counts, not dedup'd keys.
-   * `clearChapter` filters out entries with the cleared chapter slug.
+   * `clearUnit` filters out entries with the cleared chapter slug.
    */
   inlineRefUsages: InlineRefUsageEntry[];
   /**
    * Per-contract validation entries (ADR 0056 PR 3). Populated by
    * `validation/extractor.ts` via `setContractValidations`. Last-write-
-   * wins, consumer-global, NOT touched by `clearChapter` (mirrors
+   * wins, consumer-global, NOT touched by `clearUnit` (mirrors
    * `figureRegistry` / `chapters` / `modules` — the contract files
    * are external to chapter MDX so the per-chapter clear pass
    * doesn't apply).
@@ -127,16 +127,16 @@ interface GlobalIndexState {
    */
   extractorFindings: ReadonlyArray<AuditFinding>;
   /**
-   * Per-chapter `<MultiRep>` concept-binding entries (ADR 0043 +
-   * 2026-05-17 design hardening). Keyed by `${chapter}#${id}` so
+   * Per-unit `<MultiRep>` concept-binding entries (ADR 0043 +
+   * 2026-05-17 design hardening). Keyed by `${unit}#${id}` so
    * different chapters can reuse the auto-derived `mr-<concept>`
    * anchor without collision. Populated by `extractMultiReps`;
    * consumed by audit invariants MR1–MR4/MR6 in PR-δ.
    */
   multiReps: Map<string, MultiRepIndexEntry>;
   /**
-   * Per-chapter `<Intervention>` entries (ADR 0044). Keyed by
-   * `${chapter}#${anchor}` so different chapters can reuse the same
+   * Per-unit `<Intervention>` entries (ADR 0044). Keyed by
+   * `${unit}#${anchor}` so different chapters can reuse the same
    * `intervention-<type>-<idx>` anchor without collision. Populated by
    * `extractInterventions`; consumed by audit invariants MG3/MG4/I1/I2/I3
    * (PR-δ). Per-batch duplicates within a chapter trip the key
@@ -146,38 +146,38 @@ interface GlobalIndexState {
    */
   interventions: Map<string, InterventionEntry>;
   /**
-   * Per-chapter `<Callout variant="deep-dive">` entries (ADR 0058
-   * §R-deep-dive). Keyed by `${chapter}#${anchor}` so two chapters
+   * Per-unit `<Callout variant="deep-dive">` entries (ADR 0058
+   * §R-deep-dive). Keyed by `${unit}#${anchor}` so two chapters
    * can each have a `dd-1` auto-anchor without collision. Populated
    * by `extractDeepDives`. The-more-you-know callouts intentionally
    * NOT tracked here.
    */
   deepDives: Map<string, DeepDiveEntry>;
   /**
-   * Per-chapter `<OMIFlow>` callsites (ADR 0063). Keyed by
-   * `${chapter}#${anchor}` so two chapters can each have an `omi-1`
+   * Per-unit `<OMIFlow>` callsites (ADR 0063). Keyed by
+   * `${unit}#${anchor}` so two chapters can each have an `omi-1`
    * auto-anchor without collision. Populated by `extractOMIFlows`.
    * One entry per callsite carries all three slot bodies — no
    * separate per-slot rows.
    */
   omiFlows: Map<string, OMIFlowEntry>;
   /**
-   * Per-chapter `<RetrievalPrompt>` callsites (Wedge B1). Keyed by
-   * `${chapter}#${anchor}` so two chapters can each have an `rp-1`
+   * Per-unit `<RetrievalPrompt>` callsites (Wedge B1). Keyed by
+   * `${unit}#${anchor}` so two chapters can each have an `rp-1`
    * auto-anchor without collision. Populated by
    * `extractRetrievalPrompts`. Consumed by RET-1 (retrieval-coverage
    * invariant).
    */
   retrievalPrompts: Map<string, RetrievalPromptEntry>;
   /**
-   * Per-chapter `<SpacedReview>` callsites (Wedge B1). Keyed by
-   * `${chapter}#${anchor}`. Populated by `extractSpacedReviews`.
+   * Per-unit `<SpacedReview>` callsites (Wedge B1). Keyed by
+   * `${unit}#${anchor}`. Populated by `extractSpacedReviews`.
    * Consumed by SR-1 (target_id / section_id ref-validity invariant).
    */
   spacedReviews: Map<string, SpacedReviewEntry>;
   /**
-   * Per-chapter `<SkillReview>` callsites (Wedge B1). Keyed by
-   * `${chapter}#${anchor}`. Populated by `extractSkillReviews`.
+   * Per-unit `<SkillReview>` callsites (Wedge B1). Keyed by
+   * `${unit}#${anchor}`. Populated by `extractSkillReviews`.
    * Consumed by PRA-1 (prereq-activation invariant).
    */
   skillReviews: Map<string, SkillReviewEntry>;
@@ -219,10 +219,10 @@ class IndexAccumulator {
    * plugin before re-extracting a chapter (so re-parses don't
    * accumulate stale entries).
    */
-  clearChapter(chapterSlug: string): void {
+  clearUnit(unitId: string): void {
     const state = getGlobalState();
     for (const [slug, entry] of state.definitions) {
-      if (entry.chapter === chapterSlug) {
+      if (entry.unit === unitId) {
         state.definitions.delete(slug);
       }
     }
@@ -232,25 +232,25 @@ class IndexAccumulator {
     // are managed by `clearEquations` (full registry reset) or by
     // re-running the registry walker which overwrites by `id`.
     state.equationCitations = state.equationCitations.filter(
-      (c) => c.chapter !== chapterSlug
+      (c) => c.unit !== unitId
     );
     for (const [key, entry] of state.keyInsights) {
-      if (entry.chapter === chapterSlug) {
+      if (entry.unit === unitId) {
         state.keyInsights.delete(key);
       }
     }
     for (const [key, entry] of state.figureUsages) {
-      if (entry.chapter === chapterSlug) {
+      if (entry.unit === unitId) {
         state.figureUsages.delete(key);
       }
     }
     for (const [key, entry] of state.misconceptions) {
-      if (entry.chapter === chapterSlug) {
+      if (entry.unit === unitId) {
         state.misconceptions.delete(key);
       }
     }
     for (const [key, entry] of state.objectives) {
-      if (entry.chapter === chapterSlug) {
+      if (entry.unit === unitId) {
         state.objectives.delete(key);
       }
     }
@@ -258,40 +258,40 @@ class IndexAccumulator {
     // out the cleared chapter's entries. `chapters` and `modules` are
     // consumer-global (mirror `figureRegistry`) and are NOT touched here.
     state.inlineRefUsages = state.inlineRefUsages.filter(
-      (u) => u.chapter !== chapterSlug
+      (u) => u.unit !== unitId
     );
     for (const [key, entry] of state.multiReps) {
-      if (entry.chapter === chapterSlug) {
+      if (entry.unit === unitId) {
         state.multiReps.delete(key);
       }
     }
     for (const [key, entry] of state.interventions) {
-      if (entry.chapter === chapterSlug) {
+      if (entry.unit === unitId) {
         state.interventions.delete(key);
       }
     }
     for (const [key, entry] of state.deepDives) {
-      if (entry.chapter === chapterSlug) {
+      if (entry.unit === unitId) {
         state.deepDives.delete(key);
       }
     }
     for (const [key, entry] of state.omiFlows) {
-      if (entry.chapter === chapterSlug) {
+      if (entry.unit === unitId) {
         state.omiFlows.delete(key);
       }
     }
     for (const [key, entry] of state.retrievalPrompts) {
-      if (entry.chapter === chapterSlug) {
+      if (entry.unit === unitId) {
         state.retrievalPrompts.delete(key);
       }
     }
     for (const [key, entry] of state.spacedReviews) {
-      if (entry.chapter === chapterSlug) {
+      if (entry.unit === unitId) {
         state.spacedReviews.delete(key);
       }
     }
     for (const [key, entry] of state.skillReviews) {
-      if (entry.chapter === chapterSlug) {
+      if (entry.unit === unitId) {
         state.skillReviews.delete(key);
       }
     }
@@ -310,9 +310,9 @@ class IndexAccumulator {
     // larger role-mixed adds.
     for (const entry of entries) {
       const existing = state.definitions.get(entry.slug);
-      if (existing && existing.chapter !== entry.chapter) {
+      if (existing && existing.unit !== entry.unit) {
         throw new Error(
-          `Definition "${entry.term}" (slug "${entry.slug}") is defined in multiple chapters: "${existing.chapter}" and "${entry.chapter}". Resolution: rename one or consolidate.`
+          `Definition "${entry.term}" (slug "${entry.slug}") is defined in multiple chapters: "${existing.unit}" and "${entry.unit}". Resolution: rename one or consolidate.`
         );
       }
     }
@@ -338,7 +338,7 @@ class IndexAccumulator {
   /**
    * Drop ALL registry-sourced equation declarations (full reset). Called
    * when the equation registry is re-loaded wholesale (e.g., during HMR
-   * after a registry-file deletion). Distinct from `clearChapter`, which
+   * after a registry-file deletion). Distinct from `clearUnit`, which
    * does NOT touch `equations` post-ADR-0060.
    */
   clearEquations(): void {
@@ -349,7 +349,7 @@ class IndexAccumulator {
   /**
    * Add a chapter's extracted `<KeyEquation refId>` citation entries per
    * ADR 0060. Append-only; the per-chapter clear path is
-   * `clearChapterCitations(chapterSlug)`.
+   * `clearUnitCitations(unitId)`.
    */
   addEquationCitations(entries: ReadonlyArray<EquationCitationEntry>): void {
     const state = getGlobalState();
@@ -363,10 +363,10 @@ class IndexAccumulator {
    * remark plugin's chapter pass before re-extracting (mirrors
    * `inlineRefUsages` clearing semantics).
    */
-  clearChapterCitations(chapterSlug: string): void {
+  clearUnitCitations(unitId: string): void {
     const state = getGlobalState();
     state.equationCitations = state.equationCitations.filter(
-      (c) => c.chapter !== chapterSlug
+      (c) => c.unit !== unitId
     );
   }
 
@@ -375,14 +375,14 @@ class IndexAccumulator {
    * chapter-local: anchors only need to be unique within a chapter
    * (intra-chapter collisions are caught by `extractKeyInsights`
    * before they reach the accumulator), so no cross-chapter
-   * validation is required. Keyed by `${chapter}#${anchor}` so two
+   * validation is required. Keyed by `${unit}#${anchor}` so two
    * different chapters can both have e.g. anchor "ki-1"
    * without collision.
    */
   addKeyInsights(entries: ReadonlyArray<KeyInsightEntry>): void {
     const state = getGlobalState();
     for (const entry of entries) {
-      state.keyInsights.set(`${entry.chapter}#${entry.anchor}`, entry);
+      state.keyInsights.set(`${entry.unit}#${entry.anchor}`, entry);
     }
   }
 
@@ -393,7 +393,7 @@ class IndexAccumulator {
    * chapter multiple-canonical conflict BEFORE mutating, so a batch
    * that throws on entry N leaves entries 0..N-1 unwritten.
    *
-   * Keyed by `${chapter}#${anchor}`; multiple `<Figure name="X">`
+   * Keyed by `${unit}#${anchor}`; multiple `<Figure name="X">`
    * usages in one chapter coexist via distinct auto-generated anchors
    * (`fig-x-1`, `fig-x-2`, ...).
    */
@@ -410,21 +410,21 @@ class IndexAccumulator {
       for (const existing of state.figureUsages.values()) {
         if (existing.name === entry.name && existing.canonical) {
           throw new Error(
-            `F3 invariant: multiple <Figure name="${entry.name}" canonical /> usages — found in chapter "${existing.chapter}" and chapter "${entry.chapter}". Resolution: remove \`canonical\` from one of them.`
+            `F3 invariant: multiple <Figure name="${entry.name}" canonical /> usages — found in chapter "${existing.unit}" and chapter "${entry.unit}". Resolution: remove \`canonical\` from one of them.`
           );
         }
       }
       // Also detect within the incoming batch.
       const prior = seenCanonicalNames.get(entry.name);
-      if (prior !== undefined && prior !== entry.chapter) {
+      if (prior !== undefined && prior !== entry.unit) {
         throw new Error(
-          `F3 invariant: multiple <Figure name="${entry.name}" canonical /> usages — found in chapter "${prior}" and chapter "${entry.chapter}". Resolution: remove \`canonical\` from one of them.`
+          `F3 invariant: multiple <Figure name="${entry.name}" canonical /> usages — found in chapter "${prior}" and chapter "${entry.unit}". Resolution: remove \`canonical\` from one of them.`
         );
       }
-      seenCanonicalNames.set(entry.name, entry.chapter);
+      seenCanonicalNames.set(entry.name, entry.unit);
     }
     for (const entry of entries) {
-      state.figureUsages.set(`${entry.chapter}#${entry.anchor}`, entry);
+      state.figureUsages.set(`${entry.unit}#${entry.anchor}`, entry);
     }
   }
 
@@ -440,7 +440,7 @@ class IndexAccumulator {
    * collision in entry N leaves entries 0..N-1 unwritten (mirrors
    * `addDefinitions` / `addEquations` / `addFigureUsages`).
    *
-   * Keyed by `${chapter}#${anchor}` so the same anchor can coexist
+   * Keyed by `${unit}#${anchor}` so the same anchor can coexist
    * across chapters when permitted (auto-anchors).
    *
    * Note on intra-batch dedup: unlike `addFigureUsages` (which guards
@@ -463,18 +463,15 @@ class IndexAccumulator {
       // `misc-orbital`, silently bypassing M2 cross-chapter validation.
       if (/^misc-\d+$/.test(entry.anchor)) continue;
       for (const existing of state.misconceptions.values()) {
-        if (
-          existing.chapter !== entry.chapter &&
-          existing.anchor === entry.anchor
-        ) {
+        if (existing.unit !== entry.unit && existing.anchor === entry.anchor) {
           throw new Error(
-            `Misconception slug "${entry.anchor}" defined in multiple chapters: "${existing.chapter}" and "${entry.chapter}". (M2 invariant.) Resolution: change one of the \`id\` props.`
+            `Misconception slug "${entry.anchor}" defined in multiple chapters: "${existing.unit}" and "${entry.unit}". (M2 invariant.) Resolution: change one of the \`id\` props.`
           );
         }
       }
     }
     for (const entry of entries) {
-      state.misconceptions.set(`${entry.chapter}#${entry.anchor}`, entry);
+      state.misconceptions.set(`${entry.unit}#${entry.anchor}`, entry);
     }
   }
 
@@ -495,7 +492,7 @@ class IndexAccumulator {
 
   /**
    * Add a chapter's extracted objectives. Keyed by
-   * `${chapter}#${anchor}`; different chapters can each declare an
+   * `${unit}#${anchor}`; different chapters can each declare an
    * objective with the same `id` (no semantic collision at this layer
    * — chapter scope is part of the key). Single-chapter batch
    * invariant: `extractObjectives` already enforces O1 (duplicate-id-
@@ -505,7 +502,7 @@ class IndexAccumulator {
   addObjectives(entries: ReadonlyArray<ObjectiveEntry>): void {
     const state = getGlobalState();
     for (const entry of entries) {
-      state.objectives.set(`${entry.chapter}#${entry.anchor}`, entry);
+      state.objectives.set(`${entry.unit}#${entry.anchor}`, entry);
     }
   }
 
@@ -513,7 +510,7 @@ class IndexAccumulator {
    * Push the consumer-supplied sections collection into the accumulator
    * (Wedge B-followup W1). Per ADR 0067 + design doc D1. Same shape as
    * `setFigureRegistry`: last-write-wins, consumer-global, NOT touched
-   * by `clearChapter`. Called from `TextbookLayout.astro` frontmatter
+   * by `clearUnit`. Called from `TextbookLayout.astro` frontmatter
    * once per build after `getCollection('sections')` resolves.
    */
   setSections(entries: ReadonlyArray<SectionEntry>): void {
@@ -535,7 +532,7 @@ class IndexAccumulator {
    * Push the consumer-supplied artifacts collection into the
    * accumulator (Wedge B-followup W2). Per ADR 0067 + design doc D1.
    * Same shape as `setSections` / `setUnits`: last-write-wins,
-   * consumer-global, NOT touched by `clearChapter`. Called from
+   * consumer-global, NOT touched by `clearUnit`. Called from
    * `TextbookLayout.astro` frontmatter once per build after
    * `getCollection('artifacts')` resolves.
    */
@@ -547,7 +544,7 @@ class IndexAccumulator {
   /**
    * Append a chapter's inline-ref callsites. Append-only — the audit
    * consumes the whole list and usage-count facets later care about
-   * callsite counts, not dedup'd keys. `clearChapter` filters out
+   * callsite counts, not dedup'd keys. `clearUnit` filters out
    * entries with the cleared chapter slug to keep re-parses idempotent.
    */
   addInlineRefUsages(entries: ReadonlyArray<InlineRefUsageEntry>): void {
@@ -561,7 +558,7 @@ class IndexAccumulator {
    * frontmatter once per build after `extractContractValidations`
    * resolves. Mirrors `setFigureRegistry` / `setSections` /
    * `setUnits` / `setArtifacts` semantics: last-write-wins,
-   * consumer-global, NOT touched by `clearChapter` (contract files
+   * consumer-global, NOT touched by `clearUnit` (contract files
    * are external to chapter MDX). Both arrays are written atomically
    * so the audit always sees
    * a coherent {entries, findings} pair.
@@ -577,7 +574,7 @@ class IndexAccumulator {
 
   /**
    * Add a chapter's extracted MultiRep bindings. Keyed by
-   * `${chapter}#${id}` so different chapters can reuse the auto-
+   * `${unit}#${id}` so different chapters can reuse the auto-
    * derived `mr-<concept>` anchor without collision. Within-chapter
    * duplicate concept bindings (two `<MultiRep concept="x">` in one
    * chapter sharing an auto-anchor) trip the key collision and throw.
@@ -588,23 +585,23 @@ class IndexAccumulator {
   addMultiReps(entries: ReadonlyArray<MultiRepIndexEntry>): void {
     const state = getGlobalState();
     for (const entry of entries) {
-      const key = `${entry.chapter}#${entry.id}`;
+      const key = `${entry.unit}#${entry.id}`;
       const existing = state.multiReps.get(key);
       if (existing) {
         throw new Error(
-          `MultiRep id collision: chapter "${entry.chapter}" has two <MultiRep> bindings sharing anchor "${entry.id}" (concepts "${existing.concept}" and "${entry.concept}"). Resolution: change one of the \`id\` props.`
+          `MultiRep id collision: chapter "${entry.unit}" has two <MultiRep> bindings sharing anchor "${entry.id}" (concepts "${existing.concept}" and "${entry.concept}"). Resolution: change one of the \`id\` props.`
         );
       }
     }
     for (const entry of entries) {
-      const key = `${entry.chapter}#${entry.id}`;
+      const key = `${entry.unit}#${entry.id}`;
       state.multiReps.set(key, entry);
     }
   }
 
   /**
    * Add a chapter's extracted `<Intervention>` entries (ADR 0044).
-   * Keyed by `${chapter}#${anchor}` so different chapters can reuse
+   * Keyed by `${unit}#${anchor}` so different chapters can reuse
    * the same `intervention-<type>-<idx>` anchor without collision.
    * Within-chapter duplicate anchors trip the key collision and throw
    * — the extractor's sequential numbering makes this impossible in
@@ -614,16 +611,16 @@ class IndexAccumulator {
   addInterventions(entries: ReadonlyArray<InterventionEntry>): void {
     const state = getGlobalState();
     for (const entry of entries) {
-      const key = `${entry.chapter}#${entry.anchor}`;
+      const key = `${entry.unit}#${entry.anchor}`;
       const existing = state.interventions.get(key);
       if (existing) {
         throw new Error(
-          `Intervention anchor collision: chapter "${entry.chapter}" has two <Intervention> blocks sharing anchor "${entry.anchor}". Resolution: this should never happen with sequential extractor numbering — file a bug.`
+          `Intervention anchor collision: chapter "${entry.unit}" has two <Intervention> blocks sharing anchor "${entry.anchor}". Resolution: this should never happen with sequential extractor numbering — file a bug.`
         );
       }
     }
     for (const entry of entries) {
-      const key = `${entry.chapter}#${entry.anchor}`;
+      const key = `${entry.unit}#${entry.anchor}`;
       state.interventions.set(key, entry);
     }
   }
@@ -638,7 +635,7 @@ class IndexAccumulator {
    * whole batch BEFORE mutating so a collision in entry N leaves
    * entries 0..N-1 unwritten.
    *
-   * Keyed by `${chapter}#${anchor}` so the same anchor can coexist
+   * Keyed by `${unit}#${anchor}` so the same anchor can coexist
    * across chapters when permitted (auto-anchors). The intra-chapter
    * uniqueness check (D1) lives in `extractDeepDives` before this
    * method ever runs.
@@ -652,18 +649,15 @@ class IndexAccumulator {
     for (const entry of entries) {
       if (/^dd-\d+$/.test(entry.anchor)) continue;
       for (const existing of state.deepDives.values()) {
-        if (
-          existing.chapter !== entry.chapter &&
-          existing.anchor === entry.anchor
-        ) {
+        if (existing.unit !== entry.unit && existing.anchor === entry.anchor) {
           throw new Error(
-            `Deep-dive anchor "${entry.anchor}" defined in multiple chapters: "${existing.chapter}" and "${entry.chapter}". (D2 invariant.) Resolution: change one of the \`id\` props.`
+            `Deep-dive anchor "${entry.anchor}" defined in multiple chapters: "${existing.unit}" and "${entry.unit}". (D2 invariant.) Resolution: change one of the \`id\` props.`
           );
         }
       }
     }
     for (const entry of entries) {
-      state.deepDives.set(`${entry.chapter}#${entry.anchor}`, entry);
+      state.deepDives.set(`${entry.unit}#${entry.anchor}`, entry);
     }
   }
 
@@ -683,18 +677,15 @@ class IndexAccumulator {
     for (const entry of entries) {
       if (/^omi-\d+$/.test(entry.anchor)) continue;
       for (const existing of state.omiFlows.values()) {
-        if (
-          existing.chapter !== entry.chapter &&
-          existing.anchor === entry.anchor
-        ) {
+        if (existing.unit !== entry.unit && existing.anchor === entry.anchor) {
           throw new Error(
-            `OMIFlow anchor "${entry.anchor}" defined in multiple chapters: "${existing.chapter}" and "${entry.chapter}". (Cross-chapter OMIFlow invariant.) Resolution: change one of the \`id\` props.`
+            `OMIFlow anchor "${entry.anchor}" defined in multiple chapters: "${existing.unit}" and "${entry.unit}". (Cross-chapter OMIFlow invariant.) Resolution: change one of the \`id\` props.`
           );
         }
       }
     }
     for (const entry of entries) {
-      state.omiFlows.set(`${entry.chapter}#${entry.anchor}`, entry);
+      state.omiFlows.set(`${entry.unit}#${entry.anchor}`, entry);
     }
   }
 
@@ -703,13 +694,13 @@ class IndexAccumulator {
    * Anchors are auto-generated (`rp-${counter}`) and chapter-scoped, so
    * no cross-chapter collision check is required; the intra-chapter
    * uniqueness check lives in `extractRetrievalPrompts` before this
-   * method runs. Keyed by `${chapter}#${anchor}` so two chapters can
+   * method runs. Keyed by `${unit}#${anchor}` so two chapters can
    * each have an `rp-1` without collision.
    */
   addRetrievalPrompts(entries: ReadonlyArray<RetrievalPromptEntry>): void {
     const state = getGlobalState();
     for (const entry of entries) {
-      state.retrievalPrompts.set(`${entry.chapter}#${entry.anchor}`, entry);
+      state.retrievalPrompts.set(`${entry.unit}#${entry.anchor}`, entry);
     }
   }
 
@@ -720,7 +711,7 @@ class IndexAccumulator {
   addSpacedReviews(entries: ReadonlyArray<SpacedReviewEntry>): void {
     const state = getGlobalState();
     for (const entry of entries) {
-      state.spacedReviews.set(`${entry.chapter}#${entry.anchor}`, entry);
+      state.spacedReviews.set(`${entry.unit}#${entry.anchor}`, entry);
     }
   }
 
@@ -731,7 +722,7 @@ class IndexAccumulator {
   addSkillReviews(entries: ReadonlyArray<SkillReviewEntry>): void {
     const state = getGlobalState();
     for (const entry of entries) {
-      state.skillReviews.set(`${entry.chapter}#${entry.anchor}`, entry);
+      state.skillReviews.set(`${entry.unit}#${entry.anchor}`, entry);
     }
   }
 
@@ -776,7 +767,7 @@ export const indexAccumulator = new IndexAccumulator();
 /**
  * Test-only helper: wipe ALL accumulator state in one call. Use in a
  * vitest `beforeEach` to remove cross-test ordering coupling. Not for
- * production use — `clearChapter` is the production-shape API (it
+ * production use — `clearUnit` is the production-shape API (it
  * preserves entries from other chapters and is what the remark plugin
  * calls); `resetIndexAccumulator` blows away every collection,
  * including the consumer-supplied `figureRegistry`, which a build

@@ -32,7 +32,7 @@ describe("extractDeepDives (pure)", () => {
 
     expect(entries).toHaveLength(1);
     expect(entries[0]).toMatchObject({
-      chapter: "spoiler-alerts",
+      unit: "spoiler-alerts",
       anchor: "distance-ladder",
       title: "How the Distance Ladder Works",
     });

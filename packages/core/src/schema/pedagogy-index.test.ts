@@ -19,7 +19,7 @@ const validDefinition = {
   term: "Standard candle",
   slug: "standard-candle",
   body: "<p>An object whose intrinsic luminosity is known.</p>",
-  chapter: "spoiler-alerts",
+  unit: "spoiler-alerts",
   anchor: "standard-candle",
 };
 
@@ -39,10 +39,9 @@ describe("DefinitionEntrySchema", () => {
     ).toBe(false);
   });
 
-  test("rejects an entry with empty chapter", () => {
+  test("rejects an entry with empty unit", () => {
     expect(
-      DefinitionEntrySchema.safeParse({ ...validDefinition, chapter: "" })
-        .success
+      DefinitionEntrySchema.safeParse({ ...validDefinition, unit: "" }).success
     ).toBe(false);
   });
 
@@ -145,13 +144,13 @@ describe("EquationEntrySchema (registry-shaped, ADR 0060)", () => {
     expect(result.success).toBe(true);
   });
 
-  test("rejects pre-ADR-0060 fields (chapter, number, body, anchor) via .strict()", () => {
+  test("rejects pre-ADR-0060 fields (unit, number, body, anchor) via .strict()", () => {
     // Load-bearing: the chapter-side data moves to EquationCitationEntry.
     // .strict() rejection guards against extractor drift during the cutover.
     expect(
       EquationEntrySchema.safeParse({
         ...validEquation,
-        chapter: "spoiler-alerts",
+        unit: "spoiler-alerts",
       }).success
     ).toBe(false);
     expect(
@@ -220,14 +219,14 @@ describe("EquationEntrySchema (registry-shaped, ADR 0060)", () => {
 });
 
 const validCitation = {
-  chapter: "spoiler-alerts",
+  unit: "spoiler-alerts",
   refId: "wiens-law",
   anchor: "wiens-law-citation-1",
   number: 1,
 };
 
 describe("EquationCitationEntrySchema (ADR 0060)", () => {
-  test("accepts the minimal valid citation (chapter, refId, anchor, number)", () => {
+  test("accepts the minimal valid citation (unit, refId, anchor, number)", () => {
     expect(EquationCitationEntrySchema.safeParse(validCitation).success).toBe(
       true
     );
@@ -242,8 +241,8 @@ describe("EquationCitationEntrySchema (ADR 0060)", () => {
     ).toBe(true);
   });
 
-  test("rejects a citation missing chapter", () => {
-    const { chapter: _chapter, ...rest } = validCitation;
+  test("rejects a citation missing unit", () => {
+    const { unit: _unit, ...rest } = validCitation;
     expect(EquationCitationEntrySchema.safeParse(rest).success).toBe(false);
   });
 
@@ -262,7 +261,7 @@ describe("EquationCitationEntrySchema (ADR 0060)", () => {
     expect(EquationCitationEntrySchema.safeParse(rest).success).toBe(false);
   });
 
-  test("rejects a citation with number: 0 (1-indexed per-chapter sequence)", () => {
+  test("rejects a citation with number: 0 (1-indexed per-unit sequence)", () => {
     expect(
       EquationCitationEntrySchema.safeParse({ ...validCitation, number: 0 })
         .success
@@ -295,7 +294,7 @@ describe("KeyInsightEntrySchema", () => {
       KeyInsightEntrySchema.safeParse({
         title: "Color is encoded physics",
         body: "<p>Color is encoded physics.</p>",
-        chapter: "spoiler-alerts",
+        unit: "spoiler-alerts",
         anchor: "color-physics",
       }).success
     ).toBe(true);
@@ -306,7 +305,7 @@ describe("KeyInsightEntrySchema", () => {
     expect(
       KeyInsightEntrySchema.safeParse({
         body: "<p>Color is encoded physics.</p>",
-        chapter: "spoiler-alerts",
+        unit: "spoiler-alerts",
         anchor: "color-physics",
       }).success
     ).toBe(true);
@@ -387,7 +386,7 @@ describe("FigureRegistryEntrySchema", () => {
 describe("FigureUsageEntrySchema", () => {
   const validUsage = {
     name: "cosmic-distance-ladder",
-    chapter: "spoiler-alerts",
+    unit: "spoiler-alerts",
     anchor: "fig-cosmic-distance-ladder-1",
     number: 1,
     canonical: false,
@@ -412,7 +411,7 @@ describe("MisconceptionEntrySchema", () => {
     expect(
       MisconceptionEntrySchema.safeParse({
         body: "<p>Stars don't twinkle in space.</p>",
-        chapter: "atmospheric-physics",
+        unit: "atmospheric-physics",
         anchor: "twinkle",
         length: "short",
       }).success
@@ -423,7 +422,7 @@ describe("MisconceptionEntrySchema", () => {
     expect(
       MisconceptionEntrySchema.safeParse({
         body: "<p>Long-form misconception treatment...</p>",
-        chapter: "atmospheric-physics",
+        unit: "atmospheric-physics",
         anchor: "twinkle-long",
         length: "long",
       }).success
@@ -434,7 +433,7 @@ describe("MisconceptionEntrySchema", () => {
     expect(
       MisconceptionEntrySchema.safeParse({
         body: "<p>x</p>",
-        chapter: "ch",
+        unit: "ch",
         anchor: "a",
         length: "medium",
       }).success
@@ -447,7 +446,7 @@ describe("MisconceptionEntrySchema", () => {
     expect(
       MisconceptionEntrySchema.safeParse({
         body: "<p>x</p>",
-        chapter: "ch",
+        unit: "ch",
         anchor: "misc-1",
         length: "short",
       }).success
@@ -458,7 +457,7 @@ describe("MisconceptionEntrySchema", () => {
     expect(
       MisconceptionEntrySchema.safeParse({
         body: "<p>x</p>",
-        chapter: "ch",
+        unit: "ch",
         anchor: "redshift-as-ordinary-doppler",
         length: "short",
         prerequisite_misconceptions: [
@@ -473,7 +472,7 @@ describe("MisconceptionEntrySchema", () => {
     expect(
       MisconceptionEntrySchema.safeParse({
         body: "<p>x</p>",
-        chapter: "ch",
+        unit: "ch",
         anchor: "universe-with-a-center",
         length: "short",
         prerequisite_misconceptions: [],
@@ -485,7 +484,7 @@ describe("MisconceptionEntrySchema", () => {
     expect(
       MisconceptionEntrySchema.safeParse({
         body: "<p>x</p>",
-        chapter: "ch",
+        unit: "ch",
         anchor: "brightness-is-intrinsic",
         length: "short",
         related_misconceptions: [
@@ -500,7 +499,7 @@ describe("MisconceptionEntrySchema", () => {
     expect(
       MisconceptionEntrySchema.safeParse({
         body: "<p>x</p>",
-        chapter: "ch",
+        unit: "ch",
         anchor: "brightness-is-intrinsic",
         length: "short",
         concept_refs: ["flux", "stellar-luminosity", "distance-modulus"],
@@ -512,7 +511,7 @@ describe("MisconceptionEntrySchema", () => {
     expect(
       MisconceptionEntrySchema.safeParse({
         body: "<p>x</p>",
-        chapter: "ch",
+        unit: "ch",
         anchor: "correlation-implies-causation",
         length: "short",
         discipline_scope: ["statistics", "epidemiology", "social-science"],
@@ -524,7 +523,7 @@ describe("MisconceptionEntrySchema", () => {
     expect(
       MisconceptionEntrySchema.safeParse({
         body: "<p>x</p>",
-        chapter: "ch",
+        unit: "ch",
         anchor: "a",
         length: "short",
         prerequisite_misconceptions: [42],
@@ -536,7 +535,7 @@ describe("MisconceptionEntrySchema", () => {
     expect(
       MisconceptionEntrySchema.safeParse({
         body: "<p>x</p>",
-        chapter: "ch",
+        unit: "ch",
         anchor: "a",
         length: "short",
         related_misconceptions: [""],
@@ -548,7 +547,7 @@ describe("MisconceptionEntrySchema", () => {
     expect(
       MisconceptionEntrySchema.safeParse({
         body: "<p>x</p>",
-        chapter: "ch",
+        unit: "ch",
         anchor: "redshift-as-ordinary-doppler",
         length: "short",
         prerequisite_misconceptions: ["universe-with-a-center"],
@@ -566,7 +565,7 @@ describe("DeepDiveEntrySchema", () => {
   test("accepts the minimal valid shape", () => {
     expect(
       DeepDiveEntrySchema.safeParse({
-        chapter: "spoiler-alerts",
+        unit: "spoiler-alerts",
         anchor: "distance-ladder",
         title: "How the Distance Ladder Works",
         body: "<p>Parallax then Cepheids.</p>",
@@ -577,7 +576,7 @@ describe("DeepDiveEntrySchema", () => {
   test("accepts an entry with an empty title (untitled deep-dives are legal)", () => {
     expect(
       DeepDiveEntrySchema.safeParse({
-        chapter: "ch",
+        unit: "ch",
         anchor: "dd-1",
         title: "",
         body: "<p>x</p>",
@@ -588,7 +587,7 @@ describe("DeepDiveEntrySchema", () => {
   test("accepts an entry with an empty body (extractor warns; schema doesn't reject)", () => {
     expect(
       DeepDiveEntrySchema.safeParse({
-        chapter: "ch",
+        unit: "ch",
         anchor: "dd-1",
         title: "Title",
         body: "",
@@ -596,7 +595,7 @@ describe("DeepDiveEntrySchema", () => {
     ).toBe(true);
   });
 
-  test("rejects an entry missing the chapter field", () => {
+  test("rejects an entry missing the unit field", () => {
     expect(
       DeepDiveEntrySchema.safeParse({
         anchor: "dd-1",
@@ -609,17 +608,17 @@ describe("DeepDiveEntrySchema", () => {
   test("rejects an entry missing the anchor field", () => {
     expect(
       DeepDiveEntrySchema.safeParse({
-        chapter: "ch",
+        unit: "ch",
         title: "x",
         body: "<p>x</p>",
       }).success
     ).toBe(false);
   });
 
-  test("rejects an empty chapter slug (NonEmptyString-style)", () => {
+  test("rejects an empty unit slug (Slug refinement)", () => {
     expect(
       DeepDiveEntrySchema.safeParse({
-        chapter: "",
+        unit: "",
         anchor: "dd-1",
         title: "x",
         body: "<p>x</p>",
@@ -630,7 +629,7 @@ describe("DeepDiveEntrySchema", () => {
   test("rejects an empty anchor (NonEmptyString-style)", () => {
     expect(
       DeepDiveEntrySchema.safeParse({
-        chapter: "ch",
+        unit: "ch",
         anchor: "",
         title: "x",
         body: "<p>x</p>",
@@ -644,7 +643,7 @@ describe("DeepDiveEntrySchema", () => {
 describe("OMIFlowEntrySchema", () => {
   const validSlot = { title: "x", body: "<p>x</p>" };
   const validOmiFlow = {
-    chapter: "spoiler-alerts",
+    unit: "spoiler-alerts",
     anchor: "omi-1",
     observable: validSlot,
     model: validSlot,
@@ -674,8 +673,8 @@ describe("OMIFlowEntrySchema", () => {
     ).toBe(true);
   });
 
-  test("rejects an entry missing chapter", () => {
-    const { chapter: _chapter, ...without } = validOmiFlow;
+  test("rejects an entry missing unit", () => {
+    const { unit: _unit, ...without } = validOmiFlow;
     expect(OMIFlowEntrySchema.safeParse(without).success).toBe(false);
   });
 
@@ -699,9 +698,9 @@ describe("OMIFlowEntrySchema", () => {
     expect(OMIFlowEntrySchema.safeParse(without).success).toBe(false);
   });
 
-  test("rejects an empty chapter slug (NonEmptyString)", () => {
+  test("rejects an empty unit slug (Slug refinement)", () => {
     expect(
-      OMIFlowEntrySchema.safeParse({ ...validOmiFlow, chapter: "" }).success
+      OMIFlowEntrySchema.safeParse({ ...validOmiFlow, unit: "" }).success
     ).toBe(false);
   });
 
@@ -722,7 +721,7 @@ describe("ObjectiveEntrySchema", () => {
     id: "lo-1",
     verb: "Recognize",
     body: "<p>Distinguish parallax distance from standard-candle distance.</p>",
-    chapter: "spoiler-alerts",
+    unit: "spoiler-alerts",
     anchor: "lo-lo-1",
   };
 
@@ -771,7 +770,7 @@ describe("InlineRefUsageEntrySchema", () => {
   const validUsage = {
     kind: "glossary-term" as const,
     refKey: "Standard candle",
-    chapter: "spoiler-alerts",
+    unit: "spoiler-alerts",
   };
 
   test("accepts a valid entry", () => {
@@ -797,10 +796,9 @@ describe("InlineRefUsageEntrySchema", () => {
     ).toBe(false);
   });
 
-  test("rejects an entry with empty chapter", () => {
+  test("rejects an entry with empty unit", () => {
     expect(
-      InlineRefUsageEntrySchema.safeParse({ ...validUsage, chapter: "" })
-        .success
+      InlineRefUsageEntrySchema.safeParse({ ...validUsage, unit: "" }).success
     ).toBe(false);
   });
 
@@ -883,7 +881,7 @@ describe("PedagogyIndexSchema", () => {
       ...emptyIndex,
       deepDives: [
         {
-          chapter: "spoiler-alerts",
+          unit: "spoiler-alerts",
           anchor: "distance-ladder",
           title: "How the Distance Ladder Works",
           body: "<p>Parallax → Cepheids → SN Ia.</p>",
@@ -911,7 +909,7 @@ describe("PedagogyIndexSchema", () => {
       ...emptyIndex,
       omiFlows: [
         {
-          chapter: "spoiler-alerts",
+          unit: "spoiler-alerts",
           anchor: "omi-stellar-temperature",
           concept: "stellar-temperature",
           observable: { title: "HR diagram", body: "<p>x</p>" },
@@ -935,7 +933,7 @@ describe("PedagogyIndexSchema", () => {
         {
           concept: "orbital-radius",
           id: "mr-orbital-radius",
-          chapter: "module-02/lecture-04",
+          unit: "module-02-lecture-04",
           reps: [
             {
               kind: "verbal",
@@ -961,12 +959,12 @@ describe("PedagogyIndexSchema", () => {
           {
             kind: "glossary-term",
             refKey: "Parallax",
-            chapter: "ch-a",
+            unit: "ch-a",
           },
           {
             kind: "chapter-ref",
             refKey: "hydrostatic-equilibrium",
-            chapter: "ch-b",
+            unit: "ch-b",
           },
         ],
       }).success
@@ -988,13 +986,13 @@ describe("PedagogyIndexSchema", () => {
       ...emptyIndex,
       equationCitations: [
         {
-          chapter: "spoiler-alerts",
+          unit: "spoiler-alerts",
           refId: "wiens-law",
           anchor: "wiens-law-citation-1",
           number: 1,
         },
         {
-          chapter: "spoiler-alerts",
+          unit: "spoiler-alerts",
           refId: "stefan-boltzmann",
           anchor: "stefan-boltzmann-citation-1",
           number: 2,
@@ -1083,7 +1081,7 @@ describe("PedagogyIndexSchema", () => {
           order: 0,
           prereqs: [],
           section_id: "intro",
-          chapter: "x",
+          unit: "x",
         },
       ],
     });

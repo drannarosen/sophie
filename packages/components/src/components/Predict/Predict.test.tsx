@@ -20,7 +20,7 @@ describe("<Predict>", () => {
       withProfile(
         <Predict
           course='predict-course'
-          chapter='predict-chapter'
+          unit='predict-chapter'
           id='render-default'
           description='Look at the image. Before reading on, jot down:'
           prompts={samplePrompts}
@@ -38,7 +38,7 @@ describe("<Predict>", () => {
       withProfile(
         <Predict
           course='predict-course'
-          chapter='predict-chapter'
+          unit='predict-chapter'
           id='render-prompts'
           prompts={samplePrompts}
         />
@@ -56,7 +56,7 @@ describe("<Predict>", () => {
       withProfile(
         <Predict
           course='predict-course'
-          chapter='predict-chapter'
+          unit='predict-chapter'
           id='render-loading'
           prompts={samplePrompts}
         />
@@ -74,7 +74,7 @@ describe("<Predict>", () => {
       withProfile(
         <Predict
           course='predict-course'
-          chapter='predict-chapter'
+          unit='predict-chapter'
           id='persist-1'
           prompts={samplePrompts}
         />
@@ -100,7 +100,7 @@ describe("<Predict>", () => {
       withProfile(
         <Predict
           course='predict-course'
-          chapter='predict-chapter'
+          unit='predict-chapter'
           id='persist-1'
           prompts={samplePrompts}
         />
@@ -118,7 +118,7 @@ describe("<Predict>", () => {
       withProfile(
         <Predict
           course='predict-course'
-          chapter='predict-chapter'
+          unit='predict-chapter'
           id='closing'
           prompts={samplePrompts}
           closing="There's no wrong answer."
@@ -133,7 +133,7 @@ describe("<Predict>", () => {
       withProfile(
         <Predict
           course='predict-course'
-          chapter='predict-chapter'
+          unit='predict-chapter'
           id='no-reveal'
           prompts={samplePrompts}
         />
@@ -149,7 +149,7 @@ describe("<Predict>", () => {
       withProfile(
         <Predict
           course='predict-course'
-          chapter='predict-chapter'
+          unit='predict-chapter'
           id='reveal-disabled'
           prompts={samplePrompts}
         >
@@ -168,7 +168,7 @@ describe("<Predict>", () => {
       withProfile(
         <Predict
           course='predict-course'
-          chapter='predict-chapter'
+          unit='predict-chapter'
           id='reveal-gate'
           prompts={samplePrompts}
         >
@@ -206,7 +206,7 @@ describe("<Predict>", () => {
       withProfile(
         <Predict
           course='predict-course'
-          chapter='predict-chapter'
+          unit='predict-chapter'
           id='reveal-click'
           prompts={[{ id: "single", label: "One question?" }]}
         >
@@ -237,7 +237,7 @@ describe("<Predict>", () => {
       withProfile(
         <Predict
           course='predict-course'
-          chapter='predict-chapter'
+          unit='predict-chapter'
           id='reveal-click'
           prompts={[{ id: "single", label: "One question?" }]}
         >
@@ -255,7 +255,7 @@ describe("<Predict>", () => {
       withProfile(
         <Predict
           course='predict-course'
-          chapter='predict-chapter'
+          unit='predict-chapter'
           id='reveal-focus'
           prompts={[{ id: "single", label: "One question?" }]}
         >
@@ -305,7 +305,7 @@ describe("<Predict>", () => {
       withProfile(
         <Predict
           course='predict-course'
-          chapter='predict-chapter'
+          unit='predict-chapter'
           id='axe-reflection'
           description='Jot down your guesses:'
           prompts={samplePrompts}
@@ -329,7 +329,7 @@ describe("<Predict>", () => {
       withProfile(
         <Predict
           course='predict-course'
-          chapter='predict-chapter'
+          unit='predict-chapter'
           id='axe-reveal'
           prompts={samplePrompts}
         >

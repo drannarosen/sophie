@@ -35,12 +35,14 @@ function pluralize(n: number, singular: string): string {
  */
 function formatFinding(f: AuditFinding): string {
   const locParts: string[] = [];
-  // `path` (V0–V8 contract findings) and `chapter` (D4/D5/E4/F1/F2/C1/O1/
+  // `path` (V0–V8 contract findings) and `unit` (D4/D5/E4/F1/F2/C1/O1/
   // O2/K1/MG1/MG2/CS2) are mutually exclusive in practice; render whichever
   // is present. `path` first since it carries the more specific
-  // file-system identity when both somehow appear together.
+  // file-system identity when both somehow appear together. Per W3/D2 the
+  // CLI prefix word stays as "chapter:" because educators think in chapter
+  // vocabulary (D7 lock); the internal field is `location.unit` post-W3.
   if (f.location?.path) locParts.push(`path: ${f.location.path}`);
-  if (f.location?.chapter) locParts.push(`chapter: ${f.location.chapter}`);
+  if (f.location?.unit) locParts.push(`chapter: ${f.location.unit}`);
   if (f.location?.anchor) locParts.push(`anchor: ${f.location.anchor}`);
   const loc = locParts.length > 0 ? ` (${locParts.join(", ")})` : "";
   return `  [${f.severity} ${f.code}] ${f.message}${loc}`;

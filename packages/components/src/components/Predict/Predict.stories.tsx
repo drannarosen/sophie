@@ -13,7 +13,7 @@ type Story = StoryObj<typeof meta>;
 
 const ns = {
   course: "storybook",
-  chapter: "predict",
+  unit: "predict",
 };
 
 export const TwoPrompts: Story = {
