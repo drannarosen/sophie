@@ -13,7 +13,10 @@ describe("UnitEntrySchema", () => {
       chapter: "introducing-the-sky",
       status: "stable",
     };
-    expect(UnitEntrySchema.parse(input)).toEqual(input);
+    expect(UnitEntrySchema.parse(input)).toEqual({
+      ...input,
+      audit_overrides: [],
+    });
   });
 
   it("accepts the optional `lecture` slides-artifact binding (D7)", () => {

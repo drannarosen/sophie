@@ -29,6 +29,10 @@ export {
   type AuditSeverity,
   AuditSeveritySchema,
 } from "./audit.js";
+export {
+  type AuditOverride,
+  AuditOverrideSchema,
+} from "./audit-override.js";
 export { type BaseRecord, BaseRecordSchema } from "./base-record.js";
 export { type BKTState, BKTStateSchema } from "./bkt-state.js";
 export { type Chapter, ChapterSchema, ChapterStatus } from "./chapter.js";

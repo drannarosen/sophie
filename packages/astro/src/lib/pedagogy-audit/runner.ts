@@ -19,6 +19,7 @@ import { checkObjectives } from "./invariants/objectives.ts";
 import { checkOMIFlow } from "./invariants/omi-flow.ts";
 import { checkOrphans } from "./invariants/orphans.ts";
 import { checkRetrievalFamily } from "./invariants/retrieval-family.ts";
+import { checkPRA2 } from "./invariants/topic-consistency.ts";
 import { checkValidation } from "./invariants/validation.ts";
 import type { AuditExtras, AuditReport, FindingSink } from "./types.ts";
 
@@ -113,7 +114,16 @@ export function runPedagogyAudit(
 
   // Wedge B1 retrieval-family invariants (PRA-1 prereq activation,
   // RET-1 retrieval coverage, SR-1 SpacedReview ref validity).
+  // Wedge B-followup W4b graduates PRA-1 to ERROR severity + honors
+  // `audit_overrides` per ADR 0053 (per ADR 0079).
   checkRetrievalFamily(index, sink);
+
+  // ADR 0079 (W4b) — PRA-2: topic frontmatter ↔ body card consistency.
+  // Topic files must declare every <SkillReview.Card> body block in
+  // their `cards: []` frontmatter list (and vice-versa). Drift breaks
+  // the registry-resolution contract.
+  // biome-ignore lint/suspicious/noExplicitAny: sink shape matches FindingSink
+  checkPRA2(index, sink as any);
 
   return {
     errors: sink.errors,

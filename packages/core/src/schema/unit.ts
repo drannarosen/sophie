@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { AuditOverrideSchema } from "./audit-override.ts";
 import { ChapterFraming, ChapterStatus } from "./chapter.js";
 import { NonEmptyString, Slug } from "./primitives.js";
 
@@ -61,6 +62,13 @@ export const UnitSchema = z.object({
   status: ChapterStatus,
   framing: ChapterFraming.optional(),
   description: z.string().optional(),
+  /**
+   * Per-Unit audit-invariant exceptions per ADR 0053. PRA-1 (W4b)
+   * is the first invariant to honor these. Each override declares
+   * `invariant`, optional `anchor` (for grain-2/3 specificity),
+   * mandatory `tdr` (CF2 ERROR otherwise), and `reason`.
+   */
+  audit_overrides: z.array(AuditOverrideSchema).default([]),
 });
 
 export type Unit = z.infer<typeof UnitSchema>;
