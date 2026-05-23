@@ -1,7 +1,9 @@
 ---
 /**
  * `<LibraryCollectionShell>` — chrome wrapper for every Library-room
- * component (per W4c design D2). Renders the outer `<main>` landmark
+ * component (per W4c design D2). Outer landmark (`<section>` with
+ * `aria-labelledby` for a region role; `<main>` is owned by the page's
+ * ContentColumn parent — see Critical fix to Task 3.1 from code review)
  * with heading + the three documented slot extension points.
  *
  * Hybrid API split:
@@ -19,6 +21,11 @@
  * (3-level objective grouping is an exception; the shell's
  * primitives-and-slots split doesn't fit it). Documented in the
  * ADR 0070 revision-history entry that Batch 10 will land.
+ *
+ * BEM root is `sophie-library-collection` (compound term, not the
+ * usual `sophie-{level}-{thing}` split) because the shell is shared
+ * chrome across all Library rooms, not a specific level. Future
+ * shared-chrome shells should follow this compound-term pattern.
  */
 export interface Props {
   collection: string;
@@ -32,7 +39,7 @@ const rootClass = `sophie-library-collection sophie-library-collection--${collec
 const headingId = `sophie-library-collection-heading-${collection}`;
 ---
 
-<main
+<section
   class={rootClass}
   data-sophie-library-collection={collection}
   aria-labelledby={headingId}
@@ -51,4 +58,4 @@ const headingId = `sophie-library-collection-heading-${collection}`;
       <slot />
     )
   }
-</main>
+</section>
