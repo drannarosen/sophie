@@ -4,6 +4,7 @@ import { InterventionEntrySchema } from "./intervention.ts";
 import { MultiRepIndexEntrySchema } from "./multirep.ts";
 import {
   ArtifactEntrySchema,
+  CardEntrySchema,
   ContractValidationEntrySchema,
   DeepDiveEntrySchema,
   DefinitionEntrySchema,
@@ -20,6 +21,7 @@ import {
   SectionEntrySchema,
   SkillReviewEntrySchema,
   SpacedReviewEntrySchema,
+  TopicEntrySchema,
   UnitEntrySchema,
 } from "./pedagogy-index-entries/index.ts";
 
@@ -159,6 +161,27 @@ export const PedagogyIndexSchema = z.object({
    * registry-resolution pass.
    */
   skillReviews: z.array(SkillReviewEntrySchema).readonly().default([]),
+  /**
+   * Per-topic-file entries (ADR 0079 §"Topic file shape", Design F).
+   * One entry per `src/content/topics/<category>/<topic-id>.mdx`.
+   * Populated by the topic extractor at MDX-compile time from
+   * frontmatter; `cards: [{...}]` frontmatter list mirrored 1:1
+   * to body `<SkillReview.Card>` blocks (PRA-2 audit enforces).
+   * Consumed by PRA-1 (prereq coverage) + the SkillReview self-
+   * closing resolver. Defaults to `[]` so consumer apps on the
+   * pre-W4b path keep working.
+   */
+  topics: z.array(TopicEntrySchema).readonly().default([]),
+  /**
+   * Per-card entries (ADR 0079). One entry per `<SkillReview.Card
+   * id="X">` JSX block in a topic file body. Derived by the topic
+   * extractor; metadata mirrors the parent topic's `cards: [{...}]`
+   * frontmatter entry joined with `topic_id`. FSRS scheduling
+   * (ADR 0069) keys per-(course, topic_id, id). Body slots NOT
+   * stored on entry (resolver re-fetches from topic MDX at compile
+   * time, per ADR 0038's "data, not HTML" principle).
+   */
+  cards: z.array(CardEntrySchema).readonly().default([]),
   /**
    * Consumer-app-owned section metadata, forwarded from
    * `getCollection('sections')` per ADR 0067. Wedge B-followup (W1)

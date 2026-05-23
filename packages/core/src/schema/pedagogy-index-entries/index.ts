@@ -22,6 +22,10 @@ export {
   ArtifactEntrySchema,
 } from "./artifact.ts";
 export {
+  type CardEntry,
+  CardEntrySchema,
+} from "./card.ts";
+export {
   type ObjectiveEntry,
   ObjectiveEntrySchema,
 } from "./chapter-meta.ts";
@@ -74,6 +78,12 @@ export {
   type SectionEntry,
   SectionEntrySchema,
 } from "./section.ts";
+export {
+  type TopicCardMetadata,
+  TopicCardMetadataSchema,
+  type TopicEntry,
+  TopicEntrySchema,
+} from "./topic.ts";
 export {
   type UnitEntry,
   UnitEntrySchema,
