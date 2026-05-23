@@ -19,7 +19,9 @@ import type { FindingSink } from "../types.ts";
  * frontmatter entry has no body block to walk against, so the
  * extractor's visit-callback never fires for it). Both paths emit
  * findings under the same `PRA-2` code so authors get a single
- * concept to learn (per ADR 0079 §"PRA-2").
+ * concept to learn (per ADR 0079 §"PRA-2"). Both directions also
+ * honor `TopicEntry.audit_overrides` per ADR 0053 (W4c D5:
+ * per-card anchor only — no whole-topic wildcard).
  *
  * Severity: ERROR (build-time fail). Authors fix by aligning the
  * two lists.
@@ -40,17 +42,22 @@ export function checkPRA2(index: PedagogyIndex, sink: FindingSink): void {
   for (const topic of index.topics) {
     const declared = new Set(topic.cards.map((c) => c.id));
     const inBody = cardsByTopic.get(topic.id) ?? new Set<string>();
+    // W4c D5: per-card anchor only — see file header for the full rationale.
+    const overrides = topic.audit_overrides ?? [];
 
     // Frontmatter declares card not present in body.
     for (const id of declared) {
-      if (!inBody.has(id)) {
-        sink.errors.push({
-          severity: "ERROR",
-          code: "PRA-2",
-          message: `PRA-2: Topic "${topic.id}" frontmatter declares card "${id}" but no <SkillReview.Card id="${id}"> block exists in the body. Resolution: add a <SkillReview.Card id="${id}"><SkillReview.Prompt>...</SkillReview.Prompt><SkillReview.Answer>...</SkillReview.Answer></SkillReview.Card> block, OR remove the orphan entry from the cards: list in frontmatter (per ADR 0079).`,
-          location: { unit: topic.id, anchor: id },
-        });
-      }
+      if (inBody.has(id)) continue;
+      const suppressed = overrides.some(
+        (o) => o.invariant === "PRA-2" && o.anchor === id
+      );
+      if (suppressed) continue;
+      sink.errors.push({
+        severity: "ERROR",
+        code: "PRA-2",
+        message: `PRA-2: Topic "${topic.id}" frontmatter declares card "${id}" but no <SkillReview.Card id="${id}"> block exists in the body. Resolution: add a <SkillReview.Card id="${id}"><SkillReview.Prompt>...</SkillReview.Prompt><SkillReview.Answer>...</SkillReview.Answer></SkillReview.Card> block, OR remove the orphan entry from the cards: list in frontmatter (per ADR 0079).`,
+        location: { unit: topic.id, anchor: id },
+      });
     }
   }
 }
