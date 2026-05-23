@@ -153,7 +153,7 @@ Read ADR 0064 before scoping the next migration.
 
 Read the relevant ADR before proposing changes that touch its area.
 The 11 below are the routine-reasoning subset; full catalog
-(77 ADRs, 0001–0078 with 0050 a reserved gap) lives in
+(78 ADRs, 0001–0079 with 0050 a reserved gap) lives in
 `docs/website/decisions/`.
 
 | Concern                          | ADR  | Decision                                                                                                                  |
@@ -296,6 +296,37 @@ to every PR, every design decision, every refactor.
   regenerate `docs/website/status/validation.md` in the same PR.
   Integration test I3 catches this on the unit job; catching it
   locally first is faster.
+
+- **Standing PR-review rules (R6–R9).** Apply on every PR; cite by
+  number in review comments.
+  - **R6 — MyST anchor verification.** Cited ADR sections use
+    MyST heading-slug, not `#L\d+` GitHub line-anchors. Catch:
+    grep `docs/website/**/*.md` for `#L[0-9]+`. Originating
+    finding: W4b R+CR I1.
+  - **R7 — Silent-skip extractor disposition.** Every
+    `if (!matched) return;` filter in an extractor has either a
+    paired audit invariant OR a `findings.push` at the filter
+    site. Bare silent-skips produce dead-code audits.
+    Originating finding: W4b R+CR C1.
+  - **R8 — Module-scoped MDX caches declare HMR strategy.** Any
+    module-level cache (`Map`, `Set`, `WeakMap`) in the
+    MDX-compile pipeline includes a header comment naming when
+    it's invalidated in production builds + dev-mode HMR + the
+    companion plugin/hook. Originating finding: W4b R+CR C3.
+  - **R9-production — one canonical declaration per named
+    interface (hard rule).** Every named interface has exactly
+    one declaration in `packages/**/src/**/*.ts` excluding
+    tests. Pre-merge grep gate: `grep -rE "^(export )?interface <Name>" packages/*/src/`
+    returns 1. Originating finding: W4b R+CR C2.
+  - **R9-test — prefer canonical import in tests (preference).**
+    Test files import the canonical type rather than
+    redeclaring. Redeclare only when isolation is deliberate
+    AND documented in a sibling comment. Refinement source:
+    post-W4b audit A2-R9 (test-mock duplications across 6 test
+    files).
+
+  See [feedback_review_rules_r6_r9.md](~/.claude/projects/-Users-anna-Teaching-sophie/memory/feedback_review_rules_r6_r9.md)
+  for origin story + class-of-issue patterns each rule formalizes.
 
 ## Style
 
