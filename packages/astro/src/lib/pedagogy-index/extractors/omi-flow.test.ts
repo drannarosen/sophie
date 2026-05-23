@@ -71,7 +71,7 @@ describe("extractOMIFlows (pure)", () => {
     const entries = extractOMIFlows(tree as never, "spoiler-alerts");
     expect(entries).toHaveLength(1);
     expect(entries[0]).toMatchObject({
-      chapter: "spoiler-alerts",
+      unit: "spoiler-alerts",
       anchor: "stellar-temp",
       concept: "stellar-temperature",
       observable: { title: "HR diagram" },

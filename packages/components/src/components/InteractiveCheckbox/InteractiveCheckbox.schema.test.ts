@@ -4,7 +4,7 @@ import { InteractiveCheckboxPropsSchema } from "./InteractiveCheckbox.schema.ts"
 describe("InteractiveCheckboxPropsSchema", () => {
   const valid = {
     course: "test",
-    chapter: "test",
+    unit: "test",
     id: "ic-1",
     children: "Mark as done",
   };
@@ -24,8 +24,8 @@ describe("InteractiveCheckboxPropsSchema", () => {
     ).toBe(true);
   });
 
-  it("rejects empty required strings (course, chapter, id)", () => {
-    for (const field of ["course", "chapter", "id"] as const) {
+  it("rejects empty required strings (course, unit, id)", () => {
+    for (const field of ["course", "unit", "id"] as const) {
       expect(
         InteractiveCheckboxPropsSchema.safeParse({ ...valid, [field]: "" })
           .success

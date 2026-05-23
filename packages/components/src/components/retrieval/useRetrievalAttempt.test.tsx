@@ -14,7 +14,7 @@ describe("useRetrievalAttempt", () => {
       () =>
         useRetrievalAttempt({
           course: "ura-test-1",
-          chapter: "ch1",
+          unit: "ch1",
           target_id: "eq:stefan-boltzmann",
           component: "retrieval-prompt",
         }),
@@ -30,7 +30,7 @@ describe("useRetrievalAttempt", () => {
       () =>
         useRetrievalAttempt({
           course: "ura-test-2",
-          chapter: "ch1",
+          unit: "ch1",
           target_id: "eq:stefan-boltzmann",
           component: "retrieval-prompt",
         }),
@@ -51,7 +51,7 @@ describe("useRetrievalAttempt", () => {
       () =>
         useRetrievalAttempt({
           course: "ura-test-3",
-          chapter: "ch1",
+          unit: "ch1",
           target_id: "eq:stefan-boltzmann",
           component: "retrieval-prompt",
         }),
@@ -73,7 +73,7 @@ describe("useRetrievalAttempt", () => {
       () =>
         useRetrievalAttempt({
           course: "ura-test-4",
-          chapter: "ch1",
+          unit: "ch1",
           target_id: "eq:saha-equation",
           component: "retrieval-prompt",
         }),
@@ -88,7 +88,7 @@ describe("useRetrievalAttempt", () => {
       () =>
         useRetrievalAttempt({
           course: "astr201-sp26",
-          chapter: "spoiler-alerts",
+          unit: "spoiler-alerts",
           target_id: "eq:stefan-boltzmann",
           component: "retrieval-prompt",
         }),
@@ -122,7 +122,7 @@ describe("useRetrievalAttempt", () => {
       () =>
         useRetrievalAttempt({
           course: "ura-test-6",
-          chapter: "ch1",
+          unit: "ch1",
           target_id: "eq:multi",
           component: "skill-review",
         }),

@@ -4,7 +4,7 @@ import { ConfidenceCheckPropsSchema } from "./ConfidenceCheck.schema.ts";
 describe("ConfidenceCheckPropsSchema", () => {
   const valid = {
     course: "test",
-    chapter: "test",
+    unit: "test",
     id: "cc-1",
     prompt: "How sure are you?",
   };
@@ -31,7 +31,7 @@ describe("ConfidenceCheckPropsSchema", () => {
   });
 
   it("rejects empty required strings", () => {
-    for (const field of ["course", "chapter", "id", "prompt"] as const) {
+    for (const field of ["course", "unit", "id", "prompt"] as const) {
       expect(
         ConfidenceCheckPropsSchema.safeParse({ ...valid, [field]: "" }).success
       ).toBe(false);

@@ -23,7 +23,7 @@ import { z } from "zod";
  */
 export const SkillReviewPropsSchema = z.object({
   course: z.string().min(1),
-  chapter: z.string().min(1),
+  unit: z.string().min(1),
   target: z.string().min(1),
   children: z.custom<ReactNode>().optional(),
 });

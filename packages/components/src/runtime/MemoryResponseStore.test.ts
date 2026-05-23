@@ -29,7 +29,7 @@ describe("MemoryResponseStore", () => {
     });
   });
 
-  it("supports per-chapter namespacing within a profile", async () => {
+  it("supports per-unit namespacing within a profile", async () => {
     const store = new MemoryResponseStore("course-a");
     await store.set("student", "ch1", "k", { value: 1, ts: 1 });
     await store.set("student", "ch2", "k", { value: 2, ts: 2 });
@@ -55,12 +55,12 @@ describe("MemoryResponseStore", () => {
     });
   });
 
-  it("clearChapter removes every record for a (profile, chapter) pair", async () => {
+  it("clearUnit removes every record for a (profile, unit) pair", async () => {
     const store = new MemoryResponseStore("course-a");
     await store.set("student", "ch1", "k1", { value: 1, ts: 1 });
     await store.set("student", "ch1", "k2", { value: 2, ts: 2 });
     await store.set("student", "ch2", "k1", { value: 3, ts: 3 });
-    await store.clearChapter("student", "ch1");
+    await store.clearUnit("student", "ch1");
     expect(await store.get("student", "ch1", "k1")).toBeUndefined();
     expect(await store.get("student", "ch1", "k2")).toBeUndefined();
     expect(await store.get("student", "ch2", "k1")).toEqual({
@@ -69,11 +69,11 @@ describe("MemoryResponseStore", () => {
     });
   });
 
-  it("clearChapter scopes to one profile only", async () => {
+  it("clearUnit scopes to one profile only", async () => {
     const store = new MemoryResponseStore("course-a");
     await store.set("student", "ch", "k", { value: 1, ts: 1 });
     await store.set("instructor", "ch", "k", { value: 2, ts: 2 });
-    await store.clearChapter("student", "ch");
+    await store.clearUnit("student", "ch");
     expect(await store.get("student", "ch", "k")).toBeUndefined();
     expect(await store.get("instructor", "ch", "k")).toEqual({
       value: 2,
@@ -87,13 +87,13 @@ describe("MemoryResponseStore", () => {
   });
 
   describe("getAll — range read across keys (Wedge B1)", () => {
-    it("returns {} when nothing is stored for the chapter", async () => {
+    it("returns {} when nothing is stored for the unit", async () => {
       const store = new MemoryResponseStore("course-a");
       const out = await store.getAll("student", "ch1");
       expect(out).toEqual({});
     });
 
-    it("returns every (key → StoredValue) for the chapter when no prefix is given", async () => {
+    it("returns every (key → StoredValue) for the unit when no prefix is given", async () => {
       const store = new MemoryResponseStore("course-a");
       await store.set("student", "ch1", "k1", { value: 1, ts: 1 });
       await store.set("student", "ch1", "k2", { value: 2, ts: 2 });
@@ -129,7 +129,7 @@ describe("MemoryResponseStore", () => {
       });
     });
 
-    it("scopes to one (profile, chapter) only — sibling profiles + chapters excluded", async () => {
+    it("scopes to one (profile, unit) only — sibling profiles + units excluded", async () => {
       const store = new MemoryResponseStore("course-a");
       await store.set("student", "ch1", "k", { value: 1, ts: 1 });
       await store.set("instructor", "ch1", "k", { value: 2, ts: 2 });
@@ -149,15 +149,15 @@ describe("MemoryResponseStore", () => {
     });
   });
 
-  describe("getAllMulti — cross-chapter range read (Wedge B-followup W1)", () => {
-    it("returns {} when chapters array is empty", async () => {
+  describe("getAllMulti — cross-unit range read (Wedge B-followup W1)", () => {
+    it("returns {} when units array is empty", async () => {
       const store = new MemoryResponseStore("course-a");
       await store.set("student", "ch1", "k1", { value: 1, ts: 1 });
       const out = await store.getAllMulti("student", [], "practice-attempt:");
       expect(out).toEqual({});
     });
 
-    it("merges results across multiple chapters into one map", async () => {
+    it("merges results across multiple units into one map", async () => {
       const store = new MemoryResponseStore("course-a");
       await store.set("student", "ch-a", "practice-attempt:logs", {
         value: 1,
@@ -178,7 +178,7 @@ describe("MemoryResponseStore", () => {
       });
     });
 
-    it("excludes chapters not in the list", async () => {
+    it("excludes units not in the list", async () => {
       const store = new MemoryResponseStore("course-a");
       await store.set("student", "ch-a", "practice-attempt:logs", {
         value: 1,
@@ -196,7 +196,7 @@ describe("MemoryResponseStore", () => {
       expect(Object.keys(out)).toEqual(["practice-attempt:logs"]);
     });
 
-    it("applies the keyPrefix filter across all listed chapters", async () => {
+    it("applies the keyPrefix filter across all listed units", async () => {
       const store = new MemoryResponseStore("course-a");
       await store.set("student", "ch-a", "practice-attempt:x", {
         value: 1,

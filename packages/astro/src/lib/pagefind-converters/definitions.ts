@@ -6,7 +6,7 @@ export const toDefinitionRecord: EntityToPagefindRecord<DefinitionEntry> = (
   entity,
   ctx
 ) => ({
-  url: `/units/${entity.chapter}/reading#${entity.anchor}`,
+  url: `/units/${entity.unit}/reading#${entity.anchor}`,
   content: stripHtml(entity.body),
   language: "en",
   meta: {
@@ -16,7 +16,7 @@ export const toDefinitionRecord: EntityToPagefindRecord<DefinitionEntry> = (
   },
   filters: {
     type: ["term"],
-    chapter: [entity.chapter],
+    chapter: [entity.unit],
     module: [ctx.moduleSlug],
   },
 });

@@ -28,7 +28,7 @@ export function checkChapterStatus(
       severity: "INFO",
       code: "CS2",
       message: `CS2: chapter "${slug}" has status: draft — excluded from the student build per ADR 0051.`,
-      location: { chapter: slug },
+      location: { unit: slug },
     });
   }
 }

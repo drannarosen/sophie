@@ -11,33 +11,33 @@ import {
 
 export interface UseInteractiveRangeMultiResult<T> {
   /**
-   * Snapshot of every record across all listed `chapters` whose key
-   * starts with `keyPrefix` (or every record for the chapters when
+   * Snapshot of every record across all listed `units` whose key
+   * starts with `keyPrefix` (or every record for the units when
    * `keyPrefix === undefined`). Keys are the *unwrapped* keys, not the
-   * internal composite keys; collisions across chapters resolve
-   * last-chapter-wins (in iteration order), matching
+   * internal composite keys; collisions across units resolve
+   * last-unit-wins (in iteration order), matching
    * `ResponseStore.getAllMulti`'s contract.
    */
   values: Readonly<Record<string, T>>;
   status: InteractiveStatus;
   error: Error | null;
-  /** True once the initial multi-chapter range read resolves (status === "ready"). */
+  /** True once the initial multi-unit range read resolves (status === "ready"). */
   hydrated: boolean;
   persistence: PersistenceMode;
 }
 
 /**
- * Cross-chapter sibling of `useInteractiveRange`. Hydrates from a
+ * Cross-unit sibling of `useInteractiveRange`. Hydrates from a
  * `ResponseStore.getAllMulti` call on mount; subscribes to one
- * BroadcastChannel per chapter so writes anywhere in the listed
- * `chapters` flow in as LWW updates (ADR 0029) per individual key.
+ * BroadcastChannel per unit so writes anywhere in the listed
+ * `units` flow in as LWW updates (ADR 0029) per individual key.
  *
  * Read-only: mutations must go through `useInteractive` per-key,
- * scoped to a single (course, chapter).
+ * scoped to a single (course, unit).
  *
- * The chapter list is treated as a *stable build-time fact* — sourced
- * from `PedagogyIndex.units` via the section→units→chapter binding
- * chain. The hook depends on the `chapters` array reference; callers
+ * The unit list is treated as a *stable build-time fact* — sourced
+ * from `PedagogyIndex.units` via the section→units→unit binding
+ * chain. The hook depends on the `units` array reference; callers
  * **must** `useMemo` the array when deriving from the index, otherwise
  * the effects refire on every render. (`<SpacedReview section=…>`
  * memoizes via `useMemo([units, section])`.)
@@ -48,7 +48,7 @@ export interface UseInteractiveRangeMultiResult<T> {
  */
 export function useInteractiveRangeMulti<T>(
   course: string,
-  chapters: ReadonlyArray<string>,
+  units: ReadonlyArray<string>,
   keyPrefix?: string
 ): UseInteractiveRangeMultiResult<T> {
   const profile = useProfile();
@@ -62,7 +62,7 @@ export function useInteractiveRangeMulti<T>(
   );
 
   // Per-key LWW timestamps. Keyspace is the *unwrapped* key (not the
-  // composite). Multi-chapter LWW resolves on the unwrapped key —
+  // composite). Multi-unit LWW resolves on the unwrapped key —
   // matches getAllMulti's collision semantics.
   const tsRef = useRef<Map<string, number>>(new Map());
 
@@ -78,7 +78,7 @@ export function useInteractiveRangeMulti<T>(
   useEffect(() => {
     let cancelled = false;
     const store = getStore(course);
-    if (chapters.length === 0) {
+    if (units.length === 0) {
       // Empty list → no I/O; ready immediately.
       setValues({});
       setStatus("ready");
@@ -94,7 +94,7 @@ export function useInteractiveRangeMulti<T>(
       setPersistence(mode);
     });
     store
-      .getAllMulti<T>(profile, chapters, keyPrefix)
+      .getAllMulti<T>(profile, units, keyPrefix)
       .then((stored) => {
         if (cancelled) return;
         setPersistence(store.getPersistence());
@@ -115,16 +115,16 @@ export function useInteractiveRangeMulti<T>(
       cancelled = true;
       unsubscribePersistence();
     };
-  }, [course, profile, keyPrefix, chapters]);
+  }, [course, profile, keyPrefix, units]);
 
-  // Broadcast subscription effect: one subscription per chapter.
+  // Broadcast subscription effect: one subscription per unit.
   useEffect(() => {
-    if (chapters.length === 0) return;
+    if (units.length === 0) return;
     const unsubscribers: Array<() => void> = [];
-    for (const chapter of chapters) {
-      const channel = getChannel(course, chapter);
-      const chapterPrefix = `${profile}:${chapter}:`;
-      const compositePrefix = compositeKey(profile, chapter, keyPrefix ?? "");
+    for (const unit of units) {
+      const channel = getChannel(course, unit);
+      const chapterPrefix = `${profile}:${unit}:`;
+      const compositePrefix = compositeKey(profile, unit, keyPrefix ?? "");
       const unsubscribe = channel.subscribe((message: BroadcastMessage) => {
         if (message.senderId === senderId) return;
         if (typeof message.key !== "string") return;
@@ -142,7 +142,7 @@ export function useInteractiveRangeMulti<T>(
     return () => {
       for (const fn of unsubscribers) fn();
     };
-  }, [course, profile, keyPrefix, senderId, chapters]);
+  }, [course, profile, keyPrefix, senderId, units]);
 
   const hydrated = status === "ready";
 

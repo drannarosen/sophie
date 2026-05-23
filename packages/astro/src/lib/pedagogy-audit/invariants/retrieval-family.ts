@@ -68,18 +68,20 @@ function checkPRA1(index: PedagogyIndex, sink: FindingSink): void {
   const sectionOrder = new Map<string, number>();
   for (const s of index.sections) sectionOrder.set(s.slug, s.order);
 
-  // chapter -> section.order (via unit.chapter → unit.section_id → section.order)
-  const chapterSectionOrder = new Map<string, number>();
+  // unit.id -> section.order (via unit.section_id → section.order); the
+  // per-callsite entries (sr, etc.) carry the parent-unit id in `entry.unit`
+  // and look it up against this map.
+  const unitSectionOrder = new Map<string, number>();
   for (const u of index.units) {
     const ord = sectionOrder.get(u.section_id);
-    if (ord !== undefined) chapterSectionOrder.set(u.chapter, ord);
+    if (ord !== undefined) unitSectionOrder.set(u.id, ord);
   }
 
   // section.order -> Set<topic target_id> of SkillReviews in chapters bound to that order
   const coverByOrder = new Map<number, Set<string>>();
   for (const sr of index.skillReviews) {
     if (parseTargetPrefix(sr.target_id) !== "topic") continue;
-    const ord = chapterSectionOrder.get(sr.chapter);
+    const ord = unitSectionOrder.get(sr.unit);
     if (ord === undefined) continue;
     let s = coverByOrder.get(ord);
     if (s === undefined) {
@@ -106,7 +108,7 @@ function checkPRA1(index: PedagogyIndex, sink: FindingSink): void {
         severity: "WARNING",
         code: "PRA-1",
         message: `PRA-1: Unit "${unit.id}" in Section "${unit.section_id}" declares prereq "${prereq}" but no <SkillReview target="topic:${prereq}"> exists in this Section or any prior Section. Resolution: add a <SkillReview target="topic:${prereq}"> in this Section or an earlier one, or remove the prereq if the topic is genuinely off-scope.`,
-        location: { chapter: unit.chapter },
+        location: { unit: unit.id },
       });
     }
   }
@@ -123,28 +125,29 @@ function checkRET1(index: PedagogyIndex, sink: FindingSink): void {
   // metadata, learning objectives) without any inline pedagogy aren't
   // candidates for retrieval coverage — they're roadmap-shaped.
   const chaptersWithContent = new Set<string>();
-  for (const e of index.definitions) chaptersWithContent.add(e.chapter);
-  for (const e of index.equationCitations) chaptersWithContent.add(e.chapter);
-  for (const e of index.keyInsights) chaptersWithContent.add(e.chapter);
-  for (const e of index.misconceptions) chaptersWithContent.add(e.chapter);
-  for (const e of index.deepDives) chaptersWithContent.add(e.chapter);
-  for (const e of index.omiFlows) chaptersWithContent.add(e.chapter);
+  for (const e of index.definitions) chaptersWithContent.add(e.unit);
+  for (const e of index.equationCitations) chaptersWithContent.add(e.unit);
+  for (const e of index.keyInsights) chaptersWithContent.add(e.unit);
+  for (const e of index.misconceptions) chaptersWithContent.add(e.unit);
+  for (const e of index.deepDives) chaptersWithContent.add(e.unit);
+  for (const e of index.omiFlows) chaptersWithContent.add(e.unit);
 
   const chaptersWithRetrieval = new Set<string>();
-  for (const e of index.retrievalPrompts) chaptersWithRetrieval.add(e.chapter);
-  for (const e of index.spacedReviews) chaptersWithRetrieval.add(e.chapter);
-  for (const e of index.skillReviews) chaptersWithRetrieval.add(e.chapter);
+  for (const e of index.retrievalPrompts) chaptersWithRetrieval.add(e.unit);
+  for (const e of index.spacedReviews) chaptersWithRetrieval.add(e.unit);
+  for (const e of index.skillReviews) chaptersWithRetrieval.add(e.unit);
 
   // Sort for deterministic finding order across runs.
   const offenders = [...chaptersWithContent]
     .filter((c) => !chaptersWithRetrieval.has(c))
     .sort();
-  for (const chapter of offenders) {
+  for (const unitId of offenders) {
     sink.info.push({
       severity: "INFO",
       code: "RET-1",
-      message: `RET-1: chapter "${chapter}" carries substantive pedagogy content (definitions / equations / key-insights / misconceptions / deep-dives / OMIFlows) but renders zero retrieval surfaces (<RetrievalPrompt>, <SpacedReview>, <SkillReview>). Consider adding at least one recall prompt to anchor the material.`,
-      location: { chapter },
+      // CLI prefix word "chapter:" preserved per W3/D2 (educator vocabulary)
+      message: `RET-1: chapter "${unitId}" carries substantive pedagogy content (definitions / equations / key-insights / misconceptions / deep-dives / OMIFlows) but renders zero retrieval surfaces (<RetrievalPrompt>, <SpacedReview>, <SkillReview>). Consider adding at least one recall prompt to anchor the material.`,
+      location: { unit: unitId },
     });
   }
 }
@@ -168,8 +171,8 @@ function checkSR1(index: PedagogyIndex, sink: FindingSink): void {
         sink.errors.push({
           severity: "ERROR",
           code: "SR-1",
-          message: `SR-1: <SpacedReview target="${e.target_id}"> in chapter "${e.chapter}" is malformed — expected prefix-typed ref of the form "<prefix>:<slug>" with non-empty slug. Resolution: rewrite as e.g. "topic:logarithms" or "eq:stefan-boltzmann".`,
-          location: { chapter: e.chapter, anchor: e.anchor },
+          message: `SR-1: <SpacedReview target="${e.target_id}"> in chapter "${e.unit}" is malformed — expected prefix-typed ref of the form "<prefix>:<slug>" with non-empty slug. Resolution: rewrite as e.g. "topic:logarithms" or "eq:stefan-boltzmann".`,
+          location: { unit: e.unit, anchor: e.anchor },
         });
         continue;
       }
@@ -177,8 +180,8 @@ function checkSR1(index: PedagogyIndex, sink: FindingSink): void {
         sink.errors.push({
           severity: "ERROR",
           code: "SR-1",
-          message: `SR-1: <SpacedReview target="${e.target_id}"> in chapter "${e.chapter}" uses unknown prefix "${prefix}:". Known prefixes: ${[...KNOWN_TARGET_PREFIXES].sort().join(", ")}. Resolution: switch to a known prefix.`,
-          location: { chapter: e.chapter, anchor: e.anchor },
+          message: `SR-1: <SpacedReview target="${e.target_id}"> in chapter "${e.unit}" uses unknown prefix "${prefix}:". Known prefixes: ${[...KNOWN_TARGET_PREFIXES].sort().join(", ")}. Resolution: switch to a known prefix.`,
+          location: { unit: e.unit, anchor: e.anchor },
         });
       }
     }
@@ -186,8 +189,8 @@ function checkSR1(index: PedagogyIndex, sink: FindingSink): void {
       sink.errors.push({
         severity: "ERROR",
         code: "SR-1",
-        message: `SR-1: <SpacedReview section="${e.section_id}"> in chapter "${e.chapter}" refers to an unknown section slug. Resolution: ensure src/content/sections/${e.section_id}.json exists with a matching slug, or fix the ref to point at an existing section.`,
-        location: { chapter: e.chapter, anchor: e.anchor },
+        message: `SR-1: <SpacedReview section="${e.section_id}"> in chapter "${e.unit}" refers to an unknown section slug. Resolution: ensure src/content/sections/${e.section_id}.json exists with a matching slug, or fix the ref to point at an existing section.`,
+        location: { unit: e.unit, anchor: e.anchor },
       });
     }
   }

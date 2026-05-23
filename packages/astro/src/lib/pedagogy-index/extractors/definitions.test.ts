@@ -20,7 +20,7 @@ describe("extractDefinitions (pure)", () => {
     expect(entries[0]).toMatchObject({
       term: "Standard candle",
       slug: "standard-candle",
-      chapter: "spoiler-alerts",
+      unit: "spoiler-alerts",
       anchor: "standard-candle",
     });
   });

@@ -41,7 +41,7 @@ function makeCitation(
   overrides: Partial<EquationCitationEntry> = {}
 ): EquationCitationEntry {
   return {
-    chapter: "spoiler-alerts",
+    unit: "spoiler-alerts",
     refId: "wiens-law",
     anchor: "wiens-law-citation-1",
     number: 1,
@@ -61,7 +61,7 @@ describe("R1 ERROR — citation references a refId not in the registry", () => {
     expect(r1[0]?.message).toContain("nonexistent");
     expect(r1[0]?.message).toContain("spoiler-alerts");
     expect(r1[0]?.location).toMatchObject({
-      chapter: "spoiler-alerts",
+      unit: "spoiler-alerts",
       anchor: "nonexistent-citation-1",
     });
   });

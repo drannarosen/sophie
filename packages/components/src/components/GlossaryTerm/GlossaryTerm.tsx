@@ -79,8 +79,9 @@ export function GlossaryTerm({
   }
 
   // W2/D5 route shape: /units/<unit-id>/reading#<anchor>.
-  // entry.chapter holds the unit id per W2/D4's 1:1 convention.
-  const href = `/units/${entry.chapter}/reading#${entry.anchor}`;
+  // entry.unit holds the parent Unit id (W3 rename; under W2/D4
+  // 1:1 the unit id equals the reading-artifact slug).
+  const href = `/units/${entry.unit}/reading#${entry.anchor}`;
 
   return (
     <>

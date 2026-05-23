@@ -8,7 +8,7 @@ export const toObjectiveRecord: EntityToPagefindRecord<ObjectiveEntry> = (
 ) => {
   const title = `${entity.verb} ${stripHtml(entity.body)}`.trim();
   return {
-    url: `/units/${entity.chapter}/reading#${entity.anchor}`,
+    url: `/units/${entity.unit}/reading#${entity.anchor}`,
     content: title,
     language: "en",
     meta: {
@@ -18,7 +18,7 @@ export const toObjectiveRecord: EntityToPagefindRecord<ObjectiveEntry> = (
     },
     filters: {
       type: ["objective"],
-      chapter: [entity.chapter],
+      chapter: [entity.unit],
       module: [ctx.moduleSlug],
     },
   };

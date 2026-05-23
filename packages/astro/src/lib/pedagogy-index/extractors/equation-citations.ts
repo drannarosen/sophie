@@ -21,7 +21,7 @@ import {
  */
 export function extractEquationCitations(
   tree: Root,
-  chapterSlug: string,
+  unitId: string,
   chapterNumber?: number
 ): EquationCitationEntry[] {
   const out: EquationCitationEntry[] = [];
@@ -34,7 +34,7 @@ export function extractEquationCitations(
     const refId = readStringAttr(el, "refId");
     if (!refId) {
       throw new Error(
-        `<KeyEquation> in chapter "${chapterSlug}" is missing a non-empty \`refId\` attr. Post-ADR-0060, every chapter-side <KeyEquation> must cite a registry entry via \`refId\`.`
+        `<KeyEquation> in chapter "${unitId}" is missing a non-empty \`refId\` attr. Post-ADR-0060, every chapter-side <KeyEquation> must cite a registry entry via \`refId\`.`
       );
     }
 
@@ -42,7 +42,7 @@ export function extractEquationCitations(
     const framingHtml = renderChildrenToHtml(el.children).trim();
     const anchor = `${slugify(refId)}-citation-${counter}`;
     out.push({
-      chapter: chapterSlug,
+      unit: unitId,
       refId: slugify(refId),
       anchor,
       number: counter,

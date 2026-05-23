@@ -53,7 +53,7 @@ function readIntegerAttr(
  */
 export function extractSpacedReviews(
   tree: Root,
-  chapterSlug: string
+  unitId: string
 ): SpacedReviewEntry[] {
   const out: SpacedReviewEntry[] = [];
   const seenAnchors = new Set<string>();
@@ -78,13 +78,13 @@ export function extractSpacedReviews(
     const anchor = `sp-${counter}`;
     if (seenAnchors.has(anchor)) {
       throw new Error(
-        `Intra-chapter anchor collision in chapter "${chapterSlug}": SpacedReview anchor "${anchor}" generated twice.`
+        `Intra-chapter anchor collision in chapter "${unitId}": SpacedReview anchor "${anchor}" generated twice.`
       );
     }
     seenAnchors.add(anchor);
 
     out.push({
-      chapter: chapterSlug,
+      unit: unitId,
       anchor,
       ...(hasTarget ? { target_id: target } : { section_id: section }),
       max,

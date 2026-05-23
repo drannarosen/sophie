@@ -74,7 +74,7 @@ function makeMisconception(
 ): MisconceptionEntry {
   return {
     body: "<p>x</p>",
-    chapter: "ch",
+    unit: "ch",
     anchor: "wiens-law-absorption-spectra",
     length: "short",
     ...overrides,
@@ -106,7 +106,7 @@ describe("E7 INFO — biography lacks <Observable>", () => {
     expect(e7[0]?.location).toMatchObject({
       anchor: "wiens-law",
     });
-    expect(e7[0]?.location?.chapter).toBeUndefined();
+    expect(e7[0]?.location?.unit).toBeUndefined();
   });
 
   it("does NOT fire when biography includes Observable", () => {
@@ -293,7 +293,7 @@ describe("E10 WARNING — <CommonMisuse misconception=…> references undeclared
     ];
     index.misconceptions = [
       makeMisconception({
-        chapter: "ch-1",
+        unit: "ch-1",
         anchor: "wiens-law-absorption-spectra",
       }),
     ];

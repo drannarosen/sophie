@@ -20,7 +20,7 @@ import { type MdxJsxFlowElement, readStringAttr } from "../jsx-utils.ts";
  */
 export function extractRetrievalPrompts(
   tree: Root,
-  chapterSlug: string
+  unitId: string
 ): RetrievalPromptEntry[] {
   const out: RetrievalPromptEntry[] = [];
   const seenAnchors = new Set<string>();
@@ -37,13 +37,13 @@ export function extractRetrievalPrompts(
     const anchor = `rp-${counter}`;
     if (seenAnchors.has(anchor)) {
       throw new Error(
-        `Intra-chapter anchor collision in chapter "${chapterSlug}": RetrievalPrompt anchor "${anchor}" generated twice.`
+        `Intra-chapter anchor collision in chapter "${unitId}": RetrievalPrompt anchor "${anchor}" generated twice.`
       );
     }
     seenAnchors.add(anchor);
 
     out.push({
-      chapter: chapterSlug,
+      unit: unitId,
       anchor,
       target_id: target,
     });

@@ -20,7 +20,7 @@ describe("extractKeyInsights (pure)", () => {
     expect(entries).toHaveLength(1);
     expect(entries[0]).toMatchObject({
       title: "Light is a messenger",
-      chapter: "spoiler-alerts",
+      unit: "spoiler-alerts",
       anchor: "light-is-a-messenger",
     });
     expect(entries[0]?.body).toContain(

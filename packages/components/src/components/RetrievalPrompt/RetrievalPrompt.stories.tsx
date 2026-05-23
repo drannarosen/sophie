@@ -21,7 +21,7 @@ type Story = StoryObj<typeof meta>;
 
 const ns = {
   course: "storybook",
-  chapter: "retrievalprompt",
+  unit: "retrievalprompt",
 };
 
 export const Default: Story = {

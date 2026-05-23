@@ -25,7 +25,7 @@ import { createPedagogyStore } from "../../runtime/pedagogy-store.ts";
 const store = createPedagogyStore<EquationCitationEntry>({
   scriptId: "sophie-pedagogy-equation-citations",
   logTag: "[EquationRef:citations]",
-  keyOf: (c) => `${c.chapter}#${c.refId}`,
+  keyOf: (c) => `${c.unit}#${c.refId}`,
 });
 
 let allCitations: ReadonlyArray<EquationCitationEntry> = [];
@@ -68,7 +68,7 @@ export function __setEquationCitations(
   store.set(entries);
 }
 
-/** Composite-key lookup, `${chapter}#${refId}`. */
+/** Composite-key lookup, `${unit}#${refId}`. */
 export const lookupEquationCitation = store.lookup;
 
 /**

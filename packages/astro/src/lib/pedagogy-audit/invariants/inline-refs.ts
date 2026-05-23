@@ -33,8 +33,8 @@ export function checkInlineRefs(
     sink.errors.push({
       severity: "ERROR",
       code: "D4",
-      message: `D4: <GlossaryTerm name="${usage.refKey}"> in chapter "${usage.chapter}" — no matching <Aside kind="definition"> found.`,
-      location: { chapter: usage.chapter },
+      message: `D4: <GlossaryTerm name="${usage.refKey}"> in chapter "${usage.unit}" — no matching <Aside kind="definition"> found.`,
+      location: { unit: usage.unit },
     });
   }
 
@@ -45,8 +45,8 @@ export function checkInlineRefs(
     sink.errors.push({
       severity: "ERROR",
       code: "E4",
-      message: `E4: <EquationRef refId="${usage.refKey}"> in chapter "${usage.chapter}" — no matching equation registry entry found.`,
-      location: { chapter: usage.chapter },
+      message: `E4: <EquationRef refId="${usage.refKey}"> in chapter "${usage.unit}" — no matching equation registry entry found.`,
+      location: { unit: usage.unit },
     });
   }
 
@@ -60,8 +60,8 @@ export function checkInlineRefs(
     sink.errors.push({
       severity: "ERROR",
       code: "F1",
-      message: `F1: <Figure name="${use.name}"> in chapter "${use.chapter}" — name not present in figureRegistry. Resolution: add an entry to content/figures.ts, or fix the name typo.`,
-      location: { chapter: use.chapter, anchor: use.anchor },
+      message: `F1: <Figure name="${use.name}"> in chapter "${use.unit}" — name not present in figureRegistry. Resolution: add an entry to content/figures.ts, or fix the name typo.`,
+      location: { unit: use.unit, anchor: use.anchor },
     });
   }
 
@@ -73,8 +73,8 @@ export function checkInlineRefs(
     sink.errors.push({
       severity: "ERROR",
       code: "F2",
-      message: `F2: <FigureRef name="${usage.refKey}"> in chapter "${usage.chapter}" — name not present in figureRegistry.`,
-      location: { chapter: usage.chapter },
+      message: `F2: <FigureRef name="${usage.refKey}"> in chapter "${usage.unit}" — name not present in figureRegistry.`,
+      location: { unit: usage.unit },
     });
   }
 
@@ -88,8 +88,8 @@ export function checkInlineRefs(
     sink.errors.push({
       severity: "ERROR",
       code: "C1",
-      message: `C1: <ChapterRef chapter="${usage.refKey}"> in chapter "${usage.chapter}" — no matching unit in the units collection.`,
-      location: { chapter: usage.chapter },
+      message: `C1: <ChapterRef chapter="${usage.refKey}"> in chapter "${usage.unit}" — no matching unit in the units collection.`,
+      location: { unit: usage.unit },
     });
   }
 }

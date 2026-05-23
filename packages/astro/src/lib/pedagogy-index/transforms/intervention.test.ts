@@ -115,7 +115,7 @@ describe("extractInterventions (pure)", () => {
       type: "contrasting-cases",
       addresses: ["universe-with-a-center"],
       depth: "light",
-      chapter: "01-foundations/spoiler-alerts",
+      unit: "01-foundations/spoiler-alerts",
       anchor: "intervention-contrasting-cases-1",
     });
     expect(entries[0]?.body).toContain("Predict what you'd observe");

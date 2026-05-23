@@ -28,7 +28,7 @@ import {
  */
 export function extractObjectives(
   tree: Root,
-  chapterSlug: string
+  unitId: string
 ): ObjectiveEntry[] {
   const out: ObjectiveEntry[] = [];
   const seenIds = new Set<string>();
@@ -54,25 +54,25 @@ export function extractObjectives(
 
       if (!id) {
         throw new Error(
-          `<Objective> in chapter "${chapterSlug}" is missing a non-empty \`id\`.`
+          `<Objective> in chapter "${unitId}" is missing a non-empty \`id\`.`
         );
       }
       if (!verb) {
         throw new Error(
-          `<Objective id="${id}"> in chapter "${chapterSlug}" is missing a non-empty \`verb\`.`
+          `<Objective id="${id}"> in chapter "${unitId}" is missing a non-empty \`verb\`.`
         );
       }
 
       const body = renderChildrenToHtml(el.children);
       if (body.trim().length === 0) {
         throw new Error(
-          `<Objective id="${id}"> in chapter "${chapterSlug}" has an empty body. Resolution: add objective text between the opening and closing tags.`
+          `<Objective id="${id}"> in chapter "${unitId}" has an empty body. Resolution: add objective text between the opening and closing tags.`
         );
       }
 
       if (seenIds.has(id)) {
         throw new Error(
-          `O1 invariant: duplicate <Objective id="${id}"> within chapter "${chapterSlug}". Resolution: change one of the \`id\` props.`
+          `O1 invariant: duplicate <Objective id="${id}"> within chapter "${unitId}". Resolution: change one of the \`id\` props.`
         );
       }
       seenIds.add(id);
@@ -81,7 +81,7 @@ export function extractObjectives(
         id,
         verb,
         body,
-        chapter: chapterSlug,
+        unit: unitId,
         anchor: `lo-${slugify(id)}`,
       });
     }

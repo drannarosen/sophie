@@ -11,12 +11,12 @@ describe("extractRetrievalPrompts (pure)", () => {
     const entries = extractRetrievalPrompts(tree as never, "spoiler-alerts");
     expect(entries).toHaveLength(2);
     expect(entries[0]).toEqual({
-      chapter: "spoiler-alerts",
+      unit: "spoiler-alerts",
       anchor: "rp-1",
       target_id: "eq:stefan-boltzmann",
     });
     expect(entries[1]).toEqual({
-      chapter: "spoiler-alerts",
+      unit: "spoiler-alerts",
       anchor: "rp-2",
       target_id: "ki:luminosity",
     });

@@ -6,7 +6,7 @@ import { z } from "zod";
  * Persistence-bearing chapter primitive. Authored in MDX as
  *
  * ```mdx
- * <LearningObjectives client:load course="..." chapter="..." id="...">
+ * <LearningObjectives client:load course="..." unit="..." id="...">
  *   <Objective verb="Recognize" id="lo-1">body</Objective>
  *   <Objective verb="Apply"     id="lo-2">body</Objective>
  * </LearningObjectives>
@@ -16,7 +16,7 @@ import { z } from "zod";
  * children into a props-driven `objectives` array before the React
  * island runs (see `transformLearningObjectives` in `@sophie/astro`),
  * so the runtime contract is the array — not children. The parent
- * reads/writes one IndexedDB record per (course, chapter, id) tuple
+ * reads/writes one IndexedDB record per (course, unit, id) tuple
  * — value is `Record<objectiveId, boolean>`.
  *
  * Per ADR 0027: `course`, `chapter`, and `id` are required props.
@@ -31,7 +31,7 @@ import { z } from "zod";
  */
 export const LearningObjectivesPropsSchema = z.object({
   course: NonEmptyString,
-  chapter: NonEmptyString,
+  unit: NonEmptyString,
   id: NonEmptyString,
   heading: z.string().min(1).optional(),
   objectives: z.array(

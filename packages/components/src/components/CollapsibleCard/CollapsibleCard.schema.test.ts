@@ -4,7 +4,7 @@ import { CollapsibleCardPropsSchema } from "./CollapsibleCard.schema.ts";
 describe("CollapsibleCardPropsSchema", () => {
   const valid = {
     course: "test",
-    chapter: "test",
+    unit: "test",
     id: "card-1",
     title: "Deep Dive",
     children: null,
@@ -26,7 +26,7 @@ describe("CollapsibleCardPropsSchema", () => {
   });
 
   it("rejects empty required strings (course, chapter, id, title)", () => {
-    for (const field of ["course", "chapter", "id", "title"] as const) {
+    for (const field of ["course", "unit", "id", "title"] as const) {
       expect(
         CollapsibleCardPropsSchema.safeParse({ ...valid, [field]: "" }).success
       ).toBe(false);

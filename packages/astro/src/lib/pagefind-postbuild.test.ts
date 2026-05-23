@@ -68,7 +68,7 @@ describe("buildPagefindIndex (Layer 1.6)", () => {
         term: "luminosity",
         slug: "luminosity",
         body: "Total radiant power.",
-        chapter: "ch",
+        unit: "ch",
         anchor: "def-luminosity",
       },
     ]);
@@ -82,7 +82,7 @@ describe("buildPagefindIndex (Layer 1.6)", () => {
     ]);
     indexAccumulator.addEquationCitations([
       {
-        chapter: "ch",
+        unit: "ch",
         refId: "stefan-boltzmann",
         anchor: "stefan-boltzmann-citation-1",
         number: 1,
@@ -91,14 +91,14 @@ describe("buildPagefindIndex (Layer 1.6)", () => {
     indexAccumulator.addKeyInsights([
       {
         body: "Distance hides itself.",
-        chapter: "ch",
+        unit: "ch",
         anchor: "ki-1",
       },
     ]);
     indexAccumulator.addMisconceptions([
       {
         body: "A common confusion: brighter is hotter.",
-        chapter: "ch",
+        unit: "ch",
         anchor: "misc-1",
         length: "short",
         label: "Brighter ≠ hotter",
@@ -108,7 +108,7 @@ describe("buildPagefindIndex (Layer 1.6)", () => {
       {
         id: "obj-1",
         anchor: "lo-obj-1",
-        chapter: "ch",
+        unit: "ch",
         verb: "State",
         body: "the thesis.",
       },
@@ -188,7 +188,7 @@ describe("pedagogy-index.json artifact (ADR 0045)", () => {
         term: "luminosity",
         slug: "luminosity",
         body: "Total radiant power.",
-        chapter: "ch",
+        unit: "ch",
         anchor: "def-luminosity",
       },
     ]);
@@ -222,7 +222,7 @@ describe("pedagogy-index.json artifact (ADR 0045)", () => {
         {
           term: "luminosity",
           slug: "luminosity",
-          chapter: "ch",
+          unit: "ch",
           anchor: "def-luminosity",
         },
       ],

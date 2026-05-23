@@ -13,7 +13,7 @@ type Story = StoryObj<typeof meta>;
 
 const ns = {
   course: "storybook",
-  chapter: "interactivecheckbox",
+  unit: "interactivecheckbox",
 };
 
 export const Default: Story = {

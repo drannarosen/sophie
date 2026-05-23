@@ -23,7 +23,7 @@ describe("SR-1 — section-validity (W1)", () => {
       sections: [{ type: "module", slug: "stars", title: "Stars", order: 0 }],
       spacedReviews: [
         {
-          chapter: "ch1",
+          unit: "ch1",
           anchor: "sp-1",
           max: 3,
           section_id: "stars",
@@ -41,7 +41,7 @@ describe("SR-1 — section-validity (W1)", () => {
       sections: [{ type: "module", slug: "stars", title: "Stars", order: 0 }],
       spacedReviews: [
         {
-          chapter: "ch1",
+          unit: "ch1",
           anchor: "sp-1",
           max: 3,
           section_id: "nonexistent",
@@ -53,7 +53,7 @@ describe("SR-1 — section-validity (W1)", () => {
     const sr = sink.errors.filter((e) => e.code === "SR-1");
     expect(sr).toHaveLength(1);
     expect(sr[0]?.message).toMatch(/nonexistent/);
-    expect(sr[0]?.location?.chapter).toBe("ch1");
+    expect(sr[0]?.location?.unit).toBe("ch1");
     expect(sr[0]?.location?.anchor).toBe("sp-1");
   });
 });
@@ -69,7 +69,7 @@ describe("PRA-1 — Unit-aware (W1)", () => {
       sections: [{ type: "module", slug: "stars", title: "Stars", order: 1 }],
       units: [
         {
-          id: "u1",
+          id: "u1-ch",
           type: "lecture",
           title: "U1",
           order: 0,
@@ -81,7 +81,7 @@ describe("PRA-1 — Unit-aware (W1)", () => {
       ],
       skillReviews: [
         {
-          chapter: "u1-ch",
+          unit: "u1-ch",
           anchor: "sk-1",
           target_id: "topic:logs",
           has_explicit_content: true,
@@ -102,7 +102,7 @@ describe("PRA-1 — Unit-aware (W1)", () => {
       ],
       units: [
         {
-          id: "math-u1",
+          id: "math-ch",
           type: "skill",
           title: "Logs",
           order: 0,
@@ -113,7 +113,7 @@ describe("PRA-1 — Unit-aware (W1)", () => {
           status: "stable",
         },
         {
-          id: "stars-u1",
+          id: "spectra-ch",
           type: "lecture",
           title: "Spectra",
           order: 0,
@@ -125,7 +125,7 @@ describe("PRA-1 — Unit-aware (W1)", () => {
       ],
       skillReviews: [
         {
-          chapter: "math-ch",
+          unit: "math-ch",
           anchor: "sk-1",
           target_id: "topic:logs",
           has_explicit_content: true,
@@ -146,7 +146,7 @@ describe("PRA-1 — Unit-aware (W1)", () => {
       ],
       units: [
         {
-          id: "stars-u1",
+          id: "stars-ch",
           type: "lecture",
           title: "Stars",
           order: 0,
@@ -160,7 +160,7 @@ describe("PRA-1 — Unit-aware (W1)", () => {
         // SkillReview is in a chapter bound to the LATER Section (galaxies)
         // — not eligible to bridge stars's prereq.
         {
-          chapter: "galaxies-ch",
+          unit: "galaxies-ch",
           anchor: "sk-1",
           target_id: "topic:logs",
           has_explicit_content: true,
@@ -172,7 +172,7 @@ describe("PRA-1 — Unit-aware (W1)", () => {
     index.units = [
       ...index.units,
       {
-        id: "galaxies-u1",
+        id: "galaxies-ch",
         type: "lecture",
         title: "Galaxies",
         order: 0,
@@ -186,7 +186,7 @@ describe("PRA-1 — Unit-aware (W1)", () => {
     checkRetrievalFamily(index, sink);
     const pra = sink.warnings.filter((w) => w.code === "PRA-1");
     expect(pra).toHaveLength(1);
-    expect(pra[0]?.location?.chapter).toBe("stars-ch");
+    expect(pra[0]?.location?.unit).toBe("stars-ch");
   });
 
   test("emits PRA-1 WARN when no SkillReview covers the prereq topic anywhere", () => {
@@ -195,7 +195,7 @@ describe("PRA-1 — Unit-aware (W1)", () => {
       sections: [{ type: "module", slug: "stars", title: "Stars", order: 0 }],
       units: [
         {
-          id: "u1",
+          id: "u1-ch",
           type: "lecture",
           title: "U1",
           order: 0,
@@ -222,7 +222,7 @@ describe("PRA-1 — Unit-aware (W1)", () => {
     const index: PedagogyIndex = {
       ...emptyIndex(),
       retrievalPrompts: [
-        { chapter: "ch1", anchor: "rp-1", target_id: "topic:logs" },
+        { unit: "ch1", anchor: "rp-1", target_id: "topic:logs" },
       ],
       skillReviews: [],
     };
@@ -237,7 +237,7 @@ describe("PRA-1 — Unit-aware (W1)", () => {
       sections: [{ type: "module", slug: "stars", title: "Stars", order: 0 }],
       units: [
         {
-          id: "u1",
+          id: "u1-ch",
           type: "lecture",
           title: "U1",
           order: 0,
@@ -250,7 +250,7 @@ describe("PRA-1 — Unit-aware (W1)", () => {
       skillReviews: [
         // Only one of the two prereqs is covered.
         {
-          chapter: "u1-ch",
+          unit: "u1-ch",
           anchor: "sk-1",
           target_id: "topic:logs",
           has_explicit_content: true,
@@ -274,12 +274,12 @@ describe("RET-1 — retrieval coverage (INFO)", () => {
           term: "Luminosity",
           slug: "luminosity",
           body: "<p>energy / time</p>",
-          chapter: "ch1",
+          unit: "ch1",
           anchor: "def-luminosity",
         },
       ],
       retrievalPrompts: [
-        { chapter: "ch1", anchor: "rp-1", target_id: "ki:luminosity" },
+        { unit: "ch1", anchor: "rp-1", target_id: "ki:luminosity" },
       ],
     };
     const sink = emptySink();
@@ -295,14 +295,14 @@ describe("RET-1 — retrieval coverage (INFO)", () => {
           term: "Lum",
           slug: "lum",
           body: "<p>x</p>",
-          chapter: "ch1",
+          unit: "ch1",
           anchor: "def-lum",
         },
       ],
       keyInsights: [
         {
           body: "<p>k</p>",
-          chapter: "ch2",
+          unit: "ch2",
           anchor: "ki-1",
         },
       ],
@@ -311,7 +311,7 @@ describe("RET-1 — retrieval coverage (INFO)", () => {
     checkRetrievalFamily(index, sink);
     const ret = sink.info.filter((i) => i.code === "RET-1");
     expect(ret).toHaveLength(2);
-    expect(ret.map((i) => i.location?.chapter).sort()).toEqual(["ch1", "ch2"]);
+    expect(ret.map((i) => i.location?.unit).sort()).toEqual(["ch1", "ch2"]);
   });
 
   test("emits no finding for chapters with no substantive content (metadata-only)", () => {
@@ -322,7 +322,7 @@ describe("RET-1 — retrieval coverage (INFO)", () => {
           id: "verify",
           verb: "Recognize",
           body: "<p>x</p>",
-          chapter: "ch1",
+          unit: "ch1",
           anchor: "lo-verify",
         },
       ],
@@ -339,7 +339,7 @@ describe("SR-1 — SpacedReview ref validity (ERROR)", () => {
       ...emptyIndex(),
       spacedReviews: [
         {
-          chapter: "ch1",
+          unit: "ch1",
           anchor: "sp-1",
           target_id: "topic:logarithms",
           max: 3,
@@ -356,7 +356,7 @@ describe("SR-1 — SpacedReview ref validity (ERROR)", () => {
       ...emptyIndex(),
       spacedReviews: [
         {
-          chapter: "ch1",
+          unit: "ch1",
           anchor: "sp-1",
           target_id: "logarithms",
           max: 3,
@@ -375,7 +375,7 @@ describe("SR-1 — SpacedReview ref validity (ERROR)", () => {
       ...emptyIndex(),
       spacedReviews: [
         {
-          chapter: "ch1",
+          unit: "ch1",
           anchor: "sp-1",
           target_id: "mystery:x",
           max: 3,
@@ -396,7 +396,7 @@ describe("SR-1 — SpacedReview ref validity (ERROR)", () => {
       sections: [{ type: "module", slug: "foundations", title: "F", order: 0 }],
       spacedReviews: [
         {
-          chapter: "ch1",
+          unit: "ch1",
           anchor: "sp-1",
           section_id: "m1-foundations",
           max: 5,

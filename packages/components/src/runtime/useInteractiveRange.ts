@@ -11,8 +11,8 @@ import {
 
 export interface UseInteractiveRangeResult<T> {
   /**
-   * Snapshot of every record for (course, chapter) whose key starts
-   * with `keyPrefix` (or every record for the chapter when `keyPrefix
+   * Snapshot of every record for (course, unit) whose key starts
+   * with `keyPrefix` (or every record for the unit when `keyPrefix
    * === undefined`). Keys are the *unwrapped* keys (the third arg to
    * `useInteractive`/`set`), not the internal composite keys. Returns
    * a frozen `Record` reference; mutations require per-key
@@ -43,7 +43,7 @@ export interface UseInteractiveRangeResult<T> {
  */
 export function useInteractiveRange<T>(
   course: string,
-  chapter: string,
+  unit: string,
   keyPrefix?: string
 ): UseInteractiveRangeResult<T> {
   const profile = useProfile();
@@ -81,7 +81,7 @@ export function useInteractiveRange<T>(
       setPersistence(mode);
     });
     store
-      .getAll<T>(profile, chapter, keyPrefix)
+      .getAll<T>(profile, unit, keyPrefix)
       .then((stored) => {
         if (cancelled) return;
         setPersistence(store.getPersistence());
@@ -102,12 +102,12 @@ export function useInteractiveRange<T>(
       cancelled = true;
       unsubscribePersistence();
     };
-  }, [course, chapter, profile, keyPrefix]);
+  }, [course, unit, profile, keyPrefix]);
 
   useEffect(() => {
-    const channel = getChannel(course, chapter);
-    const chapterPrefix = `${profile}:${chapter}:`;
-    const compositePrefix = compositeKey(profile, chapter, keyPrefix ?? "");
+    const channel = getChannel(course, unit);
+    const chapterPrefix = `${profile}:${unit}:`;
+    const compositePrefix = compositeKey(profile, unit, keyPrefix ?? "");
     const unsubscribe = channel.subscribe((message: BroadcastMessage) => {
       if (message.senderId === senderId) return;
       if (typeof message.key !== "string") return;
@@ -121,7 +121,7 @@ export function useInteractiveRange<T>(
       setValues((prev) => ({ ...prev, [unwrappedKey]: message.value as T }));
     });
     return unsubscribe;
-  }, [course, chapter, profile, keyPrefix, senderId]);
+  }, [course, unit, profile, keyPrefix, senderId]);
 
   const hydrated = status === "ready";
 

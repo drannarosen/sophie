@@ -12,12 +12,12 @@ import type { CollapsibleCardProps } from "./CollapsibleCard.schema.ts";
  * "Persistence-bearing controls" so clicks landing before IDB
  * hydration cannot toggle into a state about to be overwritten.
  *
- * Built on Radix Collapsible (ADR 0019). Required course/chapter/id
+ * Built on Radix Collapsible (ADR 0019). Required course/unit/id
  * props per ADR 0027; use with `client:load` in MDX.
  */
 export function CollapsibleCard({
   course,
-  chapter,
+  unit,
   id,
   title,
   defaultOpen = false,
@@ -30,7 +30,7 @@ export function CollapsibleCard({
     controlProps,
   } = useInteractive<boolean>(
     course,
-    chapter,
+    unit,
     `collapsible-card:${id}:open`,
     defaultOpen
   );

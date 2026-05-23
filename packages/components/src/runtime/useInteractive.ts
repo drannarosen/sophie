@@ -90,16 +90,16 @@ export function getStore(course: string): FallbackResponseStore {
 }
 
 /**
- * Per-(course, chapter) `BroadcastChannelLayer` accessor. Same internal-
+ * Per-(course, unit) `BroadcastChannelLayer` accessor. Same internal-
  * sharing rationale as `getStore`.
  *
  * @internal
  */
 export function getChannel(
   course: string,
-  chapter: string
+  unit: string
 ): BroadcastChannelLayer {
-  const name = chapterChannelName(course, chapter);
+  const name = chapterChannelName(course, unit);
   let channel = channels.get(name);
   if (channel === undefined) {
     channel = createBroadcastChannel(name);
@@ -118,7 +118,7 @@ export function __resetRuntimeCaches(): void {
 /**
  * Persistence-bearing hook backing all `<Interactive*>` components.
  *
- * `course` and `chapter` are required arguments — they identify which
+ * `course` and `unit` are required arguments — they identify which
  * IndexedDB and which BroadcastChannel this hook reads/writes through.
  * `profile` is read from `ProfileContext` so a runtime profile toggle
  * (Phase 5) can flip student/instructor mode without re-rendering every
@@ -127,12 +127,12 @@ export function __resetRuntimeCaches(): void {
  * Per ADR 0007 + ADR 0027: SophieConfig context was removed because
  * Astro 6 + @astrojs/mdx 5 renders MDX content as Astro server-side;
  * React components inside MDX get their own SSR pass and don't see
- * context providers from `<SophieChapter>`. Course/chapter therefore
+ * context providers from `<SophieChapter>`. Course/unit therefore
  * must be threaded as props.
  *
  * Per ADR 0029: every accepted write (local setValue, hydration read,
  * cross-tab broadcast) carries a `Date.now()` timestamp. The hook
- * tracks the most-recent observed ts per (course, chapter, profile,
+ * tracks the most-recent observed ts per (course, unit, profile,
  * key) and ignores any incoming write whose ts is older. This last-
  * write-wins gate prevents the BroadcastChannel race where Tab A's
  * slower IDB write could silently overwrite Tab B's more recent
@@ -140,7 +140,7 @@ export function __resetRuntimeCaches(): void {
  */
 export function useInteractive<T>(
   course: string,
-  chapter: string,
+  unit: string,
   componentKey: string,
   initial: T
 ): UseInteractiveResult<T> {
@@ -171,7 +171,7 @@ export function useInteractive<T>(
   const valueRef = useRef(value);
   valueRef.current = value;
 
-  // Most recent observed timestamp for this (course, chapter, profile,
+  // Most recent observed timestamp for this (course, unit, profile,
   // key) tuple. Per ADR 0029, every accepted update (local setValue,
   // hydration read, cross-tab broadcast) advances this; incoming
   // updates with `ts <= tsRef.current` are ignored as stale. Initial 0
@@ -195,7 +195,7 @@ export function useInteractive<T>(
     const store = getStore(course);
     setStatus("loading");
     setError(null);
-    // Reset the LWW gate when the (course, chapter, profile, key) tuple
+    // Reset the LWW gate when the (course, unit, profile, key) tuple
     // changes — different key means a different value lineage; the
     // previous tuple's ts has no causal relation here.
     tsRef.current = 0;
@@ -207,7 +207,7 @@ export function useInteractive<T>(
       setPersistence(mode);
     });
     store
-      .get<T>(profile, chapter, componentKey)
+      .get<T>(profile, unit, componentKey)
       .then((persisted) => {
         if (cancelled) return;
         // After the first round-trip the store's mode is settled
@@ -216,7 +216,7 @@ export function useInteractive<T>(
         // mode.
         setPersistence(store.getPersistence());
         // Reset to initial when the new key has no stored value — otherwise
-        // the previous key's state lingers across (course, chapter, profile,
+        // the previous key's state lingers across (course, unit, profile,
         // key) changes. Caught in code review 2026-05-09.
         if (persisted === undefined) {
           setLocalValue(initial);
@@ -235,11 +235,11 @@ export function useInteractive<T>(
       cancelled = true;
       unsubscribePersistence();
     };
-  }, [course, chapter, profile, componentKey, initial]);
+  }, [course, unit, profile, componentKey, initial]);
 
   useEffect(() => {
-    const channel = getChannel(course, chapter);
-    const fullKey = compositeKey(profile, chapter, componentKey);
+    const channel = getChannel(course, unit);
+    const fullKey = compositeKey(profile, unit, componentKey);
     const unsubscribe = channel.subscribe((message: BroadcastMessage) => {
       if (message.senderId === senderId) return;
       if (message.key !== fullKey) return;
@@ -253,7 +253,7 @@ export function useInteractive<T>(
       setLocalValue(message.value as T);
     });
     return unsubscribe;
-  }, [course, chapter, profile, componentKey, senderId]);
+  }, [course, unit, profile, componentKey, senderId]);
 
   const setValue = useCallback(
     (next: T) => {
@@ -261,11 +261,11 @@ export function useInteractive<T>(
       tsRef.current = ts;
       setLocalValue(next);
       const store = getStore(course);
-      const channel = getChannel(course, chapter);
-      const fullKey = compositeKey(profile, chapter, componentKey);
+      const channel = getChannel(course, unit);
+      const fullKey = compositeKey(profile, unit, componentKey);
       setWritesPending((n) => n + 1);
       store
-        .set(profile, chapter, componentKey, { value: next, ts })
+        .set(profile, unit, componentKey, { value: next, ts })
         .then(() => {
           channel.post({ senderId, key: fullKey, value: next, ts });
           if (!mountedRef.current) return;
@@ -282,7 +282,7 @@ export function useInteractive<T>(
           setWritesPending((n) => n - 1);
         });
     },
-    [course, chapter, profile, componentKey, senderId]
+    [course, unit, profile, componentKey, senderId]
   );
 
   const hydrated = status === "ready";

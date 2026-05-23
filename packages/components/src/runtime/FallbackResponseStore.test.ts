@@ -144,13 +144,13 @@ describe("FallbackResponseStore", () => {
       expect(r2).toEqual({ value: { b: 2 }, ts: 200 });
     });
 
-    it("clearChapter scopes correctly under fallback", async () => {
+    it("clearUnit scopes correctly under fallback", async () => {
       mockIDBFailure();
       const store = new FallbackResponseStore("fail-8");
       await store.set("student", "ch1", "k1", { value: 1, ts: 1 });
       await store.set("student", "ch1", "k2", { value: 2, ts: 2 });
       await store.set("student", "ch2", "k1", { value: 3, ts: 3 });
-      await store.clearChapter("student", "ch1");
+      await store.clearUnit("student", "ch1");
       expect(await store.get("student", "ch1", "k1")).toBeUndefined();
       expect(await store.get("student", "ch1", "k2")).toBeUndefined();
       // ch2 untouched.
@@ -161,7 +161,7 @@ describe("FallbackResponseStore", () => {
     });
   });
 
-  describe("delete + clearChapter in healthy mode", () => {
+  describe("delete + clearUnit in healthy mode", () => {
     it("delete removes a stored record", async () => {
       const store = new FallbackResponseStore("del-1");
       await store.set("student", "ch", "k", { value: 99, ts: 1 });
@@ -173,11 +173,11 @@ describe("FallbackResponseStore", () => {
       expect(await store.get("student", "ch", "k")).toBeUndefined();
     });
 
-    it("clearChapter scopes to the named chapter only", async () => {
+    it("clearUnit scopes to the named unit only", async () => {
       const store = new FallbackResponseStore("del-2");
       await store.set("student", "ch1", "k", { value: 1, ts: 1 });
       await store.set("student", "ch2", "k", { value: 2, ts: 2 });
-      await store.clearChapter("student", "ch1");
+      await store.clearUnit("student", "ch1");
       expect(await store.get("student", "ch1", "k")).toBeUndefined();
       expect(await store.get("student", "ch2", "k")).toEqual({
         value: 2,
@@ -187,13 +187,13 @@ describe("FallbackResponseStore", () => {
   });
 
   describe("getAll — range read (Wedge B1)", () => {
-    it("returns {} when nothing is stored for the chapter", async () => {
+    it("returns {} when nothing is stored for the unit", async () => {
       const store = new FallbackResponseStore("getall-1");
       const out = await store.getAll("student", "ch1");
       expect(out).toEqual({});
     });
 
-    it("returns every (key → StoredValue) for the chapter (healthy IDB)", async () => {
+    it("returns every (key → StoredValue) for the unit (healthy IDB)", async () => {
       const store = new FallbackResponseStore("getall-2");
       await store.set("student", "ch1", "k1", { value: 1, ts: 1 });
       await store.set("student", "ch1", "k2", { value: 2, ts: 2 });
@@ -229,7 +229,7 @@ describe("FallbackResponseStore", () => {
       });
     });
 
-    it("scopes to (profile, chapter) — sibling profiles/chapters excluded (healthy IDB)", async () => {
+    it("scopes to (profile, unit) — sibling profiles/units excluded (healthy IDB)", async () => {
       const store = new FallbackResponseStore("getall-4");
       await store.set("student", "ch1", "k", { value: 1, ts: 1 });
       await store.set("instructor", "ch1", "k", { value: 2, ts: 2 });

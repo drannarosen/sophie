@@ -13,7 +13,7 @@ describe("extractSkillReviews (pure)", () => {
     const entries = extractSkillReviews(tree as never, "spoiler-alerts");
     expect(entries).toHaveLength(1);
     expect(entries[0]).toEqual({
-      chapter: "spoiler-alerts",
+      unit: "spoiler-alerts",
       anchor: "sk-1",
       target_id: "topic:logs",
       has_explicit_content: true,

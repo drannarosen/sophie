@@ -10,7 +10,7 @@ const ctx = {
 
 const fixture: KeyInsightEntry = {
   body: "Distance hides itself in every photometric measurement.",
-  chapter: "measuring-the-sky",
+  unit: "measuring-the-sky",
   anchor: "ki-3",
 };
 

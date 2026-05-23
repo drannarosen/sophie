@@ -35,19 +35,19 @@ export class MemoryResponseStore implements ResponseStore {
 
   async get<T>(
     profile: string,
-    chapter: string,
+    unit: string,
     key: string
   ): Promise<StoredValue<T> | undefined> {
-    const record = this.records.get(compositeKey(profile, chapter, key));
+    const record = this.records.get(compositeKey(profile, unit, key));
     return record as StoredValue<T> | undefined;
   }
 
   async getAll<T>(
     profile: string,
-    chapter: string,
+    unit: string,
     keyPrefix?: string
   ): Promise<Record<string, StoredValue<T>>> {
-    const chapterPrefix = `${profile}:${chapter}:`;
+    const chapterPrefix = `${profile}:${unit}:`;
     const fullPrefix =
       keyPrefix !== undefined ? `${chapterPrefix}${keyPrefix}` : chapterPrefix;
     const out: Record<string, StoredValue<T>> = {};
@@ -61,34 +61,34 @@ export class MemoryResponseStore implements ResponseStore {
 
   async getAllMulti<T>(
     profile: string,
-    chapters: ReadonlyArray<string>,
+    units: ReadonlyArray<string>,
     keyPrefix?: string
   ): Promise<Record<string, StoredValue<T>>> {
-    if (chapters.length === 0) return {};
+    if (units.length === 0) return {};
     const perChapter = await Promise.all(
-      chapters.map((ch) => this.getAll<T>(profile, ch, keyPrefix))
+      units.map((ch) => this.getAll<T>(profile, ch, keyPrefix))
     );
     return Object.assign({}, ...perChapter) as Record<string, StoredValue<T>>;
   }
 
   async set<T>(
     profile: string,
-    chapter: string,
+    unit: string,
     key: string,
     stored: StoredValue<T>
   ): Promise<void> {
     this.records.set(
-      compositeKey(profile, chapter, key),
+      compositeKey(profile, unit, key),
       stored as StoredValue<unknown>
     );
   }
 
-  async delete(profile: string, chapter: string, key: string): Promise<void> {
-    this.records.delete(compositeKey(profile, chapter, key));
+  async delete(profile: string, unit: string, key: string): Promise<void> {
+    this.records.delete(compositeKey(profile, unit, key));
   }
 
-  async clearChapter(profile: string, chapter: string): Promise<void> {
-    const prefix = `${profile}:${chapter}:`;
+  async clearUnit(profile: string, unit: string): Promise<void> {
+    const prefix = `${profile}:${unit}:`;
     for (const k of [...this.records.keys()]) {
       if (k.startsWith(prefix)) this.records.delete(k);
     }

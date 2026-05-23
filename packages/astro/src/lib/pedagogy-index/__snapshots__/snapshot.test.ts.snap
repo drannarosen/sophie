@@ -61,7 +61,7 @@ exports[`pedagogyIndexRemarkPlugin round-trip > transforms LO in place while lea
         },
         {
           "type": "mdxJsxAttribute",
-          "name": "chapter",
+          "name": "unit",
           "value": "ch"
         },
         {

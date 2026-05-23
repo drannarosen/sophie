@@ -29,8 +29,8 @@ export function checkEquationRegistry(
     sink.errors.push({
       severity: "ERROR",
       code: "R1",
-      message: `R1: <KeyEquation refId="${citation.refId}"> in chapter "${citation.chapter}" references an equation not declared in the registry. Resolution: create \`examples/smoke/src/content/equations/${citation.refId}.mdx\` (or fix the refId).`,
-      location: { chapter: citation.chapter, anchor: citation.anchor },
+      message: `R1: <KeyEquation refId="${citation.refId}"> in chapter "${citation.unit}" references an equation not declared in the registry. Resolution: create \`examples/smoke/src/content/equations/${citation.refId}.mdx\` (or fix the refId).`,
+      location: { unit: citation.unit, anchor: citation.anchor },
     });
   }
 

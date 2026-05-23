@@ -37,8 +37,8 @@ export function checkInterventions(
     sink.errors.push({
       severity: "ERROR",
       code: "I2",
-      message: `I2: <Intervention type="${iv.type}"> in chapter "${iv.chapter}" — "${iv.type}" is not a canonical name in intervention-index.ts. Resolution: pick one of the 12 canonical interventions (see docs/website/reference/intervention-library.md), or declare \`type="custom" name="${iv.type}"\` to opt out of the canonical library.`,
-      location: { chapter: iv.chapter, anchor: iv.anchor },
+      message: `I2: <Intervention type="${iv.type}"> in chapter "${iv.unit}" — "${iv.type}" is not a canonical name in intervention-index.ts. Resolution: pick one of the 12 canonical interventions (see docs/website/reference/intervention-library.md), or declare \`type="custom" name="${iv.type}"\` to opt out of the canonical library.`,
+      location: { unit: iv.unit, anchor: iv.anchor },
     });
   }
 
@@ -56,8 +56,8 @@ export function checkInterventions(
         sink.warnings.push({
           severity: "WARNING",
           code: "I1",
-          message: `I1: <Intervention type="${iv.type}"> in chapter "${iv.chapter}" — \`addresses="this"\` survived extraction (the Intervention is not nested inside a <Aside kind="misconception">). Resolution: nest the intervention inside the misconception Aside, or replace "this" with the misconception's anchor slug.`,
-          location: { chapter: iv.chapter, anchor: iv.anchor },
+          message: `I1: <Intervention type="${iv.type}"> in chapter "${iv.unit}" — \`addresses="this"\` survived extraction (the Intervention is not nested inside a <Aside kind="misconception">). Resolution: nest the intervention inside the misconception Aside, or replace "this" with the misconception's anchor slug.`,
+          location: { unit: iv.unit, anchor: iv.anchor },
         });
         continue;
       }
@@ -65,8 +65,8 @@ export function checkInterventions(
       sink.warnings.push({
         severity: "WARNING",
         code: "I1",
-        message: `I1: <Intervention type="${iv.type}"> in chapter "${iv.chapter}" — \`addresses="${target}"\` references a misconception not declared anywhere in the course. Resolution: declare the misconception (Aside or Callout with that anchor) in some chapter, or fix the slug typo.`,
-        location: { chapter: iv.chapter, anchor: iv.anchor },
+        message: `I1: <Intervention type="${iv.type}"> in chapter "${iv.unit}" — \`addresses="${target}"\` references a misconception not declared anywhere in the course. Resolution: declare the misconception (Aside or Callout with that anchor) in some chapter, or fix the slug typo.`,
+        location: { unit: iv.unit, anchor: iv.anchor },
       });
     }
   }
@@ -81,8 +81,8 @@ export function checkInterventions(
     sink.info.push({
       severity: "INFO",
       code: "I3",
-      message: `I3: <Intervention type="bridging-analogy"> in chapter "${iv.chapter}" lacks \`limits\`. Authoring nudge — Clement 1993 prescribes explicit limits ("the analogy maps X but breaks down on Y") for resilient remediation.`,
-      location: { chapter: iv.chapter, anchor: iv.anchor },
+      message: `I3: <Intervention type="bridging-analogy"> in chapter "${iv.unit}" lacks \`limits\`. Authoring nudge — Clement 1993 prescribes explicit limits ("the analogy maps X but breaks down on Y") for resilient remediation.`,
+      location: { unit: iv.unit, anchor: iv.anchor },
     });
   }
 }

@@ -22,7 +22,7 @@ import type { ConfidenceCheckProps } from "./ConfidenceCheck.schema.ts";
  */
 export function ConfidenceCheck({
   course,
-  chapter,
+  unit,
   id,
   prompt,
   scale = 5,
@@ -31,7 +31,7 @@ export function ConfidenceCheck({
   const labelId = useId();
   const { value, setValue, hydrated, controlProps } = useSelfAssessment<number>(
     course,
-    chapter,
+    unit,
     "confidence",
     id,
     0

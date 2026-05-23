@@ -22,7 +22,7 @@ function escapeHtml(s: string): string {
  * callout headings, etc.).
  *
  * Why this helper exists: MDX's remark-math chain runs on body content
- * (the chapter's MDAST tree). JSX attribute values — `title=`,
+ * (the unit's MDAST tree). JSX attribute values — `title=`,
  * `heading=`, `description=`, `label=`, `prompt=`, figure `caption=`
  * — are plain strings that bypass the markdown + math pipeline
  * entirely. Without this helper, math + bold in any of those props

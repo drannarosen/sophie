@@ -25,7 +25,7 @@ import { type MdxJsxFlowElement, readStringAttr } from "../jsx-utils.ts";
  * should surface here rather than silently desynchronize the idx
  * counter from extract's).
  */
-export function transformIntervention(tree: Root, chapterSlug: string): void {
+export function transformIntervention(tree: Root, unitId: string): void {
   let idx = 0;
   visit(tree, "mdxJsxFlowElement", (node: unknown) => {
     const el = node as MdxJsxFlowElement & {
@@ -36,7 +36,7 @@ export function transformIntervention(tree: Root, chapterSlug: string): void {
     const type = readStringAttr(el, "type");
     if (!type) {
       throw new Error(
-        `transform: <Intervention> in chapter "${chapterSlug}" is missing a non-empty \`type\` attr (extract should have caught this — file a bug).`
+        `transform: <Intervention> in chapter "${unitId}" is missing a non-empty \`type\` attr (extract should have caught this — file a bug).`
       );
     }
     const name = readStringAttr(el, "name");

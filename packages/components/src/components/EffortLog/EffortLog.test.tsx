@@ -15,7 +15,7 @@ describe("<EffortLog>", () => {
       withProfile(
         <EffortLog
           course='c'
-          chapter='ch'
+          unit='ch'
           id='el-default'
           prompt='How thoroughly did you engage with this section?'
         />
@@ -30,7 +30,7 @@ describe("<EffortLog>", () => {
   it("starts with no option selected", async () => {
     render(
       withProfile(
-        <EffortLog course='c' chapter='ch' id='el-initial' prompt='How much?' />
+        <EffortLog course='c' unit='ch' id='el-initial' prompt='How much?' />
       )
     );
     await waitFor(() => {
@@ -43,7 +43,7 @@ describe("<EffortLog>", () => {
   it("disables radios + sets aria-busy until hydration", () => {
     render(
       withProfile(
-        <EffortLog course='c' chapter='ch' id='el-loading' prompt='How much?' />
+        <EffortLog course='c' unit='ch' id='el-loading' prompt='How much?' />
       )
     );
     for (const r of screen.getAllByRole("radio")) {
@@ -55,7 +55,7 @@ describe("<EffortLog>", () => {
   it("persists chosen value across remount", async () => {
     const { unmount } = render(
       withProfile(
-        <EffortLog course='c' chapter='ch' id='el-persist' prompt='How much?' />
+        <EffortLog course='c' unit='ch' id='el-persist' prompt='How much?' />
       )
     );
     const studied = await screen.findByRole("radio", { name: /studied/i });
@@ -68,7 +68,7 @@ describe("<EffortLog>", () => {
 
     render(
       withProfile(
-        <EffortLog course='c' chapter='ch' id='el-persist' prompt='How much?' />
+        <EffortLog course='c' unit='ch' id='el-persist' prompt='How much?' />
       )
     );
     await waitFor(async () =>
@@ -81,7 +81,7 @@ describe("<EffortLog>", () => {
   it("has zero axe violations", async () => {
     const { container } = render(
       withProfile(
-        <EffortLog course='c' chapter='ch' id='el-axe' prompt='How much?' />
+        <EffortLog course='c' unit='ch' id='el-axe' prompt='How much?' />
       )
     );
     await waitFor(() =>

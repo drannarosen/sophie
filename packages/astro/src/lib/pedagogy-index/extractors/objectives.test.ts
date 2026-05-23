@@ -30,14 +30,14 @@ describe("extractObjectives (pure)", () => {
     expect(entries[0]).toMatchObject({
       id: "lo-1",
       verb: "Recognize",
-      chapter: "spoiler-alerts",
+      unit: "spoiler-alerts",
       anchor: "lo-lo-1",
     });
     expect(entries[0]?.body).toContain("Distinguish parallax distance");
     expect(entries[1]).toMatchObject({
       id: "lo-2",
       verb: "Understand",
-      chapter: "spoiler-alerts",
+      unit: "spoiler-alerts",
       anchor: "lo-lo-2",
     });
   });

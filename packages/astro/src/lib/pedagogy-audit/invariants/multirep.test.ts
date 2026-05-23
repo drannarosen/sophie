@@ -49,12 +49,12 @@ function makeRegistry(
 
 const mrWithVerbal = (
   concept: string,
-  chapter: string,
+  unit: string,
   id?: string
 ): MultiRepIndexEntry => ({
   concept,
   id: id ?? `mr-${concept}`,
-  chapter,
+  unit,
   reps: [{ kind: "verbal", body: "<p>body</p>" }],
 });
 
@@ -89,14 +89,14 @@ describe("opt-in gate", () => {
 describe("MR1 — <MultiRep concept='X'> for X not in registry", () => {
   it("fires ERROR when concept not in registry", () => {
     const index = emptyIndex();
-    index.multiReps = [mrWithVerbal("unknown-concept", "module-01/lecture-01")];
+    index.multiReps = [mrWithVerbal("unknown-concept", "module-01-lecture-01")];
     const report = runPedagogyAudit(index, {
       notationRegistry: makeRegistry(),
     });
     const mr1 = report.errors.filter((f) => f.code === "MR1");
     expect(mr1).toHaveLength(1);
     expect(mr1[0]?.message).toContain("unknown-concept");
-    expect(mr1[0]?.location?.chapter).toBe("module-01/lecture-01");
+    expect(mr1[0]?.location?.unit).toBe("module-01-lecture-01");
   });
 
   it("does NOT fire when concept is in registry", () => {
@@ -114,7 +114,7 @@ describe("MR1 — <MultiRep concept='X'> for X not in registry", () => {
       {
         concept: "unknown",
         id: "mr-unknown",
-        chapter: "ch",
+        unit: "ch",
         reps: [
           { kind: "verbal", body: "<p>1</p>" },
           { kind: "equation", refKey: "k", symbol: "r" },
@@ -135,7 +135,7 @@ describe("MR2 — <RepEquation symbol> doesn't match concept canonical_symbol", 
       {
         concept: "orbital-radius",
         id: "mr-orbital-radius",
-        chapter: "ch",
+        unit: "ch",
         reps: [
           { kind: "verbal", body: "<p>body</p>" },
           // canonical_symbol is "r"; rep declares "R" (the stellar radius
@@ -160,7 +160,7 @@ describe("MR2 — <RepEquation symbol> doesn't match concept canonical_symbol", 
       {
         concept: "orbital-radius",
         id: "mr-orbital-radius",
-        chapter: "ch",
+        unit: "ch",
         reps: [{ kind: "equation", refKey: "k", symbol: "r" }],
       },
     ];
@@ -179,7 +179,7 @@ describe("MR2 — <RepEquation symbol> doesn't match concept canonical_symbol", 
       {
         concept: "orbital-radius",
         id: "mr-orbital-radius",
-        chapter: "ch",
+        unit: "ch",
         reps: [
           { kind: "verbal", body: "<p>body</p>" },
           { kind: "figure", refName: "fig", symbolLabel: "wrong-symbol" },
@@ -200,7 +200,7 @@ describe("MR2 — <RepEquation symbol> doesn't match concept canonical_symbol", 
       {
         concept: "unknown",
         id: "mr-unknown",
-        chapter: "ch",
+        unit: "ch",
         reps: [{ kind: "equation", refKey: "k", symbol: "anything" }],
       },
     ];
@@ -221,7 +221,7 @@ describe("MR2 — <RepEquation symbol> doesn't match concept canonical_symbol", 
       {
         concept: "orbital-radius",
         id: "mr-orbital-radius",
-        chapter: "ch",
+        unit: "ch",
         reps: [
           { kind: "equation", refKey: "kepler-3rd-law", symbol: "R" },
           { kind: "equation", refKey: "kepler-3rd-law-au", symbol: "D" },
@@ -251,7 +251,7 @@ describe("MR4 — <RepFigure> alt text silent on concept", () => {
       {
         concept: "orbital-radius",
         id: "mr-orbital-radius",
-        chapter: "ch",
+        unit: "ch",
         reps: [{ kind: "figure", refName: "orbit" }],
       },
     ];
@@ -276,7 +276,7 @@ describe("MR4 — <RepFigure> alt text silent on concept", () => {
       {
         concept: "orbital-radius",
         id: "mr-orbital-radius",
-        chapter: "ch",
+        unit: "ch",
         reps: [{ kind: "figure", refName: "orbit" }],
       },
     ];
@@ -297,7 +297,7 @@ describe("MR4 — <RepFigure> alt text silent on concept", () => {
       {
         concept: "orbital-radius",
         id: "mr-orbital-radius",
-        chapter: "ch",
+        unit: "ch",
         reps: [{ kind: "figure", refName: "orbit" }],
       },
     ];
@@ -314,7 +314,7 @@ describe("MR4 — <RepFigure> alt text silent on concept", () => {
       {
         concept: "orbital-radius",
         id: "mr-orbital-radius",
-        chapter: "ch",
+        unit: "ch",
         reps: [{ kind: "figure", refName: "missing-figure" }],
       },
     ];
@@ -332,7 +332,7 @@ describe("MR6 — equivalent_to doesn't resolve", () => {
       {
         concept: "orbital-radius",
         id: "mr-orbital-radius",
-        chapter: "ch",
+        unit: "ch",
         reps: [
           {
             kind: "equation",
@@ -364,7 +364,7 @@ describe("MR6 — equivalent_to doesn't resolve", () => {
     // Post-ADR-0060: MR6 reads citations to derive chapter-scope.
     index.equationCitations = [
       {
-        chapter: "ch",
+        unit: "ch",
         refId: "kepler-3rd-law",
         anchor: "kepler-3rd-law-citation-1",
         number: 1,
@@ -374,7 +374,7 @@ describe("MR6 — equivalent_to doesn't resolve", () => {
       {
         concept: "orbital-radius",
         id: "mr-orbital-radius",
-        chapter: "ch",
+        unit: "ch",
         reps: [
           {
             kind: "equation",
@@ -398,7 +398,7 @@ describe("MR6 — equivalent_to doesn't resolve", () => {
       {
         concept: "orbital-radius",
         id: "mr-orbital-radius",
-        chapter: "ch",
+        unit: "ch",
         reps: [
           { kind: "equation", refKey: "kepler-cgs", symbol: "r" },
           {
@@ -432,7 +432,7 @@ describe("MR6 — equivalent_to doesn't resolve", () => {
     ];
     index.equationCitations = [
       {
-        chapter: "other-chapter",
+        unit: "other-chapter",
         refId: "kepler-3rd-law",
         anchor: "kepler-3rd-law-citation-1",
         number: 1,
@@ -442,7 +442,7 @@ describe("MR6 — equivalent_to doesn't resolve", () => {
       {
         concept: "orbital-radius",
         id: "mr-orbital-radius",
-        chapter: "ch",
+        unit: "ch",
         reps: [
           {
             kind: "equation",
@@ -466,7 +466,7 @@ describe("MR6 — equivalent_to doesn't resolve", () => {
       {
         concept: "orbital-radius",
         id: "mr-orbital-radius",
-        chapter: "ch",
+        unit: "ch",
         reps: [{ kind: "equation", refKey: "k", symbol: "r" }],
       },
     ];
@@ -550,7 +550,7 @@ describe("integration — full smoke fixture scenario", () => {
       {
         concept: "apparent-magnitude",
         id: "mr-apparent-magnitude",
-        chapter: "01-foundations/measuring-the-sky",
+        unit: "01-foundations/measuring-the-sky",
         reps: [
           { kind: "verbal", body: "<p>Apparent magnitude m is log-scale.</p>" },
           { kind: "equation", refKey: "pogson-magnitude", symbol: "m" },

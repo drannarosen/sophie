@@ -25,7 +25,7 @@ describe("extractMisconceptions (pure)", () => {
 
     expect(entries).toHaveLength(1);
     expect(entries[0]).toMatchObject({
-      chapter: "spoiler-alerts",
+      unit: "spoiler-alerts",
       anchor: "heavier-falls-faster",
       length: "short",
       label: "Heavier falls faster",
@@ -49,7 +49,7 @@ describe("extractMisconceptions (pure)", () => {
 
     expect(entries).toHaveLength(1);
     expect(entries[0]).toMatchObject({
-      chapter: "spoiler-alerts",
+      unit: "spoiler-alerts",
       anchor: "seasons-from-distance",
       length: "long",
       label: "Seasons from distance",

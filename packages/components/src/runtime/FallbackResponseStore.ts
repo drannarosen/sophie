@@ -116,74 +116,74 @@ export class FallbackResponseStore implements ResponseStore {
 
   async get<T>(
     profile: string,
-    chapter: string,
+    unit: string,
     key: string
   ): Promise<StoredValue<T> | undefined> {
     if (this.fallbackEngaged) {
-      return this.fallback.get<T>(profile, chapter, key);
+      return this.fallback.get<T>(profile, unit, key);
     }
     try {
-      return await this.primary.get<T>(profile, chapter, key);
+      return await this.primary.get<T>(profile, unit, key);
     } catch (err) {
       this.engageFallback(err);
-      return this.fallback.get<T>(profile, chapter, key);
+      return this.fallback.get<T>(profile, unit, key);
     }
   }
 
   async getAll<T>(
     profile: string,
-    chapter: string,
+    unit: string,
     keyPrefix?: string
   ): Promise<Record<string, StoredValue<T>>> {
     if (this.fallbackEngaged) {
-      return this.fallback.getAll<T>(profile, chapter, keyPrefix);
+      return this.fallback.getAll<T>(profile, unit, keyPrefix);
     }
     try {
-      return await this.primary.getAll<T>(profile, chapter, keyPrefix);
+      return await this.primary.getAll<T>(profile, unit, keyPrefix);
     } catch (err) {
       this.engageFallback(err);
-      return this.fallback.getAll<T>(profile, chapter, keyPrefix);
+      return this.fallback.getAll<T>(profile, unit, keyPrefix);
     }
   }
 
   async getAllMulti<T>(
     profile: string,
-    chapters: ReadonlyArray<string>,
+    units: ReadonlyArray<string>,
     keyPrefix?: string
   ): Promise<Record<string, StoredValue<T>>> {
     if (this.fallbackEngaged) {
-      return this.fallback.getAllMulti<T>(profile, chapters, keyPrefix);
+      return this.fallback.getAllMulti<T>(profile, units, keyPrefix);
     }
     try {
-      return await this.primary.getAllMulti<T>(profile, chapters, keyPrefix);
+      return await this.primary.getAllMulti<T>(profile, units, keyPrefix);
     } catch (err) {
       this.engageFallback(err);
-      return this.fallback.getAllMulti<T>(profile, chapters, keyPrefix);
+      return this.fallback.getAllMulti<T>(profile, units, keyPrefix);
     }
   }
 
   async set<T>(
     profile: string,
-    chapter: string,
+    unit: string,
     key: string,
     stored: StoredValue<T>
   ): Promise<void> {
     if (this.fallbackEngaged) {
-      return this.fallback.set(profile, chapter, key, stored);
+      return this.fallback.set(profile, unit, key, stored);
     }
     try {
-      await this.primary.set(profile, chapter, key, stored);
+      await this.primary.set(profile, unit, key, stored);
     } catch (err) {
       this.engageFallback(err);
-      await this.fallback.set(profile, chapter, key, stored);
+      await this.fallback.set(profile, unit, key, stored);
     }
   }
 
-  async delete(profile: string, chapter: string, key: string): Promise<void> {
-    return this.active().delete(profile, chapter, key);
+  async delete(profile: string, unit: string, key: string): Promise<void> {
+    return this.active().delete(profile, unit, key);
   }
 
-  async clearChapter(profile: string, chapter: string): Promise<void> {
-    return this.active().clearChapter(profile, chapter);
+  async clearUnit(profile: string, unit: string): Promise<void> {
+    return this.active().clearUnit(profile, unit);
   }
 }

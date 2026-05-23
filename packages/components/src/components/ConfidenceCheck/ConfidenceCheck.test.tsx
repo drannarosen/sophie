@@ -15,7 +15,7 @@ describe("<ConfidenceCheck>", () => {
       withProfile(
         <ConfidenceCheck
           course='c'
-          chapter='ch'
+          unit='ch'
           id='cc-default'
           prompt='How sure are you?'
         />
@@ -30,7 +30,7 @@ describe("<ConfidenceCheck>", () => {
       withProfile(
         <ConfidenceCheck
           course='c'
-          chapter='ch'
+          unit='ch'
           id='cc-7'
           prompt='How sure?'
           scale={7}
@@ -45,7 +45,7 @@ describe("<ConfidenceCheck>", () => {
       withProfile(
         <ConfidenceCheck
           course='c'
-          chapter='ch'
+          unit='ch'
           id='cc-initial'
           prompt='How sure?'
         />
@@ -64,7 +64,7 @@ describe("<ConfidenceCheck>", () => {
       withProfile(
         <ConfidenceCheck
           course='c'
-          chapter='ch'
+          unit='ch'
           id='cc-loading'
           prompt='How sure?'
         />
@@ -81,7 +81,7 @@ describe("<ConfidenceCheck>", () => {
       withProfile(
         <ConfidenceCheck
           course='c'
-          chapter='ch'
+          unit='ch'
           id='cc-persist'
           prompt='How sure?'
         />
@@ -99,7 +99,7 @@ describe("<ConfidenceCheck>", () => {
       withProfile(
         <ConfidenceCheck
           course='c'
-          chapter='ch'
+          unit='ch'
           id='cc-persist'
           prompt='How sure?'
         />
@@ -116,7 +116,7 @@ describe("<ConfidenceCheck>", () => {
       withProfile(
         <ConfidenceCheck
           course='c'
-          chapter='ch'
+          unit='ch'
           id='cc-axe'
           prompt='How sure are you?'
         />

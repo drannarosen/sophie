@@ -123,7 +123,7 @@ export function buildRepsFromMultiRepChildren(
  */
 export function extractMultiReps(
   tree: Root,
-  chapterSlug: string
+  unitId: string
 ): MultiRepIndexEntry[] {
   const out: MultiRepIndexEntry[] = [];
   // Detect within-chapter id collisions at extract-time (vs at the
@@ -141,13 +141,13 @@ export function extractMultiReps(
     const concept = readStringAttr(parent, "concept");
     if (!concept) {
       throw new Error(
-        `<MultiRep> in chapter "${chapterSlug}" is missing a non-empty \`concept\` attr.`
+        `<MultiRep> in chapter "${unitId}" is missing a non-empty \`concept\` attr.`
       );
     }
     const id = readStringAttr(parent, "id") ?? `mr-${concept}`;
     if (seenIds.has(id)) {
       throw new Error(
-        `<MultiRep> id collision in chapter "${chapterSlug}": two bindings share anchor "${id}" (latest concept: "${concept}"). Resolution: set explicit \`id\` props to disambiguate, or consolidate into one <MultiRep> block.`
+        `<MultiRep> id collision in chapter "${unitId}": two bindings share anchor "${id}" (latest concept: "${concept}"). Resolution: set explicit \`id\` props to disambiguate, or consolidate into one <MultiRep> block.`
       );
     }
     seenIds.add(id);
@@ -157,19 +157,19 @@ export function extractMultiReps(
 
     const reps = buildRepsFromMultiRepChildren(
       parent,
-      `<MultiRep concept="${concept}"> in chapter "${chapterSlug}"`
+      `<MultiRep concept="${concept}"> in chapter "${unitId}"`
     );
 
     if (reps.length === 0) {
       throw new Error(
-        `<MultiRep concept="${concept}"> in chapter "${chapterSlug}" has no Rep children. An empty MultiRep is a content bug.`
+        `<MultiRep concept="${concept}"> in chapter "${unitId}" has no Rep children. An empty MultiRep is a content bug.`
       );
     }
 
     const entry: MultiRepIndexEntry = {
       concept,
       id,
-      chapter: chapterSlug,
+      unit: unitId,
       reps,
       ...(layout ? { layout } : {}),
     };

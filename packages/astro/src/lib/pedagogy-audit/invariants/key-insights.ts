@@ -16,14 +16,14 @@ export function checkKeyInsights(
   // per-callsite KeyInsightEntry still keys by chapter: string whose
   // value equals u.id (W2 D4 1:1 convention); the lookup set is unchanged.
   const chaptersWithKeyInsights = new Set<string>();
-  for (const ki of index.keyInsights) chaptersWithKeyInsights.add(ki.chapter);
+  for (const ki of index.keyInsights) chaptersWithKeyInsights.add(ki.unit);
   for (const u of index.units) {
     if (chaptersWithKeyInsights.has(u.id)) continue;
     sink.info.push({
       severity: "INFO",
       code: "K1",
       message: `K1: chapter "${u.id}" has zero <KeyInsight>s. Informational — not a defect.`,
-      location: { chapter: u.id },
+      location: { unit: u.id },
     });
   }
 }

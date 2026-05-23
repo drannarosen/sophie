@@ -8,7 +8,7 @@ export const toFigureUsageRecord: EntityWithLookupToPagefindRecord<
   FigureUsageEntry,
   FigureRegistryEntry
 > = (usage, registry, ctx) => ({
-  url: `/units/${usage.chapter}/reading#${usage.anchor}`,
+  url: `/units/${usage.unit}/reading#${usage.anchor}`,
   content: [registry.alt, usage.captionOverride ?? registry.caption ?? ""]
     .filter(Boolean)
     .join(" — "),
@@ -23,7 +23,7 @@ export const toFigureUsageRecord: EntityWithLookupToPagefindRecord<
   },
   filters: {
     type: ["figure"],
-    chapter: [usage.chapter],
+    chapter: [usage.unit],
     module: [ctx.moduleSlug],
   },
 });

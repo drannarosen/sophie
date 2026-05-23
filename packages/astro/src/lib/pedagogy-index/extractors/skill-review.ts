@@ -48,7 +48,7 @@ function hasExplicitSlots(el: MdxJsxFlowElement): boolean {
  */
 export function extractSkillReviews(
   tree: Root,
-  chapterSlug: string
+  unitId: string
 ): SkillReviewEntry[] {
   const out: SkillReviewEntry[] = [];
   const seenAnchors = new Set<string>();
@@ -65,13 +65,13 @@ export function extractSkillReviews(
     const anchor = `sk-${counter}`;
     if (seenAnchors.has(anchor)) {
       throw new Error(
-        `Intra-chapter anchor collision in chapter "${chapterSlug}": SkillReview anchor "${anchor}" generated twice.`
+        `Intra-chapter anchor collision in chapter "${unitId}": SkillReview anchor "${anchor}" generated twice.`
       );
     }
     seenAnchors.add(anchor);
 
     out.push({
-      chapter: chapterSlug,
+      unit: unitId,
       anchor,
       target_id: target,
       has_explicit_content: hasExplicitSlots(el),

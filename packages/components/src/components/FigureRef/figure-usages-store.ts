@@ -32,7 +32,7 @@ import { createPedagogyStore } from "../../runtime/pedagogy-store.ts";
 const store = createPedagogyStore<FigureUsageEntry>({
   scriptId: "sophie-pedagogy-figure-usages",
   logTag: "[FigureRef:usages]",
-  keyOf: (u) => `${u.chapter}#${u.name}`,
+  keyOf: (u) => `${u.unit}#${u.name}`,
 });
 
 let allUsages: ReadonlyArray<FigureUsageEntry> = [];
@@ -77,13 +77,13 @@ export function __setFigureUsages(
   store.set(entries);
 }
 
-/** Composite-key lookup, `${chapter}#${name}`. */
+/** Composite-key lookup, `${unit}#${name}`. */
 export const lookupFigureUsage = store.lookup;
 
 /**
  * Returns the canonical usage for a figure name. Prefers the
  * explicit-canonical entry; falls back to the first usage by
- * `(chapter, number)` ascending. Returns `undefined` if no usage
+ * `(unit, number)` ascending. Returns `undefined` if no usage
  * matches the name.
  */
 export function lookupCanonicalUsageByName(
@@ -95,9 +95,7 @@ export function lookupCanonicalUsageByName(
   return (
     matches.find((u) => u.canonical) ??
     [...matches].sort((a, b) =>
-      a.chapter === b.chapter
-        ? a.number - b.number
-        : a.chapter.localeCompare(b.chapter)
+      a.unit === b.unit ? a.number - b.number : a.unit.localeCompare(b.unit)
     )[0]
   );
 }

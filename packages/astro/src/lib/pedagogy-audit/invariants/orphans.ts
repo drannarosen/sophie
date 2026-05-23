@@ -28,8 +28,8 @@ export function checkOrphans(
     sink.warnings.push({
       severity: "WARNING",
       code: "D5",
-      message: `D5: definition "${def.term}" (slug "${def.slug}") in chapter "${def.chapter}" has zero <GlossaryTerm> references anywhere in the textbook.`,
-      location: { chapter: def.chapter, anchor: def.anchor },
+      message: `D5: definition "${def.term}" (slug "${def.slug}") in chapter "${def.unit}" has zero <GlossaryTerm> references anywhere in the textbook.`,
+      location: { unit: def.unit, anchor: def.anchor },
     });
   }
 

@@ -100,7 +100,7 @@ function readObjectivesAttribute(lo: MdxJsxFlowElement): unknown {
 describe("transformLearningObjectives", () => {
   test("rewrites a single-Objective LO block to a props-driven shape", () => {
     const tree = root([
-      mdxLearningObjectives({ course: "astr201", chapter: "ch", id: "lo" }, [
+      mdxLearningObjectives({ course: "astr201", unit: "ch", id: "lo" }, [
         mdxObjective({ id: "thesis", verb: "State" }, [
           para("the course thesis"),
         ]),

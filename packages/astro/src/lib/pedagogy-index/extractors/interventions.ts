@@ -58,7 +58,7 @@ function readInterventionAddressesAttr(
  */
 export function extractInterventions(
   tree: Root,
-  chapterSlug: string
+  unitId: string
 ): InterventionEntry[] {
   const out: InterventionEntry[] = [];
   let idx = 0;
@@ -113,7 +113,7 @@ export function extractInterventions(
       // upfront rather than discovering a 404 hash anchor later.
       if (insideIntervention) {
         throw new Error(
-          `<Intervention> inside another <Intervention>'s body in chapter "${chapterSlug}" — nested intervention blocks are not allowed (the structural pairing only makes sense at one level). Resolution: hoist the inner intervention to a sibling of the outer.`
+          `<Intervention> inside another <Intervention>'s body in chapter "${unitId}" — nested intervention blocks are not allowed (the structural pairing only makes sense at one level). Resolution: hoist the inner intervention to a sibling of the outer.`
         );
       }
       const el = n as MdxJsxFlowElement;
@@ -125,25 +125,25 @@ export function extractInterventions(
       const authorId = readStringAttr(el, "id");
       if (authorId) {
         throw new Error(
-          `<Intervention id="${authorId}"> in chapter "${chapterSlug}" — the \`id\` attr is extractor-derived (PR-γ), not authorable. Resolution: drop the \`id\` prop; the auto-derived \`intervention-<type|name>-<idx>\` anchor is the source of truth for both the DOM and the pedagogy index.`
+          `<Intervention id="${authorId}"> in chapter "${unitId}" — the \`id\` attr is extractor-derived (PR-γ), not authorable. Resolution: drop the \`id\` prop; the auto-derived \`intervention-<type|name>-<idx>\` anchor is the source of truth for both the DOM and the pedagogy index.`
         );
       }
       const type = readStringAttr(el, "type");
       if (!type) {
         throw new Error(
-          `<Intervention> in chapter "${chapterSlug}" is missing a non-empty \`type\` attr.`
+          `<Intervention> in chapter "${unitId}" is missing a non-empty \`type\` attr.`
         );
       }
       const name = readStringAttr(el, "name");
       if (type === "custom" && !name) {
         throw new Error(
-          `<Intervention type="custom"> in chapter "${chapterSlug}" is missing a non-empty \`name\` attr (required when type="custom"; mirrors the .superRefine on InterventionPropsSchema).`
+          `<Intervention type="custom"> in chapter "${unitId}" is missing a non-empty \`name\` attr (required when type="custom"; mirrors the .superRefine on InterventionPropsSchema).`
         );
       }
       const rawAddresses = readInterventionAddressesAttr(el);
       if (!rawAddresses) {
         throw new Error(
-          `<Intervention type="${type}"> in chapter "${chapterSlug}" is missing a non-empty \`addresses\` attr.`
+          `<Intervention type="${type}"> in chapter "${unitId}" is missing a non-empty \`addresses\` attr.`
         );
       }
       // Resolve "this" against the enclosing misconception. When no
@@ -166,7 +166,7 @@ export function extractInterventions(
         depthRaw !== "substantial"
       ) {
         throw new Error(
-          `<Intervention type="${type}"> in chapter "${chapterSlug}" has invalid \`depth="${depthRaw}"\`. Allowed values: "light", "substantial".`
+          `<Intervention type="${type}"> in chapter "${unitId}" has invalid \`depth="${depthRaw}"\`. Allowed values: "light", "substantial".`
         );
       }
       const depth: InterventionDepth =
@@ -175,7 +175,7 @@ export function extractInterventions(
       const body = renderChildrenToHtml(el.children);
       if (body.trim().length === 0) {
         throw new Error(
-          `<Intervention type="${type}"> in chapter "${chapterSlug}" has an empty body. Resolution: add the remediation prose between the opening and closing tags.`
+          `<Intervention type="${type}"> in chapter "${unitId}" has an empty body. Resolution: add the remediation prose between the opening and closing tags.`
         );
       }
 
@@ -191,7 +191,7 @@ export function extractInterventions(
         body,
         ...(limits ? { limits } : {}),
         depth,
-        chapter: chapterSlug,
+        unit: unitId,
         anchor,
       };
       out.push(entry);

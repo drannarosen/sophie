@@ -4,7 +4,7 @@ import { EffortLogPropsSchema } from "./EffortLog.schema.ts";
 describe("EffortLogPropsSchema", () => {
   const valid = {
     course: "test",
-    chapter: "test",
+    unit: "test",
     id: "el-1",
     prompt: "How much effort did you give this section?",
   };
@@ -14,7 +14,7 @@ describe("EffortLogPropsSchema", () => {
   });
 
   it("rejects empty required strings", () => {
-    for (const field of ["course", "chapter", "id", "prompt"] as const) {
+    for (const field of ["course", "unit", "id", "prompt"] as const) {
       expect(
         EffortLogPropsSchema.safeParse({ ...valid, [field]: "" }).success
       ).toBe(false);

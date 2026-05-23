@@ -6,7 +6,7 @@ import { z } from "zod";
  * collapsed on first read, expanded by student choice, open/closed
  * state persisted per-instance via `useInteractive`.
  *
- * Per ADR 0027: course/chapter/id are required (per-instance hydration
+ * Per ADR 0027: course/unit/id are required (per-instance hydration
  * across the Astro MDX render boundary). Use with `client:load` if
  * placed directly in MDX.
  *
@@ -15,7 +15,7 @@ import { z } from "zod";
  */
 export const CollapsibleCardPropsSchema = z.object({
   course: z.string().min(1),
-  chapter: z.string().min(1),
+  unit: z.string().min(1),
   id: z.string().min(1),
   /** Header text + accessible name of the disclosure trigger. */
   title: z.string().min(1),

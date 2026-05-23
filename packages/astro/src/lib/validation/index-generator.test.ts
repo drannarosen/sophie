@@ -145,7 +145,7 @@ describe("generateValidationIndex", () => {
 
   test("renders contract findings' file path from location.path (issue #121)", () => {
     // Contract-scoped findings (V0/V8/S0 per ADRs 0056 + 0062) populate
-    // location.path, NOT location.chapter — see audit.ts schema docstring.
+    // location.path, NOT location.unit — see audit.ts schema docstring.
     // The findings listing must surface that path in the rendered cell.
     const md = generateValidationIndex(
       makeIndex({
@@ -183,19 +183,19 @@ describe("generateValidationIndex", () => {
             severity: "ERROR",
             code: "V0",
             message: "ValidationSchema rejected the block",
-            location: { chapter: "docs/website/decisions/0007.md" },
+            location: { unit: "docs/website/decisions/0007.md" },
           },
           {
             severity: "INFO",
             code: "V8",
             message: "Unknown key 'last_validation_date'",
-            location: { chapter: "docs/website/decisions/0008.md" },
+            location: { unit: "docs/website/decisions/0008.md" },
           },
           {
             severity: "INFO",
             code: "V8",
             message: "Unknown key 'evidence_summary'",
-            location: { chapter: "docs/website/decisions/0009.md" },
+            location: { unit: "docs/website/decisions/0009.md" },
           },
         ],
       })

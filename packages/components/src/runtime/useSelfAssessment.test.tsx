@@ -13,20 +13,20 @@ function ProfileWrapper({ children }: { children: ReactNode }) {
 
 function Probe({
   course = "sa-course",
-  chapter = "sa-chapter",
+  unit = "sa-unit",
   widget,
   id,
   initial,
 }: {
   course?: string;
-  chapter?: string;
+  unit?: string;
   widget: SelfAssessmentWidget;
   id: string;
   initial: string | number;
 }) {
   const { value, setValue, status } = useSelfAssessment(
     course,
-    chapter,
+    unit,
     widget,
     id,
     initial

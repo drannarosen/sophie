@@ -15,7 +15,7 @@ describe("<Reflection>", () => {
       withProfile(
         <Reflection
           course='c'
-          chapter='ch'
+          unit='ch'
           id='ref-default'
           prompt='What was confusing?'
         />
@@ -31,7 +31,7 @@ describe("<Reflection>", () => {
       withProfile(
         <Reflection
           course='c'
-          chapter='ch'
+          unit='ch'
           id='ref-placeholder'
           prompt='Notes'
           placeholder='Type freely...'
@@ -47,7 +47,7 @@ describe("<Reflection>", () => {
   it("disables textarea + sets aria-busy until hydration", () => {
     render(
       withProfile(
-        <Reflection course='c' chapter='ch' id='ref-loading' prompt='Reflect' />
+        <Reflection course='c' unit='ch' id='ref-loading' prompt='Reflect' />
       )
     );
     const tx = screen.getByRole("textbox", { name: "Reflect" });
@@ -58,7 +58,7 @@ describe("<Reflection>", () => {
   it("persists the textarea value across remount", async () => {
     const { unmount } = render(
       withProfile(
-        <Reflection course='c' chapter='ch' id='ref-persist' prompt='Reflect' />
+        <Reflection course='c' unit='ch' id='ref-persist' prompt='Reflect' />
       )
     );
     const tx = screen.getByRole("textbox", {
@@ -78,7 +78,7 @@ describe("<Reflection>", () => {
 
     render(
       withProfile(
-        <Reflection course='c' chapter='ch' id='ref-persist' prompt='Reflect' />
+        <Reflection course='c' unit='ch' id='ref-persist' prompt='Reflect' />
       )
     );
     const reloaded = screen.getByRole("textbox", { name: "Reflect" });
@@ -93,7 +93,7 @@ describe("<Reflection>", () => {
       withProfile(
         <Reflection
           course='c'
-          chapter='ch'
+          unit='ch'
           id='ref-axe'
           prompt='Reflect on this section'
         />

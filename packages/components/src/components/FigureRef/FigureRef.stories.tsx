@@ -30,14 +30,14 @@ const registryFixture = [
 const usagesFixture = [
   {
     name: "cosmic-distance-ladder",
-    chapter: "spoiler-alerts",
+    unit: "spoiler-alerts",
     anchor: "fig-cosmic-distance-ladder",
     number: 1,
     canonical: true,
   },
   {
     name: "m51-optical-radio",
-    chapter: "spoiler-alerts",
+    unit: "spoiler-alerts",
     anchor: "fig-m51-optical-radio",
     number: 2,
     canonical: true,

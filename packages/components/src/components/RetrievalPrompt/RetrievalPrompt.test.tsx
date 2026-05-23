@@ -21,7 +21,7 @@ describe("<RetrievalPrompt>", () => {
       withProfile(
         <RetrievalPrompt
           course='rp-test-1'
-          chapter='ch1'
+          unit='ch1'
           target='eq:stefan-boltzmann'
         >
           <RetrievalPrompt.Prompt>
@@ -43,11 +43,7 @@ describe("<RetrievalPrompt>", () => {
   it("renders Prompt + Answer through the card's expand → reveal flow", () => {
     render(
       withProfile(
-        <RetrievalPrompt
-          course='rp-test-2'
-          chapter='ch1'
-          target='ki:luminosity'
-        >
+        <RetrievalPrompt course='rp-test-2' unit='ch1' target='ki:luminosity'>
           <RetrievalPrompt.Prompt>Quick: what is L?</RetrievalPrompt.Prompt>
           <RetrievalPrompt.Answer>Energy / time.</RetrievalPrompt.Answer>
         </RetrievalPrompt>
@@ -67,7 +63,7 @@ describe("<RetrievalPrompt>", () => {
   it("persists an attempt to useRetrievalAttempt on self-assess click", async () => {
     function Probe() {
       return (
-        <RetrievalPrompt course='rp-test-3' chapter='ch1' target='eq:saha'>
+        <RetrievalPrompt course='rp-test-3' unit='ch1' target='eq:saha'>
           <RetrievalPrompt.Prompt>
             Define ionization fraction.
           </RetrievalPrompt.Prompt>
@@ -100,7 +96,7 @@ describe("<RetrievalPrompt>", () => {
     // and observing it hydrate to attempts.length === 1.
     const { container } = render(
       withProfile(
-        <RetrievalPrompt course='rp-test-3' chapter='ch1' target='eq:saha'>
+        <RetrievalPrompt course='rp-test-3' unit='ch1' target='eq:saha'>
           <RetrievalPrompt.Prompt>P</RetrievalPrompt.Prompt>
           <RetrievalPrompt.Answer>A</RetrievalPrompt.Answer>
         </RetrievalPrompt>
@@ -117,7 +113,7 @@ describe("<RetrievalPrompt>", () => {
         withProfile(
           <RetrievalPrompt
             course='rp-test-4'
-            chapter='ch1'
+            unit='ch1'
             target='stefan-boltzmann'
           >
             <RetrievalPrompt.Prompt>Q?</RetrievalPrompt.Prompt>
@@ -137,7 +133,7 @@ describe("<RetrievalPrompt>", () => {
       withProfile(
         <RetrievalPrompt
           course='rp-test-axe-1'
-          chapter='ch1'
+          unit='ch1'
           target='eq:stefan-boltzmann'
         >
           <RetrievalPrompt.Prompt>Q?</RetrievalPrompt.Prompt>
@@ -154,7 +150,7 @@ describe("<RetrievalPrompt>", () => {
       withProfile(
         <RetrievalPrompt
           course='rp-test-axe-2'
-          chapter='ch1'
+          unit='ch1'
           target='eq:stefan-boltzmann'
         >
           <RetrievalPrompt.Prompt>

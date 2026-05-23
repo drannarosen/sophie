@@ -30,8 +30,8 @@ export function checkMisconceptionPairing(
     sink.warnings.push({
       severity: "WARNING",
       code: "MG3",
-      message: `MG3: Misconception "${misc.anchor}" (chapter "${misc.chapter}") is declared but no <Intervention> pairs with it course-wide. Resolution: add an <Intervention addresses="${misc.anchor}"> (nested in the misconception Aside or standalone) in some chapter, or remove the misconception declaration if it's no longer in scope.`,
-      location: { chapter: misc.chapter, anchor: misc.anchor },
+      message: `MG3: Misconception "${misc.anchor}" (chapter "${misc.unit}") is declared but no <Intervention> pairs with it course-wide. Resolution: add an <Intervention addresses="${misc.anchor}"> (nested in the misconception Aside or standalone) in some chapter, or remove the misconception declaration if it's no longer in scope.`,
+      location: { unit: misc.unit, anchor: misc.anchor },
     });
   }
 

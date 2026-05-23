@@ -127,7 +127,7 @@ describe("pedagogyIndexRemarkPlugin round-trip", () => {
           { type: "text", value: "." },
         ],
       },
-      mdxLearningObjectives({ course: "c", chapter: "ch", id: "lo" }, [
+      mdxLearningObjectives({ course: "c", unit: "ch", id: "lo" }, [
         mdxObjective({ id: "o1", verb: "State" }, [para("the thesis")]),
         mdxObjective({ id: "o2", verb: "Explain" }, [para("the reason")]),
       ]),

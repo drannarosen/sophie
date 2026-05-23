@@ -10,7 +10,7 @@ const ctx = {
 
 const fixture: MisconceptionEntry = {
   body: "Many beginners conflate apparent brightness with temperature.",
-  chapter: "measuring-the-sky",
+  unit: "measuring-the-sky",
   anchor: "misc-2",
   length: "short",
   label: "Brighter ≠ hotter",

@@ -6,13 +6,13 @@ export type ConfidenceScale = z.infer<typeof ConfidenceScale>;
 
 /**
  * Self-assessment widget for capturing student confidence as a Likert
- * scale. Per ADR 0027: course/chapter/id required for per-instance
+ * scale. Per ADR 0027: course/unit/id required for per-instance
  * hydration. Persistence keyed under
  * `self-assessment:confidence:${id}` via `useSelfAssessment`.
  */
 export const ConfidenceCheckPropsSchema = z.object({
   course: z.string().min(1),
-  chapter: z.string().min(1),
+  unit: z.string().min(1),
   id: z.string().min(1),
   prompt: z.string().min(1),
   scale: ConfidenceScale.optional(),

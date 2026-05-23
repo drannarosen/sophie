@@ -27,13 +27,13 @@ EmptySlot.displayName = EMPTY_SLOT;
  * <SpacedReview
  *   client:load
  *   course="astr201"
- *   chapter="spoiler-alerts"
+ *   unit="spoiler-alerts"
  *   target="topic:logarithms"
  *   max={3}
  * />
  *
  * {/* Author-overridden empty state *\/}
- * <SpacedReview course="astr201" chapter="ch1" target="topic:logs">
+ * <SpacedReview course="astr201" unit="ch1" target="topic:logs">
  *   <SpacedReview.Empty>Practice ahead on logarithms?</SpacedReview.Empty>
  * </SpacedReview>
  * ```
@@ -52,7 +52,7 @@ EmptySlot.displayName = EMPTY_SLOT;
  */
 export function SpacedReview({
   course,
-  chapter,
+  unit,
   target,
   section,
   max = DEFAULT_MAX,
@@ -60,7 +60,7 @@ export function SpacedReview({
 }: SpacedReviewProps) {
   const { values: rawValues } = useInteractiveRange<readonly PracticeAttempt[]>(
     course,
-    chapter,
+    unit,
     PRACTICE_ATTEMPT_PREFIX
   );
 
