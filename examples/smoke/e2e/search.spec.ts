@@ -31,7 +31,7 @@ import { expect, test } from "@playwright/test";
  * `01-foundations/spoiler-alerts.mdx` and 1× in
  * `02-stars/stellar-evolution.mdx`. Pagefind indexes the whole
  * built site, so opening the modal from
- * `/chapters/measuring-the-sky/` still surfaces those hits.
+ * `/units/measuring-the-sky/reading/` still surfaces those hits.
  *
  * Sprint K (2026-05-21): <SearchTrigger> is now a real
  * `<input type='search'>` element (an "honest affordance" — the
@@ -45,7 +45,7 @@ test.describe("Pagefind search modal (Layer 2)", () => {
   test("Cmd+K opens modal, types term, navigates to result", async ({
     page,
   }) => {
-    await page.goto("/chapters/measuring-the-sky/");
+    await page.goto("/units/measuring-the-sky/reading/");
 
     // Wait for chapter page hydration to settle. Same precondition
     // as tests 2 + 3 below: SearchModal mounts `client:idle`, so its
@@ -86,11 +86,11 @@ test.describe("Pagefind search modal (Layer 2)", () => {
     await page.keyboard.press("ArrowDown");
     await page.keyboard.press("Enter");
 
-    await expect(page).toHaveURL(/\/chapters\/.+/);
+    await expect(page).toHaveURL(/\/units\/.+\/reading/);
   });
 
   test("chip filter narrows results to one type", async ({ page }) => {
-    await page.goto("/chapters/measuring-the-sky/");
+    await page.goto("/units/measuring-the-sky/reading/");
     // Wait for the static trigger AND a network-idle state before
     // pressing the keyboard shortcut. The SearchModal mounts with
     // `client:idle`; its document keydown listener isn't installed
@@ -120,7 +120,7 @@ test.describe("Pagefind search modal (Layer 2)", () => {
   });
 
   test("Esc closes the modal", async ({ page }) => {
-    await page.goto("/chapters/measuring-the-sky/");
+    await page.goto("/units/measuring-the-sky/reading/");
     // Same trigger-visible + networkidle precondition as tests 1 + 2:
     // SearchModal mounts client:idle so its document keydown listener
     // isn't installed until after `requestIdleCallback` (post-networkidle

@@ -2,17 +2,18 @@ import type { ObjectiveEntry } from "@sophie/core/schema";
 import { createPedagogyStore } from "../../runtime/pedagogy-store.ts";
 
 /**
- * Objectives store. Mirrors `chapters-store.ts` / `modules-store.ts`
- * (PR-C4 Task 6): consumer-facing data forwarded by `<TextbookLayout>`
- * from the populated `PedagogyIndex.objectives` collection.
+ * Objectives store. Mirrors `sections-store.ts` / `units-store.ts` /
+ * `artifacts-store.ts` (W1 + W2 graduations): consumer-facing data
+ * forwarded by `<TextbookLayout>` from the populated
+ * `PedagogyIndex.objectives` collection.
  *
  * v1 has no React consumer for this store — the `/objectives` page is
  * server-rendered Astro that reads the accumulator directly, and no
- * `<ObjectiveRef>` inline-ref component exists yet. The store ships in
- * PR-C4 for pattern uniformity with `__setChapters` / `__setModules`
- * and to anticipate future client-side consumers (PR 7 faceted search,
- * a `<CourseObjectives client:visible>` widget, etc.) without
- * rewiring `<TextbookLayout>` later.
+ * `<ObjectiveRef>` inline-ref component exists yet. The store ships
+ * for pattern uniformity with `__setSections` / `__setUnits` /
+ * `__setArtifacts` and to anticipate future client-side consumers
+ * (PR 7 faceted search, a `<CourseObjectives client:visible>` widget,
+ * etc.) without rewiring `<TextbookLayout>` later.
  *
  * Keyed by anchor (`lo-${slugify(id)}`) — anchor is unique within a
  * chapter and the chapter prefix in `PedagogyIndex.objectives` keeps

@@ -108,7 +108,7 @@ test.describe("PR-C3: <CourseMisconceptions /> on /misconceptions", () => {
     await expect(backlink).toBeAttached();
     await expect(backlink).toHaveAttribute(
       "href",
-      "/chapters/spoiler-alerts#dark-matter-is-just-hidden-normal-matter"
+      "/units/spoiler-alerts/reading#dark-matter-is-just-hidden-normal-matter"
     );
     await expect(
       page.locator("#dark-matter-is-just-hidden-normal-matter")

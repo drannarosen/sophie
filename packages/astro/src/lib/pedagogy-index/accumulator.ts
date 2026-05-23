@@ -512,10 +512,9 @@ class IndexAccumulator {
   /**
    * Push the consumer-supplied sections collection into the accumulator
    * (Wedge B-followup W1). Per ADR 0067 + design doc D1. Same shape as
-   * `setChapters` / `setModules`: last-write-wins, consumer-global, NOT
-   * touched by `clearChapter`. Called from `TextbookLayout.astro`
-   * frontmatter once per build after `getCollection('sections')`
-   * resolves.
+   * `setFigureRegistry`: last-write-wins, consumer-global, NOT touched
+   * by `clearChapter`. Called from `TextbookLayout.astro` frontmatter
+   * once per build after `getCollection('sections')` resolves.
    */
   setSections(entries: ReadonlyArray<SectionEntry>): void {
     const state = getGlobalState();
@@ -560,10 +559,11 @@ class IndexAccumulator {
    * Push the contract-validations extraction result into the
    * accumulator (ADR 0056 PR 3). Called from TextbookLayout's
    * frontmatter once per build after `extractContractValidations`
-   * resolves. Mirrors `setFigureRegistry` / `setChapters` /
-   * `setModules` semantics: last-write-wins, consumer-global, NOT
-   * touched by `clearChapter` (contract files are external to chapter
-   * MDX). Both arrays are written atomically so the audit always sees
+   * resolves. Mirrors `setFigureRegistry` / `setSections` /
+   * `setUnits` / `setArtifacts` semantics: last-write-wins,
+   * consumer-global, NOT touched by `clearChapter` (contract files
+   * are external to chapter MDX). Both arrays are written atomically
+   * so the audit always sees
    * a coherent {entries, findings} pair.
    */
   setContractValidations(

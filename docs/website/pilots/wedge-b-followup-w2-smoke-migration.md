@@ -243,7 +243,7 @@ One *follow-up* for the W2 review pass:
 - ✅ `ChapterEntrySchema` + `ModuleEntrySchema` + `setChapters` + `setModules` + `chapters-store` + `modules-store` + `__setChapters` + `__setModules` all DELETED (Tasks 18 + 20).
 - ✅ `ArtifactEntrySchema` + `artifacts` slot in PedagogyIndex + `artifacts-store` + `__setArtifacts` + payload script tag wiring added (Tasks 3 + 4 + 6 + 7 + 13).
 - ✅ All 8 audit invariants iterating `index.chapters` migrated to iterate `index.units` (Task 12).
-- ✅ All 12+ URL builders rewriting `/chapters/<slug>` → `/units/<unit-id>/reading` (Task 14).
+- ✅ All 14 URL builders rewriting `/chapters/<slug>` → `/units/<unit-id>/reading` (Task 14 + Task 25 code-review follow-up). The W2-code-review subagent caught two production callsites that Task 14 had missed: `GlossaryTerm.tsx:79` and `FigureRef.tsx:59`. Both fixed in the same PR pre-PR-open per the requesting-code-review skill discipline; their unit tests + the e2e suite's `/chapters/<slug>` CHAPTER_URL constants (32 spec files) graduated alongside.
 - ✅ Route `pages/chapters/[...slug].astro` DELETED; `pages/units/[unit]/reading.astro` added (Tasks 15 + 16).
 - ✅ `<ChapterRef>` prop renamed `slug` → `chapter`; reads from `artifactStore` + `unitStore` + `sectionStore`; smoke MDX callsites updated (Task 19).
 - ✅ `UnitSchema` gained `status`, `framing?`, `description?`; smoke unit JSONs populated (Tasks 2 + 9).

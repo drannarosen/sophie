@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-const CHAPTER_URL = "/chapters/spoiler-alerts";
+const CHAPTER_URL = "/units/spoiler-alerts/reading";
 
 /**
  * PR-C3 — misconceptions on the smoke chapter, regression check.

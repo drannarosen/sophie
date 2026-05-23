@@ -56,7 +56,7 @@ test.describe("sophie preview", () => {
       expect(serving).toBe(true);
 
       const finalRes = await request.get(
-        `http://localhost:${port}/chapters/spoiler-alerts/`
+        `http://localhost:${port}/units/spoiler-alerts/reading/`
       );
       expect(finalRes.ok()).toBe(true);
     } finally {

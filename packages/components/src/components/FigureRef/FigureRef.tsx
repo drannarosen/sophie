@@ -56,7 +56,9 @@ export function FigureRef({ name, children }: FigureRefProps) {
     return <>{children}</>;
   }
 
-  const href = `/chapters/${canonical.chapter}#${canonical.anchor}`;
+  // W2/D5 route shape: /units/<unit-id>/reading#<anchor>.
+  // canonical.chapter holds the unit id per W2/D4's 1:1 convention.
+  const href = `/units/${canonical.chapter}/reading#${canonical.anchor}`;
   // Sprint F — prefer "Fig. C.N" when the chapter declares a display
   // chapter number; fall back to within-chapter "Fig. N" otherwise.
   const figLabel =

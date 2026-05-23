@@ -33,7 +33,7 @@ validation:
 
 :::{admonition} ADR metadata
 
-- **Status**: accepted
+- **Status**: shipped (Wedge B-followup W2, 2026-05-22)
 - **Deciders**: anna
 - **Amends**: [0003](./0003-zod-as-source-of-truth.md) (extends Zod schemas with new typed entities), [0038](./0038-pedagogy-index-pattern.md) (pedagogy-index extractor expands to handle Section/Unit/Artifact entities)
 - **Related**: [0004](./0004-component-contract-revisions.md), [0030](./0030-audience-and-ai-author-model.md), [0058](./0058-epistemic-component-contract.md), [0060](./0060-registry-ecosystem.md), [0064](./0064-chapter-migration-playbook.md), [0073](./0073-unified-assessment-schema.md)

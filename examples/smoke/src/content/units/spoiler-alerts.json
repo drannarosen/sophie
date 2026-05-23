@@ -2,7 +2,7 @@
   "id": "spoiler-alerts",
   "type": "lecture",
   "title": "Spoiler Alerts — The Universe Is Weird",
-  "order": 1,
+  "order": 0,
   "prereqs": [],
   "section_id": "foundations",
   "chapter": "spoiler-alerts",

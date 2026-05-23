@@ -18,7 +18,7 @@ import { expect, test } from "@playwright/test";
  * bodies — the densest pattern that surfaced the bug originally.
  */
 
-const CHAPTER_URL = "/chapters/spectra-and-composition";
+const CHAPTER_URL = "/units/spectra-and-composition/reading";
 
 test.describe("Bug 1 — GlossaryTerm prose integrity", () => {
   test("no chapter paragraph ends with a GlossaryTerm link followed by a sibling paragraph of definition body", async ({

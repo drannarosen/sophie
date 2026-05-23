@@ -15,7 +15,7 @@ import { expect, test } from "@playwright/test";
  * choice via localStorage; this only verifies the default.
  */
 
-const CHAPTER_URL = "/chapters/spectra-and-composition";
+const CHAPTER_URL = "/units/spectra-and-composition/reading";
 
 test.describe("Sprint K — sidebar cold-load default", () => {
   test.beforeEach(async ({ context }) => {

@@ -52,11 +52,11 @@ describe("<GlossaryTerm>", () => {
     expect(link).toHaveTextContent("standard candle");
   });
 
-  it("links the trigger to /chapters/<chapter>#<anchor>", () => {
+  it("links the trigger to /units/<chapter>/reading#<anchor> (W2/D5 route shape)", () => {
     render(<GlossaryTerm name='Standard candle'>candle</GlossaryTerm>);
     const link = screen.getByRole("link", { name: /candle/i });
     expect(link.getAttribute("href")).toBe(
-      "/chapters/spoiler-alerts#standard-candle"
+      "/units/spoiler-alerts/reading#standard-candle"
     );
   });
 
@@ -64,7 +64,7 @@ describe("<GlossaryTerm>", () => {
     render(<GlossaryTerm name='standard CANDLE'>candle</GlossaryTerm>);
     const link = screen.getByRole("link", { name: /candle/i });
     expect(link.getAttribute("href")).toBe(
-      "/chapters/spoiler-alerts#standard-candle"
+      "/units/spoiler-alerts/reading#standard-candle"
     );
   });
 

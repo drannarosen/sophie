@@ -28,8 +28,10 @@ type GlossaryTermRuntimeProps = GlossaryTermProps & {
  *
  * Behaviour:
  *   - Looks up `slugify(name)` in `definitions-store`. On hit:
- *     anchor href = `/chapters/<chapter>#<anchor>`; popover
- *     content shows the entry's `term` + body HTML.
+ *     anchor href = `/units/<chapter>/reading#<anchor>` (W2/D5
+ *     route shape; the per-callsite `chapter` field stays — W3
+ *     renames the field to `unit`); popover content shows the
+ *     entry's `term` + body HTML.
  *   - On miss (no matching entry): renders children as plain
  *     prose, no anchor, no popover. PR-C1 emits a `console.warn`
  *     so authoring drift surfaces in dev; PR-C4's audit invariant
@@ -76,7 +78,9 @@ export function GlossaryTerm({
     return <>{children}</>;
   }
 
-  const href = `/chapters/${entry.chapter}#${entry.anchor}`;
+  // W2/D5 route shape: /units/<unit-id>/reading#<anchor>.
+  // entry.chapter holds the unit id per W2/D4's 1:1 convention.
+  const href = `/units/${entry.chapter}/reading#${entry.anchor}`;
 
   return (
     <>

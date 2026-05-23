@@ -1,9 +1,11 @@
 /**
  * Internal store-hydration entry point — re-exports the setter
  * functions @sophie/astro's `<TextbookLayout>` uses to push consumer-
- * supplied collections (chapters / modules / equations / glossary
- * definitions / figure registry / figure usages / objectives /
- * sections / units) into the component-side stores at render time.
+ * supplied collections (equations / glossary definitions / figure
+ * registry / figure usages / objectives / sections / units / artifacts)
+ * into the component-side stores at render time. W2/D3 deleted
+ * `__setChapters` + `__setModules` (the chapters/modules collections
+ * graduated to sections/units + the artifacts collection).
  *
  * **Not part of the public authoring API.** These setters were
  * previously exported from the root `@sophie/components` barrel with

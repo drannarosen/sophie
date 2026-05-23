@@ -101,15 +101,15 @@ test.describe("PR-C3: <CourseFigures /> on /figures", () => {
     // spoiler(1..19), spoiler-alerts fig 4 lands at index 18 and
     // fig 16 lands at index 30.
     expect(hrefs[18]).toBe(
-      "/chapters/spoiler-alerts#fig-cosmic-distance-ladder-4"
+      "/units/spoiler-alerts/reading#fig-cosmic-distance-ladder-4"
     );
-    expect(hrefs[30]).toBe("/chapters/spoiler-alerts#fig-decoder-ring-16");
+    expect(hrefs[30]).toBe("/units/spoiler-alerts/reading#fig-decoder-ring-16");
     // All hrefs share the chapter prefix and the `fig-` anchor
     // prefix (the extractor's anchor shape is invariant —
     // F5 invariant). Now spans two chapters.
     for (const href of hrefs) {
       expect(href).toMatch(
-        /^\/chapters\/(spectra-and-composition|spoiler-alerts)#fig-/
+        /^\/units\/(spectra-and-composition|spoiler-alerts)\/reading#fig-/
       );
     }
   });
