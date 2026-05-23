@@ -231,6 +231,7 @@ project:
         - file: decisions/0076-student-learning-cockpit.md
         - file: decisions/0077-ai-authoring-packets.md
         - file: decisions/0078-reasoning-trace-composition.md
+        - file: decisions/0079-topic-registry-and-resolution-pattern.md
     - title: Pilots
       children:
         - file: pilots/_template.md

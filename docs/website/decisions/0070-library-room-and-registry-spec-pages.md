@@ -292,3 +292,24 @@ section). The W4a code review caught the conflict before PR
 merge. The amendment lands in the W4a PR alongside the
 implementation evidence, per ADR-as-revision-history
 convention.
+
+### 2026-05-23 — Wedge B-followup W4b: Topics room ships
+
+W4b adds the **Topics** room to the Library hierarchy alongside
+the 6 W4a rooms (Glossary, Equations, Figures, KeyInsights,
+Misconceptions, Objectives). Topics route lives at
+`/library/topics/<topic-id>/` per the W4a URL convention; per
+[ADR 0079](./0079-topic-registry-and-resolution-pattern.md),
+the topic Spec page renders the topic's frontmatter metadata +
+inline card list + cross-references.
+
+Library hub at `/library/index.astro` (W4a) gains a Topics tile
+in the rooms list. Smoke fixture covers two topic Spec pages:
+`/library/topics/exponents/` and `/library/topics/logarithms/`.
+
+**W4c expansion preview.** W4c will add three more Library
+rooms — Observables, Models, Inferences — derived from the
+existing `OMIFlowEntry` slot data per the [W4 meta-plan
+Q4b](../../../.claude/plans/sophie-wedge-b-followup-w4-tranquil-glade.md).
+The 3 deferred rooms (Assumption, Approximation, Numerical)
+await role-tagging extension or new entry types.

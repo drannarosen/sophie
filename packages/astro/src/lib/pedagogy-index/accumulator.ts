@@ -1,6 +1,7 @@
 import type {
   ArtifactEntry,
   AuditFinding,
+  CardEntry,
   ContractValidationEntry,
   DeepDiveEntry,
   DefinitionEntry,
@@ -20,6 +21,7 @@ import type {
   SectionEntry,
   SkillReviewEntry,
   SpacedReviewEntry,
+  TopicEntry,
   UnitEntry,
 } from "@sophie/core/schema";
 
@@ -120,12 +122,21 @@ interface GlobalIndexState {
    */
   contractValidations: ReadonlyArray<ContractValidationEntry>;
   /**
-   * Extractor-layer audit findings (V0 + V8; ADR 0056 PR 3).
-   * Populated together with `contractValidations`. Flows into
-   * `PedagogyIndex.extractorFindings` so `runPedagogyAudit` can
-   * merge them into the report at the same call.
+   * Contract-validation findings (V0 + V8; ADR 0056 PR 3). Set
+   * atomically with `contractValidations` via `setContractValidations`
+   * (last-write-wins, consumer-global).
    */
-  extractorFindings: ReadonlyArray<AuditFinding>;
+  contractValidationFindings: ReadonlyArray<AuditFinding>;
+  /**
+   * Append-mode extractor findings emitted by per-file extractors
+   * (e.g., topic extractor's PRA-2 orphan-body-card finding). Stored
+   * separately from `contractValidationFindings` so the two sources
+   * don't clobber each other regardless of call order; they
+   * concatenate at `asPedagogyIndex` time into the canonical
+   * `PedagogyIndex.extractorFindings` slot. Cleared per-topic by
+   * `clearTopic` and per-chapter by `clearUnit`.
+   */
+  appendedExtractorFindings: AuditFinding[];
   /**
    * Per-unit `<MultiRep>` concept-binding entries (ADR 0043 +
    * 2026-05-17 design hardening). Keyed by `${unit}#${id}` so
@@ -181,6 +192,21 @@ interface GlobalIndexState {
    * Consumed by PRA-1 (prereq-activation invariant).
    */
   skillReviews: Map<string, SkillReviewEntry>;
+  /**
+   * Topic entries (ADR 0079). Keyed by topic `id`. Populated by the
+   * topic extractor at MDX-compile time from `src/content/topics/
+   * <category>/<topic-id>.mdx` frontmatter. Cross-chapter scope —
+   * `clearUnit` does NOT touch topics (registry-sourced like
+   * equations per ADR 0060).
+   */
+  topics: Map<string, TopicEntry>;
+  /**
+   * Card entries (ADR 0079). Keyed by `${topic_id}#${id}` so cards
+   * from different topics with the same card id don't collide.
+   * Populated by the topic extractor from `<SkillReview.Card>` JSX
+   * blocks in topic file bodies.
+   */
+  cards: Map<string, CardEntry>;
 }
 
 function getGlobalState(): GlobalIndexState {
@@ -200,7 +226,8 @@ function getGlobalState(): GlobalIndexState {
       artifacts: [],
       inlineRefUsages: [],
       contractValidations: [],
-      extractorFindings: [],
+      contractValidationFindings: [],
+      appendedExtractorFindings: [],
       multiReps: new Map(),
       interventions: new Map(),
       deepDives: new Map(),
@@ -208,6 +235,8 @@ function getGlobalState(): GlobalIndexState {
       retrievalPrompts: new Map(),
       spacedReviews: new Map(),
       skillReviews: new Map(),
+      topics: new Map(),
+      cards: new Map(),
     };
   }
   return g[GLOBAL_KEY];
@@ -295,6 +324,14 @@ class IndexAccumulator {
         state.skillReviews.delete(key);
       }
     }
+    // Filter out any append-mode extractor findings whose location
+    // points at this chapter so re-parses don't accumulate stale
+    // findings. Findings without a `location.unit` survive (they're
+    // not chapter-scoped); contractValidationFindings are managed
+    // separately by `setContractValidations`.
+    state.appendedExtractorFindings = state.appendedExtractorFindings.filter(
+      (f) => f.location?.unit !== unitId
+    );
   }
 
   /**
@@ -569,7 +606,7 @@ class IndexAccumulator {
   ): void {
     const state = getGlobalState();
     state.contractValidations = entries;
-    state.extractorFindings = findings;
+    state.contractValidationFindings = findings;
   }
 
   /**
@@ -727,6 +764,69 @@ class IndexAccumulator {
   }
 
   /**
+   * Add a topic entry (ADR 0079). Keyed by topic `id`; re-adding
+   * with the same id overwrites (last-write-wins, mirroring the
+   * `addEquations` registry pattern per ADR 0060). Cross-chapter
+   * scope — `clearUnit` does not affect topics.
+   */
+  addTopic(entry: TopicEntry): void {
+    const state = getGlobalState();
+    state.topics.set(entry.id, entry);
+  }
+
+  /**
+   * Add card entries (ADR 0079). Keyed by `${topic_id}#${id}` so
+   * cards from different topics with the same card id don't
+   * collide. Typically called once per topic file with the
+   * topic's full card list from `extractTopicAndCards`.
+   */
+  addCards(entries: ReadonlyArray<CardEntry>): void {
+    const state = getGlobalState();
+    for (const entry of entries) {
+      state.cards.set(`${entry.topic_id}#${entry.id}`, entry);
+    }
+  }
+
+  /**
+   * Drop a topic and all its cards. Called by the topic-collection
+   * iteration before re-extracting a topic file (so re-parses don't
+   * accumulate stale cards if a card is removed from the file).
+   * Also drops any topic-scoped append-mode findings (e.g., PRA-2
+   * orphan-body-card findings emitted by the topic extractor).
+   */
+  clearTopic(topicId: string): void {
+    const state = getGlobalState();
+    state.topics.delete(topicId);
+    for (const [key, entry] of state.cards) {
+      if (entry.topic_id === topicId) {
+        state.cards.delete(key);
+      }
+    }
+    state.appendedExtractorFindings = state.appendedExtractorFindings.filter(
+      (f) => f.location?.unit !== topicId
+    );
+  }
+
+  /**
+   * Append per-file extractor findings (ADR 0079 + ADR 0056). Used
+   * by extractors that need to surface audit-level findings whose
+   * cause is structurally invisible from the populated PedagogyIndex
+   * (e.g., the topic extractor's PRA-2 orphan-body-card finding —
+   * the extractor refuses to materialize the orphan card, so the
+   * audit phase can't see the drift via index.cards alone).
+   *
+   * Findings flow through `PedagogyIndex.extractorFindings` and are
+   * surfaced by `passthroughExtractorFindings` in the audit runner.
+   * Last-write-DOES-NOT-win: appends accumulate across calls.
+   * `clearUnit` and `clearTopic` filter by `location.unit` so
+   * re-parses stay idempotent.
+   */
+  addExtractorFindings(entries: ReadonlyArray<AuditFinding>): void {
+    const state = getGlobalState();
+    state.appendedExtractorFindings.push(...entries);
+  }
+
+  /**
    * Snapshot the current accumulator state as a PedagogyIndex.
    * Equations populate from PR-C2 onward; keyInsights, figureUsages,
    * and misconceptions populate from PR-C3 onward. `figureRegistry`
@@ -747,7 +847,10 @@ class IndexAccumulator {
       objectives: Array.from(state.objectives.values()),
       inlineRefUsages: state.inlineRefUsages.slice(),
       contractValidations: state.contractValidations,
-      extractorFindings: state.extractorFindings,
+      extractorFindings: [
+        ...state.contractValidationFindings,
+        ...state.appendedExtractorFindings,
+      ],
       multiReps: Array.from(state.multiReps.values()),
       interventions: Array.from(state.interventions.values()),
       deepDives: Array.from(state.deepDives.values()),
@@ -755,6 +858,8 @@ class IndexAccumulator {
       retrievalPrompts: Array.from(state.retrievalPrompts.values()),
       spacedReviews: Array.from(state.spacedReviews.values()),
       skillReviews: Array.from(state.skillReviews.values()),
+      topics: Array.from(state.topics.values()),
+      cards: Array.from(state.cards.values()),
       sections: state.sections,
       units: state.units,
       artifacts: state.artifacts,
@@ -788,7 +893,8 @@ export function resetIndexAccumulator(): void {
   state.artifacts = [];
   state.inlineRefUsages = [];
   state.contractValidations = [];
-  state.extractorFindings = [];
+  state.contractValidationFindings = [];
+  state.appendedExtractorFindings = [];
   state.multiReps.clear();
   state.interventions.clear();
   state.deepDives.clear();
@@ -796,4 +902,6 @@ export function resetIndexAccumulator(): void {
   state.retrievalPrompts.clear();
   state.spacedReviews.clear();
   state.skillReviews.clear();
+  state.topics.clear();
+  state.cards.clear();
 }

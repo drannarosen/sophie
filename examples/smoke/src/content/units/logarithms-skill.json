@@ -1,0 +1,12 @@
+{
+  "id": "logarithms-skill",
+  "type": "skill",
+  "title": "Logarithms",
+  "order": 0,
+  "prereqs": [],
+  "section_id": "math-fundamentals",
+  "chapter": "logarithms-skill",
+  "topic_id": "logarithms",
+  "status": "stable",
+  "description": "Logarithm rules — product, power, change-of-base — that appear throughout magnitude scales, Wien's law, and the Stefan-Boltzmann scaling."
+}

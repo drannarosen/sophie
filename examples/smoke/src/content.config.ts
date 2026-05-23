@@ -4,6 +4,7 @@ import {
   EquationRegistryEntrySchema,
   NonEmptyString,
   SectionSchema,
+  TopicEntrySchema,
   UnitEntrySchema,
 } from "@sophie/core/schema";
 import { glob } from "astro/loaders";
@@ -66,4 +67,17 @@ const equations = defineCollection({
   schema: EquationRegistryEntrySchema,
 });
 
-export const collections = { sections, units, artifacts, equations };
+// ADR 0079 (W4b) topic registry: per-topic MDX files at
+// `src/content/topics/<category>/<topic-id>.mdx` (Design F sub-grouped
+// flat). Frontmatter validates against `TopicEntrySchema`; body holds
+// `<SkillReview.Card id="X">` JSX blocks each containing
+// `<SkillReview.Prompt>` + `<SkillReview.Answer>` slot children.
+// Category subdirectory (`math/`, `physics/`, etc.) is organizational
+// only — topics share a flat ID namespace and `/library/topics/<id>/`
+// URL shape regardless of file path. `**/*.mdx` glob catches subdirs.
+const topics = defineCollection({
+  loader: glob({ pattern: "**/*.mdx", base: "./src/content/topics" }),
+  schema: TopicEntrySchema,
+});
+
+export const collections = { sections, units, artifacts, equations, topics };

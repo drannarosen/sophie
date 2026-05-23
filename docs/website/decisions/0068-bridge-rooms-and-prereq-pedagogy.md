@@ -205,9 +205,56 @@ Artifacts:
 - AI co-author suggestion: given a `Unit[lecture]`'s content, suggest
   `prereqs:` topics from the existing bridge content
 
+## Revision history
+
+### 2026-05-23 — W4b: Scale 1 ships; `<SkillReview target="topic:…">` self-closing resolver shipped; Scale 2 deferred
+
+Wedge B-followup W4b implements Scale 1 (top-level bridge rooms)
+end-to-end:
+
+- **Scale 1 — top-level bridge room.** Renders at Course root via
+  `examples/smoke/src/pages/[bridgeSlug].astro` (single-param
+  dynamic route). `getStaticPaths()` queries the `sections` content
+  collection for entries with `type: "bridge"`. Smoke fixture:
+  `Section[type=bridge]` with `slug: math-fundamentals` containing
+  `Unit[type=skill]` `logarithms-skill` referencing
+  `topic_id: logarithms`. Per [ADR 0079](./0079-topic-registry-and-resolution-pattern.md),
+  bridge slugs are protected by the new **BR-1** audit invariant —
+  the slug must not collide with any other Section, any Unit id,
+  or any reserved Library structural path (`library`, `sections`,
+  `units`, `topics`).
+- **`<SkillReview target="topic:…[#card]" />` self-closing resolver.**
+  ADR 0079's topic-registry shape + MDX-remark-plugin pattern lands.
+  Inline retrieval prompts (the smallest of the three scales below)
+  now resolve against the topic registry at MDX compile time;
+  authors writing `<SkillReview target="topic:logarithms#product-rule" />`
+  in a chapter get the prompt + answer slot children lifted from
+  `src/content/topics/math/logarithms.mdx`. The explicit-children
+  form continues to work for one-off prompts that don't warrant a
+  topic-registry entry.
+- **Scale 2 — inline `Section[type=bridge]` block (deferred).** Per
+  [W4 meta-plan Q3](../../../.claude/plans/sophie-wedge-b-followup-w4-tranquil-glade.md),
+  inline mid-Section bridge blocks are deferred until a real
+  curriculum pilot demands them. The Scale 2 design surface in this
+  ADR's "Three scales" section stays accurate; only the
+  implementation is paused.
+- **Scale 3 — `<RetrievalPrompt>` / `<SpacedReview>` /
+  `<SkillReview>` chapter-inline components.** Already shipped in
+  Wedge B1 + Wedge B-followup W1. W4b promotes `<SkillReview>` to
+  its full registry-backed shape — Scale 3's "single-concept
+  reminder" use case now has two affordances (explicit-children
+  form + self-closing form against a topic registry entry).
+
+The three scales now have one canonical render path each:
+top-level bridge room (Scale 1) via `[bridgeSlug].astro`,
+chapter-inline component (Scale 3) via existing retrieval-family
+components, and Scale 2 (mid-Section inline block) reserved for
+future curriculum need.
+
 ## References
 
 - [Course-Website Platform Roadmap](../status/course-website-roadmap.md) §"Section 1.5 — Prerequisites + skill reinforcement"
+- [ADR 0079](./0079-topic-registry-and-resolution-pattern.md) — Topic registry + SkillReview self-closing resolver (W4b)
 - Meyer, J. H. F., & Land, R. (2003). "Threshold concepts and troublesome
   knowledge..."
 - Pashler, H. et al. (2007). "Organizing instruction and study to

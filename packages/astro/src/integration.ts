@@ -1,7 +1,9 @@
+import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import mdx from "@astrojs/mdx";
 import react from "@astrojs/react";
 import type { AstroIntegration } from "astro";
+import { skillReviewResolverVitePlugin } from "./lib/mdx-plugins/skill-review-resolver-vite.ts";
 import { buildPagefindIndex } from "./lib/pagefind-postbuild.ts";
 import { pedagogyIndexVirtualModule } from "./lib/pedagogy-index-virtual-module.ts";
 import { sophieMdxOptions } from "./mdx-config.ts";
@@ -82,6 +84,7 @@ export function defineSophieIntegration(
     name: "@sophie/astro",
     hooks: {
       "astro:config:setup": ({ updateConfig, logger }) => {
+        const topicsDir = resolve(process.cwd(), "src/content/topics");
         updateConfig({
           integrations: [mdx(sophieMdxOptions), react()],
           vite: {
@@ -91,7 +94,14 @@ export function defineSophieIntegration(
             // Vite is duck-typed at runtime; the cast bypasses the
             // version-mismatch only. Revisit when Astro 6 → vite@8 or
             // when @sophie/astro pins to a single vite major.
-            plugins: [pedagogyIndexVirtualModule() as never],
+            plugins: [
+              pedagogyIndexVirtualModule() as never,
+              // ADR 0079 (W4b R+CR follow-up C3) — surgical HMR cache
+              // invalidation for the SkillReview self-closing resolver.
+              // Production builds don't fire handleHotUpdate; this only
+              // engages in dev mode.
+              skillReviewResolverVitePlugin({ topicsDir }) as never,
+            ],
             ssr: {
               noExternal: SOPHIE_NO_EXTERNAL,
             },

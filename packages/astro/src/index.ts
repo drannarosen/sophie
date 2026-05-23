@@ -7,6 +7,11 @@ export {
   type SophieIntegrationOptions,
 } from "./integration.ts";
 export { artifactsFromCollection } from "./lib/artifacts-from-collection.ts";
+export {
+  buildModuleNavInputs,
+  type NavChapter,
+  type NavModule,
+} from "./lib/module-nav-helpers.ts";
 export { indexAccumulator } from "./lib/pedagogy-index/accumulator.ts";
 export { extractDefinitions } from "./lib/pedagogy-index/extractors/definitions.ts";
 export {

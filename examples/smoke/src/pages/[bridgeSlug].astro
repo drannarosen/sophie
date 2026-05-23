@@ -1,0 +1,91 @@
+---
+import { buildModuleNavInputs } from "@sophie/astro";
+import ModuleNav from "@sophie/astro/components/ModuleNav.astro";
+import TextbookHead from "@sophie/astro/components/TextbookHead.astro";
+import TextbookLayout from "@sophie/astro/components/TextbookLayout.astro";
+import { SophieChapter } from "@sophie/astro/client";
+import { getCollection } from "astro:content";
+import { figures as figureRegistry } from "../content/figures";
+
+/**
+ * `/[bridgeSlug]/` — top-level Bridge Room render per
+ * [ADR 0068](../../../../docs/website/decisions/0068-bridge-rooms-and-prereq-pedagogy.md)
+ * Scale 1 (top-level bridge rooms). Each `Section[type=bridge]` in
+ * the sections content collection gets hoisted to a Course-root
+ * URL via this single-param dynamic route.
+ *
+ * Per W4 meta-plan Q3 (Anna 2026-05-22): bridge slug derived from
+ * `section.json`; optional `display_label` overrides nav-bar text
+ * but not the URL slug. BR-1 audit invariant (W4b) enforces
+ * course-wide slug uniqueness across Sections + Units +
+ * reserved Library paths.
+ *
+ * v1 renders the bridge section's title + description + a
+ * navigation list of its Units (Unit[skill] entries). Per-unit
+ * artifact rendering (worked-example, practice, etc.) lands in
+ * a future wedge.
+ */
+
+export async function getStaticPaths() {
+  const sections = await getCollection("sections");
+  const bridges = sections.filter((s) => s.data.type === "bridge");
+  return bridges.map((s) => ({
+    params: { bridgeSlug: s.data.slug },
+    props: { section: s.data },
+  }));
+}
+
+interface BridgeProps {
+  section: {
+    slug: string;
+    title: string;
+    description?: string;
+    display_label?: string;
+  };
+}
+const { section } = Astro.props as BridgeProps;
+
+const figureRegistryArray = Object.values(figureRegistry);
+
+const allSections = (await getCollection("sections")).map((s) => s.data);
+const allUnits = (await getCollection("units")).map((u) => u.data);
+const { modules, chapters } = buildModuleNavInputs(allSections, allUnits);
+
+const sectionUnits = allUnits.filter((u) => u.section_id === section.slug);
+sectionUnits.sort((a, b) => a.order - b.order);
+const displayTitle = section.display_label ?? section.title;
+---
+
+<html lang='en'>
+  <head>
+    <meta charset='utf-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1' />
+    <title>{displayTitle}</title>
+    <meta name='description' content={section.description ?? displayTitle} />
+    <TextbookHead />
+  </head>
+  <body>
+    <SophieChapter client:load>
+      <TextbookLayout figureRegistry={figureRegistryArray}>
+        <Fragment slot='sidebar'>
+          <ModuleNav modules={modules} chapters={chapters} />
+        </Fragment>
+        <h1>{displayTitle}</h1>
+        {section.description && <p>{section.description}</p>}
+        {sectionUnits.length > 0 && (
+          <section>
+            <h2>Units</h2>
+            <ul>
+              {sectionUnits.map((u) => (
+                <li>
+                  <a href={`/units/${u.id}/reading`}>{u.title}</a>
+                  {u.description && <p>{u.description}</p>}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+      </TextbookLayout>
+    </SophieChapter>
+  </body>
+</html>

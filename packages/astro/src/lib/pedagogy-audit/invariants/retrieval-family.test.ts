@@ -90,7 +90,7 @@ describe("PRA-1 — Unit-aware (W1)", () => {
     };
     const sink = emptySink();
     checkRetrievalFamily(index, sink);
-    expect(sink.warnings.filter((w) => w.code === "PRA-1")).toEqual([]);
+    expect(sink.errors.filter((e) => e.code === "PRA-1")).toEqual([]);
   });
 
   test("no finding when SkillReview is in a PRIOR Section (by order)", () => {
@@ -134,10 +134,10 @@ describe("PRA-1 — Unit-aware (W1)", () => {
     };
     const sink = emptySink();
     checkRetrievalFamily(index, sink);
-    expect(sink.warnings.filter((w) => w.code === "PRA-1")).toEqual([]);
+    expect(sink.errors.filter((e) => e.code === "PRA-1")).toEqual([]);
   });
 
-  test("emits PRA-1 WARN when SkillReview is in a LATER Section (not prior)", () => {
+  test("emits PRA-1 ERROR when SkillReview is in a LATER Section (not prior)", () => {
     const index: PedagogyIndex = {
       ...emptyIndex(),
       sections: [
@@ -184,12 +184,12 @@ describe("PRA-1 — Unit-aware (W1)", () => {
     ];
     const sink = emptySink();
     checkRetrievalFamily(index, sink);
-    const pra = sink.warnings.filter((w) => w.code === "PRA-1");
+    const pra = sink.errors.filter((e) => e.code === "PRA-1");
     expect(pra).toHaveLength(1);
     expect(pra[0]?.location?.unit).toBe("stars-ch");
   });
 
-  test("emits PRA-1 WARN when no SkillReview covers the prereq topic anywhere", () => {
+  test("emits PRA-1 ERROR when no SkillReview covers the prereq topic anywhere (W4b graduation)", () => {
     const index: PedagogyIndex = {
       ...emptyIndex(),
       sections: [{ type: "module", slug: "stars", title: "Stars", order: 0 }],
@@ -209,7 +209,7 @@ describe("PRA-1 — Unit-aware (W1)", () => {
     };
     const sink = emptySink();
     checkRetrievalFamily(index, sink);
-    const pra = sink.warnings.filter((w) => w.code === "PRA-1");
+    const pra = sink.errors.filter((e) => e.code === "PRA-1");
     expect(pra).toHaveLength(1);
     expect(pra[0]?.message).toContain("logs");
   });
@@ -228,10 +228,10 @@ describe("PRA-1 — Unit-aware (W1)", () => {
     };
     const sink = emptySink();
     checkRetrievalFamily(index, sink);
-    expect(sink.warnings.filter((w) => w.code === "PRA-1")).toEqual([]);
+    expect(sink.errors.filter((e) => e.code === "PRA-1")).toEqual([]);
   });
 
-  test("multiple prereqs on one Unit → one WARN per uncovered prereq", () => {
+  test("multiple prereqs on one Unit → one ERROR per uncovered prereq", () => {
     const index: PedagogyIndex = {
       ...emptyIndex(),
       sections: [{ type: "module", slug: "stars", title: "Stars", order: 0 }],
@@ -259,9 +259,74 @@ describe("PRA-1 — Unit-aware (W1)", () => {
     };
     const sink = emptySink();
     checkRetrievalFamily(index, sink);
-    const pra = sink.warnings.filter((w) => w.code === "PRA-1");
+    const pra = sink.errors.filter((e) => e.code === "PRA-1");
     expect(pra).toHaveLength(1);
     expect(pra[0]?.message).toContain("exponents");
+  });
+
+  test("audit_overrides on the Unit suppresses PRA-1 ERROR for a specific prereq anchor (per ADR 0053)", () => {
+    const index: PedagogyIndex = {
+      ...emptyIndex(),
+      sections: [{ type: "module", slug: "stars", title: "Stars", order: 0 }],
+      units: [
+        {
+          id: "u1-ch",
+          type: "lecture",
+          title: "U1",
+          order: 0,
+          prereqs: ["logs", "exponents"],
+          section_id: "stars",
+          chapter: "u1-ch",
+          status: "stable",
+          audit_overrides: [
+            {
+              invariant: "PRA-1",
+              anchor: "logs",
+              tdr: "TDR-XX",
+              reason: "Deliberate W4b test fixture for audit_overrides path.",
+            },
+          ],
+        },
+      ],
+      skillReviews: [],
+    };
+    const sink = emptySink();
+    checkRetrievalFamily(index, sink);
+    const pra = sink.errors.filter((e) => e.code === "PRA-1");
+    // "logs" is suppressed by the override; "exponents" still fires.
+    expect(pra).toHaveLength(1);
+    expect(pra[0]?.message).toContain("exponents");
+    expect(pra[0]?.message).not.toContain("logs");
+  });
+
+  test("grain-1 audit_override (no anchor) suppresses ALL PRA-1 findings on the Unit", () => {
+    const index: PedagogyIndex = {
+      ...emptyIndex(),
+      sections: [{ type: "module", slug: "stars", title: "Stars", order: 0 }],
+      units: [
+        {
+          id: "u1-ch",
+          type: "lecture",
+          title: "U1",
+          order: 0,
+          prereqs: ["logs", "exponents"],
+          section_id: "stars",
+          chapter: "u1-ch",
+          status: "stable",
+          audit_overrides: [
+            {
+              invariant: "PRA-1",
+              tdr: "TDR-YY",
+              reason: "Grain-1 whole-invariant suppression for this Unit.",
+            },
+          ],
+        },
+      ],
+      skillReviews: [],
+    };
+    const sink = emptySink();
+    checkRetrievalFamily(index, sink);
+    expect(sink.errors.filter((e) => e.code === "PRA-1")).toEqual([]);
   });
 });
 

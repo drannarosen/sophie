@@ -1,0 +1,58 @@
+---
+id: logarithms
+label: Logarithms
+summary: |
+  Functions that invert exponentiation; map products to sums.
+  Logarithms appear everywhere in astrophysics — stellar magnitudes
+  ($m_1 - m_2 = -2.5 \log_{10}(F_1/F_2)$), Wien's law, the
+  Stefan-Boltzmann scaling. Knowing the product / power / change-of-
+  base rules unlocks reading any equation that mixes orders of
+  magnitude.
+prereq_topic_ids: [exponents]
+linked_equation_ids:
+  - stefan-boltzmann-luminosity
+  - wiens-law
+linked_misconception_ids: []
+cards:
+  - id: product-rule
+    label: Product rule
+    difficulty: easy
+  - id: power-rule
+    label: Power rule
+    difficulty: medium
+  - id: change-of-base
+    label: Change of base
+    difficulty: hard
+---
+
+<SkillReview.Card id="product-rule">
+  <SkillReview.Prompt>
+    What does $\log_b(xy)$ equal?
+  </SkillReview.Prompt>
+  <SkillReview.Answer>
+    $\log_b(x) + \log_b(y)$ — logarithms turn products into sums.
+    Falls out of the exponent product law: $b^{m+n} = b^m \cdot b^n$.
+  </SkillReview.Answer>
+</SkillReview.Card>
+
+<SkillReview.Card id="power-rule">
+  <SkillReview.Prompt>
+    What does $\log_b(x^n)$ equal?
+  </SkillReview.Prompt>
+  <SkillReview.Answer>
+    $n \cdot \log_b(x)$ — the exponent comes down as a multiplier.
+    This is why magnitudes use the $-2.5 \log_{10}(F)$ convention:
+    a factor-of-100 brightness change becomes a 5-magnitude
+    difference because $\log_{10}(100) = 2$.
+  </SkillReview.Answer>
+</SkillReview.Card>
+
+<SkillReview.Card id="change-of-base">
+  <SkillReview.Prompt>
+    Express $\log_2(x)$ using natural log ($\ln$).
+  </SkillReview.Prompt>
+  <SkillReview.Answer>
+    $\log_2(x) = \ln(x) / \ln(2)$ — divide by $\ln$ of the new base.
+    The general rule: $\log_a(x) = \log_b(x) / \log_b(a)$.
+  </SkillReview.Answer>
+</SkillReview.Card>

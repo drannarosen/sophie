@@ -77,7 +77,11 @@ function checkPRA1(index: PedagogyIndex, sink: FindingSink): void {
     if (ord !== undefined) unitSectionOrder.set(u.id, ord);
   }
 
-  // section.order -> Set<topic target_id> of SkillReviews in chapters bound to that order
+  // section.order -> Set<topic target_id> of SkillReviews in chapters
+  // bound to that order. Per ADR 0079 §"PRA-1 graduation": coverage
+  // is checked at TOPIC granularity; the optional `#card` fragment
+  // is addressing detail and is stripped here so
+  // `topic:exponents#power-laws` covers a prereq of "exponents".
   const coverByOrder = new Map<number, Set<string>>();
   for (const sr of index.skillReviews) {
     if (parseTargetPrefix(sr.target_id) !== "topic") continue;
@@ -88,13 +92,30 @@ function checkPRA1(index: PedagogyIndex, sink: FindingSink): void {
       s = new Set();
       coverByOrder.set(ord, s);
     }
-    s.add(sr.target_id);
+    const hashIdx = sr.target_id.indexOf("#");
+    const topicOnly =
+      hashIdx === -1 ? sr.target_id : sr.target_id.slice(0, hashIdx);
+    s.add(topicOnly);
   }
 
   for (const unit of index.units) {
     const unitOrd = sectionOrder.get(unit.section_id);
     if (unitOrd === undefined) continue;
+    // Per ADR 0053: audit_overrides on the Unit can suppress PRA-1
+    // findings (grain-1 whole-invariant when anchor omitted; grain-2
+    // per-anchor when anchor matches the prereq's topic id).
+    const overrides = unit.audit_overrides ?? [];
+    const overridesAll = overrides.some(
+      (o) => o.invariant === "PRA-1" && !o.anchor
+    );
+    const overriddenAnchors = new Set(
+      overrides
+        .filter((o) => o.invariant === "PRA-1" && o.anchor)
+        .map((o) => o.anchor as string)
+    );
+    if (overridesAll) continue;
     for (const prereq of unit.prereqs) {
+      if (overriddenAnchors.has(prereq)) continue;
       const target = `topic:${prereq}`;
       let covered = false;
       for (const [ord, covers] of coverByOrder) {
@@ -104,11 +125,13 @@ function checkPRA1(index: PedagogyIndex, sink: FindingSink): void {
         }
       }
       if (covered) continue;
-      sink.warnings.push({
-        severity: "WARNING",
+      // W4b graduation per ADR 0079 §"PRA-1 graduation": WARN → ERROR.
+      // Authors opt out per-callsite via `audit_overrides` (ADR 0053).
+      sink.errors.push({
+        severity: "ERROR",
         code: "PRA-1",
-        message: `PRA-1: Unit "${unit.id}" in Section "${unit.section_id}" declares prereq "${prereq}" but no <SkillReview target="topic:${prereq}"> exists in this Section or any prior Section. Resolution: add a <SkillReview target="topic:${prereq}"> in this Section or an earlier one, or remove the prereq if the topic is genuinely off-scope.`,
-        location: { unit: unit.id },
+        message: `PRA-1: Unit "${unit.id}" in Section "${unit.section_id}" declares prereq "${prereq}" but no <SkillReview target="topic:${prereq}"> exists in this Section or any prior Section. Resolution: (a) add a <SkillReview target="topic:${prereq}"> in this Section or an earlier one, OR (b) remove the prereq if the topic is genuinely off-scope, OR (c) add an audit_overrides entry on this Unit declaring \`invariant: PRA-1, anchor: ${prereq}\` with a TDR-backed reason (per ADR 0053).`,
+        location: { unit: unit.id, anchor: prereq },
       });
     }
   }

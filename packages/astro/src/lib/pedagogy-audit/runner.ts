@@ -1,6 +1,7 @@
 import type { PedagogyIndex } from "@sophie/core/schema";
 import { buildAuditContext } from "./context.ts";
 import { checkBiography } from "./invariants/biography.ts";
+import { checkBR1 } from "./invariants/bridge-uniqueness.ts";
 import { checkChapterStatus } from "./invariants/chapter-status.ts";
 import { checkChapterTitleCollisions } from "./invariants/chapter-title-collisions.ts";
 import { checkEquationRegistry } from "./invariants/equation-registry.ts";
@@ -19,6 +20,7 @@ import { checkObjectives } from "./invariants/objectives.ts";
 import { checkOMIFlow } from "./invariants/omi-flow.ts";
 import { checkOrphans } from "./invariants/orphans.ts";
 import { checkRetrievalFamily } from "./invariants/retrieval-family.ts";
+import { checkPRA2 } from "./invariants/topic-consistency.ts";
 import { checkValidation } from "./invariants/validation.ts";
 import type { AuditExtras, AuditReport, FindingSink } from "./types.ts";
 
@@ -113,7 +115,22 @@ export function runPedagogyAudit(
 
   // Wedge B1 retrieval-family invariants (PRA-1 prereq activation,
   // RET-1 retrieval coverage, SR-1 SpacedReview ref validity).
+  // Wedge B-followup W4b graduates PRA-1 to ERROR severity + honors
+  // `audit_overrides` per ADR 0053 (per ADR 0079).
   checkRetrievalFamily(index, sink);
+
+  // ADR 0079 (W4b) — PRA-2: topic frontmatter ↔ body card consistency.
+  // The extractor catches body→frontmatter orphans by emitting findings
+  // into extractorFindings (surfaced via passthroughExtractorFindings
+  // above); PRA-2 here covers the inverse axis (frontmatter→body).
+  checkPRA2(index, sink);
+
+  // ADR 0079 + 0068 (W4b) — BR-1: bridge slug uniqueness. Each
+  // Section[type=bridge] renders at Course root via
+  // [bridgeSlug].astro; slug collisions with regular Sections, Unit
+  // ids, or reserved Library paths would silently shadow other
+  // routes.
+  checkBR1(index, sink);
 
   return {
     errors: sink.errors,
