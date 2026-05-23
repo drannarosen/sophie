@@ -1,6 +1,6 @@
 ---
 import { chaptersForModule } from "@sophie/core/schema";
-import type { NavChapter, NavModule } from "../lib/module-nav-helpers.ts";
+import type { NavChapter, NavModule } from "../lib/module-nav-helpers";
 
 /**
  * <ModuleNav> — sidebar module/chapter tree.
@@ -17,10 +17,8 @@ import type { NavChapter, NavModule } from "../lib/module-nav-helpers.ts";
  *
  * `NavChapter` and `NavModule` are canonical in
  * `../lib/module-nav-helpers.ts` (R9-production: one declaration
- * per named interface). Re-exported below so downstream consumers
- * importing from `ModuleNav.astro` keep working.
+ * per named interface).
  */
-export type { NavChapter, NavModule };
 
 interface Props {
   modules: ReadonlyArray<NavModule>;

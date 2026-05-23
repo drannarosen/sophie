@@ -1,12 +1,17 @@
 import type { SectionEntry, UnitEntry } from "@sophie/core/schema";
 
 /**
- * `<ModuleNav>` prop shapes, duplicated here from
- * `../components/ModuleNav.astro` because Astro-component type
- * imports from .astro files aren't reliable across the Node /
- * Astro / Vite toolchain. If the ModuleNav contract changes,
- * update both places. The interfaces are structural so a drift
- * surfaces as a `tsc` error at every consumer.
+ * Canonical home for `<ModuleNav>` prop shapes. `NavModule` and
+ * `NavChapter` are declared exactly once here per R9-production
+ * (one declaration per named interface). `ModuleNav.astro` and any
+ * other consumer (e.g., the `@sophie/astro` barrel in
+ * `../index.ts`) imports these types from this module.
+ *
+ * Originally lived alongside `<ModuleNav>`; extracted as part of
+ * W4b R+CR I5 helper extraction. `ModuleNav.astro` now imports
+ * from here per R9-production — Astro-component type imports from
+ * `.astro` files aren't reliable across the Node / Astro / Vite
+ * toolchain, so the `.ts` module is the right host.
  */
 export interface NavModule {
   slug: string;
