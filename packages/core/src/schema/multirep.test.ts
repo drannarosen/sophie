@@ -175,7 +175,7 @@ describe("MultiRepIndexEntrySchema (pedagogy-index entry)", () => {
   const minValid = {
     concept: "orbital-radius",
     id: "mr-orbital-radius",
-    chapter: "module-02/lecture-04",
+    unit: "module-02-lecture-04",
     reps: [
       { kind: "verbal", body: "The orbital radius is…" },
       { kind: "equation", refKey: "kepler-3rd-law", symbol: "r" },
@@ -237,7 +237,7 @@ describe("MultiRepIndexEntrySchema (pedagogy-index entry)", () => {
   });
 
   it("rejects missing required top-level fields", () => {
-    for (const field of ["concept", "id", "chapter", "reps"] as const) {
+    for (const field of ["concept", "id", "unit", "reps"] as const) {
       const { [field]: _omitted, ...rest } = minValid;
       const result = MultiRepIndexEntrySchema.safeParse(rest);
       expect(result.success, `expected missing "${field}" to be rejected`).toBe(

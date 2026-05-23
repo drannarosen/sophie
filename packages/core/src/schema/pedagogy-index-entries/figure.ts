@@ -46,7 +46,8 @@ export type FigureRegistryEntry = z.infer<typeof FigureRegistryEntrySchema>;
 export const FigureUsageEntrySchema = z.object({
   /** Registry key — must resolve to a FigureRegistryEntry at SSR merge time. */
   name: NonEmptyString,
-  chapter: Slug,
+  /** Parent Unit id (W3 rename from `chapter`). */
+  unit: Slug,
   anchor: NonEmptyString,
   /** Per-chapter sequential number, extractor-assigned at appearance order. */
   number: z.number().int().positive(),

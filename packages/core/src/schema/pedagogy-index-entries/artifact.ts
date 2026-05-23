@@ -28,9 +28,9 @@ import { NonEmptyString } from "../primitives.ts";
  * W2 1:1 convention (D4): for unit-scope reading artifacts,
  * `artifact.id === artifact.unit_id` (one reading per Unit). The same
  * string also matches `UnitEntry.chapter` and per-callsite extractor
- * `chapter: string` field values. Three strings coincide for the
- * common case; future multi-reading Units (worked-example + primary)
- * suffix the artifact id.
+ * `unit: Slug` field values (W3 rename). Three strings coincide for
+ * the common case; future multi-reading Units (worked-example +
+ * primary) suffix the artifact id.
  */
 
 const UnitScopedArtifactEntrySchema = ArtifactSchema.extend({

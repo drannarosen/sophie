@@ -42,7 +42,7 @@ describe("InterventionEntrySchema (pedagogy-index entry)", () => {
       addresses: ["universe-with-a-center"],
       body: "Predict what you'd observe if the universe had a center…",
       depth: "light",
-      chapter: "01-foundations/spoiler-alerts",
+      unit: "spoiler-alerts",
       anchor: "intervention-contrasting-cases-1",
     });
     expect(result.success).toBe(true);
@@ -55,7 +55,7 @@ describe("InterventionEntrySchema (pedagogy-index entry)", () => {
       addresses: ["stars-are-points"],
       body: "Compare 10^21 m to 10^23 m…",
       depth: "substantial",
-      chapter: "01-foundations/spoiler-alerts",
+      unit: "spoiler-alerts",
       anchor: "intervention-scale-comparison-1",
     });
     expect(result.success).toBe(true);
@@ -68,7 +68,7 @@ describe("InterventionEntrySchema (pedagogy-index entry)", () => {
         addresses: [],
         body: "body",
         depth: "light",
-        chapter: "ch",
+        unit: "ch",
         anchor: "a",
       }).success
     ).toBe(false);
@@ -80,7 +80,7 @@ describe("InterventionEntrySchema (pedagogy-index entry)", () => {
         addresses: "universe-with-a-center",
         body: "body",
         depth: "light",
-        chapter: "ch",
+        unit: "ch",
         anchor: "a",
       }).success
     ).toBe(false);
@@ -91,7 +91,7 @@ describe("InterventionEntrySchema (pedagogy-index entry)", () => {
       type: "contrasting-cases",
       addresses: ["x"],
       body: "body",
-      chapter: "ch",
+      unit: "ch",
       anchor: "a",
     });
     expect(result.success).toBe(false);
@@ -103,7 +103,7 @@ describe("InterventionEntrySchema (pedagogy-index entry)", () => {
       addresses: ["stars-are-points"],
       body: "body",
       depth: "light",
-      chapter: "ch",
+      unit: "ch",
       anchor: "a",
     });
     expect(result.success).toBe(false);
@@ -125,7 +125,7 @@ describe("InterventionEntrySchema (pedagogy-index entry)", () => {
       addresses: ["universe-with-a-center"],
       body: "body",
       depth: "light",
-      chapter: "ch",
+      unit: "ch",
       anchor: "a",
     });
     expect(result.success).toBe(false);

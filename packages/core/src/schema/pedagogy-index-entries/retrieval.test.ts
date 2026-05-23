@@ -9,7 +9,7 @@ describe("RetrievalPromptEntrySchema", () => {
   it("accepts a valid entry", () => {
     expect(() =>
       RetrievalPromptEntrySchema.parse({
-        chapter: "spoiler-alerts",
+        unit: "spoiler-alerts",
         anchor: "rp-1",
         target_id: "eq:stefan-boltzmann",
       })
@@ -19,7 +19,7 @@ describe("RetrievalPromptEntrySchema", () => {
   it("rejects empty target_id", () => {
     expect(() =>
       RetrievalPromptEntrySchema.parse({
-        chapter: "spoiler-alerts",
+        unit: "spoiler-alerts",
         anchor: "rp-1",
         target_id: "",
       })
@@ -40,7 +40,7 @@ describe("SpacedReviewEntrySchema", () => {
   it("accepts target_id-scoped entry", () => {
     expect(() =>
       SpacedReviewEntrySchema.parse({
-        chapter: "spoiler-alerts",
+        unit: "spoiler-alerts",
         anchor: "sp-1",
         target_id: "topic:logarithms",
         max: 3,
@@ -51,7 +51,7 @@ describe("SpacedReviewEntrySchema", () => {
   it("accepts section_id-scoped entry", () => {
     expect(() =>
       SpacedReviewEntrySchema.parse({
-        chapter: "spoiler-alerts",
+        unit: "spoiler-alerts",
         anchor: "sp-1",
         section_id: "m1-foundations",
         max: 5,
@@ -62,7 +62,7 @@ describe("SpacedReviewEntrySchema", () => {
   it("rejects both target_id and section_id (refine violation)", () => {
     expect(() =>
       SpacedReviewEntrySchema.parse({
-        chapter: "ch",
+        unit: "ch",
         anchor: "sp-1",
         target_id: "eq:x",
         section_id: "s",
@@ -74,7 +74,7 @@ describe("SpacedReviewEntrySchema", () => {
   it("rejects neither target_id nor section_id", () => {
     expect(() =>
       SpacedReviewEntrySchema.parse({
-        chapter: "ch",
+        unit: "ch",
         anchor: "sp-1",
         max: 3,
       })
@@ -84,7 +84,7 @@ describe("SpacedReviewEntrySchema", () => {
   it("rejects non-positive max", () => {
     expect(() =>
       SpacedReviewEntrySchema.parse({
-        chapter: "ch",
+        unit: "ch",
         anchor: "sp-1",
         target_id: "eq:x",
         max: 0,
@@ -92,7 +92,7 @@ describe("SpacedReviewEntrySchema", () => {
     ).toThrow();
     expect(() =>
       SpacedReviewEntrySchema.parse({
-        chapter: "ch",
+        unit: "ch",
         anchor: "sp-1",
         target_id: "eq:x",
         max: -1,
@@ -105,7 +105,7 @@ describe("SkillReviewEntrySchema", () => {
   it("accepts a valid entry with has_explicit_content=true", () => {
     expect(() =>
       SkillReviewEntrySchema.parse({
-        chapter: "spoiler-alerts",
+        unit: "spoiler-alerts",
         anchor: "sk-1",
         target_id: "topic:logarithms",
         has_explicit_content: true,
@@ -116,7 +116,7 @@ describe("SkillReviewEntrySchema", () => {
   it("accepts a valid entry with has_explicit_content=false", () => {
     expect(() =>
       SkillReviewEntrySchema.parse({
-        chapter: "spoiler-alerts",
+        unit: "spoiler-alerts",
         anchor: "sk-1",
         target_id: "topic:exponents",
         has_explicit_content: false,
@@ -127,7 +127,7 @@ describe("SkillReviewEntrySchema", () => {
   it("rejects empty target_id", () => {
     expect(() =>
       SkillReviewEntrySchema.parse({
-        chapter: "ch",
+        unit: "ch",
         anchor: "sk-1",
         target_id: "",
         has_explicit_content: true,

@@ -108,8 +108,8 @@ export const MultiRepIndexEntrySchema = z
     concept: NonEmptyString,
     /** Anchor id (`mr-<concept-slug>` by default). */
     id: NonEmptyString,
-    /** Chapter slug or path (matches the chapter content-collection entry). */
-    chapter: NonEmptyString,
+    /** Parent Unit id (W3 rename from `chapter`). */
+    unit: Slug,
     /**
      * Serialized rep payloads from `<MultiRep>` children. At least one rep is
      * required; binding-of-one is meaningful (e.g., a chapter introducing
