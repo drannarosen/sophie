@@ -18,6 +18,7 @@ import {
 import { checkObjectives } from "./invariants/objectives.ts";
 import { checkOMIFlow } from "./invariants/omi-flow.ts";
 import { checkOrphans } from "./invariants/orphans.ts";
+import { checkBR1 } from "./invariants/bridge-uniqueness.ts";
 import { checkRetrievalFamily } from "./invariants/retrieval-family.ts";
 import { checkPRA2 } from "./invariants/topic-consistency.ts";
 import { checkValidation } from "./invariants/validation.ts";
@@ -124,6 +125,14 @@ export function runPedagogyAudit(
   // the registry-resolution contract.
   // biome-ignore lint/suspicious/noExplicitAny: sink shape matches FindingSink
   checkPRA2(index, sink as any);
+
+  // ADR 0079 + 0068 (W4b) — BR-1: bridge slug uniqueness. Each
+  // Section[type=bridge] renders at Course root via
+  // [bridgeSlug].astro; slug collisions with regular Sections, Unit
+  // ids, or reserved Library paths would silently shadow other
+  // routes.
+  // biome-ignore lint/suspicious/noExplicitAny: sink shape matches FindingSink
+  checkBR1(index, sink as any);
 
   return {
     errors: sink.errors,

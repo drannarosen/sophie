@@ -1,0 +1,8 @@
+{
+  "type": "bridge",
+  "slug": "math-fundamentals",
+  "title": "Math Fundamentals",
+  "order": 0,
+  "description": "Quick refresher on the math you'll need to read ASTR 201's equations: exponents, logarithms, scientific notation. Skim or skip if you're solid; come back if you hit something rusty mid-chapter.",
+  "display_label": "Math Refresher"
+}
