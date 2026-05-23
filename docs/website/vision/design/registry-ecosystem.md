@@ -78,8 +78,8 @@ when reuse pressure makes the migration obvious.
 ## Two patterns, one ecosystem
 
 Sophie's content collections aggregate from **both** patterns at the
-consumption side. A reader on `/equations` sees registry entries
-roll up the same way a reader on `/key-insights` sees inline
+consumption side. A reader on `/library/equations` sees registry entries
+roll up the same way a reader on `/library/key-insights` sees inline
 chapter declarations roll up — the underlying source-of-truth
 differs, but the pedagogy index abstracts over it.
 

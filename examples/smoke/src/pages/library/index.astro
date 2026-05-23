@@ -1,0 +1,107 @@
+---
+import ModuleNav from "@sophie/astro/components/ModuleNav.astro";
+import TextbookHead from "@sophie/astro/components/TextbookHead.astro";
+import TextbookLayout from "@sophie/astro/components/TextbookLayout.astro";
+import { SophieChapter } from "@sophie/astro/client";
+import { getCollection } from "astro:content";
+import { figures as figureRegistry } from "../../content/figures";
+
+/**
+ * `/library/` — Library hub.
+ *
+ * Lists the 6 course-level rollup rooms migrated in Wedge B-followup
+ * W4a per ADR 0067 §2.1. W4b adds Topics; W4c adds Observables /
+ * Models / Inferences + per-entry Spec pages.
+ *
+ * Minimal placeholder per W4a design doc §2 D3 — shell extraction
+ * and faceted nav land in W4c.
+ */
+
+const figureRegistryArray = Object.values(figureRegistry);
+
+const sections = (await getCollection("sections")).map((s) => s.data);
+const units = (await getCollection("units")).map((u) => u.data);
+const modules = sections.map((s) => ({
+  slug: s.slug,
+  title: s.title,
+  order: s.order,
+  description: s.description,
+}));
+const chapters = units.map((u) => ({
+  slug: u.id,
+  title: u.title,
+  module: u.section_id,
+  order: u.order,
+  chapter: undefined as number | undefined,
+  status: u.status,
+}));
+
+const rooms = [
+  {
+    href: "/library/glossary",
+    title: "Glossary",
+    description: "All definitions across the course, alphabetical.",
+  },
+  {
+    href: "/library/equations",
+    title: "Equations",
+    description: "All equations across the course.",
+  },
+  {
+    href: "/library/figures",
+    title: "Figures",
+    description: "Every figure (canonical entries from the registry).",
+  },
+  {
+    href: "/library/key-insights",
+    title: "Key insights",
+    description: "All key insights across the course.",
+  },
+  {
+    href: "/library/misconceptions",
+    title: "Misconceptions",
+    description: "All misconceptions across the course.",
+  },
+  {
+    href: "/library/objectives",
+    title: "Objectives",
+    description: "Hierarchical Module → Chapter → Objectives roll-up.",
+  },
+];
+---
+
+<html lang='en'>
+  <head>
+    <meta charset='utf-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1' />
+    <title>Library</title>
+    <meta
+      name='description'
+      content='Course-wide reference rooms: glossary, equations, figures, key insights, misconceptions, objectives.'
+    />
+    <TextbookHead />
+  </head>
+  <body>
+    <SophieChapter client:load>
+      <TextbookLayout figureRegistry={figureRegistryArray}>
+        <Fragment slot='sidebar'>
+          <ModuleNav modules={modules} chapters={chapters} />
+        </Fragment>
+        <h1>Library</h1>
+        <p>
+          Course-wide reference rooms. Each room rolls up entries of
+          one epistemic kind across the whole course.
+        </p>
+        <ul>
+          {
+            rooms.map((room) => (
+              <li>
+                <a href={room.href}>{room.title}</a> — {room.description}
+              </li>
+            ))
+          }
+        </ul>
+      </TextbookLayout>
+    </SophieChapter>
+  </body>
+</html>

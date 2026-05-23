@@ -1,10 +1,10 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-const KEY_INSIGHTS_URL = "/key-insights";
+const KEY_INSIGHTS_URL = "/library/key-insights";
 
 /**
- * PR-C3 — `<CourseKeyInsights />` on `/key-insights`.
+ * PR-C3 — `<CourseKeyInsights />` on `/library/key-insights`.
  *
  * Covers TDD test list row T37 from the PR-C3 design doc
  * (`docs/plans/2026-05-14-pr-c3-design.md`).
@@ -29,7 +29,7 @@ const KEY_INSIGHTS_URL = "/key-insights";
  * spoiler-alerts.
  */
 
-test.describe("PR-C3: <CourseKeyInsights /> on /key-insights", () => {
+test.describe("PR-C3: <CourseKeyInsights /> on /library/key-insights", () => {
   test("T37: renders the page with all key-insight entries from the smoke target", async ({
     page,
   }) => {
@@ -109,7 +109,7 @@ test.describe("PR-C3: <CourseKeyInsights /> on /key-insights", () => {
     );
   });
 
-  test("/key-insights is axe-clean", async ({ page }) => {
+  test("/library/key-insights is axe-clean", async ({ page }) => {
     await page.goto(KEY_INSIGHTS_URL);
     const results = await new AxeBuilder({ page })
       .exclude("astro-island")

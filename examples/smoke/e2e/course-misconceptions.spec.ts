@@ -1,10 +1,10 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-const MISCONCEPTIONS_URL = "/misconceptions";
+const MISCONCEPTIONS_URL = "/library/misconceptions";
 
 /**
- * PR-C3 — `<CourseMisconceptions />` on `/misconceptions`.
+ * PR-C3 — `<CourseMisconceptions />` on `/library/misconceptions`.
  *
  * Covers TDD test list row T39 from the PR-C3 design doc
  * (`docs/plans/2026-05-14-pr-c3-design.md`).
@@ -31,7 +31,7 @@ const MISCONCEPTIONS_URL = "/misconceptions";
  * distinction).
  */
 
-test.describe("PR-C3: <CourseMisconceptions /> on /misconceptions", () => {
+test.describe("PR-C3: <CourseMisconceptions /> on /library/misconceptions", () => {
   test("T39: renders the page with all course misconceptions", async ({
     page,
   }) => {
@@ -115,7 +115,7 @@ test.describe("PR-C3: <CourseMisconceptions /> on /misconceptions", () => {
     ).toBeAttached();
   });
 
-  test("/misconceptions is axe-clean", async ({ page }) => {
+  test("/library/misconceptions is axe-clean", async ({ page }) => {
     await page.goto(MISCONCEPTIONS_URL);
     const results = await new AxeBuilder({ page })
       .exclude("astro-island")

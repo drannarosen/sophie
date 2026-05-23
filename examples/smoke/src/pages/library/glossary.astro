@@ -5,12 +5,12 @@ import TextbookHead from "@sophie/astro/components/TextbookHead.astro";
 import TextbookLayout from "@sophie/astro/components/TextbookLayout.astro";
 import { SophieChapter } from "@sophie/astro/client";
 import { getCollection } from "astro:content";
-import { figures as figureRegistry } from "../content/figures";
+import { figures as figureRegistry } from "../../content/figures";
 
 const figureRegistryArray = Object.values(figureRegistry);
 
 /**
- * `/glossary` — course-wide glossary auto-generated from the
+ * `/library/glossary` — course-wide glossary auto-generated from the
  * pedagogy index (ADR 0038). Reads `definitions` via
  * `virtual:sophie/pedagogy-index` (resolved by @sophie/astro's
  * Vite plugin); alphabetical; each entry back-links to its

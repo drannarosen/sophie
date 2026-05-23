@@ -228,7 +228,7 @@ hover card shows:
   a "valid in: ⟨type⟩" line. Omit if no `<Assumption>` has `type=`.
 
 The hover does not render full biography bodies — that's the
-chapter-end / `/equations` surfaces' job. The hover is a tooltip;
+chapter-end / `/library/equations` surfaces' job. The hover is a tooltip;
 keeping it compact preserves its function.
 
 ### Surface 2: `<ChapterEquations chapter="X">` (full biography)
@@ -262,14 +262,14 @@ disclosure. Other biography fields are always-visible. Rendering
 order is fixed: Observable → Assumptions → Units → BreaksWhen →
 CommonMisuses (mirrors the recommended source-authoring order).
 
-### Surface 3: `<CourseEquations />` at `/equations`
+### Surface 3: `<CourseEquations />` at `/library/equations`
 
 Renders every `<KeyEquation>` across the course, applying the same
 full-biography rendering as Surface 2. Each equation block links
 back to its source chapter via the existing `<ChapterRef>`
 infrastructure (per PR-C4).
 
-A future ADR ("Equation Pages") may add dedicated `/equations/
+A future ADR ("Equation Pages") may add dedicated `/library/equations/
 <slug>` per-equation pages with reverse-lookups (which chapters
 cite this, which misconceptions pair with it, what other equations
 share assumptions). The biography schema this page establishes is
@@ -279,7 +279,7 @@ the prerequisite; the per-equation page is a separate concern.
 
 **Start with `<Observable>`.** If you author any biography fields
 for an equation, lead with what it observes. The compact hover
-summary, the chapter-end render, and the `/equations` route all
+summary, the chapter-end render, and the `/library/equations` route all
 foreground Observable; E7 nudges chapter-authors toward declaring
 it.
 

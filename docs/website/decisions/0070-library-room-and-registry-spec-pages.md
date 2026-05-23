@@ -61,16 +61,36 @@ alternates: Reference / Atlas / Compendium / Toolbox). One room
 containing collapsible sub-areas — one per registry.
 
 ```
-Library/
-├─ Equations/      ← /equations/ + /equations/<slug>/
-├─ Glossary/       ← /glossary/ + /glossary/<term>/
-├─ Misconceptions/ ← /misconceptions/ + /misconceptions/<slug>/
-├─ Key Insights/   ← /insights/ + /insights/<slug>/
-├─ Figures/        ← /figures/ + /figures/<slug>/
-├─ Deep Dives/     ← /deep-dives/ + /deep-dives/<slug>/
-├─ Interventions/  ← /interventions/ + /interventions/<slug>/
-└─ OMI flows/      ← /omi/ + /omi/<slug>/
+Library/                  ← /library/
+├─ Glossary/              ← /library/glossary/ + /library/glossary/<term>/
+├─ Equations/             ← /library/equations/ + /library/equations/<slug>/
+├─ Figures/               ← /library/figures/ + /library/figures/<slug>/
+├─ Key Insights/          ← /library/key-insights/ + /library/key-insights/<slug>/
+├─ Misconceptions/        ← /library/misconceptions/ + /library/misconceptions/<slug>/
+├─ Objectives/            ← /library/objectives/ (rollup)
+├─ Topics/                ← /library/topics/ + /library/topics/<slug>/ (Wedge B-followup W4b)
+├─ Observables/           ← /library/observables/ (W4c; from OMIFlowEntry.observable)
+├─ Models/                ← /library/models/ (W4c; from OMIFlowEntry.model)
+├─ Inferences/            ← /library/inferences/ (W4c; from OMIFlowEntry.inference)
+├─ Deep Dives/            ← /library/deep-dives/ + /library/deep-dives/<slug>/ (future)
+├─ Interventions/         ← /library/interventions/ + /library/interventions/<slug>/ (future)
+└─ OMI flows/             ← /library/omi/ + /library/omi/<slug>/ (future)
 ```
+
+**URL prefix:** all Library room pages live under `/library/`
+(W4a, 2026-05-22 — see Revision history below). The prefix
+namespaces the room and prevents future collision with
+Section/Subsection/Unit slugs (a course section literally
+titled "Glossary of Symbols" cannot conflict with
+`/library/glossary` at the URL level).
+
+**Slug conventions:** room slugs match Sophie's internal entity
+vocabulary (`key-insights`, not `insights`; `observables` for
+the OMIFlowEntry.observable slot; etc.) so that author-facing
+URLs align with component / entry-type / data-field names
+(`<CourseKeyInsights>` → `KeyInsightEntry` →
+`/library/key-insights/`). This avoids the URL-vs-internal-name
+ambiguity flagged in the W4a R+CR (G2).
 
 ### Per-registry Spec pages (auto-generated)
 
@@ -179,9 +199,14 @@ auto-updates when equations are added/removed/edited; never drifts.
 - Each Spec page template is an Astro component pulling from
   pedagogy-index (cross-references) + registry data
   ([ADR 0060](./0060-registry-ecosystem.md))
-- Dynamic Astro routes: `/equations/[slug]/index.astro` etc.
-- Cheatsheet index pages: `/equations/index.astro` etc., consuming
-  the full registry + filter UI
+- Dynamic Astro routes: `/library/equations/[slug]/index.astro` etc.
+  (per W4a 2026-05-22 URL prefix amendment)
+- Cheatsheet / rollup index pages:
+  `/library/equations/index.astro` etc., consuming the full
+  registry + filter UI. W4a (2026-05-22) shipped the first 6
+  rollup pages (`/library/{glossary,equations,figures,
+  misconceptions,key-insights,objectives}`) + the Library hub
+  at `/library/index.astro`.
 - PDF export pipeline: print-CSS + headless browser snapshot, OR
   client-side PDF generation via `react-pdf` for offline export
 - Pedagogy-index extractor augmented to emit cross-reference indexes
@@ -194,3 +219,76 @@ auto-updates when equations are added/removed/edited; never drifts.
 - [ADR 0046 — Equation Biography](./0046-equation-biography.md)
 - [ADR 0060 — Registry Ecosystem](./0060-registry-ecosystem.md)
 - [ADR 0048 — LDS Content Plugin System](./0048-lds-content-plugin-system.md)
+
+## Revision history
+
+### 2026-05-22 — Wedge B-followup W4a: URL prefix `/library/<X>/`
+
+The original ADR (2026-05-21) specified bare-URL routes for
+each registry room (`/equations/`, `/glossary/`, `/insights/`,
+etc.). Wedge B-followup W4a amends this to `/library/<X>/`
+across the board.
+
+**Motivation.** Two converging reasons:
+
+1. **Future Section/Unit slug collision.** ADR 0067's content
+   hierarchy lets course authors slug Section / Subsection /
+   Unit titles freely within their course. A course Section
+   literally titled "Glossary of Symbols" produces a slug that
+   would collide with the bare `/glossary` rollup route. The
+   `/library/` prefix prevents this collision by construction;
+   the alternative (a reserved-slug list across all rollup
+   names) is fragile and grows with each new room added.
+2. **Room-metaphor legibility.** ADR 0070 frames Library as a
+   *room* containing typed sub-areas. Bare-URL routes flatten
+   the room metaphor in URL space; the prefix makes the
+   architectural seam visible. Authors reading a URL like
+   `/library/equations/stefan-boltzmann/` can immediately
+   place the page in the room hierarchy.
+
+**Slug alignment.** The amendment also realigns the "Key
+Insights" slug from `/insights/` (per the original ADR) to
+`/library/key-insights/` to match Sophie's internal entity
+vocabulary (`KeyInsightEntry`, `CourseKeyInsights`,
+`KeyInsightSlug`). The original ADR's `/insights/` shorthand
+was unattested in the broader codebase and would have
+required a vocabulary split between URL and entity names.
+
+**Implementation evidence (W4a, 2026-05-22).**
+
+- 6 existing rollup routes hard-renamed via `git mv` (history
+  preserved): `/glossary`, `/equations`, `/figures`,
+  `/misconceptions`, `/key-insights`, `/objectives` → their
+  `/library/<X>/` equivalents.
+- New Library hub at `/library/index.astro` lists the 6 rooms.
+- Relative-import depth fixed in all 6 moved files
+  (`../content/figures` → `../../content/figures`).
+- No 301 redirects; no shim routes (pre-launch posture per
+  `feedback_no_backcompat_prelaunch`).
+- All consumers migrated in same PR (no back-compat shims):
+  6 e2e specs, 9 lines in `chapter-components.md`, 8 JSDoc /
+  comment refs in component code, ADR 0038 inline example,
+  ~7 live `docs/website/` cross-references.
+- Detail-routes `/equations/<id>` preserved untouched
+  (W4c territory, per W4 meta-plan).
+
+**Implications for W4b / W4c.**
+
+- W4b's Topic registry collection lives at `/library/topics/`
+  with Spec pages at `/library/topics/<slug>/`.
+- W4b's `<SkillReview target="topic:X" />` resolver looks up
+  the topic entry at the same `/library/topics/<slug>/` route.
+- W4c's missing-CourseX chrome (Observables / Models /
+  Inferences from OMIFlowEntry slot data) renders at
+  `/library/observables/`, `/library/models/`,
+  `/library/inferences/`.
+- W4c's per-entry Spec pages render at
+  `/library/<collection>/[slug]/index.astro` dynamic routes.
+
+**HITL note.** The W4 meta-plan's Q1 brainstorm decided
+`/library/<X>/` without consulting this ADR (the brainstorm
+cited "ADR 0067 §2.1 Library room hierarchy" — a non-existent
+section). The W4a code review caught the conflict before PR
+merge. The amendment lands in the W4a PR alongside the
+implementation evidence, per ADR-as-revision-history
+convention.

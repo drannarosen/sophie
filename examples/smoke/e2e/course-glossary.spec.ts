@@ -1,11 +1,11 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-const GLOSSARY_URL = "/glossary";
+const GLOSSARY_URL = "/library/glossary";
 const CHAPTER_URL = "/units/spoiler-alerts/reading";
 
 /**
- * PR-C1 — `<CourseGlossary />` on `/glossary`.
+ * PR-C1 — `<CourseGlossary />` on `/library/glossary`.
  *
  * The course-wide glossary is auto-generated from the build-time
  * pedagogy index (ADR 0038): every `<Aside kind="definition">`
@@ -17,7 +17,7 @@ const CHAPTER_URL = "/units/spoiler-alerts/reading";
  * plus 21 in the `spectra-and-composition.mdx` ASTR 201 M2-L3 pilot).
  */
 
-test.describe("PR-C1: <CourseGlossary /> on /glossary", () => {
+test.describe("PR-C1: <CourseGlossary /> on /library/glossary", () => {
   test("lists every definition across the textbook", async ({ page }) => {
     await page.goto(GLOSSARY_URL);
     const terms = page.locator(".sophie-course-glossary__term");
@@ -60,7 +60,7 @@ test.describe("PR-C1: <CourseGlossary /> on /glossary", () => {
     await expect(page).toHaveURL(/\/units\/spoiler-alerts\/reading#/);
   });
 
-  test("/glossary is axe-clean", async ({ page }) => {
+  test("/library/glossary is axe-clean", async ({ page }) => {
     await page.goto(GLOSSARY_URL);
     const results = await new AxeBuilder({ page })
       .exclude("astro-island") // hydration internals
@@ -68,7 +68,7 @@ test.describe("PR-C1: <CourseGlossary /> on /glossary", () => {
     expect(results.violations).toEqual([]);
   });
 
-  test("chapter route stays separate — anchors in /glossary jump in-page on /units/spoiler-alerts/reading", async ({
+  test("chapter route stays separate — anchors in /library/glossary jump in-page on /units/spoiler-alerts/reading", async ({
     page,
   }) => {
     // Round-trip: chapter has the matching anchor element so back-link

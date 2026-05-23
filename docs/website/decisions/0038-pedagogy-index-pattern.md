@@ -192,7 +192,7 @@ without a hand-rolled cache-invalidation API.
   rendered four ways: in the chapter at its first-mention site
   (docked margin note per PR 6), in `<ChapterGlossary />`
   (alphabetical at the chapter top), in `<CourseGlossary />`
-  on `/glossary` (alphabetical across all chapters), and in
+  on `/library/glossary` (alphabetical across all chapters), and in
   `<GlossaryTerm name="...">` inline references as hover
   popovers. Authors don't maintain a parallel glossary registry.
 - **Schema-driven authoring is the AI-author surface.**
@@ -501,7 +501,7 @@ back-coupling.
   `TextbookLayout.astro`'s frontmatter, *after* `render(chapter)`
   Promise.all (which triggers MDX parsing → populates accumulator).
   Reading `indexAccumulator.asPedagogyIndex()` from a *page*
-  frontmatter (e.g., `/objectives.astro`) yields empty arrays
+  frontmatter (e.g., `examples/smoke/src/pages/library/objectives.astro`) yields empty arrays
   because Astro evaluates page frontmatter before child-component
   frontmatter. Pages consume the index via a child component
   slotted into `TextbookLayout` (the established `<Course*>`

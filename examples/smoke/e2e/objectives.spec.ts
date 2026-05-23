@@ -1,10 +1,10 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-const OBJECTIVES_URL = "/objectives";
+const OBJECTIVES_URL = "/library/objectives";
 
 /**
- * PR-C4 — `/objectives` course-wide LO roll-up.
+ * PR-C4 — `/library/objectives` course-wide LO roll-up.
  *
  * Covers TDD test list rows E6–E9 from the PR-C4 design doc
  * (`docs/plans/2026-05-14-pr-c4-design.md`).
@@ -28,7 +28,7 @@ const OBJECTIVES_URL = "/objectives";
  *       → `stellar-evolution` (1 objective: "stub")
  */
 
-test.describe("PR-C4: /objectives course roll-up", () => {
+test.describe("PR-C4: /library/objectives course roll-up", () => {
   test("E6: lists every module from the content collection with its chapters", async ({
     page,
   }) => {
@@ -144,7 +144,7 @@ test.describe("PR-C4: /objectives course roll-up", () => {
     );
   });
 
-  test("E9: axe-clean /objectives page", async ({ page }) => {
+  test("E9: axe-clean /library/objectives page", async ({ page }) => {
     await page.goto(OBJECTIVES_URL);
     const results = await new AxeBuilder({ page })
       // Same exclusions as proving-chapter / theme-toggle specs —

@@ -10,7 +10,7 @@ import type { ObjectiveProps } from "./Objective.schema.ts";
  * `objectives` prop (populated by the remark transform that harvests
  * authored `<Objective>` MDX nodes), the row includes a checkbox for
  * student self-marking. When those props are absent (pure-display
- * callsites — e.g., the `/objectives` roll-up page), the checkbox is
+ * callsites — e.g., the `/library/objectives` roll-up page), the checkbox is
  * omitted and only the verb + body render.
  *
  * `body` is an HTML string produced by `renderChildrenToHtml` at build

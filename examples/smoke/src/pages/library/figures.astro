@@ -1,22 +1,23 @@
 ---
-import CourseKeyInsights from "@sophie/astro/components/CourseKeyInsights.astro";
+import CourseFigures from "@sophie/astro/components/CourseFigures.astro";
 import ModuleNav from "@sophie/astro/components/ModuleNav.astro";
 import TextbookHead from "@sophie/astro/components/TextbookHead.astro";
 import TextbookLayout from "@sophie/astro/components/TextbookLayout.astro";
 import { SophieChapter } from "@sophie/astro/client";
 import { getCollection } from "astro:content";
-import { figures as figureRegistry } from "../content/figures";
+import { figures as figureRegistry } from "../../content/figures";
 
 const figureRegistryArray = Object.values(figureRegistry);
 
 /**
- * `/key-insights` — course-wide key-insights index auto-generated from
- * the pedagogy index (ADR 0038; PR-C3). Reads `keyInsights` via
- * `indexAccumulator` inside `<CourseKeyInsights>`; appearance order
- * only (per design decision #9: untitled key-insights can't
- * alphabetize); each entry back-links to its source `<Aside
- * kind="key-insight">` in the source chapter. Mirrors the shape of
- * `/equations`.
+ * `/library/figures` — course-wide figure index auto-generated from the
+ * pedagogy index (ADR 0038; PR-C3). Reads `figureUsages` +
+ * `figureRegistry` via `indexAccumulator` inside `<CourseFigures>`;
+ * chapter-order by default (per design decision #9: figure lookup is
+ * topic/chapter-anchored, mirroring `/library/equations` and diverging from
+ * `/library/glossary`'s alphabetical default); each figure appears once (the
+ * canonical usage) and back-links to its canonical chapter anchor.
+ * Mirrors the shape of `/library/equations`.
  */
 
 // W2/D1 graduation: chapters + modules collections deleted; derive
@@ -43,10 +44,10 @@ const chapters = units.map((u) => ({
   <head>
     <meta charset='utf-8' />
     <meta name='viewport' content='width=device-width, initial-scale=1' />
-    <title>Key insights</title>
+    <title>Figures</title>
     <meta
       name='description'
-      content='Course-wide index of key insights.'
+      content='Course-wide index of figures.'
     />
     <TextbookHead />
   </head>
@@ -56,7 +57,7 @@ const chapters = units.map((u) => ({
         <Fragment slot='sidebar'>
           <ModuleNav modules={modules} chapters={chapters} />
         </Fragment>
-        <CourseKeyInsights heading='Key insights' />
+        <CourseFigures heading='Figures (by chapter)' />
       </TextbookLayout>
     </SophieChapter>
   </body>

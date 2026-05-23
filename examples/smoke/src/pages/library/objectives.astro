@@ -5,12 +5,12 @@ import TextbookHead from "@sophie/astro/components/TextbookHead.astro";
 import TextbookLayout from "@sophie/astro/components/TextbookLayout.astro";
 import { SophieChapter } from "@sophie/astro/client";
 import { getCollection } from "astro:content";
-import { figures as figureRegistry } from "../content/figures";
+import { figures as figureRegistry } from "../../content/figures";
 
 const figureRegistryArray = Object.values(figureRegistry);
 
 /**
- * `/objectives` — course-wide learning-objectives roll-up auto-generated
+ * `/library/objectives` — course-wide learning-objectives roll-up auto-generated
  * from the pedagogy index (ADR 0038; PR-C4 design decision Q5). Reads
  * `modules`, `chapters`, and `objectives` via `indexAccumulator` inside
  * `<CourseObjectives>` (which runs after `TextbookLayout` populates the
@@ -20,8 +20,8 @@ const figureRegistryArray = Object.values(figureRegistry);
  *
  * Chapter heading is a plain `<a href>` link (not `<ChapterRef>`):
  * server-rendered Astro page, no React hydration. Mirrors the shape of
- * `/glossary`, `/equations`, `/figures`, `/misconceptions`,
- * `/key-insights`.
+ * `/library/glossary`, `/library/equations`, `/library/figures`,
+ * `/library/misconceptions`, `/library/key-insights`.
  */
 
 // W2/D1 graduation: chapters + modules collections deleted; derive

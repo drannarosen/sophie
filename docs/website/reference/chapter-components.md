@@ -167,15 +167,15 @@ JSDoc note).
 
 | Component | Route | Renders |
 |---|---|---|
-| `<CourseGlossary />` | `/glossary` | All definitions across the course, alphabetical |
-| `<CourseEquations />` | `/equations` | All equations across the course |
-| `<CourseFigures />` | `/figures` | Every figure (canonical entries from registry) |
-| `<CourseKeyInsights />` | `/key-insights` | All key insights across the course |
-| `<CourseMisconceptions />` | `/misconceptions` | All misconceptions across the course |
-| `<CourseObjectives />` | `/objectives` | Hierarchical Module → Chapter → Objectives roll-up. Chapter headings link to each `/chapters/X` route. (PR-C4) |
+| `<CourseGlossary />` | `/library/glossary` | All definitions across the course, alphabetical |
+| `<CourseEquations />` | `/library/equations` | All equations across the course |
+| `<CourseFigures />` | `/library/figures` | Every figure (canonical entries from registry) |
+| `<CourseKeyInsights />` | `/library/key-insights` | All key insights across the course |
+| `<CourseMisconceptions />` | `/library/misconceptions` | All misconceptions across the course |
+| `<CourseObjectives />` | `/library/objectives` | Hierarchical Module → Chapter → Objectives roll-up. Chapter headings link to each `/units/<unit-id>/reading` route. (PR-C4) |
 
 Course consumers are imported into the Astro page for their route
-(`examples/smoke/src/pages/{glossary,equations,figures,key-insights,misconceptions,objectives}.astro`),
+(`examples/smoke/src/pages/library/{glossary,equations,figures,key-insights,misconceptions,objectives}.astro`),
 each slotted into `TextbookLayout`. They are **never** imported into
 MDX chapter content.
 
@@ -296,7 +296,7 @@ Course-level consumers are imported only into Astro pages (not MDX):
 
 ```astro
 ---
-// examples/smoke/src/pages/objectives.astro
+// examples/smoke/src/pages/library/objectives.astro
 import TextbookLayout from "@sophie/astro/components/TextbookLayout.astro";
 import CourseObjectives from "@sophie/astro/components/CourseObjectives.astro";
 ---
@@ -386,7 +386,7 @@ time, not at runtime.
 | Chapter-end roll-up of key insights | `<ChapterKeyInsights chapter="X" />` |
 | Chapter-end roll-up of misconceptions | `<ChapterMisconceptions chapter="X" />` |
 | Chapter-end roll-up of referenced Teaching Decision Records | `<ChapterTDRs chapter="X" />` |
-| Course-wide pages | `<Course*>` on the matching `/glossary`, `/equations`, `/figures`, `/key-insights`, `/misconceptions`, `/objectives` route |
+| Course-wide pages | `<Course*>` on the matching `/library/glossary`, `/library/equations`, `/library/figures`, `/library/key-insights`, `/library/misconceptions`, `/library/objectives` route |
 
 Pick by pedagogical intent first; the static-vs-interactive split
 and the chapter-vs-course aggregation level follow automatically.

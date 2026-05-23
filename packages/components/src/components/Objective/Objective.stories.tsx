@@ -13,7 +13,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Pure-display mode: no checkbox. Used on the /objectives roll-up page. */
+/** Pure-display mode: no checkbox. Used on the `/library/objectives` roll-up page. */
 export const PureDisplay: Story = {
   args: {
     id: "display-1",
