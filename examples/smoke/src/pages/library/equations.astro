@@ -1,27 +1,22 @@
 ---
-import CourseObjectives from "@sophie/astro/components/CourseObjectives.astro";
+import CourseEquations from "@sophie/astro/components/CourseEquations.astro";
 import ModuleNav from "@sophie/astro/components/ModuleNav.astro";
 import TextbookHead from "@sophie/astro/components/TextbookHead.astro";
 import TextbookLayout from "@sophie/astro/components/TextbookLayout.astro";
 import { SophieChapter } from "@sophie/astro/client";
 import { getCollection } from "astro:content";
-import { figures as figureRegistry } from "../content/figures";
+import { figures as figureRegistry } from "../../content/figures";
 
 const figureRegistryArray = Object.values(figureRegistry);
 
 /**
- * `/objectives` — course-wide learning-objectives roll-up auto-generated
- * from the pedagogy index (ADR 0038; PR-C4 design decision Q5). Reads
- * `modules`, `chapters`, and `objectives` via `indexAccumulator` inside
- * `<CourseObjectives>` (which runs after `TextbookLayout` populates the
- * accumulator with consumer-owned modules + chapters and after MDX
- * render triggers the extractor). Hierarchical: module (course-outline
- * order) → chapter (authoring order) → objectives (source-walk order).
- *
- * Chapter heading is a plain `<a href>` link (not `<ChapterRef>`):
- * server-rendered Astro page, no React hydration. Mirrors the shape of
- * `/glossary`, `/equations`, `/figures`, `/misconceptions`,
- * `/key-insights`.
+ * `/equations` — course-wide equation index auto-generated from the
+ * pedagogy index (ADR 0038; PR-C2). Reads `equations` via
+ * `indexAccumulator` inside `<CourseEquations>`; chapter-order by
+ * default (per design decision #7: equation lookup is
+ * topic/chapter-anchored, diverging from glossary's alphabetical
+ * default); each entry back-links to its source `<KeyEquation>` in
+ * the source chapter. Mirrors the shape of `/glossary`.
  */
 
 // W2/D1 graduation: chapters + modules collections deleted; derive
@@ -48,10 +43,10 @@ const chapters = units.map((u) => ({
   <head>
     <meta charset='utf-8' />
     <meta name='viewport' content='width=device-width, initial-scale=1' />
-    <title>Course objectives</title>
+    <title>Equations</title>
     <meta
       name='description'
-      content='Hierarchical roll-up of learning objectives by module and chapter.'
+      content='Course-wide index of key equations.'
     />
     <TextbookHead />
   </head>
@@ -61,7 +56,7 @@ const chapters = units.map((u) => ({
         <Fragment slot='sidebar'>
           <ModuleNav modules={modules} chapters={chapters} />
         </Fragment>
-        <CourseObjectives heading='Course objectives' />
+        <CourseEquations heading='Key equations (by chapter)' />
       </TextbookLayout>
     </SophieChapter>
   </body>
