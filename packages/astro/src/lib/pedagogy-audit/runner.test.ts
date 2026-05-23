@@ -585,13 +585,18 @@ describe("O2 — chapter with zero objectives (WARNING)", () => {
 describe("MG1 — cycle in prerequisite_misconceptions (ADR 0044)", () => {
   const mc = (
     overrides: Partial<MisconceptionEntry> = {}
-  ): MisconceptionEntry => ({
-    body: "<p>x</p>",
-    unit: "ch-a",
-    anchor: "default",
-    length: "short",
-    ...overrides,
-  });
+  ): MisconceptionEntry => {
+    const unit = overrides.unit ?? "ch-a";
+    const anchor = overrides.anchor ?? "default";
+    return {
+      body: "<p>x</p>",
+      unit,
+      anchor,
+      length: "short",
+      slug: `${unit}-${anchor}`,
+      ...overrides,
+    };
+  };
 
   it("emits an ERROR for a two-node cycle (A → B → A)", () => {
     const index: PedagogyIndex = {
@@ -843,13 +848,18 @@ describe("MG1 — cycle in prerequisite_misconceptions (ADR 0044)", () => {
 describe("MG2 — prerequisite_misconceptions ordering + dangling (ADR 0044)", () => {
   const mc = (
     overrides: Partial<MisconceptionEntry> = {}
-  ): MisconceptionEntry => ({
-    body: "<p>x</p>",
-    unit: "ch-a",
-    anchor: "default",
-    length: "short",
-    ...overrides,
-  });
+  ): MisconceptionEntry => {
+    const unit = overrides.unit ?? "ch-a";
+    const anchor = overrides.anchor ?? "default";
+    return {
+      body: "<p>x</p>",
+      unit,
+      anchor,
+      length: "short",
+      slug: `${unit}-${anchor}`,
+      ...overrides,
+    };
+  };
 
   it("emits an ERROR when a prerequisite references no known misconception (dangling)", () => {
     const index: PedagogyIndex = {

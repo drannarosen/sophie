@@ -14,6 +14,7 @@ const fixture: MisconceptionEntry = {
   anchor: "misc-2",
   length: "short",
   label: "Brighter ≠ hotter",
+  slug: "brighter-hotter",
 };
 
 describe("toMisconceptionRecord", () => {

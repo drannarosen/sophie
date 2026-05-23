@@ -58,6 +58,7 @@ const misc = (
   unit,
   anchor,
   length,
+  slug: `${unit}-${anchor}`,
 });
 
 describe("I2 ERROR — unknown intervention type", () => {

@@ -103,6 +103,7 @@ describe("buildPagefindIndex (Layer 1.6)", () => {
         anchor: "misc-1",
         length: "short",
         label: "Brighter ≠ hotter",
+        slug: "brighter-hotter",
       },
     ]);
     indexAccumulator.addObjectives([

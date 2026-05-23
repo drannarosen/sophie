@@ -77,6 +77,7 @@ function makeMisconception(
     unit: "ch",
     anchor: "wiens-law-absorption-spectra",
     length: "short",
+    slug: "ch-wiens-law-absorption-spectra",
     ...overrides,
   };
 }
