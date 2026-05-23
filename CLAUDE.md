@@ -246,29 +246,11 @@ to every PR, every design decision, every refactor.
 
 ## Conventions
 
+### Hard rules (one-liners)
+
 - **Use pnpm.** Never npm or yarn. (ADR 0011)
 - **Format with Biome** (`pnpm biome format --write`). Lint with
   `pnpm biome check`. (ADR 0013)
-- **Don't let lint warnings accumulate.** `pnpm exec biome check`
-  must finish a PR with **zero warnings as well as zero errors**.
-  Warnings flag a code-shape issue *Biome chose not to make a hard
-  failure*; ignoring them defeats the rule. Three response paths,
-  in order of preference:
-  1. **Refactor to satisfy the rule.** Usually the right move —
-     the warning is telling you something. Example: PR #33's
-     `noNonNullAssertion` warnings on `expect(result[0]!.field)`
-     resolved cleanly with `expect(result[0]).toMatchObject(...)`,
-     which gave better failure messages too.
-  2. **Suppress with a `biome-ignore` comment + reason** when the
-     rule genuinely doesn't fit a specific call site. The reason
-     must explain *why this case is safe*, not "the rule is
-     wrong." Per-line, not file-wide.
-  3. **Open an issue + adjust `biome.json`** if a rule is
-     systematically wrong for Sophie. Don't bury this in a PR;
-     surface it explicitly. ADRs 0013-adjacent.
-
-  Warnings introduced by a new PR are the new PR's responsibility
-  to clear, even when they fall under an existing-but-loose rule.
 - **Run package tasks via Turborepo**: `pnpm turbo run <task>
   --filter=<package>`. (ADR 0014)
 - **Python under uv**: `uv run python <script>.py`. (ADR 0012)
@@ -284,22 +266,48 @@ to every PR, every design decision, every refactor.
   `nav-markers.scss`, `dashboard.scss`, `glossary.scss`,
   `collapsible-cards.scss` from `astr101-sp26/`, `astr201-sp26/`,
   `comp536-sp26/`. (ADR 0005)
+
+### Discipline (multi-line)
+
+- **Don't let lint warnings accumulate.** `pnpm exec biome check`
+  must finish a PR with **zero warnings as well as zero errors**.
+  Warnings flag a code-shape issue *Biome chose not to make a hard
+  failure*; ignoring them defeats the rule. Three response paths,
+  in order of preference:
+  1. **Refactor to satisfy the rule.** Usually the right move —
+     the warning is telling you something. (E.g., a non-null-
+     assertion warning on `expect(x[0]!.field)` resolves cleanly
+     with `expect(x[0]).toMatchObject(...)`, which gives better
+     failure messages too.)
+  2. **Suppress with a `biome-ignore` comment + reason** when the
+     rule genuinely doesn't fit a specific call site. The reason
+     must explain *why this case is safe*, not "the rule is
+     wrong." Per-line, not file-wide.
+  3. **Open an issue + adjust `biome.json`** if a rule is
+     systematically wrong for Sophie. Don't bury this in a PR;
+     surface it explicitly. ADRs 0013-adjacent.
+
+  Warnings introduced by a new PR are the new PR's responsibility
+  to clear, even when they fall under an existing-but-loose rule.
+
 - **Docs don't drift from code.** Any code change that touches
   anything in `docs/website/` (ADR examples, reference doc
   snippets, MyST TOC entries, validation dashboards) updates the
   docs in the **same PR** as the code. No follow-up "docs catch-up"
-  PRs — they don't land. The 12-file `<EqRef>` drift caught in the
-  2026-05-18 audit is the failure mode this rule prevents.
+  PRs — they don't land.
+
 - **Branch and PR scope.** Code changes go through the full PR
   flow (branch + PR + squash-merge per ADR 0055). Pure docs
   changes, dated reviews, and registry updates land directly on
   `main`. When unsure which category a change falls in, default to
   PR.
+
 - **Biome verification.** When running `pnpm exec biome check`,
   tail-only output is insufficient — a "1 file checked" line at
   the end does not mean zero warnings. Either check the exit code
   explicitly (`$?` non-zero = failure) or grep the full output for
   `"error"` / `"warning"` before declaring the run clean.
+
 - **Validation-dashboard regen on ADR status change.** Any PR
   that touches an ADR's `status:` or `validation:` block must
   regenerate `docs/website/status/validation.md` in the same PR.
