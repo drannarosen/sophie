@@ -2,13 +2,15 @@
 import type { EquationEntry } from "@sophie/core/schema";
 import { indexAccumulator } from "../lib/pedagogy-index/accumulator";
 import BiographyRender from "./BiographyRender.astro";
+import LibraryCollectionShell from "./LibraryCollectionShell.astro";
 
 const { equations } = indexAccumulator.asPedagogyIndex();
 
 /**
  * `<CourseEquations order="..." />` — Astro consumer that lists every
  * registry-declared equation across the whole textbook with a link
- * to the registry page at `/equations/<id>`.
+ * to the registry page at `/equations/<id>` (detail-route preserved
+ * untouched per ADR 0070's W4a implementation note).
  *
  * Post-ADR-0060: declaration-driven (reads `equations[]` directly).
  * Default sort is alphabetical (per ADR 0038's course-side rule for
@@ -17,17 +19,34 @@ const { equations } = indexAccumulator.asPedagogyIndex();
  * declaration; cross-chapter ordering would have to traverse
  * `equationCitations[]`, which `<ChapterEquations>` covers.
  *
- * Bodies are pre-rendered HTML embedded via `set:html` from the
- * biography. Pure Astro; no client JS.
+ * Bodies render via `<BiographyRender>` from the registry-extracted
+ * `biography` field (NOT `set:html` like glossary/key-insights — the
+ * biography is a structured object, not pre-rendered HTML). Pure
+ * Astro; no client JS.
+ *
+ * Wraps content in `<LibraryCollectionShell>` per W4c design D2 —
+ * the shell owns the outer `<section aria-labelledby>` region
+ * landmark + heading chrome + empty-state. Each `<dt>` emits
+ * `data-section`/`data-unit`/`data-anchor` for Tier-2 filter
+ * forward-compat per W4c design D8.
+ *
+ * Per W2: `data-section=""` and `data-unit=""` are empty because
+ * `EquationEntry` is registry-sourced per ADR 0060 — it carries
+ * NO `unit` field (registry MDX is not chapter-keyed) and NO
+ * `section_id`. Cross-chapter joins live on `equationCitations[]`,
+ * which `<ChapterEquations>` consumes; the Tier-2 filter UI can
+ * join via the accumulator when it ships. `data-anchor` uses
+ * `entry.id`, which IS the canonical anchor for the registry
+ * detail route `/equations/<id>`.
  */
 export interface Props {
   /** Sort strategy. Default alphabetical. */
   order?: "alphabetical";
-  /** Optional heading rendered above the list. */
+  /** Optional heading rendered above the list. Defaults to "Key Equations". */
   heading?: string;
 }
 
-const { order = "alphabetical", heading } = Astro.props;
+const { order = "alphabetical", heading = "Key Equations" } = Astro.props;
 
 const sorted: EquationEntry[] = [...equations].sort((a, b) =>
   a.title.localeCompare(b.title)
@@ -37,17 +56,23 @@ const sorted: EquationEntry[] = [...equations].sort((a, b) =>
 void order;
 ---
 
-{heading && <h1 class='sophie-course-equations__heading'>{heading}</h1>}
-{
-  sorted.length === 0 ? (
-    <p class='sophie-course-equations__empty'>
-      No key equations across the textbook yet.
-    </p>
-  ) : (
-    <dl class='sophie-course-equations' data-sophie-course-equations=''>
-      {sorted.map((entry) => (
+<LibraryCollectionShell
+  collection='equations'
+  heading={heading}
+  emptyText='No key equations across the textbook yet.'
+  isEmpty={sorted.length === 0}
+>
+  <dl class='sophie-course-equations' data-sophie-course-equations=''>
+    {
+      sorted.map((entry) => (
         <Fragment>
-          <dt id={`eq-${entry.id}`} class='sophie-course-equations__term'>
+          <dt
+            id={`eq-${entry.id}`}
+            class='sophie-course-equations__term'
+            data-section=''
+            data-unit=''
+            data-anchor={entry.id}
+          >
             <span class='sophie-course-equations__title'>{entry.title}</span>
           </dt>
           <dd class='sophie-course-equations__body'>
@@ -60,7 +85,7 @@ void order;
             </p>
           </dd>
         </Fragment>
-      ))}
-    </dl>
-  )
-}
+      ))
+    }
+  </dl>
+</LibraryCollectionShell>
