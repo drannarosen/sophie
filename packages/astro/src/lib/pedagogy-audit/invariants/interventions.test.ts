@@ -35,7 +35,7 @@ function emptyIndex(): PedagogyIndex {
 const intv = (
   overrides: Partial<InterventionEntry> & {
     type: string;
-    chapter: string;
+    unit: string;
     anchor: string;
   }
 ): InterventionEntry => ({
@@ -43,7 +43,7 @@ const intv = (
   addresses: overrides.addresses ?? ["misc-x"],
   body: overrides.body ?? "<p>body</p>",
   depth: overrides.depth ?? "light",
-  chapter: overrides.unit,
+  unit: overrides.unit,
   anchor: overrides.anchor,
   ...(overrides.name ? { name: overrides.name } : {}),
   ...(overrides.limits ? { limits: overrides.limits } : {}),
@@ -51,11 +51,11 @@ const intv = (
 
 const misc = (
   anchor: string,
-  chapter = "ch/1",
+  unit = "ch-1",
   length: "short" | "long" = "short"
 ): MisconceptionEntry => ({
   body: "<p>misconception body</p>",
-  chapter,
+  unit,
   anchor,
   length,
 });
@@ -66,7 +66,7 @@ describe("I2 ERROR — unknown intervention type", () => {
     index.interventions = [
       intv({
         type: "made-up-intervention",
-        unit: "ch/1",
+        unit: "ch-1",
         anchor: "intervention-made-up-intervention-1",
         addresses: ["misc-x"],
       }),
@@ -100,7 +100,7 @@ describe("I2 ERROR — unknown intervention type", () => {
     ].map((type, i) =>
       intv({
         type,
-        unit: "ch/1",
+        unit: "ch-1",
         anchor: `intervention-${type}-${i + 1}`,
         addresses: ["misc-x"],
         // Bridging-analogy needs limits to avoid I3 INFO noise
@@ -118,7 +118,7 @@ describe("I2 ERROR — unknown intervention type", () => {
       intv({
         type: "custom",
         name: "scale-comparison",
-        unit: "ch/1",
+        unit: "ch-1",
         anchor: "intervention-scale-comparison-1",
         addresses: ["misc-x"],
       }),
@@ -134,7 +134,7 @@ describe("I1 WARNING — unknown addresses or 'this' outside misconception", () 
     index.interventions = [
       intv({
         type: "refutation-text",
-        unit: "ch/1",
+        unit: "ch-1",
         anchor: "intervention-refutation-text-1",
         addresses: ["nonexistent-misconception"],
       }),
@@ -150,7 +150,7 @@ describe("I1 WARNING — unknown addresses or 'this' outside misconception", () 
     index.interventions = [
       intv({
         type: "refutation-text",
-        unit: "ch/1",
+        unit: "ch-1",
         anchor: "intervention-refutation-text-1",
         addresses: ["this"],
       }),
@@ -167,7 +167,7 @@ describe("I1 WARNING — unknown addresses or 'this' outside misconception", () 
     index.interventions = [
       intv({
         type: "contrasting-cases",
-        unit: "ch/1",
+        unit: "ch-1",
         anchor: "intervention-contrasting-cases-1",
         addresses: ["universe-with-a-center"],
       }),
@@ -178,11 +178,11 @@ describe("I1 WARNING — unknown addresses or 'this' outside misconception", () 
 
   it("matches misconceptions COURSE-WIDE (not chapter-scoped)", () => {
     const index = emptyIndex();
-    index.misconceptions = [misc("misc-a", "ch/other")];
+    index.misconceptions = [misc("misc-a", "ch-other")];
     index.interventions = [
       intv({
         type: "contrasting-cases",
-        unit: "ch/1",
+        unit: "ch-1",
         anchor: "intervention-contrasting-cases-1",
         addresses: ["misc-a"],
       }),
@@ -197,7 +197,7 @@ describe("I1 WARNING — unknown addresses or 'this' outside misconception", () 
     index.interventions = [
       intv({
         type: "refutation-text",
-        unit: "ch/1",
+        unit: "ch-1",
         anchor: "intervention-refutation-text-1",
         addresses: ["misc-known", "misc-unknown-a", "misc-unknown-b"],
       }),
@@ -215,7 +215,7 @@ describe("I3 INFO — bridging-analogy missing limits (Clement 1993 nudge)", () 
     index.interventions = [
       intv({
         type: "bridging-analogy",
-        unit: "ch/1",
+        unit: "ch-1",
         anchor: "intervention-bridging-analogy-1",
         addresses: ["misc-x"],
       }),
@@ -230,7 +230,7 @@ describe("I3 INFO — bridging-analogy missing limits (Clement 1993 nudge)", () 
     index.interventions = [
       intv({
         type: "bridging-analogy",
-        unit: "ch/1",
+        unit: "ch-1",
         anchor: "intervention-bridging-analogy-1",
         addresses: ["misc-x"],
         limits: "Bread has an outside; the universe doesn't.",
@@ -246,7 +246,7 @@ describe("I3 INFO — bridging-analogy missing limits (Clement 1993 nudge)", () 
     index.interventions = [
       intv({
         type: "contrasting-cases",
-        unit: "ch/1",
+        unit: "ch-1",
         anchor: "intervention-contrasting-cases-1",
         addresses: ["misc-x"],
       }),
@@ -272,7 +272,7 @@ describe("MG3 WARNING — orphan misconception (no <Intervention> pairs)", () =>
     index.interventions = [
       intv({
         type: "refutation-text",
-        unit: "ch/1",
+        unit: "ch-1",
         anchor: "intervention-refutation-text-1",
         addresses: ["addressed"],
       }),
@@ -283,11 +283,11 @@ describe("MG3 WARNING — orphan misconception (no <Intervention> pairs)", () =>
 
   it("matches addressed misconceptions across the COURSE (not per-chapter)", () => {
     const index = emptyIndex();
-    index.misconceptions = [misc("addressed", "ch/where-declared")];
+    index.misconceptions = [misc("addressed", "ch-where-declared")];
     index.interventions = [
       intv({
         type: "refutation-text",
-        unit: "ch/elsewhere",
+        unit: "ch-elsewhere",
         anchor: "intervention-refutation-text-1",
         addresses: ["addressed"],
       }),
@@ -305,7 +305,7 @@ describe("MG4 INFO — course-level depth-coverage summary", () => {
       // m1 → substantial
       intv({
         type: "refutation-text",
-        unit: "ch/1",
+        unit: "ch-1",
         anchor: "intervention-refutation-text-1",
         addresses: ["m1"],
         depth: "substantial",
@@ -313,7 +313,7 @@ describe("MG4 INFO — course-level depth-coverage summary", () => {
       // m2 → light only
       intv({
         type: "contrasting-cases",
-        unit: "ch/1",
+        unit: "ch-1",
         anchor: "intervention-contrasting-cases-1",
         addresses: ["m2"],
         depth: "light",
@@ -321,14 +321,14 @@ describe("MG4 INFO — course-level depth-coverage summary", () => {
       // m3 → both substantial AND light → counts as substantial (≥1)
       intv({
         type: "refutation-text",
-        unit: "ch/1",
+        unit: "ch-1",
         anchor: "intervention-refutation-text-2",
         addresses: ["m3"],
         depth: "substantial",
       }),
       intv({
         type: "contrasting-cases",
-        unit: "ch/1",
+        unit: "ch-1",
         anchor: "intervention-contrasting-cases-2",
         addresses: ["m3"],
         depth: "light",

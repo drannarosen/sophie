@@ -95,7 +95,7 @@ describe("OF-2 — framing:'OMI' Unit requires ≥1 <OMIFlow> (ERROR)", () => {
   test("emits no finding when an OMI-framed Unit has at least one OMIFlow", () => {
     const index = {
       ...emptyIndex(),
-      units: [unit({ id: "covered", unit: "covered", framing: "OMI" })],
+      units: [unit({ id: "covered", chapter: "covered", framing: "OMI" })],
       omiFlows: [{ ...baseEntry, unit: "covered" }],
     };
     const sink = emptySink();
@@ -106,7 +106,7 @@ describe("OF-2 — framing:'OMI' Unit requires ≥1 <OMIFlow> (ERROR)", () => {
   test("emits one ERROR per OMI-framed Unit with zero OMIFlows", () => {
     const index = {
       ...emptyIndex(),
-      units: [unit({ id: "missing", unit: "missing", framing: "OMI" })],
+      units: [unit({ id: "missing", chapter: "missing", framing: "OMI" })],
       omiFlows: [],
       retrievalPrompts: [],
       spacedReviews: [],
@@ -127,7 +127,7 @@ describe("OF-2 — framing:'OMI' Unit requires ≥1 <OMIFlow> (ERROR)", () => {
   test("emits no finding for non-OMI-framed Units regardless of OMIFlow presence", () => {
     const index = {
       ...emptyIndex(),
-      units: [unit({ id: "ch-a", unit: "ch-a" /* framing omitted */ })],
+      units: [unit({ id: "ch-a", chapter: "ch-a" /* framing omitted */ })],
       omiFlows: [],
       retrievalPrompts: [],
       spacedReviews: [],
@@ -142,9 +142,9 @@ describe("OF-2 — framing:'OMI' Unit requires ≥1 <OMIFlow> (ERROR)", () => {
     const index = {
       ...emptyIndex(),
       units: [
-        unit({ id: "missing-a", unit: "missing-a", framing: "OMI" }),
-        unit({ id: "covered", unit: "covered", framing: "OMI" }),
-        unit({ id: "missing-b", unit: "missing-b", framing: "OMI" }),
+        unit({ id: "missing-a", chapter: "missing-a", framing: "OMI" }),
+        unit({ id: "covered", chapter: "covered", framing: "OMI" }),
+        unit({ id: "missing-b", chapter: "missing-b", framing: "OMI" }),
       ],
       omiFlows: [{ ...baseEntry, unit: "covered" }],
     };
