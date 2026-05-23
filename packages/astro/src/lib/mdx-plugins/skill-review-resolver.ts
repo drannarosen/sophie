@@ -9,7 +9,9 @@ import type {
   MdxJsxFlowElement,
 } from "mdast-util-mdx-jsx";
 import { fromMarkdown } from "mdast-util-from-markdown";
+import { mathFromMarkdown } from "mdast-util-math";
 import { mdxFromMarkdown } from "mdast-util-mdx";
+import { math } from "micromark-extension-math";
 import { mdxjs } from "micromark-extension-mdxjs";
 import type { Plugin } from "unified";
 import { visit } from "unist-util-visit";
@@ -109,9 +111,16 @@ function getTopicAst(topicFilePath: string): Root {
   const cached = topicAstCache.get(topicFilePath);
   if (cached) return cached;
   const source = readFileSync(topicFilePath, "utf8");
+  // Parse with both mdxjs (for <SkillReview.Card> JSX) AND math
+  // extensions: topic prompts/answers commonly contain LaTeX like
+  // `$\cdot$` that must be parsed into inline-math AST nodes. If we
+  // left math as raw text, the LaTeX backslashes (e.g. `\cdot`)
+  // would survive into the chapter MDX as JSX text content and the
+  // chapter compiler's JS-escape pass would reject `\c` as an
+  // invalid JS escape sequence.
   const ast = fromMarkdown(source, {
-    extensions: [mdxjs()],
-    mdastExtensions: [mdxFromMarkdown()],
+    extensions: [mdxjs(), math()],
+    mdastExtensions: [mdxFromMarkdown(), mathFromMarkdown()],
   });
   topicAstCache.set(topicFilePath, ast);
   return ast;
