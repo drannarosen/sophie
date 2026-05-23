@@ -6,6 +6,13 @@
  * replaces the hand-crafted-HTML mirror pattern (W4c Task 3.1 pivot) that
  * carried drift risk against the real `.astro` template.
  *
+ * Note on axe matcher choice: kept jest-axe (v10) over vitest-axe
+ * for Batch 3b setup to avoid a parallel dep migration during W4c.
+ * Revisit post-W4c if vitest-axe's matcher shape becomes preferable.
+ * The 3 surprises hit in setup (realm-mismatch, client env guard,
+ * JSDOM-must-precede-axe-init ordering) are unrelated to which
+ * matcher package is used; switching wouldn't have helped.
+ *
  * ## Why test files in this dir use `// @vitest-environment node`
  *
  * The Astro Vite plugin emits a hard error ("Astro components cannot be
@@ -45,6 +52,59 @@
  * `renderAstroToBody` so the wrapping HTML lands in `document.body`
  * alongside the rendered component.
  *
+ * ## For singleton-consuming components (e.g., Course*)
+ *
+ * Components that read from module-singleton state at module-init
+ * (e.g., `const { definitions } = indexAccumulator.asPedagogyIndex();`)
+ * will render against EMPTY collections unless the test seeds the
+ * singleton before calling `renderAstroToBody`.
+ *
+ * The helper deliberately offers no seeding callback (W2: don't
+ * abstract until a second consumer pattern emerges). Seed
+ * directly in `beforeEach`:
+ *
+ * @example
+ * import { beforeEach } from "vitest";
+ * import {
+ *   resetIndexAccumulator,
+ *   indexAccumulator,
+ * } from "../lib/pedagogy-index/accumulator";
+ *
+ * beforeEach(() => {
+ *   resetIndexAccumulator();
+ *   indexAccumulator.addDefinition({ ...fixture });
+ *   // ... seed any other entry types the component reads
+ * });
+ *
+ * test("CourseGlossary renders with definitions", async () => {
+ *   const html = await renderAstroToBody(CourseGlossary, { props: {} });
+ *   // ... axe assertions
+ * });
+ *
+ * ## What this helper does NOT cover
+ *
+ * `Container.renderToString` is for **components**, not full
+ * Astro pages. Spec routes (Astro page modules under `src/pages/`)
+ * involve mechanisms the Container API skips:
+ *
+ *  - Layouts pulled in via `<Layout>` slot composition — they
+ *    render but Container doesn't apply page-level routing
+ *    semantics around them.
+ *  - `Astro.props` injected by routing (`getStaticPaths`,
+ *    dynamic params).
+ *  - Integration-injected globals (e.g., MDX integrations,
+ *    Pagefind context).
+ *
+ * For component-shape axe coverage, this helper is fine. For
+ * full-page axe coverage of Spec routes, use Playwright + axe
+ * against the smoke build instead — Batch 3c wired
+ * `@axe-core/playwright` for this purpose.
+ *
+ * If a Spec route's content is a single component (no layout
+ * composition), you CAN test the inner component via this
+ * helper + the route's test-only axe pass goes via Playwright.
+ * Prefer the latter for full-page coverage.
+ *
  * @see `src/components/LibraryCollectionShell.axe.test.ts` for live
  * examples covering isolated, empty, composed-fixture, and intro-slot.
  */
@@ -81,12 +141,11 @@ export function setupAxeDom(): {
     g.Node = dom.window.Node;
     g.getComputedStyle = dom.window.getComputedStyle.bind(dom.window);
   }
-  // `jest-axe` must load AFTER the DOM globals are installed. The
-  // dynamic `import()` (not a top-of-file static import) defers
-  // module-init to here, after `setupAxeDom`'s caller has any chance
-  // to populate `globalThis` further. Vitest awaits the returned
-  // promise at module-evaluation time when this helper is `await
-  // setupAxeDom()`'d from a top-level call site.
+  // `require` is used (not a top-of-file `import`) so jest-axe's
+  // module-init touches `window`/`document` AFTER `setupAxeDom`'s
+  // JSDOM install at lines 74-83, not at module load. A static
+  // import would run jest-axe's init too early and crash on a
+  // missing `document`.
   const jestAxe = require("jest-axe") as {
     axe: AxeFn;
     toHaveNoViolations: Matchers;

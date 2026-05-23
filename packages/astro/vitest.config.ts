@@ -86,7 +86,7 @@ const config: ViteUserConfigWithTest = {
   },
 };
 
-// biome-ignore lint/suspicious/noExplicitAny: cross-vite-version seam
+// biome-ignore lint/suspicious/noExplicitAny: vite@7 (astro peer) and vite@8 (vitest@4 peer) ship UserConfig augmentations from different modules; types don't merge across the boundary. Remove when astro 6.x catches up to vite@8 OR vitest@4.x backports vite@7 types.
 export default getViteConfig(config as any, {
   root: fileURLToPath(
     new URL("./test-fixtures/astro-project/", import.meta.url)
