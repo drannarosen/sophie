@@ -1,9 +1,6 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
-import type {
-  Root,
-  RootContent,
-} from "mdast";
+import type { Root } from "mdast";
 import type {
   MdxJsxAttribute,
   MdxJsxFlowElement,
@@ -263,6 +260,13 @@ export const skillReviewResolverRemarkPlugin: Plugin<
     // node. The Prompt + Answer JSX nodes are reused verbatim (their
     // descendants — text, math, components — render naturally in the
     // chapter's MDX compilation pass).
-    flow.children = [prompt as unknown as RootContent, answer as unknown as RootContent];
+    //
+    // Type cast: MdxJsxFlowElement IS a BlockContent member of
+    // `flow.children`, but findSlotChild may return a node that was
+    // originally an mdxJsxTextElement (MDX often parses inline JSX
+    // like `<Slot>text</Slot>` as text-level). The runtime behavior is
+    // safe — the chapter's MDX pipeline handles both — but TS needs
+    // an explicit widening cast.
+    flow.children = [prompt, answer] as unknown as typeof flow.children;
   });
 };

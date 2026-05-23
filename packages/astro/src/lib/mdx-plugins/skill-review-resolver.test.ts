@@ -24,13 +24,17 @@ function parseChapter(source: string): Root {
 
 function applyResolver(source: string): Root {
   const tree = parseChapter(source);
-  const transformer = skillReviewResolverRemarkPlugin({
+  // The plugin's factory returns a unified Plugin; we treat it as a
+  // synchronous transformer for tests (it doesn't return a Promise).
+  // The double-cast through `unknown` widens past unified's `Processor`
+  // `this` context requirement, which doesn't apply when we invoke the
+  // transformer directly with the AST.
+  const transformer = (skillReviewResolverRemarkPlugin as unknown as (
+    options: { topicsDir: string },
+  ) => (tree: Root, file: { path: string }) => void)({
     topicsDir: FIXTURE_TOPICS_DIR,
   });
-  // Plugin is synchronous; call its transformer directly. Avoids
-  // pulling `unified` into @sophie/astro's dep graph.
-  // biome-ignore lint/suspicious/noExplicitAny: synchronous-transformer cast for test only.
-  (transformer as any)(tree, { path: "test-chapter.mdx" });
+  transformer(tree, { path: "test-chapter.mdx" });
   return tree;
 }
 

@@ -1,0 +1,142 @@
+---
+import ModuleNav from "@sophie/astro/components/ModuleNav.astro";
+import TextbookHead from "@sophie/astro/components/TextbookHead.astro";
+import TextbookLayout from "@sophie/astro/components/TextbookLayout.astro";
+import { SophieChapter } from "@sophie/astro/client";
+import { getCollection } from "astro:content";
+import { figures as figureRegistry } from "../../../content/figures";
+
+/**
+ * `/library/topics/<id>/` — Topic Spec page per
+ * [ADR 0079](../../../../../../docs/website/decisions/0079-topic-registry-and-resolution-pattern.md)
+ * § "Spec page rendering" + ADR 0070 W4a amendment locking the
+ * `/library/<X>/` URL convention.
+ *
+ * Renders the topic file's metadata (label, summary, cross-refs)
+ * + all of its cards inline. The card list IS the topic — there's
+ * no separate per-card Spec route in v1 (deferred to W4c+ if
+ * curriculum demands one). Authors browse a topic's cards by
+ * opening its Spec page; the card body content (Prompt + Answer
+ * slot JSX) is rendered as the canonical example for each card.
+ *
+ * The page reads from the `topics` content collection (per
+ * Design F's `src/content/topics/<category>/<topic-id>.mdx`
+ * layout). Category subdirectory is invisible at this URL level
+ * (flat per ADR 0079 §"Category sub-grouping is organizational").
+ */
+
+export async function getStaticPaths() {
+  const topics = await getCollection("topics");
+  return topics.map((t) => ({
+    params: { topicId: t.data.id },
+    props: { topicId: t.data.id, topic: t.data },
+  }));
+}
+
+const { topicId, topic } = Astro.props;
+
+const figureRegistryArray = Object.values(figureRegistry);
+
+const allSections = (await getCollection("sections")).map((s) => s.data);
+const allUnits = (await getCollection("units")).map((u) => u.data);
+const modules = allSections.map((s) => ({
+  slug: s.slug,
+  title: s.title,
+  order: s.order,
+  description: s.description,
+}));
+const chapters = allUnits.map((u) => ({
+  slug: u.id,
+  title: u.title,
+  module: u.section_id,
+  order: u.order,
+  chapter: undefined as number | undefined,
+  status: u.status,
+}));
+
+// v1: Spec page shows topic metadata + card list (labels +
+// difficulty). The MDX body content is NOT rendered here because
+// the body uses <SkillReview.Card> compound components that
+// require the full chapter components map. A future wedge (W4c+)
+// can plumb the components map + render prompt/answer per card
+// inline.
+---
+
+<html lang='en'>
+  <head>
+    <meta charset='utf-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1' />
+    <title>{topic.label} — Topic</title>
+    <meta name='description' content={topic.summary} />
+    <TextbookHead />
+  </head>
+  <body>
+    <SophieChapter client:load>
+      <TextbookLayout figureRegistry={figureRegistryArray}>
+        <Fragment slot='sidebar'>
+          <ModuleNav modules={modules} chapters={chapters} />
+        </Fragment>
+        <article>
+          <header>
+            <h1>{topic.label}</h1>
+            <p>{topic.summary}</p>
+          </header>
+
+          {topic.cards.length > 0 && (
+            <section aria-labelledby={`${topicId}-cards-heading`}>
+              <h2 id={`${topicId}-cards-heading`}>Cards</h2>
+              <ol>
+                {topic.cards.map((c) => (
+                  <li>
+                    <strong>{c.label}</strong>
+                    {c.difficulty && (
+                      <span data-difficulty={c.difficulty}>
+                        {" "}({c.difficulty})
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ol>
+            </section>
+          )}
+
+          {(topic.prereq_topic_ids.length > 0 ||
+            topic.linked_equation_ids.length > 0 ||
+            topic.linked_misconception_ids.length > 0) && (
+            <section aria-labelledby={`${topicId}-crossrefs-heading`}>
+              <h2 id={`${topicId}-crossrefs-heading`}>Cross-references</h2>
+              {topic.prereq_topic_ids.length > 0 && (
+                <p>
+                  <strong>Prerequisite topics:</strong>{" "}
+                  {topic.prereq_topic_ids.map((id, i) => (
+                    <span>
+                      {i > 0 && ", "}
+                      <a href={`/library/topics/${id}/`}>{id}</a>
+                    </span>
+                  ))}
+                </p>
+              )}
+              {topic.linked_equation_ids.length > 0 && (
+                <p>
+                  <strong>Linked equations:</strong>{" "}
+                  {topic.linked_equation_ids.map((id, i) => (
+                    <span>
+                      {i > 0 && ", "}
+                      <a href={`/equations/${id}/`}>{id}</a>
+                    </span>
+                  ))}
+                </p>
+              )}
+              {topic.linked_misconception_ids.length > 0 && (
+                <p>
+                  <strong>Linked misconceptions:</strong>{" "}
+                  {topic.linked_misconception_ids.join(", ")}
+                </p>
+              )}
+            </section>
+          )}
+        </article>
+      </TextbookLayout>
+    </SophieChapter>
+  </body>
+</html>

@@ -67,8 +67,12 @@ export const UnitSchema = z.object({
    * is the first invariant to honor these. Each override declares
    * `invariant`, optional `anchor` (for grain-2/3 specificity),
    * mandatory `tdr` (CF2 ERROR otherwise), and `reason`.
+   *
+   * Optional rather than `.default([])` so existing fixtures
+   * (stories, tests, smoke unit JSONs that haven't been updated)
+   * don't require the field. PRA-1 reads via `?? []`.
    */
-  audit_overrides: z.array(AuditOverrideSchema).default([]),
+  audit_overrides: z.array(AuditOverrideSchema).optional(),
 });
 
 export type Unit = z.infer<typeof UnitSchema>;

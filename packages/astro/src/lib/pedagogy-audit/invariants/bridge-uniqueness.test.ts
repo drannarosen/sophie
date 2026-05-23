@@ -79,7 +79,7 @@ describe("BR-1 — bridge slug uniqueness (ADR 0079 + 0068)", () => {
     // biome-ignore lint/suspicious/noExplicitAny: test sink
     checkBR1(index, sink as any);
     expect(sink.errors).toHaveLength(1);
-    expect((sink.errors[0] as { message: string }).message).toContain(
+    expect((sink.errors[0] as unknown as { message: string }).message).toContain(
       "math-fundamentals",
     );
   });
@@ -93,7 +93,7 @@ describe("BR-1 — bridge slug uniqueness (ADR 0079 + 0068)", () => {
     // biome-ignore lint/suspicious/noExplicitAny: test sink
     checkBR1(index, sink as any);
     expect(sink.errors).toHaveLength(1);
-    expect((sink.errors[0] as { message: string }).message).toContain("stars");
+    expect((sink.errors[0] as unknown as { message: string }).message).toContain("stars");
   });
 
   test("ERRORs when a bridge slug collides with a Unit id", () => {
@@ -106,7 +106,7 @@ describe("BR-1 — bridge slug uniqueness (ADR 0079 + 0068)", () => {
     // biome-ignore lint/suspicious/noExplicitAny: test sink
     checkBR1(index, sink as any);
     expect(sink.errors).toHaveLength(1);
-    expect((sink.errors[0] as { message: string }).message).toContain(
+    expect((sink.errors[0] as unknown as { message: string }).message).toContain(
       "spectra-and-composition",
     );
   });
@@ -126,7 +126,7 @@ describe("BR-1 — bridge slug uniqueness (ADR 0079 + 0068)", () => {
       // biome-ignore lint/suspicious/noExplicitAny: test sink
       checkBR1(index, sink as any);
       expect(sink.errors).toHaveLength(1);
-      expect((sink.errors[0] as { message: string }).message).toContain(
+      expect((sink.errors[0] as unknown as { message: string }).message).toContain(
         reserved,
       );
     }
