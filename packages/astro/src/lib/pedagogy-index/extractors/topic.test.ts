@@ -185,6 +185,38 @@ describe("extractTopicAndCards (ADR 0079)", () => {
     });
   });
 
+  test("PRA-2 extractor does NOT honor override with omitted anchor (W4c D5: no wildcard)", () => {
+    // Mirror the positive-suppression test, but with anchor OMITTED.
+    // Per W4c D5: PRA-2 rejects Grain 1 (whole-topic wildcard); only
+    // Grain 2 (per-card anchor) is honored. A Grain 1 override on PRA-2
+    // should silently fail to suppress — this test locks that contract
+    // against future "let's add wildcard support" pressure. PRA-1 (W4b)
+    // honors both grains; the asymmetry is intentional.
+    const tree = root([
+      mdxNamedFlow("SkillReview.Card", { id: "product-rule" }),
+    ]);
+    const result = extractTopicAndCards(tree as never, {
+      id: "logarithms",
+      label: "Logarithms",
+      summary: "Inverse of exponentiation.",
+      prereq_topic_ids: [],
+      linked_equation_ids: [],
+      linked_misconception_ids: [],
+      cards: [],
+      audit_overrides: [
+        {
+          invariant: "PRA-2",
+          // anchor deliberately omitted — Grain 1 attempt
+          tdr: "TDR-W4c-D5-test",
+          reason: "Author attempts wildcard suppression; W4c D5 rejects this.",
+        },
+      ],
+    });
+    expect(result.cards).toEqual([]);
+    expect(result.findings).toHaveLength(1);
+    expect(result.findings[0]?.code).toBe("PRA-2");
+  });
+
   test("returns empty cards[] and empty findings[] when tree has no SkillReview.Card", () => {
     const tree = root([mdxNamedFlow("RetrievalPrompt", { target: "topic:x" })]);
     const result = extractTopicAndCards(tree as never, {

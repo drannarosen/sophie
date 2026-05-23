@@ -44,8 +44,7 @@ export function extractTopicAndCards(
   );
   const cards: CardEntry[] = [];
   const findings: AuditFinding[] = [];
-  // Per ADR 0053 + W4c D5: per-card-id anchor only (no whole-topic
-  // wildcard for PRA-2 — every override must name a specific card).
+  // W4c D5: per-card anchor only — see file header for the full rationale.
   const overrides = topic.audit_overrides ?? [];
 
   visit(tree, "mdxJsxFlowElement", (node) => {
