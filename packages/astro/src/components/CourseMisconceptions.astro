@@ -1,6 +1,7 @@
 ---
 import type { MisconceptionEntry } from "@sophie/core/schema";
 import { indexAccumulator } from "../lib/pedagogy-index/accumulator";
+import LibraryCollectionShell from "./LibraryCollectionShell.astro";
 
 const { misconceptions } = indexAccumulator.asPedagogyIndex();
 
@@ -22,22 +23,35 @@ const { misconceptions } = indexAccumulator.asPedagogyIndex();
  * (`--short` vs `--long`) so the consumer-app stylesheet can render
  * `short` entries inline/compactly and `long` entries as full-width
  * blocks — matching the source-component visual treatment (Aside vs
- * Callout).
+ * Callout). Preserved through the W4c shell wrap.
  *
  * Default labels per length (when `entry.label` is absent): short →
- * "Misconception (brief)"; long → "Misconception".
+ * "Misconception (brief)"; long → "Misconception". Preserved through
+ * the W4c shell wrap.
  *
  * Bodies are pre-rendered HTML embedded via `set:html`. Pure Astro;
  * no client JS.
+ *
+ * Wraps content in `<LibraryCollectionShell>` per W4c design D2 —
+ * the shell owns the outer `<section aria-labelledby>` region
+ * landmark + heading chrome + empty-state. Each `<dt>` emits
+ * `data-section`/`data-unit`/`data-anchor` for Tier-2 filter
+ * forward-compat per W4c design D8. `data-section` is empty because
+ * `MisconceptionEntry` does not carry `section_id`; deriving from the
+ * parent Unit would require accumulator changes that are not paid
+ * for by a second consumer yet (W2). `data-anchor` uses
+ * `entry.anchor` (the within-Unit anchor); `entry.slug` exists for
+ * the global per-Spec route at `/library/misconceptions/<slug>/`
+ * (W4c Batch 7) but is NOT the within-Unit anchor.
  */
 export interface Props {
   /** Sort strategy. Default chapter-order (slug asc, appearance asc). */
   order?: "chapter" | "alphabetical";
-  /** Optional heading rendered above the list. */
+  /** Optional heading rendered above the list. Defaults to "Misconceptions". */
   heading?: string;
 }
 
-const { order = "chapter", heading } = Astro.props;
+const { order = "chapter", heading = "Misconceptions" } = Astro.props;
 
 const sorted: MisconceptionEntry[] =
   order === "alphabetical"
@@ -52,22 +66,25 @@ const sorted: MisconceptionEntry[] =
       });
 ---
 
-{heading && <h1 class='sophie-course-misconceptions__heading'>{heading}</h1>}
-{
-  sorted.length === 0 ? (
-    <p class='sophie-course-misconceptions__empty'>
-      No misconceptions across the textbook yet.
-    </p>
-  ) : (
-    <dl
-      class='sophie-course-misconceptions'
-      data-sophie-course-misconceptions=''
-    >
-      {sorted.map((entry) => (
+<LibraryCollectionShell
+  collection='misconceptions'
+  heading={heading}
+  emptyText='No misconceptions across the textbook yet.'
+  isEmpty={sorted.length === 0}
+>
+  <dl
+    class='sophie-course-misconceptions'
+    data-sophie-course-misconceptions=''
+  >
+    {
+      sorted.map((entry) => (
         <Fragment>
           <dt
             id={entry.anchor}
             class={`sophie-course-misconceptions__term sophie-course-misconceptions__term--${entry.length}`}
+            data-section=''
+            data-unit={entry.unit}
+            data-anchor={entry.anchor}
           >
             {entry.label ??
               (entry.length === "short"
@@ -86,7 +103,7 @@ const sorted: MisconceptionEntry[] =
             </p>
           </dd>
         </Fragment>
-      ))}
-    </dl>
-  )
-}
+      ))
+    }
+  </dl>
+</LibraryCollectionShell>
