@@ -222,9 +222,31 @@ IDs exist + are appropriately typed.
       reading.mdx
   ```
 
+## Revision history
+
+- **2026-05-22 (W3, this PR)** — Per-callsite parent-ref field rename
+  `chapter` → `unit` across all 15 pedagogy-index entry schemas + audit
+  invariants + Finding location + persistence layer (IDB key dimension,
+  `useInteractive*` hooks, ResponseStore methods, BroadcastChannel
+  helper) + the 12 parent-ref React component props (Reflection,
+  LearningObjectives, RetrievalPrompt, SpacedReview, SkillReview,
+  Predict, Callout, CollapsibleCard, ConfidenceCheck, ComprehensionGate,
+  EffortLog, InteractiveCheckbox). UnitEntry.chapter (D7 reading-artifact
+  binding) and the artifact-ref component family (`<ChapterRef>` + 7
+  chrome `Chapter*` roll-ups) preserve the `chapter` field/prop name.
+  CLI audit output keeps `chapter:<id>:<line>` prefix word per educator
+  vocabulary lock. See
+  [W3 design doc](../plans/2026-05-22-wedge-b-followup-w3-design.md)
+  and [W3 pilot report](../pilots/wedge-b-followup-w3-callsite-rename.md).
+- **2026-05-22 (W2)** — File-layout migration activated; chapter MDX
+  moved to `sections/<sec>/units/<unit>/reading.mdx`; ChapterEntry +
+  ModuleEntry deleted; ArtifactEntry surfaced. See W2 design doc.
+
 ## References
 
 - [Course-Website Platform Roadmap](../status/course-website-roadmap.md)
 - [ADR 0064 — Chapter Migration Playbook](./0064-chapter-migration-playbook.md)
 - [ADR 0038 — Pedagogy Index Pattern](./0038-pedagogy-index-pattern.md)
 - [ADR 0060 — Registry Ecosystem](./0060-registry-ecosystem.md)
+- [W3 design doc](../../plans/2026-05-22-wedge-b-followup-w3-design.md)
+- [W3 pilot report](../pilots/wedge-b-followup-w3-callsite-rename.md)
