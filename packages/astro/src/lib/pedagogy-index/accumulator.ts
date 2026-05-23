@@ -755,6 +755,11 @@ class IndexAccumulator {
       retrievalPrompts: Array.from(state.retrievalPrompts.values()),
       spacedReviews: Array.from(state.spacedReviews.values()),
       skillReviews: Array.from(state.skillReviews.values()),
+      // ADR 0079 (W4b): topics + cards populated by the topic
+      // extractor (Batch 3 Task 11 adds addTopic/addCard methods).
+      // Empty arrays here keep the build green between batches.
+      topics: [],
+      cards: [],
       sections: state.sections,
       units: state.units,
       artifacts: state.artifacts,
