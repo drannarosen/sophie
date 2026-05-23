@@ -111,13 +111,7 @@ effectiveness and 1–2 SoTL papers, not as a DBER pivot. Full version:
 [`strategy/positioning.md` § origin and scope](docs/website/strategy/positioning.md#origin-and-scope).
 
 - **Platform repo (current location)**: `drannarosen/sophie` on GitHub.
-  May move to a more official org later; treat the current location as
-  authoritative for now.
-- **Packages**: `@sophie/*`.
-- **CLI binary**: `sophie`.
-- **Sub-brands**: Sophie Astro (astronomy textbooks), Sophie Compute
-  (CS textbooks).
-- **Originally named Sophia**; renamed Sophie May 2026 (ADR 0017).
+- **Packages**: `@sophie/*`. **CLI binary**: `sophie`.
 
 ## Where things live
 
@@ -130,7 +124,6 @@ effectiveness and 1–2 SoTL papers, not as a DBER pivot. Full version:
 | Competitive landscape + scope discipline | `docs/website/strategy/landscape/` |
 | Strategic positioning + origin/scope | `docs/website/strategy/positioning.md` |
 | Roadmap | `docs/website/status/roadmap.md` |
-| Pre-conversion historical docs | `_archive/` (read-only; do **not** edit) |
 | Implementation plans (per session) | `~/.claude/plans/` |
 | Project memory | `~/.claude/projects/-Users-anna-Teaching-sophie/memory/` |
 
@@ -151,19 +144,17 @@ happens in the per-course directories, not here.
 | ----------------------------- | --------------------------------------------- | ------------------------------------------------- |
 | ASTR 201 (Intro Astrophysics) | `/Users/anna/Teaching/astr201-sp26/modules/`  | Quarto `.qmd`; migration to Sophie `.mdx` planned |
 
-Migration protocol locked in [ADR 0064](docs/website/decisions/0064-chapter-migration-playbook.md);
-worked-example pilot is [`pilots/m2-l3-spectra-composition.md`](docs/website/pilots/m2-l3-spectra-composition.md).
-Read ADR 0064 before scoping the next migration — it carries the
-six rules, the seven-step protocol, the fixed pilot-report
-template, and the structural-density rotation rule.
+Migration protocol locked in [ADR 0064](docs/website/decisions/0064-chapter-migration-playbook.md)
+(six rules, seven-step protocol, structural-density rotation);
+worked-example pilot at [`pilots/m2-l3-spectra-composition.md`](docs/website/pilots/m2-l3-spectra-composition.md).
+Read ADR 0064 before scoping the next migration.
 
 ## Locked decisions — most-cited ADRs
 
 Read the relevant ADR before proposing changes that touch its area.
-The 15 ADRs below are selected for routine-reasoning citability;
-the other ~60 are discoverable via the docs-site Decisions nav.
-Full catalog: `docs/website/decisions/` (77 ADRs as of 2026-05-23,
-numbered 0001–0078 with 0050 a reserved gap).
+The 11 below are the routine-reasoning subset; full catalog
+(77 ADRs, 0001–0078 with 0050 a reserved gap) lives in
+`docs/website/decisions/`.
 
 | Concern                          | ADR  | Decision                                                                                                                  |
 | -------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------- |
@@ -171,14 +162,10 @@ numbered 0001–0078 with 0050 a reserved gap).
 | Schema                           | 0003 | Zod as source of truth                                                                                                    |
 | Component contract               | 0004 | `serialize` separate from render; axe-core for a11y; `useInteractive` helper; composition rules                           |
 | Theming                          | 0005 | TS tokens → CSS vars + Tailwind preset; CSS Modules in components                                                         |
-| JS package mgr                   | 0011 | **pnpm** (never npm/yarn)                                                                                                 |
-| Lint+format                      | 0013 | **Biome** (replaces ESLint+Prettier)                                                                                      |
 | A11y primitives                  | 0019 | Radix UI                                                                                                                  |
 | Build order                      | 0023 | **Vertical-slice-first**: lean Phase 0, refactor outward as patterns emerge                                               |
 | Audience + AI authoring          | 0030 | AI as primary author; four AI roles (author/pedagogy/domain/brainstorm); instructor as supervisor (HITL)                  |
 | Pedagogy-index pattern           | 0038 | Pedagogy index serialized from MDX AST; consumed by audit, diff, AI authoring                                             |
-| Squash-merge convention          | 0055 | Squash-merge for code PRs                                                                                                 |
-| Validation tracker               | 0056 | ADR frontmatter `validation:` block (status / last_validated_date / evidence)                                             |
 | **Epistemic Component Contract** | 0058 | **Eight-role taxonomy** (optional, additive); amends 0003/0004/0044/0046; underwrites Reasoning-OS thesis                  |
 | **AI-optimized codebase design** | 0061 | **AI is primary author of platform code, not just content**: 6 rules (focused files, Write-over-Edit, LOC budget 300/500/800, filename routing, atomic docs, tests split with source); amends 0023/0030 |
 | **Chapter migration playbook**   | 0064 | Six locked rules + seven-step protocol; fixed-template pilot report under `docs/website/pilots/`; halt on missing-component gaps (no inline workarounds); next pilot must differ in structural density |
@@ -214,9 +201,8 @@ to every PR, every design decision, every refactor.
     caller exists.
   - **YAGNI**: don't add abstractions for hypothetical future
     requirements. Per ADR 0023 vertical-slice-first: lean Phase 0,
-    refactor outward as patterns emerge. The 11 audit invariants in
-    `pedagogy-audit.ts` ship because they have concrete inputs (the
-    populated `PedagogyIndex`), not because they *might* be useful.
+    refactor outward as patterns emerge. Code ships when it has
+    concrete callers, not when it *might* be useful.
   - **Clean code**: zero biome warnings (per Conventions below);
     no commented-out code; no dead imports; no `TODO` without an
     issue link; descriptive identifier names; no comments that
@@ -236,13 +222,10 @@ to every PR, every design decision, every refactor.
   any new pedagogy component, ask: what epistemic role does this
   encode (observable / model / inference / assumption / approximation
   / uncertainty / numerical / misconception)? Components that don't
-  fit any of the eight are likely chrome, not pedagogy. Sophie's
-  Scientific Reasoning OS thesis (see ADR 0058 + `docs/website/vision/reasoning-os/`)
-  depends on the role contract being consistently applied; pedagogy
-  components that drift from it dilute the platform's distinguishing
-  claim. The contract is *optional and additive* at v1 (no required
-  migration), but new components should declare role wherever
-  applicable, and reviewers should ask the question on every PR.
+  fit any of the eight are likely chrome, not pedagogy. The contract
+  is optional and additive at v1 (no required migration), but new
+  components should declare role where applicable. See ADR 0058 +
+  `docs/website/vision/reasoning-os/`.
 
 ## Conventions
 
