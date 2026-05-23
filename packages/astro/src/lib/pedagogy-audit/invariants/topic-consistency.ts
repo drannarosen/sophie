@@ -45,6 +45,27 @@ export function checkPRA2(index: PedagogyIndex, sink: FindingSink): void {
     // W4c D5: per-card anchor only — see file header for the full rationale.
     const overrides = topic.audit_overrides ?? [];
 
+    // PRA-2-grain (W4c I1): the override schema permits both Grain 1
+    // (anchor omitted, whole-Unit wildcard) and Grain 2 (per-anchor)
+    // shapes for any invariant, but W4c D5 locks PRA-2 to Grain 2
+    // only. Without a signal, a Grain-1 PRA-2 override fails silently
+    // (the suppression predicate below doesn't match it, so the
+    // ERROR still fires with no clue why the override didn't take).
+    // Emit a discoverability WARNING per offending entry naming the
+    // grain mismatch + the two fix paths. Structural fix — making
+    // AuditOverrideSchema reject the bad shape at parse time — is a
+    // post-W4c follow-on (benefits from broader ADR 0053 amendment).
+    for (const override of overrides) {
+      if (override.invariant !== "PRA-2") continue;
+      if (override.anchor !== undefined && override.anchor !== "") continue;
+      sink.warnings.push({
+        severity: "WARNING",
+        code: "PRA-2-grain",
+        message: `PRA-2-grain: Topic "${topic.id}" declares an audit_overrides entry for PRA-2 with no anchor (Grain 1 / whole-topic wildcard). PRA-2 requires a per-card-id anchor per W4c D5; this override is IGNORED. Resolution: add anchor: "<card-id>" to the override entry naming the specific card whose frontmatter↔body mismatch should be suppressed, OR remove the override if it's no longer needed.`,
+        location: { unit: topic.id },
+      });
+    }
+
     // Frontmatter declares card not present in body.
     for (const id of declared) {
       if (inBody.has(id)) continue;
