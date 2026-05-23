@@ -1,5 +1,6 @@
 ---
 import { chaptersForModule } from "@sophie/core/schema";
+import type { NavChapter, NavModule } from "../lib/module-nav-helpers.ts";
 
 /**
  * <ModuleNav> — sidebar module/chapter tree.
@@ -13,21 +14,13 @@ import { chaptersForModule } from "@sophie/core/schema";
  * Lives in the sidebar slot of <TextbookLayout>. When the slot is
  * filled, the empty-slot-collapse logic (ADR 0034) lets the column
  * expand to its default width.
+ *
+ * `NavChapter` and `NavModule` are canonical in
+ * `../lib/module-nav-helpers.ts` (R9-production: one declaration
+ * per named interface). Re-exported below so downstream consumers
+ * importing from `ModuleNav.astro` keep working.
  */
-export interface NavChapter {
-  /** Astro collection id; e.g. "01-foundations/spoiler-alerts". */
-  slug: string;
-  title: string;
-  module: string;
-  order?: number;
-}
-
-export interface NavModule {
-  slug: string;
-  title: string;
-  order: number;
-  description?: string;
-}
+export type { NavChapter, NavModule };
 
 interface Props {
   modules: ReadonlyArray<NavModule>;
