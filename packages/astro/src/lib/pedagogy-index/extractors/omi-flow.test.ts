@@ -54,7 +54,7 @@ describe("extractOMIFlows (pure)", () => {
     const tree = root([
       mdxCallout({ variant: "info" }, [para("not an omiflow")]),
     ]);
-    expect(extractOMIFlows(tree as never, "ch")).toEqual([]);
+    expect(extractOMIFlows(tree as never, "ch").entries).toEqual([]);
   });
 
   test("emits one entry per <OMIFlow> callsite with all 3 slots populated", () => {
@@ -68,7 +68,7 @@ describe("extractOMIFlows (pure)", () => {
         }
       ),
     ]);
-    const entries = extractOMIFlows(tree as never, "spoiler-alerts");
+    const { entries } = extractOMIFlows(tree as never, "spoiler-alerts");
     expect(entries).toHaveLength(1);
     expect(entries[0]).toMatchObject({
       unit: "spoiler-alerts",
@@ -85,19 +85,21 @@ describe("extractOMIFlows (pure)", () => {
     const tree = root([
       omiFlow({ id: "explicit-id", concept: "stellar-temperature" }),
     ]);
-    expect(extractOMIFlows(tree as never, "ch")[0]?.anchor).toBe("explicit-id");
+    expect(extractOMIFlows(tree as never, "ch").entries[0]?.anchor).toBe(
+      "explicit-id"
+    );
   });
 
   test("anchor precedence — slug(concept) when no id", () => {
     const tree = root([omiFlow({ concept: "stellar Temperature" })]);
-    expect(extractOMIFlows(tree as never, "ch")[0]?.anchor).toBe(
+    expect(extractOMIFlows(tree as never, "ch").entries[0]?.anchor).toBe(
       "omi-stellar-temperature"
     );
   });
 
   test("anchor fallback — omi-{counter} when neither id nor concept", () => {
     const tree = root([omiFlow({}), omiFlow({})]);
-    const entries = extractOMIFlows(tree as never, "ch");
+    const { entries } = extractOMIFlows(tree as never, "ch");
     expect(entries[0]?.anchor).toBe("omi-1");
     expect(entries[1]?.anchor).toBe("omi-2");
   });
@@ -136,7 +138,7 @@ describe("extractOMIFlows (pure)", () => {
     const tree = root([
       omiFlow({ id: "x" }, { order: ["model", "observable", "inference"] }),
     ]);
-    const entries = extractOMIFlows(tree as never, "ch");
+    const { entries } = extractOMIFlows(tree as never, "ch");
     expect(entries).toHaveLength(1);
     // Body still extracted correctly per slot kind, regardless of source order.
     expect(entries[0]?.observable.body).toContain("observable");
@@ -151,7 +153,7 @@ describe("extractOMIFlows (pure)", () => {
         { order: ["inference", "observable", "model"] }
       ),
     ]);
-    const entries = extractOMIFlows(tree as never, "ch");
+    const { entries } = extractOMIFlows(tree as never, "ch");
     expect(entries).toHaveLength(1);
     // The extractor stashes the source order on the entry for the OF-1
     // invariant to consume. (Per design doc #4 + the OF-1 invariant
@@ -165,11 +167,47 @@ describe("extractOMIFlows (pure)", () => {
 
   test("emits canonical sourceOrder field when slots are in O→M→I source order", () => {
     const tree = root([omiFlow({ id: "x" })]);
-    const entries = extractOMIFlows(tree as never, "ch");
+    const { entries } = extractOMIFlows(tree as never, "ch");
     expect(entries[0]?.sourceOrder).toEqual([
       "observable",
       "model",
       "inference",
     ]);
+  });
+
+  test("emits an OF-3 WARNING finding per unknown JSX child inside <OMIFlow>", () => {
+    // <OMIFlow> with the 3 required slots PLUS an unrelated <Callout>
+    // child. Per ADR 0063 §4 slot-name-binds-role + post-W4c R7 doctrine
+    // (W4c-extension), unknown JSX children inside <OMIFlow> are
+    // authoring errors worth surfacing as OF-3 WARNINGs. The OMIFlow
+    // still extracts cleanly (3 valid slots present); OF-3 surfaces the
+    // rogue child to the author without blocking the build.
+    const tree = root([
+      mdxFlowEl("OMIFlow", { id: "with-rogue" }, {}, [
+        mdxFlowEl("OMIFlow.Observable", {}, {}, [para("o")]),
+        mdxFlowEl("Callout", { variant: "info" }, {}, [para("rogue")]),
+        mdxFlowEl("OMIFlow.Model", {}, {}, [para("m")]),
+        mdxFlowEl("OMIFlow.Inference", {}, {}, [para("i")]),
+      ]),
+    ]);
+    const { entries, findings } = extractOMIFlows(tree as never, "ch");
+    // OMIFlow still extracts (strict-3 satisfied)
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.anchor).toBe("with-rogue");
+    // OF-3 fires once for the rogue child
+    expect(findings).toHaveLength(1);
+    expect(findings[0]).toMatchObject({
+      severity: "WARNING",
+      code: "OF-3",
+      location: { unit: "ch", anchor: "with-rogue" },
+    });
+    expect(findings[0]?.message).toContain("<Callout>");
+  });
+
+  test("emits no OF-3 finding when <OMIFlow> contains only the 3 valid slot children", () => {
+    const tree = root([omiFlow({ id: "clean" })]);
+    const { entries, findings } = extractOMIFlows(tree as never, "ch");
+    expect(entries).toHaveLength(1);
+    expect(findings).toEqual([]);
   });
 });

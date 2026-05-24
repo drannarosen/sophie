@@ -274,10 +274,11 @@ export function pedagogyIndexRemarkPlugin(
     // callouts are intentionally NOT walked.
     indexAccumulator.addDeepDives(extractDeepDives(tree, unitId));
     // ADR 0063 — A8 <OMIFlow> composite primitive. Extractor walks
-    // future <OMIFlow> JSX and emits OMIFlowEntry rows; no callsites
-    // exist yet (the React component lands in PR-B), so this is a
-    // no-op until then.
-    indexAccumulator.addOMIFlows(extractOMIFlows(tree, unitId));
+    // <OMIFlow> JSX and emits OMIFlowEntry rows plus OF-3 WARNING
+    // findings for any unknown JSX children (post-W4c R7 doctrine).
+    const omiResult = extractOMIFlows(tree, unitId);
+    indexAccumulator.addOMIFlows(omiResult.entries);
+    indexAccumulator.addExtractorFindings(omiResult.findings);
     // Wedge B1 retrieval-family extractors. Each emits one entry per
     // matching JSX flow element; pure read pass (no mutation). PRA-1
     // (prereq activation), RET-1 (retrieval coverage), and SR-1

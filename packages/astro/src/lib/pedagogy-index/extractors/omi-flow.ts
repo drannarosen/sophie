@@ -1,3 +1,4 @@
+import type { AuditFinding } from "@sophie/core/schema";
 import {
   type OMIFlowEntry,
   type OMIFlowSlot,
@@ -40,6 +41,15 @@ const REQUIRED_SLOTS: ReadonlyArray<OMIFlowSlotKind> = [
  * Counter must be provided by the caller and threaded across all
  * `<OMIFlow>` nodes within one chapter to make rule (3) chapter-
  * consistent. Use `parseOMIFlowChildren` via the caller-owned loop.
+ *
+ * `unknownChildren` lists JSX flow elements found inside the
+ * `<OMIFlow>` whose names don't map to one of the three slot
+ * components (`<OMIFlow.Observable>`, `<OMIFlow.Model>`,
+ * `<OMIFlow.Inference>`). The pure parser collects them; only the
+ * read-only extractor (`extractOMIFlows`) emits OF-3 findings.
+ * The AST-mutation pass (`transformOMIFlow`) ignores the field
+ * — single source of truth for child classification across both
+ * callers, no double-counted findings.
  */
 export interface OMIFlowParseResult {
   anchor: string;
@@ -48,6 +58,7 @@ export interface OMIFlowParseResult {
   model: OMIFlowSlot;
   inference: OMIFlowSlot;
   sourceOrder: [OMIFlowSlotKind, OMIFlowSlotKind, OMIFlowSlotKind];
+  unknownChildren: ReadonlyArray<string>;
 }
 
 /**
@@ -67,12 +78,22 @@ export function parseOMIFlowElement(
   const concept = readStringAttr(el, "concept");
   const sourceOrder: OMIFlowSlotKind[] = [];
   const slots: Partial<Record<OMIFlowSlotKind, OMIFlowSlot>> = {};
+  const unknownChildren: string[] = [];
 
   for (const child of el.children ?? []) {
     const childEl = child as MdxJsxFlowElement;
     if (childEl.type !== "mdxJsxFlowElement") continue;
     const kind = childEl.name ? SLOT_NAMES[childEl.name] : undefined;
-    if (kind === undefined) continue;
+    if (kind === undefined) {
+      // R7 disposition (W4c-extension): rather than silent-skip, collect
+      // the unknown child name. The read-only extractor (extractOMIFlows
+      // below) consumes this list to emit OF-3 WARNING findings into
+      // PedagogyIndex.extractorFindings. The AST-mutation pass
+      // (transforms/omi-flow.ts) reads this same parser but ignores the
+      // field — single classification, no double-counted findings.
+      unknownChildren.push(childEl.name ?? "?");
+      continue;
+    }
     if (slots[kind] !== undefined) {
       throw new Error(
         `OMIFlow "${anchor}" in chapter "${unitId}": slot "${kind}" appears more than once. (ADR 0063 exactly-one invariant.)`
@@ -119,6 +140,7 @@ export function parseOMIFlowElement(
       OMIFlowSlotKind,
       OMIFlowSlotKind,
     ],
+    unknownChildren,
   };
 }
 
@@ -139,8 +161,21 @@ export function deriveOMIFlowAnchor(
 }
 
 /**
+ * Result of one read-only `extractOMIFlows` pass: the parsed entries
+ * + any extractor-layer findings (OF-3 unknown-child WARNINGs).
+ * Findings flow into `PedagogyIndex.extractorFindings` via
+ * `indexAccumulator.addExtractorFindings(findings)` and merge into the
+ * audit report through `passthroughExtractorFindings`.
+ */
+export interface OMIFlowExtractionResult {
+  entries: OMIFlowEntry[];
+  findings: AuditFinding[];
+}
+
+/**
  * Pure extractor. Walks an mdast tree, emits one OMIFlowEntry per
- * `<OMIFlow>` flow element. Per ADR 0063:
+ * `<OMIFlow>` flow element + one OF-3 WARNING per unknown JSX child
+ * found inside any `<OMIFlow>`. Per ADR 0063:
  *
  *   - Strict-3-slot invariant: each <OMIFlow> MUST contain exactly
  *     one of each slot kind (observable / model / inference).
@@ -150,9 +185,19 @@ export function deriveOMIFlowAnchor(
  *     records the as-authored order in `sourceOrder` for OF-1.
  *   - Anchor precedence: id > slug(concept) > omi-${counter}.
  *   - Intra-chapter anchor collision throw.
+ *   - **OF-3 (W4c-extension, R7 doctrine):** unknown JSX children
+ *     inside `<OMIFlow>` (anything other than the three slot
+ *     components) produce one WARNING per child, not silent-skip.
+ *     The OMIFlow still extracts cleanly if the three required
+ *     slots are present; OF-3 surfaces the rogue child to the
+ *     author without blocking the build.
  */
-export function extractOMIFlows(tree: Root, unitId: string): OMIFlowEntry[] {
-  const out: OMIFlowEntry[] = [];
+export function extractOMIFlows(
+  tree: Root,
+  unitId: string
+): OMIFlowExtractionResult {
+  const entries: OMIFlowEntry[] = [];
+  const findings: AuditFinding[] = [];
   const seenAnchors = new Set<string>();
   let counter = 0;
 
@@ -172,7 +217,7 @@ export function extractOMIFlows(tree: Root, unitId: string): OMIFlowEntry[] {
 
     const parsed = parseOMIFlowElement(el, unitId, anchor);
 
-    out.push({
+    entries.push({
       unit: unitId,
       anchor: parsed.anchor,
       ...(parsed.concept ? { concept: parsed.concept } : {}),
@@ -181,7 +226,16 @@ export function extractOMIFlows(tree: Root, unitId: string): OMIFlowEntry[] {
       inference: parsed.inference,
       sourceOrder: parsed.sourceOrder,
     });
+
+    for (const childName of parsed.unknownChildren) {
+      findings.push({
+        severity: "WARNING",
+        code: "OF-3",
+        message: `OF-3: OMIFlow "${anchor}" in chapter "${unitId}" contains unknown JSX child <${childName}>. Valid <OMIFlow> children per ADR 0063 §4 slot-name-binds-role are <OMIFlow.Observable>, <OMIFlow.Model>, <OMIFlow.Inference>. Resolution: remove the rogue element, or move it outside the <OMIFlow>...</OMIFlow> wrapper.`,
+        location: { unit: unitId, anchor },
+      });
+    }
   });
 
-  return out;
+  return { entries, findings };
 }
