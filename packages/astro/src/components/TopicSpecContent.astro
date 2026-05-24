@@ -1,0 +1,168 @@
+---
+import type { TopicEntry } from "@sophie/core/schema";
+
+/**
+ * `<TopicSpecContent>` — per-topic Spec content for the route at
+ * `/library/topics/<topicId>/` (W4c Batch 8 Task 8.4, closes W4b
+ * R+CR finding N5). W4b shipped the Spec page rendering card LABELS
+ * only; this component lifts each card's `<SkillReview.Prompt>` +
+ * `<SkillReview.Answer>` slot bodies inline so the Spec page is a
+ * complete reading surface (matches the per-entry richness D3
+ * promises for the other 9 Library Spec routes).
+ *
+ * Body slot HTML is sourced at the route level via
+ * `renderTopicCardSlotsToHtml(topicsDir, topicId)` from
+ * `@sophie/astro/lib/mdx-plugins/skill-review-resolver` — the same
+ * module that owns chapter-side slot lifting at MDX compile time.
+ * Reusing the W4b parser keeps a single source of truth for "what's
+ * in this topic file's body" (W3 cleanup of the W4b parsing logic,
+ * not duplication).
+ *
+ * Per the Topic Spec page render shape locked in ADR 0079 §"Spec
+ * page rendering": region landmark (`<section aria-labelledby>` —
+ * NOT `<LibraryCollectionShell>` because the shape is card-list
+ * + cross-refs, not the shell's heading/empty/intro/secondary-nav
+ * shape) + headed `Cards` section that enumerates each card with
+ * label, optional difficulty, prompt body, answer body +
+ * cross-references section listing prereq topics / linked equations
+ * / linked misconceptions. `<article>` was tempting semantically
+ * but doesn't satisfy the WCAG region rule axe-core enforces
+ * (article doesn't ship a landmark role), so `<section>` is the
+ * correct primitive here.
+ *
+ * Pure Astro; no client JS.
+ */
+export interface Props {
+  topic: TopicEntry;
+  /**
+   * Pre-rendered `{promptHtml, answerHtml}` per card id, sourced at
+   * the route level from the resolver helper. The map's key set
+   * mirrors `topic.cards[].id` 1:1 (the PRA-2 audit invariant
+   * upstream enforces frontmatter ↔ body parity; missing entries
+   * here would surface there first).
+   */
+  cardSlots: ReadonlyMap<string, { promptHtml: string; answerHtml: string }>;
+}
+
+const { topic, cardSlots } = Astro.props;
+
+const topicId = topic.id;
+const headingId = `sophie-topic-spec-${topicId}-heading`;
+const cardsHeadingId = `sophie-topic-spec-${topicId}-cards`;
+const crossrefsHeadingId = `sophie-topic-spec-${topicId}-crossrefs`;
+const hasCrossrefs =
+  topic.prereq_topic_ids.length > 0 ||
+  topic.linked_equation_ids.length > 0 ||
+  topic.linked_misconception_ids.length > 0;
+---
+
+<section
+  class='sophie-topic-spec'
+  data-sophie-topic-spec={topicId}
+  aria-labelledby={headingId}
+>
+  <header class='sophie-topic-spec__header'>
+    <h1 id={headingId} class='sophie-topic-spec__heading'>{topic.label}</h1>
+    <p class='sophie-topic-spec__summary'>{topic.summary}</p>
+  </header>
+
+  {topic.cards.length > 0 && (
+    <section
+      class='sophie-topic-spec__cards'
+      aria-labelledby={cardsHeadingId}
+    >
+      <h2 id={cardsHeadingId} class='sophie-topic-spec__cards-heading'>
+        Cards
+      </h2>
+      <ol class='sophie-topic-spec__cards-list'>
+        {topic.cards.map((c) => {
+          const slot = cardSlots.get(c.id);
+          const cardHeadingId = `sophie-topic-spec-${topicId}-card-${c.id}`;
+          return (
+            <li
+              class='sophie-topic-spec__card'
+              data-card-id={c.id}
+              aria-labelledby={cardHeadingId}
+            >
+              <h3 id={cardHeadingId} class='sophie-topic-spec__card-label'>
+                {c.label}
+                {c.difficulty && (
+                  <span
+                    class='sophie-topic-spec__card-difficulty'
+                    data-difficulty={c.difficulty}
+                  >
+                    {" "}({c.difficulty})
+                  </span>
+                )}
+              </h3>
+              {slot && (
+                <div class='sophie-topic-spec__card-prompt'>
+                  <span class='sophie-topic-spec__card-slot-label'>
+                    Prompt:
+                  </span>{" "}
+                  <span
+                    class='sophie-topic-spec__card-slot-body'
+                    set:html={slot.promptHtml}
+                  />
+                </div>
+              )}
+              {slot && (
+                <div class='sophie-topic-spec__card-answer'>
+                  <span class='sophie-topic-spec__card-slot-label'>
+                    Answer:
+                  </span>{" "}
+                  <span
+                    class='sophie-topic-spec__card-slot-body'
+                    set:html={slot.answerHtml}
+                  />
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ol>
+    </section>
+  )}
+
+  {hasCrossrefs && (
+    <section
+      class='sophie-topic-spec__crossrefs'
+      aria-labelledby={crossrefsHeadingId}
+    >
+      <h2
+        id={crossrefsHeadingId}
+        class='sophie-topic-spec__crossrefs-heading'
+      >
+        Cross-references
+      </h2>
+      {topic.prereq_topic_ids.length > 0 && (
+        <p class='sophie-topic-spec__crossrefs-row'>
+          <strong>Prerequisite topics:</strong>{" "}
+          {topic.prereq_topic_ids.map((id, i) => (
+            <span>
+              {i > 0 && ", "}
+              <a href={`/library/topics/${id}/`}>{id}</a>
+            </span>
+          ))}
+        </p>
+      )}
+      {topic.linked_equation_ids.length > 0 && (
+        <p class='sophie-topic-spec__crossrefs-row'>
+          <strong>Linked equations:</strong>{" "}
+          {topic.linked_equation_ids.map((id, i) => (
+            <span>
+              {i > 0 && ", "}
+              <a href={`/equations/${id}/`}>{id}</a>
+            </span>
+          ))}
+        </p>
+      )}
+      {topic.linked_misconception_ids.length > 0 && (
+        <p class='sophie-topic-spec__crossrefs-row'>
+          <strong>Linked misconceptions:</strong>{" "}
+          {topic.linked_misconception_ids.join(", ")}
+        </p>
+      )}
+    </section>
+  )}
+</section>

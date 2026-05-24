@@ -43,6 +43,7 @@
     "./components/ObservableSpecContent.astro": "./dist/components/ObservableSpecContent.astro",
     "./components/ModelSpecContent.astro": "./dist/components/ModelSpecContent.astro",
     "./components/InferenceSpecContent.astro": "./dist/components/InferenceSpecContent.astro",
+    "./components/TopicSpecContent.astro": "./dist/components/TopicSpecContent.astro",
     "./components/ChapterMultiReps.astro": "./dist/components/ChapterMultiReps.astro",
     "./components/CourseObjectives.astro": "./dist/components/CourseObjectives.astro",
     "./components/CourseObservables.astro": "./dist/components/CourseObservables.astro",

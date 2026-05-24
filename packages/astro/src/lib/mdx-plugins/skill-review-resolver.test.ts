@@ -7,6 +7,7 @@ import { mdxjs } from "micromark-extension-mdxjs";
 import { unified } from "unified";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import {
+  renderTopicCardSlotsToHtml,
   resetSkillReviewResolverCache,
   skillReviewResolverRemarkPlugin,
 } from "./skill-review-resolver.ts";
@@ -127,5 +128,32 @@ describe("skillReviewResolverRemarkPlugin (ADR 0079)", () => {
     const node = tree.children[0] as { children: unknown[]; name?: string };
     expect(node.name).toBe("RetrievalPrompt");
     expect(node.children).toEqual([]); // unchanged
+  });
+});
+
+describe("renderTopicCardSlotsToHtml (W4c Task 8.4 — closes W4b R+CR N5)", () => {
+  test("returns one entry per card with promptHtml + answerHtml", () => {
+    const slots = renderTopicCardSlotsToHtml(FIXTURE_TOPICS_DIR, "logarithms");
+    expect(slots.size).toBe(3);
+    expect([...slots.keys()]).toEqual([
+      "product-rule",
+      "power-rule",
+      "change-of-base",
+    ]);
+    const productRule = slots.get("product-rule");
+    expect(productRule).toBeDefined();
+    expect(productRule?.promptHtml).toContain("log_b(xy)");
+    expect(productRule?.answerHtml).toContain("log_b(x) + log_b(y)");
+  });
+
+  test("returns single-card topics with one entry", () => {
+    const slots = renderTopicCardSlotsToHtml(FIXTURE_TOPICS_DIR, "exponents");
+    expect(slots.size).toBe(1);
+  });
+
+  test("throws ERROR for unknown topic id", () => {
+    expect(() =>
+      renderTopicCardSlotsToHtml(FIXTURE_TOPICS_DIR, "nonexistent")
+    ).toThrow(/unknown topic.*nonexistent/i);
   });
 });
