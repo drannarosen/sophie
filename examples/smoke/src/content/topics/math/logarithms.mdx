@@ -23,6 +23,21 @@ cards:
   - id: change-of-base
     label: Change of base
     difficulty: hard
+audit_overrides:
+  - invariant: PRA-2
+    anchor: log-of-one
+    tdr: TDR-W4c-batch-9.3-fixture
+    reason: |
+      W4c Batch 9.3 audit_overrides demo fixture (per W4c design D5 +
+      Batch 2 PRA-2 audit_overrides honoring). The body below contains
+      a deliberate orphan SkillReview.Card block with id "log-of-one"
+      and no matching entry in the cards frontmatter list; the topic
+      extractor would otherwise emit a PRA-2 ERROR per ADR 0079 and
+      refuse to materialize the card. This per-(invariant, anchor)
+      override suppresses the finding so the smoke build stays green
+      while exercising the honoring path end-to-end against real
+      fixture content. Demonstrates the feature for course authors as
+      a worked example.
 ---
 
 <SkillReview.Card id="product-rule">
@@ -54,5 +69,27 @@ cards:
   <SkillReview.Answer>
     $\log_2(x) = \ln(x) / \ln(2)$ — divide by $\ln$ of the new base.
     The general rule: $\log_a(x) = \log_b(x) / \log_b(a)$.
+  </SkillReview.Answer>
+</SkillReview.Card>
+
+{/*
+  W4c Batch 9.3 fixture: this <SkillReview.Card id="log-of-one"> is a
+  deliberate body-orphan — there is intentionally NO matching entry
+  in the cards: [] frontmatter list. The topic extractor would emit a
+  PRA-2 ERROR (per ADR 0079) and refuse to materialize the card; the
+  audit_overrides entry in this file's frontmatter suppresses the
+  finding so the smoke build remains green while exercising the
+  override honoring path against real fixture content. The card body
+  here is therefore unrendered (extractor refuses to register an
+  orphan id, so SkillReview's self-closing resolver has nothing to
+  hydrate); the block exists only to feed the extractor's body walk.
+*/}
+<SkillReview.Card id="log-of-one">
+  <SkillReview.Prompt>
+    What is $\log_b(1)$ for any base $b > 0$?
+  </SkillReview.Prompt>
+  <SkillReview.Answer>
+    Zero. By definition $\log_b(1) = 0$ because $b^0 = 1$ for any
+    nonzero base. (Demo orphan — see surrounding comment.)
   </SkillReview.Answer>
 </SkillReview.Card>
