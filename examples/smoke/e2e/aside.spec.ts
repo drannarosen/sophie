@@ -270,6 +270,7 @@ test.describe("PR 6: <Aside> on the smoke chapter", () => {
         ?.hasAttribute("data-aside-docked")
     );
     const dockedResults = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"])
       .include("[data-sophie-aside]")
       .disableRules(["color-contrast"])
       .analyze();
@@ -282,6 +283,7 @@ test.describe("PR 6: <Aside> on the smoke chapter", () => {
       return a && !a.hasAttribute("data-aside-docked");
     });
     const inlineResults = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"])
       .include("[data-sophie-aside]")
       .disableRules(["color-contrast"])
       .analyze();

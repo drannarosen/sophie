@@ -347,6 +347,7 @@ test.describe("PR 5: ViewModeToggle on the smoke chapter", () => {
     for (const expected of ["default", "focused", "wide"]) {
       await expect(toggle).toHaveAttribute("data-view-mode-pref", expected);
       const results = await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"])
         .include(".sophie-view-mode-toggle")
         .disableRules(["color-contrast"])
         .analyze();

@@ -89,6 +89,7 @@ test.describe("<CourseEquations /> on /library/equations (ADR 0060)", () => {
   test("/library/equations is axe-clean", async ({ page }) => {
     await page.goto(EQUATIONS_URL);
     const results = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"])
       .exclude("astro-island")
       .analyze();
     expect(results.violations).toEqual([]);

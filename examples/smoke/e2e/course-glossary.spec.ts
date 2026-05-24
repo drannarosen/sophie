@@ -63,6 +63,7 @@ test.describe("PR-C1: <CourseGlossary /> on /library/glossary", () => {
   test("/library/glossary is axe-clean", async ({ page }) => {
     await page.goto(GLOSSARY_URL);
     const results = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"])
       .exclude("astro-island") // hydration internals
       .analyze();
     expect(results.violations).toEqual([]);

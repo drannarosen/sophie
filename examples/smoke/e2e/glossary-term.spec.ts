@@ -147,6 +147,7 @@ test.describe("PR-C1: <GlossaryTerm> on the smoke chapter", () => {
       .first();
     await expect(trigger).toBeAttached();
     const results = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"])
       .exclude("astro-island")
       .analyze();
     expect(results.violations).toEqual([]);

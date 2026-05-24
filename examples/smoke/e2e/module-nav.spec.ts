@@ -167,6 +167,7 @@ test.describe("PR 3: Module/chapter sidebar nav", () => {
   test("axe-core: zero violations on the new nav region", async ({ page }) => {
     await page.goto(SPOILER_ALERTS);
     const results = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"])
       .include(".sophie-module-nav")
       .disableRules(["color-contrast"])
       .analyze();

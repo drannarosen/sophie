@@ -112,6 +112,7 @@ test.describe("PR-C3: <CourseKeyInsights /> on /library/key-insights", () => {
   test("/library/key-insights is axe-clean", async ({ page }) => {
     await page.goto(KEY_INSIGHTS_URL);
     const results = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"])
       .exclude("astro-island")
       .analyze();
     expect(results.violations).toEqual([]);

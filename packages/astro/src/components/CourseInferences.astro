@@ -1,99 +1,20 @@
 ---
-import type { OMIFlowEntry } from "@sophie/core/schema";
-import { indexAccumulator } from "../lib/pedagogy-index/accumulator";
-import LibraryCollectionShell from "./LibraryCollectionShell.astro";
-
-const { omiFlows } = indexAccumulator.asPedagogyIndex();
+import CourseOMIRollup from "./_shared/CourseOMIRollup.astro";
 
 /**
- * `<CourseInferences heading="..." />` — Astro consumer that surfaces
- * the `inference` slot of every `<OMIFlow>` callsite across the
- * textbook, with a back-link to source unit + anchor.
- *
- * One entry per OMIFlow callsite (there is exactly one OMIFlowEntry
- * per callsite per the ADR 0063 schema). The inference slot's `title`
- * (or the role-label fallback `"Inference"` when the author left it
- * blank) becomes the `<dt>` label; the slot's pre-rendered HTML body
- * fills the `<dd>`.
- *
- * Per ADR 0058 eight-role contract, the `inference` slot encodes the
- * "inference" role (probabilistic conclusion from model + data). This
- * rollup surfaces all inferences together so students browsing the
- * Library can see the conclusion-drawing side of every OMI triad in
- * one place. `<CourseObservables>` and `<CourseModels>` are sibling
- * rollups for the other two roles (Tasks 5.1 / 5.2) — identical shape
- * with the role substituted.
- *
- * Sort: by unit slug ascending, then anchor ascending (stable;
- * preserves source-walk order within a unit when anchors are
- * auto-derived `omi-${N}` because anchors monotonically increase).
- *
- * Bodies are pre-rendered HTML embedded via `set:html`. Pure Astro;
- * no client JS. Reads the accumulator directly per ADR 0038's
- * Revisions section.
- *
- * Wraps content in `<LibraryCollectionShell>` per W4c design D2 — the
- * shell owns the outer `<section aria-labelledby>` region landmark +
- * heading chrome + empty-state. Each `<dt>` emits
- * `data-section`/`data-unit`/`data-anchor` for Tier-2 filter
- * forward-compat per W4c design D8. `data-section` is empty because
- * `OMIFlowEntry` does not carry `section_id`; deriving from the
- * parent Unit would require accumulator changes that are not paid
- * for by a second consumer yet (W2). When the Tier-2 filter UI ships,
- * it can join via the accumulator.
+ * `<CourseInferences heading="..." />` — Thin adapter for the
+ * `inference` slot rollup. Delegates to the shared `CourseOMIRollup`
+ * factory (post-W4c PR 4 M1 DRY extraction; pre-extraction this file
+ * carried the full rendering — see git blame for the original shape).
+ * Rendered DOM is structurally equivalent to the pre-extraction
+ * component except the `data-sophie-course-*` marker normalizes
+ * plural→singular to match the ADR 0058 role token (no current
+ * consumers; see factory JSDoc for rationale).
  */
 export interface Props {
   /** Optional heading rendered above the list. Defaults to "Inferences". */
   heading?: string;
 }
-
-const { heading = "Inferences" } = Astro.props;
-
-// Sort by unit slug (ascending), then by anchor (ascending). Stable per
-// ECMAScript spec since 2019. Anchor sort gives a deterministic order
-// within a unit; for the common auto-anchor case (`omi-1`, `omi-2`, ...)
-// `localeCompare` orders them as `omi-1, omi-10, omi-2` — fine for v1
-// because no chapter will have ≥10 OMIFlows in practice, and explicit
-// `id` props (the only authored alternative) are author-controlled.
-const sorted: OMIFlowEntry[] = [...omiFlows].sort((a, b) => {
-  if (a.unit !== b.unit) return a.unit.localeCompare(b.unit);
-  return a.anchor.localeCompare(b.anchor);
-});
+const { heading } = Astro.props;
 ---
-
-<LibraryCollectionShell
-  collection='inferences'
-  heading={heading}
-  emptyText='No OMIFlow inference slots across the textbook yet.'
-  isEmpty={sorted.length === 0}
->
-  <dl
-    class='sophie-course-inferences'
-    data-sophie-course-inferences=''
-  >
-    {
-      sorted.map((entry) => (
-        <Fragment>
-          <dt
-            id={`inf-${entry.anchor}`}
-            class='sophie-course-inferences__term'
-            data-section=''
-            data-unit={entry.unit}
-            data-anchor={entry.anchor}
-          >
-            {entry.inference.title || "Inference"}
-          </dt>
-          <dd class='sophie-course-inferences__body'>
-            <div set:html={entry.inference.body} />
-            <p class='sophie-course-inferences__backlink'>
-              in{" "}
-              <a href={`/units/${entry.unit}/reading#${entry.anchor}`}>
-                <code>{entry.unit}</code>
-              </a>
-            </p>
-          </dd>
-        </Fragment>
-      ))
-    }
-  </dl>
-</LibraryCollectionShell>
+<CourseOMIRollup role='inference' heading={heading} />

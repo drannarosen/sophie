@@ -98,6 +98,7 @@ test.describe("<Predict> in spoiler-alerts chapter", () => {
     ).toBeEnabled({ timeout: 5000 });
 
     const results = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"])
       // Same exclusions as the other smoke specs (Phase 0 acceptable patterns).
       .exclude(".margin-note")
       .exclude(".task-list-item input[type='checkbox']")

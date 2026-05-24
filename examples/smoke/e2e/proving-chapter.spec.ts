@@ -275,6 +275,7 @@ test.describe("Phase 0 vertical-slice acceptance — spoiler-alerts chapter", ()
       .waitFor();
 
     const results = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"])
       // Exclusions document Phase-0 known-acceptable patterns:
       // - `.margin-note`: 22 column-margin <aside> elements from MDX.
       //   Phase 1 replaces these with a <MarginNote> component (per

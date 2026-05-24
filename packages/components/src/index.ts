@@ -235,7 +235,7 @@ export {
 } from "./components/Units/index.ts";
 // Contract
 export type {
-  AuditFinding,
+  ComponentAuditFinding,
   ComponentContract,
   SerializedNode,
 } from "./contract/index.ts";

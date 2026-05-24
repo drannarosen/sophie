@@ -107,6 +107,7 @@ test.describe("Self-assessment family in spoiler-alerts chapter", () => {
     });
 
     const results = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"])
       .exclude(".margin-note")
       .exclude(".task-list-item input[type='checkbox']")
       .exclude("li > input[type='checkbox'][disabled]")

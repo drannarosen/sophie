@@ -4,7 +4,7 @@ export {
   registerComponent,
 } from "./register.ts";
 export type {
-  AuditFinding,
+  ComponentAuditFinding,
   ComponentContract,
   SerializedNode,
 } from "./types.ts";

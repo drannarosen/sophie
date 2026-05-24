@@ -137,6 +137,7 @@ test.describe("PR-C4: <ChapterRef> on the smoke chapter", () => {
     // final shape.
     await page.locator('[data-react-hydrated="true"]').first().waitFor();
     const results = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"])
       // Scope to the ChapterRef trigger; exclude the rest of the
       // chapter (covered by proving-chapter.spec.ts axe scan).
       .include(SELF_CLOSING_TRIGGER)

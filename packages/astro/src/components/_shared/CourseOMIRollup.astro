@@ -1,0 +1,145 @@
+---
+import type { OMIFlowEntry } from "@sophie/core/schema";
+import { indexAccumulator } from "../../lib/pedagogy-index/accumulator";
+import LibraryCollectionShell from "../LibraryCollectionShell.astro";
+
+/**
+ * `<CourseOMIRollup role="observable|model|inference" heading="..." />`
+ * — shared factory for the three Course-level OMIFlow rollups.
+ *
+ * Surfaces the named slot of every `<OMIFlow>` callsite across the
+ * textbook, with a back-link to source unit + anchor. One entry per
+ * OMIFlow callsite (there is exactly one `OMIFlowEntry` per callsite
+ * per the ADR 0063 schema). The slot's `title` (or the role-label
+ * fallback when the author left it blank) becomes the `<dt>` label;
+ * the slot's pre-rendered HTML body fills the `<dd>`.
+ *
+ * Per ADR 0058 eight-role contract, the three slot kinds encode the
+ * observable / model / inference roles of the OMI triad. The three
+ * Course\* wrappers (`<CourseObservables>`, `<CourseModels>`,
+ * `<CourseInferences>`) are 1-line thin adapters that pass the
+ * appropriate `role` constant — extracted post-W4c PR 4 (M1) after
+ * the 3 callers paid for the abstraction.
+ *
+ * Sort: by unit slug ascending, then anchor ascending (stable;
+ * preserves source-walk order within a unit when anchors are
+ * auto-derived `omi-${N}` because anchors monotonically increase).
+ *
+ * Bodies are pre-rendered HTML embedded via `set:html`. Pure Astro;
+ * no client JS. Reads the accumulator directly per ADR 0038's
+ * Revisions section.
+ *
+ * Wraps content in `<LibraryCollectionShell>` per W4c design D2 — the
+ * shell owns the outer `<section aria-labelledby>` region landmark +
+ * heading chrome + empty-state. Each `<dt>` emits
+ * `data-section`/`data-unit`/`data-anchor` for Tier-2 filter
+ * forward-compat per W4c design D8. `data-section` is empty because
+ * `OMIFlowEntry` does not carry `section_id`; deriving from the
+ * parent Unit would require accumulator changes that are not paid
+ * for by a second consumer yet (W2). When the Tier-2 filter UI ships,
+ * it can join via the accumulator.
+ *
+ * The rendered DOM is structurally equivalent to the pre-extraction
+ * Course\* components with **one normalization**: the `data-sophie-
+ * course-*` marker shifts plural→singular to match the ADR 0058 role
+ * token (`data-sophie-course-observables` → `data-sophie-course-
+ * observable`, etc.). Every other per-role marker is preserved
+ * bit-identical: CSS class roots (`sophie-course-{observables,models,
+ * inferences}` — kept plural because they name the *collection*, not
+ * the *role*), per-role `dt` id prefixes (`obs-` / `mod-` / `inf-`),
+ * and the slot-body `set:html` rendering pipeline. No consumers
+ * grep-match either data-attr form anywhere in the repo (no CSS, no
+ * test selector, no Pagefind index reference); the normalization is
+ * the right structural alignment with ADR 0058 (eight-role taxonomy,
+ * all singular) and this PR is the moment to land it. The W4c pilot
+ * report at `docs/plans/2026-05-23-wedge-b-followup-w4c.md:786`
+ * shows the historical plural form — immutable historical artifact;
+ * future authors writing Tier-2 filter selectors should reference
+ * the singular form per the current code.
+ */
+
+export type CourseOMIRollupRole = "observable" | "model" | "inference";
+
+export interface Props {
+  /** OMIFlow slot kind to surface (per ADR 0063 §4 slot-name-binds-role). */
+  role: CourseOMIRollupRole;
+  /**
+   * Optional heading rendered above the list. Defaults to the
+   * Title-cased plural of the role.
+   */
+  heading?: string;
+}
+
+const COLLECTION_NAMES = {
+  observable: "observables",
+  model: "models",
+  inference: "inferences",
+} as const;
+
+const DEFAULT_HEADINGS = {
+  observable: "Observables",
+  model: "Models",
+  inference: "Inferences",
+} as const;
+
+const LABEL_FALLBACKS = {
+  observable: "Observable",
+  model: "Model",
+  inference: "Inference",
+} as const;
+
+const ID_PREFIXES = {
+  observable: "obs",
+  model: "mod",
+  inference: "inf",
+} as const;
+
+const { role, heading } = Astro.props;
+const collection = COLLECTION_NAMES[role];
+const resolvedHeading = heading ?? DEFAULT_HEADINGS[role];
+const labelFallback = LABEL_FALLBACKS[role];
+const idPrefix = ID_PREFIXES[role];
+const classRoot = `sophie-course-${collection}`;
+const dataMarker = `data-sophie-course-${role}`;
+
+const { omiFlows } = indexAccumulator.asPedagogyIndex();
+
+const sorted: OMIFlowEntry[] = [...omiFlows].sort((a, b) => {
+  if (a.unit !== b.unit) return a.unit.localeCompare(b.unit);
+  return a.anchor.localeCompare(b.anchor);
+});
+---
+
+<LibraryCollectionShell
+  collection={collection}
+  heading={resolvedHeading}
+  emptyText={`No OMIFlow ${role} slots across the textbook yet.`}
+  isEmpty={sorted.length === 0}
+>
+  <dl class={classRoot} {...{ [dataMarker]: "" }}>
+    {
+      sorted.map((entry) => (
+        <Fragment>
+          <dt
+            id={`${idPrefix}-${entry.anchor}`}
+            class={`${classRoot}__term`}
+            data-section=''
+            data-unit={entry.unit}
+            data-anchor={entry.anchor}
+          >
+            {entry[role].title || labelFallback}
+          </dt>
+          <dd class={`${classRoot}__body`}>
+            <div set:html={entry[role].body} />
+            <p class={`${classRoot}__backlink`}>
+              in{" "}
+              <a href={`/units/${entry.unit}/reading#${entry.anchor}`}>
+                <code>{entry.unit}</code>
+              </a>
+            </p>
+          </dd>
+        </Fragment>
+      ))
+    }
+  </dl>
+</LibraryCollectionShell>
