@@ -37,6 +37,7 @@
     "./components/ChapterMisconceptions.astro": "./dist/components/ChapterMisconceptions.astro",
     "./components/CourseMisconceptions.astro": "./dist/components/CourseMisconceptions.astro",
     "./components/MisconceptionSpecContent.astro": "./dist/components/MisconceptionSpecContent.astro",
+    "./components/GlossarySpecContent.astro": "./dist/components/GlossarySpecContent.astro",
     "./components/ChapterMultiReps.astro": "./dist/components/ChapterMultiReps.astro",
     "./components/CourseObjectives.astro": "./dist/components/CourseObjectives.astro",
     "./components/CourseObservables.astro": "./dist/components/CourseObservables.astro",

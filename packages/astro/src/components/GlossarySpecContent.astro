@@ -1,0 +1,105 @@
+---
+import type { DefinitionEntry } from "@sophie/core/schema";
+import LibraryCollectionShell from "./LibraryCollectionShell.astro";
+
+/**
+ * `<GlossarySpecContent>` — per-entry Spec content for the route at
+ * `/library/glossary/<slug>/` (W4c Batch 7 Task 7.3). Third of five
+ * W4a-era Spec content components; follows the Task 7.1 (Equations) +
+ * Task 7.2 (Misconceptions) template — the route file is a thin
+ * `getStaticPaths` + layout-wiring shell.
+ *
+ * Renders, per W4c design D3:
+ *   1. Heading (the term) via `<LibraryCollectionShell>`,
+ *   2. Epistemic-role label ("Role: Observable") per ADR 0058
+ *      §R-deep-dive — definitions are terminological grounding;
+ *      observable is the primary role from the role pair
+ *      "observable / inference (terminological grounding)",
+ *   3. Pre-rendered HTML body via `set:html` (the source aside body,
+ *      escaped at extraction time),
+ *   4. Cross-references — "Referenced in" listing the Unit(s) that
+ *      cite this term via `<GlossaryTerm>`. Real cross-collection
+ *      links: glossary-term is one of the four inline-ref kinds in
+ *      `INLINE_REF_TARGETS` (lookup-prop `name`). The audit's D4
+ *      invariant matches via `slugify(usage.refKey) === entry.slug`,
+ *      so the route filters `inlineRefUsages` by `kind === "glossary-term"`
+ *      AND `slugify(refKey) === entry.slug` to derive the citing units,
+ *   5. "Defined in" back-link prose: the parent Unit slug that owns
+ *      the source `<Aside kind="definition">` block. v1 lists the
+ *      slug as a `<code>` run (the Unit → URL link shape is Tier-2
+ *      and not locked yet; deferring the linkify per W2 mirrors
+ *      Task 7.1's "cross-refs to <code>" decision).
+ *
+ * Wraps content in `<LibraryCollectionShell collection="glossary-spec"
+ * heading={entry.term}>` — per-entry use of the shell (same shape as
+ * Tasks 7.1 + 7.2). The shell owns the `<section aria-labelledby>`
+ * landmark + the H1.
+ *
+ * Pure Astro; no client JS.
+ */
+export interface Props {
+  entry: DefinitionEntry;
+  /** Units that reference this term via `<GlossaryTerm>` (derived at the route level by filtering `inlineRefUsages`). */
+  referencingUnits: ReadonlyArray<string>;
+}
+
+const { entry, referencingUnits } = Astro.props;
+
+const crossrefsHeadingId = `sophie-glossary-spec-${entry.slug}-crossrefs`;
+const definedInHeadingId = `sophie-glossary-spec-${entry.slug}-defined-in`;
+---
+
+<LibraryCollectionShell
+  collection='glossary-spec'
+  heading={entry.term}
+  emptyText=''
+  isEmpty={false}
+>
+  <div
+    class='sophie-glossary-spec'
+    data-sophie-glossary-spec={entry.slug}
+  >
+    <p class='sophie-glossary-spec__role' data-epistemic-role='observable'>
+      <span class='sophie-glossary-spec__role-label'>Role:</span>{" "}
+      <span class='sophie-glossary-spec__role-value'>Observable</span>
+    </p>
+
+    <div class='sophie-glossary-spec__body' set:html={entry.body} />
+
+    <section
+      class='sophie-glossary-spec__defined-in'
+      aria-labelledby={definedInHeadingId}
+    >
+      <h2
+        id={definedInHeadingId}
+        class='sophie-glossary-spec__defined-in-heading'
+      >
+        Defined in
+      </h2>
+      <p class='sophie-glossary-spec__defined-in-body'>
+        <code>{entry.unit}</code>
+      </p>
+    </section>
+
+    {referencingUnits.length > 0 && (
+      <section
+        class='sophie-glossary-spec__crossrefs'
+        aria-labelledby={crossrefsHeadingId}
+      >
+        <h2
+          id={crossrefsHeadingId}
+          class='sophie-glossary-spec__crossrefs-heading'
+        >
+          Referenced in
+        </h2>
+        <ul class='sophie-glossary-spec__crossrefs-list'>
+          {referencingUnits.map((unit) => (
+            <li class='sophie-glossary-spec__crossrefs-item'>
+              <code>{unit}</code>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+  </div>
+</LibraryCollectionShell>
