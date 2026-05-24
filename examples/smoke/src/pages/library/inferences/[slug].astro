@@ -1,0 +1,79 @@
+---
+import { buildModuleNavInputs, indexAccumulator } from "@sophie/astro";
+import InferenceSpecContent from "@sophie/astro/components/InferenceSpecContent.astro";
+import ModuleNav from "@sophie/astro/components/ModuleNav.astro";
+import TextbookHead from "@sophie/astro/components/TextbookHead.astro";
+import TextbookLayout from "@sophie/astro/components/TextbookLayout.astro";
+import { SophieChapter } from "@sophie/astro/client";
+import { getCollection } from "astro:content";
+import { figures as figureRegistry } from "../../../content/figures";
+
+/**
+ * `/library/inferences/<slug>/` — per-entry Inference Spec page
+ * (W4c Batch 8 Task 8.3). Sibling to the W4c Batch 5 rollup at
+ * `examples/smoke/src/pages/library/inferences.astro`. Third of
+ * three OMIFlow Spec routes (Tasks 8.1-8.3); mirrors Tasks 8.1
+ * (Observable) + 8.2 (Model) templates with role substitution per
+ * ADR 0058 §4.
+ *
+ * Per-route surface: each OMIFlow has 3 slots (observable / model /
+ * inference); this Spec family surfaces ONE slot — the `inference`
+ * slot — per route. Tasks 8.1 + 8.2 are sibling Spec families for
+ * `observable` and `model` respectively, identical shape with role
+ * substitution per ADR 0058 §4.
+ *
+ * `getStaticPaths` enumerates from `indexAccumulator.omiFlows` — one
+ * path per OMIFlow callsite. Slug shape: `${unit}-${anchor}`.
+ * OMIFlowEntry has no `slug` field of its own; the accumulator keys
+ * entries on `${unit}#${anchor}` (accumulator.ts:725) which is
+ * structurally unique by construction, so the URL-safe
+ * `${unit}-${anchor}` form inherits that uniqueness. No new audit
+ * invariant is required (mirrors the KeyInsight Task 2.1 D4 fallback
+ * pattern but is *always* the slug here — OMIFlowEntry carries no
+ * title field).
+ *
+ * The `<InferenceSpecContent>` component (sibling-tested via
+ * `InferenceSpecContent.axe.test.ts`) owns the Spec render shape;
+ * this route is a thin layout-wiring shell.
+ */
+
+export async function getStaticPaths() {
+  const pedagogy = indexAccumulator.asPedagogyIndex();
+  return pedagogy.omiFlows.map((entry) => ({
+    params: { slug: `${entry.unit}-${entry.anchor}` },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+
+const figureRegistryArray = Object.values(figureRegistry);
+const allSections = (await getCollection("sections")).map((s) => s.data);
+const allUnits = (await getCollection("units")).map((u) => u.data);
+const { modules, chapters } = buildModuleNavInputs(allSections, allUnits);
+
+const pageTitle = entry.inference.title || "Inference";
+---
+
+<html lang='en'>
+  <head>
+    <meta charset='utf-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1' />
+    <title>{pageTitle} — Inference</title>
+    <meta
+      name='description'
+      content={`Spec page for the OMIFlow inference "${pageTitle}".`}
+    />
+    <TextbookHead />
+  </head>
+  <body>
+    <SophieChapter client:load>
+      <TextbookLayout figureRegistry={figureRegistryArray}>
+        <Fragment slot='sidebar'>
+          <ModuleNav modules={modules} chapters={chapters} />
+        </Fragment>
+        <InferenceSpecContent entry={entry} />
+      </TextbookLayout>
+    </SophieChapter>
+  </body>
+</html>
