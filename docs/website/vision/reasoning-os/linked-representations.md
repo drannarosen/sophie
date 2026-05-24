@@ -80,7 +80,7 @@ Sophie already has a state primitive:
 (per ADR 0007 + ADR 0029). It exists to persist *per-component,
 per-student* interaction state across sessions — a student's
 answer to a `<Predict>`, the open/closed state of a
-`<CollapsibleCard>`, the entered code in a `<CodeCell>`. The data
+`<Dropdown>`, the entered code in a `<CodeCell>`. The data
 flow is:
 
 ```

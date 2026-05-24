@@ -35,7 +35,7 @@ export const CalloutVariant = z.enum([
   //     pedagogy index — by design. Renders with Sparkles icon +
   //     "The More You Know: " title prefix.
   //
-  // Both default-collapsed via composed `<CollapsibleCard>`;
+  // Both default-collapsed via native `<details>` (see Callout.tsx);
   // print mode auto-expands via `@media print`.
   "deep-dive",
   "the-more-you-know",

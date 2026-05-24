@@ -1,0 +1,56 @@
+/* Chrome primitive — Card.
+ *
+ * Sophie-native opinionated aesthetic per PR 5 design doc § 3.
+ * Clean tile on --sophie-surface-1; header gets a bottom-border
+ * separator; no icons / no left-stripe (those belong to <Callout>'s
+ * grammar). No new tokens added Phase B — composes only from the
+ * existing TS-token → CSS-var pipeline (ADR 0005).
+ */
+
+.card {
+  display: block;
+  margin-block: var(--sophie-space-3);
+  background: var(--sophie-surface-1);
+  border: 1px solid var(--sophie-border);
+  border-radius: var(--sophie-radius-sm);
+  color: var(--sophie-text);
+  font-family: var(--sophie-font-sans);
+  line-height: var(--sophie-leading-prose);
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--sophie-space-2);
+  padding: var(--sophie-space-2) var(--sophie-space-3);
+  background: var(--sophie-surface-1);
+  border-bottom: 1px solid var(--sophie-border);
+  color: var(--sophie-text);
+  font-family: var(--sophie-font-sans);
+  font-weight: var(--sophie-weight-semibold);
+}
+
+.body {
+  padding: var(--sophie-space-3);
+}
+
+.body > :first-child {
+  margin-block-start: 0;
+}
+
+.body > :last-child {
+  margin-block-end: 0;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: var(--sophie-space-2);
+  padding: var(--sophie-space-2) var(--sophie-space-3);
+  background: var(--sophie-surface-2);
+  border-top: 1px solid var(--sophie-border);
+  color: var(--sophie-text-muted);
+  font-family: var(--sophie-font-sans);
+  font-size: var(--sophie-text-sm);
+}

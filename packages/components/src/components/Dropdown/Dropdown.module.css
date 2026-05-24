@@ -1,19 +1,35 @@
-/*
- * CollapsibleCard styles — ported from
- * astr101-sp26/assets/theme/collapsible-cards.scss to Sophie's
- * design tokens. The chevron rotation is driven by Radix's
- * `[data-state="open"]` selector, not the native <details> [open]
- * attribute the source SCSS targeted.
+/* Chrome primitive — Dropdown.
+ *
+ * Ported from CollapsibleCard's aesthetic (3px left accent, soft
+ * shadow, chevron rotation) to support the multi-item Accordion shape.
+ * Each item is its own card; items stack with a small gap. The
+ * chevron rotates from rotate(-45deg) to rotate(45deg) on
+ * [data-state="open"] (Radix Accordion's open-state attribute).
  */
 
-.card {
-  margin-block: var(--space-cc-block, 0.5rem);
-  border-inline-start: 3px solid
-    var(--color-cc-accent, var(--sophie-brand-teal));
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sophie-space-2);
+  margin-block: var(--sophie-space-3);
+}
+
+.item {
+  border-inline-start: 3px solid var(--sophie-brand-teal);
   border-radius: var(--sophie-radius-sm);
-  background: var(--color-cc-bg, var(--sophie-surface-1));
+  background: var(--sophie-surface-1);
   box-shadow: var(--sophie-shadow-card);
   overflow: hidden;
+}
+
+.header {
+  /* Radix wraps the Trigger in a <h3> via Accordion.Header. Strip the
+   * default margin/padding so the trigger button owns the layout. */
+  display: block;
+  margin: 0;
+  padding: 0;
+  font-size: inherit;
+  font-weight: inherit;
 }
 
 .trigger {
@@ -21,7 +37,7 @@
   align-items: center;
   gap: var(--sophie-space-2);
   width: 100%;
-  padding: var(--space-cc-trigger-y, 0.875rem) var(--space-cc-trigger-x, 1rem);
+  padding: var(--sophie-space-3) var(--sophie-space-4);
   background: transparent;
   border: 0;
   font: inherit;
@@ -33,11 +49,7 @@
 }
 
 .trigger:hover {
-  background: color-mix(
-    in oklch,
-    var(--color-cc-accent, var(--sophie-brand-teal)) 6%,
-    transparent
-  );
+  background: color-mix(in oklch, var(--sophie-brand-teal) 6%, transparent);
 }
 
 .trigger:focus-visible {
@@ -65,10 +77,10 @@
 }
 
 .trigger:hover .chevron {
-  border-color: var(--color-cc-accent, var(--sophie-brand-teal));
+  border-color: var(--sophie-brand-teal);
 }
 
-.title {
+.label {
   flex: 1;
 }
 
@@ -79,7 +91,7 @@
   );
   padding-inline-end: var(--sophie-space-4, 1rem);
   padding-block-end: var(--sophie-space-4, 1rem);
-  background: var(--color-cc-content-bg, var(--sophie-surface-2));
+  background: var(--sophie-surface-2);
   font-size: var(--sophie-text-sm);
   line-height: var(--sophie-leading-prose);
   color: var(--sophie-text);
@@ -87,11 +99,6 @@
 
 .content :is(p, li) {
   margin-block: var(--sophie-space-2, 0.5rem);
-}
-
-.content strong {
-  color: var(--sophie-brand-violet-text);
-  font-weight: var(--sophie-weight-semibold);
 }
 
 @media (prefers-reduced-motion: reduce) {

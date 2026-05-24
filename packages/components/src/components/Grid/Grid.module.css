@@ -1,0 +1,42 @@
+/* Chrome primitive — Grid.
+ *
+ * CSS-only responsive grid. Cols + gap drive inline custom properties
+ * set by the component (`--grid-cols`, `--grid-gap`). The responsive
+ * breakpoint collapses to a single column at <640px; chapter cells
+ * should always be readable on phones.
+ *
+ * Non-landmark by design — `role="list"` is grouping. See R10 doctrine
+ * in AGENTS.md.
+ */
+
+.list {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-cols, 1), minmax(0, 1fr));
+  gap: var(--grid-gap, var(--sophie-space-3));
+  margin-block: var(--sophie-space-3);
+  /* Reset the <ul> defaults — Grid is layout chrome, not a bulleted
+   * list. The semantic <ul> wrapper satisfies the `role="list"`
+   * grouping that screen readers expect. */
+  list-style: none;
+  padding-inline-start: 0;
+}
+
+.responsive {
+  @media (max-width: 640px) {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+}
+
+.item {
+  /* Cell wrapper. Block-level by default so Card / Aside children fill
+   * the cell width. No min-height — content drives height. */
+  display: block;
+  min-width: 0;
+}
+
+.empty {
+  /* Empty-children render path: no role="list" (list-with-no-items
+   * is an axe violation). Plain div, no display rules; collapses
+   * harmlessly into surrounding flow. */
+  display: block;
+}

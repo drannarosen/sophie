@@ -31,7 +31,9 @@ import { describe, expect, it } from "vitest";
  *   open http://localhost:4321/chapters/spoiler-alerts
  *   → console: "Invalid hook call. ... You might have more than
  *     one copy of React in the same app" — ~15+ times in
- *     <CollapsibleCard> via Radix UI's <Collapsible>.
+ *     `<CollapsibleCard>` (chrome primitive replaced by `<Dropdown>`
+ *     in the Phase B chrome consolidation) via Radix UI's
+ *     `<Collapsible>`.
  */
 
 // vitest runs from the package's working directory under

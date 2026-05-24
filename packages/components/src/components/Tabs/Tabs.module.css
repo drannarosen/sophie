@@ -1,0 +1,69 @@
+/* Chrome primitive — Tabs.
+ *
+ * Visual aesthetic: underline-style trigger bar over the chapter's
+ * surface-1 background; active tab carries the brand accent underline
+ * + body weight. Composes only from existing tokens (ADR 0005); no
+ * new tokens added Phase B.
+ */
+
+.root {
+  display: block;
+  margin-block: var(--sophie-space-3);
+}
+
+.list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sophie-space-1);
+  border-bottom: 1px solid var(--sophie-border);
+  margin-block-end: var(--sophie-space-3);
+}
+
+.trigger {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  border-block-end: 2px solid transparent;
+  padding: var(--sophie-space-2) var(--sophie-space-3);
+  margin-block-end: -1px;
+  font: inherit;
+  font-weight: var(--sophie-weight-medium);
+  color: var(--sophie-text-muted);
+  cursor: pointer;
+  transition:
+    color 150ms ease,
+    border-color 150ms ease;
+}
+
+.trigger:hover {
+  color: var(--sophie-text);
+}
+
+.trigger:focus-visible {
+  outline: 2px solid var(--sophie-accent);
+  outline-offset: 2px;
+  border-radius: var(--sophie-radius-xs);
+}
+
+.trigger[data-state="active"] {
+  color: var(--sophie-text);
+  border-block-end-color: var(--sophie-accent);
+  font-weight: var(--sophie-weight-semibold);
+}
+
+.content {
+  /* No padding — let the panel's own components own their margins. */
+  display: block;
+}
+
+.content:focus-visible {
+  outline: 2px solid var(--sophie-accent);
+  outline-offset: 2px;
+  border-radius: var(--sophie-radius-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trigger {
+    transition: none;
+  }
+}

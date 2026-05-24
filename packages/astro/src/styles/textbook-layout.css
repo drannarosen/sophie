@@ -1522,14 +1522,17 @@
      Gate) emits hooks for future use but needs no print rule today —
      native radio buttons print their current state correctly. */
 
-  /* CollapsibleCard: force-expand the body and hide the chevron, so
+  /* Dropdown: force-expand all items and hide the chevron, so
      printed handouts contain the deep-dive content rather than just
-     the closed disclosure header. Radix sets `data-state` on the
-     Collapsible.Content element; we override its closed-state hide. */
-  .sophie-collapsible-card [data-state] {
+     closed disclosure headers. Radix Accordion sets `data-state` on
+     each Accordion.Content element; we override the closed-state
+     hide. (Replaces the Phase A `<CollapsibleCard>` print rule;
+     same intent, broader scope — Accordion items, not a single
+     Collapsible.) */
+  .sophie-dropdown [data-state] {
     display: block;
   }
-  .sophie-collapsible-card [aria-hidden="true"] {
+  .sophie-dropdown [aria-hidden="true"] {
     display: none;
   }
 

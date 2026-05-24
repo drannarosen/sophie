@@ -101,7 +101,7 @@ consumers see a uniform read.
 | `<Objective>`                                | (none)            | pedagogy chrome                                  |
 | `<Figure>`                                   | (caption-dependent) | a Figure rendering a model prediction is `model`; a Figure showing data is `observable`; declare via `epistemicRole=` when ambiguous |
 | `<Aside>` (general)                          | (none)            | depends on `kind=`; chrome by default            |
-| `<CollapsibleCard>`                          | (none)            | progressive-disclosure chrome                    |
+| `<Dropdown>`                                 | (none)            | progressive-disclosure chrome (replaces `<CollapsibleCard>` from Phase A) |
 | `<InteractiveCheckbox>`                      | (none)            | teaching-move chrome                             |
 | `<EffortLog>`                                | (none)            | metacognition / metric chrome                    |
 | `<GlossaryTerm>`                             | (none)            | reference chrome                                 |
