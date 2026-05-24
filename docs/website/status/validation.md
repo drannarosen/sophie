@@ -140,7 +140,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0077-ai-authoring-packets.md](/ai-authoring-packets/) | unvalidated | accepted design | — | — |  |
 | [docs/website/decisions/0078-reasoning-trace-composition.md](/reasoning-trace-composition/) | unvalidated | accepted design | — | — |  |
 | [docs/website/decisions/0079-topic-registry-and-resolution-pattern.md](/topic-registry-and-resolution-pattern/) | in progress | accepted design | 2026-05-23 | deployment, review, test |  |
-| [docs/website/decisions/0080-course-spec-format-v0.1.md](/course-spec-format-v0.1/) | in progress | shipped | 2026-05-25 | deployment, test |  |
+| [docs/website/decisions/0080-course-spec-format-v0-1.md](/course-spec-format-v0-1/) | in progress | shipped | 2026-05-25 | deployment, test |  |
 
 ### Reference docs
 
