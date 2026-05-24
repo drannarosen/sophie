@@ -1,0 +1,99 @@
+---
+import { buildModuleNavInputs, indexAccumulator } from "@sophie/astro";
+import MisconceptionSpecContent from "@sophie/astro/components/MisconceptionSpecContent.astro";
+import ModuleNav from "@sophie/astro/components/ModuleNav.astro";
+import TextbookHead from "@sophie/astro/components/TextbookHead.astro";
+import TextbookLayout from "@sophie/astro/components/TextbookLayout.astro";
+import { SophieChapter } from "@sophie/astro/client";
+import { getCollection } from "astro:content";
+import { figures as figureRegistry } from "../../../content/figures";
+
+/**
+ * `/library/misconceptions/<slug>/` — per-entry Misconception Spec
+ * page (W4c Batch 7 Task 7.2). Sibling to the W4a rollup at
+ * `examples/smoke/src/pages/library/misconceptions.astro` (untouched
+ * per ADR 0070's W4a implementation note).
+ *
+ * `getStaticPaths` enumerates from `indexAccumulator` rather than a
+ * content collection — unlike equations (file-per-entry), each
+ * misconception is one of N `<Aside kind="misconception">` /
+ * `<Callout variant="misconception">` blocks inside a Unit MDX
+ * source, so the accumulator is the canonical per-entry source.
+ * Each entry's `slug` field (W4c Batch 1b derived, mirrors
+ * `KeyInsightEntry.slug`) is unique across the textbook (audit
+ * invariant `Misconception-slug-unique`); one path per entry.
+ *
+ * Cross-references — the "Surfaces in" list — derive from the same
+ * accumulator pass: the parent Unit(s) containing this slug.
+ * Misconceptions don't have an inline-ref kind in
+ * `INLINE_REF_TARGETS` (they're Aside/Callout content, not inline
+ * JSX refs), so we group the misconceptions collection by `unit`
+ * for the slug rather than reading from `inlineRefUsages`. The
+ * `Misconception-slug-unique` invariant guarantees the list is
+ * typically single-item at v1; the list shape is preserved for
+ * future loosening of the invariant.
+ *
+ * The `<MisconceptionSpecContent>` component (sibling-tested via
+ * `MisconceptionSpecContent.axe.test.ts`) owns the Spec render
+ * shape; this route is a thin layout-wiring shell.
+ */
+
+export async function getStaticPaths() {
+  const pedagogy = indexAccumulator.asPedagogyIndex();
+  return pedagogy.misconceptions.map((m) => ({ params: { slug: m.slug } }));
+}
+
+const { slug } = Astro.params;
+
+const pedagogy = indexAccumulator.asPedagogyIndex();
+const misconception = pedagogy.misconceptions.find((m) => m.slug === slug);
+if (!misconception) {
+  // Should be unreachable: getStaticPaths enumerates the same
+  // accumulator pass. A mismatch here surfaces an orchestrator
+  // wiring break, not author error.
+  throw new Error(
+    `Misconception Spec route: no accumulator entry for slug="${slug}"; getStaticPaths/orchestrator drift`
+  );
+}
+const units = Array.from(
+  new Set(
+    pedagogy.misconceptions
+      .filter((m) => m.slug === slug)
+      .map((m) => m.unit)
+  )
+);
+
+const figureRegistryArray = Object.values(figureRegistry);
+const allSections = (await getCollection("sections")).map((s) => s.data);
+const allUnits = (await getCollection("units")).map((u) => u.data);
+const { modules, chapters } = buildModuleNavInputs(allSections, allUnits);
+
+const pageTitle =
+  misconception.label ??
+  (misconception.length === "short"
+    ? "Misconception (brief)"
+    : "Misconception");
+---
+
+<html lang='en'>
+  <head>
+    <meta charset='utf-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1' />
+    <title>{pageTitle} — Misconception</title>
+    <meta
+      name='description'
+      content={`Spec page for the misconception "${pageTitle}".`}
+    />
+    <TextbookHead />
+  </head>
+  <body>
+    <SophieChapter client:load>
+      <TextbookLayout figureRegistry={figureRegistryArray}>
+        <Fragment slot='sidebar'>
+          <ModuleNav modules={modules} chapters={chapters} />
+        </Fragment>
+        <MisconceptionSpecContent misconception={misconception} units={units} />
+      </TextbookLayout>
+    </SophieChapter>
+  </body>
+</html>
