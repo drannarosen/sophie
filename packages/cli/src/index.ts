@@ -2,6 +2,7 @@ import { defineCommand } from "citty";
 import { auditCommand } from "./commands/audit.ts";
 import { previewCommand } from "./commands/preview.ts";
 import { startCommand } from "./commands/start.ts";
+import { validateCommand } from "./commands/validate.ts";
 
 export const main = defineCommand({
   meta: {
@@ -15,5 +16,6 @@ export const main = defineCommand({
     dev: startCommand,
     preview: previewCommand,
     audit: auditCommand,
+    validate: validateCommand,
   },
 });

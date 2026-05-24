@@ -41,6 +41,15 @@ export {
   ChapterSectionSchema,
 } from "./chapter-section.js";
 export {
+  COURSE_SPEC_SCHEMA_ID,
+  COURSE_SPEC_VERSION,
+  type CourseSpec,
+  CourseSpecSchema,
+  type PedagogyPattern,
+  PedagogyPatternSchema,
+  validateCourseSpec,
+} from "./course-spec.js";
+export {
   EPISTEMIC_ROLES,
   type EpistemicRole,
   EpistemicRoleSchema,
@@ -213,3 +222,8 @@ export {
   type ValidationStatus,
   ValidationStatusSchema,
 } from "./validation.js";
+export {
+  type VoiceContract,
+  VoiceContractSchema,
+  type VoiceRegister,
+} from "./voice-contract.js";
