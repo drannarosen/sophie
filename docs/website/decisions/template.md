@@ -10,6 +10,25 @@ This page is the template every {abbr}`ADR` follows. Copy it to
 `decisions/NNNN-short-title.md`, replace placeholders, and update the
 toc in `myst.yml`.
 
+## Filename conventions
+
+The filename pattern is `NNNN-short-title.md` — zero-padded four-digit
+id, then a kebab-case slug, then `.md`. Two constraints worth calling
+out:
+
+- **No dots in the slug.** Don't write `0080-course-spec-format-v0.1.md`;
+  write `0080-course-spec-format-v0-1.md` instead. MyST slugifies `.`
+  → `-` when generating the URL (`_build/html/<slug>/`), but the
+  validation-dashboard generator
+  ([`scripts/regenerate-validation-index.mts`](https://github.com/drannarosen/sophie/blob/main/scripts/regenerate-validation-index.mts))
+  uses the filename literal, so a dotted filename produces a dashboard
+  `href` that doesn't resolve to any rendered HTML artifact.
+  Integration test `I5` in
+  [`packages/astro/src/lib/validation/index-generator.integration.test.ts`](https://github.com/drannarosen/sophie/blob/main/packages/astro/src/lib/validation/index-generator.integration.test.ts)
+  fails the unit job when this drift exists.
+- **Lowercase + kebab-case + alphanumerics only.** Same reason — the
+  filename slug must equal the MyST URL slug character-for-character.
+
 ## When to write an ADR
 
 Write an ADR when a decision:
