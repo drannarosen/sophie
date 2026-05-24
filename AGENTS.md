@@ -297,17 +297,23 @@ to every PR, every design decision, every refactor.
   Integration test I3 catches this on the unit job; catching it
   locally first is faster.
 
-- **Standing PR-review rules (R6–R9).** Apply on every PR; cite by
+- **Standing PR-review rules (R6–R10).** Apply on every PR; cite by
   number in review comments.
   - **R6 — MyST anchor verification.** Cited ADR sections use
     MyST heading-slug, not `#L\d+` GitHub line-anchors. Catch:
     grep `docs/website/**/*.md` for `#L[0-9]+`. Originating
     finding: W4b R+CR I1.
-  - **R7 — Silent-skip extractor disposition.** Every
-    `if (!matched) return;` filter in an extractor has either a
-    paired audit invariant OR a `findings.push` at the filter
-    site. Bare silent-skips produce dead-code audits.
-    Originating finding: W4b R+CR C1.
+  - **R7 — Silent-skip extractor disposition.** Every silent-skip
+    filter in an extractor has either a paired audit invariant OR a
+    `findings.push` at the filter site. Bare silent-skips produce
+    dead-code audits. **Grep covers three filter shapes:**
+    negation (`if (!X) return;`), equality-undefined
+    (`if (X === undefined) return;`), and equality-null
+    (`if (X === null) return;`). Full pattern:
+    `grep -rE "if \(!(\w+)\)|if \((\w+) === undefined\)|if \((\w+) === null\)" packages/astro/src/lib/pedagogy-index/extractors/`.
+    Originating finding: W4b R+CR C1; pattern extended W4c
+    Batch 0.5b (found 2 sites using equality-check shape the
+    original negation-only grep missed).
   - **R8 — Module-scoped MDX caches declare HMR strategy.** Any
     module-level cache (`Map`, `Set`, `WeakMap`) in the
     MDX-compile pipeline includes a header comment naming when
@@ -325,8 +331,22 @@ to every PR, every design decision, every refactor.
     AND documented in a sibling comment. Refinement source:
     post-W4b audit A2-R9 (test-mock duplications across 6 test
     files).
+  - **R10 — Landmark choice when nested under a parent landmark.**
+    When a new component is designed to live inside another
+    landmark (e.g., a layout that owns `<main>`), declare its
+    landmark element as `<section aria-labelledby={...}>` —
+    **not** `<main>` (collides), **not** `<article>` (not a
+    landmark), **not** `<div>` (nothing for the screen reader
+    to announce). The named-region pattern is the default;
+    deviations require a sibling comment explaining why.
+    Apply during component design AND review. Originating
+    finding: W4c Surprise #5 (three same-root-cause landmark
+    bugs surfaced by Batch 4–5 axe coverage: `LibraryCollectionShell`
+    used `<main>` inside the chapter layout, `CourseObjectives`
+    had a nameless `<section>`, `TopicSpecContent` used
+    `<article>` instead of a landmark).
 
-  See `feedback_review_rules_r6_r9.md` (under
+  See `feedback_review_rules_r6_r10.md` (under
   `~/.claude/projects/-Users-anna-Teaching-sophie/memory/`) for origin
   story + class-of-issue patterns each rule formalizes.
 
