@@ -9,9 +9,93 @@ tags:
   - reasoning-os
 status: accepted-design
 validation:
-  status: unvalidated
-  last_validated_date: null
-  evidence: []
+  status: in-progress
+  last_validated_date: "2026-05-23"
+  evidence:
+    - kind: test
+      ref: packages/astro/src/components/LibraryCollectionShell.axe.test.ts
+      date: "2026-05-23"
+      notes: "Shell extraction (D2 hybrid API: text props + slots); axe-clean as a standalone container; outer <section aria-labelledby> region landmark."
+    - kind: test
+      ref: packages/astro/src/components/CourseGlossary.axe.test.ts
+      date: "2026-05-23"
+      notes: "Refactored to use LibraryCollectionShell; axe-clean post-refactor."
+    - kind: test
+      ref: packages/astro/src/components/CourseKeyInsights.axe.test.ts
+      date: "2026-05-23"
+      notes: "Refactored to use LibraryCollectionShell; axe-clean post-refactor."
+    - kind: test
+      ref: packages/astro/src/components/CourseEquations.axe.test.ts
+      date: "2026-05-23"
+      notes: "Refactored to use LibraryCollectionShell; axe-clean post-refactor."
+    - kind: test
+      ref: packages/astro/src/components/CourseMisconceptions.axe.test.ts
+      date: "2026-05-23"
+      notes: "Refactored to use LibraryCollectionShell; axe-clean post-refactor."
+    - kind: test
+      ref: packages/astro/src/components/CourseFigures.axe.test.ts
+      date: "2026-05-23"
+      notes: "Refactored to use LibraryCollectionShell; axe-clean post-refactor."
+    - kind: test
+      ref: packages/astro/src/components/CourseObjectives.axe.test.ts
+      date: "2026-05-23"
+      notes: "Stays outside the shell per W4c D1 exception (3-level grouping); internal aria-labelledby landmark added for standalone axe-cleanness."
+    - kind: test
+      ref: packages/astro/src/components/CourseObservables.axe.test.ts
+      date: "2026-05-23"
+      notes: "New OMIFlow-derived rollup per ADR 0058 §4 slot-name-binds-role."
+    - kind: test
+      ref: packages/astro/src/components/CourseModels.axe.test.ts
+      date: "2026-05-23"
+      notes: "New OMIFlow-derived rollup per ADR 0058 §4 slot-name-binds-role."
+    - kind: test
+      ref: packages/astro/src/components/CourseInferences.axe.test.ts
+      date: "2026-05-23"
+      notes: "New OMIFlow-derived rollup per ADR 0058 §4 slot-name-binds-role."
+    - kind: test
+      ref: packages/astro/src/components/EquationSpecContent.axe.test.ts
+      date: "2026-05-23"
+      notes: "Per-entry Spec route /library/equations/<id>/ — BiographyRender + KaTeX + role 'model' + cross-refs from equationCitations."
+    - kind: test
+      ref: packages/astro/src/components/MisconceptionSpecContent.axe.test.ts
+      date: "2026-05-23"
+      notes: "Per-entry Spec route /library/misconceptions/<slug>/ — role 'misconception'."
+    - kind: test
+      ref: packages/astro/src/components/GlossarySpecContent.axe.test.ts
+      date: "2026-05-23"
+      notes: "Per-entry Spec route /library/glossary/<slug>/ — cross-refs via slugify(refKey) per D4."
+    - kind: test
+      ref: packages/astro/src/components/FigureSpecContent.axe.test.ts
+      date: "2026-05-23"
+      notes: "Per-entry Spec route /library/figures/<name>/ — two-tier registry+usage; raw refKey match per F2."
+    - kind: test
+      ref: packages/astro/src/components/KeyInsightSpecContent.axe.test.ts
+      date: "2026-05-23"
+      notes: "Per-entry Spec route /library/key-insights/<slug>/ — uses Batch 1+2 derived slug; role 'inference'."
+    - kind: test
+      ref: packages/astro/src/components/ObservableSpecContent.axe.test.ts
+      date: "2026-05-23"
+      notes: "New per-OMIFlow-callsite Spec route /library/observables/<unit>-<anchor>/ per W4c D3 + ADR 0058 §4."
+    - kind: test
+      ref: packages/astro/src/components/ModelSpecContent.axe.test.ts
+      date: "2026-05-23"
+      notes: "New per-OMIFlow-callsite Spec route /library/models/<unit>-<anchor>/ per W4c D3 + ADR 0058 §4."
+    - kind: test
+      ref: packages/astro/src/components/InferenceSpecContent.axe.test.ts
+      date: "2026-05-23"
+      notes: "New per-OMIFlow-callsite Spec route /library/inferences/<unit>-<anchor>/ per W4c D3 + ADR 0058 §4."
+    - kind: test
+      ref: packages/astro/src/lib/pedagogy-audit/invariants/key-insights.test.ts
+      date: "2026-05-23"
+      notes: "KI-slug-unique audit invariant (Batch 2 Task 2.2) — cross-unit slug-collision detection; pathological-'term' hint when slug derives from non-alphanumeric titles."
+    - kind: test
+      ref: packages/astro/src/lib/pedagogy-audit/invariants/misconceptions.test.ts
+      date: "2026-05-23"
+      notes: "Misconception-slug-unique audit invariant (Batch 1b) — sibling cross-unit slug-collision detection."
+    - kind: deployment
+      ref: examples/smoke/dist/library/index.html
+      date: "2026-05-23"
+      notes: "Library hub surfaces 10 rooms with counts from PedagogyIndex (Topics shipped in W4b; 9 W4c rooms + Topics). Smoke build: 19 → 129 pages."
 ---
 
 # ADR 0070: Library room + registry-driven Spec pages and Cheatsheets
@@ -313,3 +397,118 @@ existing `OMIFlowEntry` slot data per the [W4 meta-plan
 Q4b](../../../.claude/plans/sophie-wedge-b-followup-w4-tranquil-glade.md).
 The 3 deferred rooms (Assumption, Approximation, Numerical)
 await role-tagging extension or new entry types.
+
+### 2026-05-23 — Wedge B-followup W4c: shell extraction + 3 OMIFlow rooms + 8 per-entry Spec routes
+
+W4c is the largest single increment on this ADR since the original
+2026-05-21 design lock. It does five interlocking things: extracts
+the Course\* surface chrome into a shared shell, refactors the five
+W4a Course\* components onto it (with one principled exception),
+ships three new OMIFlow-derived rollups, ships eight new per-entry
+Spec routes, and adds two cross-unit slug-uniqueness audit
+invariants. The Library hub now surfaces ten rooms with live
+counts. Smoke build grows 19 → 129 pages.
+
+**Companion ADR revision entries.** ADR 0058 records the
+Observable/Model/Inference rollup chrome + Spec routes shipped via
+OMIFlow slot derivation per §4 (slot name binds role). ADR 0079
+records the PRA-2 graduation + Topic Spec page card-body inline
+rendering + the `<article>` → `<section aria-labelledby>` landmark
+fix. Read all three W4c entries together — the W4c work was a
+coordinated cross-ADR push, not three independent changes.
+
+**`<LibraryCollectionShell>` extraction (D2 hybrid API).** The five
+W4a Course\* components had grown a duplicated surface: each
+rendered a `<section>` wrapper with a heading + intro paragraph +
+entry-grid container. W4c lifts this chrome into
+`<LibraryCollectionShell>` with a deliberately hybrid API per
+W4c D2: text-shaped concerns (`heading`, `headingId`, `intro`,
+`emptyMessage`, `count`) are exposed as props; structurally-
+distinct concerns (the entry grid, any per-entry filter UI) are
+exposed as `<slot>` children. The outer wrapper is
+`<section aria-labelledby={headingId}>` — a region landmark, not
+`<main>` (avoids duplication with `<ContentColumn>`, which already
+owns the page's main landmark).
+
+**Five Course\* refactored onto the shell.** CourseGlossary,
+CourseKeyInsights, CourseEquations, CourseMisconceptions, and
+CourseFigures now consume `<LibraryCollectionShell>` for chrome
+and contribute their entry-grid bodies as slot children. Each
+refactor is a strict reduction in surface area — no new behavior,
+no per-component chrome variation.
+
+**CourseObjectives D1 exception.** CourseObjectives stays outside
+the shell per W4c D1: its three-level grouping (Unit → Section →
+Objective) is structurally distinct from the flat entry-grid the
+other five Course\* render, and forcing it through the shell would
+either degrade the shell's hybrid API to lowest-common-denominator
+slot-everything OR keep an `<LibraryCollectionShell variant=...>`
+escape valve that swallows the abstraction. Instead the component
+gets an internal `aria-labelledby`-bound landmark (matching the
+shell's pattern) so it remains axe-clean as a standalone surface.
+
+**Three new CourseX OMIFlow rollups.** CourseObservables,
+CourseModels, and CourseInferences derive their entry lists from
+existing `OMIFlowEntry` slot data — per
+[ADR 0058 §4](./0058-epistemic-component-contract.md) the slot
+name binds the role, so OMIFlow's three slots already constitute
+the role-classified data each rollup needs. No new schema, no new
+extractor; the entry-list is a projection of `PedagogyIndex.omiFlows`
+through the slot accessor. Each rollup uses `<LibraryCollectionShell>`
+identically to the five refactored W4a components.
+
+**Eight new per-entry Spec routes.** Five W4a-era + three new:
+
+| Route                                     | Wave | Highlights                                                                           |
+| ----------------------------------------- | ---- | ------------------------------------------------------------------------------------ |
+| `/library/equations/<id>/`                | W4a  | BiographyRender + KaTeX + epistemic role `model` + cross-refs from equationCitations |
+| `/library/misconceptions/<slug>/`         | W4a  | Role `misconception`; canonical instance per ADR 0058 §3                             |
+| `/library/glossary/<slug>/`               | W4a  | Cross-refs via `slugify(refKey)` per D4                                              |
+| `/library/figures/<name>/`                | W4a  | Two-tier registry+usage; raw `refKey` match per F2                                   |
+| `/library/key-insights/<slug>/`           | W4a  | Uses Batch 1+2 derived slug; role `inference`                                        |
+| `/library/observables/<unit>-<anchor>/`   | W4c  | New; per-OMIFlow-callsite per-slot Spec page per W4c D3                              |
+| `/library/models/<unit>-<anchor>/`        | W4c  | New; per-OMIFlow-callsite per-slot Spec page per W4c D3                              |
+| `/library/inferences/<unit>-<anchor>/`    | W4c  | New; per-OMIFlow-callsite per-slot Spec page per W4c D3                              |
+
+All eight render through dedicated `<XSpecContent>` Astro
+components with full axe coverage.
+
+**Two cross-unit slug-uniqueness audit invariants.** KI-slug-unique
+(Batch 2 Task 2.2) and Misconception-slug-unique (Batch 1b) detect
+cases where two different entries in different units would otherwise
+collide on the `/library/<collection>/<slug>/` Spec-route path. Both
+include a pathological-`"term"` diagnostic hint when the colliding
+slug derives from a title containing no alphanumerics (slugify's
+fallback case) — a class of bug that surfaces during real authoring
+because component-flavored content (e.g., a glossary entry titled
+`<term>`) produces an empty slug pre-fallback.
+
+**Library hub: 10 rooms with counts.** `/library/index.astro` now
+lists 10 rooms — the six W4a rooms (Glossary, Equations, Figures,
+KeyInsights, Misconceptions, Objectives), Topics (W4b), and the
+three new W4c rooms (Observables, Models, Inferences) — each
+showing a live count read from `PedagogyIndex`. The W4a hub was
+hand-rolled with 6 tile entries; W4c rewrites it to consume a
+manifest so adding the next room is one entry, not three edit
+points.
+
+**Tier-2 forward-compat data attributes (D8).** Every Course\*
+entry and every Spec page entry carries `data-section`,
+`data-unit`, `data-anchor` attributes. These have no rendering
+effect at W4c — they're declared now so a future Tier-2 filter UI
+(filter Library entries by section / unit / anchor without
+re-extracting from PedagogyIndex on the client) can consume them
+without a downstream chrome rewrite.
+
+**Smoke build: 19 → 129 pages.** The smoke fixture now exercises
+the eight new Spec routes across every entry in its registries
+(N misconceptions × 1 route + N equations × 1 route + ...). The
+build-time count is the headline evidence that the per-entry route
+templates work generically across real registry data.
+
+**HITL note.** The shell-vs-no-shell call for CourseObjectives
+(D1) was the only W4c brainstorm decision Anna explicitly broke
+the SoTA-default on — every other Course\* uniformly adopted the
+shell. The exception is documented because *not* documenting it
+would invite a future PR to "fix the inconsistency" by forcing
+CourseObjectives through the shell anyway.
