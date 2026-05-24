@@ -1,0 +1,94 @@
+---
+id: "chrome-primitives-demo"
+title: "Chrome Primitives Demo"
+chapter: 4
+order: 4
+lang: "en"
+description: "Smoke fixture exercising the four PR-5 chrome primitives — Card, Grid, Tabs, Dropdown — with astronomy content."
+tags: ["foundations", "chrome"]
+---
+
+import { Card, Dropdown, Grid, Tab, Tabs } from "@sophie/components";
+
+# Chrome primitives demo
+
+A short tour of Sophie's four chrome primitives. They are layout
+containers — they hold pedagogical content; they are not pedagogy.
+
+## A single Card
+
+<Card title="Spectral classification">
+  Stars are sorted from hottest (O-type, blue) through coolest
+  (M-type, red) by surface temperature. The Sun is a G2V star at
+  roughly 5,800 K.
+
+  <Card.Footer>
+    Source: Morgan-Keenan classification scheme (1943).
+  </Card.Footer>
+</Card>
+
+## A Grid of three Cards
+
+<Grid cols={3}>
+  <Card title="O type">
+    Hottest main-sequence stars; surface ~30,000 K. Blue light
+    dominates the visible continuum.
+  </Card>
+  <Card title="G type">
+    Sun-like stars; surface ~5,800 K. Yellow-white visible peak.
+  </Card>
+  <Card title="M type">
+    Coolest main-sequence; surface ~3,500 K. Red, with strong
+    molecular lines (TiO, VO).
+  </Card>
+</Grid>
+
+## Tabs across representational modes
+
+<Tabs defaultLabel="Continuum">
+  <Tab label="Continuum">
+    A blackbody continuum encodes effective temperature via Wien's
+    displacement law: λ_peak × T = 2.898 × 10⁻¹ cm·K (CGS).
+  </Tab>
+  <Tab label="Line spectra">
+    Absorption and emission lines arise from quantized atomic
+    transitions. Each element has a fingerprint of wavelengths.
+  </Tab>
+  <Tab label="Composition">
+    Line strength encodes the relative abundance of each element in
+    the stellar photosphere — the breakthrough Cecilia Payne
+    formalized in 1925.
+  </Tab>
+</Tabs>
+
+## Dropdown — single-item shorthand
+
+<Dropdown
+  client:load
+  course="smoke"
+  unit="chrome-primitives-demo"
+  id="deep-dive-hydrogen"
+  label="Deep Dive: Hydrogen's atomic fingerprint"
+>
+  The red glow of an H II region comes from hydrogen's H-alpha
+  transition at 656.3 nm — an electron dropping from the n=3 to n=2
+  level. Each Balmer line is a different jump down to n=2.
+</Dropdown>
+
+## Dropdown — multi-item accordion
+
+<Dropdown
+  client:load
+  course="smoke"
+  unit="chrome-primitives-demo"
+  id="blackbody-tour"
+>
+  <Dropdown.Item label="Wien's displacement law">
+    λ_peak T = 2.898 × 10⁻¹ cm·K (CGS). Hotter stars peak at shorter
+    wavelengths.
+  </Dropdown.Item>
+  <Dropdown.Item label="Stefan-Boltzmann law">
+    L = 4π R² σ T⁴. A star's luminosity scales with the fourth power
+    of its surface temperature for a fixed radius.
+  </Dropdown.Item>
+</Dropdown>

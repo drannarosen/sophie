@@ -276,7 +276,7 @@ across every chapter forever.
 | `<Figure>` | `alt` required at schema level (`z.string().min(1)`); `caption` slot; long-description slot (planned); pedagogical-role field (planned) |
 | `<FigureRef>` | Pulls registered `alt` from figure metadata; one-source-of-truth — authors cannot drift |
 | `<ParameterSlider>` | Radix Slider keyboard nav (arrows, home/end); `aria-label`; visible `<output>` readout linked via `htmlFor` |
-| `<CollapsibleCard>` | Radix Collapsible; `aria-expanded` reflects state; space/enter toggle |
+| `<Dropdown>` | Radix Accordion; `aria-expanded` reflects state; space/enter toggle; chevron rotation via `[data-state="open"]` |
 | Search modal | Radix Dialog focus trap; escape dismissal; live-region result count |
 | `<ChapterTitle>` + section structure | Single `<h1>`; sentence case; `aria-labelledby` for sections |
 | In-page TocSidebar | `aria-current="location"` on the active link; scroll-spy observes only chapter headings |

@@ -92,6 +92,149 @@ This page is the chapter author's quick reference.
 | `<Intervention>` 🚧 in-progress | Children-mode source for `PedagogyIndex.interventions` (per [ADR 0044](../decisions/0044-misconception-graph-and-intervention-library.md); v1 design locked in [2026-05-17 design doc](../../plans/2026-05-17-intervention-design.md)). Nests inside a misconception `<Aside>` or `<Callout variant="misconception">` (`addresses="this"`) — or stands outside with an explicit `addresses="<misc-slug>"`. `type` references the 12 canonical interventions in `intervention-index.ts` or `"custom"`. Feeds the **MG3 + MG4 + I1–I3** audit invariants. (I4 deferred until ADR 0041 `move-index.ts` ships.) |
 | `<Observable>` / `<Assumption>` / `<Units>` / `<BreaksWhen>` / `<CommonMisuse>` / `<DerivationStep>` | Biography children of an equation (per [ADR 0046](../decisions/0046-equation-biography.md) + [ADR 0060](../decisions/0060-registry-ecosystem.md)). **Authored in the equation registry MDX body** at `src/content/equations/<id>.mdx`, NOT chapter-side. Make an equation's observational meaning, assumptions, units, validity domain, common student misuses, and derivation first-class structured metadata. Each declares its `epistemicRole` as a hardcoded const (Observable→observable, Assumption→assumption, BreaksWhen→approximation, Units→none, CommonMisuse→cross-refs misconception, DerivationStep→model). `<Units>` is now optional per [ADR 0046 §R10](../decisions/0046-equation-biography.md) — the notation registry resolves units by symbol; per-equation `<Units>` children only needed when a symbol isn't in the registry. Feeds the **E7 + E8 + E9** audit invariants (only fire when biography children present); the R1–R4 invariants police citation-vs-declaration cross-reference integrity. See [equation-registry-schema](equation-registry-schema.md) for the registry MDX shape. |
 
+### Chrome primitives (PR 5, Phase B)
+
+Four layout primitives that compose with — but never replace —
+Sophie's pedagogy components. They are deliberately "chrome": no
+`epistemicRole` per [ADR 0058](../decisions/0058-epistemic-component-contract.md)
+(optional omission for non-pedagogy components), no pedagogy-index
+contribution, no audit invariants. Use them to organize pedagogical
+content; reach for the eight-role pedagogy components when content
+carries scientific reasoning meaning.
+
+#### `<Card>` — static container
+
+Static SSR container with optional `Card.Header` + `Card.Footer`
+slots. When `title` or a `Card.Header` slot is present, the root
+becomes `<section aria-labelledby={titleId}>` for screen-reader
+landmark navigation; titleless cards render as a plain `<div>`
+(non-landmark — no name to anchor to per [R10](../../AGENTS.md)).
+Composed solely from existing tokens per [ADR 0005](../decisions/0005-theming-three-layers.md).
+axe-clean across all combinations.
+
+| Prop | Type | Default | Notes |
+|---|---|---|---|
+| `title` | `string?` | — | Shorthand header text. When `Card.Header` slot is also provided, the slot wins (Q3 lock). |
+| `id` | `string?` | — | Anchor id on the root. |
+| `className` | `string?` | — | Concatenated with the card root class. |
+| `children` | `ReactNode` | — | Body + optional `Card.Header` / `Card.Footer` slots. |
+
+```mdx
+<Card title="Spectral classification">
+  Stars are classified O / B / A / F / G / K / M from hottest to
+  coolest.
+</Card>
+```
+
+#### `<Grid>` — pure layout
+
+Responsive CSS grid with 1–4 columns. Each non-null child is wrapped
+in a `<div role="listitem">`; the root is `<div role="list">`. NOT
+a landmark — `role="list"` is grouping. Empty grid falls back to a
+plain `<div>` (a list with zero items is an axe violation under
+best-practice rules).
+
+| Prop | Type | Default | Notes |
+|---|---|---|---|
+| `cols` | `1 \| 2 \| 3 \| 4` | required | Number of columns. |
+| `responsive` | `boolean?` | `true` | Collapses to 1 column at <640px. |
+| `gap` | `"sm" \| "md" \| "lg"?` | `"md"` | Maps to `--sophie-space-2` / `--sophie-space-3` / `--sophie-space-4`. |
+| `id` | `string?` | — | Anchor id on the root. |
+| `className` | `string?` | — | Concatenated with the grid root class. |
+
+```mdx
+<Grid cols={3}>
+  <Card title="O type">~30,000 K</Card>
+  <Card title="G type">~5,800 K (Sun)</Card>
+  <Card title="M type">~3,500 K</Card>
+</Grid>
+```
+
+#### `<Tabs>` — non-persistent tabbed interface
+
+Compound shape backed by Radix Tabs ([ADR 0019](../decisions/0019-radix-ui-primitives.md)):
+`<Tabs>` wraps n × `<Tab label="…">` children. Each label slugifies
+into the Radix `value` identity; duplicate slugs throw at render
+(Q1 loud-feedback lock). Renders as a plain `<div>` — no landmark
+(no inherent name to anchor `<section aria-labelledby>` to per
+[R10](../../AGENTS.md)); Radix provides all ARIA semantics for the
+tablist + tabpanel interaction. NO persistence — view-state only;
+for persisted disclosure use `<Dropdown>`.
+
+| Prop | Type | Default | Notes |
+|---|---|---|---|
+| `defaultLabel` | `string?` | first tab | Label of the tab open on first render. Slugified before passing to Radix as `defaultValue`. |
+| `id` | `string?` | — | Anchor id on the root. |
+| `className` | `string?` | — | Concatenated with the tabs root class. |
+
+`<Tab>` props: `label: string` (required), `id?: string`,
+`children: ReactNode`.
+
+```mdx
+<Tabs defaultLabel="Composition">
+  <Tab label="Line spectra">
+    Atomic transitions produce sharp lines at characteristic
+    wavelengths.
+  </Tab>
+  <Tab label="Composition">
+    Line strength encodes elemental abundance.
+  </Tab>
+</Tabs>
+```
+
+#### `<Dropdown>` — persistence-bearing disclosure
+
+Replaces `<CollapsibleCard>` from Phase A. Backed by Radix Accordion
+([ADR 0019](../decisions/0019-radix-ui-primitives.md)); single- and
+multi-item forms share the same render path. Per-instance open/closed
+state persists via `useInteractive`
+([ADR 0004](../decisions/0004-component-contract.md),
+[ADR 0007](../decisions/0007-indexeddb-persistence.md)) under the key
+`dropdown:${id}:open`. Per [ADR 0027](../decisions/0027-course-unit-id-required-props.md):
+`course`, `unit`, `id` are required. Use with `client:load` if placed
+directly in MDX.
+
+| Prop | Type | Default | Notes |
+|---|---|---|---|
+| `course` | `string` | required | IDB course key per ADR 0027. |
+| `unit` | `string` | required | IDB unit key per ADR 0027. |
+| `id` | `string` | required | Per-instance anchor for persisted open-slug array. |
+| `label` | `string?` | — | Single-item shorthand. Mutually exclusive with `<Dropdown.Item>` children (throws at render if both supplied). |
+| `defaultOpen` | `string[]?` | `[]` | Slugs of items open on first visit, before persisted state. |
+| `allowMultiple` | `boolean?` | `false` | When true, multiple items may be open simultaneously (Radix `type="multiple"`). |
+
+`<Dropdown.Item>` props: `label: string` (required), `id?: string`,
+`children: ReactNode`.
+
+```mdx
+{/* Single-item shorthand */}
+<Dropdown
+  client:load
+  course="astr201"
+  unit="spectra"
+  id="deep-dive-hydrogen"
+  label="Deep Dive: Hydrogen's atomic fingerprint"
+>
+  H-alpha at 656.3 nm is the n=3 → n=2 transition.
+</Dropdown>
+
+{/* Multi-item form */}
+<Dropdown
+  client:load
+  course="astr201"
+  unit="spectra"
+  id="classification"
+  allowMultiple
+>
+  <Dropdown.Item label="Line spectra">
+    Atomic transitions produce sharp lines.
+  </Dropdown.Item>
+  <Dropdown.Item label="Composition">
+    Line strength encodes elemental abundance.
+  </Dropdown.Item>
+</Dropdown>
+```
+
 ### Interactive React island
 
 #### Persistence-bearing (IndexedDB state)
@@ -118,7 +261,7 @@ This page is the chapter author's quick reference.
 | `<ComprehensionGate>` | "Did you understand?" gate before next section |
 | `<EffortLog>` | Effort self-report |
 | `<Reflection>` | Free-text reflection prompt |
-| `<CollapsibleCard>` | "Deep Dive" disclosure block |
+| `<Dropdown>` | Persistence-bearing disclosure widget (single-item shorthand or n-item accordion). Replaces `<CollapsibleCard>` from Phase A — see "Chrome primitives" section below for API. |
 | `<RetrievalPrompt>` | Primary in-flow recall prompt (Wedge B1 retrieval family) |
 | `<SpacedReview>` | Queued review surface; surfaces past-attempted targets (Wedge B1) |
 | `<SkillReview>` | Inline prereq-bridge prompt; same prefix-typed `target` convention (Wedge B1) |
@@ -262,9 +405,9 @@ marked for hydration:
 ```mdx
 import {
   ChapterRef,
-  CollapsibleCard,
   ComprehensionGate,
   ConfidenceCheck,
+  Dropdown,
   EffortLog,
   EquationRef,
   FigureRef,
@@ -408,7 +551,7 @@ time, not at runtime.
 | A "did you understand?" gate | `<ComprehensionGate>` |
 | An effort-level self-report | `<EffortLog>` |
 | A free-text reflection prompt | `<Reflection>` |
-| A "Deep Dive" disclosure block | `<CollapsibleCard>` |
+| A "Deep Dive" disclosure block | `<Dropdown label="…">body</Dropdown>` (single-item shorthand) or `<Dropdown>` with `<Dropdown.Item>` children (multi-item accordion) |
 | In-flow recall prompt anchored to a pedagogy-graph node (equation / glossary / misconception / learning-objective / key-insight / topic) | `<RetrievalPrompt target="prefix:slug">` with required `<RetrievalPrompt.Prompt>` + `<RetrievalPrompt.Answer>` slot children. Amber left-band. Writes `practice_attempt` records via `useRetrievalAttempt`. Self-assess buttons (Got it / Partial / Missed it) render automatically below the revealed answer. Per Wedge B1 design doc §1. |
 | Queued review surface that resurfaces past-attempted targets due for review | `<SpacedReview target="prefix:slug" max={3} />` (single-target scope) or `<SpacedReview section="<section-slug>" max={3} />` (Section-scope, **graduated in Wedge B-followup W1**). Section-scope resolves the slug → `UnitEntry`s in that Section → `unit.chapter` slugs → aggregates `practice_attempt` records via `useInteractiveRangeMulti`, then runs the LRU over the merged set with `max`. SR-1 audit invariant validates the section slug against `PedagogyIndex.sections`. Exactly-one selection rule (`target` xor `section`) enforced by Zod refine. Cyan left-band. Optional `<SpacedReview.Empty>` slot overrides the default empty-state message. Wedge B1 ships an LRU stub scheduler; Wedge D's FSRS replaces the function body. |
 | Inline prereq-bridge prompt at the point a prereq concept is invoked mid-reading | `<SkillReview target="topic:X" />` or `<SkillReview target="topic:X#card-id" />` (self-closing form, resolved at MDX compile time by the topic-registry resolver — see *Topic registry + `<SkillReview>` self-closing form* below), OR `<SkillReview target="topic:X">` with inline `<SkillReview.Prompt>` + `<SkillReview.Answer>` + `<SkillReview.ReviewMore>` slot children (explicit form). Violet left-band. Same `target` prefix convention as RetrievalPrompt + SpacedReview. |

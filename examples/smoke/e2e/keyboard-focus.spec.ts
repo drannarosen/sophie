@@ -51,7 +51,7 @@ test.describe("keyboard focus rings on Sophie interactive controls", () => {
           /\.[\w-]*checkbox[\w-]*:focus-visible|input\[type="checkbox"\]:focus-visible/,
       },
       {
-        name: "trigger (CollapsibleCard)",
+        name: "trigger (Dropdown)",
         pattern: /\.[\w-]*trigger[\w-]*:focus-visible/,
       },
       {

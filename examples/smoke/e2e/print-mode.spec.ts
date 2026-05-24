@@ -11,7 +11,7 @@ const CHAPTER_URL = "/units/measuring-the-sky/reading";
  * - .sophie-shell collapses to single-column block layout (Wide
  *   override) regardless of <html data-view-mode>.
  * - Interactive components expand to static pedagogy-preserving
- *   form (CollapsibleCard open, Predict answer-space, GlossaryTerm
+ *   form (Dropdown items open, Predict answer-space, GlossaryTerm
  *   first-use inline footnote visible).
  * - axe-core passes under media: "print" emulation.
  * - Rendered .sophie-content HTML matches the print snapshot.
@@ -51,11 +51,14 @@ test.describe("PR 10: chapter print contract", () => {
     await page.goto(CHAPTER_URL);
     await page.emulateMedia({ media: "print" });
 
-    // CollapsibleCard: all cards' bodies render as block regardless of
-    // [data-state]. (Test asserts the first card on the page.)
-    const card = page.locator(".sophie-collapsible-card").first();
+    // Dropdown: all accordion-item bodies render as block regardless
+    // of [data-state]. (Test asserts the first dropdown on the page.)
+    const card = page.locator(".sophie-dropdown").first();
     if (await card.count()) {
-      await expect(card.locator("[data-state]")).toHaveCSS("display", "block");
+      await expect(card.locator("[data-state]").first()).toHaveCSS(
+        "display",
+        "block"
+      );
     }
 
     // GlossaryTerm first-use footnote: the first occurrence per slug

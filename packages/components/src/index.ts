@@ -34,6 +34,12 @@ export {
   InteractiveCalloutPropsSchema,
   interactiveCalloutContract,
 } from "./components/Callout/index.ts";
+export type { CardProps } from "./components/Card/Card.schema.ts";
+export {
+  Card,
+  CardPropsSchema,
+  cardContract,
+} from "./components/Card/index.ts";
 export type { ChapterRefProps } from "./components/ChapterRef/ChapterRef.schema.ts";
 // Internal-use store-hydration setters (__setChapters, __setModules,
 // __setEquations, __setFigureRegistry, __setFigureUsages,
@@ -46,12 +52,6 @@ export {
   ChapterRefPropsSchema,
   chapterRefContract,
 } from "./components/ChapterRef/index.ts";
-export type { CollapsibleCardProps } from "./components/CollapsibleCard/index.ts";
-export {
-  CollapsibleCard,
-  CollapsibleCardPropsSchema,
-  collapsibleCardContract,
-} from "./components/CollapsibleCard/index.ts";
 export type { CommonMisuseProps } from "./components/CommonMisuse/index.ts";
 export {
   CommonMisuse,
@@ -83,6 +83,16 @@ export {
   DerivationStepPropsSchema,
   derivationStepContract,
 } from "./components/DerivationStep/index.ts";
+export type {
+  DropdownItemProps,
+  DropdownProps,
+} from "./components/Dropdown/Dropdown.schema.ts";
+export {
+  Dropdown,
+  DropdownItemPropsSchema,
+  DropdownPropsSchema,
+  dropdownContract,
+} from "./components/Dropdown/index.ts";
 export type {
   EffortLevel,
   EffortLogProps,
@@ -117,6 +127,12 @@ export {
   GlossaryTermPropsSchema,
   glossaryTermContract,
 } from "./components/GlossaryTerm/index.ts";
+export type { GridProps } from "./components/Grid/Grid.schema.ts";
+export {
+  Grid,
+  GridPropsSchema,
+  gridContract,
+} from "./components/Grid/index.ts";
 export type { InteractiveCheckboxProps } from "./components/InteractiveCheckbox/InteractiveCheckbox.schema.ts";
 export {
   InteractiveCheckbox,
@@ -227,6 +243,17 @@ export {
   SpacedReviewPropsSchema,
   spacedReviewContract,
 } from "./components/SpacedReview/index.ts";
+export {
+  Tab,
+  TabPropsSchema,
+  Tabs,
+  TabsPropsSchema,
+  tabsContract,
+} from "./components/Tabs/index.ts";
+export type {
+  TabProps,
+  TabsProps,
+} from "./components/Tabs/Tabs.schema.ts";
 export type { UnitsProps } from "./components/Units/index.ts";
 export {
   Units,

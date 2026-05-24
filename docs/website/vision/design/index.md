@@ -24,7 +24,7 @@ This section is *under construction*. Initial principles to be drafted
 
 - **Motion and affordance** — micro-interactions communicate
   pedagogical state changes (a `<Predict>` answer being revealed; a
-  `<CollapsibleCard>` "deep dive" opening; a `<HoverCard>`
+  `<Dropdown>` "deep dive" opening; a `<HoverCard>`
   cross-reference appearing). Motion shouldn't be decorative; it
   should reduce cognitive friction.
 - **Multi-media pedagogy** — text + math + figures is the floor, not
