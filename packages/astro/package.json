@@ -41,6 +41,7 @@
     "./components/FigureSpecContent.astro": "./dist/components/FigureSpecContent.astro",
     "./components/KeyInsightSpecContent.astro": "./dist/components/KeyInsightSpecContent.astro",
     "./components/ObservableSpecContent.astro": "./dist/components/ObservableSpecContent.astro",
+    "./components/ModelSpecContent.astro": "./dist/components/ModelSpecContent.astro",
     "./components/ChapterMultiReps.astro": "./dist/components/ChapterMultiReps.astro",
     "./components/CourseObjectives.astro": "./dist/components/CourseObjectives.astro",
     "./components/CourseObservables.astro": "./dist/components/CourseObservables.astro",
