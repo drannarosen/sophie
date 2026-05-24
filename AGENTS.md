@@ -295,10 +295,18 @@ to every PR, every design decision, every refactor.
   exit code is 0 even when MyST surfaces broken cross-references,
   unresolved citations, and implicit-heading preferences as
   `⚠️ <message>` lines. Plain `grep -cE "(error|warning)"` misses
-  these because MyST uses the emoji glyph, not the word. Verified
-  gate pattern: `grep -ciE "(^|[^a-z])(error|warning|⚠)"`. Post-W4c
-  audit A1-X1 surfaced this measurement gap (16 warnings the prior
-  audit cycle silently dropped).
+  these because MyST uses the emoji glyph, not the word. **Verified
+  gate pattern: `grep -c "⚠"`** — counts only MyST's content
+  warnings (the emoji is MyST-exclusive in its output). Do NOT
+  also match the words `error`/`warning` — Node emits process-level
+  deprecation noise via stderr (e.g. `[DEP0169] DeprecationWarning`,
+  `(node:NNNN) Warning: ...`) that this gate must not conflate with
+  MyST content drift. CI-level build-error checks live at the exit-
+  code level, separate from this content-warning gate. Post-W4c
+  audit A1-X1 surfaced the measurement gap (16 warnings the prior
+  audit cycle silently dropped); post-W4c PR 3 R+CR I1 tightened the
+  grep after the broader `(error|warning|⚠)` pattern false-positived
+  on Node stderr.
 
 - **Validation-dashboard regen on ADR status change.** Any PR
   that touches an ADR's `status:` or `validation:` block must
@@ -316,16 +324,17 @@ to every PR, every design decision, every refactor.
     filter in an extractor has either a paired audit invariant OR a
     `findings.push` at the filter site. Bare silent-skips produce
     dead-code audits. **Grep covers three filter shapes** + dotted
-    property access: negation (`if (!X) return;` or `if (!X.Y) return;`),
-    equality-undefined (`if (X === undefined) return;`), and equality-
-    null (`if (X === null) return;`). Full pattern:
-    `grep -rE "if \(!(\w+(\.\w+)?)\)|if \((\w+(\.\w+)?) === undefined\)|if \((\w+(\.\w+)?) === null\)" packages/astro/src/lib/pedagogy-index/extractors/`.
+    property access at any depth: negation (`if (!X) return;`,
+    `if (!X.Y) return;`, `if (!X.Y.Z) return;`), equality-undefined
+    (`if (X === undefined) return;`), and equality-null
+    (`if (X === null) return;`). Full pattern:
+    `grep -rE "if \(!(\w+(\.\w+)*)\)|if \((\w+(\.\w+)*) === undefined\)|if \((\w+(\.\w+)*) === null\)" packages/astro/src/lib/pedagogy-index/extractors/`.
     Originating finding: W4b R+CR C1; pattern extended W4c Batch 0.5b
     (found 2 sites using equality-check shape the original
     negation-only grep missed); dotted-access refinement post-W4c PR 2
-    R+CR M1 (the `if (!el.name) return;` site was addressed by a
-    disposition comment in inline-refs.ts but the original `\w+`-only
-    grep wouldn't catch a regression on that exact shape).
+    R+CR M1 (`if (!el.name) return;` shape); multi-level dotted access
+    via `(\.\w+)*` per post-W4c PR 3 R+CR M1 (forecloses the
+    class-of-issue rather than patching one observed depth).
   - **R8 — Module-scoped MDX caches declare HMR strategy.** Any
     module-level cache (`Map`, `Set`, `WeakMap`) in the
     MDX-compile pipeline includes a header comment naming when
