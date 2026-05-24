@@ -6,7 +6,10 @@ import CourseOMIRollup from "./_shared/CourseOMIRollup.astro";
  * slot rollup. Delegates to the shared `CourseOMIRollup` factory
  * (post-W4c PR 4 M1 DRY extraction; pre-extraction this file
  * carried the full rendering — see git blame for the original shape).
- * Behavior is bit-identical to the pre-extraction component.
+ * Rendered DOM is structurally equivalent to the pre-extraction
+ * component except the `data-sophie-course-*` marker normalizes
+ * plural→singular to match the ADR 0058 role token (no current
+ * consumers; see factory JSDoc for rationale).
  */
 export interface Props {
   /** Optional heading rendered above the list. Defaults to "Models". */

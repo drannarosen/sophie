@@ -32,7 +32,12 @@ interface SlugUniqueEntryFields {
   unit: string;
   anchor: string;
   slug: string;
-  /** The author-supplied display label, if present, that drove `slugify(label)`. */
+  /**
+   * The author-supplied display label, if present, that drove
+   * `slugify(<labelField>)` — `slugify(title)` for `KeyInsight`,
+   * `slugify(label)` for `Misconception`. Undefined when the entry
+   * fell back to the `${unit}-${anchor}` slug shape.
+   */
   labelValue: string | undefined;
 }
 
