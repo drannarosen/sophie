@@ -1,0 +1,24 @@
+# Voice contract fixture — anna-rosen.
+# Source: 2026-05-25 design doc § "Voice contract as separate artifact".
+# Register ids converted from snake_case (design draft) to kebab-case
+# (codebase Slug convention; primitives.ts).
+
+id: anna-rosen
+display_name: Anna Rosen
+
+base_voice:
+  rules:
+    - Information-dense and quantitatively anchored.
+    - Wonder-first → physics-second.
+    - Conversational, not formal.
+    - Metaphor-light; physics-reasoning over analogy.
+    - Direct address ("you can measure"), not third-person passive.
+    - No hedging. Declarative claims with assumption-citing.
+
+registers:
+  - id: sophomore-quantitative
+    pitch: "Assumes Phys 195; symbolic-with-interpretation math; high information density."
+  - id: intro-non-major
+    pitch: "Wonder-first; ≤50 words per slide; lighter math (scientific notation, ratios)."
+  - id: scientific-computing
+    pitch: "Code-as-explanation; runnable examples; test-driven framing."
