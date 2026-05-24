@@ -47,6 +47,7 @@ The full rationale lives at
 [ADR 0056 — Validation tracker](../decisions/0056-validation-tracker.md).
 This reference doc is the operational specification.
 
+(see-also-chapter-status-vs-contract-validation)=
 ## See also: chapter status vs contract validation
 
 Sophie has **two sibling status surfaces** that read similarly but
@@ -353,6 +354,7 @@ When `SOPHIE_DOCS_INCLUDE_VALIDATION=0` is set in the env, the
 script returns early without writing — symmetric with the
 admonition plugin's env-flag behavior.
 
+(migration-guidance-for-new-adrs)=
 ## Migration guidance for new ADRs
 
 After PR 6, V1 + V2 are ERROR-grade. **Every new ADR + reference

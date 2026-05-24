@@ -57,7 +57,7 @@ Concrete uses for ~\$25–40K:
 - Open-access publication fee for the resulting paper.
 
 This pilot study seeds an **HSI outcomes thread** documented at
-[Future contributions § Thread B](../papers/future-contributions.md#thread-b--hsi-learning-outcomes-comparative-study)
+[Future contributions § Thread B](../papers/future-contributions.md#thread-b-hsi-learning-outcomes-comparative-study)
 (the empirical learning-outcomes thread is not yet a committed
 paper), produces preliminary data referenced in the CAREER
 mid-period report, and demonstrates active institutional research
@@ -88,5 +88,5 @@ support.
 ## See also
 
 - [Grants overview](index.md) — full 2026 pipeline
-- [Future contributions § Thread B](../papers/future-contributions.md#thread-b--hsi-learning-outcomes-comparative-study) — the uncommitted HSI outcomes thread this pilot seeds
+- [Future contributions § Thread B](../papers/future-contributions.md#thread-b-hsi-learning-outcomes-comparative-study) — the uncommitted HSI outcomes thread this pilot seeds
 - [SDSU University Grants Program](https://research.sdsu.edu/research_affairs/university_grants_program)

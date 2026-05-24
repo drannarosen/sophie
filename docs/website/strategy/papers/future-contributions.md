@@ -51,6 +51,7 @@ benefits substantially from validation by a DBER co-author Anna
 hasn't yet recruited; bandwidth tradeoff against the committed
 Paper #1 + the empirical threads below is real.
 
+(thread-b-hsi-learning-outcomes-comparative-study)=
 ## Thread B — HSI learning-outcomes comparative study
 
 **Working framing:** *Learning outcomes from Sophie-authored content

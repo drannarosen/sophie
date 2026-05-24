@@ -1,4 +1,4 @@
-import { defineCollection, z } from "astro:content";
+import { defineCollection } from "astro:content";
 import {
   ArtifactReferencesSchema,
   EquationRegistryEntrySchema,
@@ -8,6 +8,7 @@ import {
   UnitEntrySchema,
 } from "@sophie/core/schema";
 import { glob } from "astro/loaders";
+import { z } from "zod";
 
 // Astro 6 Content Layer: glob loaders pull every section JSON, every
 // unit JSON, every equation MDX, and (W2) every artifact MDX from the
@@ -55,7 +56,7 @@ const artifacts = defineCollection({
       title: NonEmptyString,
       references: ArtifactReferencesSchema.optional().default({}),
     })
-    .passthrough(),
+    .loose(),
 });
 
 // ADR 0060 registry ecosystem: per-equation MDX files at

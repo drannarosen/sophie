@@ -100,6 +100,7 @@ runtime behavior.
 | **CF4 — audit-tooling failure** | Build pipeline | Build fails with explicit error; no silent degradation. |
 | **CF5 — runtime persistence/sync unavailable** | Component runtime (ADR 0007) | Graceful fallback (MemoryResponseStore + silent BroadcastChannel degradation); session-only persistence surfaced via `useInteractive`. |
 
+(audit_overrides-chapter-frontmatter)=
 ### `audit_overrides` chapter frontmatter
 
 A chapter's MDX frontmatter can declare overrides:

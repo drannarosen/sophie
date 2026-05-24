@@ -81,7 +81,7 @@ Concretely:
 ## Rationale
 
 - **It is the only pattern that compiles.** The static map + per-MDX
-  `client:load` pattern is the official Astro 6 + @astrojs/mdx
+  `client:load` pattern is the official Astro 6 + `@astrojs/mdx`
   pattern; alternatives we evaluated (lazy-import the component-mapping
   inside the integration hook; consumer-side `vite.ssr.noExternal`)
   fail at config-load time or at the React-tree boundary.

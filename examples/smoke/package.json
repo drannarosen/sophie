@@ -15,16 +15,17 @@
     "sophie:audit": "sophie audit src/content/chapters/01-foundations/spoiler-alerts.mdx"
   },
   "dependencies": {
-    "@astrojs/mdx": "^5.0.4",
-    "@astrojs/react": "^5.0.4",
+    "@astrojs/mdx": "^5.0.6",
+    "@astrojs/react": "^5.0.5",
     "@sophie/astro": "workspace:*",
     "@sophie/cli": "workspace:*",
     "@sophie/components": "workspace:*",
     "@sophie/core": "workspace:*",
     "@sophie/theme": "workspace:*",
-    "astro": "^6.3.1",
+    "astro": "^6.3.7",
     "react": "^19.2.6",
-    "react-dom": "^19.2.6"
+    "react-dom": "^19.2.6",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.9",

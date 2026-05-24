@@ -15,7 +15,7 @@ projects.
 
 Low effort, low award size — but a useful CV line, a way to engage
 the AAS-EPD community (which is critical for [DBER co-author
-cultivation](../papers/index.md#co-author-leads)), and an
+cultivation](../papers/future-contributions.md#co-author-candidate-pool)), and an
 opportunity to position Sophie in the astronomy-education world.
 
 ## Program quick facts
@@ -35,7 +35,7 @@ opportunity to position Sophie in the astronomy-education world.
   CV entry for ~1 day of writing.
 - **AAS-EPD community engagement.** The mini-grant process puts you
   in the AAS-EPD network — exactly where [potential DBER
-  co-authors](../papers/index.md#co-author-leads) live.
+  co-authors](../papers/future-contributions.md#co-author-candidate-pool) live.
 - **Positions Sophie in the astronomy-education space.** A funded
   AAS-EPD project tagged "Sophie" surfaces the platform in the
   community.
@@ -83,5 +83,5 @@ focused, achievable mini-grant projects.
 ## See also
 
 - [Grants overview](index.md) — full 2026 pipeline
-- [Papers — co-author leads](../papers/index.md#co-author-leads) — why AAS-EPD network matters
+- [Papers — co-author leads](../papers/future-contributions.md#co-author-candidate-pool) — why AAS-EPD network matters
 - [AAS-EPD Mini-Grant Program](https://aas.org/education/aas-epd-mini-grant-program)

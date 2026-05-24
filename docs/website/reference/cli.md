@@ -36,6 +36,7 @@ If you only want the surface that works today, jump to
 [§Implemented today](#implemented-today).
 :::
 
+(implemented-today)=
 ## Implemented today
 
 Four commands ship in [`packages/cli/src/index.ts`](https://github.com/drannarosen/sophie/blob/main/packages/cli/src/index.ts):

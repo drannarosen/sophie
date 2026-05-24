@@ -263,7 +263,7 @@ in the pedagogy graph — at the *bridge/section* layer, not the
 the bridge-room affordance and introduce cross-level ambiguity
 in PRA-1's coverage check (does "math-fundamentals covered" mean
 any sub-topic covered? all sub-topics covered?). **Topics stay
-flat; bridge rooms own the umbrella.** See [Rationale Q3](#rationale)
+flat; bridge rooms own the umbrella.** See [Rationale Q3](#rationale-q3)
 for the design trace.
 
 ### Pedagogy-index entries
@@ -445,6 +445,7 @@ audit_overrides:
 The mandatory `tdr:` field (per ADR 0053 CF2) means every
 override carries its own provenance trail.
 
+(rationale)=
 ## Rationale
 
 The W4b brainstorm (2026-05-23) settled six interlocking
@@ -476,6 +477,7 @@ The new `lib/mdx-plugins/` subdirectory names a *family*: the
 resolution-pattern's future siblings (misconception, equation
 biography) live there too.
 
+(rationale-q3)=
 ### Q3. Design F (sub-grouped flat topics + cards inline)
 
 The brainstorm walked through THREE iterations before landing

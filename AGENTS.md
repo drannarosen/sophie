@@ -291,6 +291,15 @@ to every PR, every design decision, every refactor.
   explicitly (`$?` non-zero = failure) or grep the full output for
   `"error"` / `"warning"` before declaring the run clean.
 
+- **MyST build verification.** When running `npx mystmd build --html`,
+  exit code is 0 even when MyST surfaces broken cross-references,
+  unresolved citations, and implicit-heading preferences as
+  `⚠️ <message>` lines. Plain `grep -cE "(error|warning)"` misses
+  these because MyST uses the emoji glyph, not the word. Verified
+  gate pattern: `grep -ciE "(^|[^a-z])(error|warning|⚠)"`. Post-W4c
+  audit A1-X1 surfaced this measurement gap (16 warnings the prior
+  audit cycle silently dropped).
+
 - **Validation-dashboard regen on ADR status change.** Any PR
   that touches an ADR's `status:` or `validation:` block must
   regenerate `docs/website/status/validation.md` in the same PR.
@@ -306,14 +315,17 @@ to every PR, every design decision, every refactor.
   - **R7 — Silent-skip extractor disposition.** Every silent-skip
     filter in an extractor has either a paired audit invariant OR a
     `findings.push` at the filter site. Bare silent-skips produce
-    dead-code audits. **Grep covers three filter shapes:**
-    negation (`if (!X) return;`), equality-undefined
-    (`if (X === undefined) return;`), and equality-null
-    (`if (X === null) return;`). Full pattern:
-    `grep -rE "if \(!(\w+)\)|if \((\w+) === undefined\)|if \((\w+) === null\)" packages/astro/src/lib/pedagogy-index/extractors/`.
-    Originating finding: W4b R+CR C1; pattern extended W4c
-    Batch 0.5b (found 2 sites using equality-check shape the
-    original negation-only grep missed).
+    dead-code audits. **Grep covers three filter shapes** + dotted
+    property access: negation (`if (!X) return;` or `if (!X.Y) return;`),
+    equality-undefined (`if (X === undefined) return;`), and equality-
+    null (`if (X === null) return;`). Full pattern:
+    `grep -rE "if \(!(\w+(\.\w+)?)\)|if \((\w+(\.\w+)?) === undefined\)|if \((\w+(\.\w+)?) === null\)" packages/astro/src/lib/pedagogy-index/extractors/`.
+    Originating finding: W4b R+CR C1; pattern extended W4c Batch 0.5b
+    (found 2 sites using equality-check shape the original
+    negation-only grep missed); dotted-access refinement post-W4c PR 2
+    R+CR M1 (the `if (!el.name) return;` site was addressed by a
+    disposition comment in inline-refs.ts but the original `\w+`-only
+    grep wouldn't catch a regression on that exact shape).
   - **R8 — Module-scoped MDX caches declare HMR strategy.** Any
     module-level cache (`Map`, `Set`, `WeakMap`) in the
     MDX-compile pipeline includes a header comment naming when

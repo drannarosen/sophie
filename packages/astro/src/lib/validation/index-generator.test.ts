@@ -308,7 +308,7 @@ describe("generateValidationIndex", () => {
     expect(generateValidationIndex(index)).toBe(generateValidationIndex(index));
   });
 
-  test("escapes Markdown special chars in notes-cell (I1 from comprehensive review)", () => {
+  test("escapes only table-breaking chars in notes-cell (narrowed post-W4c PR 3)", () => {
     const md = generateValidationIndex(
       makeIndex({
         contractValidations: [
@@ -326,15 +326,15 @@ describe("generateValidationIndex", () => {
         ],
       })
     );
-    // Each special char gets a leading backslash so MyST renders them
-    // as literal cell text, not active Markdown.
-    expect(md).toContain("\\*\\*bold\\*\\*");
-    expect(md).toContain("\\_emphasis\\_");
-    expect(md).toContain("\\`code\\`");
-    expect(md).toContain("\\[link");
+    // Table-breakers stay escaped:
     expect(md).toContain("\\| pipe");
-    // Parens / chars NOT in the escape list pass through.
-    expect(md).toContain("(url)");
+    // Inline markdown formatting passes through (post-W4c PR 3 fix —
+    // over-escaping `` ` `` corrupted code spans like `` `@sophie/*` ``
+    // and made MyST mis-parse them as broken citations).
+    expect(md).toContain("**bold**");
+    expect(md).toContain("_emphasis_");
+    expect(md).toContain("`code`");
+    expect(md).toContain("[link](url)");
   });
 
   test("collapses newlines in notes to single spaces", () => {
