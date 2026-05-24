@@ -1,0 +1,113 @@
+---
+import { buildModuleNavInputs, indexAccumulator } from "@sophie/astro";
+import FigureSpecContent from "@sophie/astro/components/FigureSpecContent.astro";
+import ModuleNav from "@sophie/astro/components/ModuleNav.astro";
+import TextbookHead from "@sophie/astro/components/TextbookHead.astro";
+import TextbookLayout from "@sophie/astro/components/TextbookLayout.astro";
+import { SophieChapter } from "@sophie/astro/client";
+import { getCollection } from "astro:content";
+import { figures as figureRegistry } from "../../../content/figures";
+
+/**
+ * `/library/figures/<name>/` — per-entry Figure Spec page (W4c
+ * Batch 7 Task 7.4). Sibling to the W4a rollup at
+ * `examples/smoke/src/pages/library/figures.astro` (untouched per
+ * ADR 0070's W4a implementation note).
+ *
+ * `getStaticPaths` enumerates directly from the consumer's
+ * `content/figures.ts` (the registry source-of-truth per PR-C3
+ * two-tier decision #3). Unlike the other three Spec routes
+ * (equations/glossary/misconceptions), which read from
+ * `indexAccumulator`, the registry isn't populated in the
+ * accumulator until a `<TextbookLayout figureRegistry={...}>`
+ * actually renders — and `getStaticPaths` runs BEFORE any layout
+ * does. So the route bypasses the accumulator for path-enumeration
+ * and goes straight to the consumer registry. Each entry's `name`
+ * is unique and serves as the URL slug (no derived slug field —
+ * `name` IS the canonical key). One path per registry entry,
+ * including curated-but-unused figures (the page renders the
+ * registry data + role + credit, with both cross-ref sections
+ * omitted when empty).
+ *
+ * Two collections feed the Spec page (via `indexAccumulator` —
+ * populated when the layout slot evaluates):
+ *   - `figureUsages` filtered by `name === entry.name` — every
+ *     Unit that calls `<Figure name={entry.name}>` (typically 1-N
+ *     callsites; canonical flag distinguishes the primary one),
+ *   - `inlineRefUsages` filtered by `kind === "figure-ref" AND
+ *     refKey === entry.name` — Units that cite this figure via
+ *     `<FigureRef>`. F2 audit invariant
+ *     (`packages/astro/src/lib/pedagogy-audit/invariants/inline-refs.ts`)
+ *     uses **raw string match** (NOT `slugify` — unlike D4 for
+ *     `<GlossaryTerm>`), so the route mirrors that resolution
+ *     rule.
+ *
+ * The `<FigureSpecContent>` component (sibling-tested via
+ * `FigureSpecContent.axe.test.ts`) owns the Spec render shape;
+ * this route is a thin layout-wiring shell.
+ */
+
+export async function getStaticPaths() {
+  return Object.values(figureRegistry).map((entry) => ({
+    params: { name: entry.name },
+  }));
+}
+
+const { name } = Astro.params;
+
+const entry = figureRegistry[name as keyof typeof figureRegistry];
+if (!entry) {
+  // Should be unreachable: getStaticPaths enumerates the same
+  // registry. A mismatch here surfaces an orchestrator wiring break,
+  // not author error.
+  throw new Error(
+    `Figure Spec route: no registry entry for name="${name}"; getStaticPaths/registry drift`
+  );
+}
+
+const pedagogy = indexAccumulator.asPedagogyIndex();
+
+const usages = pedagogy.figureUsages.filter((u) => u.name === entry.name);
+
+const referencingUnits = Array.from(
+  new Set(
+    pedagogy.inlineRefUsages
+      .filter((u) => u.kind === "figure-ref" && u.refKey === entry.name)
+      .map((u) => u.unit)
+  )
+);
+
+const figureRegistryArray = Object.values(figureRegistry);
+const allSections = (await getCollection("sections")).map((s) => s.data);
+const allUnits = (await getCollection("units")).map((u) => u.data);
+const { modules, chapters } = buildModuleNavInputs(allSections, allUnits);
+
+const pageTitle = entry.caption ?? entry.name;
+---
+
+<html lang='en'>
+  <head>
+    <meta charset='utf-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1' />
+    <title>{entry.name} — Figure</title>
+    <meta
+      name='description'
+      content={`Spec page for the figure "${pageTitle}".`}
+    />
+    <TextbookHead />
+  </head>
+  <body>
+    <SophieChapter client:load>
+      <TextbookLayout figureRegistry={figureRegistryArray}>
+        <Fragment slot='sidebar'>
+          <ModuleNav modules={modules} chapters={chapters} />
+        </Fragment>
+        <FigureSpecContent
+          entry={entry}
+          usages={usages}
+          referencingUnits={referencingUnits}
+        />
+      </TextbookLayout>
+    </SophieChapter>
+  </body>
+</html>
