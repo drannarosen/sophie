@@ -152,12 +152,19 @@ const hasCrossrefs =
           {topic.linked_equation_ids.map((id, i) => (
             <span>
               {i > 0 && ", "}
-              <a href={`/equations/${id}/`}>{id}</a>
+              <a href={`/library/equations/${id}/`}>{id}</a>
             </span>
           ))}
         </p>
       )}
       {topic.linked_misconception_ids.length > 0 && (
+        // Misconception IDs (ADR 0044 graph fields) are NOT 1:1 with
+        // Misconception slugs (slugify(label) per W4c Batch 1b), so
+        // we can't derive a /library/misconceptions/<slug>/ URL from
+        // the id alone. Until an id→slug accumulator pass exists,
+        // render as plain text rather than producing broken links.
+        // Equations + prereq topics use id directly as their URL key,
+        // so they link cleanly.
         <p class='sophie-topic-spec__crossrefs-row'>
           <strong>Linked misconceptions:</strong>{" "}
           {topic.linked_misconception_ids.join(", ")}

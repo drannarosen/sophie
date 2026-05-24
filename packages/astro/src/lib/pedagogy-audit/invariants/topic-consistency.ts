@@ -57,7 +57,7 @@ export function checkPRA2(index: PedagogyIndex, sink: FindingSink): void {
     // post-W4c follow-on (benefits from broader ADR 0053 amendment).
     for (const override of overrides) {
       if (override.invariant !== "PRA-2") continue;
-      if (override.anchor !== undefined && override.anchor !== "") continue;
+      if (override.anchor !== undefined) continue;
       sink.warnings.push({
         severity: "WARNING",
         code: "PRA-2-grain",
