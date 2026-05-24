@@ -1,0 +1,97 @@
+---
+import type { KeyInsightEntry } from "@sophie/core/schema";
+import LibraryCollectionShell from "./LibraryCollectionShell.astro";
+
+/**
+ * `<KeyInsightSpecContent>` — per-entry Spec content for the route
+ * at `/library/key-insights/<slug>/` (W4c Batch 7 Task 7.5). Fifth
+ * and final of the W4a-era Spec content components; follows the
+ * Task 7.2 (Misconceptions) template — KeyInsights share the
+ * "no inline-ref kind" shape (they live as `<Aside kind="key-insight">`
+ * / `<Callout variant="key-insight">` Units-resident content, not
+ * as inline JSX refs), so cross-refs derive from grouping the
+ * `keyInsights` collection by `unit` rather than from
+ * `inlineRefUsages`.
+ *
+ * Renders, per W4c design D3 + D4:
+ *   1. Heading via `<LibraryCollectionShell>` — uses `entry.title`
+ *      when present; otherwise the fallback "Key insight"
+ *      (KeyInsights have no length discriminator, so a single
+ *      fallback covers the no-title path),
+ *   2. Epistemic-role label ("Role: Inference") per ADR 0058 §2 —
+ *      KeyInsights encode the inference role ("the so-what of a
+ *      chapter") in the eight-role taxonomy,
+ *   3. Pre-rendered HTML body via `set:html` (the source aside /
+ *      callout body, escaped at extraction time),
+ *   4. Cross-references — "Surfaces in" listing the parent Unit(s)
+ *      that contain this KeyInsight. Derived at the route level
+ *      from the `keyInsights` collection grouped by `unit`.
+ *
+ *      W2 note: the `KI-slug-unique` audit invariant guarantees
+ *      one slug → one Unit, so the "Surfaces in" list is typically
+ *      a single-item list at v1. The list shape is preserved for
+ *      the future case where the invariant loosens to allow
+ *      cross-unit references.
+ *
+ * Wraps content in `<LibraryCollectionShell collection="key-insight-spec"
+ * heading={...}>` — per-entry use of the shell (same shape as Tasks
+ * 7.1–7.4). The shell owns the `<section aria-labelledby>` landmark
+ * + the H1.
+ *
+ * Pure Astro; no client JS.
+ */
+export interface Props {
+  entry: KeyInsightEntry;
+  /** Units that contain this KeyInsight (derived at the route level by grouping the keyInsights collection by `unit`). */
+  units: ReadonlyArray<string>;
+}
+
+const { entry, units } = Astro.props;
+
+const heading = entry.title ?? "Key insight";
+
+const crossrefsHeadingId = `sophie-key-insight-spec-${entry.slug}-crossrefs`;
+---
+
+<LibraryCollectionShell
+  collection='key-insight-spec'
+  heading={heading}
+  emptyText=''
+  isEmpty={false}
+>
+  <div
+    class='sophie-key-insight-spec'
+    data-sophie-key-insight-spec={entry.slug}
+  >
+    <p
+      class='sophie-key-insight-spec__role'
+      data-epistemic-role='inference'
+    >
+      <span class='sophie-key-insight-spec__role-label'>Role:</span>{" "}
+      <span class='sophie-key-insight-spec__role-value'>Inference</span>
+    </p>
+
+    <div class='sophie-key-insight-spec__body' set:html={entry.body} />
+
+    {units.length > 0 && (
+      <section
+        class='sophie-key-insight-spec__crossrefs'
+        aria-labelledby={crossrefsHeadingId}
+      >
+        <h2
+          id={crossrefsHeadingId}
+          class='sophie-key-insight-spec__crossrefs-heading'
+        >
+          Surfaces in
+        </h2>
+        <ul class='sophie-key-insight-spec__crossrefs-list'>
+          {units.map((unit) => (
+            <li class='sophie-key-insight-spec__crossrefs-item'>
+              <code>{unit}</code>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+  </div>
+</LibraryCollectionShell>
