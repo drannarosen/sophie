@@ -57,6 +57,7 @@ test.describe("PR-C1: <ChapterGlossary /> on the smoke chapter", () => {
   test("chapter glossary is axe-clean", async ({ page }) => {
     await page.goto(CHAPTER_URL);
     const results = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"])
       .include("[data-sophie-chapter-glossary]")
       .analyze();
     expect(results.violations).toEqual([]);

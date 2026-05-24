@@ -188,6 +188,7 @@ test.describe("PR 2: ThemeToggle on the smoke chapter", () => {
     await page.emulateMedia({ colorScheme: "light" });
     await page.goto(CHAPTER_URL);
     const results = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"])
       .include(".sophie-theme-toggle")
       .disableRules(["color-contrast"])
       .analyze();

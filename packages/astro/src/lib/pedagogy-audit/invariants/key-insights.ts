@@ -1,9 +1,6 @@
-import {
-  type KeyInsightEntry,
-  type PedagogyIndex,
-  slugify,
-} from "@sophie/core/schema";
+import type { PedagogyIndex } from "@sophie/core/schema";
 import type { FindingSink } from "../types.ts";
+import { checkSlugUnique } from "./_shared/check-slug-unique.ts";
 
 /**
  * Key-insight coverage invariant (K1).
@@ -40,80 +37,34 @@ export function checkKeyInsights(
  * `slugify(title)` when `title` is present, else `${unit}-${anchor}`.
  * Per-Spec-page URLs are `/library/key-insights/<slug>/`, so two
  * entries with the same slug would silently shadow each other at one
- * URL. The fallback shape (`${unit}-${anchor}`) is itself globally
- * unique (unit + anchor are both Slugs and the extractor enforces
- * intra-chapter anchor uniqueness), but the title-derived shape is
- * NOT — two KeyInsights in different chapters can share a title, and
- * `slugify("!!!") === "term"` per slugify.ts:19 means any two titles
- * consisting only of non-alphanumerics collapse to the same slug.
+ * URL.
  *
  * Severity: ERROR (build-time fail). Authors fix by retitling one of
  * the colliding KeyInsights so its slug derives uniquely.
  *
- * The error message names every colliding `(unit, anchor, title?)`
- * triple so authors can locate each callsite, and explicitly flags
- * the pathological-non-alphanumeric-title cause when the colliding
- * slug is `"term"` (the slugify fallback for empty / non-alnum input)
- * — without that hint the cause is opaque.
+ * Post-W4c PR 4 (M2): delegates to the shared `checkSlugUnique`
+ * helper (`./_shared/check-slug-unique.ts`) — sibling
+ * `Misconception-slug-unique` invariant is structurally identical.
  */
 export function checkKISlugUnique(
   index: PedagogyIndex,
   sink: FindingSink
 ): void {
-  const bySlug = new Map<string, KeyInsightEntry[]>();
-  for (const entry of index.keyInsights) {
-    const bucket = bySlug.get(entry.slug);
-    if (bucket) {
-      bucket.push(entry);
-    } else {
-      bySlug.set(entry.slug, [entry]);
-    }
-  }
-
-  for (const [slug, entries] of bySlug) {
-    if (entries.length < 2) continue;
-
-    const callsites = entries
-      .map((e) => {
-        const titlePart =
-          e.title !== undefined ? `, title="${e.title}"` : ", title=<absent>";
-        return `(unit="${e.unit}", anchor="${e.anchor}"${titlePart})`;
-      })
-      .join("; ");
-
-    // slugify("!!!") === "term" per slugify.ts:19 — any title composed
-    // only of non-alphanumerics collapses to "term". When the colliding
-    // slug is "term", surface the offending titles + the cause so the
-    // author connects the dots; without this hint the derivation is
-    // opaque (the title field is "!!!" but the slug field is "term").
-    //
-    // Guard: fire ONLY when at least one colliding title slugifies to
-    // "term" but is NOT literally "term" — i.e., the cause is the
-    // non-alnum collapse, not literal equality. Without this tightening
-    // two KeyInsights literally titled "Term" would falsely trigger the
-    // hint (their titles contain alphanumerics; the collision is
-    // literal-slug equality, not the fallback path).
-    const isPathologicalTermCollision =
-      slug === "term" &&
-      entries.some((e) => {
-        const t = e.title?.trim();
-        if (!t) return false; // fallback-shape, not slugify-shape
-        return slugify(t) === "term" && t.toLowerCase() !== "term";
-      });
-    const pathologicalHint = isPathologicalTermCollision
-      ? ' Note: slug "term" is the slugify fallback for titles composed only of non-alphanumeric characters (see slugify.ts). The colliding titles slugify to "term" because they contain no [a-z0-9] after lowercasing; retitle them with alphanumeric content to derive distinct slugs.'
-      : "";
-
-    sink.errors.push({
-      severity: "ERROR",
+  checkSlugUnique(
+    {
+      entries: index.keyInsights,
+      getKey: (e) => ({
+        unit: e.unit,
+        anchor: e.anchor,
+        slug: e.slug,
+        labelValue: e.title,
+      }),
       code: "KI-slug-unique",
-      message: `KI-slug-unique: ${entries.length} <KeyInsight>s derive the same slug "${slug}" — they would shadow each other at /library/key-insights/${slug}/. Colliding callsites: ${callsites}. Resolution: retitle one of the colliding KeyInsights so its slug derives uniquely (slug is slugify(title) when title is present, else \`\${unit}-\${anchor}\`).${pathologicalHint}`,
-      location: {
-        // anchor = slug because no single (unit, anchor) pair is canonical
-        // for a cross-unit collision finding; the slug IS the colliding
-        // identifier.
-        anchor: slug,
-      },
-    });
-  }
+      componentName: "KeyInsight",
+      labelFieldName: "title",
+      labelVerb: "retitle",
+      urlPath: "key-insights",
+    },
+    sink
+  );
 }

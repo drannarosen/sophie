@@ -70,6 +70,7 @@ test.describe("<Callout variant='deep-dive'> Deep Dives in spoiler-alerts chapte
       .waitFor({ timeout: 5000 });
 
     const results = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"])
       .exclude(".margin-note")
       .exclude(".task-list-item input[type='checkbox']")
       .exclude("li > input[type='checkbox'][disabled]")

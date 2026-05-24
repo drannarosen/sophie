@@ -62,7 +62,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsup && mkdir -p dist/components dist/styles && cp src/components/*.astro dist/components/ && cp src/styles/*.css dist/styles/",
+    "build": "tsup && mkdir -p dist/components/_shared dist/styles && cp src/components/*.astro dist/components/ && cp src/components/_shared/*.astro dist/components/_shared/ && cp src/styles/*.css dist/styles/",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
     "test:unit": "vitest run --coverage",
