@@ -1,0 +1,83 @@
+---
+import { buildModuleNavInputs, indexAccumulator } from "@sophie/astro";
+import EquationSpecContent from "@sophie/astro/components/EquationSpecContent.astro";
+import ModuleNav from "@sophie/astro/components/ModuleNav.astro";
+import TextbookHead from "@sophie/astro/components/TextbookHead.astro";
+import TextbookLayout from "@sophie/astro/components/TextbookLayout.astro";
+import { SophieChapter } from "@sophie/astro/client";
+import { getCollection } from "astro:content";
+import { figures as figureRegistry } from "../../../content/figures";
+
+/**
+ * `/library/equations/<id>/` — per-entry Equation Spec page (W4c
+ * Batch 7 Task 7.1). Sibling to the W4a rollup at
+ * `examples/smoke/src/pages/library/equations.astro` (untouched per
+ * ADR 0070's W4a implementation note).
+ *
+ * `getStaticPaths` enumerates from the `equations` content
+ * collection — that's the canonical per-file source. The runtime
+ * `EquationEntry` (with biography extracted from the MDX body via
+ * `pedagogyIndexRemarkPlugin`) is read from `indexAccumulator` per
+ * ADR 0046 §R8 + ADR 0060.
+ *
+ * Cross-references are derived from `equationCitations` by filtering
+ * for `refId === equation.id`. The `<EquationSpecContent>` component
+ * (sibling-tested via `EquationSpecContent.axe.test.ts`) owns the
+ * Spec render shape; this route is a thin layout-wiring shell.
+ *
+ * Pattern recipe for Tasks 7.2-7.5 (Misconceptions / Glossary /
+ * Figures / KeyInsights Spec routes):
+ *   1. `getStaticPaths` from the appropriate content collection,
+ *   2. read the runtime entry from `indexAccumulator.asPedagogyIndex()`,
+ *   3. pass entry + any derived citations/usages to a sibling
+ *      `<*SpecContent>` component for the Spec render,
+ *   4. wrap in `<TextbookLayout>` for layout + accumulator hydration.
+ */
+
+export async function getStaticPaths() {
+  const equations = await getCollection("equations");
+  return equations.map((e) => ({ params: { id: e.data.id } }));
+}
+
+const { id } = Astro.params;
+
+const pedagogy = indexAccumulator.asPedagogyIndex();
+const equation = pedagogy.equations.find((e) => e.id === id);
+if (!equation) {
+  // Should be unreachable: getStaticPaths enumerates the same source
+  // the orchestrator's registry-pass walks. A mismatch here surfaces
+  // an orchestrator wiring break, not author error.
+  throw new Error(
+    `Equation Spec route: no accumulator entry for id="${id}"; getStaticPaths/orchestrator drift`
+  );
+}
+const citations = pedagogy.equationCitations.filter((c) => c.refId === id);
+
+const figureRegistryArray = Object.values(figureRegistry);
+const allSections = (await getCollection("sections")).map((s) => s.data);
+const allUnits = (await getCollection("units")).map((u) => u.data);
+const { modules, chapters } = buildModuleNavInputs(allSections, allUnits);
+---
+
+<html lang='en'>
+  <head>
+    <meta charset='utf-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1' />
+    <title>{equation.title} — Equation</title>
+    <meta
+      name='description'
+      content={`Spec page for the ${equation.title} equation.`}
+    />
+    <TextbookHead />
+  </head>
+  <body>
+    <SophieChapter client:load>
+      <TextbookLayout figureRegistry={figureRegistryArray}>
+        <Fragment slot='sidebar'>
+          <ModuleNav modules={modules} chapters={chapters} />
+        </Fragment>
+        <EquationSpecContent equation={equation} citations={citations} />
+      </TextbookLayout>
+    </SophieChapter>
+  </body>
+</html>

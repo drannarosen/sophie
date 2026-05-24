@@ -29,6 +29,7 @@
     "./components/CourseGlossary.astro": "./dist/components/CourseGlossary.astro",
     "./components/ChapterEquations.astro": "./dist/components/ChapterEquations.astro",
     "./components/CourseEquations.astro": "./dist/components/CourseEquations.astro",
+    "./components/EquationSpecContent.astro": "./dist/components/EquationSpecContent.astro",
     "./components/ChapterKeyInsights.astro": "./dist/components/ChapterKeyInsights.astro",
     "./components/CourseKeyInsights.astro": "./dist/components/CourseKeyInsights.astro",
     "./components/ChapterFigures.astro": "./dist/components/ChapterFigures.astro",
