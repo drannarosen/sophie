@@ -88,4 +88,45 @@ describe("extractKeyInsights (pure)", () => {
     expect(entries).toHaveLength(2);
     expect(entries.map((e) => e.anchor)).toEqual(["ki-1", "ki-2"]);
   });
+
+  // W4c D4: slug is derived at extraction time.
+  test("slug derives from title via slugify when title present", () => {
+    const tree = root([
+      mdxAside({ kind: "key-insight", title: "Light is information" }, [
+        para("body"),
+      ]),
+    ]);
+
+    const entries = extractKeyInsights(
+      tree as never,
+      "spectra-and-composition"
+    );
+    expect(entries[0]?.slug).toBe("light-is-information");
+  });
+
+  test("slug falls back to '<unit>-<anchor>' when title absent", () => {
+    const tree = root([
+      mdxAside({ kind: "key-insight" }, [para("untitled body")]),
+    ]);
+
+    const entries = extractKeyInsights(
+      tree as never,
+      "spectra-and-composition"
+    );
+    expect(entries[0]?.anchor).toBe("ki-1");
+    expect(entries[0]?.slug).toBe("spectra-and-composition-ki-1");
+  });
+
+  // W4c Task 2.2 reviewer Minor #1: whitespace-only title trims to
+  // empty, which `attrs.title?.trim() || undefined` collapses to
+  // `undefined` — so the slug fallback must still fire.
+  test("slug falls back to '<unit>-<anchor>' when title is whitespace-only", () => {
+    const tree = root([
+      mdxAside({ kind: "key-insight", title: "   " }, [para("body")]),
+    ]);
+
+    const entries = extractKeyInsights(tree as never, "x");
+    expect(entries[0]?.title).toBeUndefined();
+    expect(entries[0]?.slug).toBe("x-ki-1");
+  });
 });

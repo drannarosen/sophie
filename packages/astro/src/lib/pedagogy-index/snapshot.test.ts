@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { pedagogyIndexRemarkPlugin, resetIndexAccumulator } from "./index.ts";
+import type { MdxJsxFlowElement } from "./jsx-utils.ts";
 
 /**
  * Layer 1.5 — plugin round-trip snapshot test. See design doc
@@ -26,27 +27,21 @@ import { pedagogyIndexRemarkPlugin, resetIndexAccumulator } from "./index.ts";
  * mdast manually here — no `remark` / `remark-mdx` deps in tests.
  */
 
-interface MdxAttribute {
-  type: "mdxJsxAttribute";
-  name: string;
-  value: unknown;
-}
-interface MdxJsxFlowElement {
-  type: "mdxJsxFlowElement";
-  name: string;
-  attributes: MdxAttribute[];
-  children: ReadonlyArray<MdastChild>;
-}
 /**
- * `MdastChild` is the test-side union of node shapes we hand to
- * `pedagogyIndexRemarkPlugin` via `tree as never`. Factory functions
- * return `MdxJsxFlowElement`, while inline text/paragraph/link nodes
- * flow through as the open `Record<string, unknown>` shape. The union
- * keeps factory outputs assignable to `children` slots without
- * weakening the structural types the assertions read.
+ * `MdastChild` + `TestRoot` are the test-side synthetic-tree shape
+ * we hand to `pedagogyIndexRemarkPlugin` via `tree as never`. Factory
+ * functions return the canonical `MdxJsxFlowElement` (imported above
+ * from `jsx-utils.ts` per R9-test), while inline text/paragraph/link
+ * nodes flow through as the open `Record<string, unknown>` shape.
+ * The union keeps factory outputs assignable to `children` slots
+ * without weakening the structural types the assertions read.
+ *
+ * `TestRoot` stays test-local because mdast's `Root` types `children`
+ * as `BlockContent[]`, which is wider than the factory-output union
+ * we need to keep assignment-checked at construction sites.
  */
 type MdastChild = MdxJsxFlowElement | Record<string, unknown>;
-interface Root {
+interface TestRoot {
   type: "root";
   children: Array<MdastChild>;
 }
@@ -56,7 +51,7 @@ const para = (text: string) => ({
   children: [{ type: "text", value: text }],
 });
 
-const root = (children: ReadonlyArray<MdastChild>): Root => ({
+const root = (children: ReadonlyArray<MdastChild>): TestRoot => ({
   type: "root",
   children: [...children],
 });
@@ -89,7 +84,10 @@ const mdxObjective = (
   children,
 });
 
-function findByName(tree: Root, name: string): MdxJsxFlowElement | undefined {
+function findByName(
+  tree: TestRoot,
+  name: string
+): MdxJsxFlowElement | undefined {
   for (const node of tree.children) {
     const n = node as unknown as MdxJsxFlowElement;
     if (n.type === "mdxJsxFlowElement" && n.name === name) {

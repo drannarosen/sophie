@@ -1,0 +1,99 @@
+---
+import { buildModuleNavInputs, indexAccumulator } from "@sophie/astro";
+import GlossarySpecContent from "@sophie/astro/components/GlossarySpecContent.astro";
+import ModuleNav from "@sophie/astro/components/ModuleNav.astro";
+import TextbookHead from "@sophie/astro/components/TextbookHead.astro";
+import TextbookLayout from "@sophie/astro/components/TextbookLayout.astro";
+import { SophieChapter } from "@sophie/astro/client";
+import { slugify } from "@sophie/core/schema";
+import { getCollection } from "astro:content";
+import { figures as figureRegistry } from "../../../content/figures";
+
+/**
+ * `/library/glossary/<slug>/` — per-entry Glossary Spec page (W4c
+ * Batch 7 Task 7.3). Sibling to the W4a rollup at
+ * `examples/smoke/src/pages/library/glossary.astro` (untouched per
+ * ADR 0070's W4a implementation note).
+ *
+ * `getStaticPaths` enumerates from `indexAccumulator` — each
+ * definition is one of N `<Aside kind="definition">` blocks inside
+ * a Unit MDX source, so the accumulator is the canonical per-entry
+ * source. The `slug` field (`DefinitionEntrySchema.slug`) is unique
+ * across the textbook (audit invariant duplicate-term); one path
+ * per entry.
+ *
+ * Cross-references — the "Referenced in" list — derive from
+ * `inlineRefUsages` (per-entry's real cross-collection signal,
+ * unlike misconceptions which lack an inline-ref kind). The audit's
+ * D4 invariant matches via `slugify(usage.refKey) === entry.slug`,
+ * so this route filters usages by:
+ *   - `kind === "glossary-term"` AND
+ *   - `slugify(refKey) === entry.slug`
+ * The `<GlossaryTerm name="...">` prop is the canonical term as
+ * written in prose (often plural / inflected); the audit's D4
+ * slugify-compare is the source-of-truth match.
+ *
+ * The `<GlossarySpecContent>` component (sibling-tested via
+ * `GlossarySpecContent.axe.test.ts`) owns the Spec render shape;
+ * this route is a thin layout-wiring shell.
+ */
+
+export async function getStaticPaths() {
+  const pedagogy = indexAccumulator.asPedagogyIndex();
+  return pedagogy.definitions.map((d) => ({ params: { slug: d.slug } }));
+}
+
+const { slug } = Astro.params;
+
+const pedagogy = indexAccumulator.asPedagogyIndex();
+const entry = pedagogy.definitions.find((d) => d.slug === slug);
+if (!entry) {
+  // Should be unreachable: getStaticPaths enumerates the same
+  // accumulator pass. A mismatch here surfaces an orchestrator
+  // wiring break, not author error.
+  throw new Error(
+    `Glossary Spec route: no accumulator entry for slug="${slug}"; getStaticPaths/orchestrator drift`
+  );
+}
+
+const referencingUnits = Array.from(
+  new Set(
+    pedagogy.inlineRefUsages
+      .filter(
+        (u) => u.kind === "glossary-term" && slugify(u.refKey) === entry.slug
+      )
+      .map((u) => u.unit)
+  )
+);
+
+const figureRegistryArray = Object.values(figureRegistry);
+const allSections = (await getCollection("sections")).map((s) => s.data);
+const allUnits = (await getCollection("units")).map((u) => u.data);
+const { modules, chapters } = buildModuleNavInputs(allSections, allUnits);
+---
+
+<html lang='en'>
+  <head>
+    <meta charset='utf-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1' />
+    <title>{entry.term} — Glossary</title>
+    <meta
+      name='description'
+      content={`Spec page for the glossary term "${entry.term}".`}
+    />
+    <TextbookHead />
+  </head>
+  <body>
+    <SophieChapter client:load>
+      <TextbookLayout figureRegistry={figureRegistryArray}>
+        <Fragment slot='sidebar'>
+          <ModuleNav modules={modules} chapters={chapters} />
+        </Fragment>
+        <GlossarySpecContent
+          entry={entry}
+          referencingUnits={referencingUnits}
+        />
+      </TextbookLayout>
+    </SophieChapter>
+  </body>
+</html>

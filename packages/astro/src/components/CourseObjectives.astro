@@ -13,8 +13,31 @@ const { sections, units, objectives } = indexAccumulator.asPedagogyIndex();
 
 /**
  * `<CourseObjectives heading="..." />` — Astro consumer that produces
- * a Module → Chapter → Objectives roll-up across the whole textbook,
- * joining `PedagogyIndex.modules`, `PedagogyIndex.chapters`, and
+ * a Module → Chapter → Objectives roll-up across the whole textbook.
+ *
+ * **W4c shell-extraction exception (per W4c design doc D1):** this
+ * component does NOT wrap content in `<LibraryCollectionShell>`. The
+ * 3-level Module → Chapter → Objectives grouping (`<section>` /
+ * `<article>` / `<ul>`) is structurally distinct from the flat-list
+ * `<dl>` / `<ol>` shape the shell is optimized for. Revisit when a
+ * second grouped consumer emerges (e.g., a per-Section practice-set
+ * rollup) — at which point the shell may grow a grouped-content slot
+ * variant.
+ *
+ * **Standalone-axe-clean via internal `aria-labelledby` wiring**
+ * (W4c Task 4.6): the outer `<section>` + each module `<section>` +
+ * each chapter `<article>` are accessibly-named landmarks via
+ * `aria-labelledby` pointing at their respective headings. Per WAI,
+ * `<section>` / `<article>` only become `region` landmarks when
+ * accessibly named — without this wiring, axe `region` rule fails in
+ * standalone composition (the component worked in production only
+ * because `TextbookLayout` always wraps in `<main>`). Stable id
+ * scheme: outer = `sophie-course-objectives-heading`; per module =
+ * `sophie-course-objectives-module-<mod.slug>` (slug uniqueness per
+ * ADR 0067); per chapter = `sophie-course-objectives-chapter-<unit.id>`
+ * (id uniqueness per W3 invariants).
+ *
+ * Joins `PedagogyIndex.modules`, `PedagogyIndex.chapters`, and
  * `PedagogyIndex.objectives` (ADR 0038; PR-C4 design decision Q5).
  *
  * Module order is course-outline (required `order` on `ModuleEntry`).
@@ -39,6 +62,19 @@ export interface Props {
 }
 
 const { heading } = Astro.props;
+
+// Stable ids for `aria-labelledby` wiring so the outer + per-module
+// + per-chapter elements become accessibly-named region landmarks
+// (per WAI: <section>/<article> are only landmarks when named).
+// Key scheme — collisions prevented by upstream invariants:
+//   outer   = static (one per page)
+//   module  = section slug (unique per ADR 0067)
+//   chapter = unit id     (unique per W3 invariants)
+const rootHeadingId = "sophie-course-objectives-heading";
+const moduleHeadingId = (slug: string) =>
+  `sophie-course-objectives-module-${slug}`;
+const chapterHeadingId = (id: string) =>
+  `sophie-course-objectives-chapter-${id}`;
 
 interface GroupedChapter {
   chapter: UnitEntry;
@@ -67,28 +103,44 @@ const grouped: GroupedModule[] = [...sections]
   }));
 ---
 
-{heading && <h1 class='sophie-course-objectives__heading'>{heading}</h1>}
-{
-  grouped.length === 0 ? (
-    <p class='sophie-course-objectives__empty'>
-      No modules declared yet.
-    </p>
-  ) : (
-    <div
-      class='sophie-course-objectives'
-      data-sophie-course-objectives=''
-    >
-      {grouped.map(({ module: mod, chapters: modChapters }) => (
-        <section class='sophie-course-objectives__module'>
-          <h2 class='sophie-course-objectives__module-title'>{mod.title}</h2>
+<section
+  class='sophie-course-objectives'
+  data-sophie-course-objectives=''
+  aria-labelledby={heading ? rootHeadingId : undefined}
+  aria-label={heading ? undefined : "Course objectives"}
+>
+  {heading && <h1 id={rootHeadingId} class='sophie-course-objectives__heading'>{heading}</h1>}
+  {
+    grouped.length === 0 ? (
+      <p class='sophie-course-objectives__empty'>
+        No modules declared yet.
+      </p>
+    ) : (
+      grouped.map(({ module: mod, chapters: modChapters }) => (
+        <section
+          class='sophie-course-objectives__module'
+          aria-labelledby={moduleHeadingId(mod.slug)}
+        >
+          <h2
+            id={moduleHeadingId(mod.slug)}
+            class='sophie-course-objectives__module-title'
+          >
+            {mod.title}
+          </h2>
           {modChapters.length === 0 ? (
             <p class='sophie-course-objectives__empty'>
               No chapters in this module.
             </p>
           ) : (
             modChapters.map(({ chapter, objectives: chObjectives }) => (
-              <article class='sophie-course-objectives__chapter'>
-                <h3 class='sophie-course-objectives__chapter-title'>
+              <article
+                class='sophie-course-objectives__chapter'
+                aria-labelledby={chapterHeadingId(chapter.id)}
+              >
+                <h3
+                  id={chapterHeadingId(chapter.id)}
+                  class='sophie-course-objectives__chapter-title'
+                >
                   <a href={`/units/${chapter.id}/reading`}>{chapter.title}</a>
                 </h3>
                 {chObjectives.length === 0 ? (
@@ -123,10 +175,10 @@ const grouped: GroupedModule[] = [...sections]
             ))
           )}
         </section>
-      ))}
-    </div>
-  )
-}
+      ))
+    )
+  }
+</section>
 
 <style is:global>
   /* `__body` is a `<div>` so the HTML5 parser accepts a `<p>` from

@@ -215,6 +215,34 @@ describe("extractMisconceptions (pure)", () => {
     }
   });
 
+  // W4c Batch 1b: slug is derived at extraction time.
+  test("slug derives from label via slugify when label present", () => {
+    const tree = root([
+      mdxAside({ kind: "misconception", title: "Heavier falls faster" }, [
+        para("body"),
+      ]),
+    ]);
+
+    const entries = extractMisconceptions(
+      tree as never,
+      "spectra-and-composition"
+    );
+    expect(entries[0]?.slug).toBe("heavier-falls-faster");
+  });
+
+  test("slug falls back to '<unit>-<anchor>' when label absent", () => {
+    const tree = root([
+      mdxAside({ kind: "misconception" }, [para("untitled body")]),
+    ]);
+
+    const entries = extractMisconceptions(
+      tree as never,
+      "spectra-and-composition"
+    );
+    expect(entries[0]?.anchor).toBe("misc-1");
+    expect(entries[0]?.slug).toBe("spectra-and-composition-misc-1");
+  });
+
   test("skips Aside blocks with non-misconception kinds and Callouts with non-misconception variants", () => {
     const tree = root([
       mdxAside({ kind: "note", title: "A note" }, [para("not it")]),

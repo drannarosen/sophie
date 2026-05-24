@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { transformOMIFlow } from "../index.ts";
+import type { MdxJsxFlowElement } from "../jsx-utils.ts";
 
 /**
  * Synthetic-mdast tests for `transformOMIFlow`. Mirrors the
@@ -15,24 +16,33 @@ import { transformOMIFlow } from "../index.ts";
  * ADR 0027).
  */
 
-interface MdxAttributeValueExpression {
+/**
+ * `TestMdxAttribute(ValueExpression)` + `MdastChild` + `TestRoot` are
+ * the test-side synthetic-tree shape we hand to `transformOMIFlow`
+ * via `tree as never`. `MdxJsxFlowElement` is imported from the
+ * canonical home (`../jsx-utils.ts`) per R9-test.
+ *
+ * `TestMdxAttributeValueExpression` stays test-local with a richer
+ * shape (`value: string`, `data?: { estree?: unknown }`) than
+ * canonical's `{ type: string }` because post-transform assertions
+ * read both `.value` (for JSON parse) and `.data?.estree` (for the
+ * MDX-lowering invariant). `TestRoot` stays test-local because mdast's
+ * `Root` types `children` as `BlockContent[]`, which is wider than
+ * the factory-output union we need to keep assignment-checked at
+ * construction sites.
+ */
+interface TestMdxAttributeValueExpression {
   type: "mdxJsxAttributeValueExpression";
   value: string;
   data?: { estree?: unknown };
 }
-interface MdxAttribute {
+interface TestMdxAttribute {
   type: "mdxJsxAttribute";
   name: string;
-  value: string | MdxAttributeValueExpression;
-}
-interface MdxJsxFlowElement {
-  type: "mdxJsxFlowElement";
-  name: string;
-  attributes: MdxAttribute[];
-  children: ReadonlyArray<MdastChild>;
+  value: string | TestMdxAttributeValueExpression;
 }
 type MdastChild = MdxJsxFlowElement | Record<string, unknown>;
-interface Root {
+interface TestRoot {
   type: "root";
   children: ReadonlyArray<MdastChild>;
 }
@@ -42,7 +52,7 @@ const para = (text: string) => ({
   children: [{ type: "text", value: text }],
 });
 
-const root = (children: ReadonlyArray<MdastChild>): Root => ({
+const root = (children: ReadonlyArray<MdastChild>): TestRoot => ({
   type: "root",
   children,
 });
@@ -99,8 +109,14 @@ function buildOMIFlow(
 function findAttr(
   node: MdxJsxFlowElement,
   name: string
-): MdxAttribute | undefined {
-  return node.attributes.find((a) => a.name === name);
+): TestMdxAttribute | undefined {
+  // Canonical `attributes[].value` is `string | boolean | null | { type: string }`;
+  // post-transform assertions need the richer
+  // `TestMdxAttributeValueExpression` shape (`.value`, `.data?.estree`).
+  // The cast is safe because `transformOMIFlow` writes exactly that shape.
+  return node.attributes.find((a) => a.name === name) as
+    | TestMdxAttribute
+    | undefined;
 }
 
 describe("transformOMIFlow", () => {
@@ -138,7 +154,7 @@ describe("transformOMIFlow", () => {
       type: "mdxJsxAttributeValueExpression",
     });
     const observableJson = JSON.parse(
-      (observable?.value as MdxAttributeValueExpression).value
+      (observable?.value as TestMdxAttributeValueExpression).value
     );
     expect(observableJson).toMatchObject({
       title: "Obs title",
@@ -147,7 +163,7 @@ describe("transformOMIFlow", () => {
 
     const inference = findAttr(omiNode, "inference");
     const inferenceJson = JSON.parse(
-      (inference?.value as MdxAttributeValueExpression).value
+      (inference?.value as TestMdxAttributeValueExpression).value
     );
     expect(inferenceJson.title).toBe("Inf title");
   });
@@ -157,7 +173,7 @@ describe("transformOMIFlow", () => {
     transformOMIFlow(root([omiNode]) as never, "ch");
     const observable = findAttr(omiNode, "observable");
     expect(
-      (observable?.value as MdxAttributeValueExpression).data?.estree
+      (observable?.value as TestMdxAttributeValueExpression).data?.estree
     ).toBeDefined();
   });
 

@@ -296,6 +296,7 @@ describe("KeyInsightEntrySchema", () => {
         body: "<p>Color is encoded physics.</p>",
         unit: "spoiler-alerts",
         anchor: "color-physics",
+        slug: "color-is-encoded-physics",
       }).success
     ).toBe(true);
   });
@@ -307,6 +308,7 @@ describe("KeyInsightEntrySchema", () => {
         body: "<p>Color is encoded physics.</p>",
         unit: "spoiler-alerts",
         anchor: "color-physics",
+        slug: "spoiler-alerts-color-physics",
       }).success
     ).toBe(true);
   });
@@ -414,6 +416,7 @@ describe("MisconceptionEntrySchema", () => {
         unit: "atmospheric-physics",
         anchor: "twinkle",
         length: "short",
+        slug: "atmospheric-physics-twinkle",
       }).success
     ).toBe(true);
   });
@@ -425,6 +428,7 @@ describe("MisconceptionEntrySchema", () => {
         unit: "atmospheric-physics",
         anchor: "twinkle-long",
         length: "long",
+        slug: "atmospheric-physics-twinkle-long",
       }).success
     ).toBe(true);
   });
@@ -449,6 +453,7 @@ describe("MisconceptionEntrySchema", () => {
         unit: "ch",
         anchor: "misc-1",
         length: "short",
+        slug: "ch-misc-1",
       }).success
     ).toBe(true);
   });
@@ -460,6 +465,7 @@ describe("MisconceptionEntrySchema", () => {
         unit: "ch",
         anchor: "redshift-as-ordinary-doppler",
         length: "short",
+        slug: "ch-redshift-as-ordinary-doppler",
         prerequisite_misconceptions: [
           "universe-with-a-center",
           "expansion-vs-motion-in-space",
@@ -475,6 +481,7 @@ describe("MisconceptionEntrySchema", () => {
         unit: "ch",
         anchor: "universe-with-a-center",
         length: "short",
+        slug: "ch-universe-with-a-center",
         prerequisite_misconceptions: [],
       }).success
     ).toBe(true);
@@ -487,6 +494,7 @@ describe("MisconceptionEntrySchema", () => {
         unit: "ch",
         anchor: "brightness-is-intrinsic",
         length: "short",
+        slug: "ch-brightness-is-intrinsic",
         related_misconceptions: [
           "flux-and-luminosity-interchangeable",
           "all-stars-equally-bright",
@@ -502,6 +510,7 @@ describe("MisconceptionEntrySchema", () => {
         unit: "ch",
         anchor: "brightness-is-intrinsic",
         length: "short",
+        slug: "ch-brightness-is-intrinsic",
         concept_refs: ["flux", "stellar-luminosity", "distance-modulus"],
       }).success
     ).toBe(true);
@@ -514,6 +523,7 @@ describe("MisconceptionEntrySchema", () => {
         unit: "ch",
         anchor: "correlation-implies-causation",
         length: "short",
+        slug: "ch-correlation-implies-causation",
         discipline_scope: ["statistics", "epidemiology", "social-science"],
       }).success
     ).toBe(true);
@@ -550,6 +560,7 @@ describe("MisconceptionEntrySchema", () => {
         unit: "ch",
         anchor: "redshift-as-ordinary-doppler",
         length: "short",
+        slug: "ch-redshift-as-ordinary-doppler",
         prerequisite_misconceptions: ["universe-with-a-center"],
         related_misconceptions: ["expansion-vs-motion-in-space"],
         concept_refs: ["redshift", "recession-velocity"],

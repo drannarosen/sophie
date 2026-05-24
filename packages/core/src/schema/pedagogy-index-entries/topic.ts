@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { AuditOverrideSchema } from "../audit-override.ts";
 import { NonEmptyString, Slug } from "../primitives.ts";
 
 /**
@@ -45,5 +46,17 @@ export const TopicEntrySchema = z.object({
   linked_equation_ids: z.array(Slug).default([]),
   linked_misconception_ids: z.array(Slug).default([]),
   cards: z.array(TopicCardMetadataSchema).default([]),
+  /**
+   * Per-Topic audit-invariant exceptions per ADR 0053. PRA-2 (ADR
+   * 0079, wired in Batch 2 of this PR) is the first invariant to
+   * honor these. Each override declares `invariant`, optional
+   * `anchor` (per card id — W4c D5 fixed no whole-topic wildcard),
+   * mandatory `tdr` (CF2 ERROR otherwise), and `reason`.
+   *
+   * Optional rather than `.default([])` so existing fixtures don't
+   * require the field (W4b Surprise #2: `.default([])` cascaded to
+   * ~30 fixtures). PRA-2 honoring code reads via `?? []`.
+   */
+  audit_overrides: z.array(AuditOverrideSchema).optional(),
 });
 export type TopicEntry = z.infer<typeof TopicEntrySchema>;

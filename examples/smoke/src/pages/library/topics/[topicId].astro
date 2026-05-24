@@ -1,8 +1,10 @@
 ---
-import { buildModuleNavInputs } from "@sophie/astro";
+import { resolve } from "node:path";
+import { buildModuleNavInputs, renderTopicCardSlotsToHtml } from "@sophie/astro";
 import ModuleNav from "@sophie/astro/components/ModuleNav.astro";
 import TextbookHead from "@sophie/astro/components/TextbookHead.astro";
 import TextbookLayout from "@sophie/astro/components/TextbookLayout.astro";
+import TopicSpecContent from "@sophie/astro/components/TopicSpecContent.astro";
 import { SophieChapter } from "@sophie/astro/client";
 import { getCollection } from "astro:content";
 import { figures as figureRegistry } from "../../../content/figures";
@@ -13,8 +15,10 @@ import { figures as figureRegistry } from "../../../content/figures";
  * § "Spec page rendering" + ADR 0070 W4a amendment locking the
  * `/library/<X>/` URL convention.
  *
- * Renders the topic file's metadata (label, summary, cross-refs)
- * + all of its cards inline. The card list IS the topic — there's
+ * Renders the topic file's metadata (label, summary, cross-refs) +
+ * all of its cards inline WITH each card's Prompt + Answer body
+ * (W4c Batch 8 Task 8.4, closes W4b R+CR finding N5 — Spec page
+ * shipped with labels only). The card list IS the topic — there's
  * no separate per-card Spec route in v1 (deferred to W4c+ if
  * curriculum demands one). Authors browse a topic's cards by
  * opening its Spec page; the card body content (Prompt + Answer
@@ -24,6 +28,13 @@ import { figures as figureRegistry } from "../../../content/figures";
  * Design F's `src/content/topics/<category>/<topic-id>.mdx`
  * layout). Category subdirectory is invisible at this URL level
  * (flat per ADR 0079 §"Category sub-grouping is organizational").
+ *
+ * Slot bodies are sourced via `renderTopicCardSlotsToHtml` from
+ * the SkillReview resolver module — same parser + module-level
+ * AST cache that powers MDX-compile-time slot lifting for chapter
+ * `<SkillReview ... />` self-closing forms. Topics dir mirrors the
+ * resolver's `DEFAULT_TOPICS_DIR` (Astro integration anchors
+ * `process.cwd()` to the consumer project root).
  */
 
 export async function getStaticPaths() {
@@ -36,18 +47,14 @@ export async function getStaticPaths() {
 
 const { topicId, topic } = Astro.props;
 
+const TOPICS_DIR = resolve(process.cwd(), "src/content/topics");
+const cardSlots = renderTopicCardSlotsToHtml(TOPICS_DIR, topicId);
+
 const figureRegistryArray = Object.values(figureRegistry);
 
 const allSections = (await getCollection("sections")).map((s) => s.data);
 const allUnits = (await getCollection("units")).map((u) => u.data);
 const { modules, chapters } = buildModuleNavInputs(allSections, allUnits);
-
-// v1: Spec page shows topic metadata + card list (labels +
-// difficulty). The MDX body content is NOT rendered here because
-// the body uses <SkillReview.Card> compound components that
-// require the full chapter components map. A future wedge (W4c+)
-// can plumb the components map + render prompt/answer per card
-// inline.
 ---
 
 <html lang='en'>
@@ -64,66 +71,7 @@ const { modules, chapters } = buildModuleNavInputs(allSections, allUnits);
         <Fragment slot='sidebar'>
           <ModuleNav modules={modules} chapters={chapters} />
         </Fragment>
-        <article>
-          <header>
-            <h1>{topic.label}</h1>
-            <p>{topic.summary}</p>
-          </header>
-
-          {topic.cards.length > 0 && (
-            <section aria-labelledby={`${topicId}-cards-heading`}>
-              <h2 id={`${topicId}-cards-heading`}>Cards</h2>
-              <ol>
-                {topic.cards.map((c) => (
-                  <li>
-                    <strong>{c.label}</strong>
-                    {c.difficulty && (
-                      <span data-difficulty={c.difficulty}>
-                        {" "}({c.difficulty})
-                      </span>
-                    )}
-                  </li>
-                ))}
-              </ol>
-            </section>
-          )}
-
-          {(topic.prereq_topic_ids.length > 0 ||
-            topic.linked_equation_ids.length > 0 ||
-            topic.linked_misconception_ids.length > 0) && (
-            <section aria-labelledby={`${topicId}-crossrefs-heading`}>
-              <h2 id={`${topicId}-crossrefs-heading`}>Cross-references</h2>
-              {topic.prereq_topic_ids.length > 0 && (
-                <p>
-                  <strong>Prerequisite topics:</strong>{" "}
-                  {topic.prereq_topic_ids.map((id, i) => (
-                    <span>
-                      {i > 0 && ", "}
-                      <a href={`/library/topics/${id}/`}>{id}</a>
-                    </span>
-                  ))}
-                </p>
-              )}
-              {topic.linked_equation_ids.length > 0 && (
-                <p>
-                  <strong>Linked equations:</strong>{" "}
-                  {topic.linked_equation_ids.map((id, i) => (
-                    <span>
-                      {i > 0 && ", "}
-                      <a href={`/equations/${id}/`}>{id}</a>
-                    </span>
-                  ))}
-                </p>
-              )}
-              {topic.linked_misconception_ids.length > 0 && (
-                <p>
-                  <strong>Linked misconceptions:</strong>{" "}
-                  {topic.linked_misconception_ids.join(", ")}
-                </p>
-              )}
-            </section>
-          )}
-        </article>
+        <TopicSpecContent topic={topic} cardSlots={cardSlots} />
       </TextbookLayout>
     </SophieChapter>
   </body>

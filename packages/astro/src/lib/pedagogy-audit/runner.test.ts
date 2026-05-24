@@ -99,6 +99,7 @@ describe("runPedagogyAudit — clean index", () => {
       body: "<p>Stars are physics labs.</p>",
       unit: "spoiler-alerts",
       anchor: "ki-1",
+      slug: "spoiler-alerts-ki-1",
     };
     const obj: ObjectiveEntry = {
       id: "lo-1",
@@ -118,6 +119,7 @@ describe("runPedagogyAudit — clean index", () => {
       body: "<p>Foundations insight.</p>",
       unit: "foundations",
       anchor: "ki-1",
+      slug: "foundations-ki-1",
     };
     const usages: InlineRefUsageEntry[] = [
       { kind: "glossary-term", refKey: "Photon", unit: "spoiler-alerts" },
@@ -583,13 +585,18 @@ describe("O2 — chapter with zero objectives (WARNING)", () => {
 describe("MG1 — cycle in prerequisite_misconceptions (ADR 0044)", () => {
   const mc = (
     overrides: Partial<MisconceptionEntry> = {}
-  ): MisconceptionEntry => ({
-    body: "<p>x</p>",
-    unit: "ch-a",
-    anchor: "default",
-    length: "short",
-    ...overrides,
-  });
+  ): MisconceptionEntry => {
+    const unit = overrides.unit ?? "ch-a";
+    const anchor = overrides.anchor ?? "default";
+    return {
+      body: "<p>x</p>",
+      unit,
+      anchor,
+      length: "short",
+      slug: `${unit}-${anchor}`,
+      ...overrides,
+    };
+  };
 
   it("emits an ERROR for a two-node cycle (A → B → A)", () => {
     const index: PedagogyIndex = {
@@ -841,13 +848,18 @@ describe("MG1 — cycle in prerequisite_misconceptions (ADR 0044)", () => {
 describe("MG2 — prerequisite_misconceptions ordering + dangling (ADR 0044)", () => {
   const mc = (
     overrides: Partial<MisconceptionEntry> = {}
-  ): MisconceptionEntry => ({
-    body: "<p>x</p>",
-    unit: "ch-a",
-    anchor: "default",
-    length: "short",
-    ...overrides,
-  });
+  ): MisconceptionEntry => {
+    const unit = overrides.unit ?? "ch-a";
+    const anchor = overrides.anchor ?? "default";
+    return {
+      body: "<p>x</p>",
+      unit,
+      anchor,
+      length: "short",
+      slug: `${unit}-${anchor}`,
+      ...overrides,
+    };
+  };
 
   it("emits an ERROR when a prerequisite references no known misconception (dangling)", () => {
     const index: PedagogyIndex = {
@@ -1108,6 +1120,7 @@ describe("K1 — chapters with zero <KeyInsight>s (INFO)", () => {
       body: "<p>x</p>",
       unit: "spoiler-alerts",
       anchor: "ki-1",
+      slug: "spoiler-alerts-ki-1",
     };
     const index: PedagogyIndex = {
       ...emptyIndex(),

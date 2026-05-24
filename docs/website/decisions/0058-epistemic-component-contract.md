@@ -9,9 +9,37 @@ tags:
   - thesis
 status: shipped
 validation:
-  status: unvalidated
-  last_validated_date: null
-  evidence: []
+  status: in-progress
+  last_validated_date: "2026-05-23"
+  evidence:
+    - kind: test
+      ref: packages/astro/src/components/CourseObservables.axe.test.ts
+      date: "2026-05-23"
+      notes: "W4c Observable rollup chrome (per §4 slot-name-binds-role) — derived from OMIFlowEntry.observable; axe-clean."
+    - kind: test
+      ref: packages/astro/src/components/CourseModels.axe.test.ts
+      date: "2026-05-23"
+      notes: "W4c Model rollup chrome (per §4 slot-name-binds-role) — derived from OMIFlowEntry.model; axe-clean."
+    - kind: test
+      ref: packages/astro/src/components/CourseInferences.axe.test.ts
+      date: "2026-05-23"
+      notes: "W4c Inference rollup chrome (per §4 slot-name-binds-role) — derived from OMIFlowEntry.inference; axe-clean."
+    - kind: test
+      ref: packages/astro/src/components/ObservableSpecContent.axe.test.ts
+      date: "2026-05-23"
+      notes: "W4c per-callsite Spec route; carries data-epistemic-role='observable' on role label paragraph."
+    - kind: test
+      ref: packages/astro/src/components/ModelSpecContent.axe.test.ts
+      date: "2026-05-23"
+      notes: "W4c per-callsite Spec route; carries data-epistemic-role='model' on role label paragraph."
+    - kind: test
+      ref: packages/astro/src/components/InferenceSpecContent.axe.test.ts
+      date: "2026-05-23"
+      notes: "W4c per-callsite Spec route; carries data-epistemic-role='inference' on role label paragraph."
+    - kind: deployment
+      ref: examples/smoke/dist/library/observables/index.html
+      date: "2026-05-23"
+      notes: "Smoke build emits Observable/Model/Inference rollups + Spec pages with data-epistemic-role attributes per §R-deep-dive table."
 ---
 
 # ADR 0058: Epistemic Component Contract
@@ -514,6 +542,73 @@ misconception:
 - key-insight → inference (the "so what" of a chapter)
 - misconception → uncertainty (the durable wrong-model alert)
 - **deep-dive → role-inherited from container (per §R-deep-dive)**
+
+### 2026-05-23 — Wedge B-followup W4c: Observable/Model/Inference rollup chrome + per-callsite Spec routes
+
+W4c ships the first cross-component application of this ADR's §4
+composite contract (*"Composite components must declare role per
+slot"*) at scale. Three new CourseX rollup components
+(CourseObservables / CourseModels / CourseInferences) and three
+new per-OMIFlow-callsite Spec routes
+(`/library/observables/<unit>-<anchor>/`,
+`/library/models/<unit>-<anchor>/`,
+`/library/inferences/<unit>-<anchor>/`) **derive their entry
+lists from existing `OMIFlowEntry` slot data** — no new schema,
+no new extractor. Per §4, OMIFlow's three slots (`observable` /
+`model` / `inference`) already carry the role binding, so each
+rollup is a projection of `PedagogyIndex.omiFlows` through the
+relevant slot accessor.
+
+**`data-epistemic-role` on role label paragraphs.** Each new
+rollup component and each new Spec page entry renders a small
+role-label paragraph carrying
+`data-epistemic-role="observable|model|inference"`. This is the
+first ADR 0058-blessed *rendered* surface for the role enum (the
+prior R-greenfield instances bound role at the schema layer
+only — `<Observable>` and friends carry no runtime role marker on
+their DOM output). The data attribute lets downstream consumers
+(theme tokens per ADR 0005, future epistemic filter UI, AI
+authoring per ADR 0030) read the role without re-deriving it
+from the slot-name lookup table.
+
+**Three roles still deferred per §4.** `assumption`,
+`approximation`, and `numerical` remain unbacked by composite
+chrome. The current Sophie surface carries `assumption` and
+`approximation` implicitly through `<KeyEquation>`'s
+`<Assumption>` and `<BreaksWhen>` children (per §R-greenfield),
+but neither has a Library rollup yet — there is no
+`<AssumptionStack>` (A9) or `<UncertaintyLens>` (A10) shipped to
+provide the slot-name binding the way OMIFlow does for the OMI
+triple. `numerical` has no in-tree role-bearer at all. **Trigger
+to revisit:** when role-tagging extends to other entry types
+(e.g., a future `<EquationCommentary>` declaring
+`epistemicRole="approximation"` explicitly) OR a new entry type
+with explicit role ships (A9 / A10 / future `<NumericsPlayground>`).
+Until then the contract is honored by intentional non-extension,
+not by chrome that doesn't exist.
+
+**Role assignments for the five W4a Spec routes** (per the
+§R-deep-dive table's "rendered but typed" precedent):
+
+| Spec route                           | Role            | Source                                                |
+| ------------------------------------ | --------------- | ----------------------------------------------------- |
+| `/library/key-insights/<slug>/`      | `inference`     | Per §R-deep-dive table ("the 'so what' of a chapter") |
+| `/library/glossary/<slug>/`          | `observable`    | Terminological grounding per §R-deep-dive table       |
+| `/library/misconceptions/<slug>/`    | `misconception` | Canonical instance per §3                             |
+| `/library/equations/<id>/`           | `model`         | Per the canonical KeyEquation role binding            |
+| `/library/figures/<name>/`           | `observable`    | W2 default — registry doesn't carry explicit role     |
+
+These are **rendered** assignments on the Spec page templates, not
+schema fields — the underlying entries carry no `epistemicRole`
+field at v1 (the W2 default for non-greenfield components per
+§2). When a future PR opportunistically lifts a role to explicit
+on one of these entry types (per §2 optional + additive), the
+template binding stays consistent; the read shape is the same.
+
+**Companion ADRs.** [ADR 0070 W4c entry](./0070-library-room-and-registry-spec-pages.md#id-2026-05-23-wedge-b-followup-w4c-shell-extraction-3-omiflow-rooms-8-per-entry-spec-routes)
+documents the full Library shell extraction; [ADR 0079 W4c
+entry](./0079-topic-registry-and-resolution-pattern.md#id-2026-05-23-wedge-b-followup-w4c-pra-2-graduation-topic-spec-card-body-inline-rendering)
+documents the Topic Spec page changes.
 
 ## References
 

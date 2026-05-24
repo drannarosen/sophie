@@ -24,8 +24,8 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 | Status | Count |
 |---|---|
 | Validated | 14 |
-| In progress | 15 |
-| Unvalidated | 76 |
+| In progress | 17 |
+| Unvalidated | 74 |
 | Re-validation needed | 0 |
 | Missing block | 0 |
 | Total | 105 |
@@ -45,10 +45,10 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 
 | Kind | Count |
 |---|---|
-| test | 42 |
+| test | 72 |
 | chapter | 7 |
 | review | 21 |
-| deployment | 13 |
+| deployment | 16 |
 | audit | 5 |
 | manual | 29 |
 
@@ -118,7 +118,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0055-squash-merge-for-code-prs.md](/squash-merge-for-code-prs/) | validated | shipped | 2026-05-16 | deployment, manual | Status promoted from in-progress → validated on 2026-05-16 after the squash-merge-guard CI workflow + repo-settings change both landed. Two layers are required: settings prevent UI accidents (the \`Create a merge commit\` and \`Rebase and merge\` buttons are gone); the CI workflow catches API-level bypass of the merge-commit shape. Together they cover all three GitHub merge strategies. |
 | [docs/website/decisions/0056-validation-tracker.md](/validation-tracker/) | validated | shipped | 2026-05-16 | audit, deployment, manual, review, test | All six PRs (#43 schema, #44 bulk migration, #50 admonition, #51 audit, #52 index, this PR curated-pass + reference doc + V1/V2 promotion) shipped. Self-referential validation complete; tracker is the source of truth for every ADR + reference doc's validation state as of 2026-05-16. |
 | [docs/website/decisions/0057-visual-regression-baseline.md](/visual-regression-baseline/) | unvalidated | shipped | — | — |  |
-| [docs/website/decisions/0058-epistemic-component-contract.md](/epistemic-component-contract/) | unvalidated | shipped | — | — |  |
+| [docs/website/decisions/0058-epistemic-component-contract.md](/epistemic-component-contract/) | in progress | shipped | 2026-05-23 | deployment, test |  |
 | [docs/website/decisions/0059-linked-representation-state-primitive.md](/linked-representation-state-primitive/) | unvalidated | accepted design | — | — |  |
 | [docs/website/decisions/0060-registry-ecosystem.md](/registry-ecosystem/) | unvalidated | accepted design | — | — |  |
 | [docs/website/decisions/0061-ai-optimized-codebase-design.md](/ai-optimized-codebase-design/) | unvalidated | shipped | — | — |  |
@@ -130,7 +130,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0067-section-level-artifacts.md](/section-level-artifacts/) | in progress | shipped | 2026-05-22 | manual |  |
 | [docs/website/decisions/0068-bridge-rooms-and-prereq-pedagogy.md](/bridge-rooms-and-prereq-pedagogy/) | unvalidated | accepted design | — | — |  |
 | [docs/website/decisions/0069-fsrs-spaced-repetition-engine.md](/fsrs-spaced-repetition-engine/) | unvalidated | accepted design | — | — |  |
-| [docs/website/decisions/0070-library-room-and-registry-spec-pages.md](/library-room-and-registry-spec-pages/) | unvalidated | accepted design | — | — |  |
+| [docs/website/decisions/0070-library-room-and-registry-spec-pages.md](/library-room-and-registry-spec-pages/) | in progress | accepted design | 2026-05-23 | deployment, test |  |
 | [docs/website/decisions/0071-pyodide-computational-labs.md](/pyodide-computational-labs/) | unvalidated | accepted design | — | — |  |
 | [docs/website/decisions/0072-three-tier-build-priority.md](/three-tier-build-priority/) | unvalidated | accepted design | — | — |  |
 | [docs/website/decisions/0073-unified-assessment-schema.md](/unified-assessment-schema/) | unvalidated | accepted design | — | — |  |

@@ -1,0 +1,111 @@
+---
+import type { MisconceptionEntry } from "@sophie/core/schema";
+import LibraryCollectionShell from "./LibraryCollectionShell.astro";
+
+/**
+ * `<MisconceptionSpecContent>` — per-entry Spec content for the route
+ * at `/library/misconceptions/<slug>/` (W4c Batch 7 Task 7.2). Second
+ * of five W4a-era Spec content components; follows the Task 7.1
+ * (Equations) template — the route file is a thin
+ * `getStaticPaths` + layout-wiring shell.
+ *
+ * Renders, per W4c design D3:
+ *   1. Heading via `<LibraryCollectionShell>` — uses `entry.label`
+ *      when present; otherwise the length-aware fallback (matches
+ *      `<CourseMisconceptions>`: short → "Misconception (brief)";
+ *      long → "Misconception"),
+ *   2. Length variant readout (`<p>Length: short|long</p>`) — the
+ *      length discriminator is part of the misconception's identity
+ *      (Aside vs Callout source primitive per
+ *      `MisconceptionEntrySchema`),
+ *   3. Epistemic-role label ("Role: Misconception") per ADR 0058
+ *      §2 — misconceptions are role `"misconception"` in the
+ *      eight-role taxonomy,
+ *   4. Pre-rendered HTML body via `set:html` (the source aside /
+ *      callout body, escaped at extraction time),
+ *   5. Cross-references — "Surfaces in" listing the parent Unit(s)
+ *      that contain this misconception. Derived at the route level
+ *      from the `misconceptions` collection grouped by `unit`.
+ *
+ *      W2 note: misconceptions don't have an inline-ref kind in
+ *      `INLINE_REF_TARGETS` (unlike equations, which use
+ *      `<EquationRef>`). Misconceptions appear as `<Aside
+ *      kind="misconception">` / `<Callout variant="misconception">`
+ *      Units-resident content, not as inline JSX refs from other
+ *      Units. The `Misconception-slug-unique` audit invariant
+ *      guarantees one slug → one Unit, so the "Surfaces in" list
+ *      will typically be a single-item list at v1. The list shape
+ *      is preserved for the future case where the audit invariant
+ *      loosens to allow cross-unit references.
+ *
+ * Wraps content in `<LibraryCollectionShell collection="misconception-spec"
+ * heading={...}>` — per-entry use of the shell (same shape as Task
+ * 7.1). The shell owns the `<section aria-labelledby>` landmark +
+ * the H1.
+ *
+ * Pure Astro; no client JS.
+ */
+export interface Props {
+  misconception: MisconceptionEntry;
+  /** Units that contain this misconception (derived at the route level by grouping the misconceptions collection by `unit`). */
+  units: ReadonlyArray<string>;
+}
+
+const { misconception, units } = Astro.props;
+
+const fallbackLabel =
+  misconception.length === "short" ? "Misconception (brief)" : "Misconception";
+const heading = misconception.label ?? fallbackLabel;
+
+const crossrefsHeadingId = `sophie-misconception-spec-${misconception.slug}-crossrefs`;
+---
+
+<LibraryCollectionShell
+  collection='misconception-spec'
+  heading={heading}
+  emptyText=''
+  isEmpty={false}
+>
+  <div
+    class={`sophie-misconception-spec sophie-misconception-spec--${misconception.length}`}
+    data-sophie-misconception-spec={misconception.slug}
+  >
+    <p
+      class='sophie-misconception-spec__role'
+      data-epistemic-role='misconception'
+    >
+      <span class='sophie-misconception-spec__role-label'>Role:</span>{" "}
+      <span class='sophie-misconception-spec__role-value'>Misconception</span>
+    </p>
+
+    <p class='sophie-misconception-spec__length'>
+      <span class='sophie-misconception-spec__length-label'>Length:</span>{" "}
+      <span class='sophie-misconception-spec__length-value'>
+        {misconception.length}
+      </span>
+    </p>
+
+    <div class='sophie-misconception-spec__body' set:html={misconception.body} />
+
+    {units.length > 0 && (
+      <section
+        class='sophie-misconception-spec__crossrefs'
+        aria-labelledby={crossrefsHeadingId}
+      >
+        <h2
+          id={crossrefsHeadingId}
+          class='sophie-misconception-spec__crossrefs-heading'
+        >
+          Surfaces in
+        </h2>
+        <ul class='sophie-misconception-spec__crossrefs-list'>
+          {units.map((unit) => (
+            <li class='sophie-misconception-spec__crossrefs-item'>
+              <code>{unit}</code>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+  </div>
+</LibraryCollectionShell>

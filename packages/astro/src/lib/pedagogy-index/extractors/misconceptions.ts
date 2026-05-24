@@ -1,6 +1,7 @@
 import {
   deriveAsideAnchor,
   type MisconceptionEntry,
+  slugify,
 } from "@sophie/core/schema";
 import type { Root } from "mdast";
 import { visit } from "unist-util-visit";
@@ -125,12 +126,21 @@ export function extractMisconceptions(
       }
     }
 
+    const label = attrs.title?.trim() || undefined;
     const entry: MisconceptionEntry = {
       body,
       unit: unitId,
       anchor,
       length,
-      label: attrs.title?.trim() || undefined,
+      label,
+      // W4c Batch 1b: derive a stable slug at extraction time. Use
+      // slugify(label) when label present; fall back to
+      // `${unit}-${anchor}` (guaranteed non-empty by Slug schema since
+      // both parts are themselves Slugs). The Misconception-slug-unique
+      // audit invariant (Batch 1b.3) catches the cross-unit collisions
+      // the fallback could otherwise allow. Mirrors Task 2.1's
+      // KeyInsight extractor pattern.
+      slug: label ? slugify(label) : `${unitId}-${anchor}`,
     };
     // Graph fields (ADR 0044). Omit when undefined to keep the
     // pre-ADR-0044 shape on misconceptions that don't declare any

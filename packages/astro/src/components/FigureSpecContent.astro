@@ -1,0 +1,196 @@
+---
+import type {
+  FigureRegistryEntry,
+  FigureUsageEntry,
+} from "@sophie/core/schema";
+import LibraryCollectionShell from "./LibraryCollectionShell.astro";
+
+/**
+ * `<FigureSpecContent>` — per-entry Spec content for the route at
+ * `/library/figures/<name>/` (W4c Batch 7 Task 7.4). Fourth of five
+ * W4a-era Spec content components; follows the Task 7.1 (Equations) /
+ * Task 7.2 (Misconceptions) / Task 7.3 (Glossary) template — the
+ * route file is a thin `getStaticPaths` + layout-wiring shell.
+ *
+ * ## Two-tier model
+ *
+ * Figures have a two-tier shape per `FigureRegistryEntry` +
+ * `FigureUsageEntry` (PR-C3 decision #3):
+ *   - **Registry** (`entry`): consumer-app source-of-truth in
+ *     `src/content/figures.ts` — owns `name` (the registry key,
+ *     also the URL), `src`, `alt` (REQUIRED — `NonEmptyString` per
+ *     schema), `caption`, `credit`, `width`, `height`.
+ *   - **Usages** (`usages`): extractor-emitted per-callsite records
+ *     — one per `<Figure name="X">` callsite, carrying `unit`,
+ *     `anchor`, `number` (per-Unit sequential), `canonical`,
+ *     `captionOverride`, `chapterNumber`.
+ *
+ * The Spec page renders the registry data ONCE (image + alt +
+ * caption + credit) + lists ALL usages (every Unit that calls this
+ * name, with per-callsite Fig. number + canonical badge + optional
+ * captionOverride).
+ *
+ * ## Render shape, per W4c design D3
+ *
+ *   1. Heading via `<LibraryCollectionShell>` — `entry.caption ??
+ *      entry.name` (caption usually descriptive; name is the
+ *      registry key e.g. `absorption-emission-elements`),
+ *   2. The image itself: `<img src alt loading="lazy">` — `alt` is
+ *      required by `FigureRegistryEntrySchema` (`NonEmptyString`),
+ *      so we forward without fallback,
+ *   3. `<figcaption>` rendering `entry.caption` when present
+ *      (markdown-flavored prose is allowed in registry captions —
+ *      v1 renders as plain text; markdown expansion is Tier-2),
+ *   4. Epistemic-role label ("Role: Observable") per ADR 0058 W2
+ *      default — `FigureRegistryEntrySchema` does not carry an
+ *      explicit role at v1 (Tier-2 extension); figures showing
+ *      real data default to `observable`, and a schematic-vs-data
+ *      discriminator is the natural Tier-2 follow-up,
+ *   5. `<p>Credit: {entry.credit}</p>` when present,
+ *   6. "Used in" — list each `<Figure>` callsite (every usage),
+ *      showing `unit` + `Fig. {chapterNumber}.{number}` or
+ *      `Fig. {number}` (per `FigureUsageEntry.chapterNumber`
+ *      optionality) + canonical badge when applicable + any
+ *      captionOverride. Filtered at the route level (`usages`
+ *      contains only this figure's usages),
+ *   7. "Referenced in" — units that cite this figure via
+ *      `<FigureRef name="X">`. F2 audit invariant
+ *      (`packages/astro/src/lib/pedagogy-audit/invariants/inline-refs.ts`)
+ *      uses **raw string match** against `figureRegistryNames`
+ *      (NOT `slugify` — unlike D4 for `<GlossaryTerm>`). The route
+ *      mirrors this: filter `inlineRefUsages` where
+ *      `kind === "figure-ref"` AND `refKey === entry.name` exactly.
+ *
+ * ## Edge case: registered-but-unused
+ *
+ * A figure declared in `content/figures.ts` but never called by
+ * any Unit yields `usages.length === 0` and (typically)
+ * `referencingUnits.length === 0`. The page still renders the
+ * registry data + role + credit; both cross-ref sections gate on
+ * `length > 0` and silently omit. The W2-justified shape: a
+ * curated-but-unused registry entry is a valid authoring state
+ * (e.g. asset prepared ahead of a draft Unit) and shouldn't crash
+ * the build.
+ *
+ * Wraps content in `<LibraryCollectionShell collection="figure-spec"
+ * heading={...}>` — per-entry use of the shell (same shape as
+ * Tasks 7.1 + 7.2 + 7.3). The shell owns the
+ * `<section aria-labelledby>` landmark + the H1.
+ *
+ * Pure Astro; no client JS.
+ */
+export interface Props {
+  entry: FigureRegistryEntry;
+  /** All `<Figure name={entry.name}>` callsites across the textbook (filtered at the route level from `pedagogy.figureUsages`). */
+  usages: ReadonlyArray<FigureUsageEntry>;
+  /** Units that cite this figure via `<FigureRef name={entry.name}>` (derived at the route level by filtering `inlineRefUsages` — F2 audit uses raw-string match, not slugify). */
+  referencingUnits: ReadonlyArray<string>;
+}
+
+const { entry, usages, referencingUnits } = Astro.props;
+
+const heading = entry.caption ?? entry.name;
+
+const usagesHeadingId = `sophie-figure-spec-${entry.name}-usages`;
+const crossrefsHeadingId = `sophie-figure-spec-${entry.name}-crossrefs`;
+
+const formatFigNumber = (u: FigureUsageEntry): string =>
+  u.chapterNumber !== undefined
+    ? `Fig. ${u.chapterNumber}.${u.number}`
+    : `Fig. ${u.number}`;
+---
+
+<LibraryCollectionShell
+  collection='figure-spec'
+  heading={heading}
+  emptyText=''
+  isEmpty={false}
+>
+  <div
+    class='sophie-figure-spec'
+    data-sophie-figure-spec={entry.name}
+  >
+    <p class='sophie-figure-spec__role' data-epistemic-role='observable'>
+      <span class='sophie-figure-spec__role-label'>Role:</span>{" "}
+      <span class='sophie-figure-spec__role-value'>Observable</span>
+    </p>
+
+    <figure class='sophie-figure-spec__figure'>
+      <img
+        class='sophie-figure-spec__image'
+        src={entry.src}
+        alt={entry.alt}
+        width={entry.width}
+        height={entry.height}
+        loading='lazy'
+      />
+      {entry.caption && (
+        <figcaption class='sophie-figure-spec__caption'>
+          {entry.caption}
+        </figcaption>
+      )}
+    </figure>
+
+    {entry.credit && (
+      <p class='sophie-figure-spec__credit'>
+        <span class='sophie-figure-spec__credit-label'>Credit:</span>{" "}
+        <span class='sophie-figure-spec__credit-value'>{entry.credit}</span>
+      </p>
+    )}
+
+    {usages.length > 0 && (
+      <section
+        class='sophie-figure-spec__usages'
+        aria-labelledby={usagesHeadingId}
+      >
+        <h2 id={usagesHeadingId} class='sophie-figure-spec__usages-heading'>
+          Used in
+        </h2>
+        <ul class='sophie-figure-spec__usages-list'>
+          {usages.map((u) => (
+            <li class='sophie-figure-spec__usages-item'>
+              <code>{u.unit}</code>{" "}
+              <span class='sophie-figure-spec__usages-number'>
+                {formatFigNumber(u)}
+              </span>
+              {u.canonical && (
+                <span
+                  class='sophie-figure-spec__usages-canonical'
+                  aria-label='canonical usage'
+                >
+                  (canonical)
+                </span>
+              )}
+              {u.captionOverride && (
+                <span class='sophie-figure-spec__usages-override'>
+                  {" — "}{u.captionOverride}
+                </span>
+              )}
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    {referencingUnits.length > 0 && (
+      <section
+        class='sophie-figure-spec__crossrefs'
+        aria-labelledby={crossrefsHeadingId}
+      >
+        <h2
+          id={crossrefsHeadingId}
+          class='sophie-figure-spec__crossrefs-heading'
+        >
+          Referenced in
+        </h2>
+        <ul class='sophie-figure-spec__crossrefs-list'>
+          {referencingUnits.map((unit) => (
+            <li class='sophie-figure-spec__crossrefs-item'>
+              <code>{unit}</code>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+  </div>
+</LibraryCollectionShell>

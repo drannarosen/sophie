@@ -1,40 +1,57 @@
 ---
 import { indexAccumulator } from "../lib/pedagogy-index/accumulator";
+import LibraryCollectionShell from "./LibraryCollectionShell.astro";
 
 const { definitions } = indexAccumulator.asPedagogyIndex();
 
 /**
- * `<CourseGlossary />` — Astro consumer that lists every
+ * `<CourseGlossary heading="..." />` — Astro consumer that lists every
  * definition across the whole textbook, alphabetical. Each entry
- * back-links to its source chapter + anchor so a reader hitting
- * an unfamiliar term anywhere can return to the canonical
- * treatment (per overview decision #13).
+ * back-links to its source chapter + anchor so a reader hitting an
+ * unfamiliar term anywhere can return to the canonical treatment
+ * (per overview decision #13).
  *
  * Per overview decision #12: course-glossary is alphabetical only
- * (chapter-glossary is the consumer that supports appearance
- * order via prop). Bodies render from pre-rendered HTML strings.
+ * (chapter-glossary is the consumer that supports appearance order
+ * via prop). Bodies render from pre-rendered HTML strings.
+ *
+ * Wraps content in `<LibraryCollectionShell>` per W4c design D2 —
+ * the shell owns the outer `<section aria-labelledby>` region
+ * landmark + heading chrome + empty-state. Each `<dt>` emits
+ * `data-section`/`data-unit`/`data-anchor` for Tier-2 filter
+ * forward-compat per W4c design D8. `data-section` is empty because
+ * `DefinitionEntry` does not carry `section_id`; deriving from the
+ * parent Unit would require accumulator changes that are not paid
+ * for by a second consumer yet (W2). When the Tier-2 filter UI ships,
+ * it can join via the accumulator.
  */
 export interface Props {
-  /** Optional heading rendered above the list. */
+  /** Optional heading rendered above the list. Defaults to "Glossary". */
   heading?: string;
 }
 
-const { heading } = Astro.props;
+const { heading = "Glossary" } = Astro.props;
 
 const sorted = [...definitions].sort((a, b) => a.term.localeCompare(b.term));
 ---
 
-{heading && <h1 class='sophie-course-glossary__heading'>{heading}</h1>}
-{
-  sorted.length === 0 ? (
-    <p class='sophie-course-glossary__empty'>
-      No definitions across the textbook yet.
-    </p>
-  ) : (
-    <dl class='sophie-course-glossary' data-sophie-course-glossary=''>
-      {sorted.map((entry) => (
+<LibraryCollectionShell
+  collection='glossary'
+  heading={heading}
+  emptyText='No definitions across the textbook yet.'
+  isEmpty={sorted.length === 0}
+>
+  <dl class='sophie-course-glossary' data-sophie-course-glossary=''>
+    {
+      sorted.map((entry) => (
         <Fragment>
-          <dt id={`gloss-${entry.slug}`} class='sophie-course-glossary__term'>
+          <dt
+            id={`gloss-${entry.slug}`}
+            class='sophie-course-glossary__term'
+            data-section=''
+            data-unit={entry.unit}
+            data-anchor={entry.anchor}
+          >
             {entry.term}
           </dt>
           <dd class='sophie-course-glossary__body'>
@@ -47,7 +64,7 @@ const sorted = [...definitions].sort((a, b) => a.term.localeCompare(b.term));
             </p>
           </dd>
         </Fragment>
-      ))}
-    </dl>
-  )
-}
+      ))
+    }
+  </dl>
+</LibraryCollectionShell>

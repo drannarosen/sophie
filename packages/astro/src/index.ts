@@ -8,6 +8,10 @@ export {
 } from "./integration.ts";
 export { artifactsFromCollection } from "./lib/artifacts-from-collection.ts";
 export {
+  type CardSlotHtml,
+  renderTopicCardSlotsToHtml,
+} from "./lib/mdx-plugins/skill-review-resolver.ts";
+export {
   buildModuleNavInputs,
   type NavChapter,
   type NavModule,

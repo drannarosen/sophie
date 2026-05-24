@@ -1,6 +1,7 @@
 ---
 import type { KeyInsightEntry } from "@sophie/core/schema";
 import { indexAccumulator } from "../lib/pedagogy-index/accumulator";
+import LibraryCollectionShell from "./LibraryCollectionShell.astro";
 
 const { keyInsights } = indexAccumulator.asPedagogyIndex();
 
@@ -22,13 +23,23 @@ const { keyInsights } = indexAccumulator.asPedagogyIndex();
  * Bodies are pre-rendered HTML embedded via `set:html`. Pure Astro;
  * no client JS. Reads the accumulator directly per ADR 0038's
  * Revisions section.
+ *
+ * Wraps content in `<LibraryCollectionShell>` per W4c design D2 —
+ * the shell owns the outer `<section aria-labelledby>` region
+ * landmark + heading chrome + empty-state. Each `<dt>` emits
+ * `data-section`/`data-unit`/`data-anchor` for Tier-2 filter
+ * forward-compat per W4c design D8. `data-section` is empty because
+ * `KeyInsightEntry` does not carry `section_id`; deriving from the
+ * parent Unit would require accumulator changes that are not paid
+ * for by a second consumer yet (W2). When the Tier-2 filter UI ships,
+ * it can join via the accumulator.
  */
 export interface Props {
-  /** Optional heading rendered above the list. */
+  /** Optional heading rendered above the list. Defaults to "Key Insights". */
   heading?: string;
 }
 
-const { heading } = Astro.props;
+const { heading = "Key Insights" } = Astro.props;
 
 // Sort by chapter slug (ascending), preserving the extractor's
 // source-walk order WITHIN each chapter (stable sort guaranteed by
@@ -39,22 +50,25 @@ const sorted: KeyInsightEntry[] = [...keyInsights].sort((a, b) => {
 });
 ---
 
-{heading && <h1 class='sophie-course-key-insights__heading'>{heading}</h1>}
-{
-  sorted.length === 0 ? (
-    <p class='sophie-course-key-insights__empty'>
-      No key insights across the textbook yet.
-    </p>
-  ) : (
-    <dl
-      class='sophie-course-key-insights'
-      data-sophie-course-key-insights=''
-    >
-      {sorted.map((entry) => (
+<LibraryCollectionShell
+  collection='key-insights'
+  heading={heading}
+  emptyText='No key insights across the textbook yet.'
+  isEmpty={sorted.length === 0}
+>
+  <dl
+    class='sophie-course-key-insights'
+    data-sophie-course-key-insights=''
+  >
+    {
+      sorted.map((entry) => (
         <Fragment>
           <dt
             id={entry.anchor}
             class='sophie-course-key-insights__term'
+            data-section=''
+            data-unit={entry.unit}
+            data-anchor={entry.anchor}
           >
             {entry.title ?? "Key insight"}
           </dt>
@@ -68,7 +82,7 @@ const sorted: KeyInsightEntry[] = [...keyInsights].sort((a, b) => {
             </p>
           </dd>
         </Fragment>
-      ))}
-    </dl>
-  )
-}
+      ))
+    }
+  </dl>
+</LibraryCollectionShell>

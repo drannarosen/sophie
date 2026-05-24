@@ -132,6 +132,7 @@ describe("cross-family composition — KeyEquation ↔ MultiRep ↔ Aside ↔ In
       unit: unitId,
       anchor: "wiens-law-absorption-spectra",
       length: "short",
+      slug: `${unitId}-wiens-law-absorption-spectra`,
     };
 
     const intervention: InterventionEntry = {
@@ -272,6 +273,7 @@ describe("cross-family composition — KeyEquation ↔ MultiRep ↔ Aside ↔ In
         unit: unitId,
         anchor: "wiens-law-absorption-spectra",
         length: "short",
+        slug: `${unitId}-wiens-law-absorption-spectra`,
       },
     ];
     index.interventions = [

@@ -10,6 +10,7 @@ import { mdxjs } from "micromark-extension-mdxjs";
 import type { Plugin } from "unified";
 import { visit } from "unist-util-visit";
 import { parse as parseYaml } from "yaml";
+import { renderChildrenToHtml } from "../pedagogy-index/jsx-utils.ts";
 
 /**
  * SkillReview self-closing resolver remark plugin (ADR 0079).
@@ -341,3 +342,68 @@ export const skillReviewResolverRemarkPlugin: Plugin<
     flow.children = [prompt, answer] as unknown as typeof flow.children;
   });
 };
+
+/**
+ * Pre-rendered `<SkillReview.Prompt>` + `<SkillReview.Answer>` HTML
+ * for a single card. Math is run through `rehype-katex` at
+ * extraction time via the shared `renderChildrenToHtml` helper, so
+ * consumers can drop the strings into `set:html` directly without
+ * needing a downstream KaTeX pass.
+ */
+export interface CardSlotHtml {
+  promptHtml: string;
+  answerHtml: string;
+}
+
+/**
+ * Render every `<SkillReview.Card>` block in `topicId`'s body to
+ * `{promptHtml, answerHtml}` HTML strings, keyed by card id.
+ *
+ * Powers the Topic Spec page (`/library/topics/<id>/`) per W4c
+ * Task 8.4 (closes W4b R+CR N5 — the Spec page rendered card
+ * LABELS only). The Spec page is a static reading surface, so we
+ * serialize Prompt + Answer subtrees to HTML rather than reusing
+ * the MDX-compile-time lift the remark plugin performs for chapter
+ * `<SkillReview ... />` self-closing forms.
+ *
+ * Reuses the same module-private helpers (`getTopicPathByIdMap`,
+ * `getTopicAst`, `findCardBlocks`, `findSlotChild`) the remark
+ * plugin uses, and the same module-level AST cache — so the topic
+ * file is parsed once per build process even when the Spec page
+ * runs alongside chapter compilation. (W3: reusing the W4b parsing
+ * logic instead of duplicating it.)
+ *
+ * Throws when `topicId` is unknown OR when a card is missing its
+ * required Prompt/Answer slot. Cards declared in frontmatter but
+ * absent from the body are surfaced by the PRA-2 audit invariant
+ * upstream, so the route can assume frontmatter ↔ body 1:1.
+ */
+export function renderTopicCardSlotsToHtml(
+  topicsDir: string,
+  topicId: string
+): Map<string, CardSlotHtml> {
+  const topicPaths = getTopicPathByIdMap(topicsDir);
+  const topicFilePath = topicPaths.get(topicId);
+  if (!topicFilePath) {
+    throw new Error(
+      `renderTopicCardSlotsToHtml: unknown topic "${topicId}". No topic file found in ${topicsDir} declaring this id in frontmatter (per ADR 0079).`
+    );
+  }
+  const topicAst = getTopicAst(topicFilePath);
+  const cards = findCardBlocks(topicAst);
+  const out = new Map<string, CardSlotHtml>();
+  for (const { id, node } of cards) {
+    const prompt = findSlotChild(node, "SkillReview.Prompt");
+    const answer = findSlotChild(node, "SkillReview.Answer");
+    if (!prompt || !answer) {
+      throw new Error(
+        `renderTopicCardSlotsToHtml: topic "${topicId}" card "${id}" is missing required <SkillReview.Prompt> or <SkillReview.Answer> slot child (per ADR 0079).`
+      );
+    }
+    out.set(id, {
+      promptHtml: renderChildrenToHtml(prompt.children),
+      answerHtml: renderChildrenToHtml(answer.children),
+    });
+  }
+  return out;
+}

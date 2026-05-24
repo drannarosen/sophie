@@ -369,6 +369,7 @@ describe("RET-1 — retrieval coverage (INFO)", () => {
           body: "<p>k</p>",
           unit: "ch2",
           anchor: "ki-1",
+          slug: "ch2-ki-1",
         },
       ],
     };

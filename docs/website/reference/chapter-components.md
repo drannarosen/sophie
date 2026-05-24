@@ -163,28 +163,47 @@ forward-looking `headingLevel?: 2 | 3 | 4` prop will land when a real
 consumer needs nested-section usage (Phase 1 item #13 forward-looking
 JSDoc note).
 
-#### Course-level (used on dedicated routes only)
+#### Course-level Library rooms (rollups + Spec pages)
 
-| Component | Route | Renders |
-|---|---|---|
-| `<CourseGlossary />` | `/library/glossary` | All definitions across the course, alphabetical |
-| `<CourseEquations />` | `/library/equations` | All equations across the course |
-| `<CourseFigures />` | `/library/figures` | Every figure (canonical entries from registry) |
-| `<CourseKeyInsights />` | `/library/key-insights` | All key insights across the course |
-| `<CourseMisconceptions />` | `/library/misconceptions` | All misconceptions across the course |
-| `<CourseObjectives />` | `/library/objectives` | Hierarchical Module → Chapter → Objectives roll-up. Chapter headings link to each `/units/<unit-id>/reading` route. (PR-C4) |
-| _Topic Spec page_ | `/library/topics/<topic-id>` | Per-topic Spec page rendered via Astro dynamic route `pages/library/topics/[topicId].astro` (W4b; ADR 0079). Lists frontmatter metadata + cards + cross-references. No `<CourseTopics />` aggregator yet — W4c may add one alongside the `<LibraryCollectionShell>` extraction. |
+Each Library room ships a **rollup** (all entries on one route) plus
+a per-entry **Spec page** (one URL per registry entry), with two
+documented exceptions. The shape is locked by
+[ADR 0070](../decisions/0070-library-room-and-registry-spec-pages.md);
+the eight epistemic roles are locked by
+[ADR 0058](../decisions/0058-epistemic-component-contract.md).
+
+| Room | Rollup route | Spec route | Notes |
+|---|---|---|---|
+| Glossary | `/library/glossary/` | `/library/glossary/<slug>/` | Definition Spec — term, definition body, cross-refs to citing chapters. |
+| Equations | `/library/equations/` | `/library/equations/<id>/` | Renders `<BiographyRender>` (KaTeX-formatted equation biography per ADR 0060) + cross-refs to citing `<KeyEquation>` callsites. |
+| Figures | `/library/figures/` | `/library/figures/<name>/` | Two-tier registry+usage shape: Spec page renders `<img>` from the canonical registry entry + lists every chapter usage; `canonical` flag distinguishes the registry entry from per-chapter usages. |
+| Misconceptions | `/library/misconceptions/` | `/library/misconceptions/<slug>/` | Misconception Spec page renders the misconception body + the `length` variant (`short` / `standard` / `long`) shaped per ADR 0044 + 0058. |
+| Key Insights | `/library/key-insights/` | `/library/key-insights/<slug>/` | KeyInsight Spec page; slug derived from `title` when present, else falls back to `<unit>-<anchor>` per W4c D4. |
+| Objectives | `/library/objectives/` | *(no Spec route)* | Rollup-only per W4c D1 exception — Objectives have no stable per-entry identity worth a URL. Three-level grouping: Module → Chapter → Objectives. |
+| Topics | `/library/topics/` | `/library/topics/<topic-id>/` | Topic Spec rendered via Astro dynamic route `pages/library/topics/[topicId].astro` (W4b; ADR 0079). Renders each card's Prompt + Answer body inline per W4c Task 8.4 (no link-out indirection). |
+| Observables | `/library/observables/` | `/library/observables/<unit>-<anchor>/` | OMI Spec page sourced from `OMIFlowEntry.observable` slot (W4c). One Spec per observable in any chapter's `<OMIFlow>`. |
+| Models | `/library/models/` | `/library/models/<unit>-<anchor>/` | OMI Spec page sourced from `OMIFlowEntry.model` slot (W4c). |
+| Inferences | `/library/inferences/` | `/library/inferences/<unit>-<anchor>/` | OMI Spec page sourced from `OMIFlowEntry.inference` slot (W4c). |
+
+**Three rooms remain deferred** per ADR 0058 §4 — Assumption,
+Approximation, and Numerical are reserved roles in the eight-role
+taxonomy but have no v1 extractor + rollup. They will land when a
+concrete chapter authoring need surfaces them.
 
 Course consumers are imported into the Astro page for their route
-(`examples/smoke/src/pages/library/{glossary,equations,figures,key-insights,misconceptions,objectives,topics/[topicId]}.astro`),
+(`examples/smoke/src/pages/library/{glossary,equations,figures,key-insights,misconceptions,objectives}.astro`
+for the W4a-era rollups; `pages/library/topics/[topicId].astro`,
+`pages/library/observables/[slug].astro`,
+`pages/library/models/[slug].astro`, and
+`pages/library/inferences/[slug].astro` for W4b + W4c dynamic routes),
 each slotted into `TextbookLayout`. They are **never** imported into
 MDX chapter content.
 
-#### Library hub + bridge rooms (W4a + W4b)
+#### Library hub + bridge rooms (W4a + W4b + W4c)
 
 | Route | Astro page | Purpose |
 |---|---|---|
-| `/library/` | `pages/library/index.astro` | Library hub — links to the 7 Course-level rooms above (W4a + W4b Topics row). |
+| `/library/` | `pages/library/index.astro` | Library hub — surfaces all 10 Course-level rooms above (6 W4a-era + Topics from W4b + 3 W4c OMIFlow rollups) with per-room entry counts. |
 | `/<bridge-slug>/` | `pages/[bridgeSlug].astro` | Bridge Room render per ADR 0068 Scale 1 (W4b). Single-param dynamic route; one path per `Section[type=bridge]`. URL slug comes from `section.yaml`; optional `course.yaml` override sets the display label only. BR-1 audit invariant enforces course-wide slug uniqueness against other Sections + Unit ids + reserved Library paths (`library` / `sections` / `units` / `topics`). |
 
 The two route shapes use `buildModuleNavInputs(sections, units)`
@@ -399,7 +418,7 @@ time, not at runtime.
 | Chapter-end roll-up of key insights | `<ChapterKeyInsights chapter="X" />` |
 | Chapter-end roll-up of misconceptions | `<ChapterMisconceptions chapter="X" />` |
 | Chapter-end roll-up of referenced Teaching Decision Records | `<ChapterTDRs chapter="X" />` |
-| Course-wide pages | `<Course*>` on the matching `/library/glossary`, `/library/equations`, `/library/figures`, `/library/key-insights`, `/library/misconceptions`, `/library/objectives` route |
+| Course-wide pages | `<Course*>` on the matching `/library/glossary`, `/library/equations`, `/library/figures`, `/library/key-insights`, `/library/misconceptions`, `/library/objectives` route, plus the W4b + W4c dynamic Spec routes under `/library/topics/<id>/`, `/library/observables/<slug>/`, `/library/models/<slug>/`, `/library/inferences/<slug>/` |
 
 Pick by pedagogical intent first; the static-vs-interactive split
 and the chapter-vs-course aggregation level follow automatically.

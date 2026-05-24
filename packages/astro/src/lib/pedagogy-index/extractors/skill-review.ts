@@ -41,8 +41,11 @@ function hasExplicitSlots(el: MdxJsxFlowElement): boolean {
  * `<SkillReview.Answer>` children (B1 explicit path); false otherwise
  * (placeholder fallback path until Wedge C registry-resolution ships).
  *
- * Skips elements with no `target` attribute (the component's Zod
- * schema requires it; curriculum-CI surfaces the omission).
+ * Missing required props (e.g., a bare `<SkillReview>` with no
+ * `target=`) are silently skipped at the visit site; see the R7
+ * disposition comment in the visitor for the rationale (TypeScript
+ * prop-type check at the call site is the authoritative surface;
+ * emitting a finding here would confuse mid-edit authors).
  *
  * Throws on intra-chapter anchor collisions.
  */
@@ -59,6 +62,12 @@ export function extractSkillReviews(
     if (el.name !== "SkillReview") return;
 
     const target = readStringAttr(el, "target");
+    // R7 disposition: a `<SkillReview>` with no `target=` attribute is
+    // malformed JSX — TypeScript prop-type check should flag it at the
+    // call site (the prop is required per the component schema). We
+    // silently skip here rather than emit a finding because the finding
+    // would be confusing for an author who's mid-edit (no target yet);
+    // the prop-type gate is the better surface for this error.
     if (target === undefined) return;
 
     counter += 1;

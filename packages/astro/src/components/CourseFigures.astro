@@ -4,6 +4,7 @@ import type {
   FigureUsageEntry,
 } from "@sophie/core/schema";
 import { indexAccumulator } from "../lib/pedagogy-index/accumulator";
+import LibraryCollectionShell from "./LibraryCollectionShell.astro";
 
 const { figureRegistry, figureUsages } = indexAccumulator.asPedagogyIndex();
 
@@ -34,15 +35,26 @@ const { figureRegistry, figureUsages } = indexAccumulator.asPedagogyIndex();
  * missing-figure marker is rendered instead of bombing the build.
  *
  * Pure Astro; no client JS.
+ *
+ * Wraps content in `<LibraryCollectionShell>` per W4c design D2 —
+ * the shell owns the outer `<section aria-labelledby>` region
+ * landmark + heading chrome + empty-state. Each `<li>` emits
+ * `data-section`/`data-unit`/`data-anchor` for Tier-2 filter
+ * forward-compat per W4c design D8. The slot content stays as
+ * `<ol>`/`<li>` (NOT `<dl>`/`<dt>`+`<dd>` like the other 4 Course*
+ * consumers) — the shell wraps; slot ownership is the consumer's.
+ * `data-section` is empty because `FigureUsageEntry` does not carry
+ * `section_id`; `data-unit` pulls `usage.unit`; `data-anchor` pulls
+ * `usage.anchor` (the within-Unit anchor).
  */
 export interface Props {
   /** Sort strategy. Default chapter-order (slug asc, then number asc). */
   order?: "chapter" | "alphabetical";
-  /** Optional heading rendered above the list. */
+  /** Optional heading rendered above the list. Defaults to "Figures". */
   heading?: string;
 }
 
-const { order = "chapter", heading } = Astro.props;
+const { order = "chapter", heading = "Figures" } = Astro.props;
 
 // O(1) registry lookup by name. May be empty during PR-C3 build steps
 // before the registry is wired through TextbookLayout (Task 11) —
@@ -90,20 +102,23 @@ const sorted =
       );
 ---
 
-{heading && <h1 class='sophie-course-figures__heading'>{heading}</h1>}
-{
-  sorted.length === 0 ? (
-    <p class='sophie-course-figures__empty'>
-      No figures across the textbook yet.
-    </p>
-  ) : (
-    <ol class='sophie-course-figures' data-sophie-course-figures=''>
-      {sorted.map((usage) => {
+<LibraryCollectionShell
+  collection='figures'
+  heading={heading}
+  emptyText='No figures across the textbook yet.'
+  isEmpty={sorted.length === 0}
+>
+  <ol class='sophie-course-figures' data-sophie-course-figures=''>
+    {
+      sorted.map((usage) => {
         const registry = registryByName.get(usage.name);
         return (
           <li
             id={`fig-${usage.anchor}`}
             class='sophie-course-figures__item sophie-rollup-entry'
+            data-section=''
+            data-unit={usage.unit}
+            data-anchor={usage.anchor}
           >
             <span class='sophie-course-figures__number'>
               Fig. {usage.number}
@@ -134,7 +149,7 @@ const sorted =
             </p>
           </li>
         );
-      })}
-    </ol>
-  )
-}
+      })
+    }
+  </ol>
+</LibraryCollectionShell>

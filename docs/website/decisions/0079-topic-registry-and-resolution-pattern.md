@@ -45,6 +45,26 @@ validation:
       ref: docs/website/pilots/wedge-b-followup-w4b-affordances.md
       date: "2026-05-23"
       notes: "W4b pilot report (Shape α); R+CR APPROVE WITH FIXES → all Critical + Important resolved before PR open."
+    - kind: test
+      ref: packages/astro/src/lib/pedagogy-audit/invariants/topic-consistency.test.ts
+      date: "2026-05-23"
+      notes: "W4c: PRA-2 audit-side honors TopicEntry.audit_overrides (frontmatter→body direction); PRA-2-grain WARNING regression for Grain-1 override attempts."
+    - kind: test
+      ref: packages/astro/src/lib/pedagogy-index/extractors/topic.test.ts
+      date: "2026-05-23"
+      notes: "W4c: PRA-2 extractor-side honors TopicEntry.audit_overrides (body→frontmatter direction); mirrors PRA-1 W4b shape."
+    - kind: test
+      ref: packages/astro/src/components/TopicSpecContent.axe.test.ts
+      date: "2026-05-23"
+      notes: "W4c: Topic Spec page renders card Prompt/Answer body inline (closes W4b R+CR N5); outer <section aria-labelledby> landmark fix."
+    - kind: test
+      ref: packages/astro/src/lib/mdx-plugins/skill-review-resolver.test.ts
+      date: "2026-05-23"
+      notes: "W4c: renderTopicCardSlotsToHtml resolver helper — 3 new tests cover slot extraction reuse for Topic Spec inline body rendering."
+    - kind: deployment
+      ref: examples/smoke/src/content/topics/math/logarithms.mdx
+      date: "2026-05-23"
+      notes: "W4c smoke fixture: deliberate PRA-2 orphan card with matching audit_overrides entry demonstrates the honoring path end-to-end."
 ---
 
 # ADR 0079: Topic registry + registry-resolution pattern
@@ -740,3 +760,83 @@ being defined in a vacuum without a concrete first user.
   — `/library/topics/` URL convention (amended in W4a)
 - [ADR 0069](./0069-fsrs-spaced-repetition-engine.md) — FSRS
   per-card scheduling (cards-as-leaf precedent)
+
+## Revision history
+
+### 2026-05-23 — Wedge B-followup W4c: PRA-2 graduation + Topic Spec card-body inline rendering
+
+W4c extends the W4b PRA-1 graduation pattern to PRA-2 (both
+directions), inlines the Topic Spec card bodies via a resolver-
+helper export, and fixes a latent W4b a11y bug on the Topic Spec
+landmark.
+
+**PRA-2 graduated to honor `TopicEntry.audit_overrides`.** Per
+[ADR 0053](./0053-conformance-failure-modes.md), both directions
+of the PRA-2 audit (extractor body→frontmatter; audit-invariant
+frontmatter→body) check `topic.audit_overrides ?? []` before
+emitting a finding. A per-card override entry of the shape
+`{ invariant: "PRA-2", anchor: <card-id> }` suppresses the
+finding for that specific card. This mirrors the PRA-1 W4b shape
+exactly — same lookup helper, same `tdr:` provenance requirement
+per [ADR 0053 CF2](./0053-conformance-failure-modes.md), same
+end-to-end smoke coverage.
+
+**Per-card anchor only — strict per W4c D5.** Unlike PRA-1 (which
+honors both Grain 1 / no-anchor and Grain 2 / specific-anchor
+overrides), PRA-2 is intentionally strict: only Grain 2
+(per-card anchor) is honored. A whole-topic PRA-2 wildcard would
+swallow the entire class of frontmatter↔body drift bugs PRA-2
+exists to catch — defeating the audit's purpose. The narrowing is
+documented at the override callsite via the new
+`PRA-2-grain` WARNING (below) so authors get a signal instead of
+silent suppression failure.
+
+**New `PRA-2-grain` WARNING.** Grain-1 PRA-2 override attempts
+(an override entry with `invariant: "PRA-2"` but no `anchor:`
+field) surface as a WARNING naming the affected topic plus the
+override callsite. The WARNING explicitly directs the author to
+either provide a `anchor: <card-id>` field (the supported shape)
+or remove the override entirely. Closes Batch 2 Task 2.3+2.4
+reviewer's Important I1.
+
+**Topic Spec page renders card Prompt + Answer body inline (N5
+fix).** The W4b R+CR identified N5 — the Topic Spec page rendered
+only card metadata (id, label, difficulty), not the actual
+Prompt/Answer body content — as a deferred concern. W4c closes it.
+A new helper `renderTopicCardSlotsToHtml(topicsDir, topicId)`
+is exported from `packages/astro/src/lib/mdx-plugins/skill-review-resolver.ts`
+and reuses the resolver's slot-extraction logic (W3 — touch only
+what you must; the resolver already walks topic MDX and lifts
+slot children, so the Topic Spec page consumes that same path
+instead of duplicating). The exported helper returns
+`{ promptHtml, answerHtml }[]` keyed by card id; the Topic Spec
+page template renders each card's prompt + answer inline beneath
+the card metadata.
+
+**Topic Spec landmark fix: `<article>` → `<section
+aria-labelledby>`.** The W4b Topic Spec page wrapped its content
+in an `<article>` element. `<article>` is not a landmark in the
+WAI-ARIA landmark roles taxonomy — it provides a self-contained
+composition role but does not appear in screen-reader landmark
+navigation. The latent a11y bug was caught by Batch 8 axe
+coverage (the new TopicSpecContent.axe.test.ts asserts a
+nameable region landmark). The fix changes the wrapper to
+`<section aria-labelledby={headingId}>` — matching the W4c Task
+4.6 CourseObjectives fix and the W4c Task 3.1
+LibraryCollectionShell pattern. One consistent landmark
+discipline across the entire Library surface.
+
+**Smoke fixture: PRA-2 audit_overrides end-to-end demo.** A
+deliberately-orphan card in `examples/smoke/src/content/topics/
+math/logarithms.mdx` carries a matching `audit_overrides` entry
+with `invariant: PRA-2`, `anchor: <orphan-card-id>`, and a `tdr:`
+provenance field. The smoke build emits zero PRA-2 findings for
+the orphan card (override honored) while continuing to emit
+PRA-2 findings for any *other* orphan introduced during
+authoring (override scope correctly limited to the named anchor).
+Batch 9.3.
+
+**Companion ADRs.** [ADR 0070 W4c entry](./0070-library-room-and-registry-spec-pages.md#id-2026-05-23-wedge-b-followup-w4c-shell-extraction-3-omiflow-rooms-8-per-entry-spec-routes)
+documents the broader Library shell extraction + 8 per-entry
+Spec routes; [ADR 0058 W4c entry](./0058-epistemic-component-contract.md#id-2026-05-23-wedge-b-followup-w4c-observable-model-inference-rollup-chrome-per-callsite-spec-routes)
+documents the Observable/Model/Inference rollups.

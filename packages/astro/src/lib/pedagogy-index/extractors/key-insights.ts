@@ -1,4 +1,8 @@
-import { deriveAsideAnchor, type KeyInsightEntry } from "@sophie/core/schema";
+import {
+  deriveAsideAnchor,
+  type KeyInsightEntry,
+  slugify,
+} from "@sophie/core/schema";
 import type { Root } from "mdast";
 import { visit } from "unist-util-visit";
 import {
@@ -67,11 +71,18 @@ export function extractKeyInsights(
       }
     }
 
+    const title = attrs.title?.trim() || undefined;
     out.push({
-      title: attrs.title?.trim() || undefined,
+      title,
       body,
       unit: unitId,
       anchor,
+      // W4c D4: derive a stable slug at extraction time. Use slugify(title)
+      // when title present; fall back to `${unit}-${anchor}` (guaranteed
+      // non-empty by Slug schema since both parts are themselves Slugs).
+      // The KI-slug-unique audit invariant (Task 2.2) catches the cross-
+      // unit collisions the fallback could otherwise allow.
+      slug: title ? slugify(title) : `${unitId}-${anchor}`,
     });
   });
 

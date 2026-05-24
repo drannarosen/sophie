@@ -243,6 +243,7 @@ describe("indexAccumulator key-insights (cross-chapter)", () => {
     body: "",
     unit: "ch-a",
     anchor: "default-anchor",
+    slug: "default",
     ...overrides,
   });
 
@@ -648,13 +649,18 @@ const _mdxFlowEl = (
 describe("indexAccumulator misconceptions (cross-chapter)", () => {
   const mc = (
     overrides: Partial<MisconceptionEntry> = {}
-  ): MisconceptionEntry => ({
-    body: "",
-    unit: "mc-ch-a",
-    anchor: "default-anchor",
-    length: "short",
-    ...overrides,
-  });
+  ): MisconceptionEntry => {
+    const unit = overrides.unit ?? "mc-ch-a";
+    const anchor = overrides.anchor ?? "default-anchor";
+    return {
+      body: "",
+      unit,
+      anchor,
+      length: "short",
+      slug: `${unit}-${anchor}`,
+      ...overrides,
+    };
+  };
 
   test("addMisconceptions populates misconceptions collection accessible via asPedagogyIndex", () => {
     indexAccumulator.addMisconceptions([

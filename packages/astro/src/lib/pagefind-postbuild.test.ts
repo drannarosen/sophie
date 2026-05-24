@@ -93,6 +93,7 @@ describe("buildPagefindIndex (Layer 1.6)", () => {
         body: "Distance hides itself.",
         unit: "ch",
         anchor: "ki-1",
+        slug: "ch-ki-1",
       },
     ]);
     indexAccumulator.addMisconceptions([
@@ -102,6 +103,7 @@ describe("buildPagefindIndex (Layer 1.6)", () => {
         anchor: "misc-1",
         length: "short",
         label: "Brighter ≠ hotter",
+        slug: "brighter-hotter",
       },
     ]);
     indexAccumulator.addObjectives([

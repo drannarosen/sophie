@@ -1,0 +1,88 @@
+---
+import type { OMIFlowEntry } from "@sophie/core/schema";
+import LibraryCollectionShell from "./LibraryCollectionShell.astro";
+
+/**
+ * `<InferenceSpecContent>` — per-entry Spec content for the route
+ * at `/library/inferences/<slug>/` (W4c Batch 8 Task 8.3). Third of
+ * three OMIFlow Spec content components (Tasks 8.1-8.3); mirrors
+ * Tasks 8.1 (Observable) + 8.2 (Model) with role substitution per
+ * ADR 0058 §4. OMIFlows have no inline-ref kind — cross-refs derive
+ * from grouping the `omiFlows` collection by `unit` rather than from
+ * `inlineRefUsages`.
+ *
+ * Slug shape: `${entry.unit}-${entry.anchor}`. OMIFlowEntry carries no
+ * `slug` field of its own; the accumulator keys entries on
+ * `${unit}#${anchor}` (accumulator.ts:725) which is structurally
+ * unique by construction, so the URL-safe `${unit}-${anchor}` form
+ * inherits that uniqueness. No new audit invariant is required —
+ * mirrors the KeyInsight Task 2.1 D4 no-title fallback pattern but
+ * is *always* the slug (OMIFlowEntry has no title field; the
+ * inference *slot* has a title, used only as the heading).
+ *
+ * Renders, per W4c design D3 + ADR 0058 §4 (slot-name-binds-role):
+ *   1. Heading via `<LibraryCollectionShell>` — uses
+ *      `entry.inference.title` when present; otherwise the fallback
+ *      "Inference" (matches the `CourseInferences` rollup fallback
+ *      at CourseInferences.astro:84),
+ *   2. Epistemic-role label ("Role: Inference") per ADR 0058 §4 —
+ *      the `inference` slot name binds the `inference` role
+ *      (probabilistic conclusion from model + data) in the
+ *      eight-role taxonomy,
+ *   3. Optional concept binding ("Concept: <id>") when the parent
+ *      OMIFlow declares `concept` (ADR 0043 Notation Registry link),
+ *   4. Pre-rendered HTML body via `set:html` (the inference slot's
+ *      children, escaped at extraction time),
+ *   5. Back-link prose — "Anchored at" + `${unit}/reading#${anchor}`
+ *      as `<code>` (no linkification per Task 7.1 W2 precedent).
+ *
+ * Wraps content in `<LibraryCollectionShell collection="inference-spec"
+ * heading={...}>` — per-entry use of the shell (same shape as Tasks
+ * 7.1–7.5 and 8.1–8.2). The shell owns the `<section aria-labelledby>`
+ * landmark + the H1.
+ *
+ * Pure Astro; no client JS.
+ */
+export interface Props {
+  entry: OMIFlowEntry;
+}
+
+const { entry } = Astro.props;
+
+const heading = entry.inference.title || "Inference";
+
+const anchorRef = `${entry.unit}/reading#${entry.anchor}`;
+---
+
+<LibraryCollectionShell
+  collection='inference-spec'
+  heading={heading}
+  emptyText=''
+  isEmpty={false}
+>
+  <div
+    class='sophie-inference-spec'
+    data-sophie-inference-spec={`${entry.unit}-${entry.anchor}`}
+  >
+    <p
+      class='sophie-inference-spec__role'
+      data-epistemic-role='inference'
+    >
+      <span class='sophie-inference-spec__role-label'>Role:</span>{" "}
+      <span class='sophie-inference-spec__role-value'>Inference</span>
+    </p>
+
+    {entry.concept && (
+      <p class='sophie-inference-spec__concept'>
+        <span class='sophie-inference-spec__concept-label'>Concept:</span>{" "}
+        <code>{entry.concept}</code>
+      </p>
+    )}
+
+    <div class='sophie-inference-spec__body' set:html={entry.inference.body} />
+
+    <p class='sophie-inference-spec__backlink'>
+      Anchored at <code>{anchorRef}</code>
+    </p>
+  </div>
+</LibraryCollectionShell>

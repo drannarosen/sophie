@@ -1,0 +1,95 @@
+---
+import { buildModuleNavInputs, indexAccumulator } from "@sophie/astro";
+import KeyInsightSpecContent from "@sophie/astro/components/KeyInsightSpecContent.astro";
+import ModuleNav from "@sophie/astro/components/ModuleNav.astro";
+import TextbookHead from "@sophie/astro/components/TextbookHead.astro";
+import TextbookLayout from "@sophie/astro/components/TextbookLayout.astro";
+import { SophieChapter } from "@sophie/astro/client";
+import { getCollection } from "astro:content";
+import { figures as figureRegistry } from "../../../content/figures";
+
+/**
+ * `/library/key-insights/<slug>/` — per-entry KeyInsight Spec page
+ * (W4c Batch 7 Task 7.5). Sibling to the W4a rollup at
+ * `examples/smoke/src/pages/library/key-insights.astro` (untouched
+ * per ADR 0070's W4a implementation note). Fifth and final of the
+ * W4a-era Spec routes; mirrors Task 7.2 (Misconceptions) template.
+ *
+ * `getStaticPaths` enumerates from `indexAccumulator` rather than a
+ * content collection — each KeyInsight is one of N `<Aside
+ * kind="key-insight">` / `<Callout variant="key-insight">` blocks
+ * inside a Unit MDX source, so the accumulator is the canonical
+ * per-entry source. Each entry's `slug` field (W4c Batch 1 + 2:
+ * `slugify(title)` when present, falls back to `${unit}-${anchor}`)
+ * is unique across the textbook (audit invariant `KI-slug-unique`);
+ * one path per entry.
+ *
+ * Cross-references — the "Surfaces in" list — derive from the same
+ * accumulator pass: the parent Unit(s) containing this slug.
+ * KeyInsights don't have an inline-ref kind in `INLINE_REF_TARGETS`
+ * (they're Aside/Callout content, not inline JSX refs), so we group
+ * the keyInsights collection by `unit` for the slug rather than
+ * reading from `inlineRefUsages`. The `KI-slug-unique` invariant
+ * guarantees the list is typically single-item at v1; the list
+ * shape is preserved for future loosening of the invariant.
+ *
+ * The `<KeyInsightSpecContent>` component (sibling-tested via
+ * `KeyInsightSpecContent.axe.test.ts`) owns the Spec render shape;
+ * this route is a thin layout-wiring shell.
+ */
+
+export async function getStaticPaths() {
+  const pedagogy = indexAccumulator.asPedagogyIndex();
+  return pedagogy.keyInsights.map((k) => ({ params: { slug: k.slug } }));
+}
+
+const { slug } = Astro.params;
+
+const pedagogy = indexAccumulator.asPedagogyIndex();
+const entry = pedagogy.keyInsights.find((k) => k.slug === slug);
+if (!entry) {
+  // Should be unreachable: getStaticPaths enumerates the same
+  // accumulator pass. A mismatch here surfaces an orchestrator
+  // wiring break, not author error.
+  throw new Error(
+    `KeyInsight Spec route: no accumulator entry for slug="${slug}"; getStaticPaths/orchestrator drift`
+  );
+}
+const units = Array.from(
+  new Set(
+    pedagogy.keyInsights
+      .filter((k) => k.slug === slug)
+      .map((k) => k.unit)
+  )
+);
+
+const figureRegistryArray = Object.values(figureRegistry);
+const allSections = (await getCollection("sections")).map((s) => s.data);
+const allUnits = (await getCollection("units")).map((u) => u.data);
+const { modules, chapters } = buildModuleNavInputs(allSections, allUnits);
+
+const pageTitle = entry.title ?? "Key insight";
+---
+
+<html lang='en'>
+  <head>
+    <meta charset='utf-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1' />
+    <title>{pageTitle} — Key insight</title>
+    <meta
+      name='description'
+      content={`Spec page for the key insight "${pageTitle}".`}
+    />
+    <TextbookHead />
+  </head>
+  <body>
+    <SophieChapter client:load>
+      <TextbookLayout figureRegistry={figureRegistryArray}>
+        <Fragment slot='sidebar'>
+          <ModuleNav modules={modules} chapters={chapters} />
+        </Fragment>
+        <KeyInsightSpecContent entry={entry} units={units} />
+      </TextbookLayout>
+    </SophieChapter>
+  </body>
+</html>

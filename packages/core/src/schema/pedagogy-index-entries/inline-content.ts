@@ -47,6 +47,13 @@ export const KeyInsightEntrySchema = z.object({
   /** Parent Unit id (W3 rename from `chapter`). */
   unit: Slug,
   anchor: NonEmptyString,
+  /**
+   * URL-safe slug. Derived at extraction time (W4c D4): slugified
+   * `title` when present; falls back to `${unit}-${anchor}` when
+   * absent. Required; the `KI-slug-unique` audit invariant catches
+   * collisions across units that the fallback could otherwise allow.
+   */
+  slug: Slug,
 });
 export type KeyInsightEntry = z.infer<typeof KeyInsightEntrySchema>;
 
@@ -69,6 +76,16 @@ export const MisconceptionEntrySchema = z.object({
   length: z.enum(["short", "long"]),
   /** Optional label — from Aside.title OR Callout.title (both source primitives' titles are optional). */
   label: z.string().optional(),
+  /**
+   * URL-safe slug. Derived at extraction time (W4c Batch 1b, mirrors
+   * `KeyInsightEntry.slug` per W4c D4): `slugify(label)` when `label`
+   * is present; falls back to `${unit}-${anchor}` when absent. Required;
+   * the `Misconception-slug-unique` audit invariant catches collisions
+   * across units that the fallback could otherwise allow. Powers the
+   * per-Spec route at `/library/misconceptions/<slug>/` (W4c Batch 7
+   * Task 7.2).
+   */
+  slug: Slug,
   /**
    * Misconception-graph fields (ADR 0044 Artifact 1).
    *

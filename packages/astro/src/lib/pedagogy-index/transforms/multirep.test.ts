@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { extractMultiReps, transformMultiRep } from "../index.ts";
+import type { MdxJsxFlowElement } from "../jsx-utils.ts";
 
 /**
  * Synthetic-mdast tests for `extractMultiReps` + `transformMultiRep`,
@@ -14,25 +15,17 @@ import { extractMultiReps, transformMultiRep } from "../index.ts";
  * paralleling the LearningObjectives pattern.
  */
 
-interface MdxAttribute {
-  type: "mdxJsxAttribute";
-  name: string;
-  value:
-    | string
-    | {
-        type: string;
-        value: string;
-        data?: { estree?: unknown };
-      };
-}
-interface MdxJsxFlowElement {
-  type: "mdxJsxFlowElement";
-  name: string;
-  attributes: MdxAttribute[];
-  children: ReadonlyArray<MdastChild>;
-}
+/**
+ * `MdastChild` + `TestRoot` are the test-side synthetic-tree shape we
+ * hand to `extractMultiReps` / `transformMultiRep` via `tree as never`.
+ * `MdxJsxFlowElement` is imported from the canonical home
+ * (`../jsx-utils.ts`) per R9-test. `TestRoot` stays test-local because
+ * mdast's `Root` types `children` as `BlockContent[]`, which is wider
+ * than the factory-output union we need to keep assignment-checked at
+ * construction sites.
+ */
 type MdastChild = MdxJsxFlowElement | Record<string, unknown>;
-interface Root {
+interface TestRoot {
   type: "root";
   children: ReadonlyArray<MdastChild>;
 }
@@ -42,7 +35,7 @@ const para = (text: string) => ({
   children: [{ type: "text", value: text }],
 });
 
-const root = (children: ReadonlyArray<MdastChild>): Root => ({
+const root = (children: ReadonlyArray<MdastChild>): TestRoot => ({
   type: "root",
   children,
 });
@@ -76,7 +69,7 @@ const mdxRepEquation = (attrs: Record<string, string>): MdxJsxFlowElement =>
 const mdxRepFigure = (attrs: Record<string, string>): MdxJsxFlowElement =>
   mdxFlow("RepFigure", attrs, []);
 
-function findMultiRep(tree: Root): MdxJsxFlowElement | undefined {
+function findMultiRep(tree: TestRoot): MdxJsxFlowElement | undefined {
   for (const node of tree.children) {
     const n = node as unknown as MdxJsxFlowElement;
     if (n.type === "mdxJsxFlowElement" && n.name === "MultiRep") {

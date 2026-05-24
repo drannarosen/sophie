@@ -1,7 +1,41 @@
-import { defineConfig } from "vitest/config";
+import { fileURLToPath } from "node:url";
+import { getViteConfig } from "astro/config";
+import type { ViteUserConfig as VitestViteUserConfig } from "vitest/config";
 
-export default defineConfig({
+/**
+ * The vitest re-export of Vite's `UserConfig` is augmented to include
+ * `test?: VitestInlineConfig`. Astro 6.3 pulls Vite 7; vitest 4 pulls
+ * Vite 8 — distinct modules, so the augmentation can't flow through.
+ * We build the config under vitest's type (full `test` validation +
+ * completion) and cast at the `getViteConfig` seam.
+ */
+type ViteUserConfigWithTest = VitestViteUserConfig & {
+  test?: VitestViteUserConfig extends { test?: infer T } ? T : never;
+};
+
+/**
+ * `@sophie/astro` is a library package, not an Astro project. To let
+ * vitest parse `.astro` files (so axe-core tests can render real
+ * components via `experimental_AstroContainer`), we wire `getViteConfig`
+ * pointed at a fabricated minimal Astro project under
+ * `test-fixtures/astro-project/`. That project carries the Astro Vite
+ * plugin + `@astrojs/react` so Container API renders work end-to-end.
+ *
+ * `getViteConfig(userVite, inlineAstroConfig)` returns a Vite config
+ * function; vitest resolves it lazily at test startup.
+ *
+ * Coverage `include` is narrowed to JS/TS so the v8 report doesn't list
+ * `.astro` files as 0%-uncovered (they're exercised at smoke e2e, not
+ * unit). See the original commentary below for the rolldown stderr quirk.
+ */
+const config: ViteUserConfigWithTest = {
   test: {
+    // `root` here overrides the Astro project root (test-fixtures/...)
+    // for the test runner's file resolution — keeps test discovery,
+    // setup-file path, and coverage paths anchored at the package
+    // root while Vite still resolves the Astro plugin chain from the
+    // fabricated fixture root above.
+    root: fileURLToPath(new URL("./", import.meta.url)),
     environment: "jsdom",
     globals: true,
     setupFiles: ["./test-setup.ts"],
@@ -45,7 +79,16 @@ export default defineConfig({
         "src/integration.ts",
         "src/mdx-config.ts",
         "src/client/**",
+        // Test-only Astro project fixture.
+        "test-fixtures/**",
       ],
     },
   },
+};
+
+// biome-ignore lint/suspicious/noExplicitAny: vite@7 (astro peer) and vite@8 (vitest@4 peer) ship UserConfig augmentations from different modules; types don't merge across the boundary. Remove when astro 6.x catches up to vite@8 OR vitest@4.x backports vite@7 types.
+export default getViteConfig(config as any, {
+  root: fileURLToPath(
+    new URL("./test-fixtures/astro-project/", import.meta.url)
+  ),
 });

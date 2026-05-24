@@ -421,9 +421,10 @@ references by ID, and verifies:
 
 Sophie's identity policy is **table-driven, not per-component**. The
 canonical anchor prefix table at
-[packages/core/src/schema/pedagogy-index.ts:36-53](../../packages/core/src/schema/pedagogy-index.ts#L36-L53)
-assigns each pedagogy entry kind a stable prefix; uniqueness
-invariants in the audit enforce the policy.
+[`packages/core/src/schema/pedagogy-index.ts`](../../packages/core/src/schema/pedagogy-index.ts)
+(search for the `PedagogyIndex` type declaration) assigns each
+pedagogy entry kind a stable prefix; uniqueness invariants in the
+audit enforce the policy.
 
 ### The table (lives in code; this is a snapshot)
 

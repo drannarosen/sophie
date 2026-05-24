@@ -1,0 +1,86 @@
+---
+import type { OMIFlowEntry } from "@sophie/core/schema";
+import LibraryCollectionShell from "./LibraryCollectionShell.astro";
+
+/**
+ * `<ObservableSpecContent>` — per-entry Spec content for the route
+ * at `/library/observables/<slug>/` (W4c Batch 8 Task 8.1). First of
+ * three OMIFlow Spec content components (Tasks 8.1-8.3); follows the
+ * Task 7.5 (KeyInsights) template. OMIFlows have no inline-ref kind
+ * — cross-refs derive from grouping the `omiFlows` collection by
+ * `unit` rather than from `inlineRefUsages`.
+ *
+ * Slug shape: `${entry.unit}-${entry.anchor}`. OMIFlowEntry carries no
+ * `slug` field of its own; the accumulator keys entries on
+ * `${unit}#${anchor}` (accumulator.ts:725) which is structurally
+ * unique by construction, so the URL-safe `${unit}-${anchor}` form
+ * inherits that uniqueness. No new audit invariant is required —
+ * mirrors the KeyInsight Task 2.1 D4 no-title fallback pattern but
+ * is *always* the slug (OMIFlowEntry has no title field; the
+ * observable *slot* has a title, used only as the heading).
+ *
+ * Renders, per W4c design D3 + ADR 0058 §4 (slot-name-binds-role):
+ *   1. Heading via `<LibraryCollectionShell>` — uses
+ *      `entry.observable.title` when present; otherwise the fallback
+ *      "Observable" (matches the `CourseObservables` rollup fallback
+ *      at CourseObservables.astro:84),
+ *   2. Epistemic-role label ("Role: Observable") per ADR 0058 §4 —
+ *      the `observable` slot name binds the `observable` role
+ *      (measured/observed phenomenon) in the eight-role taxonomy,
+ *   3. Optional concept binding ("Concept: <id>") when the parent
+ *      OMIFlow declares `concept` (ADR 0043 Notation Registry link),
+ *   4. Pre-rendered HTML body via `set:html` (the observable slot's
+ *      children, escaped at extraction time),
+ *   5. Back-link prose — "Anchored at" + `${unit}/reading#${anchor}`
+ *      as `<code>` (no linkification per Task 7.1 W2 precedent).
+ *
+ * Wraps content in `<LibraryCollectionShell collection="observable-spec"
+ * heading={...}>` — per-entry use of the shell (same shape as Tasks
+ * 7.1–7.5). The shell owns the `<section aria-labelledby>` landmark
+ * + the H1.
+ *
+ * Pure Astro; no client JS.
+ */
+export interface Props {
+  entry: OMIFlowEntry;
+}
+
+const { entry } = Astro.props;
+
+const heading = entry.observable.title || "Observable";
+
+const anchorRef = `${entry.unit}/reading#${entry.anchor}`;
+---
+
+<LibraryCollectionShell
+  collection='observable-spec'
+  heading={heading}
+  emptyText=''
+  isEmpty={false}
+>
+  <div
+    class='sophie-observable-spec'
+    data-sophie-observable-spec={`${entry.unit}-${entry.anchor}`}
+  >
+    <p
+      class='sophie-observable-spec__role'
+      data-epistemic-role='observable'
+    >
+      <span class='sophie-observable-spec__role-label'>Role:</span>{" "}
+      <span class='sophie-observable-spec__role-value'>Observable</span>
+    </p>
+
+    {entry.concept && (
+      <p class='sophie-observable-spec__concept'>
+        <span class='sophie-observable-spec__concept-label'>Concept:</span>{" "}
+        <code>{entry.concept}</code>
+      </p>
+    )}
+
+    <div class='sophie-observable-spec__body' set:html={entry.observable.body} />
+
+    <p class='sophie-observable-spec__backlink'>
+      Anchored at <code>{anchorRef}</code>
+    </p>
+  </div>
+</LibraryCollectionShell>
