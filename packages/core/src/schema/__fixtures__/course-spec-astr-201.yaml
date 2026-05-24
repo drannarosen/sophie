@@ -272,20 +272,12 @@ quality_bars:
       check: "Visual + numerical + symbolic forms (Sophie multi-rep partial)."
 
 discovery:
-  modules:
-    pattern: "modules/*/index.mdx"
-    children:
-      lectures: "modules/*/readings/*.mdx"
-      slides: "modules/*/slides/*.mdx"
-  assignments: "homework/*.mdx"
-  exams: "exams/*.mdx"
-  course_info: "course-info/*.mdx"
-  handouts: "handouts/*.{pdf,mdx}"
+  sections: "src/content/sections/*.json"
+  units: "src/content/units/**/*.json"
+  artifacts: "src/content/sections/**/*.mdx"
   registries:
-    figures: "assets/figures.yaml"
-    equations: "equations/*.mdx"
-    misconceptions: "misconceptions/*.mdx"
-  schedule: "course-info/schedule.yaml"
+    equations: "src/content/equations/**/*.mdx"
+    figures: "src/content/figures.ts"
 
 spec_version: "0.1"
 schema: "@sophie/schemas/course-spec@0.1"
