@@ -26,7 +26,10 @@ import { NonEmptyString, Slug } from "./primitives.js";
  *   7. **quality_bars**    — required (errors) + recommended (warnings)
  *                            audit invariants.
  *   8. **discovery**       — filesystem glob conventions Sophie uses to
- *                            find chapters, assignments, registries.
+ *                            find Sections, Units, Artifacts, registries
+ *                            (ADR 0067 hierarchy; amended in ADR 0080
+ *                            §"Revisions" 2026-05-26 from the original
+ *                            module-shaped doctrine).
  *
  * Plus spec metadata: `spec_version` ("0.1") + `schema` literal
  * (`@sophie/schemas/course-spec@0.1`). The schema id is a logical
@@ -264,37 +267,45 @@ const QualityBarsSchema = z
 
 // ─── Section 8: discovery + spec metadata ───────────────────────────
 
-const ModuleDiscoveryChildrenSchema = z
-  .object({
-    lectures: NonEmptyString,
-    slides: NonEmptyString,
-  })
-  .strict();
-
-const ModuleDiscoverySchema = z
-  .object({
-    pattern: NonEmptyString,
-    children: ModuleDiscoveryChildrenSchema,
-  })
-  .strict();
-
+/**
+ * Discovery globs align with ADR 0067's Section → Subsection → Unit →
+ * Artifact content hierarchy (inline-amended in ADR 0080 §"Revisions"
+ * 2026-05-26). The three required top-level globs match the on-disk
+ * layout demonstrated by `examples/smoke/src/content.config.ts`:
+ *
+ *   - `sections`: per-Section JSON files (one per ADR 0067 Section).
+ *   - `units`: per-Unit JSON files (one per ADR 0067 Unit).
+ *   - `artifacts`: MDX/JSON for typed Artifacts. Recursive glob catches
+ *     BOTH section-level artifacts (`sections/<sec>/<artifact>.mdx`)
+ *     AND unit-level artifacts (`sections/<sec>/units/<unit>/<artifact>.mdx`).
+ *
+ * `registries` carries two REQUIRED keys (`equations`, `figures` — both
+ * shipped registries today) plus two OPTIONAL keys (`topics` per
+ * ADR 0079; `misconceptions` per ADR 0060) that courses may opt into.
+ * `.strict()` rejects unknown registry keys, preserving the contract
+ * discipline.
+ *
+ * Out of scope for v0.1: assessment surfaces (`assignments`, `exams`,
+ * `diagnostics`) — these require ADR 0073 to ship first. The old
+ * v0.1 doctrine included them as required; the inline amendment dropped
+ * them entirely rather than leaving forward-declared stubs that can't
+ * be rendered.
+ */
 const DiscoveryRegistriesSchema = z
   .object({
-    figures: NonEmptyString,
     equations: NonEmptyString,
-    misconceptions: NonEmptyString,
+    figures: NonEmptyString,
+    topics: NonEmptyString.optional(),
+    misconceptions: NonEmptyString.optional(),
   })
   .strict();
 
 const DiscoverySchema = z
   .object({
-    modules: ModuleDiscoverySchema,
-    assignments: NonEmptyString,
-    exams: NonEmptyString,
-    course_info: NonEmptyString,
-    handouts: NonEmptyString,
+    sections: NonEmptyString,
+    units: NonEmptyString,
+    artifacts: NonEmptyString,
     registries: DiscoveryRegistriesSchema,
-    schedule: NonEmptyString,
   })
   .strict();
 

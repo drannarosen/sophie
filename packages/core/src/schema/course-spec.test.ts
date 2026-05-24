@@ -173,6 +173,126 @@ describe("CourseSpecSchema — rejects malformed inputs", () => {
   });
 });
 
+describe("CourseSpecSchema — discovery shape (ADR 0067 alignment)", () => {
+  it("accepts the ADR 0067 shape from the fixture", () => {
+    const parsed = CourseSpecSchema.parse(valid());
+    expect(parsed.discovery.sections).toMatch(/sections/);
+    expect(parsed.discovery.units).toMatch(/units/);
+    expect(parsed.discovery.artifacts).toMatch(/sections.*mdx/);
+    expect(parsed.discovery.registries.equations).toMatch(/equations/);
+    expect(parsed.discovery.registries.figures).toMatch(/figures/);
+  });
+
+  it("accepts optional registries.topics (ADR 0079) when present", () => {
+    const data = valid();
+    const discovery = data.discovery as Record<string, unknown>;
+    const registries = discovery.registries as Record<string, unknown>;
+    const extended = {
+      ...data,
+      discovery: {
+        ...discovery,
+        registries: {
+          ...registries,
+          topics: "src/content/topics/**/*.mdx",
+        },
+      },
+    };
+    expect(() => CourseSpecSchema.parse(extended)).not.toThrow();
+    const parsed = CourseSpecSchema.parse(extended);
+    expect(parsed.discovery.registries.topics).toBe(
+      "src/content/topics/**/*.mdx"
+    );
+  });
+
+  it("accepts optional registries.misconceptions (ADR 0060) when present", () => {
+    const data = valid();
+    const discovery = data.discovery as Record<string, unknown>;
+    const registries = discovery.registries as Record<string, unknown>;
+    const extended = {
+      ...data,
+      discovery: {
+        ...discovery,
+        registries: {
+          ...registries,
+          misconceptions: "src/content/misconceptions/**/*.mdx",
+        },
+      },
+    };
+    expect(() => CourseSpecSchema.parse(extended)).not.toThrow();
+  });
+
+  it("rejects unknown top-level discovery keys (.strict)", () => {
+    const data = valid();
+    const discovery = data.discovery as Record<string, unknown>;
+    const broken = {
+      ...data,
+      discovery: { ...discovery, modules: "modules/*/index.mdx" },
+    };
+    expect(() => CourseSpecSchema.parse(broken)).toThrow();
+  });
+
+  it("rejects unknown registry keys (.strict on inner)", () => {
+    const data = valid();
+    const discovery = data.discovery as Record<string, unknown>;
+    const registries = discovery.registries as Record<string, unknown>;
+    const broken = {
+      ...data,
+      discovery: {
+        ...discovery,
+        registries: { ...registries, glossary: "glossary/*.mdx" },
+      },
+    };
+    expect(() => CourseSpecSchema.parse(broken)).toThrow();
+  });
+
+  it("rejects the legacy v0.1 module-shaped discovery (pre-amendment)", () => {
+    const data = valid();
+    const broken = {
+      ...data,
+      discovery: {
+        modules: {
+          pattern: "modules/*/index.mdx",
+          children: {
+            lectures: "modules/*/readings/*.mdx",
+            slides: "modules/*/slides/*.mdx",
+          },
+        },
+        assignments: "homework/*.mdx",
+        exams: "exams/*.mdx",
+        course_info: "course-info/*.mdx",
+        handouts: "handouts/*.{pdf,mdx}",
+        registries: {
+          figures: "assets/figures.yaml",
+          equations: "equations/*.mdx",
+          misconceptions: "misconceptions/*.mdx",
+        },
+        schedule: "course-info/schedule.yaml",
+      },
+    };
+    expect(() => CourseSpecSchema.parse(broken)).toThrow();
+  });
+
+  it("rejects missing required discovery key (units omitted)", () => {
+    const data = valid();
+    const discovery = data.discovery as Record<string, unknown>;
+    const { units: _omit, ...rest } = discovery;
+    const broken = { ...data, discovery: rest };
+    expect(() => CourseSpecSchema.parse(broken)).toThrow();
+  });
+
+  it("rejects missing required registries key (figures omitted)", () => {
+    const data = valid();
+    const discovery = data.discovery as Record<string, unknown>;
+    const registries = discovery.registries as Record<string, unknown>;
+    const { figures: _omit, ...regRest } = registries;
+    const broken = {
+      ...data,
+      discovery: { ...discovery, registries: regRest },
+    };
+    expect(() => CourseSpecSchema.parse(broken)).toThrow();
+  });
+});
+
 describe("validateCourseSpec helper", () => {
   it("returns [] for valid input", () => {
     expect(validateCourseSpec(valid())).toEqual([]);

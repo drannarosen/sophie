@@ -9,7 +9,7 @@ tags:
 status: shipped
 validation:
   status: in-progress
-  last_validated_date: "2026-05-25"
+  last_validated_date: "2026-05-26"
   evidence:
     - kind: test
       ref: packages/core/src/schema/course-spec.test.ts
@@ -23,6 +23,14 @@ validation:
       ref: packages/cli/src/commands/validate.ts
       date: "2026-05-25"
       notes: "`sophie validate <path>` CLI command smoke-tested end-to-end against the valid + weights-not-100 fixtures (exit 0 / exit 1 + path-prefixed error)."
+    - kind: test
+      ref: packages/core/src/schema/course-spec.test.ts
+      date: "2026-05-26"
+      notes: "Amendment 1 — 8 new discovery-shape tests pinning the ADR 0067 alignment: ADR 0067 shape accepted; optional registries.topics (ADR 0079) accepted when present; optional registries.misconceptions (ADR 0060) accepted when present; unknown top-level discovery keys rejected (.strict); unknown registry keys rejected (.strict on inner); legacy v0.1 module-shaped discovery rejected (pre-amendment regression guard); missing required discovery key rejected; missing required registries key rejected."
+    - kind: deployment
+      ref: packages/core/src/schema/__fixtures__/course-spec-astr-201.yaml
+      date: "2026-05-26"
+      notes: "Valid fixture's `discovery:` block reshaped to ADR 0067 (`sections` / `units` / `artifacts` globs + `registries: { equations, figures }`); CLI smoke `sophie validate` against the updated fixture still exits 0."
 ---
 
 # ADR 0080: Course Spec format v0.1
@@ -30,7 +38,7 @@ validation:
 :::{admonition} ADR metadata
 - **Status**: accepted
 - **Deciders**: anna
-- **Related**: [0001](./0001-platform-not-monorepo.md), [0003](./0003-schema-zod-vs-typebox.md), [0030](./0030-audience-and-ai-author-model.md), [0058](./0058-epistemic-component-contract.md), [0061](./0061-codebase-optimized-for-ai-coding.md), [0064](./0064-chapter-migration-playbook.md)
+- **Related**: [0001](./0001-platform-not-monorepo.md), [0003](./0003-schema-zod-vs-typebox.md), [0030](./0030-audience-and-ai-author-model.md), [0058](./0058-epistemic-component-contract.md), [0061](./0061-codebase-optimized-for-ai-coding.md), [0064](./0064-chapter-migration-playbook.md), [0067](./0067-section-level-artifacts.md) (Amendment 1), [0073](./0073-unified-assessment-schema.md) (Amendment 1), [0079](./0079-topic-registry-and-resolution-pattern.md) (Amendment 1)
 :::
 
 ## Context
@@ -77,7 +85,7 @@ file Sophie-recognizable. Eight non-nesting top-level sections:
 | `principles` | non-negotiables AI authoring + audit honor |
 | `assessment` | philosophy + grade weights (must sum to 100) + workflow + exam policy |
 | `quality_bars` | `required` (errors) + `recommended` (warnings) audit invariants |
-| `discovery` | filesystem glob conventions Sophie uses to find chapters/registries |
+| `discovery` | filesystem glob conventions Sophie uses to find Sections, Units, Artifacts, and registries (ADR 0067 hierarchy — see Amendment 1 for the v0.1 reshape applied 2026-05-26) |
 
 Plus spec metadata at the top level: `spec_version: "0.1"` and
 `schema: "@sophie/schemas/course-spec@0.1"`.
@@ -236,6 +244,100 @@ buys forward compat at zero cost.
 - COMP 521 introduction triggers `pedagogy.pattern` v0.2 expansion.
 - `@sophie/schemas` package extraction trigger: when ≥3 packages
   consume the schemas standalone (today only `@sophie/cli` does).
+
+## Amendments
+
+### Amendment 1 — `discovery` reshape to ADR 0067 Section/Unit/Artifact (2026-05-26)
+
+**Trigger.** Surfaced by ASTR 201's Sprint-1 Day 4 directory-hierarchy
+brainstorm (course-local decision at
+[`astr201/decisions/0001-directory-hierarchy.md`](https://github.com/astrobytes-edu/astr201/blob/main/decisions/0001-directory-hierarchy.md)).
+The v0.1 `DiscoverySchema` (shipped 2026-05-25 in PR #169) was shaped
+`modules: {pattern, children: {lectures, slides}}` plus required
+`assignments` / `exams` / `course_info` / `handouts` / `schedule` globs.
+That predated [ADR 0067](./0067-section-level-artifacts.md)'s
+Section → Subsection → Unit → Artifact content model — `@sophie/astro`'s
+`TextbookLayout` already path-derives `type / scope / unit_id /
+section_id` from a Section/Unit/Artifact layout, demonstrated by
+[`examples/smoke/src/content.config.ts`](https://github.com/drannarosen/sophie/blob/main/examples/smoke/src/content.config.ts).
+The old schema was `.strict()`, so a consumer course's
+`course.sophie.yaml` could not adopt the correct ADR 0067 shape
+without `sophie validate` failing — the fix was platform-side.
+
+**Reshape.** `DiscoverySchema` top-level becomes four required globs
+plus a `registries` block:
+
+```yaml
+discovery:
+  sections:  "src/content/sections/*.json"
+  units:     "src/content/units/**/*.json"
+  artifacts: "src/content/sections/**/*.mdx"
+  registries:
+    equations: "src/content/equations/**/*.mdx"      # required
+    figures:   "src/content/figures.ts"              # required
+    topics:    "src/content/topics/**/*.mdx"         # optional (ADR 0079)
+    misconceptions: "src/content/misconceptions/**/*.mdx"  # optional (ADR 0060)
+```
+
+The recursive `artifacts:` glob catches **both** ADR 0067's section-level
+artifacts (`sections/<sec>/<artifact>.mdx` — intro / synthesis /
+practice-set / etc.) AND unit-level artifacts
+(`sections/<sec>/units/<unit>/<artifact>.mdx` — reading / slides /
+spec / rubric / etc.) in a single declaration.
+
+`registries` carries two required keys (`equations` + `figures` — both
+shipped registries today) and two optional keys (`topics` per
+[ADR 0079](./0079-topic-registry-and-resolution-pattern.md);
+`misconceptions` per [ADR 0060](./0060-registry-ecosystem.md), whose
+schema is `accepted-design` not shipped). `.strict()` rejects any other
+registry key, preserving the contract discipline (§5).
+
+**Dropped fields.** `modules` / `assignments` / `exams` / `course_info` /
+`handouts` / `schedule` are removed entirely. The assessment surfaces
+(`assignments`, `exams`, `diagnostics`) require
+[ADR 0073](./0073-unified-assessment-schema.md)'s unified `Assessment`
+schema to ship first (currently `accepted-design`); the inline
+amendment drops them rather than leaving forward-declared stubs that
+can't be rendered. `modules` / `course_info` / `handouts` / `schedule`
+were lecture-shape concepts orthogonal to the Section/Unit hierarchy.
+
+**Why in-place mutation, not a `spec_version` bump.** §5 of this ADR
+declared that schema evolution happens via `spec_version` bumps. That
+discipline is the **post-launch** rule. Pre-launch with zero external
+consumers (astr201 is the sole consumer and we control it), the
+clean-break amendment is the right shape per
+`feedback_no_backcompat_prelaunch`. `spec_version` and the schema id
+literal both stay at `0.1`; the v0.1 contract is what's now in the
+schema file, with this Amendment as the audit trail. Future
+amendments to the v0.1 surface land here; cross-shape breaks (e.g.
+when ADR 0073 ships and assessment surfaces re-enter) trigger a real
+v0.2 bump.
+
+**Why the amendment lives in 0080 rather than a new 0081.** Sophie's
+ADR template (§"ADR lifecycle") notes that pre-implementation work is
+freely editable in place. Course Spec v0.1 shipped less than 24 hours
+before this amendment — it had one consumer (astr201, which hadn't
+yet authored its `course.sophie.yaml`) and zero downstream tooling
+beyond `sophie validate` itself. A separate 0081 would have created
+two ADRs to grep for one decision surface; the audit trail lives in
+git history + this Amendment block.
+
+**Consequences.**
+
+- ASTR 201 (Sprint-1 Day 4 follow-up) updates its
+  `course.sophie.yaml` `discovery:` to the new shape; no
+  `spec_version` bump in the consumer YAML.
+- The original v0.1 doctrine (module-shaped discovery) is now
+  **rejected** by the schema. Test
+  [`course-spec.test.ts`](https://github.com/drannarosen/sophie/blob/main/packages/core/src/schema/course-spec.test.ts)
+  pins this: "rejects the legacy v0.1 module-shaped discovery
+  (pre-amendment)" — `.strict()` catches the dropped `modules` key.
+- ADR 0073's eventual `Assessment` schema lands as a separate ADR;
+  when it ships, a new amendment to this ADR (or a new course-spec
+  ADR) re-adds the relevant discovery globs.
+- `@sophie/astro`'s `TextbookLayout` path-derivation now has a
+  declarative source-of-truth at the Course-Spec level matching its
+  implementation.
 
 ## References
 
