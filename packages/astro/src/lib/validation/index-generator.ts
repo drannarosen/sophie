@@ -241,29 +241,25 @@ function formatDateCell(entry: ContractValidationEntry): string {
 function formatNotesCell(entry: ContractValidationEntry): string {
   if (entry.validation === undefined) return "no validation block";
   const notes = entry.validation.notes ?? "";
-  // Escape Markdown characters that would otherwise leak into the
-  // rendered table cell (I1 from comprehensive review):
+  // Escape only the characters that genuinely break Markdown tables:
   //   - `\` first (so subsequent escapes don't double up).
   //   - `|`        — table-column separator.
-  //   - `` ` ``     — inline code spans.
-  //   - `*` `_`    — bold / emphasis.
-  //   - `[`        — link / image syntax start.
+  //   - `\n`       — collapse to single spaces.
   //
-  // Skipped on purpose (these don't break Markdown tables and would
-  // clutter author-written notes that legitimately use them):
-  //   - `(` `)`    — common in prose; only meaningful AFTER `[`.
-  //   - `<` `>`    — MyST handles these inside cell text already.
-  //   - leading `#` `-` `*` — table cells don't process line-start
-  //                          syntax; safe inside `|...|`.
-  //
-  // Collapse newlines to single spaces last — escape sequences intact.
+  // Backticks / asterisks / brackets are NOT escaped: post-W4c PR 3
+  // surfaced that author-written notes legitimately use inline
+  // code spans (`` `@sophie/*` ``), bold (`**text**`), and link
+  // syntax (`[text](url)`) — escaping them turned valid code spans
+  // into `\`@sophie/\*\`` which MyST then mis-parses as a citation
+  // reference (`@sophie/core` was flagged "citation not found"
+  // because the surrounding backticks were escaped away). Markdown
+  // tables can render inline-code / bold / links inside cells as
+  // long as `|` and `\n` are escaped; the previous I1 over-escape
+  // (which motivated the wider escape list) is mitigated by the
+  // narrower table-breaker set without sacrificing inline markup.
   return notes
     .replaceAll("\\", "\\\\")
     .replaceAll("|", "\\|")
-    .replaceAll("`", "\\`")
-    .replaceAll("*", "\\*")
-    .replaceAll("_", "\\_")
-    .replaceAll("[", "\\[")
     .replaceAll("\n", " ");
 }
 

@@ -25,7 +25,7 @@ validation:
       ref: docs/reviews/2026-05-15-bucket-b-c-architecture-audit.md
       date: "2026-05-15"
       notes: "D4 type safety = 20/20; Zod-as-SoT held across all packages."
-  notes: "Every load-bearing data shape in @sophie/core is a Zod schema; downstream packages type-infer via z.infer. No drift detected in the audit."
+  notes: "Every load-bearing data shape in `@sophie/core` is a Zod schema; downstream packages type-infer via z.infer. No drift detected in the audit."
 ---
 
 # ADR 0003: Zod as schema source of truth

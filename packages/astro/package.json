@@ -77,8 +77,8 @@
     "vite": "^7.3.0 || ^8.0.0"
   },
   "dependencies": {
-    "@astrojs/mdx": "^5.0.4",
-    "@astrojs/react": "^5.0.4",
+    "@astrojs/mdx": "^5.0.6",
+    "@astrojs/react": "^5.0.5",
     "@sophie/components": "workspace:*",
     "@sophie/core": "workspace:*",
     "@sophie/theme": "workspace:*",
@@ -114,7 +114,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitest/coverage-v8": "^4.1.5",
-    "astro": "^6.3.1",
+    "astro": "^6.3.7",
     "jest-axe": "^10.0.0",
     "jsdom": "^29.1.1",
     "react": "^19.2.6",
@@ -122,6 +122,6 @@
     "tsup": "^8.5.1",
     "tsx": "^4.21.0",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.5"
+    "vitest": "^4.1.7"
   }
 }

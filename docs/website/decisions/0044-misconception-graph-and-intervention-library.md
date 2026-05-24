@@ -236,6 +236,7 @@ chapter-bound:
 Full reference at
 [`reference/intervention-library.md`](../reference/intervention-library.md).
 
+(artifact-4-audit-invariants)=
 ### Artifact 4: Eight new audit invariants (hardened 2026-05-14 — MG4 + I4 added)
 
 The audit extends [PR-C4's `pedagogy-audit.ts`](./0038-pedagogy-index-pattern.md)

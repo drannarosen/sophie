@@ -125,7 +125,7 @@ mental model that no longer matches the codebase.
 
 ## Revisions
 
-### R-no-runtime — Tailwind runtime not installed; @theme syntax used as CSS-vars sugar (2026-05-19)
+### R-no-runtime — Tailwind runtime not installed; `@theme` syntax used as CSS-vars sugar (2026-05-19)
 
 The 2026-05-19 architecture audit flagged that this ADR's status
 was `shipped` but zero packages have `tailwindcss` installed and

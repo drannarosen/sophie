@@ -300,7 +300,7 @@ when that lands) plus a tabular fallback.
 
 ## How the audit uses these fields
 
-The [Representation Alignment Audit's misconception family](../decisions/0044-misconception-graph-and-intervention-library.md#artifact-4-six-new-audit-invariants)
+The [Representation Alignment Audit's misconception family](../decisions/0044-misconception-graph-and-intervention-library.md#artifact-4-audit-invariants)
 checks:
 
 Pre-existing (shipped or deferred in

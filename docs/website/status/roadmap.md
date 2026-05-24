@@ -32,7 +32,7 @@ implementation begins after that roadmap's 9 proposed ADRs land.
 |---|---|---|
 | PR 1–6 | ✓ merged | Layout shell, theme toggle, view modes, aside, module-nav, in-page-ToC |
 | PR 7 (#41) | ✓ merged 2026-05-15 | Pagefind faceted search consuming the pedagogy-index (7 entity types as facets; Cmd/Ctrl+K Radix Dialog modal; converter-registry seam for future LDS facets) |
-| PR 10 (#42) | ✓ merged 2026-05-15 | Chapter-print polish — @media print chrome reset + view-mode-Wide override + forced-light tokens + page-break protection + interactive-to-static expansion + first-use `<GlossaryTerm>` inline footnotes via remark-plugin extension |
+| PR 10 (#42) | ✓ merged 2026-05-15 | Chapter-print polish — `@media print` chrome reset + view-mode-Wide override + forced-light tokens + page-break protection + interactive-to-static expansion + first-use `<GlossaryTerm>` inline footnotes via remark-plugin extension |
 
 PR 7 left the converter registry seam open for Phase 3 LDS-conformance
 work (notation registry, misconception graph, intervention library
