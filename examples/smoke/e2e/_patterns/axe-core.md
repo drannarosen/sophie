@@ -66,9 +66,8 @@ shared tag list catches that class of issue at every spec invocation.
 
 ## Canonical example
 
-Canonical example: forthcoming at
-`examples/smoke/e2e/_helpers/axe.ts` (Task B.4; this doc will be
-updated with a Markdown link once that task lands).
+Canonical example: [`../_helpers/axe.ts`](../_helpers/axe.ts) — the
+shared helper exporting `expectChapterA11y(page)`.
 
 ## Cross-references
 
