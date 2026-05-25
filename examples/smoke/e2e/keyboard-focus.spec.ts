@@ -71,10 +71,9 @@ test.describe("keyboard focus rings on Sophie interactive controls", () => {
     // Wait for hydration to settle so persistence-bearing controls are
     // not still in their disabled-while-loading state (which would
     // cause Tab to skip them).
-    await page
-      .locator("label", { hasText: /Mark as reviewed/ })
-      .first()
-      .waitFor({ timeout: 5000 });
+    await expect(
+      page.locator("label", { hasText: /Mark as reviewed/ }).first()
+    ).toBeVisible();
 
     // Walk forward from page start. Stop at the first Sophie interactive
     // control (a button, checkbox, or radio inside the chapter content).
