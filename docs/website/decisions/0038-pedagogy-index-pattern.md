@@ -828,3 +828,17 @@ flowing prose in the footnote; the **popover** still receives the
 full block structure (its `<div>` container is block-safe). New
 unit test fixture `multi-block` pins the contract; existing tests
 unchanged.
+
+## ADR 0038 family — hydration-class defenses
+
+Four ADRs collectively close the React #418 hydration regression class
+for store-backed components in packed consumers:
+
+- ADR 0038 Amendment 2 — `useHydrated`-gate at the top of render (runtime)
+- [ADR 0083](0083-cl1-client-directive-invariant.md) — CL1 build-time audit invariant
+- [ADR 0084](0084-packed-smoke-ci-gate.md) — packed-smoke CI gate
+- [ADR 0085](0085-component-template-skeleton.md) — `_template/` skeleton authoring affordance
+
+Each is a structural class-of-issue defense; together they cover the
+runtime, build-time-static-analysis, CI-runtime, and authoring-
+affordance layers.

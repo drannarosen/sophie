@@ -156,7 +156,7 @@ defense, not an instance-of-issue patch.
    whatever the runtime and build-time layers miss — any new regression
    in packed-shape module semantics that neither static analysis nor
    the runtime gate can foresee. The four-layer family
-   (`useHydrated` + CL1 + packed-smoke + future ADR 0085's
+   (`useHydrated` + CL1 + packed-smoke + [ADR 0085](0085-component-template-skeleton.md)'s
    `_template/` skeleton) makes the hydration regression class
    structurally implausible.
 
@@ -298,7 +298,7 @@ layer of the four-layer hydration defense.
 - [ADR 0061](0061-ai-optimized-codebase-design.md) — AI-optimized
   codebase design; the rationale for citation-discoverable ADRs as
   defense-in-depth anchors for AI authors.
-- Future ADR 0085 (Phase A Task A.5) — `_template/` skeleton
+- [ADR 0085](0085-component-template-skeleton.md) — `_template/` skeleton
   convention; the authoring-affordance layer of the four-layer
   hydration family.
 - [PR #176](https://github.com/drannarosen/sophie/pull/176) — the

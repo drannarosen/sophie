@@ -191,8 +191,8 @@ Two known risks, each with a planned mitigation.
    hard-coded: `INLINE_REF_TARGETS` in `inline-refs.ts` and the
    `<KeyEquation>` check in `equation-citations.ts`. A sixth
    store-backed component shipped without an extractor update would
-   slip past CL1 silently. **Mitigation**: future ADR 0085 (Phase A
-   Task A.5) will formalize the `_template/` skeleton convention; new store-backed
+   slip past CL1 silently. **Mitigation**: [ADR 0085](0085-component-template-skeleton.md)
+   formalizes the `_template/` skeleton convention; new store-backed
    components are copied from the skeleton and the extractor scope
    update is part of the same PR as the new component. The vitest
    meta-test in `Template.test.tsx` is the floor that catches
@@ -236,8 +236,8 @@ CL1 is validated by four artifacts, listed in the frontmatter
 - [ADR 0061](0061-ai-optimized-codebase-design.md) — AI-optimized
   codebase design; the rationale for promoting CL1 to its own ADR
   (citation discoverability for AI authors).
-- Future ADR 0085 (Phase A Task A.5) — `_template/`
-  skeleton convention; the authoring-affordance layer that will defend
+- [ADR 0085](0085-component-template-skeleton.md) — `_template/`
+  skeleton convention; the authoring-affordance layer that defends
   against the false-negative risk in CL1's element-set hard-coding.
 - [PR #174](https://github.com/drannarosen/sophie/pull/174) — the
   squash-merge that shipped CL1.
