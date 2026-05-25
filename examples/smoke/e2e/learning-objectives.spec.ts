@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { expectChapterA11y } from "./_helpers/axe";
 
 /**
  * RED — Layer 2 e2e for the LO checkbox interactivity bug.
@@ -66,6 +67,7 @@ test.describe("Learning Objectives checkbox interactivity", () => {
     // `<Objective id="stub" verb="Recognize">…</Objective>`.
     const checkboxes = page.locator(LO_CHECKBOX_SELECTOR);
     await expect(checkboxes).toHaveCount(1);
+    await expectChapterA11y(page);
   });
 
   test("clicking a checkbox sets it to checked and persists across reload", async ({
