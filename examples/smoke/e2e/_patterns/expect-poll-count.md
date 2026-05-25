@@ -63,10 +63,11 @@ threshold) behind a hope (2 seconds is enough).
 
 ## Canonical example
 
-Canonical example: forthcoming in
-`examples/packed-smoke/e2e/hydration-mismatch-defense.spec.ts`
-(Task B.5; this doc will be updated with a Markdown link once that
-task lands).
+Canonical example:
+[`examples/packed-smoke/e2e/hydration-mismatch-defense.spec.ts`](../../../packed-smoke/e2e/hydration-mismatch-defense.spec.ts)
+(Task B.5). Asserts the packed-smoke chapter hydrates all 5 store-
+backed components (`data-react-hydrated='true'`) before the React #418
+console-error assertion runs.
 
 ## Cross-references
 
