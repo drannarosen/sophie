@@ -50,10 +50,22 @@ jobs:
         #      that bypass the extractor);
         #   2. any ADR or reference page missing status: (catches
         #      rollout-regression — a new ADR landing without status
-        #      would silently render no-status in the dashboard).
-        # The validation-block-without-status rollout-gap signal
-        # remains informational (future explanation/vision sweep).
+        #      would silently render no-status in the dashboard);
+        #   3. any page declaring a validation: block without a paired
+        #      status: field — promoted from informational to blocking
+        #      in A+ hardening Phase C (a validation: block opts the
+        #      page into the dashboard contract, so missing status:
+        #      renders a silently-undefined lifecycle column).
         run: pnpm lint:status
+      - name: Back-compat shim detection (A+ hardening Phase C)
+        # Pre-launch invariant per AGENTS.md "Pre-launch; no backwards
+        # compatibility": zero @deprecated JSDoc tags and zero
+        # // COMPAT / // SHIM / // LEGACY / // BACKCOMPAT comment
+        # markers in packages/ or examples/. Sophie has zero production
+        # students; back-compat shims are dead-shape drift that defeats
+        # the "build the best now" rule and accumulates AI-author
+        # confusion. Fails CI on any match.
+        run: pnpm lint:shims
 
   typecheck:
     name: typecheck
