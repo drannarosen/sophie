@@ -311,3 +311,60 @@ jobs:
             packages/components/test-results/
           retention-days: 7
           if-no-files-found: ignore
+
+  packed-smoke:
+    name: packed-smoke
+    needs: build
+    runs-on: ubuntu-latest
+    # PR-D1 (ADR-0082 follow-up + PR #172 review item 2): structural
+    # defense against the packed-vs-workspace regression class. The
+    # examples/packed-smoke/ consumer is OUTSIDE the pnpm workspace by
+    # design — it consumes @sophie/* via pnpm pack + file: tarball
+    # install (NOT workspace links), so React #418 hydration mismatches
+    # that workspace-resolution masks become surfaceable. One Playwright
+    # spec asserts 0 × #418 on a chapter exercising all 5 store-backed
+    # components with client:load.
+    steps:
+      - uses: actions/checkout@v4
+      - name: Enable corepack
+        run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Restore Turborepo cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .turbo
+            **/.turbo
+          key: ${{ runner.os }}-turbo-packed-smoke-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-packed-smoke-
+            ${{ runner.os }}-turbo-build-${{ github.sha }}
+            ${{ runner.os }}-turbo-build-
+            ${{ runner.os }}-turbo-
+      - name: Build + pack + install @sophie/* into packed-smoke
+        # Builds @sophie/{core,theme,components,astro}, packs each into
+        # a tarball, strips inter-@sophie deps from each tarball's
+        # package.json (pnpm pack rewrites workspace:* → "0.0.0" which
+        # the npm registry can't resolve), and installs the tarballs
+        # into examples/packed-smoke/. Idempotent.
+        run: bash examples/packed-smoke/scripts/sync-packed.sh
+      - name: Build packed-smoke (astro build)
+        run: pnpm --dir examples/packed-smoke build
+      - name: Install Playwright browsers
+        run: pnpm --dir examples/packed-smoke exec playwright install --with-deps chromium
+      - name: Playwright spec (hydration-mismatch defense)
+        run: pnpm --dir examples/packed-smoke exec playwright test
+      - name: Upload Playwright report on failure
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: packed-smoke-playwright-report
+          path: |
+            examples/packed-smoke/playwright-report/
+            examples/packed-smoke/test-results/
+          if-no-files-found: ignore

@@ -1,0 +1,16 @@
+# PR-D1 packed-smoke pnpm-workspace.yaml.
+#
+# This file is INTENTIONALLY empty of `packages:` entries. Its sole
+# purpose is to give pnpm 11 a place to read the per-project
+# `allowBuilds` allow-list so postinstall scripts for esbuild, sharp,
+# etc. are permitted. Without `allowBuilds`, pnpm 11 hard-fails any
+# script run (including `pnpm build`) with ERR_PNPM_IGNORED_BUILDS.
+#
+# packed-smoke is OUTSIDE the repo's main workspace (excluded via
+# `!examples/packed-smoke` in the root pnpm-workspace.yaml) by design
+# — workspace links would defeat the packed-vs-workspace defense.
+# The .npmrc `ignore-workspace=true` makes this defensive even when
+# invoked from a parent shell that found the root workspace.
+allowBuilds:
+  esbuild: true
+  sharp: true

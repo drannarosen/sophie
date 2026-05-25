@@ -1,6 +1,13 @@
 packages:
   - 'packages/*'
   - 'examples/*'
+  # PR-D1 / ADR-0082 follow-up: examples/packed-smoke/ MUST be
+  # excluded from the workspace. It consumes @sophie/* via pnpm pack
+  # + file:./vendor/*.tgz tarballs to surface packed-vs-workspace
+  # regressions (e.g. React #418 hydration mismatches). pnpm
+  # workspace resolution would silently replace those file: specs
+  # with workspace links, defeating the entire purpose.
+  - '!examples/packed-smoke'
   # docs/website is the MyST design-docs site. Promoted to a workspace
   # package (comprehensive-review I8) so the MyST plugin at
   # docs/website/scripts/validation-admonition-plugin.mjs can import
