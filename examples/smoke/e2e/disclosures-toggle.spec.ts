@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { expectChapterA11y } from "./_helpers/axe";
 
 const CHAPTER_URL = "/units/spoiler-alerts/reading";
 
@@ -29,6 +30,7 @@ test.describe("DisclosuresToggle on the smoke chapter", () => {
       "data-disclosures",
       "collapsed"
     );
+    await expectChapterA11y(page);
   });
 
   test("clicking the toggle flips state and updates aria + data-disclosures", async ({
