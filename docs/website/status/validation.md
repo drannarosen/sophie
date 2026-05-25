@@ -23,33 +23,33 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 
 | Status | Count |
 |---|---|
-| Validated | 15 |
+| Validated | 16 |
 | In progress | 19 |
 | Unvalidated | 74 |
 | Re-validation needed | 0 |
 | Missing block | 0 |
-| Total | 108 |
+| Total | 109 |
 
 ## Lifecycle summary
 
 | Lifecycle | Count |
 |---|---|
 | Shipped | 63 |
-| Accepted design | 35 |
+| Accepted design | 36 |
 | Mixed | 1 |
 | Future package split | 9 |
 | No status | 0 |
-| Total | 108 |
+| Total | 109 |
 
 ## Evidence kinds
 
 | Kind | Count |
 |---|---|
-| test | 82 |
+| test | 84 |
 | chapter | 9 |
 | review | 22 |
-| deployment | 19 |
-| audit | 5 |
+| deployment | 20 |
+| audit | 7 |
 | manual | 30 |
 
 ## Extractor findings
@@ -143,6 +143,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0080-course-spec-format-v0-1.md](/course-spec-format-v0-1/) | in progress | shipped | 2026-05-26 | deployment, test |  |
 | [docs/website/decisions/0081-worked-example-component.md](/worked-example-component/) | in progress | shipped | 2026-05-26 | manual, test |  |
 | [docs/website/decisions/0082-chapter-layout-extraction.md](/chapter-layout-extraction/) | validated | accepted design | 2026-05-25 | chapter, deployment, review, test | PR-C consolidates ADR text + figures virtual module + shipped ChapterLayout + injected reading route + integration wiring + smoke migration into one branch (with sibling astr201 migration). Contract is locked; future routes (slides, intro/synthesis) extend by adding parallel injectRoute calls per ADR § Consequences. |
+| [docs/website/decisions/0083-cl1-client-directive-invariant.md](/cl1-client-directive-invariant/) | validated | accepted design | 2026-05-25 | audit, deployment, test | Shipped as part of the post-PR-#172 hardening sequence; closes the "missing client:* directive" failure mode that ADR 0038 Amendment 2 defends structurally via the `useHydrated` gate. CL1 is the build-time defence; the gate is the runtime defence; together they form a defence-in-depth pair against the React #418 hydration mismatch class for store-backed components in packed consumers.  |
 
 ### Reference docs
 
