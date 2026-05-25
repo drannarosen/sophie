@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { expectChapterA11y } from "./_helpers/axe";
 
 /**
  * Bug 1 regression test (2026-05-20 verify pass): a `<GlossaryTerm>`
@@ -84,6 +85,7 @@ test.describe("Bug 1 — GlossaryTerm prose integrity", () => {
     // (which produced 18 suspects).
     expect(stats.suspects.length).toBeLessThanOrEqual(2);
     expect(stats.triggerCount).toBeGreaterThan(10);
+    await expectChapterA11y(page);
   });
 
   test("first-use footnote span does not contain a <p> tag", async ({
@@ -126,5 +128,6 @@ test.describe("Bug 1 — GlossaryTerm prose integrity", () => {
       stats.totalFootnotes - 1
     );
     expect(stats.footnotesWithBlockTag).toBe(0);
+    await expectChapterA11y(page);
   });
 });
