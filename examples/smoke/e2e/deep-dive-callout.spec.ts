@@ -65,9 +65,7 @@ test.describe("<Callout variant='deep-dive'> Deep Dives in spoiler-alerts chapte
     page,
   }) => {
     await page.goto(CHAPTER_URL);
-    await page
-      .getByRole("note", { name: DEEP_DIVES[0] })
-      .waitFor({ timeout: 5000 });
+    await expect(page.getByRole("note", { name: DEEP_DIVES[0] })).toBeVisible();
 
     const results = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"])
