@@ -13,9 +13,9 @@ validation:
   last_validated_date: "2026-05-25"
   evidence:
     - kind: test
-      ref: packages/astro/src/lib/pedagogy-index-extractor.test.ts
+      ref: packages/astro/src/lib/pedagogy-index/
       date: "2026-05-13"
-      notes: "Extractor coverage: definitions, equations, key insights, misconceptions, objectives, inline-refs, figures."
+      notes: "Extractor coverage: definitions, equations, key insights, misconceptions, objectives, inline-refs, figures. Per-file tests under the directory (accumulator.test.ts, orchestrator.test.ts, mdx-compile.test.ts, snapshot.test.ts, plus per-extractor tests under extractors/) post-refactor from the original single pedagogy-index-extractor.ts."
     - kind: test
       ref: packages/astro/src/lib/pedagogy-audit.test.ts
       date: "2026-05-15"
