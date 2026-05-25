@@ -29,13 +29,10 @@ test("packed-smoke prod build emits zero React #418 hydration mismatches", async
   // the #418 console-error assertion runs; otherwise the test races
   // with hydration and may green-light a real regression.
   await expect
-    .poll(
-      async () => page.locator("[data-react-hydrated='true']").count(),
-      {
-        timeout: 10_000,
-        message: "wait for 5 hydrated store-backed islands",
-      }
-    )
+    .poll(async () => page.locator("[data-react-hydrated='true']").count(), {
+      timeout: 10_000,
+      message: "wait for 5 hydrated store-backed islands",
+    })
     .toBeGreaterThan(4);
   expect(errors.filter((e) => /#418|hydration/i.test(e))).toHaveLength(0);
 });

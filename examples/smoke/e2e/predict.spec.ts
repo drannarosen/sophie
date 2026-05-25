@@ -52,9 +52,7 @@ test.describe("<Predict> in spoiler-alerts chapter", () => {
     const reloaded = page.getByRole("textbox", {
       name: /different colors might represent/,
     });
-    await expect(reloaded).toHaveValue(
-      "emission from hydrogen alpha and OIII"
-    );
+    await expect(reloaded).toHaveValue("emission from hydrogen alpha and OIII");
 
     // Verify the IDB stored the per-prompt answer under the expected key.
     const storedValue = await page.evaluate(async () => {
