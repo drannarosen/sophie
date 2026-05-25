@@ -343,6 +343,25 @@ to flowing prose). The full block structure is still preserved in
 the **popover** (`<div>` container), which is the canonical place
 for rich definition content.
 
+**Popover vs. footnote rendering.** `<GlossaryTerm
+data-first-use="true">` injects the definition body into *both*
+surfaces, but they render the body differently:
+
+- **Popover.** The body renders inside a `<div>` container (block-
+  safe) and preserves the authored structure exactly — paragraphs,
+  lists, nested blocks all render as written. Use the popover when
+  the definition relies on multi-block content (a lead paragraph
+  followed by a list of conditions, e.g.).
+- **Inline first-use footnote.** The body is parsed via
+  `innerHTML=` into an inline container, and the strip pass
+  (`stripWrappingParagraph`) flattens multi-block bodies into
+  inline-safe prose, collapsing list/paragraph semantics into
+  flowing text (see ADR 0038 § A2.7). All text is preserved; the
+  block structure is not.
+
+Authors who need to preserve structured content should rely on the
+popover; the inline footnote is for short summary text.
+
 ### Astro consumer (server-rendered aggregator)
 
 #### Chapter-level (used inside MDX)
@@ -545,6 +564,49 @@ this read must happen in a *child* of `TextbookLayout` (e.g., a
 frontmatter itself — Astro evaluates page frontmatter before
 TextbookLayout's setChapters / setModules / render(chapter) cycle
 populates the accumulator.
+
+## Integration consumption
+
+Per [ADR 0082](../decisions/0082-chapter-layout-extraction.md),
+`@sophie/astro` ships a canonical chapter layout
+(`ChapterLayout.astro`) and a reading-route page injected at
+`/units/[unit]/reading` directly from the integration. Consumers
+no longer maintain duplicates of either file; the consumer's
+`astro.config.ts` only needs to wire the integration and hand in
+the figure registry:
+
+```ts
+// astro.config.ts
+import { defineConfig } from "astro/config";
+import { defineSophieIntegration } from "@sophie/astro";
+import { figures } from "./src/content/figures.ts";
+
+export default defineConfig({
+  integrations: [defineSophieIntegration({ figures })],
+});
+```
+
+The `figures` option is the consumer-owned figure registry (the
+same shape `<Figure>` and `<FigureRef>` resolve against). The
+integration hands it to the shipped `ChapterLayout` and the
+injected reading route through the **`virtual:sophie/figures`**
+virtual module — Vite synthesizes a tiny ESM module whose default
+export is the registry that was passed in. Per ADR 0082
+§ Consequences, this hand-off is build-time only: changes to
+`figures.ts` require a **dev-server restart** (no HMR).
+
+The injected reading route owns the route segment
+`src/pages/units/[unit]/reading.astro`. If a consumer ships a file
+at that exact path the integration warns at build time
+("`<file>` shadows the injected reading route from
+`@sophie/astro`; the consumer file will win"); the consumer file wins by Astro's
+file-system precedence, but the warning surfaces the drift. Per
+ADR 0082 the canonical setup is to delete the consumer copy and
+rely on the injected route.
+
+See [ADR 0082](../decisions/0082-chapter-layout-extraction.md) for
+the full design (extraction motivation, virtual-module rationale,
+shadow-detection invariant, alternatives considered).
 
 ## Common failure modes
 
@@ -908,6 +970,7 @@ JSDoc:
 - [Wedge B1 design doc](../../plans/2026-05-21-wedge-b1-retrieval-family-design.md) — locked decisions for `<RetrievalPrompt>` + `<SpacedReview>` + `<SkillReview>`: shared `<RetrievalCard>` primitive, `practice_attempt` persistence shape, LRU stub scheduler, target-prefix convention, smoke chapter usage. PRA-1 / RET-1 / SR-1 curriculum-CI invariants.
 - [Wedge B-followup design doc](../../plans/2026-05-22-wedge-b-followup-design.md) — W1 graduation of PRA-1 (Unit-aware) + SR-1 (section-validity) + `<SpacedReview section=…>` end-to-end rendering. Adds `sections` + `units` collections to `PedagogyIndex` and the `useInteractiveRangeMulti` hook for cross-chapter range reads. Locks ADR 0067 as Sophie's canonical content shape via the four-wedge W1→W4 migration sequence.
 - [ADR 0061](../decisions/0061-ai-optimized-codebase-design.md) — AI-optimized codebase design (six rules including docs-atomic-with-code).
+- [ADR 0082](../decisions/0082-chapter-layout-extraction.md) — Chapter layout + reading route extracted into `@sophie/astro`; consumers receive both via the integration, hand in the figure registry as a config option, and read it through `virtual:sophie/figures`.
 - [equation-registry-schema](equation-registry-schema.md) — the registry MDX shape (frontmatter + biography body).
 - [Component contract](component-contract.md) — the TypeScript interface every component implements.
 - [Add a custom component](../how-to/add-a-custom-component.md) — recipe for new components.
