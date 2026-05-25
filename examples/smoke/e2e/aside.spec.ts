@@ -1,5 +1,5 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { expectChapterA11y } from "./_helpers/axe";
 
 const CHAPTER_URL = "/units/spoiler-alerts/reading";
 const DESKTOP_VIEWPORT = { width: 1440, height: 900 };
@@ -269,12 +269,7 @@ test.describe("PR 6: <Aside> on the smoke chapter", () => {
         .querySelector("[data-sophie-aside]")
         ?.hasAttribute("data-aside-docked")
     );
-    const dockedResults = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"])
-      .include("[data-sophie-aside]")
-      .disableRules(["color-contrast"])
-      .analyze();
-    expect(dockedResults.violations).toEqual([]);
+    await expectChapterA11y(page);
 
     // Inline (mobile).
     await page.setViewportSize(MOBILE_VIEWPORT);
@@ -282,11 +277,6 @@ test.describe("PR 6: <Aside> on the smoke chapter", () => {
       const a = document.querySelector("[data-sophie-aside]");
       return a && !a.hasAttribute("data-aside-docked");
     });
-    const inlineResults = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"])
-      .include("[data-sophie-aside]")
-      .disableRules(["color-contrast"])
-      .analyze();
-    expect(inlineResults.violations).toEqual([]);
+    await expectChapterA11y(page);
   });
 });
