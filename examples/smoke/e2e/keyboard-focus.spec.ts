@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { expectChapterA11y } from "./_helpers/axe";
 
 const CHAPTER_URL = "/units/spoiler-alerts/reading";
 
@@ -62,6 +63,7 @@ test.describe("keyboard focus rings on Sophie interactive controls", () => {
     for (const { name, pattern } of requiredPatterns) {
       expect(css, `missing :focus-visible rule for ${name}`).toMatch(pattern);
     }
+    await expectChapterA11y(page);
   });
 
   test("the first interactive control reached by Tab gets a visible focus outline", async ({
