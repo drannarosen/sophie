@@ -230,7 +230,7 @@ describe("CL1 — missing client:* directive on store-backed inline-refs", () =>
     expect(findings).toHaveLength(0);
   });
 
-  test("mixed: 5 bare + 2 gated → 5 findings, 7 usages", () => {
+  test("mixed: 4 bare + 1 gated → 4 findings, 5 usages", () => {
     const tree = root([
       {
         type: "paragraph",
