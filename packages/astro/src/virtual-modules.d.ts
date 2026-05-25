@@ -23,3 +23,14 @@ declare module "virtual:sophie/pedagogy-index" {
   export const figureUsages: ReadonlyArray<FigureUsageEntry>;
   export const misconceptions: ReadonlyArray<MisconceptionEntry>;
 }
+
+declare module "virtual:sophie/figures" {
+  import type { FigureRegistryEntry } from "@sophie/core/schema";
+
+  /**
+   * Consumer-supplied figure registry (a name-indexed map). Populated
+   * by `defineSophieIntegration({ figures })` per ADR 0082; backed by
+   * `figuresVirtualModule()` in `packages/astro/src/lib/`.
+   */
+  export const figures: Record<string, FigureRegistryEntry>;
+}

@@ -1,8 +1,8 @@
 ---
 import { makeStaticComponents } from "@sophie/astro";
 import { getCollection, render } from "astro:content";
-import { figures } from "../../../content/figures";
-import ChapterLayout from "../../../layouts/ChapterLayout.astro";
+import { figures } from "virtual:sophie/figures";
+import ChapterLayout from "../components/ChapterLayout.astro";
 
 // Module-level singleton: every chapter in this smoke target shares the
 // same figure registry, so the components map is built once instead of

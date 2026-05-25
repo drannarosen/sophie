@@ -13,7 +13,7 @@ import { buildModuleNavInputs, indexAccumulator } from "@sophie/astro";
 import { SophieChapter } from "@sophie/astro/client";
 import { getCollection } from "astro:content";
 import type { MarkdownHeading } from "astro";
-import { figures as figureRegistry } from "../content/figures";
+import { figures as figureRegistry } from "virtual:sophie/figures";
 
 // Convert the consumer-owned figures registry (a named-keyed map; see
 // `src/content/figures.ts`) into the array shape `<TextbookLayout>`

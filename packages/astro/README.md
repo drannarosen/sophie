@@ -13,87 +13,37 @@ Built against Astro 6 (was Astro 5 originally — see
 
 | Subpath | What it exports |
 | --- | --- |
-| `@sophie/astro` | `defineSophieIntegration()`, `makeStaticComponents()` |
+| `@sophie/astro` | `defineSophieIntegration({ figures })`, `makeStaticComponents()` |
 | `@sophie/astro/client` | `<SophieChapter>` — CSS-shell wrapper |
+| `@sophie/astro/components/ChapterLayout.astro` | Canonical chapter layout (ADR-0082) |
+| `@sophie/astro/routes/reading.astro` | Reading route — injected by `defineSophieIntegration` |
+| `virtual:sophie/figures` | Virtual module exposing the consumer's figure registry (ADR-0082) |
 
 ## Quick recipe (consumer Astro app)
 
-`astro.config.ts`:
+Per [ADR-0082](../../docs/website/decisions/0082-chapter-layout-extraction.md),
+`defineSophieIntegration` injects the canonical `/units/[unit]/reading`
+route and registers a Vite virtual module exposing the course's figure
+registry. The consumer's `astro.config.ts` is one line:
 
 ```ts
 import { defineConfig } from "astro/config";
 import { defineSophieIntegration } from "@sophie/astro";
+import { figures } from "./src/content/figures.ts";
 
 export default defineConfig({
-  integrations: [defineSophieIntegration()],
+  integrations: [defineSophieIntegration({ figures })],
 });
 ```
 
-`src/content.config.ts` — schema validation via Astro Content
-Collections (we lean on Astro's native validator instead of duplicating
-it):
+`src/content.config.ts` declares the content collections (sections,
+units, artifacts, registries) per [ADR-0067](../../docs/website/decisions/0067-content-collections-shape.md).
 
-```ts
-import { defineCollection } from "astro:content";
-import { glob } from "astro/loaders";
-import { ChapterSchema } from "@sophie/core/schema";
-
-const chapters = defineCollection({
-  loader: glob({ pattern: "**/*.mdx", base: "./src/content/chapters" }),
-  schema: ChapterSchema,
-});
-
-export const collections = { chapters };
-```
-
-`src/layouts/ChapterLayout.astro`:
-
-```astro
----
-import { SophieChapter } from "@sophie/astro/client";
-const { frontmatter } = Astro.props;
----
-<html lang={frontmatter.lang ?? "en"}>
-  <head>
-    <meta charset="utf-8" />
-    <title>{frontmatter.title}</title>
-  </head>
-  <body>
-    <SophieChapter client:load>
-      <main><slot /></main>
-    </SophieChapter>
-  </body>
-</html>
-```
-
-`src/pages/chapters/[...slug].astro`:
-
-```astro
----
-import { makeStaticComponents } from "@sophie/astro";
-import { getCollection, render } from "astro:content";
-import { figures } from "../../content/figures";
-import ChapterLayout from "../../layouts/ChapterLayout.astro";
-
-// Module-level: built once per page-module, shared across all rendered
-// chapters that pass through this route.
-const components = makeStaticComponents({ figures });
-
-export async function getStaticPaths() {
-  const chapters = await getCollection("chapters");
-  return chapters.map((chapter) => ({
-    params: { slug: chapter.id },
-    props: { chapter },
-  }));
-}
-
-const { chapter } = Astro.props;
-const { Content } = await render(chapter);
----
-<ChapterLayout frontmatter={chapter.data}>
-  <Content components={components} />
-</ChapterLayout>
-```
+**No `src/layouts/ChapterLayout.astro` or `src/pages/units/[unit]/reading.astro`
+in the consumer.** Both live in `@sophie/astro` and are wired through
+`injectRoute`. If a consumer ships its own `src/pages/units/[unit]/reading.astro`,
+the integration emits a build-time warning (Astro #3809 shadow-warning
+mitigation per ADR-0082 § Consequences).
 
 For interactive (persistence-bearing) callouts, the MDX file imports
 the component directly and uses `client:load` per call-site:
@@ -111,6 +61,11 @@ import { InteractiveCallout } from "@sophie/components";
   Mark when reviewed.
 </InteractiveCallout>
 ```
+
+The 5 store-backed components (`GlossaryTerm`, `KeyEquation`,
+`EquationRef`, `FigureRef`, `ChapterRef`) **require** a `client:*`
+directive per [ADR 0038 § A2.6](../../docs/website/decisions/0038-pedagogy-index-pattern.md#a26--clientload-is-mandatory-for-all-five-components);
+the audit invariant `CL1` catches missing directives at build time.
 
 ## Behavior
 

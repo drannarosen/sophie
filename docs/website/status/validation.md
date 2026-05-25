@@ -23,32 +23,32 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 
 | Status | Count |
 |---|---|
-| Validated | 14 |
+| Validated | 15 |
 | In progress | 19 |
 | Unvalidated | 74 |
 | Re-validation needed | 0 |
 | Missing block | 0 |
-| Total | 107 |
+| Total | 108 |
 
 ## Lifecycle summary
 
 | Lifecycle | Count |
 |---|---|
 | Shipped | 63 |
-| Accepted design | 34 |
+| Accepted design | 35 |
 | Mixed | 1 |
 | Future package split | 9 |
 | No status | 0 |
-| Total | 107 |
+| Total | 108 |
 
 ## Evidence kinds
 
 | Kind | Count |
 |---|---|
-| test | 81 |
-| chapter | 8 |
-| review | 21 |
-| deployment | 18 |
+| test | 82 |
+| chapter | 9 |
+| review | 22 |
+| deployment | 19 |
 | audit | 5 |
 | manual | 30 |
 
@@ -142,6 +142,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0079-topic-registry-and-resolution-pattern.md](/topic-registry-and-resolution-pattern/) | in progress | accepted design | 2026-05-23 | deployment, review, test |  |
 | [docs/website/decisions/0080-course-spec-format-v0-1.md](/course-spec-format-v0-1/) | in progress | shipped | 2026-05-26 | deployment, test |  |
 | [docs/website/decisions/0081-worked-example-component.md](/worked-example-component/) | in progress | shipped | 2026-05-26 | manual, test |  |
+| [docs/website/decisions/0082-chapter-layout-extraction.md](/chapter-layout-extraction/) | validated | accepted design | 2026-05-25 | chapter, deployment, review, test | PR-C consolidates ADR text + figures virtual module + shipped ChapterLayout + injected reading route + integration wiring + smoke migration into one branch (with sibling astr201 migration). Contract is locked; future routes (slides, intro/synthesis) extend by adding parallel injectRoute calls per ADR § Consequences. |
 
 ### Reference docs
 

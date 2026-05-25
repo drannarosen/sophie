@@ -15,6 +15,7 @@
       "import": "./dist/client/SophieChapter.js"
     },
     "./components/TextbookLayout.astro": "./dist/components/TextbookLayout.astro",
+    "./components/ChapterLayout.astro": "./dist/components/ChapterLayout.astro",
     "./components/TextbookHead.astro": "./dist/components/TextbookHead.astro",
     "./components/TopBar.astro": "./dist/components/TopBar.astro",
     "./components/Sidebar.astro": "./dist/components/Sidebar.astro",
@@ -55,6 +56,7 @@
     "./components/ChapterPagination.astro": "./dist/components/ChapterPagination.astro",
     "./components/ChapterTitle.astro": "./dist/components/ChapterTitle.astro",
     "./components/TocToggle.astro": "./dist/components/TocToggle.astro",
+    "./routes/reading.astro": "./dist/routes/reading.astro",
     "./styles/textbook-layout.css": "./dist/styles/textbook-layout.css"
   },
   "files": [
@@ -62,7 +64,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsup && mkdir -p dist/components/_shared dist/styles && cp src/components/*.astro dist/components/ && cp src/components/_shared/*.astro dist/components/_shared/ && cp src/styles/*.css dist/styles/",
+    "build": "tsup && mkdir -p dist/components/_shared dist/styles dist/routes && cp src/components/*.astro dist/components/ && cp src/components/_shared/*.astro dist/components/_shared/ && cp src/styles/*.css dist/styles/ && cp src/routes/*.astro dist/routes/",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
     "test:unit": "vitest run --coverage",

@@ -1,16 +1,25 @@
-import { resolve } from "node:path";
+import fs from "node:fs";
+import path, { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import mdx from "@astrojs/mdx";
 import react from "@astrojs/react";
+import type { FigureRegistryEntry } from "@sophie/core/schema";
 import type { AstroIntegration } from "astro";
+import { figuresVirtualModule } from "./lib/figures-virtual-module.ts";
 import { skillReviewResolverVitePlugin } from "./lib/mdx-plugins/skill-review-resolver-vite.ts";
 import { buildPagefindIndex } from "./lib/pagefind-postbuild.ts";
 import { pedagogyIndexVirtualModule } from "./lib/pedagogy-index-virtual-module.ts";
 import { sophieMdxOptions } from "./mdx-config.ts";
 
 export interface SophieIntegrationOptions {
-  // Reserved for future. Phase 5 will add `profile` and others.
-  readonly _reserved?: never;
+  /**
+   * Consumer-supplied figure registry (name-indexed map). Exposed to
+   * the platform-shipped ChapterLayout + reading route through the
+   * `virtual:sophie/figures` virtual module per ADR 0082. Required —
+   * the injected `/units/[unit]/reading` route imports figures from
+   * this virtual module, so consumers MUST pass their registry.
+   */
+  readonly figures: Record<string, FigureRegistryEntry>;
 }
 
 /**
@@ -78,12 +87,12 @@ const VITE_BUILD_EXTERNAL: (string | RegExp)[] = [
 ];
 
 export function defineSophieIntegration(
-  _options?: SophieIntegrationOptions
+  options: SophieIntegrationOptions
 ): AstroIntegration {
   return {
     name: "@sophie/astro",
     hooks: {
-      "astro:config:setup": ({ updateConfig, logger }) => {
+      "astro:config:setup": ({ config, injectRoute, updateConfig, logger }) => {
         const topicsDir = resolve(process.cwd(), "src/content/topics");
         updateConfig({
           integrations: [mdx(sophieMdxOptions), react()],
@@ -101,6 +110,12 @@ export function defineSophieIntegration(
               // Production builds don't fire handleHotUpdate; this only
               // engages in dev mode.
               skillReviewResolverVitePlugin({ topicsDir }) as never,
+              // ADR 0082 — consumer-supplied figure registry exposed as
+              // `virtual:sophie/figures` for the platform-shipped
+              // ChapterLayout + reading route. Captured by closure at
+              // config-parse time; figures changes require a dev-
+              // server restart (no HMR by design).
+              figuresVirtualModule(options.figures) as never,
             ],
             ssr: {
               noExternal: SOPHIE_NO_EXTERNAL,
@@ -112,6 +127,36 @@ export function defineSophieIntegration(
             },
           },
         });
+
+        // ADR 0082 — inject the canonical reading route from
+        // @sophie/astro. The route imports figures from
+        // virtual:sophie/figures (wired above) and ChapterLayout from
+        // the platform package, so consumers no longer maintain their
+        // own copy.
+        injectRoute({
+          pattern: "/units/[unit]/reading",
+          entrypoint: "@sophie/astro/routes/reading.astro",
+        });
+
+        // ADR 0082 § A2.6 — warn when a consumer ships a file at the
+        // same route pattern as the injected route. Per Astro #3809,
+        // file-based routes win over injected routes silently; surfacing
+        // this at config-setup time prevents confusion when the
+        // platform route appears not to apply.
+        const consumerRoot = fileURLToPath(config.root);
+        const consumerRoutePath = path.join(
+          consumerRoot,
+          "src/pages/units/[unit]/reading.astro"
+        );
+        if (fs.existsSync(consumerRoutePath)) {
+          logger.warn(
+            `[sophie] Consumer has src/pages/units/[unit]/reading.astro at ${consumerRoutePath}. ` +
+              `This will shadow the injected route from @sophie/astro/routes/reading.astro ` +
+              `(Astro issue #3809). Delete the consumer file to use the platform's reading route. ` +
+              `See ADR-0082 § A2.6.`
+          );
+        }
+
         logger.info("Sophie integration loaded (MDX + React)");
       },
       "astro:build:done": async ({ dir, logger }) => {
