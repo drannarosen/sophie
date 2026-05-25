@@ -1,5 +1,5 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { expectChapterA11y } from "./_helpers/axe";
 
 const CHAPTER_URL = "/units/measuring-the-sky/reading";
 
@@ -76,9 +76,6 @@ test.describe("PR 10: chapter print contract", () => {
   test("axe-core passes under media: print", async ({ page }) => {
     await page.goto(CHAPTER_URL);
     await page.emulateMedia({ media: "print" });
-    const results = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"])
-      .analyze();
-    expect(results.violations).toEqual([]);
+    await expectChapterA11y(page);
   });
 });
