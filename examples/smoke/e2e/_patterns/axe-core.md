@@ -9,10 +9,11 @@ axe-core tests are mandatory on every component PR. For e2e specs,
 that means: **every spec touching rendered chapter HTML ends with a
 call to the shared `expectChapterA11y(page)` helper.**
 
-The helper centralizes Sophie's standard a11y tag set — WCAG 2.1 AA
-plus the R10 landmark checks — so individual specs don't drift on
-which tags they pass to `AxeBuilder`. One helper, one tag list, one
-class of bugs caught uniformly across the suite.
+The helper centralizes Sophie's standard a11y tag set — WCAG 2.0 A/AA
++ WCAG 2.1 A/AA + `best-practice` (which transitively includes the R10
+landmark rules) — so individual specs don't drift on which tags they
+pass to `AxeBuilder`. One helper, one tag list, one class of bugs
+caught uniformly across the suite.
 
 ## The shape
 
