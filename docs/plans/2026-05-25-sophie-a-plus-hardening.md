@@ -18,7 +18,7 @@
 
 **Files:**
 - Create branch: `feat/a-plus-phase-a-adr-hygiene`
-- Worktree location: `../sophie-a-plus-phase-a/` (sibling to the main repo)
+- Worktree location: `.worktrees/sophie-a-plus-phase-a/` (per Sophie's [[feedback-worktree-location]] convention — worktrees live inside the repo at `.worktrees/<branch>/`, gitignored)
 
 **Step 1: Verify clean main**
 
@@ -29,12 +29,12 @@ Expected: `nothing to commit, working tree clean` on `main` at `02f287a docs(rev
 
 Use @superpowers:using-git-worktrees.
 
-Run: `git worktree add ../sophie-a-plus-phase-a -b feat/a-plus-phase-a-adr-hygiene`
+Run: `git worktree add .worktrees/sophie-a-plus-phase-a -b feat/a-plus-phase-a-adr-hygiene`
 Expected: `Preparing worktree (new branch 'feat/a-plus-phase-a-adr-hygiene') HEAD is now at 02f287a docs(reviews): ...`
 
 **Step 3: cd into the worktree**
 
-Run: `cd ../sophie-a-plus-phase-a && pnpm install --frozen-lockfile`
+Run: `cd .worktrees/sophie-a-plus-phase-a && pnpm install --frozen-lockfile`
 Expected: `Lockfile is up to date, resolution step is skipped` then dependencies installed in ~30s.
 
 **No test, no commit — setup only. Subsequent tasks happen inside the worktree.**
@@ -382,7 +382,7 @@ Expected: HEAD is the squash-merge of Phase A.
 
 **Step 2: Create Phase B worktree**
 
-Run: `git worktree add ../sophie-a-plus-phase-b -b feat/a-plus-phase-b-sota-test-patterns && cd ../sophie-a-plus-phase-b && pnpm install --frozen-lockfile`
+Run: `git worktree add .worktrees/sophie-a-plus-phase-b -b feat/a-plus-phase-b-sota-test-patterns && cd .worktrees/sophie-a-plus-phase-b && pnpm install --frozen-lockfile`
 
 ### Task B.2: Codify the canonical patterns under examples/smoke/e2e/\_patterns/
 
@@ -1052,11 +1052,11 @@ After all 5 phases merge:
 
 ```bash
 cd /Users/anna/Teaching/sophie
-git worktree remove ../sophie-a-plus-phase-a
-git worktree remove ../sophie-a-plus-phase-b
-git worktree remove ../sophie-a-plus-phase-c
-git worktree remove ../sophie-a-plus-phase-d
-git worktree remove ../sophie-a-plus-phase-e
+git worktree remove .worktrees/sophie-a-plus-phase-a
+git worktree remove .worktrees/sophie-a-plus-phase-b
+git worktree remove .worktrees/sophie-a-plus-phase-c
+git worktree remove .worktrees/sophie-a-plus-phase-d
+git worktree remove .worktrees/sophie-a-plus-phase-e
 git branch -d feat/a-plus-phase-a-adr-hygiene feat/a-plus-phase-b-sota-test-patterns feat/a-plus-phase-c-ci-gate-hardening feat/a-plus-phase-d-blackbody-extract feat/a-plus-phase-e-megafile-splits
 ```
 

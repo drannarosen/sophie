@@ -65,7 +65,7 @@ const GRANDFATHERED: ReadonlyArray<string> = [
   // Largest pedagogy-index test: extractor-side biography traversal
   // edge cases (post-C6 rename of transform-equation-biography).
   "packages/astro/src/lib/pedagogy-index/extractors/biography.test.ts",
-  // accumulator.ts itself sits between WARNING (500) and ERROR (800).
+  // accumulator.ts itself is currently above ERROR (>800 LOC).
   // Splitting the IndexAccumulator class into per-method files would
   // shadow the schema entries layout (which is already done in C4).
   // The class is one cohesive unit per ADR 0038's role-aggregation

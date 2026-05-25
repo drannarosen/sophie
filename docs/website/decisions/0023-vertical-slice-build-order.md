@@ -8,9 +8,39 @@ tags:
   - foundation
 status: shipped
 validation:
-  status: unvalidated
-  last_validated_date: null
-  evidence: []
+  status: validated
+  last_validated_date: "2026-05-25"
+  evidence:
+    - kind: review
+      ref: docs/reviews/2026-05-25-sophie-sota-audit.md
+      date: "2026-05-25"
+      notes: "Post-PR-#177 SoTA audit grades the codebase against vertical-slice posture and explicitly identifies the PR sequence #168 (chrome primitives) → #172 (useHydrated gate) → #174 (CL1 invariant) → #175 (ChapterLayout extraction) → #176 (packed-smoke gate) → #177 (_template skeleton) as the textbook lean-Phase-0 + refactor-outward shape — each PR responded to a pattern that emerged from a concrete prior consumer rather than being pre-built."
+    - kind: review
+      ref: docs/reviews/2026-05-25-state-of-sophie.md
+      date: "2026-05-25"
+      notes: "Companion state-of-platform review covers the same Session 9–11 PR arc and treats the lean-Phase-0-then-outward refactor pattern as the operating shape of the codebase."
+    - kind: deployment
+      ref: https://github.com/drannarosen/sophie/pull/175
+      date: "2026-05-25"
+      notes: "PR #175 extracted ChapterLayout + the reading route into @sophie/astro under ADR 0082 — extraction landed AFTER consumers in the smoke chapter surfaced the duplication, not speculatively pre-built. Canonical example of vertical-slice-first refactor-outward."
+    - kind: deployment
+      ref: https://github.com/drannarosen/sophie/pull/168
+      date: "2026-05-25"
+      notes: "PR #168 chrome primitives shipped AFTER pedagogy primitives stabilized — chrome demand emerged from the consumer chapter, not pre-built. The order #168-after-pedagogy is the lean-Phase-0 shape this ADR locks."
+    - kind: manual
+      ref: AGENTS.md
+      date: "2026-05-25"
+      notes: "AGENTS.md 'Locked decisions — most-cited ADRs' table names ADR 0023 explicitly as the build-order governing rule and the 'Engineering principles' section cites vertical-slice-first as the YAGNI application. The repo-root agent contract treats this ADR as in active force."
+  notes: |
+    The 2026-05-25 SoTA audit + companion state-of-platform review + the just-landed
+    PR sequence #168-#177 collectively demonstrate the ADR is in active force.
+    Each PR in the sequence extended Sophie's surface only after a concrete prior
+    consumer surfaced the need — chrome after pedagogy; ChapterLayout extraction
+    after smoke duplicated the route shape; the _template skeleton after the
+    fifth store-backed component re-paid the gate-convention recall tax. AGENTS.md
+    cites ADR 0023 as a routine-reasoning ADR that governs every PR scoping
+    decision. No remaining lean-Phase-0 work pre-dates the refactor-outward step;
+    no remaining package was speculatively pre-built under this ADR's authority.
 ---
 
 # ADR 0023: Vertical-slice-first build order for Phase 0 and beyond

@@ -7,9 +7,41 @@ tags:
   - ai-authoring
 status: shipped
 validation:
-  status: unvalidated
-  last_validated_date: null
-  evidence: []
+  status: validated
+  last_validated_date: "2026-05-25"
+  evidence:
+    - kind: manual
+      ref: AGENTS.md
+      date: "2026-05-25"
+      notes: "AGENTS.md opens with the 'HUMAN-IN-THE-LOOP MANDATE' section formalizing the supervisor/decider half of this ADR + the 'Locked decisions' table line cites ADR 0030 explicitly for the four-AI-roles half. The repo-root agent contract is the operational embodiment of this ADR's authoring model."
+    - kind: review
+      ref: docs/reviews/2026-05-25-sophie-sota-audit.md
+      date: "2026-05-25"
+      notes: "The SoTA audit grades the codebase against the AI-author-friendly criterion (ADR 0030 + ADR 0061) and reaches A− / 87 — the grade is partly on AI-authored output quality across the post-#168 PR arc."
+    - kind: review
+      ref: docs/reviews/2026-05-25-state-of-sophie.md
+      date: "2026-05-25"
+      notes: "State-of-platform review's Design-system 18/20 grade is partly anchored on AI-authored component output landed under HITL supervision. The 18/20 ceiling is a concrete signal that the four-role + supervisor model is producing publishable output, not just functional code."
+    - kind: deployment
+      ref: https://github.com/drannarosen/sophie/pull/177
+      date: "2026-05-25"
+      notes: "PR #177 (_template skeleton) was AI-authored under Anna's HITL supervision — the post-PR-172 audit + the _template skeleton + the expect.poll/defs audits all landed in one squash-merge after iterative Claude-authored proposals + Anna-approved scope adjustments. Sibling ADRs 0083, 0084, 0085 (just-landed in this Phase A PR) were likewise AI-authored under HITL supervision."
+    - kind: audit
+      ref: packages/astro/src/lib/pedagogy-audit/runner.ts
+      date: "2026-05-25"
+      notes: "The pedagogy-audit runner is the structural-supervision surface this ADR enables: the AI primary-authors against pedagogy contracts; the audit invariants V0–V8 + the extractor pipeline + the validation tracker (ADR 0056) are what let the instructor review at scale rather than line-by-line. The runner's existence is the load-bearing infrastructure validating 'HITL is structural, not advisory.'"
+  notes: |
+    The HITL mandate codified in AGENTS.md + the entire post-PR-#168 commit log
+    (every commit AI-authored under Anna's review) + the just-landed family of
+    ADRs 0083/0084/0085 (each AI-drafted under HITL supervision in this same
+    Phase A PR) together constitute the operating evidence that the four-AI-role
+    + supervisor model is in active force. The Design-system 18/20 grade in the
+    state-of-platform review is a concrete output-quality signal. The pedagogy-
+    audit runner is the structural-supervision infrastructure that makes
+    instructor-as-supervisor tractable at the scale of an AI-primary-author
+    codebase. Multi-cohort outcomes from the AI-author-as-content-author path
+    (downstream ASTR 201 fa26 cohort) remain deferred to a future re-validation;
+    the AI-author-of-platform-code path (ADR 0061 amendment) is fully shipped.
 ---
 
 # ADR 0030: Audience priority and AI-as-primary-author / instructor-as-supervisor

@@ -13,9 +13,9 @@ validation:
   last_validated_date: "2026-05-25"
   evidence:
     - kind: test
-      ref: packages/astro/src/lib/pedagogy-index-extractor.test.ts
+      ref: packages/astro/src/lib/pedagogy-index/
       date: "2026-05-13"
-      notes: "Extractor coverage: definitions, equations, key insights, misconceptions, objectives, inline-refs, figures."
+      notes: "Extractor coverage: definitions, equations, key insights, misconceptions, objectives, inline-refs, figures. Per-file tests under the directory (accumulator.test.ts, orchestrator.test.ts, mdx-compile.test.ts, snapshot.test.ts, plus per-extractor tests under extractors/) post-refactor from the original single pedagogy-index-extractor.ts."
     - kind: test
       ref: packages/astro/src/lib/pedagogy-audit.test.ts
       date: "2026-05-15"
@@ -828,3 +828,17 @@ flowing prose in the footnote; the **popover** still receives the
 full block structure (its `<div>` container is block-safe). New
 unit test fixture `multi-block` pins the contract; existing tests
 unchanged.
+
+## ADR 0038 family — hydration-class defenses
+
+Four ADRs collectively close the React #418 hydration regression class
+for store-backed components in packed consumers:
+
+- ADR 0038 Amendment 2 — `useHydrated`-gate at the top of render (runtime)
+- [ADR 0083](0083-cl1-client-directive-invariant.md) — CL1 build-time audit invariant
+- [ADR 0084](0084-packed-smoke-ci-gate.md) — packed-smoke CI gate
+- [ADR 0085](0085-component-template-skeleton.md) — `_template/` skeleton authoring affordance
+
+Each is a structural class-of-issue defense; together they cover the
+runtime, build-time-static-analysis, CI-runtime, and authoring-
+affordance layers.
