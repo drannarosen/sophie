@@ -236,7 +236,7 @@ test.describe("Phase 0 vertical-slice acceptance — spoiler-alerts chapter", ()
     await page.reload();
     await expect(
       page.locator("label", { hasText: "Reviewed" }).first()
-    ).toBeVisible({ timeout: 5000 });
+    ).toBeVisible();
 
     // Verify the underlying DB exists with the expected key.
     const storedValue = await page.evaluate(async () => {
