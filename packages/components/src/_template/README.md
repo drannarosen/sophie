@@ -14,6 +14,13 @@ remember from scratch.
    and replace `template-store.ts` with the real store-lookup module
    (or import the existing one — see `GlossaryTerm/definitions-store.ts`
    for the build-time pedagogy-index pattern).
+2.5. **Fix the relative import depth.** The template lives at
+   `src/_template/Template.tsx` (one level under `src/`) and imports
+   `useHydrated` from `../runtime/useHydrated.ts`. After copying to
+   `src/components/<ComponentName>/<ComponentName>.tsx` (two levels
+   under `src/`), update that import to `../../runtime/useHydrated.ts`.
+   TypeScript will flag it immediately if you forget, but the README
+   surfaces it to save the round-trip.
 3. **Replace `lookupX` with your actual store-lookup.** Real components
    source data from `virtual:sophie/pedagogy-index` (ADR 0038) or a
    sibling Zustand store — pick the pattern that matches your data
@@ -67,7 +74,7 @@ appears once `useEffect` flips the gate.
 
 ## References
 
-- [ADR 0038 § A2.2 — The convention: `useHydrated` gate at the top of render](../../../../docs/website/decisions/0038-build-time-pedagogy-index.md)
-- [ADR 0038 § A2.6 — `client:load` is mandatory for all five components](../../../../docs/website/decisions/0038-build-time-pedagogy-index.md)
+- [ADR 0038 § A2.2 — The convention: `useHydrated` gate at the top of render](../../../../docs/website/decisions/0038-pedagogy-index-pattern.md#a22--the-convention-usehydrated-gate-at-the-top-of-render)
+- [ADR 0038 § A2.6 — `client:load` is mandatory for all five components](../../../../docs/website/decisions/0038-pedagogy-index-pattern.md#a26--clientload-is-mandatory-for-all-five-components)
 - [`useHydrated` runtime hook](../runtime/useHydrated.ts)
 - PR #172 — the original race-and-fix that established the gate.
