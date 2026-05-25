@@ -36,10 +36,9 @@ test.describe("Bug 1 — GlossaryTerm prose integrity", () => {
     // saw 22). Poll the trigger count until it settles above the test's
     // threshold — condition-based wait on the actual stable state.
     await expect
-      .poll(
-        () => page.locator(".sophie-content a[class*='trigger']").count(),
-        { timeout: 10_000 }
-      )
+      .poll(() => page.locator(".sophie-content a[class*='trigger']").count(), {
+        timeout: 10_000,
+      })
       .toBeGreaterThan(15);
     const stats = await page.evaluate(() => {
       // A "suspect" paragraph is one where:
@@ -105,10 +104,9 @@ test.describe("Bug 1 — GlossaryTerm prose integrity", () => {
     // above for rationale. Footnotes appear under the same gate as the
     // triggers, so poll on footnote count directly.
     await expect
-      .poll(
-        () => page.locator(".sophie-glossary-footnote").count(),
-        { timeout: 10_000 }
-      )
+      .poll(() => page.locator(".sophie-glossary-footnote").count(), {
+        timeout: 10_000,
+      })
       .toBeGreaterThan(10);
     const stats = await page.evaluate(() => {
       const fns = Array.from(
