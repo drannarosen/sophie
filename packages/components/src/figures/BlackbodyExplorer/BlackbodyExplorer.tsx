@@ -1,6 +1,16 @@
 import * as Plot from "@observablehq/plot";
 import { Sun, Telescope } from "lucide-react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
+import {
+  blackbodyToSrgb,
+  nmToCm,
+  planckLambda,
+  rayleighJeansLambda,
+  spectralClassification,
+  stefanBoltzmannFlux,
+  wienApproxLambda,
+  wienPeakWavelengthCm,
+} from "../../_physics/blackbody.ts";
 import { ParameterCursor } from "../../interactive/ParameterCursor.tsx";
 import { ParameterSlider } from "../../interactive/ParameterSlider.tsx";
 import { useParameterStore } from "../../interactive/store.ts";
@@ -10,17 +20,7 @@ import {
   type BlackbodyExplorerProps,
   BlackbodyExplorerPropsSchema,
 } from "./BlackbodyExplorer.schema.ts";
-import { blackbodyToSrgb } from "./chromaticity.ts";
-import { spectralClassification } from "./classification.ts";
 import { InlineMath } from "./InlineMath.tsx";
-import {
-  nmToCm,
-  planckLambda,
-  rayleighJeansLambda,
-  stefanBoltzmannFlux,
-  wienApproxLambda,
-  wienPeakWavelengthCm,
-} from "./physics.ts";
 
 // Astronomy constants in the figure scope.
 const T_SUN = 5772; // IAU 2015 nominal solar effective temperature.

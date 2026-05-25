@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { spectralClassification } from "./classification.ts";
+import { spectralClassification } from "./blackbody.ts";
 
 describe("spectralClassification", () => {
   test("Sun (5772 K) classifies as G2", () => {
