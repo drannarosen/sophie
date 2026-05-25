@@ -8,9 +8,40 @@ tags:
   - foundation
 status: shipped
 validation:
-  status: unvalidated
-  last_validated_date: null
-  evidence: []
+  status: validated
+  last_validated_date: "2026-05-25"
+  evidence:
+    - kind: deployment
+      ref: scripts/loc-budget.ts
+      date: "2026-05-25"
+      notes: "Rule 3 (300/500/800 LOC budget) is enforced by this script with `process.exit(1)` on non-exempt ERROR. The schema-registry + barrel exemptions specified in Rule 3 are encoded directly in the script. CI lint job runs `pnpm lint:loc` as a required gate."
+    - kind: deployment
+      ref: .github/workflows/ci.yml
+      date: "2026-05-25"
+      notes: "The lint job in the CI workflow wires `pnpm lint:loc` as a required pre-merge gate (alongside biome + status). Rule 3 is fail-loud at the workflow level, not advisory."
+    - kind: manual
+      ref: packages/components/src/_template/README.md
+      date: "2026-05-25"
+      notes: "Rule 1 (focused files) + Rule 6 (tests split with source) shipped in PR #177 as the `_template/` skeleton — four files under 200 LOC total, sibling co-located with the components it seeds. Formalized in just-landed ADR 0085."
+    - kind: review
+      ref: docs/reviews/2026-05-25-sophie-sota-audit.md
+      date: "2026-05-25"
+      notes: "The SoTA audit's LOC-budget compliance section verifies Rule 3 enforcement is in active force across packages/ + examples/ + scripts/. Grandfathered exemptions are listed explicitly; no non-exempt ERROR-tier file remains."
+    - kind: test
+      ref: packages/components/src/_template/Template.test.tsx
+      date: "2026-05-25"
+      notes: "Two meta-tests in the unit suite (SSR snapshot + post-mount hydration assertion) are Rule 6 in action — tests split with source, co-located with the skeleton they exercise. A regression on the gate convention breaks this file FIRST, before propagating to component copy-pastes."
+  notes: |
+    Rule 3's CI enforcement via `scripts/loc-budget.ts` + the `_template/` skeleton
+    embodying Rules 1 + 6 (shipped in PR #177, formalized in just-landed ADR 0085)
+    + the SoTA audit's verification of LOC-budget compliance constitute the
+    concrete operating evidence. Rules 2 (Write-over-Edit), 4 (filename-as-routing),
+    and 5 (atomic docs) are author-discipline rules — their enforcement is at the
+    review-rules R6-R10 layer (AGENTS.md) rather than CI, and the post-#168 PR arc
+    shows them in operating use (focused-files ADRs 0083/0084/0085; atomic doc
+    updates landing in the same PRs as code under AGENTS.md's 'Docs don't drift
+    from code' discipline rule). The validation-tracker pattern (ADR 0056) is the
+    atomic-docs rule enacted at the contract layer.
 ---
 
 # ADR 0061: AI-optimized codebase design

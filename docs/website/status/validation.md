@@ -23,9 +23,9 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 
 | Status | Count |
 |---|---|
-| Validated | 18 |
+| Validated | 21 |
 | In progress | 19 |
-| Unvalidated | 74 |
+| Unvalidated | 71 |
 | Re-validation needed | 0 |
 | Missing block | 0 |
 | Total | 111 |
@@ -45,12 +45,12 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 
 | Kind | Count |
 |---|---|
-| test | 86 |
+| test | 87 |
 | chapter | 9 |
-| review | 22 |
-| deployment | 22 |
-| audit | 7 |
-| manual | 33 |
+| review | 27 |
+| deployment | 27 |
+| audit | 8 |
+| manual | 36 |
 
 ## Extractor findings
 
@@ -84,14 +84,14 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0020-shiki-syntax-highlighting.md](/shiki-syntax-highlighting/) | unvalidated | accepted design | — | — |  |
 | [docs/website/decisions/0021-observable-plot-data-viz.md](/observable-plot-data-viz/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0022-tsup-library-builds.md](/tsup-library-builds/) | unvalidated | shipped | — | — |  |
-| [docs/website/decisions/0023-vertical-slice-build-order.md](/vertical-slice-build-order/) | unvalidated | shipped | — | — |  |
+| [docs/website/decisions/0023-vertical-slice-build-order.md](/vertical-slice-build-order/) | validated | shipped | 2026-05-25 | deployment, manual, review | The 2026-05-25 SoTA audit + companion state-of-platform review + the just-landed PR sequence #168-#177 collectively demonstrate the ADR is in active force. Each PR in the sequence extended Sophie's surface only after a concrete prior consumer surfaced the need — chrome after pedagogy; ChapterLayout extraction after smoke duplicated the route shape; the _template skeleton after the fifth store-backed component re-paid the gate-convention recall tax. AGENTS.md cites ADR 0023 as a routine-reasoning ADR that governs every PR scoping decision. No remaining lean-Phase-0 work pre-dates the refactor-outward step; no remaining package was speculatively pre-built under this ADR's authority.  |
 | [docs/website/decisions/0024-license-agpl.md](/license-agpl/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0025-phase-0-actual-scope.md](/phase-0-actual-scope/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0026-tailwind-v4-css-first.md](/tailwind-v4-css-first/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0027-mdx-render-boundary-prop-threading.md](/mdx-render-boundary-prop-threading/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0028-storybook-setup.md](/storybook-setup/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0029-broadcast-channel-last-write-wins.md](/broadcast-channel-last-write-wins/) | validated | shipped | 2026-05-22 | review, test | ADR 0007 refinement; LWW timestamping confirmed via the useInteractive + useInteractiveRange test suites. 2026-05-22 Wedge B1 amendment: same-tab local fan-out added to unblock sibling-hook same-tab sync (senderId guard preserves the no-self-echo semantic). No cross-tab production cohort data yet (deferred to fa26). |
-| [docs/website/decisions/0030-audience-and-ai-author-model.md](/audience-and-ai-author-model/) | unvalidated | shipped | — | — |  |
+| [docs/website/decisions/0030-audience-and-ai-author-model.md](/audience-and-ai-author-model/) | validated | shipped | 2026-05-25 | audit, deployment, manual, review | The HITL mandate codified in AGENTS.md + the entire post-PR-#168 commit log (every commit AI-authored under Anna's review) + the just-landed family of ADRs 0083/0084/0085 (each AI-drafted under HITL supervision in this same Phase A PR) together constitute the operating evidence that the four-AI-role + supervisor model is in active force. The Design-system 18/20 grade in the state-of-platform review is a concrete output-quality signal. The pedagogy- audit runner is the structural-supervision infrastructure that makes instructor-as-supervisor tractable at the scale of an AI-primary-author codebase. Multi-cohort outcomes from the AI-author-as-content-author path (downstream ASTR 201 fa26 cohort) remain deferred to a future re-validation; the AI-author-of-platform-code path (ADR 0061 amendment) is fully shipped.  |
 | [docs/website/decisions/0031-compound-component-layout-primitives.md](/compound-component-layout-primitives/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0032-vanilla-js-chrome-state.md](/vanilla-js-chrome-state/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0033-is-inline-outside-react-island.md](/is-inline-outside-react-island/) | unvalidated | shipped | — | — |  |
@@ -121,7 +121,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0058-epistemic-component-contract.md](/epistemic-component-contract/) | in progress | shipped | 2026-05-23 | deployment, test |  |
 | [docs/website/decisions/0059-linked-representation-state-primitive.md](/linked-representation-state-primitive/) | unvalidated | accepted design | — | — |  |
 | [docs/website/decisions/0060-registry-ecosystem.md](/registry-ecosystem/) | unvalidated | accepted design | — | — |  |
-| [docs/website/decisions/0061-ai-optimized-codebase-design.md](/ai-optimized-codebase-design/) | unvalidated | shipped | — | — |  |
+| [docs/website/decisions/0061-ai-optimized-codebase-design.md](/ai-optimized-codebase-design/) | validated | shipped | 2026-05-25 | deployment, manual, review, test | Rule 3's CI enforcement via `scripts/loc-budget.ts` + the `_template/` skeleton embodying Rules 1 + 6 (shipped in PR #177, formalized in just-landed ADR 0085) + the SoTA audit's verification of LOC-budget compliance constitute the concrete operating evidence. Rules 2 (Write-over-Edit), 4 (filename-as-routing), and 5 (atomic docs) are author-discipline rules — their enforcement is at the review-rules R6-R10 layer (AGENTS.md) rather than CI, and the post-#168 PR arc shows them in operating use (focused-files ADRs 0083/0084/0085; atomic doc updates landing in the same PRs as code under AGENTS.md's 'Docs don't drift from code' discipline rule). The validation-tracker pattern (ADR 0056) is the atomic-docs rule enacted at the contract layer.  |
 | [docs/website/decisions/0062-page-status-frontmatter-enum.md](/page-status-frontmatter-enum/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0063-omiflow-composite-primitive.md](/omiflow-composite-primitive/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0064-chapter-migration-playbook.md](/chapter-migration-playbook/) | unvalidated | shipped | — | — |  |
