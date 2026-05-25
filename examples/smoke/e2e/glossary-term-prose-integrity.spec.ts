@@ -25,6 +25,18 @@ test.describe("Bug 1 — GlossaryTerm prose integrity", () => {
     page,
   }) => {
     await page.goto(CHAPTER_URL);
+    // Post-ADR-0038-Amendment-2 (2026-05-25): GlossaryTerm renders only
+    // its bare children at SSR + first client render (useHydrated gate),
+    // so the trigger anchors + first-use footnotes appear post-mount.
+    // Wait for the hydration signal on the first anchor before measuring
+    // — condition-based waiting on the same `data-react-hydrated="true"`
+    // marker the unit tests assert in jsdom. The chapter has 22+
+    // first-use callsites; once the first one flips hydrated, all
+    // others are mounting in the same React commit pass.
+    await page
+      .locator('a[class*="trigger"][data-react-hydrated="true"]')
+      .first()
+      .waitFor();
     const stats = await page.evaluate(() => {
       // A "suspect" paragraph is one where:
       //   1. The paragraph contains a GlossaryTerm trigger anchor.
@@ -85,6 +97,12 @@ test.describe("Bug 1 — GlossaryTerm prose integrity", () => {
     // only remaining content). Test the inverse: a populated, p-free
     // footnote span proves the fix is in place.
     await page.goto(CHAPTER_URL);
+    // Post-ADR-0038-Amendment-2 hydration-gate wait — see sibling test
+    // above for rationale.
+    await page
+      .locator('a[class*="trigger"][data-react-hydrated="true"]')
+      .first()
+      .waitFor();
     const stats = await page.evaluate(() => {
       const fns = Array.from(
         document.querySelectorAll(".sophie-glossary-footnote")
