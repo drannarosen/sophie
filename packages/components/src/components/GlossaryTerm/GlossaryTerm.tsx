@@ -46,11 +46,20 @@ export function GlossaryTerm({
 }: GlossaryTermRuntimeProps) {
   const slug = slugify(name);
   const entry = lookupDefinition(slug);
-  // E2E hydration signal (followup #10): flips to "true" after
-  // useEffect runs, so Playwright can wait on the trigger being
-  // fully interactive before hovering. `networkidle` is unreliable
-  // when Astro islands hydrate after the network goes quiet.
+  // Hydration-gate (Phase 1.5 evidence, 2026-05-25). Packed-copy
+  // consumers (e.g. astr201) populate the pedagogy store AFTER island
+  // SSR — the server pass sees an empty store and emits the bare
+  // fallback, while the client's first render sees the script-tag-
+  // auto-hydrated store and emits the full <a>+popover tree. Same
+  // component, two tree shapes → React #418. Gating render on
+  // `useHydrated` forces SSR + first client render to emit only bare
+  // children regardless of store state; the full tree appears once
+  // the mount-effect flips the gate. The same hook drives the e2e
+  // hydration signal (followup #10) on the post-hydration anchor.
   const hydrated = useHydrated();
+  if (!hydrated) {
+    return <>{children}</>;
+  }
 
   if (!entry) {
     // Dev-only signal so authoring drift is visible. Production

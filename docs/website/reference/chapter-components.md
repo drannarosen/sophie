@@ -288,6 +288,28 @@ Each carries the new `data-react-hydrated="true"` attribute after
 mount via the `useHydrated()` hook (Phase 1 item #10 pattern); e2e
 tests wait on this signal before exercising hover behavior.
 
+**SSR fallback (Phase 1.5 hydration-gate, 2026-05-25).** All four
+hover-interactive cross-references (`<GlossaryTerm>`, `<EquationRef>`,
+`<FigureRef>`, `<ChapterRef>`) plus the block-level `<KeyEquation>`
+gate their store-backed render on `useHydrated()`. At SSR and on the
+first client render the gate is closed: the component emits only its
+text fallback (`<>{children}</>` for `<GlossaryTerm>` /
+`<KeyEquation>` / `<FigureRef>`; `<>{children ?? refId}</>` for
+`<EquationRef>`; `<>{children ?? chapter}</>` for `<ChapterRef>`),
+without the `<a class="trigger">` anchor, the Radix HoverCard
+machinery, or `<KeyEquation>`'s `<section>` card. The full tree
+appears once the mount-effect flips the gate. This is by design — it
+defends the whole class of store-backed components against the
+packed-copy-consumer SSR-ordering bug that surfaced 12 × React #418
+errors on the astr201 lecture-02 reading page (the pedagogy stores
+are populated *after* island-SSR runs in packed builds, so reading
+the store during SSR produces a different tree shape than the
+post-hydration client render → React #418). Author-visible
+consequences: SEO and no-JS readers see the prose unchanged but
+without the cross-reference affordances; readers with JS see the
+chrome appear within ~one frame of hydration. See ADR 0038 +
+[Sprint K diagnostic comment in `GlossaryTerm.tsx:63-69`].
+
 ### Astro consumer (server-rendered aggregator)
 
 #### Chapter-level (used inside MDX)

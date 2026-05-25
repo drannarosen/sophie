@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { axe } from "jest-axe";
+import { renderToString } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 // Mock the registry store BEFORE importing the component. Mirrors the
@@ -159,6 +160,29 @@ describe("<KeyEquation> (ADR 0060 registry-shaped)", () => {
       expect.stringMatching(/keyequation.*nonexistent/i)
     );
     warn.mockRestore();
+  });
+
+  // Hydration-gate regression (Phase 1.5 evidence, 2026-05-25). Same
+  // class of bug as GlossaryTerm: packed-copy consumers (e.g. astr201)
+  // populate the equation store AFTER island SSR. SSR sees empty store
+  // → bare <astro-slot>framing prose</astro-slot>; client first render
+  // sees the script-tag-auto-hydrated store → full <section> card.
+  // Same component, two tree shapes → React #418 (×3 on astr201's
+  // lecture-02 reading page). Gating render on `useHydrated()` forces
+  // SSR + first client render to emit only the framing prose
+  // regardless of store state; the full card appears post-mount.
+  it("renders only framing prose at SSR even when refId resolves (useHydrated gate)", () => {
+    const html = renderToString(
+      <KeyEquation refId='wiens-law'>
+        <p>SSR framing prose for the equation.</p>
+      </KeyEquation>
+    );
+    // SSR snapshot must not contain the post-hydration <section> card
+    // or its <header>/<dl>/<details> sub-machinery — only the children.
+    expect(html).not.toMatch(/<section\b/i);
+    expect(html).not.toMatch(/<header\b/i);
+    expect(html).not.toMatch(/<details\b/i);
+    expect(html).toContain("SSR framing prose for the equation.");
   });
 
   it("is axe-clean for the full Wien's-law render", async () => {

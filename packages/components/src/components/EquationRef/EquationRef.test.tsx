@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { axe } from "jest-axe";
+import { renderToString } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 // Mock the store BEFORE importing the component so vitest's
@@ -101,6 +102,28 @@ describe("<EquationRef>", () => {
       );
       const results = await axe(container);
       expect(results.violations).toEqual([]);
+    });
+  });
+
+  describe("hydration gate", () => {
+    // Phase 1.5 class fix (2026-05-25). Same SSR-store-empty mismatch
+    // as GlossaryTerm + KeyEquation: packed-copy consumers populate
+    // the equation store AFTER island SSR. Without a gate, SSR emits
+    // the bare fallback while client renders the full <a class="trigger">
+    // → React #418. Gating render on `useHydrated()` defends the class.
+    it("renders only the fallback at SSR even when refId resolves", () => {
+      const html = renderToString(
+        <EquationRef refId='inverse-square-law'>see the law</EquationRef>
+      );
+      expect(html).not.toMatch(/<a\b/i);
+      expect(html).not.toMatch(/data-radix/i);
+      expect(html).toContain("see the law");
+    });
+
+    it("self-closing form: SSR emits the refId as bare text (gate closed)", () => {
+      const html = renderToString(<EquationRef refId='inverse-square-law' />);
+      expect(html).not.toMatch(/<a\b/i);
+      expect(html).toContain("inverse-square-law");
     });
   });
 

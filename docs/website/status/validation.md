@@ -45,8 +45,8 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 
 | Kind | Count |
 |---|---|
-| test | 76 |
-| chapter | 7 |
+| test | 81 |
+| chapter | 8 |
 | review | 21 |
 | deployment | 18 |
 | audit | 5 |
@@ -99,7 +99,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0035-token-naming-flat-kindless.md](/token-naming-flat-kindless/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0036-define-preference-factory-pattern.md](/define-preference-factory-pattern/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0037-cross-bundle-dom-attribute-observation.md](/cross-bundle-dom-attribute-observation/) | unvalidated | shipped | — | — |  |
-| [docs/website/decisions/0038-pedagogy-index-pattern.md](/pedagogy-index-pattern/) | validated | shipped | 2026-05-16 | audit, chapter, review, test | The pedagogy-index pattern is the load-bearing reference architecture for ADRs 0042/0043/0044/0045/0056; pattern itself is validated, downstream consumers ship in tranches (see 0044/0045/0046 in-progress). |
+| [docs/website/decisions/0038-pedagogy-index-pattern.md](/pedagogy-index-pattern/) | validated | shipped | 2026-05-25 | audit, chapter, review, test | The pedagogy-index pattern is the load-bearing reference architecture for ADRs 0042/0043/0044/0045/0056; pattern itself is validated, downstream consumers ship in tranches (see 0044/0045/0046 in-progress). Amendment 2 (2026-05-25) added the `useHydrated`-at-top SSR-gate convention covering the five store-gated components, defending the whole class against the packed-copy SSR-ordering hazard. |
 | [docs/website/decisions/0039-lucide-two-adapter-convention.md](/lucide-two-adapter-convention/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0040-teaching-decision-records.md](/teaching-decision-records/) | in progress | accepted design | 2026-05-16 | deployment, review | Contract spec'd + cross-referenced; tooling + TDR-coverage audit invariant not yet wired. Code lands in a follow-up PR (separate from the validation tracker rollout). |
 | [docs/website/decisions/0041-teaching-move-library.md](/teaching-move-library/) | in progress | accepted design | 2026-05-16 | deployment, manual, review | Taxonomy spec'd in reference doc; no automated audit of move IDs against pedagogy-contract.reasoning_style yet. Code follow-up tracked. |

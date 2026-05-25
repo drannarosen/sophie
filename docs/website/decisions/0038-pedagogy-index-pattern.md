@@ -10,7 +10,7 @@ tags:
 status: shipped
 validation:
   status: validated
-  last_validated_date: "2026-05-16"
+  last_validated_date: "2026-05-25"
   evidence:
     - kind: test
       ref: packages/astro/src/lib/pedagogy-index-extractor.test.ts
@@ -35,7 +35,31 @@ validation:
     - kind: review
       ref: docs/reviews/2026-05-15-bucket-b-c-architecture-audit.md
       date: "2026-05-15"
-  notes: "The pedagogy-index pattern is the load-bearing reference architecture for ADRs 0042/0043/0044/0045/0056; pattern itself is validated, downstream consumers ship in tranches (see 0044/0045/0046 in-progress)."
+    - kind: test
+      ref: packages/components/src/components/GlossaryTerm/GlossaryTerm.test.tsx
+      date: "2026-05-25"
+      notes: "Amendment 2 — useHydrated SSR-gate convention. `renderToString` test asserts SSR snapshot emits bare children (no <a class=trigger>, no Radix machinery) even when the store resolves the term."
+    - kind: test
+      ref: packages/components/src/components/KeyEquation/KeyEquation.test.tsx
+      date: "2026-05-25"
+      notes: "Amendment 2 gate test — SSR snapshot emits framing prose only (no <section>/<header>/<details>) even when the equation refId resolves."
+    - kind: test
+      ref: packages/components/src/components/EquationRef/EquationRef.test.tsx
+      date: "2026-05-25"
+      notes: "Amendment 2 gate tests — children-form and self-closing form both emit bare fallback at SSR."
+    - kind: test
+      ref: packages/components/src/components/FigureRef/FigureRef.test.tsx
+      date: "2026-05-25"
+      notes: "Amendment 2 gate test — SSR emits bare children even when figure-registry + figure-usages resolve."
+    - kind: test
+      ref: packages/components/src/components/ChapterRef/ChapterRef.test.tsx
+      date: "2026-05-25"
+      notes: "Amendment 2 gate tests — children-form and self-closing form both emit bare fallback at SSR despite the artifact/unit/section chain resolving."
+    - kind: chapter
+      ref: /Users/anna/Teaching/astr201/pilots/lecture-02-tools-of-the-trade.md
+      date: "2026-05-25"
+      notes: "Amendment 2 cross-repo verification: astr201 (first file:-packed consumer) prod console at /units/lecture-02-foundations/reading/ confirmed 0 × React #418 after re-pack. Pre-fix baseline was 12 errors (9 × GlossaryTerm + 3 × KeyEquation, pinned via unminified-React diagnostic build)."
+  notes: "The pedagogy-index pattern is the load-bearing reference architecture for ADRs 0042/0043/0044/0045/0056; pattern itself is validated, downstream consumers ship in tranches (see 0044/0045/0046 in-progress). Amendment 2 (2026-05-25) added the `useHydrated`-at-top SSR-gate convention covering the five store-gated components, defending the whole class against the packed-copy SSR-ordering hazard."
 ---
 
 # ADR 0038: Pedagogy index pattern + role-aggregation principle
@@ -611,3 +635,134 @@ way. The asymmetry lives at the *authoring* layer, not at the
 This preserves ADR 0038's original contract (one pedagogy index;
 multiple consumers; one extraction phase) while accommodating the
 registry-vs-collection distinction the ecosystem requires.
+
+## Amendment 2 (2026-05-25 — hydration-gate convention)
+
+The pedagogy-store + script-tag-auto-hydration pattern (this ADR's
+v1 design) is correct for in-workspace consumers (the smoke target),
+but has a latent **packed-copy SSR-ordering hazard** that surfaces
+React #418 errors as soon as a consumer installs `@sophie/components`
+via a `file:` packed copy. Phase 1.5 of the
+[island-hydration-gate investigation](https://github.com/drannarosen/sophie/issues)
+(2026-05-25) pinned this against astr201's lecture-02 reading page:
+12 × React #418 in production, 0 in dev, 0 in smoke prod.
+
+### A2.1 — The packed-vs-workspace SSR-ordering hazard
+
+When a consumer imports `@sophie/components` from the workspace
+(`workspace:*`), Vite resolves modules to the source `.ts` files. The
+chain `TextbookLayout` → `__setGlossaryDefinitions` →
+`pedagogy-store.set` populates the store *before* slot children
+render at SSR, so the store-gated islands (`<GlossaryTerm>`,
+`<KeyEquation>`, `<EquationRef>`, `<FigureRef>`, `<ChapterRef>`) see
+a populated store at SSR and emit the full tree.
+
+When a consumer imports `@sophie/components` from a `file:`-packed
+copy, Vite resolves to the prebuilt `dist/` JavaScript. The same
+import chain produces a *different* effective module-graph ordering
+at SSR — the chapter MDX's React-island SSR runs *before*
+`TextbookLayout`'s `__set*` setters fire. The store is empty when
+the islands render server-side, so SSR emits the bare fallback
+(`<>{children}</>`). On the client, the script-tag auto-hydration
+populates the store *before* React's first render commits, so the
+client renders the full tree. Same component, two tree shapes → React
+detects a hydration mismatch → #418 per island.
+
+Phase 1.5 evidence:
+
+- **Smoke (workspace)** `dist/units/spoiler-alerts/reading/index.html`:
+  GlossaryTerm SSR = `<a class="trigger_T-3f8" href="...">…popover…</a>`;
+  KeyEquation SSR = `<section id="inverse-square-law" class="section_PjIV6">…</section>`.
+  Console: 0 × #418.
+- **astr201 (`file:`-packed)** `dist/units/lecture-02-foundations/reading/index.html`:
+  GlossaryTerm SSR = `<astro-slot>word</astro-slot>` × 10;
+  KeyEquation SSR = framing-only × 3. Console: 12 × #418, named via
+  an unminified-React diagnostic build as 9 × `<mne>` + 3 × `<Cne>`
+  (GlossaryTerm + KeyEquation internal names).
+
+### A2.2 — The convention: `useHydrated` gate at the top of render
+
+Every component that reads any pedagogy store at render time must
+gate the entire render on `useHydrated()`:
+
+```tsx
+export function MyStoreGatedComponent({ … }: Props) {
+  const entry = lookupX(key);     // hook-rule-safe: unconditional read
+  const hydrated = useHydrated();  // hook-rule-safe: unconditional call
+  if (!hydrated) {
+    return <>{children}</>;        // or <>{children ?? key}</> per family
+  }
+  if (!entry) {
+    // dev-only authoring-drift warning, then bare fallback
+    return <>{children}</>;
+  }
+  // …full tree…
+}
+```
+
+The gate forces SSR + first client render to emit the same bare
+fallback regardless of store state; the full tree appears once the
+mount-effect flips the gate. SSR and first client render are
+hydration-safe by construction; React #418 cannot fire for the gated
+class.
+
+The five gated components at v1:
+
+| Component | Stores read | SSR fallback |
+|---|---|---|
+| `<GlossaryTerm>` | `definitions` | `<>{children}</>` |
+| `<KeyEquation>` | `equations` (+ `equationCitations` transitively) | `<>{children}</>` (framing prose only) |
+| `<EquationRef>` | `equations` (+ `equationCitations`) | `<>{children ?? refId}</>` |
+| `<FigureRef>` | `figureRegistry` + `figureUsages` | `<>{children}</>` |
+| `<ChapterRef>` | `artifacts` + `units` + `sections` | `<>{children ?? chapter}</>` |
+
+### A2.3 — Tradeoff and author-visible behavior
+
+The fallback tree is the canonical prose; the cross-reference
+chrome (`<a class="trigger">`, Radix HoverCard, `<section>` cards)
+appears one frame after hydration. SEO crawlers and no-JS readers
+see prose unchanged but without affordances — acceptable because
+prose IS the canonical content and the chrome IS the affordance
+(per ADR 0058 epistemic-role contract). Authors writing new
+store-gated components must apply the convention; the test pattern
+(`renderToString` assertion that SSR emits the fallback) is
+enforced via per-component unit tests in `packages/components/src/`.
+
+### A2.4 — Why this is structural, not patch
+
+Three alternatives were considered and rejected:
+
+1. **Fix SSR ordering so `__set*` runs before island SSR.** Would
+   preserve full SSR markup but requires fighting Astro's slot-
+   evaluation order in `file:`-packed consumers — known fragile per
+   the Sprint K diagnostic comments in the affected components.
+2. **`globalThis`-singleton store to defeat module duplication.**
+   Built + tested during Phase 1.5; left the #418 count at exactly
+   12, confirming the root cause is *not* module duplication.
+3. **Targeted per-component patches.** Would only fix the two
+   components hit by astr201 today (GlossaryTerm + KeyEquation),
+   leaving EquationRef/FigureRef/ChapterRef as latent bugs for any
+   new packed consumer.
+
+The `useHydrated`-at-top gate defends the whole class regardless
+of which consumer triggers the bug. Per W4 (define success criteria;
+loop until verified) + the "SoTA-structural-over-patch" engineering
+principle.
+
+### A2.5 — Where the convention's tests live
+
+Each of the five components has a `renderToString` unit test that
+asserts the SSR snapshot contains only the fallback, not the
+post-hydration chrome:
+
+- [`packages/components/src/components/GlossaryTerm/GlossaryTerm.test.tsx`](../../../packages/components/src/components/GlossaryTerm/GlossaryTerm.test.tsx) — "renders bare children at SSR even when the term resolves (useHydrated gate)"
+- [`packages/components/src/components/KeyEquation/KeyEquation.test.tsx`](../../../packages/components/src/components/KeyEquation/KeyEquation.test.tsx) — "renders only framing prose at SSR even when refId resolves (useHydrated gate)"
+- [`packages/components/src/components/EquationRef/EquationRef.test.tsx`](../../../packages/components/src/components/EquationRef/EquationRef.test.tsx) — "hydration gate" describe block (children-form + self-closing form)
+- [`packages/components/src/components/FigureRef/FigureRef.test.tsx`](../../../packages/components/src/components/FigureRef/FigureRef.test.tsx) — "renders only the children at SSR even when name resolves"
+- [`packages/components/src/components/ChapterRef/ChapterRef.test.tsx`](../../../packages/components/src/components/ChapterRef/ChapterRef.test.tsx) — "hydration gate" describe block (children-form + self-closing form)
+
+Cross-repo end-to-end verification: rebuild `@sophie/components`,
+re-pack astr201 via `rm -rf node_modules && pnpm store prune &&
+pnpm install` (per astr201/AGENTS.md), build astr201 prod, navigate
+to `/units/lecture-02-foundations/reading/` via Playwright, assert
+**0 × #418** in console. Validated 2026-05-25.

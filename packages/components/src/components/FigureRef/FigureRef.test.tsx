@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { axe } from "jest-axe";
+import { renderToString } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 // Mock the two stores BEFORE importing the component so vitest's
@@ -154,6 +155,22 @@ describe("<FigureRef>", () => {
       );
       const results = await axe(container);
       expect(results.violations).toEqual([]);
+    });
+  });
+
+  // Phase 1.5 class fix (2026-05-25). Same SSR-store-empty mismatch
+  // as GlossaryTerm + KeyEquation + EquationRef: packed-copy consumers
+  // populate the figure stores AFTER island SSR. Without a gate, SSR
+  // emits bare children while client renders the full <a class="trigger">
+  // → React #418. Gating render on `useHydrated()` defends the class.
+  describe("hydration gate", () => {
+    it("renders only the children at SSR even when name resolves", () => {
+      const html = renderToString(
+        <FigureRef name='cosmic-distance-ladder'>see this comparison</FigureRef>
+      );
+      expect(html).not.toMatch(/<a\b/i);
+      expect(html).not.toMatch(/data-radix/i);
+      expect(html).toContain("see this comparison");
     });
   });
 

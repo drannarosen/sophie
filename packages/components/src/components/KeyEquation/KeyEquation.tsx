@@ -1,6 +1,7 @@
 import katex from "katex";
 import { Sigma } from "lucide-react";
 import { type ReactNode, useId, useMemo } from "react";
+import { useHydrated } from "../../runtime/useHydrated.ts";
 import { lookupCanonicalCitationByRefId } from "../EquationRef/equation-citations-store.ts";
 import { lookupEquation } from "../EquationRef/equations-store.ts";
 import styles from "./KeyEquation.module.css.js";
@@ -75,6 +76,16 @@ export function KeyEquation({
 }: KeyEquationProps) {
   const entry = lookupEquation(refId);
   const titleId = useId();
+  // Hydration-gate (Phase 1.5 evidence, 2026-05-25). Packed-copy
+  // consumers populate the equation store AFTER island SSR — the
+  // server pass sees an empty store and emits framing-prose-only,
+  // while the client's first render sees the script-tag-auto-hydrated
+  // store and emits the full <section> card. Same component, two tree
+  // shapes → React #418. Gating render on `useHydrated` forces SSR +
+  // first client render to emit only the framing children regardless
+  // of store state; the full card appears once the mount-effect flips
+  // the gate.
+  const hydrated = useHydrated();
 
   const texHtml = useMemo(() => {
     if (!entry?.tex) return "";
@@ -99,6 +110,10 @@ export function KeyEquation({
       label: form.label,
     }));
   }, [entry?.rearranged_forms]);
+
+  if (!hydrated) {
+    return <>{children}</>;
+  }
 
   if (!entry) {
     // SSR-pass-tolerant warning — same Sprint K pattern as

@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { axe } from "jest-axe";
+import { renderToString } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 // Mock the store BEFORE importing the component so vitest's
@@ -110,6 +111,27 @@ describe("<GlossaryTerm>", () => {
     const svg = link.querySelector("svg");
     expect(svg).not.toBeNull();
     expect(svg?.getAttribute("aria-hidden")).toBe("true");
+  });
+
+  // Hydration-gate regression (Phase 1.5 evidence, 2026-05-25). Packed-
+  // copy consumers (e.g. astr201) populate the pedagogy store AFTER
+  // island SSR — the SSR pass sees an empty store and emits the bare
+  // fallback, while the client's first render sees the auto-hydrated
+  // store and emits the full <a>+popover tree. Same component, two
+  // tree shapes → React #418 hydration mismatch (×12 on astr201's
+  // lecture-02 reading page). Gating render on `useHydrated()` forces
+  // SSR + first client render to emit the same bare children
+  // regardless of store state; the full tree appears only after the
+  // mount-effect flips the gate. Defends the whole class.
+  it("renders bare children at SSR even when the term resolves (useHydrated gate)", () => {
+    const html = renderToString(
+      <GlossaryTerm name='Parallax'>parallax</GlossaryTerm>
+    );
+    // SSR snapshot must not contain the post-hydration <a class="trigger">,
+    // nor any Radix HoverCard wiring (Popper, etc.) — only the children.
+    expect(html).not.toMatch(/<a\b/i);
+    expect(html).not.toMatch(/data-radix/i);
+    expect(html).toContain("parallax");
   });
 
   // E2E hydration signal (followup #10). The trigger anchor flips

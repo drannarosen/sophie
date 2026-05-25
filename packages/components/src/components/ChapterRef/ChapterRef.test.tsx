@@ -5,6 +5,7 @@ import type {
 } from "@sophie/core/schema";
 import { render, screen, waitFor } from "@testing-library/react";
 import { axe } from "jest-axe";
+import { renderToString } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   __setArtifacts,
@@ -163,6 +164,33 @@ describe("<ChapterRef>", () => {
         expect.stringMatching(/chapterref.*does-not-exist.*bare prose/i)
       );
       warn.mockRestore();
+    });
+  });
+
+  // Phase 1.5 class fix (2026-05-25). Same SSR-store-empty mismatch
+  // as the other store-gated inline refs: packed-copy consumers
+  // populate artifact/unit/section stores AFTER island SSR. Without a
+  // gate, SSR emits bare children while client renders the full
+  // <a class="trigger"> → React #418. Gating render on `useHydrated()`
+  // defends the class.
+  describe("hydration gate", () => {
+    it("renders only the fallback at SSR even when chapter resolves", () => {
+      const html = renderToString(
+        <ChapterRef chapter='hydrostatic-equilibrium'>
+          the pressure-gravity balance
+        </ChapterRef>
+      );
+      expect(html).not.toMatch(/<a\b/i);
+      expect(html).not.toMatch(/data-radix/i);
+      expect(html).toContain("the pressure-gravity balance");
+    });
+
+    it("self-closing form: SSR emits the chapter slug as bare text", () => {
+      const html = renderToString(
+        <ChapterRef chapter='hydrostatic-equilibrium' />
+      );
+      expect(html).not.toMatch(/<a\b/i);
+      expect(html).toContain("hydrostatic-equilibrium");
     });
   });
 
