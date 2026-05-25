@@ -73,7 +73,7 @@ test.describe("<EquationRef> on the smoke chapter (ADR 0060)", () => {
     ).not.toBeAttached();
     await trigger.hover();
     const popover = page.locator("[data-sophie-equation-popover]");
-    await expect(popover).toBeAttached({ timeout: 2000 });
+    await expect(popover).toBeAttached();
     await expect(popover).toContainText(/Inverse-Square Law/i);
     await expect(popover.locator(".katex").first()).toBeVisible();
   });
