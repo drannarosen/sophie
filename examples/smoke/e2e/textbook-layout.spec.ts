@@ -138,7 +138,7 @@ test.describe("PR 1: TextbookLayout shell on the smoke chapter", () => {
     page,
   }) => {
     await page.goto(CHAPTER_URL);
-    await page.locator(".sophie-topbar").waitFor({ timeout: 5000 });
+    await expect(page.locator(".sophie-topbar")).toBeVisible();
 
     const results = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"])
