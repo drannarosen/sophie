@@ -9,21 +9,34 @@ axe-core tests are mandatory on every component PR. For e2e specs,
 that means: **every spec touching rendered chapter HTML ends with a
 call to the shared `expectChapterA11y(page)` helper.**
 
-The helper centralizes Sophie's standard a11y tag set — WCAG 2.0 A/AA
-+ WCAG 2.1 A/AA + `best-practice` (which transitively includes the R10
-landmark rules) — and the standard disable list (`color-contrast`,
-`list`, `listitem`) so individual specs don't drift on which tags or
-disables they pass to `AxeBuilder`. One helper, one tag list, one
-disable list, one class of bugs caught uniformly across the suite.
+The helper centralizes Sophie's standard a11y configuration —
+**tag set**, **exclude list**, **disable list** — so individual specs
+don't drift on which tags, excludes, or disables they pass to
+`AxeBuilder`. One helper, one canonical pattern, one class of bugs
+caught uniformly across the suite. Mirrors the canonical inline
+pattern at [`proving-chapter.spec.ts:277-302`](../proving-chapter.spec.ts).
 
-The three disabled rules match the existing inline convention pending
-Sophie-wide remediation:
+**Tag set:** WCAG 2.0 A/AA + WCAG 2.1 A/AA + `best-practice` (the
+last transitively includes the R10 landmark rules).
 
-- `color-contrast` — token-level remediation tracked as a Sprint-K P1
-- `list` / `listitem` — component emit-shape cleanup tracked separately
+**Excludes** — Phase-0 known-acceptable carve-outs:
 
-When those follow-ups land, drop the rule names from the helper and
-the suite tightens uniformly across all 35 specs.
+- `.margin-note` — column-margin `<aside>` elements from raw MDX;
+  partial fix in 9cc115f (spoiler-alerts chapter), full migration
+  to a `<MarginNote>` component is queued
+- `.task-list-item input[type='checkbox']` + `li > input[type='checkbox'][disabled]`
+  — GFM task-list `[x]` syntax emits unlabeled disabled checkboxes;
+  not actionable without a custom rehype plugin
+
+**Disabled rules** — Phase-0 known-acceptable suppressions:
+
+- `color-contrast` — Sprint-K P1 token-level remediation
+- `list` / `listitem` — Astro-slot inside MDX `client:load` island
+  trips WCAG 1.3.1 on a render-layer artifact (PR-C4
+  `<LearningObjectives>` shape, commit 4737e03)
+
+When those follow-ups land, drop the corresponding entry from the
+helper and the suite tightens uniformly across all 35 specs.
 
 ## The shape
 

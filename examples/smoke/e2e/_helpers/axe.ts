@@ -3,25 +3,40 @@
  * component PR) + R10 (landmark choice when nested under a parent
  * landmark; see AGENTS.md "Standing PR-review rules").
  *
- * Tag set matches Sophie's existing convention across the 22 specs
- * that previously inlined their own AxeBuilder calls: WCAG 2.0 A/AA +
- * WCAG 2.1 A/AA + `best-practice`. The `best-practice` tag transitively
- * includes `landmark-unique` + `landmark-one-main` (the R10 rules that
- * caught three same-root-cause landmark bugs in the W4c audit), so the
- * helper's R10 coverage matches the existing inline pattern exactly.
+ * Canonical pattern (mirrors `proving-chapter.spec.ts:277-302`):
+ * tag set + excludes + disables together encode Sophie's standing
+ * Phase-0 known-acceptable carve-outs, so adopting the helper is a
+ * drop-in for the 22 inline-axe specs without weakening their checks.
  *
- * Disabled rules match the existing inline convention pending the
- * Sprint-K P1 color-contrast remediation + the underlying list/listitem
- * fixture cleanup:
- *   - `color-contrast`: 14 of 22 inline specs already disable; chapter-
- *     wide token-level remediation is tracked separately
- *   - `list` / `listitem`: 6 of 22 inline specs disable; component
- *     emit-shape cleanup is tracked separately
- * When those follow-ups land, drop the rules from this list and the
- * helper auto-tightens across the suite.
+ * **Excludes** — Phase-0 known-acceptable patterns:
+ *   - `.margin-note`: column-margin <aside> elements from MDX. Phase 1
+ *     replaces these with a <MarginNote> component (ADR-queue) that
+ *     carries role="note" + a unique label. PR landing 9cc115f added
+ *     aria-label to spoiler-alerts/reading.mdx's 20 asides; other
+ *     chapters still carry raw asides — exclude until full migration.
+ *   - GFM task-list checkboxes: remark-gfm renders `[x]` lists as
+ *     `<input type="checkbox" disabled>` siblings of text without
+ *     wrapping `<label>`. Markdown convention; not actionable from
+ *     Sophie's side without a custom rehype plugin.
  *
- * Single point of maintenance for the tag set + the include selector +
- * the disable list.
+ * **Disabled rules** — Phase-0 known-acceptable rule suppressions:
+ *   - `color-contrast`: theme-level concern; @sophie/theme runs its
+ *     own WCAG-AA contrast check at build time. Sprint-K P1 token-
+ *     level remediation tracked separately.
+ *   - `list` / `listitem`: the PR-C4 <LearningObjectives> children-
+ *     mode refactor (commit 4737e03) renders `<ul><astro-slot><li>…`
+ *     because Astro slots nested React children inside MDX
+ *     `client:load` islands. axe-core's list+listitem rules
+ *     (WCAG 1.3.1) flag the slot as a non-`<li>` direct child. The
+ *     DOM is semantically a list; the slot is an Astro render-layer
+ *     artifact. Component emit-shape cleanup tracked separately.
+ *
+ * When any of the above follow-ups land, drop the corresponding
+ * exclude / rule from this file and the suite tightens uniformly
+ * across all chapter specs.
+ *
+ * Single point of maintenance for the tag set + include selector +
+ * exclude list + disable list.
  * Canonical-example contract for `examples/smoke/e2e/_patterns/axe-core.md`.
  */
 import AxeBuilder from "@axe-core/playwright";
@@ -30,6 +45,9 @@ import { expect, type Page } from "@playwright/test";
 export async function expectChapterA11y(page: Page): Promise<void> {
   const results = await new AxeBuilder({ page })
     .include("main, [role='main'], article")
+    .exclude(".margin-note")
+    .exclude(".task-list-item input[type='checkbox']")
+    .exclude("li > input[type='checkbox'][disabled]")
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"])
     .disableRules(["color-contrast", "list", "listitem"])
     .analyze();
