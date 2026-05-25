@@ -288,6 +288,61 @@ Each carries the new `data-react-hydrated="true"` attribute after
 mount via the `useHydrated()` hook (Phase 1 item #10 pattern); e2e
 tests wait on this signal before exercising hover behavior.
 
+**SSR fallback (Phase 1.5 hydration-gate, 2026-05-25).** All four
+hover-interactive cross-references (`<GlossaryTerm>`, `<EquationRef>`,
+`<FigureRef>`, `<ChapterRef>`) plus the block-level `<KeyEquation>`
+gate their store-backed render on `useHydrated()`. At SSR and on the
+first client render the gate is closed: the component emits only its
+text fallback (`<>{children}</>` for `<GlossaryTerm>` /
+`<KeyEquation>` / `<FigureRef>`; `<>{children ?? refId}</>` for
+`<EquationRef>`; `<>{children ?? chapter}</>` for `<ChapterRef>`),
+without the `<a class="trigger">` anchor, the Radix HoverCard
+machinery, or `<KeyEquation>`'s `<section>` card. The full tree
+appears once the mount-effect flips the gate. This is by design — it
+defends the whole class of store-backed components against the
+packed-copy-consumer SSR-ordering bug that surfaced 12 × React #418
+errors on the astr201 lecture-02 reading page (the pedagogy stores
+are populated *after* island-SSR runs in packed builds, so reading
+the store during SSR produces a different tree shape than the
+post-hydration client render → React #418). Author-visible
+consequences: SEO and no-JS readers see the prose unchanged but
+without the cross-reference affordances; readers with JS see the
+chrome appear within ~one frame of hydration. See ADR 0038 +
+[Sprint K diagnostic comment in `GlossaryTerm.tsx:63-69`].
+
+**Authoring requirement — `client:load` is mandatory.** Because the
+gate only flips post-`useEffect`, all five store-backed components
+**must** be rendered as hydrating React islands. In MDX, that means
+the `client:load` directive on every callsite:
+
+```mdx
+<GlossaryTerm client:load name="spectrum">spectrum</GlossaryTerm>
+<KeyEquation client:load refId="bohr-energy" />
+<EquationRef client:load refId="wiens-law" />
+<FigureRef client:load name="cosmic-distance-ladder" />
+<ChapterRef client:load chapter="measuring-the-sky" />
+```
+
+Static rendering (no `client:load`) skips React hydration entirely;
+`useHydrated()` returns `false` forever; the component renders as
+permanent bare prose with no anchor, no popover, no first-use
+footnote. The hover popover wouldn't function in a static render
+anyway (Radix needs hydrated event listeners), so this requirement
+matches what authors already wanted from these components. See
+ADR 0038 Amendment 2 for the architectural rationale.
+
+**First-use footnote multi-block handling
+(Amendment 2 follow-up, 2026-05-25).** `<GlossaryTerm
+data-first-use="true">` injects the canonical definition body into an
+inline `<span>` (see `stripWrappingParagraph` in `GlossaryTerm.tsx`).
+Authors can use multi-block markdown in definition bodies
+(intro paragraph followed by a list, multi-paragraph bodies, nested
+blocks); the strip pass flattens these to inline-safe HTML in the
+footnote (preserving all text, collapsing list/paragraph semantics
+to flowing prose). The full block structure is still preserved in
+the **popover** (`<div>` container), which is the canonical place
+for rich definition content.
+
 ### Astro consumer (server-rendered aggregator)
 
 #### Chapter-level (used inside MDX)

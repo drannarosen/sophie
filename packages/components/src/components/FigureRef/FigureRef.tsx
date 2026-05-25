@@ -35,9 +35,17 @@ import { lookupCanonicalUsageByName } from "./figure-usages-store.ts";
 export function FigureRef({ name, children }: FigureRefProps) {
   const registry = lookupFigureRegistry(name);
   const canonical = lookupCanonicalUsageByName(name);
-  // E2E hydration signal (followup #10): see useHydrated.ts and
-  // GlossaryTerm.tsx for rationale.
+  // Hydration-gate (Phase 1.5 class fix, 2026-05-25). Same shape as
+  // GlossaryTerm + KeyEquation + EquationRef: packed-copy consumers
+  // populate the figure stores AFTER island SSR, so reading at render-
+  // time produces a different tree on SSR vs. client → React #418.
+  // Gating on `useHydrated` forces SSR + first client render to emit
+  // bare children; the full anchor + HoverCard appears post-mount.
+  // The same hook drives the e2e hydration signal (followup #10).
   const hydrated = useHydrated();
+  if (!hydrated) {
+    return <>{children}</>;
+  }
 
   if (!registry || !canonical) {
     // SSR-pass-tolerant warning — same Sprint K pattern as

@@ -41,8 +41,18 @@ export function ChapterRef({ chapter, children }: ChapterRefProps) {
       ? unitStore.lookup(artifact.unit_id)
       : undefined;
   const section = unit ? sectionStore.lookup(unit.section_id) : undefined;
-  // E2E hydration signal — see GlossaryTerm.tsx for rationale.
+  // Hydration-gate (Phase 1.5 class fix, 2026-05-25). Same shape as
+  // GlossaryTerm + KeyEquation + EquationRef + FigureRef: packed-copy
+  // consumers populate the artifact/unit/section stores AFTER island
+  // SSR, so reading at render-time produces a different tree on SSR
+  // vs. client → React #418. Gating on `useHydrated` forces SSR +
+  // first client render to emit `<>{children ?? chapter}</>`
+  // regardless of store state; the full anchor + HoverCard appears
+  // post-mount. The same hook drives the e2e hydration signal.
   const hydrated = useHydrated();
+  if (!hydrated) {
+    return <>{children ?? chapter}</>;
+  }
 
   if (!artifact || !unit) {
     if (

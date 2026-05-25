@@ -31,6 +31,13 @@ import { lookupEquation } from "./equations-store.ts";
  */
 export function EquationRef({ refId, children }: EquationRefProps) {
   const entry = lookupEquation(refId);
+  // Hydration-gate (Phase 1.5 class fix, 2026-05-25). Same shape as
+  // GlossaryTerm + KeyEquation: packed-copy consumers populate the
+  // equation store AFTER island SSR, so reading at render-time
+  // produces a different tree on SSR vs. client → React #418. Gating
+  // on `useHydrated` forces SSR + first client render to emit the
+  // fallback (`<>{children ?? refId}</>`) regardless of store state;
+  // the full anchor + HoverCard appears post-mount.
   const hydrated = useHydrated();
 
   const texHtml = useMemo(() => {
@@ -41,6 +48,10 @@ export function EquationRef({ refId, children }: EquationRefProps) {
       output: "html",
     });
   }, [entry?.tex]);
+
+  if (!hydrated) {
+    return <>{children ?? refId}</>;
+  }
 
   if (!entry) {
     // SSR-pass-tolerant warning. The `typeof document !== "undefined"`

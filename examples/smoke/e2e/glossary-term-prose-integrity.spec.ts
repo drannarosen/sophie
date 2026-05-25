@@ -25,6 +25,21 @@ test.describe("Bug 1 — GlossaryTerm prose integrity", () => {
     page,
   }) => {
     await page.goto(CHAPTER_URL);
+    // Post-ADR-0038-Amendment-2 (2026-05-25): GlossaryTerm renders only
+    // its bare children at SSR + first client render (useHydrated gate),
+    // so the trigger anchors + first-use footnotes appear post-mount.
+    // The chapter has 22+ GlossaryTerm islands; Astro hydrates each one
+    // independently so they flip `data-react-hydrated="true"` at slightly
+    // different times. Waiting on `.first()` would race against CI's
+    // slower workers where only a handful have hydrated by the time the
+    // synchronous page.evaluate runs (observed: CI saw 1 trigger, local
+    // saw 22). Poll the trigger count until it settles above the test's
+    // threshold — condition-based wait on the actual stable state.
+    await expect
+      .poll(() => page.locator(".sophie-content a[class*='trigger']").count(), {
+        timeout: 10_000,
+      })
+      .toBeGreaterThan(15);
     const stats = await page.evaluate(() => {
       // A "suspect" paragraph is one where:
       //   1. The paragraph contains a GlossaryTerm trigger anchor.
@@ -85,6 +100,14 @@ test.describe("Bug 1 — GlossaryTerm prose integrity", () => {
     // only remaining content). Test the inverse: a populated, p-free
     // footnote span proves the fix is in place.
     await page.goto(CHAPTER_URL);
+    // Post-ADR-0038-Amendment-2 hydration-gate wait — see sibling test
+    // above for rationale. Footnotes appear under the same gate as the
+    // triggers, so poll on footnote count directly.
+    await expect
+      .poll(() => page.locator(".sophie-glossary-footnote").count(), {
+        timeout: 10_000,
+      })
+      .toBeGreaterThan(10);
     const stats = await page.evaluate(() => {
       const fns = Array.from(
         document.querySelectorAll(".sophie-glossary-footnote")
