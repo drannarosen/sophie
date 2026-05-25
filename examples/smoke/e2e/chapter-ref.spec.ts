@@ -1,5 +1,5 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { expectChapterA11y } from "./_helpers/axe";
 
 const CHAPTER_URL = "/units/spoiler-alerts/reading";
 
@@ -134,14 +134,7 @@ test.describe("PR-C4: <ChapterRef> on the smoke chapter", () => {
     // Wait for hydration before scanning so the trigger is in its
     // final shape.
     await page.locator('[data-react-hydrated="true"]').first().waitFor();
-    const results = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"])
-      // Scope to the ChapterRef trigger; exclude the rest of the
-      // chapter (covered by proving-chapter.spec.ts axe scan).
-      .include(SELF_CLOSING_TRIGGER)
-      .disableRules(["color-contrast"])
-      .analyze();
-    expect(results.violations).toEqual([]);
+    await expectChapterA11y(page);
   });
 
   test.skip("children-mode ChapterRef cite — anchor + slotted text", () => {
