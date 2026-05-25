@@ -6,7 +6,7 @@ import {
   stefanBoltzmannFlux,
   wienApproxLambda,
   wienPeakWavelengthCm,
-} from "./physics.ts";
+} from "./blackbody.ts";
 
 // ──────────────────────────────────────────────────────────────
 // CGS reference values (per Anna's CGS convention).

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { blackbodyToSrgb } from "./chromaticity.ts";
+import { blackbodyToSrgb } from "./blackbody.ts";
 
 describe("blackbodyToSrgb", () => {
   test("returns RGB components in [0, 255]", () => {

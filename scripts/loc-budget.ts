@@ -71,8 +71,11 @@ const GRANDFATHERED: ReadonlyArray<string> = [
   // The class is one cohesive unit per ADR 0038's role-aggregation
   // principle.
   "packages/astro/src/lib/pedagogy-index/accumulator.ts",
-  // Interactive-figure component; pure JSX + math. Out-of-scope for
-  // the Bucket-C refactor arc.
+  // Interactive-figure component; presentation + plotting glue only
+  // (physics math extracted to packages/components/src/_physics/blackbody.ts
+  // per A+ Phase D). Remaining LOC is the SpectrumPlot Observable Plot
+  // setup + the readout/swatch/approximation-toggle JSX; further splits
+  // would shadow the figure shape without removing complexity.
   "packages/components/src/figures/BlackbodyExplorer/BlackbodyExplorer.tsx",
 ];
 
