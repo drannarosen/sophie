@@ -310,6 +310,39 @@ without the cross-reference affordances; readers with JS see the
 chrome appear within ~one frame of hydration. See ADR 0038 +
 [Sprint K diagnostic comment in `GlossaryTerm.tsx:63-69`].
 
+**Authoring requirement — `client:load` is mandatory.** Because the
+gate only flips post-`useEffect`, all five store-backed components
+**must** be rendered as hydrating React islands. In MDX, that means
+the `client:load` directive on every callsite:
+
+```mdx
+<GlossaryTerm client:load name="spectrum">spectrum</GlossaryTerm>
+<KeyEquation client:load refId="bohr-energy" />
+<EquationRef client:load refId="wiens-law" />
+<FigureRef client:load name="cosmic-distance-ladder" />
+<ChapterRef client:load chapter="measuring-the-sky" />
+```
+
+Static rendering (no `client:load`) skips React hydration entirely;
+`useHydrated()` returns `false` forever; the component renders as
+permanent bare prose with no anchor, no popover, no first-use
+footnote. The hover popover wouldn't function in a static render
+anyway (Radix needs hydrated event listeners), so this requirement
+matches what authors already wanted from these components. See
+ADR 0038 Amendment 2 for the architectural rationale.
+
+**First-use footnote multi-block handling
+(Amendment 2 follow-up, 2026-05-25).** `<GlossaryTerm
+data-first-use="true">` injects the canonical definition body into an
+inline `<span>` (see `stripWrappingParagraph` in `GlossaryTerm.tsx`).
+Authors can use multi-block markdown in definition bodies
+(intro paragraph followed by a list, multi-paragraph bodies, nested
+blocks); the strip pass flattens these to inline-safe HTML in the
+footnote (preserving all text, collapsing list/paragraph semantics
+to flowing prose). The full block structure is still preserved in
+the **popover** (`<div>` container), which is the canonical place
+for rich definition content.
+
 ### Astro consumer (server-rendered aggregator)
 
 #### Chapter-level (used inside MDX)

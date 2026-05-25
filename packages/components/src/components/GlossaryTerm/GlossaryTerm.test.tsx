@@ -39,6 +39,21 @@ vi.mock("./definitions-store.ts", () => ({
         anchor: "block-rich",
       };
     }
+    // Multi-block body — Kirchhoff-style "introductory <p> followed by <ol>"
+    // pattern. Pre-Amendment-2-followup the strip pass bailed on this shape,
+    // returning the HTML unchanged; static SSR hid the resulting block-in-
+    // span via document-parser hoisting. Under the hydrated render path
+    // (innerHTML = ...) the fragment parser preserves the blocks inside the
+    // span — strip must now flatten this shape to inline-safe HTML.
+    if (slug === "multi-block") {
+      return {
+        term: "Multi-block",
+        slug: "multi-block",
+        body: "<p>Three empirical rules:</p>\n<ol>\n<li>First rule.</li>\n<li>Second rule.</li>\n<li>Third rule.</li>\n</ol>",
+        unit: "spoiler-alerts",
+        anchor: "multi-block",
+      };
+    }
     return undefined;
   },
 }));
@@ -228,5 +243,32 @@ describe("GlossaryTerm first-use footnote", () => {
     expect(footnote.textContent).toContain("two");
     expect(footnote.textContent).toContain("quoted");
     expect(footnote.textContent).toContain("tail text");
+  });
+
+  /**
+   * ADR 0038 Amendment 2 follow-up (2026-05-25): multi-block body shape
+   * (introductory `<p>` + sibling `<ol>`/`<ul>`/etc.) must flatten to
+   * inline-safe HTML. Pre-strengthening the strip bailed on this shape
+   * because the body wasn't a single outer `<p>...</p>` wrap; static SSR
+   * incidentally hid the resulting block-in-span via document-parser
+   * hoisting, but the post-Amendment-2 hydration path injects via
+   * `innerHTML =` whose fragment parser preserves blocks inside the span.
+   * Test pins the strengthening: no block tags, all text preserved.
+   */
+  it("flattens multi-block bodies (intro <p> + <ol>) to inline-safe HTML", () => {
+    render(
+      <GlossaryTerm name='Multi-block' data-first-use='true'>
+        multi-block
+      </GlossaryTerm>
+    );
+    const footnote = screen.getByTestId("glossary-footnote");
+    expect(footnote.innerHTML).not.toMatch(
+      /<(p|div|section|article|figure|h[1-6]|ul|ol|li|blockquote|pre|table|hr)[\s>]/i
+    );
+    // Intro paragraph text + each list item's text preserved.
+    expect(footnote.textContent).toContain("Three empirical rules");
+    expect(footnote.textContent).toContain("First rule");
+    expect(footnote.textContent).toContain("Second rule");
+    expect(footnote.textContent).toContain("Third rule");
   });
 });

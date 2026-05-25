@@ -160,56 +160,65 @@ export function GlossaryTerm({
  * splitting the surrounding sentence across multiple top-level
  * paragraphs.
  *
- * Two passes:
- *   1. Strip a single outer `<p>…</p>` wrapper that markdown applies
- *      to a one-paragraph body. Multi-paragraph bodies (additional
- *      `<p>` open tags inside the wrapper) pass through unchanged so
- *      the popover-rendering path (`<div>` container) stays correct.
- *   2. Unwrap remaining block-level tags inside the body — most
- *      importantly the `<div>` that JSX-flow elements (like a nested
- *      `<GlossaryTerm>` callsite) render as during mdast→html
- *      serialization. Replaces `<div>…</div>` and `<p>…</p>` with
- *      their contents; the result is inline-safe HTML carrying only
- *      text, `<em>`, `<strong>`, `<a>`, KaTeX `<span>` trees, etc.
+ * Strengthened in ADR 0038 Amendment 2 follow-up (2026-05-25): under
+ * the `useHydrated` gate, footnote HTML is injected via
+ * `innerHTML = ...` on the client (not via the SSR document parser).
+ * The HTML5 *fragment* parsing algorithm used by `innerHTML` does NOT
+ * hoist block children out of an inline `<span>` the way the
+ * *document* parser does at SSR-page-load time — so multi-block
+ * bodies that used to be incidentally hidden by document-time
+ * hoisting now stay inside the span and break prose integrity. The
+ * function now flattens multi-block bodies (multi-paragraph + sibling
+ * block structures) to inline-safe HTML instead of bailing.
  *
- * Returns the input unchanged when both passes detect a multi-block
- * structure (rare but worth defending — if the body's structure is
- * load-bearing we keep it intact and accept the paragraph-split risk
- * rather than mangling content silently).
+ * Algorithm (two phases):
+ *   1. *Selecting the content to flatten*:
+ *      - Single outer `<p>…</p>` wrap with no nested `<p>`: use the
+ *        inner content (preserves the original behavior for the
+ *        common one-paragraph case).
+ *      - Anything else (multi-`<p>`, `<p>` + sibling `<ol>`/`<ul>`,
+ *        already-inline, etc.): use the entire trimmed input.
+ *        `<p>` and `</p>` are replaced with single spaces so sentence
+ *        boundaries become flowing whitespace.
+ *   2. *Stripping block tags*: replace `<div>`, `<section>`,
+ *      `<article>`, `<figure>`, `<h1>`-`<h6>`, `<ul>`/`<ol>`/`<li>`,
+ *      `<blockquote>`, `<pre>`, `<table>`, `<hr>` with their inner
+ *      content surrounded by single spaces, repeatedly until stable
+ *      (handles nested blocks). Trailing whitespace is collapsed.
+ *
+ * Output is inline-safe HTML carrying only text, `<em>`, `<strong>`,
+ * `<a>`, KaTeX `<span>` trees, etc. List semantics (numbering,
+ * bullets) are lost; multi-paragraph boundaries collapse to spaces.
+ * Authors who need to preserve list/paragraph structure should use
+ * the popover (full markup, `<div>` container) and keep the inline
+ * footnote text short.
  */
 function stripWrappingParagraph(html: string): string {
   const trimmed = html.trim();
-  const match = trimmed.match(/^<p>([\s\S]*)<\/p>$/);
-  if (!match?.[1]) return html;
-  const innerHTML = match[1];
-  // Defensive: bail when the body is multi-paragraph (additional `<p>`
-  // open tags). Authoring would have to do something unusual to hit
-  // this; leaving it alone is safer than reshaping unknown structure.
-  if (/<p[\s>]/i.test(innerHTML)) return html;
-  // Unwrap any remaining block-level tags. Covers the elements
-  // mdast→html commonly emits inside a one-paragraph body:
-  //   - `<div>` from JSX-flow elements (nested `<GlossaryTerm>` is
-  //     the common case that triggered the post-fix verify pass).
-  //   - `<section>` / `<article>` / `<figure>` from arbitrary nested
-  //     blocks.
-  //   - `<h1>`-`<h6>`, `<ul>` / `<ol>` / `<li>`, `<blockquote>`,
-  //     `<pre>`, `<table>`, `<hr>` for defensive coverage — a
-  //     definition body that contains any of these would otherwise
-  //     reintroduce Bug 1's "inline ancestor `<p>` auto-closes"
-  //     failure mode on the chapter prose path. Realistic? Low —
-  //     definitions are short — but the extra cost is one regex
-  //     character class.
-  // Repeated until stable so nested blocks unwrap fully.
-  let unwrapped = innerHTML;
+  // Phase 1 — pick the content stream.
+  let content: string;
+  const wrapMatch = trimmed.match(/^<p>([\s\S]*)<\/p>$/);
+  if (wrapMatch?.[1] && !/<p[\s>]/i.test(wrapMatch[1])) {
+    // Common case: single outer <p>…</p>, no nested <p>. Use inner content.
+    content = wrapMatch[1];
+  } else {
+    // Multi-block case: strip all <p>/</p> from anywhere; the surrounding
+    // whitespace (often a "\n" between siblings in markdown-emitted HTML)
+    // becomes the inter-paragraph separator that Phase 2 collapses.
+    content = trimmed.replace(/<\/?p[^>]*>/gi, " ");
+  }
+  // Phase 2 — strip block tags, repeatedly until stable.
+  let unwrapped = content;
   let prev: string;
   do {
     prev = unwrapped;
     unwrapped = unwrapped.replace(
       /<(div|section|article|figure|h[1-6]|ul|ol|li|blockquote|pre|table)\b[^>]*>([\s\S]*?)<\/\1>/gi,
-      "$2"
+      " $2 "
     );
   } while (unwrapped !== prev);
   // `<hr>` is void (no closing tag); strip it separately.
-  unwrapped = unwrapped.replace(/<hr\b[^>]*\/?>/gi, "");
-  return unwrapped;
+  unwrapped = unwrapped.replace(/<hr\b[^>]*\/?>/gi, " ");
+  // Collapse runs of whitespace introduced by the separators.
+  return unwrapped.replace(/\s+/g, " ").trim();
 }

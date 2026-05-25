@@ -766,3 +766,55 @@ re-pack astr201 via `rm -rf node_modules && pnpm store prune &&
 pnpm install` (per astr201/AGENTS.md), build astr201 prod, navigate
 to `/units/lecture-02-foundations/reading/` via Playwright, assert
 **0 × #418** in console. Validated 2026-05-25.
+
+### A2.6 — `client:load` is mandatory for all five components
+
+The `useHydrated`-at-top gate only flips post-`useEffect`. Components
+rendered without `client:load` (static Astro mode) skip React
+hydration entirely; `useHydrated()` returns `false` forever; the
+gate stays closed and the component renders as **permanent bare
+prose**. Smoke's `examples/smoke/src/content/sections/stars/units/spectra-and-composition/reading.mdx`
+exercised this anti-pattern with 22 × `<GlossaryTerm>` + 4 ×
+`<KeyEquation>` without `client:load`. Phase 1.5 follow-up
+verification caught the regression on CI (the
+[`glossary-term-prose-integrity.spec.ts`](../../../examples/smoke/e2e/glossary-term-prose-integrity.spec.ts)
+suite asserted post-hydration trigger/footnote counts; the static
+chapter produced zero of either).
+
+Resolution (single-PR scope expansion): every callsite of the five
+store-backed components now carries `client:load`. Smoke's
+spectra-and-composition was updated in this PR. The authoring
+requirement is documented in
+[`chapter-components.md`](../reference/chapter-components.md#hover-interactive-inline-cross-references-over-the-pedagogy-index).
+
+Hover popovers (Radix HoverCard) wouldn't function without
+hydration anyway — Radix needs client-mounted event listeners —
+so the requirement matches what authors already wanted from these
+components. A build-time audit invariant flagging missing
+`client:load` on the five tracked components is a candidate
+follow-up; for now the contract is documented, the smoke pilot
+chapter encodes it, and the prose-integrity e2e suite catches
+regressions empirically.
+
+### A2.7 — `stripWrappingParagraph` strengthened for multi-block bodies
+
+Under the hydration-gate path, first-use footnote HTML is injected
+via `innerHTML = ...` on the client (instead of by the SSR document
+parser at page-load time). The HTML5 *fragment* parsing algorithm
+used by `innerHTML` does **not** hoist block children out of an
+inline `<span>` the way the *document* parser does at SSR — so any
+multi-block definition body that the pre-strengthening
+`stripWrappingParagraph` returned unchanged (its "rare but worth
+defending" bail) now stays inside the span and breaks prose
+integrity. Smoke's Kirchhoff's-laws definition was the first
+authored body to surface this (intro `<p>` followed by `<ol>` with
+three `<li>`s).
+
+The strip pass now flattens multi-block bodies (multi-`<p>` siblings,
+or `<p>` + sibling block structures) by replacing all `<p>`/`</p>`
+with whitespace separators and recursively unwrapping block-level
+tags with surrounding spaces. List/paragraph semantics collapse to
+flowing prose in the footnote; the **popover** still receives the
+full block structure (its `<div>` container is block-safe). New
+unit test fixture `multi-block` pins the contract; existing tests
+unchanged.

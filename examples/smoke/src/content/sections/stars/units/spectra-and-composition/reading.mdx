@@ -76,7 +76,7 @@ import ChapterGlossary from "@sophie/astro/components/ChapterGlossary.astro";
 > *Atoms are nature's barcode readers — each element absorbs and emits light at a unique set of wavelengths determined by its electron energy levels.* By measuring where spectral lines appear and how they shift, we read a star's composition and velocity from across the galaxy. And the same physics that decodes starlight explains why adding CO$_2$ to an atmosphere warms a planet.
 
 <Callout variant="warning" title="What does 'spectrum' mean here?">
-In everyday language, "spectrum" might mean a range or continuum. In astrophysics, a <GlossaryTerm name="spectrum">spectrum</GlossaryTerm> is the intensity of light as a function of wavelength — a precise, quantitative measurement obtained by dispersing light through a prism or diffraction grating. A spectrum is *data*, not decoration. Every absorption line, every emission peak, every slope of the continuum encodes physics. When we say "take a spectrum," we mean "measure the brightness at every wavelength." The canonical definition for this course was set in [Lecture 1: Spoiler Alerts](../01-foundations/spoiler-alerts).
+In everyday language, "spectrum" might mean a range or continuum. In astrophysics, a <GlossaryTerm client:load name="spectrum">spectrum</GlossaryTerm> is the intensity of light as a function of wavelength — a precise, quantitative measurement obtained by dispersing light through a prism or diffraction grating. A spectrum is *data*, not decoration. Every absorption line, every emission peak, every slope of the continuum encodes physics. When we say "take a spectrum," we mean "measure the brightness at every wavelength." The canonical definition for this course was set in [Lecture 1: Spoiler Alerts](../01-foundations/spoiler-alerts).
 </Callout>
 
 <Callout variant="key-insight" title="The big idea">
@@ -107,12 +107,12 @@ In Lectures 1 and 2, you learned to measure a star's distance, luminosity, tempe
 
 ### Three types of spectra
 
-In Lecture 4 (Module 1), you saw a preview of <GlossaryTerm name="spectral-type">spectral types</GlossaryTerm>. Now we formalize the physics. Light sources produce three distinct spectral signatures, depending on their structure.
+In Lecture 4 (Module 1), you saw a preview of <GlossaryTerm client:load name="spectral-type">spectral types</GlossaryTerm>. Now we formalize the physics. Light sources produce three distinct spectral signatures, depending on their structure.
 
 <Figure name="three-types-of-spectra" />
 
 <Aside kind="definition" title="Continuous spectrum">
-A **hot, dense source** — a solid, liquid, or dense gas — emits light at all wavelengths, producing a smooth rainbow. The shape follows the Planck function $B_\lambda(T)$ you studied in Lecture 4 (Module 1). Examples: the Sun's <GlossaryTerm name="photosphere">photosphere</GlossaryTerm>, an incandescent filament, the interior of a kiln.
+A **hot, dense source** — a solid, liquid, or dense gas — emits light at all wavelengths, producing a smooth rainbow. The shape follows the Planck function $B_\lambda(T)$ you studied in Lecture 4 (Module 1). Examples: the Sun's <GlossaryTerm client:load name="photosphere">photosphere</GlossaryTerm>, an incandescent filament, the interior of a kiln.
 </Aside>
 
 <Aside kind="definition" title="Emission spectrum">
@@ -154,9 +154,9 @@ In practice, you work Kirchhoff's laws *backwards*: given a spectrum, infer the 
 
 ### Why stars show absorption spectra: the two-layer model
 
-A star has a steep temperature gradient. Deep in the interior, temperatures reach millions of kelvin. The <GlossaryTerm name="photosphere">photosphere</GlossaryTerm> — the visible "surface," meaning the depth where the star becomes opaque (optical depth $\tau \approx 1$) — sits at thousands of kelvin (about $5{,}800\ \text{K}$ for the Sun). Just above the photosphere lies the <GlossaryTerm name="stellar-atmosphere">stellar atmosphere</GlossaryTerm>, a thin layer of gas that is slightly cooler than the photosphere below it.
+A star has a steep temperature gradient. Deep in the interior, temperatures reach millions of kelvin. The <GlossaryTerm client:load name="photosphere">photosphere</GlossaryTerm> — the visible "surface," meaning the depth where the star becomes opaque (optical depth $\tau \approx 1$) — sits at thousands of kelvin (about $5{,}800\ \text{K}$ for the Sun). Just above the photosphere lies the <GlossaryTerm client:load name="stellar-atmosphere">stellar atmosphere</GlossaryTerm>, a thin layer of gas that is slightly cooler than the photosphere below it.
 
-The light we observe is emitted by the photosphere (<GlossaryTerm name="kirchhoff-s-laws">Kirchhoff's laws</GlossaryTerm> 1 → <GlossaryTerm name="continuous-spectrum">continuous spectrum</GlossaryTerm>). As this light travels outward through the cooler stellar atmosphere, atoms in the atmosphere absorb photons at their characteristic wavelengths (Kirchhoff's law 3 → dark <GlossaryTerm name="absorption-spectrum">absorption-line spectrum</GlossaryTerm> appears). The result: **a continuous spectrum scored by dark absorption lines**.
+The light we observe is emitted by the photosphere (<GlossaryTerm client:load name="kirchhoff-s-laws">Kirchhoff's laws</GlossaryTerm> 1 → <GlossaryTerm client:load name="continuous-spectrum">continuous spectrum</GlossaryTerm>). As this light travels outward through the cooler stellar atmosphere, atoms in the atmosphere absorb photons at their characteristic wavelengths (Kirchhoff's law 3 → dark <GlossaryTerm client:load name="absorption-spectrum">absorption-line spectrum</GlossaryTerm> appears). The result: **a continuous spectrum scored by dark absorption lines**.
 
 <Figure name="week04-photosphere-line-formation-cococubed" />
 
@@ -185,7 +185,7 @@ The photosphere is hot enough to radiate a continuous spectrum, but it is surrou
 </Callout>
 
 <Callout variant="the-more-you-know" title="Enrichment: what about emission nebulae?">
-Nebulae — vast clouds of gas — show bright emission lines rather than absorption lines. Why? There's no dense, hot blackbody source sitting behind them. Instead, ultraviolet photons from a nearby hot star ionize the gas. When electrons recombine with ions and cascade down through energy levels, they emit photons at characteristic wavelengths. This is Kirchhoff's law 2: a hot, low-density gas emitting an <GlossaryTerm name="emission-spectrum">emission-line spectrum</GlossaryTerm>.
+Nebulae — vast clouds of gas — show bright emission lines rather than absorption lines. Why? There's no dense, hot blackbody source sitting behind them. Instead, ultraviolet photons from a nearby hot star ionize the gas. When electrons recombine with ions and cascade down through energy levels, they emit photons at characteristic wavelengths. This is Kirchhoff's law 2: a hot, low-density gas emitting an <GlossaryTerm client:load name="emission-spectrum">emission-line spectrum</GlossaryTerm>.
 
 The Orion Nebula glows red from hydrogen's H$\alpha$ line ($656.3\ \text{nm}$) and blue-green from doubly ionized oxygen's [O III] line ($500.7\ \text{nm}$). Every color in a nebula photograph encodes a specific atomic transition.
 </Callout>
@@ -240,9 +240,9 @@ The same energy gaps produce the same wavelengths whether the photon is absorbed
 
 The **Bohr model** (1913) captures the essential idea for hydrogen:
 
-<KeyEquation refId="bohr-energy" />
+<KeyEquation client:load refId="bohr-energy" />
 
-where $n = 1, 2, 3, \ldots$ is the <GlossaryTerm name="principal-quantum-number">principal quantum number</GlossaryTerm> and $13.6\ \text{eV}$ is the <GlossaryTerm name="ionization-energy">ionization energy</GlossaryTerm> of hydrogen — the energy needed to completely free the electron.
+where $n = 1, 2, 3, \ldots$ is the <GlossaryTerm client:load name="principal-quantum-number">principal quantum number</GlossaryTerm> and $13.6\ \text{eV}$ is the <GlossaryTerm client:load name="ionization-energy">ionization energy</GlossaryTerm> of hydrogen — the energy needed to completely free the electron.
 
 <Aside kind="definition" title="Principal quantum number">
 The integer $n \geq 1$ labeling each allowed energy level of a hydrogen atom. $n = 1$ is the ground state; larger $n$ corresponds to less tightly bound (less negative) energies. Set by quantization of orbital angular momentum in the Bohr model; reinterpreted in the full quantum mechanical treatment as labeling shells of solutions to the Schrödinger equation.
@@ -290,7 +290,7 @@ $$\Delta E = |E_{\text{upper}} - E_{\text{lower}}|$$
 
 The photon's wavelength is set by the energy–wavelength relation:
 
-<KeyEquation refId="photon-energy" />
+<KeyEquation client:load refId="photon-energy" />
 
 Rearranging for wavelength: $\lambda = hc / \Delta E$.
 
@@ -300,7 +300,7 @@ Rearranging for wavelength: $\lambda = hc / \Delta E$.
 
 ### The hydrogen Balmer series: visible fingerprints
 
-The most famous set of spectral lines in astronomy is the <GlossaryTerm name="balmer-series">Balmer series</GlossaryTerm> — transitions where electrons fall to (emission) or jump from (absorption) the $n = 2$ level in hydrogen:
+The most famous set of spectral lines in astronomy is the <GlossaryTerm client:load name="balmer-series">Balmer series</GlossaryTerm> — transitions where electrons fall to (emission) or jump from (absorption) the $n = 2$ level in hydrogen:
 
 <Aside kind="definition" title="Balmer series">
 The set of hydrogen spectral lines arising from transitions to or from the $n = 2$ level. Named for Johann Balmer, who in 1885 found an empirical formula fitting the visible hydrogen lines decades before the Bohr model explained why. Includes H$\alpha$ ($n = 3 \to 2$, 656.3 nm), H$\beta$ ($n = 4 \to 2$, 486.1 nm), H$\gamma$ ($n = 5 \to 2$, 434.0 nm), H$\delta$ ($n = 6 \to 2$, 410.2 nm).
@@ -320,7 +320,7 @@ The $n = 3 \to 2$ transition releases $\Delta E = 1.89\ \text{eV}$. Using $\lamb
 </Aside>
 
 <Callout variant="deep-dive" title="Worked Example 1 — Calculating H$\alpha$'s wavelength">
-**Problem.** Use the <GlossaryTerm name="bohr-model">Bohr model</GlossaryTerm> to predict the wavelength of the $n = 3 \to 2$ transition in hydrogen. Compare to the observed H$\alpha$ wavelength of $656.3\ \text{nm}$.
+**Problem.** Use the <GlossaryTerm client:load name="bohr-model">Bohr model</GlossaryTerm> to predict the wavelength of the $n = 3 \to 2$ transition in hydrogen. Compare to the observed H$\alpha$ wavelength of $656.3\ \text{nm}$.
 
 **Step 1 — Find the energy levels.**
 $$E_3 = -\frac{13.6\ \text{eV}}{3^2} = -1.511\ \text{eV} \qquad E_2 = -\frac{13.6\ \text{eV}}{2^2} = -3.400\ \text{eV}$$
@@ -424,7 +424,7 @@ Look at the prevalence column: **M dwarfs make up over three-quarters of all mai
 
 ### Why temperature controls line strength
 
-This is a **critical conceptual point** that trips up beginners: the spectral type does NOT directly reflect composition. All main-sequence stars have roughly the same composition. What changes is **which atomic transitions are active** — and that depends on temperature through the <GlossaryTerm name="boltzmann-distribution">Boltzmann distribution</GlossaryTerm>.
+This is a **critical conceptual point** that trips up beginners: the spectral type does NOT directly reflect composition. All main-sequence stars have roughly the same composition. What changes is **which atomic transitions are active** — and that depends on temperature through the <GlossaryTerm client:load name="boltzmann-distribution">Boltzmann distribution</GlossaryTerm>.
 
 <Callout variant="key-insight" title="Four knobs, one spectrum">
 A stellar spectrum encodes multiple independent properties. Here's how to read them:
@@ -447,7 +447,7 @@ $$\text{fraction in level } n \propto e^{-\chi_n / k_B T}$$
 The statistical-mechanics rule for how a gas in thermal equilibrium distributes its constituents across energy levels. The fraction of particles in a level of excitation energy $\chi_n$ above the ground state scales as $e^{-\chi_n/k_BT}$. Higher temperatures populate higher levels exponentially more efficiently. The full version includes degeneracy factors $g_n$ and a partition function $Z$ in the denominator; we drop those for pedagogical clarity.
 </Aside>
 
-where $\chi_n$ is the <GlossaryTerm name="excitation-energy">excitation energy</GlossaryTerm> — the energy *above the ground state* needed to reach level $n$ (always positive) — and $k_B = 8.617 \times 10^{-5}\ \text{eV K}^{-1}$ is Boltzmann's constant. For hydrogen, $\chi_2 = 10.2\ \text{eV}$ (the energy to excite from $n = 1$ to $n = 2$). Note that $\chi_n$ is *not* the same as the Bohr energy $E_n$ used earlier — it's the gap $\chi_n = E_n - E_1$, which is always positive.
+where $\chi_n$ is the <GlossaryTerm client:load name="excitation-energy">excitation energy</GlossaryTerm> — the energy *above the ground state* needed to reach level $n$ (always positive) — and $k_B = 8.617 \times 10^{-5}\ \text{eV K}^{-1}$ is Boltzmann's constant. For hydrogen, $\chi_2 = 10.2\ \text{eV}$ (the energy to excite from $n = 1$ to $n = 2$). Note that $\chi_n$ is *not* the same as the Bohr energy $E_n$ used earlier — it's the gap $\chi_n = E_n - E_1$, which is always positive.
 
 <Aside kind="definition" title="Excitation energy">
 The energy required to promote an electron from the ground state to a specific excited state, measured *above* the ground state (always positive). Distinct from the Bohr energy $E_n$ (which is measured from the ionization threshold and is always negative for bound states). Related by $\chi_n = E_n - E_1$. For hydrogen, $\chi_2 = 10.2\ \text{eV}$ — the gap that makes Balmer absorption temperature-sensitive.
@@ -482,7 +482,7 @@ The exponential is ruthless: even modest temperature changes dramatically shift 
 
 **How this creates the spectral sequence.**
 
-**O stars ($30{,}000{+}\ \text{K}$):** So hot that collisions ionize most hydrogen atoms — electrons are stripped free entirely. No neutral hydrogen means weak Balmer lines. Instead, we see lines of **ionized helium** (He II), which requires extreme temperatures to produce. The spectrum is dominated by ions. (The physics governing ionization is described by the <GlossaryTerm name="saha-equation">Saha equation</GlossaryTerm>, which we won't derive here — but the key idea is simple: at high enough temperatures, collisions have enough energy to knock electrons free entirely.)
+**O stars ($30{,}000{+}\ \text{K}$):** So hot that collisions ionize most hydrogen atoms — electrons are stripped free entirely. No neutral hydrogen means weak Balmer lines. Instead, we see lines of **ionized helium** (He II), which requires extreme temperatures to produce. The spectrum is dominated by ions. (The physics governing ionization is described by the <GlossaryTerm client:load name="saha-equation">Saha equation</GlossaryTerm>, which we won't derive here — but the key idea is simple: at high enough temperatures, collisions have enough energy to knock electrons free entirely.)
 
 <Aside kind="definition" title="Saha equation">
 The statistical-mechanics relation governing the ionization equilibrium of a gas: it sets the ratio of ionized to neutral atoms as a function of temperature, electron density, and the ionization energy of the species. At high temperature and low density, ionization wins; at low temperature and high density, recombination wins. Together with the Boltzmann distribution, it determines which absorption lines a stellar atmosphere can produce.
@@ -573,7 +573,7 @@ The OBAFGKM sequence you just learned was not derived from theory. It was built 
 The mass fraction of elements heavier than helium in a star (or any astrophysical object). Denoted $Z$. The Sun has $Z_\odot \approx 0.014$ — about $1.4\%$ of its mass is "metals" (everything heavier than He, in astronomical parlance; older references cite $Z_\odot \approx 0.02$, but modern measurements have revised this downward). High-metallicity stars show stronger and more numerous metal absorption lines.
 </Aside>
 
-<GlossaryTerm name="metallicity">Metallicity</GlossaryTerm> ($Z$) is the mass fraction of elements heavier than helium. High-metallicity stars show more and stronger metal absorption lines; low-metallicity stars appear "cleaner." But metallicity is a *second-order* effect for classification. Two stars at the same temperature with different metallicities have the same spectral type — the metal line *strengths* differ, but the overall pattern (which species dominates) is set by temperature.
+<GlossaryTerm client:load name="metallicity">Metallicity</GlossaryTerm> ($Z$) is the mass fraction of elements heavier than helium. High-metallicity stars show more and stronger metal absorption lines; low-metallicity stars appear "cleaner." But metallicity is a *second-order* effect for classification. Two stars at the same temperature with different metallicities have the same spectral type — the metal line *strengths* differ, but the overall pattern (which species dominates) is set by temperature.
 
 <Callout variant="the-more-you-know" title="Enrichment — The Morgan–Keenan system: temperature + size in one label">
 The spectral type (OBAFGKM) tells you temperature. But stars of the same temperature can have wildly different luminosities — a G2 main-sequence star like the Sun ($L \approx 1\,L_\odot$) and a G2 supergiant ($L \approx 10{,}000\,L_\odot$) look very different despite having similar surface temperatures. The missing piece is **luminosity class**, which encodes surface gravity and therefore evolutionary state.
@@ -652,13 +652,13 @@ We'll use MK classifications extensively when we build the full H–R diagram in
 
 ### The Doppler effect for light
 
-You've experienced the <GlossaryTerm name="doppler-shift">Doppler effect</GlossaryTerm> with sound: an ambulance siren rises in pitch as it approaches and drops as it recedes. Light does the same thing. When a light source moves toward or away from an observer, the observed wavelength shifts.
+You've experienced the <GlossaryTerm client:load name="doppler-shift">Doppler effect</GlossaryTerm> with sound: an ambulance siren rises in pitch as it approaches and drops as it recedes. Light does the same thing. When a light source moves toward or away from an observer, the observed wavelength shifts.
 
 <Figure name="jwst-doppler-shift" />
 
-If a source has <GlossaryTerm name="radial-velocity">radial velocity</GlossaryTerm> $v_r$ (positive = receding, negative = approaching), the observed wavelength $\lambda_{\text{obs}}$ relates to the laboratory rest wavelength $\lambda_0$ by the non-relativistic Doppler formula:
+If a source has <GlossaryTerm client:load name="radial-velocity">radial velocity</GlossaryTerm> $v_r$ (positive = receding, negative = approaching), the observed wavelength $\lambda_{\text{obs}}$ relates to the laboratory rest wavelength $\lambda_0$ by the non-relativistic Doppler formula:
 
-<KeyEquation refId="doppler-shift" />
+<KeyEquation client:load refId="doppler-shift" />
 
 where $\Delta\lambda = \lambda_{\text{obs}} - \lambda_0$.
 
@@ -671,7 +671,7 @@ The component of a source's velocity along the line of sight to the observer. Si
 - **Redshift** ($\Delta\lambda > 0$, $\lambda_{\text{obs}} > \lambda_0$): source receding, $v_r > 0$.
 - **Blueshift** ($\Delta\lambda < 0$, $\lambda_{\text{obs}} < \lambda_0$): source approaching, $v_r < 0$.
 
-This formula is valid for $v_r \ll c$ (the non-relativistic limit), which covers virtually all stellar velocities in our galaxy. Typical stellar radial velocities are $10$–$100\ \text{km s}^{-1}$; the speed of light is $300{,}000\ \text{km s}^{-1}$. The ratio $v_r/c \sim 10^{-4}$ to $10^{-3}$ — tiny shifts, but measurable with precision spectrographs. For relativistic speeds (galaxies, jets, cosmology), the full relativistic Doppler formula is needed, and for the expanding universe the interpretation becomes <GlossaryTerm name="cosmological-redshift">cosmological redshift</GlossaryTerm> — a stretch of space itself, not simple motion.
+This formula is valid for $v_r \ll c$ (the non-relativistic limit), which covers virtually all stellar velocities in our galaxy. Typical stellar radial velocities are $10$–$100\ \text{km s}^{-1}$; the speed of light is $300{,}000\ \text{km s}^{-1}$. The ratio $v_r/c \sim 10^{-4}$ to $10^{-3}$ — tiny shifts, but measurable with precision spectrographs. For relativistic speeds (galaxies, jets, cosmology), the full relativistic Doppler formula is needed, and for the expanding universe the interpretation becomes <GlossaryTerm client:load name="cosmological-redshift">cosmological redshift</GlossaryTerm> — a stretch of space itself, not simple motion.
 
 <Aside kind="definition" title="Cosmological redshift">
 The redshift of light from a distant source caused by the expansion of space between source and observer, rather than by the source's local motion through space. For distant galaxies, cosmological redshift dominates over any peculiar (kinematic) Doppler shift. The relativistic Doppler formula and the cosmological-redshift formula give the same low-$z$ limit but diverge at high $z$; the cosmological framework is correct in the expanding-universe regime.
@@ -897,7 +897,7 @@ Everything you've learned about spectral absorption applies not only to stars bu
 
 ### Planetary energy balance: Stefan–Boltzmann applied to planets
 
-<KeyEquation refId="stefan-boltzmann" />
+<KeyEquation client:load refId="stefan-boltzmann" />
 
 In Lecture 2, you learned the <EquationRef refId="stefan-boltzmann" client:load /> above. That law applies to **any blackbody** — and to first approximation, a planet is one. A planet doesn't generate its own luminosity — it absorbs sunlight and re-radiates that energy as **thermal (blackbody) radiation** at infrared wavelengths. The key insight is that the Sun and Earth are *both* approximate blackbodies, but at very different temperatures: the Sun's Planck curve peaks in visible light (${\sim}0.5\ \mu\text{m}$), while Earth's peaks in the thermal infrared (${\sim}10\ \mu\text{m}$). These two blackbody spectra barely overlap — and that spectral separation is what makes the greenhouse effect possible.
 
@@ -909,7 +909,7 @@ The power absorbed from the star is built from three factors:
 
 - **Stellar flux at the planet's distance:** $L_\star / 4\pi d^2$ — the luminosity spread over a sphere of radius $d$.
 - **Intercepted cross-section:** $\pi R_p^2$ — the area of the *shadow* the planet casts, not the planet's total surface area. Starlight "sees" the planet as a circular disk of area $\pi R_p^2$. (The planet's full surface area $4\pi R_p^2$, four times larger, matters on the re-radiation side.)
-- **Albedo correction:** $(1 - A)$, where the <GlossaryTerm name="albedo">albedo</GlossaryTerm> $A$ is the fraction of incoming light a planet reflects back to space without absorbing it.
+- **Albedo correction:** $(1 - A)$, where the <GlossaryTerm client:load name="albedo">albedo</GlossaryTerm> $A$ is the fraction of incoming light a planet reflects back to space without absorbing it.
 
 <Aside kind="definition" title="Albedo">
 The fraction of incident light reflected by a surface or planet without being absorbed. Denoted $A$. A perfectly absorbing body has $A = 0$; a perfect mirror has $A = 1$. Real solar-system values span a wide range: Moon $A \approx 0.12$ (dark rock), Earth $A \approx 0.30$ (clouds + ice + oceans), Venus $A \approx 0.77$ (sulfuric-acid clouds). Higher albedo means less energy absorbed and a cooler equilibrium temperature, all else equal.
@@ -923,7 +923,7 @@ The power radiated by the planet (modeled as a blackbody radiating isotropically
 
 $$\text{Radiated} = 4\pi R_p^2 \sigma T_{\text{eq}}^4$$
 
-Setting these equal and solving for the <GlossaryTerm name="equilibrium-temperature">equilibrium temperature</GlossaryTerm> $T_{\text{eq}}$ — the blackbody temperature the planet would have if it had no atmosphere:
+Setting these equal and solving for the <GlossaryTerm client:load name="equilibrium-temperature">equilibrium temperature</GlossaryTerm> $T_{\text{eq}}$ — the blackbody temperature the planet would have if it had no atmosphere:
 
 $$T_{\text{eq}} = \left(\frac{L_\star (1-A)}{16\pi\sigma d^2}\right)^{1/4}$$
 
@@ -967,7 +967,7 @@ This is deep in the **thermal infrared** — far from the visible band where sun
 
 <Figure name="earth-energy-balance-blackbodies" />
 
-For Earth to maintain energy balance, this outgoing infrared radiation must escape to space. But <GlossaryTerm name="greenhouse-effect">greenhouse gases</GlossaryTerm> — CO$_2$, H$_2$O, CH$_4$, N$_2$O, and others — have molecular absorption lines and bands in the infrared, precisely where Earth's blackbody curve is trying to radiate. Look at the sharp absorption features carved into the outgoing spectrum in the figure — those are the molecular fingerprints of greenhouse gases. These molecules absorb outgoing infrared photons and re-emit them in random directions — some back downward toward the surface. The surface receives extra energy and warms until it radiates enough to compensate.
+For Earth to maintain energy balance, this outgoing infrared radiation must escape to space. But <GlossaryTerm client:load name="greenhouse-effect">greenhouse gases</GlossaryTerm> — CO$_2$, H$_2$O, CH$_4$, N$_2$O, and others — have molecular absorption lines and bands in the infrared, precisely where Earth's blackbody curve is trying to radiate. Look at the sharp absorption features carved into the outgoing spectrum in the figure — those are the molecular fingerprints of greenhouse gases. These molecules absorb outgoing infrared photons and re-emit them in random directions — some back downward toward the surface. The surface receives extra energy and warms until it radiates enough to compensate.
 
 <Aside kind="definition" title="Greenhouse effect">
 Warming of a planet's surface caused by atmospheric gases absorbing and re-emitting outgoing infrared radiation at wavelengths set by their molecular energy levels. Identical in physical content to Kirchhoff's third law (cool gas absorbing from a hotter continuum) — only the wavelengths and the source-of-continuum are different. Earth's greenhouse adds $\sim 33\ \text{K}$ to the bare equilibrium temperature; Venus's adds $\sim 508\ \text{K}$.
