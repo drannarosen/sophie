@@ -46,7 +46,7 @@ test.describe("Self-assessment family in spoiler-alerts chapter", () => {
 
     // Pick: ComprehensionGate "I'm stuck"
     const stuck = page.getByRole("radio", { name: "I'm stuck" });
-    await expect(stuck).toBeEnabled({ timeout: 5000 });
+    await expect(stuck).toBeEnabled();
     await stuck.check();
     await expect(stuck).toBeChecked();
 
@@ -58,9 +58,7 @@ test.describe("Self-assessment family in spoiler-alerts chapter", () => {
 
     // Reload — both should re-hydrate.
     await page.reload();
-    await expect(page.getByRole("radio", { name: "I'm stuck" })).toBeChecked({
-      timeout: 5000,
-    });
+    await expect(page.getByRole("radio", { name: "I'm stuck" })).toBeChecked();
     await expect(page.getByRole("radio", { name: "Studied" })).toBeChecked();
 
     // Verify IDB keys use the `self-assessment:${widget}:${id}` prefix.
@@ -102,9 +100,7 @@ test.describe("Self-assessment family in spoiler-alerts chapter", () => {
   }) => {
     await page.goto(CHAPTER_URL);
     // Wait for any of the four widgets to finish hydrating.
-    await expect(page.getByRole("radio", { name: "I got it" })).toBeEnabled({
-      timeout: 5000,
-    });
+    await expect(page.getByRole("radio", { name: "I got it" })).toBeEnabled();
 
     const results = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"])
