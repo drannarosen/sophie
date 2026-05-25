@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { expectChapterA11y } from "./_helpers/axe";
 
 /**
  * Sprint K hardening (2026-05-21) — regression test for the
@@ -51,6 +52,12 @@ test.describe("Sprint K — sidebar cold-load default", () => {
       expect(box.x).toBeGreaterThanOrEqual(0);
       expect(box.x + box.width).toBeLessThanOrEqual(375);
     }
+    // Mobile-only axe scan is intentionally deferred: at 375px
+    // viewport the chapter's `<table>` blocks overflow horizontally
+    // and trip `scrollable-region-focusable` (responsive-table issue
+    // unrelated to B.18). The desktop test below carries the axe
+    // assertion; reinstating mobile-axe is queued behind a
+    // responsive-table follow-up.
   });
 
   test("desktop 1440x900: data-sidebar='closed' on cold load (Sprint K default)", async ({
@@ -72,6 +79,7 @@ test.describe("Sprint K — sidebar cold-load default", () => {
       "closed"
     );
     await expect(page.locator("html")).toHaveAttribute("data-toc", "closed");
+    await expectChapterA11y(page);
   });
 
   test("persisted preference survives reload (user opens sidebar)", async ({
@@ -96,5 +104,6 @@ test.describe("Sprint K — sidebar cold-load default", () => {
     // Reload — the preference should persist via localStorage.
     await page.reload();
     await expect(page.locator("html")).toHaveAttribute("data-sidebar", "open");
+    await expectChapterA11y(page);
   });
 });
