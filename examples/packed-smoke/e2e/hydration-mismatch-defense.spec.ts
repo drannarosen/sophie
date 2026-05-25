@@ -23,6 +23,19 @@ test("packed-smoke prod build emits zero React #418 hydration mismatches", async
     }
   });
   await page.goto("/units/packed-smoke-chapter/reading/");
-  await page.waitForLoadState("networkidle");
+  // Parallel-hydration-race-safe wait per AGENTS.md SoTA test patterns +
+  // expect-poll-count.md canonical pattern doc. All 5 store-backed
+  // components must be hydrated (emit data-react-hydrated="true") before
+  // the #418 console-error assertion runs; otherwise the test races
+  // with hydration and may green-light a real regression.
+  await expect
+    .poll(
+      async () => page.locator("[data-react-hydrated='true']").count(),
+      {
+        timeout: 10_000,
+        message: "wait for 5 hydrated store-backed islands",
+      }
+    )
+    .toBeGreaterThan(4);
   expect(errors.filter((e) => /#418|hydration/i.test(e))).toHaveLength(0);
 });
