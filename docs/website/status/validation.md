@@ -23,34 +23,34 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 
 | Status | Count |
 |---|---|
-| Validated | 16 |
+| Validated | 17 |
 | In progress | 19 |
 | Unvalidated | 74 |
 | Re-validation needed | 0 |
 | Missing block | 0 |
-| Total | 109 |
+| Total | 110 |
 
 ## Lifecycle summary
 
 | Lifecycle | Count |
 |---|---|
 | Shipped | 63 |
-| Accepted design | 36 |
+| Accepted design | 37 |
 | Mixed | 1 |
 | Future package split | 9 |
 | No status | 0 |
-| Total | 109 |
+| Total | 110 |
 
 ## Evidence kinds
 
 | Kind | Count |
 |---|---|
-| test | 84 |
+| test | 85 |
 | chapter | 9 |
 | review | 22 |
-| deployment | 20 |
+| deployment | 21 |
 | audit | 7 |
-| manual | 30 |
+| manual | 31 |
 
 ## Extractor findings
 
@@ -144,6 +144,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0081-worked-example-component.md](/worked-example-component/) | in progress | shipped | 2026-05-26 | manual, test |  |
 | [docs/website/decisions/0082-chapter-layout-extraction.md](/chapter-layout-extraction/) | validated | accepted design | 2026-05-25 | chapter, deployment, review, test | PR-C consolidates ADR text + figures virtual module + shipped ChapterLayout + injected reading route + integration wiring + smoke migration into one branch (with sibling astr201 migration). Contract is locked; future routes (slides, intro/synthesis) extend by adding parallel injectRoute calls per ADR § Consequences. |
 | [docs/website/decisions/0083-cl1-client-directive-invariant.md](/cl1-client-directive-invariant/) | validated | accepted design | 2026-05-25 | audit, deployment, test | Shipped as part of the post-PR-#172 hardening sequence; closes the "missing client:* directive" failure mode that ADR 0038 Amendment 2 defends structurally via the `useHydrated` gate. CL1 is the build-time defence; the gate is the runtime defence; together they form a defence-in-depth pair against the React #418 hydration mismatch class for store-backed components in packed consumers.  |
+| [docs/website/decisions/0084-packed-smoke-ci-gate.md](/packed-smoke-ci-gate/) | validated | accepted design | 2026-05-25 | deployment, manual, test | Shipped in PR #176 (PR-D1) as the CI-runtime layer of the hydration- class defense family. Pairs with ADR 0038 Amendment 2 (runtime `useHydrated` gate) + ADR 0083 (build-time CL1 invariant) + future ADR 0085 (authoring-affordance `_template/` skeleton). The four layers together close the React #418 hydration regression class structurally; the packed-smoke gate is what catches the bug in the consumer-shape pnpm workspace resolution cannot exercise by construction.  |
 
 ### Reference docs
 
