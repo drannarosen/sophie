@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { expectChapterA11y } from "./_helpers/axe";
 
 const CHAPTER_URL = "/units/spoiler-alerts/reading";
 
@@ -62,6 +63,7 @@ test.describe("keyboard focus rings on Sophie interactive controls", () => {
     for (const { name, pattern } of requiredPatterns) {
       expect(css, `missing :focus-visible rule for ${name}`).toMatch(pattern);
     }
+    await expectChapterA11y(page);
   });
 
   test("the first interactive control reached by Tab gets a visible focus outline", async ({
@@ -71,10 +73,9 @@ test.describe("keyboard focus rings on Sophie interactive controls", () => {
     // Wait for hydration to settle so persistence-bearing controls are
     // not still in their disabled-while-loading state (which would
     // cause Tab to skip them).
-    await page
-      .locator("label", { hasText: /Mark as reviewed/ })
-      .first()
-      .waitFor({ timeout: 5000 });
+    await expect(
+      page.locator("label", { hasText: /Mark as reviewed/ }).first()
+    ).toBeVisible();
 
     // Walk forward from page start. Stop at the first Sophie interactive
     // control (a button, checkbox, or radio inside the chapter content).

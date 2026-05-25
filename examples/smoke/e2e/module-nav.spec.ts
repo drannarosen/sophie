@@ -1,5 +1,5 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { expectChapterA11y } from "./_helpers/axe";
 
 const SPOILER_ALERTS = "/units/spoiler-alerts/reading";
 const MEASURING_THE_SKY = "/units/measuring-the-sky/reading";
@@ -166,11 +166,6 @@ test.describe("PR 3: Module/chapter sidebar nav", () => {
 
   test("axe-core: zero violations on the new nav region", async ({ page }) => {
     await page.goto(SPOILER_ALERTS);
-    const results = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"])
-      .include(".sophie-module-nav")
-      .disableRules(["color-contrast"])
-      .analyze();
-    expect(results.violations).toEqual([]);
+    await expectChapterA11y(page);
   });
 });

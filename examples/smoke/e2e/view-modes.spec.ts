@@ -1,5 +1,5 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { expectChapterA11y } from "./_helpers/axe";
 
 const CHAPTER_URL = "/units/spoiler-alerts/reading";
 
@@ -346,12 +346,7 @@ test.describe("PR 5: ViewModeToggle on the smoke chapter", () => {
 
     for (const expected of ["default", "focused", "wide"]) {
       await expect(toggle).toHaveAttribute("data-view-mode-pref", expected);
-      const results = await new AxeBuilder({ page })
-        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"])
-        .include(".sophie-view-mode-toggle")
-        .disableRules(["color-contrast"])
-        .analyze();
-      expect(results.violations).toEqual([]);
+      await expectChapterA11y(page);
       // Cycle to the next state for the next iteration; the loop
       // ends with one extra click that brings us back to "default"
       // — harmless.

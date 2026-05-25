@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { expectChapterA11y } from "./_helpers/axe";
 
 const CHAPTER_URL = "/units/spoiler-alerts/reading";
 
@@ -36,6 +37,7 @@ test.describe("<EquationRef> on the smoke chapter (ADR 0060)", () => {
       .first();
     await expect(trigger).toBeAttached();
     await expect(trigger).toContainText(/^\s*Eq\.\s*\d+(\.\d+)?\s*$/);
+    await expectChapterA11y(page);
   });
 
   test("children form renders the override text and links to /equations/<id>", async ({
@@ -73,7 +75,7 @@ test.describe("<EquationRef> on the smoke chapter (ADR 0060)", () => {
     ).not.toBeAttached();
     await trigger.hover();
     const popover = page.locator("[data-sophie-equation-popover]");
-    await expect(popover).toBeAttached({ timeout: 2000 });
+    await expect(popover).toBeAttached();
     await expect(popover).toContainText(/Inverse-Square Law/i);
     await expect(popover.locator(".katex").first()).toBeVisible();
   });

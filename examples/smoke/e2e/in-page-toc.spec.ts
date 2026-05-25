@@ -1,5 +1,5 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { expectChapterA11y } from "./_helpers/axe";
 
 const SPOILER_ALERTS = "/units/spoiler-alerts/reading";
 const STELLAR_EVOLUTION = "/units/stellar-evolution/reading";
@@ -143,12 +143,7 @@ test.describe("PR 4: In-page ToC (desktop)", () => {
 
   test("axe-core: zero violations on the desktop ToC", async ({ page }) => {
     await page.goto(SPOILER_ALERTS);
-    const results = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"])
-      .include(".sophie-toc--sidebar")
-      .disableRules(["color-contrast"])
-      .analyze();
-    expect(results.violations).toEqual([]);
+    await expectChapterA11y(page);
   });
 });
 

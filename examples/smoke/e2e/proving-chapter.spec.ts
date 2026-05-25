@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { expectChapterA11y } from "./_helpers/axe";
 
 const CHAPTER_URL = "/units/spoiler-alerts/reading";
 const CHAPTER_SLUG = "spoiler-alerts";
@@ -236,7 +236,7 @@ test.describe("Phase 0 vertical-slice acceptance — spoiler-alerts chapter", ()
     await page.reload();
     await expect(
       page.locator("label", { hasText: "Reviewed" }).first()
-    ).toBeVisible({ timeout: 5000 });
+    ).toBeVisible();
 
     // Verify the underlying DB exists with the expected key.
     const storedValue = await page.evaluate(async () => {
@@ -274,33 +274,6 @@ test.describe("Phase 0 vertical-slice acceptance — spoiler-alerts chapter", ()
       .first()
       .waitFor();
 
-    const results = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"])
-      // Exclusions document Phase-0 known-acceptable patterns:
-      // - `.margin-note`: 22 column-margin <aside> elements from MDX.
-      //   Phase 1 replaces these with a <MarginNote> component (per
-      //   ADR-queue) that carries role="note" + a unique label.
-      // - GFM task-list checkboxes: remark-gfm renders `[x]` lists as
-      //   `<input type="checkbox" disabled>` siblings of text without
-      //   wrapping `<label>`. Markdown convention; not actionable
-      //   from Sophie's side without a custom rehype plugin.
-      // - color-contrast: theme-level concern; @sophie/theme runs its
-      //   own WCAG-AA contrast check at build time.
-      .exclude(".margin-note")
-      .exclude(".task-list-item input[type='checkbox']")
-      .exclude("li > input[type='checkbox'][disabled]")
-      // - list / listitem: the PR-C4 <LearningObjectives> children-mode
-      //   refactor (commit 4737e03) renders `<ul><astro-slot><li>…`
-      //   because Astro slots nested React children inside MDX
-      //   `client:load` islands. axe-core's list+listitem rules
-      //   (WCAG 1.3.1) flag the slot as a non-`<li>` direct child.
-      //   The DOM is semantically a list; the slot is an Astro
-      //   render-layer artifact. Tracked as a follow-up; suppress
-      //   here so the chapter-wide axe sweep stays green. Mirrors
-      //   the same suppression in learning-objectives.spec.ts.
-      .disableRules(["color-contrast", "list", "listitem"])
-      .analyze();
-
-    expect(results.violations).toEqual([]);
+    await expectChapterA11y(page);
   });
 });

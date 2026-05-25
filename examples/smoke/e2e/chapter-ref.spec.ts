@@ -1,5 +1,5 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { expectChapterA11y } from "./_helpers/axe";
 
 const CHAPTER_URL = "/units/spoiler-alerts/reading";
 
@@ -94,18 +94,16 @@ test.describe("PR-C4: <ChapterRef> on the smoke chapter", () => {
     const trigger = page.locator(SELF_CLOSING_TRIGGER).first();
     await trigger.waitFor({ state: "attached" });
     await trigger.scrollIntoViewIfNeeded();
-    await expect(trigger).toHaveAttribute("data-react-hydrated", "true", {
-      timeout: 5000,
-    });
+    await expect(trigger).toHaveAttribute("data-react-hydrated", "true");
     // Closed-state precondition: portal isn't mounted yet.
     await expect(
       page.locator("[data-sophie-chapter-popover]")
     ).not.toBeAttached();
     await trigger.hover();
     const popover = page.locator("[data-sophie-chapter-popover]");
-    // HoverCard.openDelay = 150ms (set in ChapterRef.tsx); explicit
-    // 2000ms timeout makes the contract clear.
-    await expect(popover).toBeAttached({ timeout: 2000 });
+    // HoverCard.openDelay = 150ms (set in ChapterRef.tsx); default
+    // expect timeout (5s) is the SLA.
+    await expect(popover).toBeAttached();
     // Module breadcrumb (muted) — measuring-the-sky belongs to the
     // `foundations` module, title "Foundations" per
     // examples/smoke/src/content/modules/01-foundations.json.
@@ -136,14 +134,7 @@ test.describe("PR-C4: <ChapterRef> on the smoke chapter", () => {
     // Wait for hydration before scanning so the trigger is in its
     // final shape.
     await page.locator('[data-react-hydrated="true"]').first().waitFor();
-    const results = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"])
-      // Scope to the ChapterRef trigger; exclude the rest of the
-      // chapter (covered by proving-chapter.spec.ts axe scan).
-      .include(SELF_CLOSING_TRIGGER)
-      .disableRules(["color-contrast"])
-      .analyze();
-    expect(results.violations).toEqual([]);
+    await expectChapterA11y(page);
   });
 
   test.skip("children-mode ChapterRef cite — anchor + slotted text", () => {

@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { expectChapterA11y } from "./_helpers/axe";
 
 const CHAPTER_URL = "/units/spoiler-alerts/reading";
 
@@ -62,6 +63,7 @@ test.describe("PR-C3: <FigureRef> on the smoke chapter", () => {
     // `chapterNumber`. spoiler-alerts.mdx declares chapter 1, so the
     // label is "Fig. 1.16" (chapterNumber.number), not "Fig. 16".
     await expect(trigger).toContainText("Fig. 1.16");
+    await expectChapterA11y(page);
   });
 
   test.skip("T43 dual-mode: renders the children cite as 'This distance ladder' (cosmic-distance-ladder)", () => {

@@ -1,5 +1,5 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { expectChapterA11y } from "./_helpers/axe";
 
 const CHAPTER_URL = "/units/spoiler-alerts/reading";
 
@@ -41,7 +41,7 @@ test.describe("<Predict> in spoiler-alerts chapter", () => {
       name: /different colors might represent/,
     });
     // Wait for hydration: the controlProps guard disables until ready.
-    await expect(colorsBox).toBeEnabled({ timeout: 5000 });
+    await expect(colorsBox).toBeEnabled();
 
     await colorsBox.fill("emission from hydrogen alpha and OIII");
     await expect(colorsBox).toHaveValue(
@@ -52,10 +52,7 @@ test.describe("<Predict> in spoiler-alerts chapter", () => {
     const reloaded = page.getByRole("textbox", {
       name: /different colors might represent/,
     });
-    await expect(reloaded).toHaveValue(
-      "emission from hydrogen alpha and OIII",
-      { timeout: 5000 }
-    );
+    await expect(reloaded).toHaveValue("emission from hydrogen alpha and OIII");
 
     // Verify the IDB stored the per-prompt answer under the expected key.
     const storedValue = await page.evaluate(async () => {
@@ -95,19 +92,8 @@ test.describe("<Predict> in spoiler-alerts chapter", () => {
       .waitFor({ state: "attached" });
     await expect(
       page.getByRole("textbox", { name: /different colors might represent/ })
-    ).toBeEnabled({ timeout: 5000 });
+    ).toBeEnabled();
 
-    const results = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"])
-      // Same exclusions as the other smoke specs (Phase 0 acceptable patterns).
-      .exclude(".margin-note")
-      .exclude(".task-list-item input[type='checkbox']")
-      .exclude("li > input[type='checkbox'][disabled]")
-      // list/listitem suppression — see proving-chapter.spec.ts for
-      // the LearningObjectives astro-slot follow-up rationale.
-      .disableRules(["color-contrast", "list", "listitem"])
-      .analyze();
-
-    expect(results.violations).toEqual([]);
+    await expectChapterA11y(page);
   });
 });

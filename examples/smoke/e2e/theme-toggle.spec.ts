@@ -1,5 +1,5 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { expectChapterA11y } from "./_helpers/axe";
 
 const CHAPTER_URL = "/units/spoiler-alerts/reading";
 
@@ -187,11 +187,6 @@ test.describe("PR 2: ThemeToggle on the smoke chapter", () => {
   test("axe-core: zero violations on the theme toggle", async ({ page }) => {
     await page.emulateMedia({ colorScheme: "light" });
     await page.goto(CHAPTER_URL);
-    const results = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"])
-      .include(".sophie-theme-toggle")
-      .disableRules(["color-contrast"])
-      .analyze();
-    expect(results.violations).toEqual([]);
+    await expectChapterA11y(page);
   });
 });

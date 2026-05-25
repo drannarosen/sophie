@@ -1,5 +1,5 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { expectChapterA11y } from "./_helpers/axe";
 
 const CHAPTER_URL = "/units/spoiler-alerts/reading";
 
@@ -146,10 +146,6 @@ test.describe("PR-C1: <GlossaryTerm> on the smoke chapter", () => {
       .locator('a[href="/units/spoiler-alerts/reading#redshift"]')
       .first();
     await expect(trigger).toBeAttached();
-    const results = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"])
-      .exclude("astro-island")
-      .analyze();
-    expect(results.violations).toEqual([]);
+    await expectChapterA11y(page);
   });
 });

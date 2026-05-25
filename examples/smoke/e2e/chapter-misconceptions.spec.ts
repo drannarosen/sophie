@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { expectChapterA11y } from "./_helpers/axe";
 
 const CHAPTER_URL = "/units/spoiler-alerts/reading";
 
@@ -33,6 +34,7 @@ test.describe("PR-7: misconception Asides on the smoke chapter", () => {
     await expect(aside).toContainText(
       /Many imagine astronomers peering through eyepieces/
     );
+    await expectChapterA11y(page);
   });
 
   test("a PR-7-introduced misconception (dark-matter-is-just-hidden-normal-matter) renders with its intervention", async ({

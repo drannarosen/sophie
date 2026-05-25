@@ -1,5 +1,5 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { expectCourseA11y } from "./_helpers/axe";
 
 const EQUATIONS_URL = "/library/equations";
 
@@ -88,10 +88,6 @@ test.describe("<CourseEquations /> on /library/equations (ADR 0060)", () => {
 
   test("/library/equations is axe-clean", async ({ page }) => {
     await page.goto(EQUATIONS_URL);
-    const results = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"])
-      .exclude("astro-island")
-      .analyze();
-    expect(results.violations).toEqual([]);
+    await expectCourseA11y(page);
   });
 });

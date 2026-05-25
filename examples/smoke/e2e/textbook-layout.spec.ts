@@ -1,5 +1,5 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { expectChapterA11y } from "./_helpers/axe";
 
 const CHAPTER_URL = "/units/spoiler-alerts/reading";
 
@@ -138,24 +138,8 @@ test.describe("PR 1: TextbookLayout shell on the smoke chapter", () => {
     page,
   }) => {
     await page.goto(CHAPTER_URL);
-    await page.locator(".sophie-topbar").waitFor({ timeout: 5000 });
+    await expect(page.locator(".sophie-topbar")).toBeVisible();
 
-    const results = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"])
-      .include(
-        ".sophie-topbar, .sophie-sidebar, .sophie-content, .sophie-right"
-      )
-      // .margin-note is the existing chapter-content aside markup;
-      // its a11y is the responsibility of the margin-note-PR (PR 6),
-      // not this chrome PR. Other specs follow the same exclusion.
-      .exclude(".margin-note")
-      .exclude(".task-list-item input[type='checkbox']")
-      .exclude("li > input[type='checkbox'][disabled]")
-      // list/listitem suppression — see proving-chapter.spec.ts for
-      // the LearningObjectives astro-slot follow-up rationale.
-      .disableRules(["color-contrast", "list", "listitem"])
-      .analyze();
-
-    expect(results.violations).toEqual([]);
+    await expectChapterA11y(page);
   });
 });

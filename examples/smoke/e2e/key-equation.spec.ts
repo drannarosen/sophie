@@ -1,5 +1,5 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { expectChapterA11y } from "./_helpers/axe";
 
 const CHAPTER_URL = "/units/spoiler-alerts/reading";
 
@@ -33,18 +33,14 @@ test.describe("<KeyEquation> blocks in spoiler-alerts chapter", () => {
     // aside-docked attribute (set by the positioning script once
     // it settles) before asserting viewport position.
     await page.waitForLoadState("networkidle");
-    await page
-      .waitForFunction(
-        () =>
-          document
-            .querySelector("[data-sophie-aside]")
-            ?.hasAttribute("data-aside-docked"),
-        null,
-        { timeout: 5000 }
-      )
+    // Asides may not be docked at narrower viewports — tolerate
+    // non-occurrence by swallowing the expect assertion failure.
+    // The condition-based attribute wait supersedes the prior
+    // `waitForFunction(..., { timeout: 5000 })` clock guess.
+    await expect(page.locator("[data-sophie-aside]").first())
+      .toHaveAttribute("data-aside-docked", /.*/)
       .catch(() => {
-        // Asides may not be docked at narrower viewports — that's
-        // fine; we just want the script to have run once.
+        // intentionally swallow — see comment above
       });
     // The browser may have scrolled to the anchor before islands
     // hydrated; force a follow-up scroll now that layout has
@@ -77,20 +73,10 @@ test.describe("<KeyEquation> blocks in spoiler-alerts chapter", () => {
   }) => {
     await page.goto(CHAPTER_URL);
     // Wait for the first KeyEquation region to be present before scanning.
-    await page
-      .getByRole("region", { name: "The Inverse-Square Law" })
-      .waitFor({ timeout: 5000 });
+    await expect(
+      page.getByRole("region", { name: "The Inverse-Square Law" })
+    ).toBeVisible();
 
-    const results = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"])
-      .exclude(".margin-note")
-      .exclude(".task-list-item input[type='checkbox']")
-      .exclude("li > input[type='checkbox'][disabled]")
-      // list/listitem suppression — see proving-chapter.spec.ts for
-      // the LearningObjectives astro-slot follow-up rationale.
-      .disableRules(["color-contrast", "list", "listitem"])
-      .analyze();
-
-    expect(results.violations).toEqual([]);
+    await expectChapterA11y(page);
   });
 });

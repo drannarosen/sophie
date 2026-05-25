@@ -1,5 +1,5 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { expectCourseA11y } from "./_helpers/axe";
 
 const FIGURES_URL = "/library/figures";
 
@@ -116,10 +116,6 @@ test.describe("PR-C3: <CourseFigures /> on /library/figures", () => {
 
   test("/library/figures is axe-clean", async ({ page }) => {
     await page.goto(FIGURES_URL);
-    const results = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"])
-      .exclude("astro-island")
-      .analyze();
-    expect(results.violations).toEqual([]);
+    await expectCourseA11y(page);
   });
 });

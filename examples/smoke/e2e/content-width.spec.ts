@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { expectChapterA11y } from "./_helpers/axe";
 
 const CHAPTER_URL = "/units/spoiler-alerts/reading";
 const DESKTOP_VIEWPORT = { width: 1440, height: 900 };
@@ -68,6 +69,7 @@ test.describe("PR 6: content-width responds to sidebar state", () => {
     // (~660px, Focused override) below and 85ch (~860px) above.
     expect(width).toBeGreaterThan(700);
     expect(width).toBeLessThan(820);
+    await expectChapterA11y(page);
   });
 
   test("Default mode + sidebar='closed' (cold load): content widens to ~85ch", async ({

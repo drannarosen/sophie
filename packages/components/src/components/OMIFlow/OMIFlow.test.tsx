@@ -150,14 +150,23 @@ describe("<OMIFlow> — slot titles", () => {
     );
   });
 
-  it("each section is aria-labelledby its own title span", () => {
+  it("each section is aria-labelledby the root flow name AND its own role-label span", () => {
+    // B.18: composite aria-labelledby = `${rootTitleId} ${slotTitleId}`.
+    // Every space-separated id token must resolve to a real element so
+    // the assistive-tech accessible name is the concatenation of both.
+    // This gives each slot a unique landmark name across multiple
+    // OMIFlow instances on one page (axe `landmark-is-unique`).
     render(<MinimalFlow />);
     const sections = screen.getAllByRole("region");
     for (const section of sections) {
-      const labelId = section.getAttribute("aria-labelledby");
-      expect(labelId).not.toBeNull();
-      const labelEl = labelId ? document.getElementById(labelId) : null;
-      expect(labelEl).not.toBeNull();
+      const labelIds = section.getAttribute("aria-labelledby");
+      expect(labelIds).not.toBeNull();
+      const tokens = (labelIds ?? "").split(/\s+/).filter(Boolean);
+      // Two tokens: root flow name span + per-slot role-label span.
+      expect(tokens).toHaveLength(2);
+      for (const id of tokens) {
+        expect(document.getElementById(id)).not.toBeNull();
+      }
     }
   });
 });
@@ -239,6 +248,43 @@ describe("<OMIFlow> — a11y (axe)", () => {
           <p>More massive stars burn hotter and die younger.</p>
         </OMIFlow.Inference>
       </OMIFlow>
+    );
+    const results = await axe(container);
+    expect(results.violations).toEqual([]);
+  });
+
+  it("renders zero violations across multiple OMIFlow instances on one page", async () => {
+    // B.18 regression: prior to the composite-aria-labelledby fix,
+    // each slot section's accessible name was just the role label
+    // ("Observable" / "Model" / "Inference"). Multiple OMIFlow
+    // instances on one page produced N copies of each name and
+    // tripped axe rule `landmark-is-unique`. The composite name
+    // (root flow concept + role label) disambiguates them.
+    const { container } = render(
+      <div>
+        <OMIFlow id='flow-a' concept='kirchhoff-third-law'>
+          <OMIFlow.Observable>
+            <p>obs a</p>
+          </OMIFlow.Observable>
+          <OMIFlow.Model>
+            <p>mod a</p>
+          </OMIFlow.Model>
+          <OMIFlow.Inference>
+            <p>inf a</p>
+          </OMIFlow.Inference>
+        </OMIFlow>
+        <OMIFlow id='flow-b' concept='composition-from-spectral-lines'>
+          <OMIFlow.Observable>
+            <p>obs b</p>
+          </OMIFlow.Observable>
+          <OMIFlow.Model>
+            <p>mod b</p>
+          </OMIFlow.Model>
+          <OMIFlow.Inference>
+            <p>inf b</p>
+          </OMIFlow.Inference>
+        </OMIFlow>
+      </div>
     );
     const results = await axe(container);
     expect(results.violations).toEqual([]);

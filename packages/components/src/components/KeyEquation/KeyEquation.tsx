@@ -139,7 +139,12 @@ export function KeyEquation({
     : null;
 
   return (
-    <section id={entry.id} aria-labelledby={titleId} className={styles.section}>
+    <section
+      id={entry.id}
+      aria-labelledby={titleId}
+      className={styles.section}
+      data-react-hydrated='true'
+    >
       {children !== undefined && children !== null ? (
         <div className={styles.framing}>{children}</div>
       ) : null}

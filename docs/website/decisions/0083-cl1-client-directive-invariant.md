@@ -77,7 +77,7 @@ class of bugs:
   permanent rather than the SSR-only transient.
 - **Unit tests** of the components themselves pass; the bug only
   exists at the MDX *callsite*.
-- **The Phase 1.5 prose-integrity e2e suite** ([`glossary-term-prose-integrity.spec.ts`](../../examples/smoke/e2e/glossary-term-prose-integrity.spec.ts))
+- **The Phase 1.5 prose-integrity e2e suite** ([`glossary-term-prose-integrity.spec.ts`](../../../examples/smoke/e2e/glossary-term-prose-integrity.spec.ts))
   catches the regression empirically by asserting post-hydration
   trigger/footnote counts, but only for chapters routed through the
   smoke build.

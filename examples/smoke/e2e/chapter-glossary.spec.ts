@@ -1,5 +1,5 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { expectChapterA11y } from "./_helpers/axe";
 
 const CHAPTER_URL = "/units/spoiler-alerts/reading";
 
@@ -56,10 +56,6 @@ test.describe("PR-C1: <ChapterGlossary /> on the smoke chapter", () => {
 
   test("chapter glossary is axe-clean", async ({ page }) => {
     await page.goto(CHAPTER_URL);
-    const results = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"])
-      .include("[data-sophie-chapter-glossary]")
-      .analyze();
-    expect(results.violations).toEqual([]);
+    await expectChapterA11y(page);
   });
 });

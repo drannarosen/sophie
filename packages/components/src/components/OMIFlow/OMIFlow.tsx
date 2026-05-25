@@ -78,12 +78,14 @@ function slotClassFor(role: SlotKind): string {
 function OMIFlowSlotImpl({
   role,
   titleId,
+  rootTitleId,
   title,
   bodyHtml,
   children,
 }: {
   role: SlotKind;
   titleId: string;
+  rootTitleId: string;
   title: string | undefined;
   bodyHtml?: string;
   children?: ReactNode;
@@ -94,13 +96,17 @@ function OMIFlowSlotImpl({
   // label in left gutter, title+body in main column). Mobile fallback
   // (in OMIFlow.module.css) collapses gutter to inline label.
   //
-  // a11y: aria-labelledby still points at the role label span; role
-  // label remains the section's accessible name. Slot identity
-  // (data-omi-role) preserved for OF-1 / OF-2 audit DOM checks.
+  // a11y: aria-labelledby references BOTH the parent OMIFlow's name
+  // span (rootTitleId — carries the per-flow `concept` text or the
+  // default phrase) AND the per-slot role label (titleId). The
+  // composite gives each section landmark a unique accessible name
+  // across multiple OMIFlow instances on one page (axe rule
+  // `landmark-is-unique`, B.18 fix). Slot identity (data-omi-role)
+  // preserved for OF-1 / OF-2 audit DOM checks.
   const trimmed = title?.trim();
   return (
     <section
-      aria-labelledby={titleId}
+      aria-labelledby={`${rootTitleId} ${titleId}`}
       className={`${styles.slot} ${slotClassFor(role)}`.trim()}
       data-omi-role={role}
     >
@@ -281,6 +287,7 @@ export function OMIFlow(props: OMIFlowProps) {
             key={kind}
             role={kind}
             titleId={slotTitleId}
+            rootTitleId={titleId}
             title={slot.title}
             bodyHtml={slot.bodyHtml}
           >
