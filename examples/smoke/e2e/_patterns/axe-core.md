@@ -11,9 +11,19 @@ call to the shared `expectChapterA11y(page)` helper.**
 
 The helper centralizes Sophie's standard a11y tag set — WCAG 2.0 A/AA
 + WCAG 2.1 A/AA + `best-practice` (which transitively includes the R10
-landmark rules) — so individual specs don't drift on which tags they
-pass to `AxeBuilder`. One helper, one tag list, one class of bugs
-caught uniformly across the suite.
+landmark rules) — and the standard disable list (`color-contrast`,
+`list`, `listitem`) so individual specs don't drift on which tags or
+disables they pass to `AxeBuilder`. One helper, one tag list, one
+disable list, one class of bugs caught uniformly across the suite.
+
+The three disabled rules match the existing inline convention pending
+Sophie-wide remediation:
+
+- `color-contrast` — token-level remediation tracked as a Sprint-K P1
+- `list` / `listitem` — component emit-shape cleanup tracked separately
+
+When those follow-ups land, drop the rule names from the helper and
+the suite tightens uniformly across all 35 specs.
 
 ## The shape
 
