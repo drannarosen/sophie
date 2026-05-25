@@ -791,10 +791,20 @@ Hover popovers (Radix HoverCard) wouldn't function without
 hydration anyway — Radix needs client-mounted event listeners —
 so the requirement matches what authors already wanted from these
 components. A build-time audit invariant flagging missing
-`client:load` on the five tracked components is a candidate
-follow-up; for now the contract is documented, the smoke pilot
-chapter encodes it, and the prose-integrity e2e suite catches
-regressions empirically.
+`client:*` directives on the five tracked components is now
+implemented as audit invariant **CL1** (severity: ERROR) in
+[`packages/astro/src/lib/pedagogy-index/extractors/inline-refs.ts`](../../../packages/astro/src/lib/pedagogy-index/extractors/inline-refs.ts)
+and
+[`packages/astro/src/lib/pedagogy-index/extractors/equation-citations.ts`](../../../packages/astro/src/lib/pedagogy-index/extractors/equation-citations.ts).
+The invariant emits a finding for any of the five store-backed
+components (`GlossaryTerm`, `EquationRef`, `FigureRef`,
+`ChapterRef`, `KeyEquation`) in chapter MDX without a `client:*`
+directive (`client:load`, `client:visible`, `client:idle`,
+`client:only`, `client:media`). Findings ride on
+`PedagogyIndex.extractorFindings` and surface as build errors via
+[`packages/astro/src/lib/pedagogy-audit/invariants/extractor-findings.ts`](../../../packages/astro/src/lib/pedagogy-audit/invariants/extractor-findings.ts).
+The prose-integrity e2e suite remains as defence-in-depth empirical
+coverage.
 
 ### A2.7 — `stripWrappingParagraph` strengthened for multi-block bodies
 

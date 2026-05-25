@@ -43,16 +43,25 @@ export const mdxAside = (
 });
 
 /**
- * Build a synthetic `<KeyEquation refId="…" />` citation node — the
- * post-ADR-0060 chapter-walker shape.
+ * Build a synthetic `<KeyEquation refId="…" client:load />` citation
+ * node — the post-ADR-0060 chapter-walker shape. Includes `client:load`
+ * by default because CL1 (ADR 0038 § A2.6) requires every store-backed
+ * KeyEquation callsite to declare a `client:*` directive; tests that
+ * exercise CL1 itself pass `clientDirective: false` to omit it.
  */
 export const mdxKeyEquationCitation = (
   refId: string,
-  children: ReadonlyArray<Record<string, unknown>> = []
+  children: ReadonlyArray<Record<string, unknown>> = [],
+  { clientDirective = true }: { clientDirective?: boolean } = {}
 ) => ({
   type: "mdxJsxFlowElement",
   name: "KeyEquation",
-  attributes: [{ type: "mdxJsxAttribute", name: "refId", value: refId }],
+  attributes: [
+    { type: "mdxJsxAttribute", name: "refId", value: refId },
+    ...(clientDirective
+      ? [{ type: "mdxJsxAttribute", name: "client:load", value: null }]
+      : []),
+  ],
   children,
 });
 

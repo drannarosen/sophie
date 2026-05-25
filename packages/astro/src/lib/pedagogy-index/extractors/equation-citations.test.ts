@@ -9,15 +9,18 @@ beforeEach(() => {
 describe("extractEquationCitations (pure, chapter walker)", () => {
   test("returns one EquationCitationEntry for a self-closing <KeyEquation refId>", () => {
     const tree = root([mdxKeyEquationCitation("wiens-law")]);
-    const citations = extractEquationCitations(tree as never, "spoiler-alerts");
-    expect(citations).toHaveLength(1);
-    expect(citations[0]).toMatchObject({
+    const { entries } = extractEquationCitations(
+      tree as never,
+      "spoiler-alerts"
+    );
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
       unit: "spoiler-alerts",
       refId: "wiens-law",
       anchor: "wiens-law-citation-1",
       number: 1,
     });
-    expect(citations[0]?.framingHtml).toBeUndefined();
+    expect(entries[0]?.framingHtml).toBeUndefined();
   });
 
   test("renders chapter framing prose children to framingHtml", () => {
@@ -26,8 +29,11 @@ describe("extractEquationCitations (pure, chapter walker)", () => {
         para("We've seen Wien's law before; here we apply it to dust."),
       ]),
     ]);
-    const citations = extractEquationCitations(tree as never, "spoiler-alerts");
-    expect(citations[0]?.framingHtml).toContain("We've seen Wien's law before");
+    const { entries } = extractEquationCitations(
+      tree as never,
+      "spoiler-alerts"
+    );
+    expect(entries[0]?.framingHtml).toContain("We've seen Wien's law before");
   });
 
   test("assigns per-chapter number 1, 2, 3 in source order across three citations", () => {
@@ -36,10 +42,10 @@ describe("extractEquationCitations (pure, chapter walker)", () => {
       mdxKeyEquationCitation("stefan-boltzmann"),
       mdxKeyEquationCitation("planck-distribution"),
     ]);
-    const citations = extractEquationCitations(tree as never, "ch");
-    expect(citations).toHaveLength(3);
-    expect(citations.map((c) => c.number)).toEqual([1, 2, 3]);
-    expect(citations.map((c) => c.refId)).toEqual([
+    const { entries } = extractEquationCitations(tree as never, "ch");
+    expect(entries).toHaveLength(3);
+    expect(entries.map((c) => c.number)).toEqual([1, 2, 3]);
+    expect(entries.map((c) => c.refId)).toEqual([
       "wiens-law",
       "stefan-boltzmann",
       "planck-distribution",
@@ -53,11 +59,11 @@ describe("extractEquationCitations (pure, chapter walker)", () => {
       mdxKeyEquationCitation("wiens-law"),
       mdxKeyEquationCitation("wiens-law"),
     ]);
-    const citations = extractEquationCitations(tree as never, "ch");
-    expect(citations).toHaveLength(2);
-    expect(citations[0]?.anchor).toBe("wiens-law-citation-1");
-    expect(citations[1]?.anchor).toBe("wiens-law-citation-2");
-    expect(citations[0]?.anchor).not.toBe(citations[1]?.anchor);
+    const { entries } = extractEquationCitations(tree as never, "ch");
+    expect(entries).toHaveLength(2);
+    expect(entries[0]?.anchor).toBe("wiens-law-citation-1");
+    expect(entries[1]?.anchor).toBe("wiens-law-citation-2");
+    expect(entries[0]?.anchor).not.toBe(entries[1]?.anchor);
   });
 
   test("throws when <KeyEquation> is missing refId", () => {
@@ -86,8 +92,106 @@ describe("extractEquationCitations (pure, chapter walker)", () => {
       },
       mdxKeyEquationCitation("real-eq"),
     ]);
-    const citations = extractEquationCitations(tree as never, "ch");
-    expect(citations).toHaveLength(1);
-    expect(citations[0]?.refId).toBe("real-eq");
+    const { entries } = extractEquationCitations(tree as never, "ch");
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.refId).toBe("real-eq");
+  });
+});
+
+describe("CL1 — missing client:* directive on <KeyEquation>", () => {
+  test("emits ERROR finding when <KeyEquation> has refId but no client:*", () => {
+    const tree = root([
+      mdxKeyEquationCitation("newtons-second-law", [], {
+        clientDirective: false,
+      }),
+    ]);
+    const { entries, findings } = extractEquationCitations(
+      tree as never,
+      "missing-client-load"
+    );
+    expect(entries).toHaveLength(1);
+    expect(findings).toHaveLength(1);
+    expect(findings[0]).toMatchObject({
+      code: "CL1",
+      severity: "ERROR",
+      location: { unit: "missing-client-load" },
+    });
+    expect(findings[0]?.message).toContain("<KeyEquation");
+    expect(findings[0]?.message).toContain("newtons-second-law");
+  });
+
+  test("emits NO finding when <KeyEquation> declares client:load", () => {
+    const tree = root([mdxKeyEquationCitation("properly-gated-equation")]);
+    const { entries, findings } = extractEquationCitations(
+      tree as never,
+      "ok-chapter"
+    );
+    expect(entries).toHaveLength(1);
+    expect(findings).toHaveLength(0);
+  });
+
+  test("recognises any client:* directive (visible / idle / only / media)", () => {
+    const tree = root([
+      {
+        type: "mdxJsxFlowElement",
+        name: "KeyEquation",
+        attributes: [
+          { type: "mdxJsxAttribute", name: "refId", value: "eq-a" },
+          { type: "mdxJsxAttribute", name: "client:visible", value: null },
+        ],
+        children: [],
+      },
+      {
+        type: "mdxJsxFlowElement",
+        name: "KeyEquation",
+        attributes: [
+          { type: "mdxJsxAttribute", name: "refId", value: "eq-b" },
+          { type: "mdxJsxAttribute", name: "client:idle", value: null },
+        ],
+        children: [],
+      },
+      {
+        type: "mdxJsxFlowElement",
+        name: "KeyEquation",
+        attributes: [
+          { type: "mdxJsxAttribute", name: "refId", value: "eq-c" },
+          { type: "mdxJsxAttribute", name: "client:only", value: "react" },
+        ],
+        children: [],
+      },
+      {
+        type: "mdxJsxFlowElement",
+        name: "KeyEquation",
+        attributes: [
+          { type: "mdxJsxAttribute", name: "refId", value: "eq-d" },
+          {
+            type: "mdxJsxAttribute",
+            name: "client:media",
+            value: "(min-width: 768px)",
+          },
+        ],
+        children: [],
+      },
+    ]);
+    const { entries, findings } = extractEquationCitations(
+      tree as never,
+      "ok-chapter"
+    );
+    expect(entries).toHaveLength(4);
+    expect(findings).toHaveLength(0);
+  });
+
+  test("mixed: one bare + one gated → 1 CL1 finding, 2 entries", () => {
+    const tree = root([
+      mdxKeyEquationCitation("bare-eq", [], { clientDirective: false }),
+      mdxKeyEquationCitation("gated-eq"),
+    ]);
+    const { entries, findings } = extractEquationCitations(
+      tree as never,
+      "missing-client-load"
+    );
+    expect(entries).toHaveLength(2);
+    expect(findings).toHaveLength(1);
+    expect(findings[0]?.message).toContain("bare-eq");
   });
 });

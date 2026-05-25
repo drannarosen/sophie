@@ -261,9 +261,17 @@ export function pedagogyIndexRemarkPlugin(
 
     indexAccumulator.clearUnit(unitId);
     indexAccumulator.addDefinitions(extractDefinitions(tree, unitId));
-    indexAccumulator.addEquationCitations(
-      extractEquationCitations(tree, unitId, chapterNumber)
+    // ADR 0038 § A2.6 — CL1 emits ERROR findings for <KeyEquation>
+    // callsites missing a `client:*` hydration directive. Same wrapper-
+    // shape return convention as `extractOMIFlows` /
+    // `extractInlineRefUsages`.
+    const equationCitationResult = extractEquationCitations(
+      tree,
+      unitId,
+      chapterNumber
     );
+    indexAccumulator.addEquationCitations(equationCitationResult.entries);
+    indexAccumulator.addExtractorFindings(equationCitationResult.findings);
     indexAccumulator.addKeyInsights(extractKeyInsights(tree, unitId));
     indexAccumulator.addFigureUsages(
       extractFigures(tree, unitId, chapterNumber)
@@ -287,7 +295,13 @@ export function pedagogyIndexRemarkPlugin(
     indexAccumulator.addSpacedReviews(extractSpacedReviews(tree, unitId));
     indexAccumulator.addSkillReviews(extractSkillReviews(tree, unitId));
     indexAccumulator.addObjectives(extractObjectives(tree, unitId));
-    indexAccumulator.addInlineRefUsages(extractInlineRefUsages(tree, unitId));
+    // ADR 0038 § A2.6 — CL1 audit invariant emits ERROR findings for
+    // store-backed inline-refs missing a `client:*` hydration directive.
+    // Findings ride PedagogyIndex.extractorFindings and surface as
+    // build errors via passthroughExtractorFindings.
+    const inlineRefResult = extractInlineRefUsages(tree, unitId);
+    indexAccumulator.addInlineRefUsages(inlineRefResult.usages);
+    indexAccumulator.addExtractorFindings(inlineRefResult.findings);
     indexAccumulator.addMultiReps(extractMultiReps(tree, unitId));
     // Intervention PR-γ — pair the misconception graph with cognitive-
     // science-grounded remediation moves (ADR 0044). Read-only harvest
