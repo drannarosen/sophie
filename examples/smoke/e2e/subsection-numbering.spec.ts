@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { expectChapterA11y } from "./_helpers/axe";
 
 /**
  * Sprint G regression test — Part + subsection numbering.
@@ -115,6 +116,7 @@ test.describe("Sprint G — chapter Part + subsection numbering", () => {
       return out;
     });
     expect(computed).toEqual(EXPECTED_NUMBERING);
+    await expectChapterA11y(page);
   });
 
   test("Part-anchored h3 carries a non-empty ::before generated label", async ({
@@ -147,5 +149,6 @@ test.describe("Sprint G — chapter Part + subsection numbering", () => {
     expect(beforeContent).toContain("counter(sophie-subsection)");
     expect(beforeContent).not.toBe("normal");
     expect(beforeContent).not.toBe("none");
+    await expectChapterA11y(page);
   });
 });
