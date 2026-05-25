@@ -38,6 +38,37 @@ last transitively includes the R10 landmark rules).
 When those follow-ups land, drop the corresponding entry from the
 helper and the suite tightens uniformly across all 35 specs.
 
+## Two helpers, two contexts
+
+Sophie ships **two sibling helpers** — `expectChapterA11y(page)` and
+`expectCourseA11y(page)` — covering the two structural shapes that
+recur across the smoke e2e suite.
+
+| Helper | Use on | Astro-island carve-out |
+| --- | --- | --- |
+| `expectChapterA11y` | Chapter routes (`/units/.../reading`) — one hydrated chapter island per page | none — single `<main>`, single hydrated island |
+| `expectCourseA11y` | Library / course-listing routes (`/library/*`) — multiple `<astro-island>` elements each emitting `<main>` | `.exclude("astro-island")` — keeps `landmark-no-duplicate-main` from firing on the multi-island layout |
+
+The two helpers share every other configuration value (tag set,
+margin-note/task-list excludes, color-contrast/list/listitem disables).
+The astro-island exclude is the **only** difference and it tracks a
+real structural distinction in how Astro hydrates the two route
+families. Per W2 + DRY in `AGENTS.md`: a single helper with a boolean
+flag would be terser but reads worse at call sites — explicit
+signatures make the chapter-vs-course intent obvious at the test, and
+the duplication inside `_helpers/axe.ts` is small and load-bearing.
+
+Mirrors the multi-island axe convention documented in
+[`library-rooms-axe.spec.ts:30-46`](../library-rooms-axe.spec.ts) —
+the only spec that intentionally *omits* the astro-island exclude
+because the bug class it covers (a stray `<main>` inside the chapter
+layout's `<main>`) only fires when astro-island ISN'T excluded.
+
+When the underlying Astro slot-shape gets fixed so course listings
+emit one `<main>` per page (queued under the library-room ADR set),
+the astro-island exclude drops and `expectCourseA11y` collapses into
+`expectChapterA11y`. Single point of maintenance.
+
 ## The shape
 
 At the end of every test block that renders chapter HTML:

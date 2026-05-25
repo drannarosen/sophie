@@ -21,7 +21,7 @@ Two project standards drive every pattern below:
 |---|---|
 | [`condition-based-waits.md`](./condition-based-waits.md) | Wait on a discriminable DOM attribute (`aria-busy`, `data-state`, `aria-expanded`) instead of a clock. Use for any single-element ready-state assertion. |
 | [`expect-poll-count.md`](./expect-poll-count.md) | Wait for **N elements** to satisfy a selector — the parallel-hydration-race-safe wait. Use when asserting "after hydration of N store-backed components, the DOM contains M nodes." |
-| [`axe-core.md`](./axe-core.md) | Run `expectChapterA11y(page)` at the end of every spec touching rendered chapter HTML. WCAG 2.1 AA + R10 landmark tags per ADR 0004. |
+| [`axe-core.md`](./axe-core.md) | Run `expectChapterA11y(page)` (chapter routes) or `expectCourseA11y(page)` (Library / course-listing routes — multi-island layout) at the end of every spec touching rendered HTML. WCAG 2.1 AA + R10 landmark tags per ADR 0004. |
 
 ## When you're writing a new spec
 
@@ -29,8 +29,9 @@ Two project standards drive every pattern below:
    [`condition-based-waits.md`](./condition-based-waits.md).
 2. If you're waiting for *N* elements to hydrate or appear →
    [`expect-poll-count.md`](./expect-poll-count.md).
-3. Regardless, end the test with `await expectChapterA11y(page);` →
-   [`axe-core.md`](./axe-core.md).
+3. Regardless, end the test with `await expectChapterA11y(page);`
+   (chapter routes) or `await expectCourseA11y(page);` (Library /
+   course-listing routes) → [`axe-core.md`](./axe-core.md).
 
 If a pattern doesn't fit, surface the gap rather than reaching for a
 bare `{ timeout: N }` or `page.waitForTimeout(N)`. Those mask real

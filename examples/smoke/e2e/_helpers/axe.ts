@@ -53,3 +53,35 @@ export async function expectChapterA11y(page: Page): Promise<void> {
     .analyze();
   expect(results.violations, "axe violations").toEqual([]);
 }
+
+/**
+ * Sibling of `expectChapterA11y` for course-listing pages (Library
+ * pages) that legitimately host multiple hydrated `<astro-island>`
+ * elements, each emitting its own `<main>`. The astro-island exclude
+ * keeps `landmark-no-duplicate-main` from firing on the multi-island
+ * layout, mirroring the convention documented in
+ * `library-rooms-axe.spec.ts:30-46`.
+ *
+ * Use this helper on Library/course-* pages; use `expectChapterA11y`
+ * on chapter pages. When the underlying Astro slot-shape gets fixed
+ * such that course listings emit one `<main>` per page (likely via
+ * the library-room ADR queue), the astro-island exclude drops and
+ * this helper can collapse into the chapter helper.
+ *
+ * Two helpers (not one with a flag) is the intentional shape per W2
+ * + DRY: the duplication is small, the contexts are distinct, and
+ * an explicit signature reads better at every call site than
+ * `expectA11y(page, { excludeAstroIsland: true })`.
+ */
+export async function expectCourseA11y(page: Page): Promise<void> {
+  const results = await new AxeBuilder({ page })
+    .include("main, [role='main'], article")
+    .exclude("astro-island")
+    .exclude(".margin-note")
+    .exclude(".task-list-item input[type='checkbox']")
+    .exclude("li > input[type='checkbox'][disabled]")
+    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"])
+    .disableRules(["color-contrast", "list", "listitem"])
+    .analyze();
+  expect(results.violations, "axe violations").toEqual([]);
+}
