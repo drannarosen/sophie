@@ -54,17 +54,8 @@ export function EquationRef({ refId, children }: EquationRefProps) {
   }
 
   if (!entry) {
-    // SSR-pass-tolerant warning. The `typeof document !== "undefined"`
-    // guard suppresses the warning during Astro dev SSR, where
-    // `TextbookLayout`'s setter runs AFTER the chapter MDX's React-
-    // island SSR — every valid refId would otherwise miss-and-warn
-    // on the server pass. On the client the script-tag hydration
-    // populates the store BEFORE the first lookup, so a miss there
-    // is real authoring drift. Same shape as GlossaryTerm.
-    if (
-      typeof document !== "undefined" &&
-      (typeof process === "undefined" || process.env?.NODE_ENV !== "production")
-    ) {
+    // Dev-only authoring-drift warning. Post-gate → always client (ADR 0038 § A2.2).
+    if (process.env?.NODE_ENV !== "production") {
       console.warn(
         `[EquationRef] No equation found for refId "${refId}". Rendering bare prose.`
       );

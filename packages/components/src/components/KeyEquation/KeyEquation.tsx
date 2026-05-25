@@ -116,12 +116,8 @@ export function KeyEquation({
   }
 
   if (!entry) {
-    // SSR-pass-tolerant warning — same Sprint K pattern as
-    // GlossaryTerm / EquationRef / FigureRef / ChapterRef.
-    if (
-      typeof document !== "undefined" &&
-      (typeof process === "undefined" || process.env?.NODE_ENV !== "production")
-    ) {
+    // Dev-only authoring-drift warning. Post-gate → always client (ADR 0038 § A2.2).
+    if (process.env?.NODE_ENV !== "production") {
       console.warn(
         `[KeyEquation] No equation found for refId "${refId}". Rendering framing prose only.`
       );

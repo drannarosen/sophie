@@ -55,10 +55,8 @@ export function ChapterRef({ chapter, children }: ChapterRefProps) {
   }
 
   if (!artifact || !unit) {
-    if (
-      typeof document !== "undefined" &&
-      (typeof process === "undefined" || process.env?.NODE_ENV !== "production")
-    ) {
+    // Dev-only authoring-drift warning. Post-gate → always client (ADR 0038 § A2.2).
+    if (process.env?.NODE_ENV !== "production") {
       console.warn(
         `[ChapterRef] No reading artifact found for chapter "${chapter}". Rendering bare prose.`
       );
