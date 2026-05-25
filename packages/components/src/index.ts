@@ -260,6 +260,23 @@ export {
   UnitsPropsSchema,
   unitsContract,
 } from "./components/Units/index.ts";
+export type {
+  WorkedExampleDimCheckProps,
+  WorkedExampleProblemProps,
+  WorkedExampleProps,
+  WorkedExampleResultProps,
+  WorkedExampleStepProps,
+} from "./components/WorkedExample/index.ts";
+export {
+  WORKED_EXAMPLE_EPISTEMIC_ROLE,
+  WorkedExample,
+  WorkedExampleDimCheckPropsSchema,
+  WorkedExampleProblemPropsSchema,
+  WorkedExamplePropsSchema,
+  WorkedExampleResultPropsSchema,
+  WorkedExampleStepPropsSchema,
+  workedExampleContract,
+} from "./components/WorkedExample/index.ts";
 // Contract
 export type {
   ComponentAuditFinding,

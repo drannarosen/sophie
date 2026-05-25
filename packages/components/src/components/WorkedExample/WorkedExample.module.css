@@ -1,0 +1,88 @@
+/* WorkedExample — chapter-body compound primitive (ADR 0081).
+ *
+ * A titled region (not a Tier-3 biography card) holding ordered slot
+ * sub-components. Per ADR 0005, colors flow through @sophie/theme tokens
+ * only — no hex/rgb literals. Uses the same token vocabulary as
+ * _shared/Tier3Card.module.css (surface-2 / border / text / text-muted /
+ * space-* / radius-sm / font-* / text-* / weight-semibold), so it needs
+ * no new theme-generator entry.
+ */
+
+.workedExample {
+  margin-block: var(--sophie-space-3);
+  background: var(--sophie-surface-2);
+  border: 1px solid var(--sophie-border);
+  border-radius: var(--sophie-radius-sm);
+  color: var(--sophie-text);
+  font-family: var(--sophie-font-sans);
+  line-height: var(--sophie-leading-prose);
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sophie-space-1);
+  padding: var(--sophie-space-2) var(--sophie-space-3);
+  border-bottom: 1px solid var(--sophie-border);
+}
+
+.kicker {
+  font-family: var(--sophie-font-mono);
+  font-size: var(--sophie-text-xs);
+  font-weight: var(--sophie-weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--sophie-text-muted);
+}
+
+.title {
+  font-size: var(--sophie-text-sm);
+  font-weight: var(--sophie-weight-semibold);
+  color: var(--sophie-text);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sophie-space-2);
+  padding: var(--sophie-space-3);
+}
+
+.slot {
+  border-inline-start: 2px solid var(--sophie-border);
+  padding-inline-start: var(--sophie-space-2);
+}
+
+.slotLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--sophie-space-2);
+  margin: 0 0 var(--sophie-space-1) 0;
+  font-family: var(--sophie-font-mono);
+  font-size: var(--sophie-text-xs);
+  font-weight: var(--sophie-weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--sophie-text-muted);
+}
+
+.separator {
+  color: var(--sophie-border);
+  font-weight: var(--sophie-weight-normal);
+}
+
+.stepLabel {
+  color: var(--sophie-text);
+  font-weight: var(--sophie-weight-medium);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.slotBody > :first-child {
+  margin-block-start: 0;
+}
+
+.slotBody > :last-child {
+  margin-block-end: 0;
+}

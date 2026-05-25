@@ -5,6 +5,7 @@ import {
   type FigureRegistry,
   GlossaryTerm,
   KeyEquation,
+  WorkedExample,
 } from "@sophie/components";
 
 export interface MakeStaticComponentsOptions {
@@ -47,6 +48,10 @@ export function makeStaticComponents({ figures }: MakeStaticComponentsOptions) {
     // (PR-C1; the canonical glossary surface is now <ChapterGlossary />
     // + <CourseGlossary /> consuming the pedagogy index — ADR 0038).
     GlossaryTerm,
+    // WorkedExample is content-only (no per-instance state). Its slot
+    // sub-components (Problem/Step/DimCheck/Result) resolve as member
+    // access on the mapped component. Per ADR 0027 / ADR 0081.
+    WorkedExample,
     Figure: (props: MdxFigureProps) => {
       if (props.name !== undefined) {
         return (
