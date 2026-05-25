@@ -14,9 +14,6 @@ importers:
       '@astrojs/react':
         specifier: ^5.0.5
         version: 5.0.5(@types/node@25.9.1)(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(tsx@4.22.3)(yaml@2.9.0)
-      '@fontsource-variable/fraunces':
-        specifier: ^5.2.9
-        version: 5.2.9
       '@sophie/astro':
         specifier: file:./vendor/sophie-astro-0.0.0.tgz
         version: file:vendor/sophie-astro-0.0.0.tgz(@types/node@25.9.1)(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(astro@6.3.7(@types/node@25.9.1)(rollup@4.60.4)(tsx@4.22.3)(yaml@2.9.0))(esbuild@0.27.7)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(tsx@4.22.3)(vite@7.3.3(@types/node@25.9.1)(tsx@4.22.3)(yaml@2.9.0))
@@ -1266,7 +1263,7 @@ packages:
     resolution: {integrity: sha512-83yeghZ2xxin3Nj8z1NMd/NCuca+gsYXswywDy5bHvwlWL8tpTQmzGeUuHd9FC3E/SBEMvzJRwWEOz5gGes9Qg==}
 
   '@sophie/astro@file:vendor/sophie-astro-0.0.0.tgz':
-    resolution: {integrity: sha512-6RKDI9hStduBBppuTtkBHqZ8pNeXnbq6YJgHPIc3ugsVYHsGkhAgTlMbwGFVkiZTHO2LTQ+cmlQhkTlRaSXxDg==, tarball: file:vendor/sophie-astro-0.0.0.tgz}
+    resolution: {integrity: sha512-xV0aeyAW7qtJtUZI7U/AeepqRRY/D3IR5WiXkjMfSsikuoBaLbzodefsT5J2iT9tf19hHZlPcQs3tqk7Xj9C/g==, tarball: file:vendor/sophie-astro-0.0.0.tgz}
     version: 0.0.0
     peerDependencies:
       astro: ^6.0.0
@@ -1276,18 +1273,18 @@ packages:
       vite: ^7.3.0 || ^8.0.0
 
   '@sophie/components@file:vendor/sophie-components-0.0.0.tgz':
-    resolution: {integrity: sha512-1ZsdOqZYK2/suGcD6biOdEJ/3+ljyOtQegi+SYU7TMIwhqGLafgW3AxmmLrCu78cva+c/yasVnYwcV9G3JovPw==, tarball: file:vendor/sophie-components-0.0.0.tgz}
+    resolution: {integrity: sha512-1/VWtuvj6LqYxiF0BsOsV8nWDRyF2ukLGB8yVCyhHJG+NU8ikIrrlLJSmbI3k0mmD2PMKo3Lbi8DJPuIn3Hjmg==, tarball: file:vendor/sophie-components-0.0.0.tgz}
     version: 0.0.0
     peerDependencies:
       react: ^19.2.6
       react-dom: ^19.2.6
 
   '@sophie/core@file:vendor/sophie-core-0.0.0.tgz':
-    resolution: {integrity: sha512-RP247m3PFT/MCZ2ztoYkxy+0/C46WUfJbspTxOwTR+zPmypYYAfkqydlRrtKKTq6j60YiyX0rxxY8D3jqEh4ww==, tarball: file:vendor/sophie-core-0.0.0.tgz}
+    resolution: {integrity: sha512-UrZFT0DkZcLXhbirH66ALZ3CMvIaIavlj7rQF/nZaUuuNzCt2zfOeuCUDog5SSHc2bZ/PB92+sCTD2X58FjD4w==, tarball: file:vendor/sophie-core-0.0.0.tgz}
     version: 0.0.0
 
   '@sophie/theme@file:vendor/sophie-theme-0.0.0.tgz':
-    resolution: {integrity: sha512-Ubs//yLbDV+EXu4PwmzDy8tdBglMM51UjzNQ9wBQNh68lxOoX9XQPKwxcMiEosTNskTyzF5yCRw7voB1m5tuTg==, tarball: file:vendor/sophie-theme-0.0.0.tgz}
+    resolution: {integrity: sha512-whiwBnxpRZqdi+voy7jlUlGbxmgrLrX2nFezszS9+cY1S1TIGJrVHYoQ0uOOnKm1ZLmPBHdWQuOXXy5o9L1EQw==, tarball: file:vendor/sophie-theme-0.0.0.tgz}
     version: 0.0.0
 
   '@types/babel__core@7.20.5':
@@ -3888,6 +3885,7 @@ snapshots:
 
   '@sophie/theme@file:vendor/sophie-theme-0.0.0.tgz':
     dependencies:
+      '@fontsource-variable/fraunces': 5.2.9
       '@fontsource-variable/ibm-plex-sans': 5.2.8
       '@fontsource/ibm-plex-mono': 5.2.7
 
