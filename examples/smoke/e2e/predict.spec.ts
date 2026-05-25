@@ -1,5 +1,5 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { expectChapterA11y } from "./_helpers/axe";
 
 const CHAPTER_URL = "/units/spoiler-alerts/reading";
 
@@ -96,17 +96,6 @@ test.describe("<Predict> in spoiler-alerts chapter", () => {
       page.getByRole("textbox", { name: /different colors might represent/ })
     ).toBeEnabled();
 
-    const results = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"])
-      // Same exclusions as the other smoke specs (Phase 0 acceptable patterns).
-      .exclude(".margin-note")
-      .exclude(".task-list-item input[type='checkbox']")
-      .exclude("li > input[type='checkbox'][disabled]")
-      // list/listitem suppression — see proving-chapter.spec.ts for
-      // the LearningObjectives astro-slot follow-up rationale.
-      .disableRules(["color-contrast", "list", "listitem"])
-      .analyze();
-
-    expect(results.violations).toEqual([]);
+    await expectChapterA11y(page);
   });
 });
