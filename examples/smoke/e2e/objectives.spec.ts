@@ -1,5 +1,5 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { expectChapterA11y } from "./_helpers/axe";
 
 const OBJECTIVES_URL = "/library/objectives";
 
@@ -146,16 +146,6 @@ test.describe("PR-C4: /library/objectives course roll-up", () => {
 
   test("E9: axe-clean /library/objectives page", async ({ page }) => {
     await page.goto(OBJECTIVES_URL);
-    const results = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"])
-      // Same exclusions as proving-chapter / theme-toggle specs —
-      // theme-level color contrast is a Phase 0 acceptable pattern;
-      // margin-notes / GFM task-list inputs aren't applicable here
-      // but excluded for consistency with the existing axe surfaces.
-      .exclude(".margin-note")
-      .exclude(".task-list-item input[type='checkbox']")
-      .disableRules(["color-contrast"])
-      .analyze();
-    expect(results.violations).toEqual([]);
+    await expectChapterA11y(page);
   });
 });
