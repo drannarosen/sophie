@@ -7,7 +7,7 @@ tags:
   - chapter-layout
   - dry
   - extraction
-status: accepted
+status: accepted-design
 validation:
   status: validated
   last_validated_date: "2026-05-25"
@@ -16,19 +16,19 @@ validation:
       ref: packages/astro/src/lib/figures-virtual-module.test.ts
       date: "2026-05-25"
       notes: "Unit coverage for figuresVirtualModule(): resolveId routing, load() output shape, JSON serialization of a fixture registry, and the deliberate no-HMR semantics."
-    - kind: pr
-      ref: "<TBD: PR-C URL>"
+    - kind: review
+      ref: docs/website/decisions/0082-chapter-layout-extraction.md
       date: "2026-05-25"
-      notes: "Foundational extraction PR — ADR text + virtual module + type declaration. Subsequent PRs land the shipped ChapterLayout.astro + reading.astro + integration wiring."
-    - kind: build
-      ref: examples/smoke prod build
-      date: "<TBD: post-integration commit>"
-      notes: "Smoke prod build clean after migration to the injected route + virtual figures module."
+      notes: "PR-C ships ADR-0082 + virtual module + type declaration + integration wiring + ChapterLayout/reading.astro + smoke migration in one branch (3 commits). Code-reviewer subagent pass before push."
+    - kind: deployment
+      ref: examples/smoke/dist
+      date: "2026-05-25"
+      notes: "Smoke prod build clean after migration to the injected route + virtual figures module — `/units/spectra-and-composition/reading/index.html` produced via @sophie/astro/routes/reading.astro; 23 GlossaryTerm + 4 KeyEquation islands SSR-bare per ADR 0038 § A2.2."
     - kind: chapter
-      ref: /Users/anna/Teaching/astr201/src/content/chapters/lecture-02-foundations/
-      date: "<TBD: post-astr201 migration>"
-      notes: "Cross-repo verification: astr201 prod build serves /units/[unit]/reading via the platform-injected route with 0 × React #418."
-  notes: "PR-C foundational batch. Subsequent commits in the same PR series build the shipped ChapterLayout.astro + injected route + consumer migration; this ADR documents the design and locks the contract."
+      ref: /Users/anna/Teaching/astr201/src/content/sections/foundations/units/lecture-02-foundations/reading.mdx
+      date: "2026-05-25"
+      notes: "Cross-repo verification: astr201 prod build serves /units/lecture-02-foundations/reading via the platform-injected route; Playwright console probe = 0 × React #418 (only favicon 404). Local commit on feat/use-extracted-chapter-layout; lands in lockstep with PR-C."
+  notes: "PR-C consolidates ADR text + figures virtual module + shipped ChapterLayout + injected reading route + integration wiring + smoke migration into one branch (with sibling astr201 migration). Contract is locked; future routes (slides, intro/synthesis) extend by adding parallel injectRoute calls per ADR § Consequences."
 ---
 
 # ADR 0082: Chapter-layout extraction into `@sophie/astro`
