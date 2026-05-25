@@ -124,13 +124,20 @@ function main(): void {
   }
   console.log("");
 
-  // 2. Pages with validation block but no status (rollout-gap signal).
+  // 2. Pages with validation block but no status (BLOCKING since
+  // A+ hardening Phase C — see plan
+  // `docs/plans/2026-05-25-sophie-a-plus-hardening.md`). A page that
+  // declares a `validation:` block has opted into the dashboard
+  // contract; rendering one without a paired `status:` produces a
+  // silently-undefined lifecycle column. Phase A's dashboard regen
+  // brought the docs tree to zero such pages; this gate keeps it
+  // that way going forward.
   const gapPages = records
     .filter((r) => r.hasValidationBlock && r.status === undefined)
     .map((r) => r.path)
     .sort();
   console.log(
-    `Pages with a validation: block but no status: field (${gapPages.length}):`
+    `Pages with a validation: block but no status: field (${gapPages.length}, expected 0):`
   );
   if (gapPages.length === 0) {
     console.log("  (none — rollout complete for pages with validation blocks)");
@@ -184,19 +191,24 @@ function main(): void {
   }
   console.log("");
 
-  // Exit non-zero on hard failures (unknown values + missing-required).
-  // gap-without-validation-block stays informational (it's a rollout
-  // signal for the future explanation/vision sweep).
-  const hardFailures = unknownPages.length + missingRequired.length;
+  // Exit non-zero on hard failures: unknown values, missing-required,
+  // and validation-block-without-status. The last category was
+  // promoted from informational to blocking in A+ hardening Phase C
+  // (see `docs/plans/2026-05-25-sophie-a-plus-hardening.md`): a
+  // `validation:` block opts the page into the dashboard contract, so
+  // rendering one without a paired `status:` is a silent-dashboard
+  // bug, not a soft rollout signal.
+  const hardFailures =
+    unknownPages.length + missingRequired.length + gapPages.length;
   if (hardFailures > 0) {
     console.log(
       `FAIL: ${hardFailures} blocking issue${hardFailures === 1 ? "" : "s"} ` +
-        `(${unknownPages.length} unknown-value, ${missingRequired.length} missing-required).`
+        `(${unknownPages.length} unknown-value, ${missingRequired.length} missing-required, ${gapPages.length} validation-without-status).`
     );
     process.exit(1);
   }
   console.log(
-    "PASS: every ADR + reference page carries a valid status; no unknown values across the docs tree."
+    "PASS: every ADR + reference page carries a valid status; every page with a validation: block carries status:; no unknown values across the docs tree."
   );
 }
 
