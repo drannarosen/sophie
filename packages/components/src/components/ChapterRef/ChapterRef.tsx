@@ -70,11 +70,7 @@ export function ChapterRef({ chapter, children }: ChapterRefProps) {
   return (
     <HoverCard.Root openDelay={150} closeDelay={120}>
       <HoverCard.Trigger asChild>
-        <a
-          className={styles.trigger}
-          data-react-hydrated={hydrated ? "true" : undefined}
-          href={href}
-        >
+        <a className={styles.trigger} data-react-hydrated='true' href={href}>
           {linkText}
           <BookMarked
             aria-hidden
