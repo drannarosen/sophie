@@ -27,8 +27,8 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 | In progress | 19 |
 | Unvalidated | 74 |
 | Re-validation needed | 0 |
-| Missing block | 0 |
-| Total | 107 |
+| Missing block | 1 |
+| Total | 108 |
 
 ## Lifecycle summary
 
@@ -38,8 +38,8 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 | Accepted design | 34 |
 | Mixed | 1 |
 | Future package split | 9 |
-| No status | 0 |
-| Total | 107 |
+| No status | 1 |
+| Total | 108 |
 
 ## Evidence kinds
 
@@ -54,7 +54,15 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 
 ## Extractor findings
 
-_No extractor findings (V0 + V8) surfaced during this build._
+| Code | Count |
+|---|---|
+| S0 | 1 |
+| V0 | 1 |
+
+### Findings list
+
+- **INFO S0** — S0: docs/website/decisions/0082-chapter-layout-extraction.md: page-level 'status:' field has unknown value (got: "accepted"; expected one of: shipped, accepted-design, mixed, future-package-split). (docs/website/decisions/0082-chapter-layout-extraction.md)
+- **ERROR V0** — V0: docs/website/decisions/0082-chapter-layout-extraction.md: validation block failed schema parse: evidence.1.kind: Invalid option: expected one of "test"|"chapter"|"review"|"deployment"|"audit"|"manual"; evidence.2.kind: Invalid option: expected one of "test"|"chapter"|"review"|"deployment"|"audit"|"manual" (docs/website/decisions/0082-chapter-layout-extraction.md)
 
 ## Contracts
 
@@ -142,6 +150,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0079-topic-registry-and-resolution-pattern.md](/topic-registry-and-resolution-pattern/) | in progress | accepted design | 2026-05-23 | deployment, review, test |  |
 | [docs/website/decisions/0080-course-spec-format-v0-1.md](/course-spec-format-v0-1/) | in progress | shipped | 2026-05-26 | deployment, test |  |
 | [docs/website/decisions/0081-worked-example-component.md](/worked-example-component/) | in progress | shipped | 2026-05-26 | manual, test |  |
+| [docs/website/decisions/0082-chapter-layout-extraction.md](/chapter-layout-extraction/) | _missing_ | — | — | — | no validation block |
 
 ### Reference docs
 

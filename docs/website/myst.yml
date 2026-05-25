@@ -234,6 +234,7 @@ project:
         - file: decisions/0079-topic-registry-and-resolution-pattern.md
         - file: decisions/0080-course-spec-format-v0-1.md
         - file: decisions/0081-worked-example-component.md
+        - file: decisions/0082-chapter-layout-extraction.md
     - title: Pilots
       children:
         - file: pilots/_template.md
