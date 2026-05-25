@@ -1,0 +1,7 @@
+{
+  "type": "module",
+  "slug": "test-section",
+  "title": "Packed-Smoke Test Section",
+  "order": 0,
+  "description": "Single-section fixture for the packed-smoke hydration-mismatch defense (PR-D1)."
+}

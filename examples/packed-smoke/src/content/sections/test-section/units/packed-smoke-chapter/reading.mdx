@@ -1,0 +1,40 @@
+---
+id: "packed-smoke-chapter"
+title: "Packed-Smoke Test Chapter — Reading"
+chapter: 1
+order: 1
+lang: "en"
+description: "Minimal fixture exercising all 5 store-backed components with client:load — PR-D1 (ADR-0082 follow-up + PR #172 review item 2)."
+tags: ["fixture", "packed-smoke"]
+---
+
+import {
+  Aside,
+  ChapterRef,
+  EquationRef,
+  FigureRef,
+  GlossaryTerm,
+  KeyEquation,
+} from "@sophie/components";
+
+# Packed-smoke hydration fixture
+
+<Aside kind="definition" title="Test term">
+A minimal definition wired to satisfy pedagogy audit D4 (every
+`<GlossaryTerm name>` must resolve to an `<Aside kind="definition">`
+with a matching slugified title). Not pedagogically meaningful; the
+fixture's only job is to exercise the store-backed render path.
+</Aside>
+
+A <GlossaryTerm client:load name="test-term">test term</GlossaryTerm>
+demonstrates the store-backed inline reference.
+
+See <EquationRef client:load refId="test-equation" /> for the canonical
+form.
+
+<KeyEquation client:load refId="test-equation" />
+
+The figure <FigureRef client:load name="test-figure" /> illustrates the
+concept.
+
+Continue at <ChapterRef client:load chapter="packed-smoke-chapter" />.

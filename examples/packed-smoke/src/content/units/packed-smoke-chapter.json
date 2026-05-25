@@ -1,0 +1,11 @@
+{
+  "id": "packed-smoke-chapter",
+  "type": "lecture",
+  "title": "Packed-Smoke Test Chapter",
+  "order": 0,
+  "prereqs": [],
+  "section_id": "test-section",
+  "chapter": "packed-smoke-chapter",
+  "status": "stable",
+  "description": "Minimal fixture exercising all 5 store-backed components (GlossaryTerm / KeyEquation / EquationRef / FigureRef / ChapterRef) with client:load — the regression class addressed by PR #172's useHydrated gate."
+}
