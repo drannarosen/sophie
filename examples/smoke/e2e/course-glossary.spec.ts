@@ -1,5 +1,5 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { expectCourseA11y } from "./_helpers/axe";
 
 const GLOSSARY_URL = "/library/glossary";
 const CHAPTER_URL = "/units/spoiler-alerts/reading";
@@ -62,11 +62,7 @@ test.describe("PR-C1: <CourseGlossary /> on /library/glossary", () => {
 
   test("/library/glossary is axe-clean", async ({ page }) => {
     await page.goto(GLOSSARY_URL);
-    const results = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"])
-      .exclude("astro-island") // hydration internals
-      .analyze();
-    expect(results.violations).toEqual([]);
+    await expectCourseA11y(page);
   });
 
   test("chapter route stays separate — anchors in /library/glossary jump in-page on /units/spoiler-alerts/reading", async ({
