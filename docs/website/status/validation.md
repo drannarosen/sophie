@@ -24,33 +24,33 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 | Status | Count |
 |---|---|
 | Validated | 14 |
-| In progress | 18 |
+| In progress | 19 |
 | Unvalidated | 74 |
 | Re-validation needed | 0 |
 | Missing block | 0 |
-| Total | 106 |
+| Total | 107 |
 
 ## Lifecycle summary
 
 | Lifecycle | Count |
 |---|---|
-| Shipped | 62 |
+| Shipped | 63 |
 | Accepted design | 34 |
 | Mixed | 1 |
 | Future package split | 9 |
 | No status | 0 |
-| Total | 106 |
+| Total | 107 |
 
 ## Evidence kinds
 
 | Kind | Count |
 |---|---|
-| test | 75 |
+| test | 76 |
 | chapter | 7 |
 | review | 21 |
 | deployment | 18 |
 | audit | 5 |
-| manual | 29 |
+| manual | 30 |
 
 ## Extractor findings
 
@@ -141,6 +141,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0078-reasoning-trace-composition.md](/reasoning-trace-composition/) | unvalidated | accepted design | — | — |  |
 | [docs/website/decisions/0079-topic-registry-and-resolution-pattern.md](/topic-registry-and-resolution-pattern/) | in progress | accepted design | 2026-05-23 | deployment, review, test |  |
 | [docs/website/decisions/0080-course-spec-format-v0-1.md](/course-spec-format-v0-1/) | in progress | shipped | 2026-05-26 | deployment, test |  |
+| [docs/website/decisions/0081-worked-example-component.md](/worked-example-component/) | in progress | shipped | 2026-05-26 | manual, test |  |
 
 ### Reference docs
 
