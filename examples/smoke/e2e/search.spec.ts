@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { expectChapterA11y } from "./_helpers/axe";
 
 /**
  * RED — Layer 2 e2e for the Pagefind faceted search modal.
@@ -57,6 +58,7 @@ test.describe("Pagefind search modal (Layer 2)", () => {
     const trigger = page.getByRole("searchbox", { name: /search/i });
     await expect(trigger).toBeVisible();
     await page.waitForLoadState("networkidle");
+    await expectChapterA11y(page);
 
     // Trigger via keyboard (the modal's primary entry point)
     await page.keyboard.press("Meta+k");
