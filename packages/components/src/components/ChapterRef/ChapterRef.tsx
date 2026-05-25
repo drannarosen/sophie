@@ -55,10 +55,8 @@ export function ChapterRef({ chapter, children }: ChapterRefProps) {
   }
 
   if (!artifact || !unit) {
-    if (
-      typeof document !== "undefined" &&
-      (typeof process === "undefined" || process.env?.NODE_ENV !== "production")
-    ) {
+    // Dev-only authoring-drift warning. Post-gate → always client (ADR 0038 § A2.2).
+    if (process.env?.NODE_ENV !== "production") {
       console.warn(
         `[ChapterRef] No reading artifact found for chapter "${chapter}". Rendering bare prose.`
       );
@@ -72,11 +70,7 @@ export function ChapterRef({ chapter, children }: ChapterRefProps) {
   return (
     <HoverCard.Root openDelay={150} closeDelay={120}>
       <HoverCard.Trigger asChild>
-        <a
-          className={styles.trigger}
-          data-react-hydrated={hydrated ? "true" : undefined}
-          href={href}
-        >
+        <a className={styles.trigger} data-react-hydrated='true' href={href}>
           {linkText}
           <BookMarked
             aria-hidden
