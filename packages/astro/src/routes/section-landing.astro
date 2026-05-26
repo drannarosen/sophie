@@ -21,6 +21,18 @@ export async function getStaticPaths() {
   }));
 }
 
+// Defensive null guard — runtime-unreachable today (integration
+// only injects /sections/[section]/ when courseSpec is non-null),
+// but documents the invariant at the route boundary. Per Phase 1-4
+// review C1.
+if (!courseSpec) {
+  throw new Error(
+    "[sophie] section-landing.astro: virtual:sophie/course-spec exported null. " +
+      "This route should only be injected when course.sophie.yaml is present. " +
+      "Check the integration's injectRoute guard."
+  );
+}
+
 const { section, units } = Astro.props;
 ---
 

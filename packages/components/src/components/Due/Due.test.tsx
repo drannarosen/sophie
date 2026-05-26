@@ -39,6 +39,18 @@ describe("<Due>", () => {
     expect(() => render(<Due date='not-a-date' />)).toThrow(/date/i);
   });
 
+  it("renders the same date string in <time datetime> regardless of host TZ (UTC-parse defense)", () => {
+    // 2026-12-31 is the canonical hostile date — in US-eastern (UTC-5)
+    // a naive `new Date('2026-12-31')` parses to UTC then localizes to
+    // 2026-12-30 evening. The UTC-parse path in <Due> must round-trip
+    // the same ISO string into the <time datetime> attribute.
+    const { container } = render(<Due date='2026-12-31' />);
+    const time = container.querySelector("time");
+    expect(time?.getAttribute("datetime")).toBe("2026-12-31");
+    // Formatted text should reflect Dec 31, not Dec 30.
+    expect(time?.textContent ?? "").toMatch(/Dec.*31|31.*Dec/);
+  });
+
   it("has zero axe violations", async () => {
     const { container } = render(<Due date='2026-09-15' of='homework' />);
     const results = await axe(container);

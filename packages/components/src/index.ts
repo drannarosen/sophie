@@ -241,6 +241,10 @@ export {
   PredictPropsSchema,
   predictContract,
 } from "./components/Predict/index.ts";
+export {
+  PrereqsList,
+  type PrereqsListProps,
+} from "./components/PrereqsList/index.ts";
 export { Reading, type ReadingProps } from "./components/Reading/index.ts";
 export type { ReflectionProps } from "./components/Reflection/index.ts";
 export {

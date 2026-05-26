@@ -74,8 +74,11 @@ export {
 export {
   type ComposeEntry,
   ComposeEntrySchema,
+  INFO_PAGE_LAYOUTS,
   type InfoPageDeclaration,
   InfoPageDeclarationSchema,
+  type InfoPageLayout,
+  InfoPageLayoutSchema,
   type InfoPages,
   InfoPagesSchema,
 } from "./course-spec-v02-info-pages.js";

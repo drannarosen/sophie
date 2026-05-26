@@ -5,6 +5,7 @@ import {
   GradingTable,
   ObjectivesSection,
   OfficeHoursTable,
+  PrereqsList,
 } from "@sophie/components";
 import type { CollectionEntry } from "astro:content";
 import { render } from "astro:content";
@@ -86,11 +87,7 @@ const resolved = await Promise.all(
         case "accessibility":
           return <AccessibilitySection accessibility={item.value} />;
         case "prereqs":
-          // Phase 3 v0.2: prereqs declared on the schema but no
-          // sub-component yet (ASTR 201's compose list doesn't
-          // include it). Future sprint ships <PrereqsList>; for now,
-          // skip silently.
-          return null;
+          return <PrereqsList prereqs={item.value} />;
         default:
           return null;
       }

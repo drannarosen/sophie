@@ -1,4 +1,5 @@
 import type { Objective } from "@sophie/core/schema";
+import { useId } from "react";
 import styles from "./ObjectivesSection.module.css.js";
 
 export interface ObjectivesSectionProps {
@@ -16,15 +17,17 @@ export interface ObjectivesSectionProps {
  * lives inside another landmark, declare it as a named-region
  * `<section>`, not `<main>` or `<article>`.
  *
- * `assessed_by` badges reference grading.categories[*].id — the
- * cross-refine on CourseSpecSchema ensures every assessed_by ref
- * exists, so this component renders without referential checks.
+ * `assessed_by` badges reference `grading.categories[*].id`. The
+ * cross-refine on `CourseSpecSchema` (added per Phase 1-4 review I3)
+ * rejects any objective whose `assessed_by` entry doesn't exist in
+ * the declared grading categories, so this component renders without
+ * runtime referential checks — schema parse is the gate.
  */
 export function ObjectivesSection({
   objectives,
   title = "Course Objectives",
 }: ObjectivesSectionProps) {
-  const headingId = "course-objectives-heading";
+  const headingId = useId();
 
   return (
     <section className={styles.section} aria-labelledby={headingId}>

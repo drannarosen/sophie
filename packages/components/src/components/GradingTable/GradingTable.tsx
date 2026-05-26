@@ -1,4 +1,5 @@
 import type { Grading } from "@sophie/core/schema";
+import { useId } from "react";
 import styles from "./GradingTable.module.css.js";
 
 export interface GradingTableProps {
@@ -24,7 +25,7 @@ export function GradingTable({
   grading,
   title = "Grading",
 }: GradingTableProps) {
-  const headingId = "grading-section-heading";
+  const headingId = useId();
 
   return (
     <section className={styles.section} aria-labelledby={headingId}>

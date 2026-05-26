@@ -370,6 +370,27 @@ export const CourseSpecSchema = z
         "assessment.category_refs entries must all reference declared grading.categories[*].id",
       path: ["assessment", "category_refs"],
     }
+  )
+  // Cross-refine: every objectives[*].assessed_by entry must reference a
+  // declared grading.categories[*].id. Per Phase 1-4 review I3 —
+  // matches the assessment.category_refs invariant above so objective→
+  // category links can't drift silently. The ObjectivesSection's
+  // 'assessed by' badges depend on these refs being live.
+  .refine(
+    (spec) => {
+      if (!spec.objectives) return true;
+      const declaredIds = new Set(spec.grading.categories.map((c) => c.id));
+      return spec.objectives.every(
+        (obj) =>
+          !obj.assessed_by ||
+          obj.assessed_by.every((ref) => declaredIds.has(ref))
+      );
+    },
+    {
+      message:
+        "objectives[*].assessed_by entries must all reference declared grading.categories[*].id",
+      path: ["objectives"],
+    }
   );
 
 export type CourseSpec = z.infer<typeof CourseSpecSchema>;

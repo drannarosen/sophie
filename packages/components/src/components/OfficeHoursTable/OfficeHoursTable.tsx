@@ -1,4 +1,5 @@
 import type { OfficeHour } from "@sophie/core/schema";
+import { useId } from "react";
 import styles from "./OfficeHoursTable.module.css.js";
 
 export interface OfficeHoursTableProps {
@@ -21,7 +22,7 @@ export function OfficeHoursTable({
   hours,
   title = "Office Hours",
 }: OfficeHoursTableProps) {
-  const headingId = "office-hours-section-heading";
+  const headingId = useId();
 
   return (
     <section className={styles.section} aria-labelledby={headingId}>

@@ -82,6 +82,21 @@ describe("course-spec-store — script-tag auto-hydration", () => {
     expect(() => getCourseSpec()).not.toThrow();
     expect(getCourseSpec()).toBeNull();
   });
+
+  test("handles the literal 'null' payload emitted by TextbookLayout when no consumer spec exists (back-compat roundtrip)", () => {
+    // TextbookLayout serializes `JSON.stringify(courseSpec)` which for
+    // a null spec emits the literal string "null". The store must
+    // round-trip that as a parse-success-with-null-value (NOT a parse
+    // failure), and useCourseSpec must throw with the curated message.
+    const script = document.createElement("script");
+    script.id = "sophie-course-spec";
+    script.type = "application/json";
+    script.textContent = "null";
+    document.body.appendChild(script);
+
+    // getCourseSpec returns null (parse succeeded, value is null).
+    expect(getCourseSpec()).toBeNull();
+  });
 });
 
 describe("useCourseSpec — hook", () => {

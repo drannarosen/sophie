@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { NonEmptyString } from "./primitives.js";
 
 /**
  * `info_pages` drives route injection at `astro:config:setup`. Each
@@ -35,10 +34,29 @@ export const ComposeEntrySchema = z.union([
 
 export type ComposeEntry = z.infer<typeof ComposeEntrySchema>;
 
+/**
+ * The five layout components @sophie/astro ships at v0.2. Tightened
+ * to `z.enum` per Phase 1-4 review I1: defends the typo class at the
+ * schema layer rather than surfacing missing-layout errors at the
+ * info-page.astro dispatcher's runtime lookup. New layouts ship by
+ * extending this enum + adding to info-page.astro's LAYOUTS map in
+ * the same PR.
+ */
+export const INFO_PAGE_LAYOUTS = [
+  "SyllabusPage",
+  "SchedulePage",
+  "InstructorPage",
+  "PoliciesPage",
+  "AccommodationsPage",
+] as const;
+
+export const InfoPageLayoutSchema = z.enum(INFO_PAGE_LAYOUTS);
+export type InfoPageLayout = z.infer<typeof InfoPageLayoutSchema>;
+
 export const InfoPageDeclarationSchema = z
   .object({
     /** Component name resolved by info-page.astro's LAYOUTS lookup. */
-    layout: NonEmptyString,
+    layout: InfoPageLayoutSchema,
     /** Ordered composition of structural data + prose fragments. */
     compose: z.array(ComposeEntrySchema).optional(),
     /** Single-prose-fragment layouts (InstructorPage, PoliciesPage). */

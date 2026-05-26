@@ -148,9 +148,9 @@ describe("evaluateCompose", () => {
     }
   });
 
-  test("supports all 7 known data keys (objectives, prereqs, grading, office_hours, accessibility, contact, schedule_overview)", () => {
+  test("supports the 5 implemented data keys present on the fixture (objectives, grading, office_hours, contact, accessibility); prereqs schema-valid but not on this fixture; schedule_overview deferred per H6", () => {
     const spec = fixtureSpec();
-    const composeAllData = [
+    const composeImplemented = [
       "objectives",
       "grading",
       "office_hours",
@@ -158,12 +158,12 @@ describe("evaluateCompose", () => {
       "accessibility",
     ] as const;
     const result = evaluateCompose({
-      compose: [...composeAllData],
+      compose: [...composeImplemented],
       spec,
       proseLookup: fixtureProseLookup(),
     });
     expect(result.map((i) => (i.kind === "data" ? i.key : null))).toEqual([
-      ...composeAllData,
+      ...composeImplemented,
     ]);
   });
 });

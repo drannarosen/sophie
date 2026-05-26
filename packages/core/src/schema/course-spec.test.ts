@@ -369,6 +369,17 @@ describe("CourseSpecSchema v0.2 — chrome clusters", () => {
     expect(parsed.info_pages?.syllabus?.compose).toContain("prose/policies");
   });
 
+  it("rejects info_pages declarations with unknown layout names (per review I1 — enum, not NonEmptyString)", () => {
+    const data = valid();
+    const broken = {
+      ...data,
+      info_pages: {
+        syllabus: { layout: "TypoPage" }, // not one of the 5 known layouts
+      },
+    };
+    expect(() => CourseSpecSchema.parse(broken)).toThrow();
+  });
+
   it("rejects info_pages.compose entries that are neither known data keys nor prose/<slug>", () => {
     const data = valid();
     const broken = {
@@ -434,6 +445,22 @@ describe("CourseSpecSchema v0.2 — chrome clusters", () => {
 });
 
 describe("CourseSpecSchema v0.2 — grading invariants", () => {
+  it("rejects objectives[*].assessed_by entries that don't reference declared grading.categories (I3 cross-refine)", () => {
+    const data = valid();
+    const broken = {
+      ...data,
+      objectives: [
+        {
+          id: "lo-x",
+          verb: "Test",
+          body: "the cross-refine",
+          assessed_by: ["nonexistent-category"],
+        },
+      ],
+    };
+    expect(() => CourseSpecSchema.parse(broken)).toThrow();
+  });
+
   it("requires assessment.category_refs to reference declared grading.categories", () => {
     const data = valid();
     const broken = {

@@ -32,6 +32,18 @@ import { courseSpec } from "virtual:sophie/course-spec";
  * @sophie/components, prose via Astro <Content components={...}>.
  */
 
+// Defensive null guard — runtime-unreachable today (integration
+// only injects /<slug>/ when courseSpec is non-null), but documents
+// the invariant at the route boundary + narrows the type from
+// `CourseSpec | null`. Per Phase 1-4 review C1.
+if (!courseSpec) {
+  throw new Error(
+    "[sophie] info-page.astro: virtual:sophie/course-spec exported null. " +
+      "This route should only be injected when course.sophie.yaml is present. " +
+      "Check the integration's injectRoute guard."
+  );
+}
+
 const slug = Astro.url.pathname.replace(/^\/|\/$/g, "");
 const decl = courseSpec.info_pages?.[slug];
 if (!decl) {

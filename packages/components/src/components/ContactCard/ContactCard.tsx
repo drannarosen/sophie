@@ -1,4 +1,5 @@
 import type { Contact } from "@sophie/core/schema";
+import { useId } from "react";
 import styles from "./ContactCard.module.css.js";
 
 export interface ContactCardProps {
@@ -23,7 +24,7 @@ export function ContactCard({
   instructor,
   title = "Contact",
 }: ContactCardProps) {
-  const headingId = "contact-section-heading";
+  const headingId = useId();
 
   return (
     <section className={styles.section} aria-labelledby={headingId}>

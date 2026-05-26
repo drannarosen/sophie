@@ -1,4 +1,5 @@
 import type { Accessibility } from "@sophie/core/schema";
+import { useId } from "react";
 import styles from "./AccessibilitySection.module.css.js";
 
 export interface AccessibilitySectionProps {
@@ -23,7 +24,7 @@ export function AccessibilitySection({
   accessibility,
   title = "Accessibility & Accommodations",
 }: AccessibilitySectionProps) {
-  const headingId = "accessibility-section-heading";
+  const headingId = useId();
 
   return (
     <section className={styles.section} aria-labelledby={headingId}>

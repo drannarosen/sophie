@@ -20,6 +20,20 @@ import { courseSpec } from "virtual:sophie/course-spec";
  * real implementation; the other two delegate to it pending follow-up
  * sprints.
  */
+// Defensive null guard — runtime-unreachable today because the
+// integration only injects `/` when courseSpec is non-null, but
+// declaring the invariant at the route boundary documents the
+// contract + narrows the type from `CourseSpec | null` (per the
+// virtual module's always-register signature). Per Phase 1-4
+// review C1.
+if (!courseSpec) {
+  throw new Error(
+    "[sophie] course-landing.astro: virtual:sophie/course-spec exported null. " +
+      "This route should only be injected when course.sophie.yaml is present. " +
+      "Check the integration's injectRoute guard."
+  );
+}
+
 const LAYOUTS = {
   "simple-list": SimpleList,
   "hero-with-modules": HeroWithModules,
