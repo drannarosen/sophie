@@ -80,6 +80,7 @@ proposal.
 | **Publisher AI tutors (Cengage, Pearson, Top Hat)** | Closed, proprietary, accountable to shareholders. Sophie is AGPL, accountable to instructors and students. |
 | **Pressbooks** | OER hosting + flat content. Sophie targets the *interactive* layer: schema-validated components, persistent learner state, audit. |
 | **Jupyter Book / JOSS-style infra** | General-purpose scholarly publishing. Sophie is opinionated about pedagogy and authoring workflow. |
+| **Course-LMS integration (Canvas, Blackboard, Moodle)** | LMS plugins or manually-authored Markdown syllabi; per-course rebuild + sync required. Sophie ships schema-driven course-website chrome (`course.sophie.yaml` v0.2 — see [ADR 0080 Amendment 2](../decisions/0080-course-spec-format-v0-1.md#amendment-2-assessment-grade-weights-clean-break-course-info-projection-2026-05-26)) that auto-generates syllabus, schedule, instructor, policies, and accommodations pages from a single source. Lighter-weight than LMS plugins; more structured than plain-Markdown syllabi. iCal export + PDF generation on the same source roadmapped. |
 
 ## Sophie as a production implementation of Open Cognitive Graph
 
