@@ -238,6 +238,7 @@ project:
         - file: decisions/0083-cl1-client-directive-invariant.md
         - file: decisions/0084-packed-smoke-ci-gate.md
         - file: decisions/0085-component-template-skeleton.md
+        - file: decisions/0086-multi-chapter-glossary-definitions.md
     - title: Pilots
       children:
         - file: pilots/_template.md
