@@ -6,7 +6,7 @@ tags:
   - content
   - authoring
   - pedagogy-index
-status: accepted
+status: accepted-design
 validation:
   status: validated
   last_validated_date: "2026-05-26"
@@ -16,9 +16,9 @@ validation:
       date: "2026-05-26"
       notes: "Cross-chapter same-slug definitions no longer throw; default first-defined canonical; explicit `canonical` overrides; two explicit canonicals for one slug throw (mirrors the F3 figure invariant)."
     - kind: test
-      ref: packages/astro/src/components/CourseGlossary.dedup.test.ts
+      ref: packages/astro/src/lib/pedagogy-index/canonical-definitions.test.ts
       date: "2026-05-26"
-      notes: "The /library/glossary room dedupes to one entry per slug, selecting the canonical definition."
+      notes: "The course-glossary dedup helper collapses to one entry per slug, selecting the canonical definition (explicit canonical wins; else first-accumulated)."
 ---
 
 # ADR 0086: Multi-chapter glossary definitions (collisions allowed; canonical resolution)
