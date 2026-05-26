@@ -32,6 +32,17 @@ export const DefinitionEntrySchema = z.object({
   unit: Slug,
   /** DOM id on the source <details> element; back-link target. */
   anchor: NonEmptyString,
+  /**
+   * Whether this definition is the course-level canonical for its slug
+   * (ADR 0086). A slug may be defined in multiple chapters; at most one
+   * may be canonical, and the `/library/glossary` room shows that one.
+   * The extractor always sets it (true/false); optional in the schema so
+   * existing non-extractor DefinitionEntry literals (test fixtures, audit
+   * inputs) need no change — `undefined` reads as non-canonical
+   * everywhere it is consumed. Mirrors the F3 figure-canonical mechanism
+   * (ADR 0038) at the resolution layer.
+   */
+  canonical: z.boolean().optional(),
 });
 export type DefinitionEntry = z.infer<typeof DefinitionEntrySchema>;
 

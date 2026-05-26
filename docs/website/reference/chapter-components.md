@@ -78,7 +78,7 @@ This page is the chapter author's quick reference.
 
 | Component | Notes |
 |---|---|
-| `<Aside kind="definition">` | Source for `PedagogyIndex.definitions`. Required `title` slugifies into the canonical anchor. |
+| `<Aside kind="definition">` | Source for `PedagogyIndex.definitions`. Required `title` slugifies into the canonical anchor. A term MAY be defined in multiple chapters (cross-lecture reinforcement, [ADR 0086](../decisions/0086-multi-chapter-glossary-definitions.md)); the optional boolean-presence `canonical` prop (`<Aside kind="definition" title="X" canonical>`) marks which definition the `/library/glossary` room shows — at most one per slug across the textbook, else a build error. |
 | `<Aside kind="key-insight">` | Source for `PedagogyIndex.keyInsights` (short variant). |
 | `<Aside kind="misconception">` | Source for `PedagogyIndex.misconceptions` (short variant). |
 | `<Aside kind="note">` / `kind="digression">` | Non-indexed marginal asides; no pedagogy-index role. |

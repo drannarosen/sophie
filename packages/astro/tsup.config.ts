@@ -49,6 +49,13 @@ export default defineConfig({
     // Must exist at dist/lib/pedagogy-index/accumulator.js to resolve
     // from the copied-verbatim .astro files in dist/components/.
     "lib/pedagogy-index/accumulator": "src/lib/pedagogy-index/accumulator.ts",
+    // `lib/pedagogy-index/canonical-definitions` collapses multi-chapter
+    // definitions to one canonical entry per slug (ADR 0086). Imported by
+    // CourseGlossary.astro; must exist at
+    // dist/lib/pedagogy-index/canonical-definitions.js to resolve from the
+    // copied-verbatim .astro files in dist/components/.
+    "lib/pedagogy-index/canonical-definitions":
+      "src/lib/pedagogy-index/canonical-definitions.ts",
     // `lib/pedagogy-audit/runner` is the systematic build-time audit
     // pass (PR-C4) over the populated PedagogyIndex (C2 split under
     // ADR 0061). Imported indirectly by TextbookLayout via

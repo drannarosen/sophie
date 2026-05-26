@@ -23,6 +23,33 @@ describe("extractDefinitions (pure)", () => {
       unit: "spoiler-alerts",
       anchor: "standard-candle",
     });
+    expect(entries[0]?.canonical).toBe(false);
+  });
+
+  test("reads the boolean-presence `canonical` prop (ADR 0086)", () => {
+    const tree = {
+      type: "root",
+      children: [
+        {
+          type: "mdxJsxFlowElement",
+          name: "Aside",
+          attributes: [
+            { type: "mdxJsxAttribute", name: "kind", value: "definition" },
+            {
+              type: "mdxJsxAttribute",
+              name: "title",
+              value: "Kirchhoff's laws",
+            },
+            { type: "mdxJsxAttribute", name: "canonical", value: null },
+          ],
+          children: [para("body")],
+        },
+      ],
+    };
+
+    const entries = extractDefinitions(tree as never, "ch-b");
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.canonical).toBe(true);
   });
 
   test("skips Aside blocks with non-definition kinds", () => {

@@ -260,9 +260,9 @@ class IndexAccumulator {
    */
   clearUnit(unitId: string): void {
     const state = getGlobalState();
-    for (const [slug, entry] of state.definitions) {
+    for (const [key, entry] of state.definitions) {
       if (entry.unit === unitId) {
-        state.definitions.delete(slug);
+        state.definitions.delete(key);
       }
     }
     // Post-ADR-0060: equations are registry-sourced (one declaration per
@@ -350,26 +350,42 @@ class IndexAccumulator {
   }
 
   /**
-   * Add a chapter's extracted entries. Throws on cross-chapter
-   * slug collision (audit invariant #1).
+   * Add a chapter's extracted definitions. Per ADR 0086 a slug MAY be
+   * defined in multiple chapters (deliberate cross-lecture reinforcement);
+   * stored keyed by `${unit}#${slug}` so every chapter's own definition is
+   * retained (mirrors figure usages keyed by `${unit}#${anchor}`). The
+   * retained invariant mirrors F3: at most one chapter may mark a given
+   * slug `canonical` (the one the `/library/glossary` room shows).
+   * Intra-chapter slug collisions are caught upstream in `extractDefinitions`.
    */
   addDefinitions(entries: ReadonlyArray<DefinitionEntry>): void {
     const state = getGlobalState();
-    // Validate the whole batch BEFORE mutating. Without this two-
-    // pass shape, a cross-chapter collision in entry N would leave
-    // entries 0..N-1 already in the map — fine while the throw
-    // kills the build, but brittle for PR-C2+ which may batch
-    // larger role-mixed adds.
+    // Two-pass: detect a cross-chapter multiple-canonical conflict BEFORE
+    // mutating, so a batch that throws on entry N leaves 0..N-1 unwritten.
+    const seenCanonicalSlugs = new Map<string, string>(); // slug -> unit
     for (const entry of entries) {
-      const existing = state.definitions.get(entry.slug);
-      if (existing && existing.unit !== entry.unit) {
+      if (!entry.canonical) continue;
+      for (const existing of state.definitions.values()) {
+        if (
+          existing.slug === entry.slug &&
+          existing.canonical &&
+          existing.unit !== entry.unit
+        ) {
+          throw new Error(
+            `Definition slug "${entry.slug}" ("${entry.term}") is marked canonical in multiple chapters: "${existing.unit}" and "${entry.unit}". Resolution: remove \`canonical\` from one of them.`
+          );
+        }
+      }
+      const prior = seenCanonicalSlugs.get(entry.slug);
+      if (prior !== undefined && prior !== entry.unit) {
         throw new Error(
-          `Definition "${entry.term}" (slug "${entry.slug}") is defined in multiple chapters: "${existing.unit}" and "${entry.unit}". Resolution: rename one or consolidate.`
+          `Definition slug "${entry.slug}" ("${entry.term}") is marked canonical in multiple chapters: "${prior}" and "${entry.unit}". Resolution: remove \`canonical\` from one of them.`
         );
       }
+      seenCanonicalSlugs.set(entry.slug, entry.unit);
     }
     for (const entry of entries) {
-      state.definitions.set(entry.slug, entry);
+      state.definitions.set(`${entry.unit}#${entry.slug}`, entry);
     }
   }
 

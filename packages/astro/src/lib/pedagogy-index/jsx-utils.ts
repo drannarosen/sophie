@@ -31,6 +31,11 @@ export interface AsideAttributes extends MisconceptionGraphFields {
   title?: string;
   id?: string;
   /**
+   * Course-level canonical flag for `kind="definition"` (ADR 0086).
+   * Boolean-presence prop; mirrors `FigureAttributes.canonical`.
+   */
+  canonical?: boolean;
+  /**
    * `<Aside kind="misconception" name="…">` — the canonical
    * misconception-graph identifier per ADR 0044 (used in
    * `prerequisite_misconceptions` / `related_misconceptions` /
@@ -141,6 +146,13 @@ export function readAsideAttributes(node: MdxJsxFlowElement): AsideAttributes {
   const out: AsideAttributes = {};
   for (const attr of node.attributes ?? []) {
     if (attr.type !== "mdxJsxAttribute") continue;
+    // `canonical` is a boolean-presence prop (`<Aside ... canonical />`,
+    // mdast `value: null`), so it must be read BEFORE the string guard
+    // below. Mirrors `readFigureAttributes` (ADR 0086 / F3).
+    if (attr.name === "canonical") {
+      out.canonical = attr.value === null || attr.value === true;
+      continue;
+    }
     if (typeof attr.value !== "string") continue;
     if (attr.name === "kind") out.kind = attr.value;
     if (attr.name === "title") out.title = attr.value;

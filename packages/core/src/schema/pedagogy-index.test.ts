@@ -21,6 +21,7 @@ const validDefinition = {
   body: "<p>An object whose intrinsic luminosity is known.</p>",
   unit: "spoiler-alerts",
   anchor: "standard-candle",
+  canonical: false,
 };
 
 describe("DefinitionEntrySchema", () => {
