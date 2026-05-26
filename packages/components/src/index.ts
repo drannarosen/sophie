@@ -113,6 +113,14 @@ export {
   DropdownPropsSchema,
   dropdownContract,
 } from "./components/Dropdown/index.ts";
+// Course-info projection (2026-05-26) — course-management chrome
+// components per the design doc's "C pack". Inline elements (no
+// landmarks); hybrid props-or-schema where applicable. Used by
+// authors inside chapter MDX. <OfficeHoursChrome> is aliased as
+// <OfficeHours> at the public name so authors write
+// `<OfficeHours />` in MDX; the internal name disambiguates from
+// the info-page section component <OfficeHoursTable>.
+export { Due, type DueProps } from "./components/Due/index.ts";
 export type {
   EffortLevel,
   EffortLogProps,
@@ -206,6 +214,7 @@ export {
   ObservablePropsSchema,
   observableContract,
 } from "./components/Observable/index.ts";
+export { OfficeHoursChrome as OfficeHours } from "./components/OfficeHoursChrome/index.ts";
 export {
   OfficeHoursTable,
   type OfficeHoursTableProps,
@@ -220,6 +229,7 @@ export {
   OMIFlowSlotPropsSchema,
   omiFlowContract,
 } from "./components/OMIFlow/index.ts";
+export { Points, type PointsProps } from "./components/Points/index.ts";
 export type {
   PredictPrompt,
   PredictProps,
@@ -231,6 +241,7 @@ export {
   PredictPropsSchema,
   predictContract,
 } from "./components/Predict/index.ts";
+export { Reading, type ReadingProps } from "./components/Reading/index.ts";
 export type { ReflectionProps } from "./components/Reflection/index.ts";
 export {
   Reflection,
@@ -296,6 +307,7 @@ export {
   UnitsPropsSchema,
   unitsContract,
 } from "./components/Units/index.ts";
+export { Week, type WeekProps } from "./components/Week/index.ts";
 export type {
   WorkedExampleDimCheckProps,
   WorkedExampleProblemProps,
@@ -381,6 +393,7 @@ export type {
 export {
   IndexedDBResponseStore,
   ProfileProvider,
+  useCourseSpec,
   useHydrated,
   useInteractive,
   useProfile,

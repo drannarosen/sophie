@@ -1,0 +1,41 @@
+.chrome {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--sophie-space-2);
+  padding: 4px 10px;
+  border-radius: var(--sophie-radius-sm);
+  background: var(--sophie-surface-2);
+  color: var(--sophie-text);
+  border: 1px solid var(--sophie-border);
+  font-size: var(--sophie-font-size-small, 0.875rem);
+}
+
+.label {
+  font-weight: 600;
+  color: var(--sophie-text-strong);
+}
+
+.slot {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.day {
+  font-weight: 500;
+}
+
+.location {
+  color: var(--sophie-text-muted);
+  margin-inline-start: var(--sophie-space-1);
+}
+
+.separator {
+  color: var(--sophie-text-muted);
+}
+
+.empty {
+  font-style: italic;
+  color: var(--sophie-text-muted);
+}
