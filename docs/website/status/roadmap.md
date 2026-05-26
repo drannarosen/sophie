@@ -24,6 +24,44 @@ integration) lives in a dedicated roadmap:
 implementation begins after that roadmap's 9 proposed ADRs land.
 :::
 
+## Current status (2026-05-26)
+
+**Tier-2 course-website chrome shipped via PR #199** (course-info
+projection sprint, commit `4e0730e`).
+
+Phases 1–4 complete:
+
+- `course.sophie.yaml` v0.2-shape extension: 7 new optional clusters
+  (objectives, prereqs, office_hours, contact, accessibility,
+  info_pages, landing) + required top-level `grading.categories`
+  replacing the v0.1 `assessment.grade_weights` clean break. 8 new
+  sibling-file schemas per ADR 0061 LOC budget.
+- 5 info-page `.astro` layout orchestrators (Syllabus, Schedule,
+  Instructor, Policies, Accommodations) + 6 React layout
+  sub-components (`ObjectivesSection`, `GradingTable`,
+  `OfficeHoursTable`, `ContactCard`, `AccessibilitySection`,
+  `PrereqsList`).
+- Course-landing + section-landing dispatchers; 3 built-in landing
+  layouts (`hero-with-modules`, `simple-list`, `prose-with-toc`) + a
+  `"custom"` integration-override path.
+- 5 MDX-authorable course-management chrome components: `<Due>`,
+  `<Points>`, `<Reading>`, `<OfficeHours>`, `<Week>` via the
+  `useCourseSpec()` hook (SSR-setter store doctrine).
+- 2 virtual modules now in use (`virtual:sophie/figures` +
+  `virtual:sophie/course-spec`); pattern doctrine codified as
+  AGENTS.md R12 (type-narrowing at dispatcher entry).
+- Author-facing reference doc lands at
+  [reference/course-info-schema.md](../reference/course-info-schema.md).
+
+**Deferred per H6**: iCal export (`/schedule.ics`) +
+`schedule.yaml` source-of-truth. Follow-up sprint with own design
+pass + ADR. `SchedulePage.astro` ships as v0.2 placeholder.
+
+Documentation reconciliation: ADR 0080 Amendment 2 +
+cross-references on ADRs 0082, 0058, 0061, 0004, 0030 (must-update)
++ 0023, 0067, 0003 (should-update). See
+[ADR 0080 Amendment 2](../decisions/0080-course-spec-format-v0-1.md#amendment-2-assessment-grade-weights-clean-break-course-info-projection-2026-05-26).
+
 ## Current status (2026-05-15)
 
 **Bucket B — chrome + foundation — is 10/10 done.**
