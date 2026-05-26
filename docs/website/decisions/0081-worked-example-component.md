@@ -19,6 +19,10 @@ validation:
       ref: astr201/pilots/lecture-02-tools-of-the-trade.md
       date: "2026-05-26"
       notes: "Gap driver — the astr201 M1-L2 pilot (4 worked examples) was halted on this component per ADR 0064 §3; this ADR is the path-1 resolution. Conversion resumes after merge + sync."
+    - kind: test
+      ref: packages/astro/src/lib/pedagogy-index/extractors/worked-examples.ts
+      date: "2026-05-26"
+      notes: "WS B+D — pedagogy-index extractor + WE-1 (units-at-every-step / QB6) + WE-2 (Problem + Result completeness) + WE-3 (unknown JSX child, R7 disposition) invariants now ship. Extractor populates PedagogyIndex.workedExamples with per-callsite slot-coverage summaries; checkWorkedExamples in invariants/worked-examples.ts consumes them. Closes the M3-L2 Hydrostatic Equilibrium pilot's Surprise #5 deferral (issue #188)."
 ---
 
 # ADR 0081: WorkedExample epistemic component

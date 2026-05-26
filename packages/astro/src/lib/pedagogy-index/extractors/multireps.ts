@@ -1,4 +1,8 @@
-import type { MultiRepIndexEntry, SerializedRep } from "@sophie/core/schema";
+import type {
+  InlineRefUsageEntry,
+  MultiRepIndexEntry,
+  SerializedRep,
+} from "@sophie/core/schema";
 import type { Root } from "mdast";
 import { visit } from "unist-util-visit";
 import {
@@ -109,9 +113,35 @@ export function buildRepsFromMultiRepChildren(
 }
 
 /**
+ * Result of one read-only `extractMultiReps` pass: the parsed
+ * MultiRep entries + any `InlineRefUsageEntry` records emitted for
+ * the MultiRep's `<RepFigure>` and `<RepEquation>` children.
+ *
+ * Why the side-channel emission ([issue #191](https://github.com/drannarosen/sophie/issues/191)):
+ * before WS B+D, F4 (orphan figure) and the R-series equation-
+ * citation invariants only saw `<Figure>`, `<FigureRef>`,
+ * `<KeyEquation>`, and `<EquationRef>` callsites. Figures/equations
+ * referenced ONLY from a `<MultiRep>` binding were therefore flagged
+ * as orphans even though they were genuinely used. By emitting one
+ * `InlineRefUsageEntry { kind: "rep-figure" | "rep-equation" }` per
+ * Rep child the MultiRep extractor walks, MultiRep-only references
+ * become first-class index-layer citations and F4 / R-series stop
+ * false-positiving — without those invariants needing to know about
+ * MultiRep's internal shape (per AGENTS.md "structural fixes over
+ * targeted patches").
+ */
+export interface MultiRepExtractionResult {
+  entries: MultiRepIndexEntry[];
+  inlineRefUsages: InlineRefUsageEntry[];
+}
+
+/**
  * Pure extractor. Walks the mdast tree for `mdxJsxFlowElement` nodes
  * named `MultiRep`. For each match, validates the `concept` attr and
  * builds a `MultiRepIndexEntry` with the serialized rep payloads.
+ * Additionally emits one `InlineRefUsageEntry` per `<RepFigure>` /
+ * `<RepEquation>` child so MultiRep references count toward the
+ * figure-usage and equation-citation audits (#191, WS B+D).
  *
  * Resolution of `refKey` / `refName` against the chapter's equation /
  * figure indexes happens at audit-time (PR-δ), not here — keeps the
@@ -124,8 +154,9 @@ export function buildRepsFromMultiRepChildren(
 export function extractMultiReps(
   tree: Root,
   unitId: string
-): MultiRepIndexEntry[] {
+): MultiRepExtractionResult {
   const out: MultiRepIndexEntry[] = [];
+  const inlineRefUsages: InlineRefUsageEntry[] = [];
   // Detect within-chapter id collisions at extract-time (vs at the
   // accumulator's `addMultiReps`, which only catches cross-batch
   // collisions). Two `<MultiRep concept="x">` in one chapter both
@@ -174,7 +205,28 @@ export function extractMultiReps(
       ...(layout ? { layout } : {}),
     };
     out.push(entry);
+
+    // #191 — emit InlineRefUsageEntry per Rep child so F4 / R-series
+    // see MultiRep references as first-class citations. `reps` was
+    // produced by `buildRepsFromMultiRepChildren` above which already
+    // validated the refKey/refName presence; here we just thread them
+    // through to the audit-visible collection.
+    for (const rep of reps) {
+      if (rep.kind === "figure") {
+        inlineRefUsages.push({
+          kind: "rep-figure",
+          refKey: rep.refName,
+          unit: unitId,
+        });
+      } else if (rep.kind === "equation") {
+        inlineRefUsages.push({
+          kind: "rep-equation",
+          refKey: rep.refKey,
+          unit: unitId,
+        });
+      }
+    }
   });
 
-  return out;
+  return { entries: out, inlineRefUsages };
 }

@@ -129,4 +129,26 @@ describe("F4 — registry figure with zero usages (WARNING)", () => {
     const report = runPedagogyAudit(index);
     expect(report.warnings).toEqual([]);
   });
+
+  it("WS B+D #191 — does not flag a figureRegistry entry referenced ONLY via <RepFigure> inside <MultiRep>", () => {
+    const fig: FigureRegistryEntry = {
+      name: "multirep-only-figure",
+      src: "/x.png",
+      alt: "x",
+    };
+    const index: PedagogyIndex = {
+      ...emptyIndex(),
+      figureRegistry: [fig],
+      figureUsages: [],
+      inlineRefUsages: [
+        {
+          kind: "rep-figure",
+          refKey: "multirep-only-figure",
+          unit: "surface-flux-and-colors",
+        },
+      ],
+    };
+    const report = runPedagogyAudit(index);
+    expect(report.warnings).toEqual([]);
+  });
 });

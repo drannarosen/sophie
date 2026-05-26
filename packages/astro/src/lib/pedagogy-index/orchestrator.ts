@@ -24,6 +24,7 @@ import { extractRetrievalPrompts } from "./extractors/retrieval-prompt.ts";
 import { extractSkillReviews } from "./extractors/skill-review.ts";
 import { extractSpacedReviews } from "./extractors/spaced-review.ts";
 import { extractTopicAndCards } from "./extractors/topic.ts";
+import { extractWorkedExamples } from "./extractors/worked-examples.ts";
 import { markChapterOpener } from "./transforms/chapter-opener.ts";
 import { markFirstUseGlossaryTerms } from "./transforms/first-use-glossary.ts";
 import { transformIntervention } from "./transforms/intervention.ts";
@@ -287,6 +288,13 @@ export function pedagogyIndexRemarkPlugin(
     const omiResult = extractOMIFlows(tree, unitId);
     indexAccumulator.addOMIFlows(omiResult.entries);
     indexAccumulator.addExtractorFindings(omiResult.findings);
+    // ADR 0081 + WS B+D — <WorkedExample> extractor. Counts slot
+    // children + emits WE-3 WARNING findings for any unknown JSX
+    // children (R7 doctrine, mirrors OMIFlow's OF-3). Audit-time
+    // invariants WE-1 / WE-2 consume the per-entry `slots` summary.
+    const workedExampleResult = extractWorkedExamples(tree, unitId);
+    indexAccumulator.addWorkedExamples(workedExampleResult.entries);
+    indexAccumulator.addExtractorFindings(workedExampleResult.findings);
     // Wedge B1 retrieval-family extractors. Each emits one entry per
     // matching JSX flow element; pure read pass (no mutation). PRA-1
     // (prereq activation), RET-1 (retrieval coverage), and SR-1
@@ -302,7 +310,12 @@ export function pedagogyIndexRemarkPlugin(
     const inlineRefResult = extractInlineRefUsages(tree, unitId);
     indexAccumulator.addInlineRefUsages(inlineRefResult.usages);
     indexAccumulator.addExtractorFindings(inlineRefResult.findings);
-    indexAccumulator.addMultiReps(extractMultiReps(tree, unitId));
+    // #191 — `extractMultiReps` now also returns inline-ref usages for
+    // each `<RepFigure>` / `<RepEquation>` child so MultiRep references
+    // count toward F4 (orphan figure) + R-series equation invariants.
+    const multiRepResult = extractMultiReps(tree, unitId);
+    indexAccumulator.addMultiReps(multiRepResult.entries);
+    indexAccumulator.addInlineRefUsages(multiRepResult.inlineRefUsages);
     // Intervention PR-γ — pair the misconception graph with cognitive-
     // science-grounded remediation moves (ADR 0044). Read-only harvest
     // BEFORE the LO/MultiRep transform passes that mutate the tree;

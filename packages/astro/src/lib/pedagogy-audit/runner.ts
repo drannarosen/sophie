@@ -26,6 +26,7 @@ import { checkOrphans } from "./invariants/orphans.ts";
 import { checkRetrievalFamily } from "./invariants/retrieval-family.ts";
 import { checkPRA2 } from "./invariants/topic-consistency.ts";
 import { checkValidation } from "./invariants/validation.ts";
+import { checkWorkedExamples } from "./invariants/worked-examples.ts";
 import type { AuditExtras, AuditReport, FindingSink } from "./types.ts";
 
 /**
@@ -116,6 +117,12 @@ export function runPedagogyAudit(
   // ADR 0063 — OF-1 (slot source-order WARN). OF-2 (chapter-level
   // conformance ERROR for framing: 'OMI') lands in PR-C.
   checkOMIFlow(index, sink);
+
+  // ADR 0081 + WS B+D — WE-1 (units-at-every-step / QB6 coverage
+  // WARN) + WE-2 (Problem/Result completeness ERROR). The extractor
+  // emits WE-3 WARNINGs for unknown JSX children via
+  // `passthroughExtractorFindings`.
+  checkWorkedExamples(index, sink);
 
   // Wedge B1 retrieval-family invariants (PRA-1 prereq activation,
   // RET-1 retrieval coverage, SR-1 SpacedReview ref validity).

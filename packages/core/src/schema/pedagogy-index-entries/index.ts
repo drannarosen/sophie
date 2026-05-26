@@ -88,3 +88,7 @@ export {
   type UnitEntry,
   UnitEntrySchema,
 } from "./unit.ts";
+export {
+  type WorkedExampleEntry,
+  WorkedExampleEntrySchema,
+} from "./worked-example.ts";

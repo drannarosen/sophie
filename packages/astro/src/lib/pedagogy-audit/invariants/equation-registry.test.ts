@@ -105,6 +105,22 @@ describe("R2 WARNING — registry entry has no citations (orphan)", () => {
     expect(report.warnings.filter((f) => f.code === "R2")).toHaveLength(0);
   });
 
+  it("WS B+D #191 — does NOT fire when only a <RepEquation refKey> inside <MultiRep> cites it", () => {
+    const index = emptyIndex();
+    index.equations = [makeEquation()];
+    // No <KeyEquation> — only a MultiRep reference.
+    index.equationCitations = [];
+    index.inlineRefUsages = [
+      {
+        kind: "rep-equation",
+        refKey: "wiens-law",
+        unit: "surface-flux-and-colors",
+      },
+    ];
+    const report = runPedagogyAudit(index);
+    expect(report.warnings.filter((f) => f.code === "R2")).toHaveLength(0);
+  });
+
   it("fires per orphan equation across multiple registry entries", () => {
     const index = emptyIndex();
     index.equations = [

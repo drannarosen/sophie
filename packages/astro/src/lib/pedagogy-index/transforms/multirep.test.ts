@@ -98,7 +98,10 @@ describe("extractMultiReps", () => {
       ]),
     ]);
 
-    const entries = extractMultiReps(tree as never, "module-02/lecture-04");
+    const { entries, inlineRefUsages } = extractMultiReps(
+      tree as never,
+      "module-02/lecture-04"
+    );
     expect(entries).toHaveLength(1);
     expect(entries[0]).toMatchObject({
       concept: "orbital-radius",
@@ -114,13 +117,28 @@ describe("extractMultiReps", () => {
         },
       ],
     });
+    // WS B+D (#191) — RepFigure / RepEquation children also emit
+    // InlineRefUsageEntry records so F4 / R-series invariants count
+    // MultiRep references as first-class citations.
+    expect(inlineRefUsages).toEqual([
+      {
+        kind: "rep-equation",
+        refKey: "kepler-3rd-law",
+        unit: "module-02/lecture-04",
+      },
+      {
+        kind: "rep-figure",
+        refKey: "orbit-geometry",
+        unit: "module-02/lecture-04",
+      },
+    ]);
   });
 
   test("auto-derives anchor id from concept slug when `id` is omitted", () => {
     const tree = root([
       mdxMultiRep({ concept: "redshift" }, [mdxRepVerbal("body")]),
     ]);
-    const entries = extractMultiReps(tree as never, "ch");
+    const { entries } = extractMultiReps(tree as never, "ch");
     expect(entries[0]).toMatchObject({ id: "mr-redshift" });
   });
 
@@ -130,7 +148,7 @@ describe("extractMultiReps", () => {
         mdxRepVerbal("body"),
       ]),
     ]);
-    const entries = extractMultiReps(tree as never, "ch");
+    const { entries } = extractMultiReps(tree as never, "ch");
     expect(entries[0]).toMatchObject({ id: "binding-1" });
   });
 
@@ -142,7 +160,7 @@ describe("extractMultiReps", () => {
         mdxRepVerbal("body"),
       ]),
     ]);
-    const entries = extractMultiReps(tree as never, "ch");
+    const { entries } = extractMultiReps(tree as never, "ch");
     expect(entries[0]?.reps.map((r) => r.kind)).toEqual([
       "figure",
       "equation",
@@ -161,7 +179,7 @@ describe("extractMultiReps", () => {
         }),
       ]),
     ]);
-    const entries = extractMultiReps(tree as never, "ch");
+    const { entries } = extractMultiReps(tree as never, "ch");
     expect(entries[0]?.reps[0]).toMatchObject({
       kind: "equation",
       refKey: "wiens-law-frequency",
@@ -180,7 +198,7 @@ describe("extractMultiReps", () => {
         mdxRepEquation({ refKey: "eq", symbol: "r" }),
       ]),
     ]);
-    const entries = extractMultiReps(tree as never, "ch");
+    const { entries } = extractMultiReps(tree as never, "ch");
     expect(entries[0]?.reps).toHaveLength(2);
   });
 
@@ -290,7 +308,7 @@ describe("extractMultiReps", () => {
         mdxRepVerbal("absolute body"),
       ]),
     ]);
-    const entries = extractMultiReps(tree as never, "ch");
+    const { entries } = extractMultiReps(tree as never, "ch");
     expect(entries).toHaveLength(2);
     expect(entries.map((e) => e.id)).toEqual([
       "mr-apparent-magnitude",
