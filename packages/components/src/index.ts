@@ -1,5 +1,13 @@
 // Components
 
+// Course-info projection — chrome sub-components composed by the
+// .astro layout shells (per Anna's H7 = Option B). Each is a
+// labeled <section> region (R10) used inside the page-level <main>
+// owned by the layout.
+export {
+  AccessibilitySection,
+  type AccessibilitySectionProps,
+} from "./components/AccessibilitySection/index.ts";
 export type { AsideProps } from "./components/Aside/Aside.schema.ts";
 export {
   Aside,
@@ -76,6 +84,10 @@ export {
   ConfidenceCheckPropsSchema,
   confidenceCheckContract,
 } from "./components/ConfidenceCheck/index.ts";
+export {
+  ContactCard,
+  type ContactCardProps,
+} from "./components/ContactCard/index.ts";
 // Course-info projection (2026-05-26) — top-level page shells exposed
 // as React islands from the platform-shipped routes.
 export {
@@ -135,6 +147,10 @@ export {
   GlossaryTermPropsSchema,
   glossaryTermContract,
 } from "./components/GlossaryTerm/index.ts";
+export {
+  GradingTable,
+  type GradingTableProps,
+} from "./components/GradingTable/index.ts";
 export type { GridProps } from "./components/Grid/Grid.schema.ts";
 export {
   Grid,
@@ -179,6 +195,10 @@ export {
   Objective,
   ObjectivePropsSchema,
 } from "./components/Objective/index.ts";
+export {
+  ObjectivesSection,
+  type ObjectivesSectionProps,
+} from "./components/ObjectivesSection/index.ts";
 export type { ObservableProps } from "./components/Observable/index.ts";
 export {
   OBSERVABLE_EPISTEMIC_ROLE,
@@ -186,6 +206,10 @@ export {
   ObservablePropsSchema,
   observableContract,
 } from "./components/Observable/index.ts";
+export {
+  OfficeHoursTable,
+  type OfficeHoursTableProps,
+} from "./components/OfficeHoursTable/index.ts";
 export type {
   OMIFlowProps,
   OMIFlowSlotProps,
