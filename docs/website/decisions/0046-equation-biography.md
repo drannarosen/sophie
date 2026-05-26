@@ -772,7 +772,7 @@ Reserved schema slots for non-breaking v2 evolution:
 | PR | Subject |
 |----|---------|
 | α  | Schema for 6 biography sub-schemas + aggregate `BiographySchema` + extend `KeyEquationSchema` with optional `biography` field |
-| β  | 6 biography components (each with hardcoded `epistemicRole` const where applicable) + extend `<KeyEquation>` walker + rendering updates to `<EqRef>` + `<ChapterEquations>` + `<CourseEquations>` + tests + stories |
+| β  | 6 biography components (each with hardcoded `epistemicRole` const where applicable) + extend `<KeyEquation>` walker + rendering updates to `<EqRef>` (renamed to `<EquationRef>` in PR #102) + `<ChapterEquations>` + `<CourseEquations>` + tests + stories |
 | γ  | `transformEquationBiography` extractor + extend `pedagogy-index-extractor.ts` + Wien's law smoke fixture |
 | δ  | E7 + E8 + E9 audit invariants + per-invariant tests |
 
@@ -786,7 +786,7 @@ All four PRs in the α → β → γ → δ cadence shipped and squash-merged to
 | PR | Shipped | Status |
 |----|---------|--------|
 | α  | [#91](https://github.com/drannarosen/sophie/pull/91) | `BiographySchema` + 5 sub-schemas + `EquationEntry.biography?` + `EquationEntry.symbols`; every schema `.strict()` per the §F1 forward-compat clause |
-| β  | [#92](https://github.com/drannarosen/sophie/pull/92) | 5 biography components (`<Observable>` / `<Assumption>` / `<Units>` / `<BreaksWhen>` / `<CommonMisuse>`) + `KeyEquation.symbols` prop + `<EqRef>` hover compact biography summary + `<ChapterEquations>` + `<CourseEquations>` full biography render via shared `BiographyRender.astro` |
+| β  | [#92](https://github.com/drannarosen/sophie/pull/92) | 5 biography components (`<Observable>` / `<Assumption>` / `<Units>` / `<BreaksWhen>` / `<CommonMisuse>`) + `KeyEquation.symbols` prop + `<EqRef>` (renamed to `<EquationRef>` in PR #102) hover compact biography summary + `<ChapterEquations>` + `<CourseEquations>` full biography render via shared `BiographyRender.astro` |
 | γ  | [#93](https://github.com/drannarosen/sophie/pull/93) | `buildBiographyFromKeyEquationChildren` extractor + Wien's law smoke fixture (`examples/smoke/src/content/chapters/01-foundations/wiens-law-fixture.mdx`) |
 | δ  | [#94](https://github.com/drannarosen/sophie/pull/94) | E7 INFO + E8 WARNING + E9 INFO audit invariants + NR1/NR3/NR4 (closes ADR 0043 §R5) + NR2 modification (symbols now count as a reference signal) |
 

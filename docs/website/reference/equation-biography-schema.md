@@ -203,9 +203,9 @@ namespace coherence preserves the rule "E-prefix governs
 The three surfaces already exist for plain `<KeyEquation>`. The
 biography schema changes the *render layer* of each.
 
-### Surface 1: `<EqRef>` hover (compact summary)
+### Surface 1: `<EquationRef>` hover (compact summary)
 
-When a reader hovers an inline `<EqRef slug="wiens-law">`, the
+When a reader hovers an inline `<EquationRef slug="wiens-law">`, the
 hover card shows:
 
 ```text

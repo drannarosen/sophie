@@ -66,6 +66,21 @@ jobs:
         # the "build the best now" rule and accumulates AI-author
         # confusion. Fails CI on any match.
         run: pnpm lint:shims
+      - name: Doc-drift detection (post-A+ P1, 2026-05-25)
+        # Defends the 2026-05-18 EqRef class-of-issue per ADR 0061
+        # Rule 5 ("docs land atomically with code"). PR-A's batch 5a
+        # hard-renamed <EqRef> -> <EquationRef> in the component layer
+        # but left ~50 stale references in docstrings, ADR prose,
+        # runtime comments, and reference docs; the audit caught 12,
+        # the cleanup PR (#102 / 5d85c91) cleaned the rest. Same class
+        # surfaced again at PR #168 (<CollapsibleCard> -> <Dropdown>).
+        # Stale legacy-name mentions actively mislead the AI author
+        # because docs are templates the AI copies when authoring new
+        # content (ADR 0061 Rule 5 rationale). This gate enforces a
+        # legacy-name registry: every hard rename adds an entry, and
+        # CI rejects PRs that reintroduce the retired name outside an
+        # intentional narrative context. Fails CI on any drift.
+        run: pnpm lint:docs-drift
 
   typecheck:
     name: typecheck

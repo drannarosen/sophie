@@ -209,7 +209,7 @@ M6 = sum over chapters of (# resolved refs in chapter)
      / |chapters|
 ```
 
-Refs counted: `<EqRef>`, `<MisconceptionRef>`, `<ChapterRef>`,
+Refs counted: `<EquationRef>`, `<MisconceptionRef>`, `<ChapterRef>`,
 `<TDRRef>`, `<GlossaryTerm>`, `<FigureRef>`. Only refs that
 resolve are counted (dangling refs are excluded; they are
 already surfaced by audit invariants D5/E4/F2/etc.).

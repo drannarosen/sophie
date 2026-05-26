@@ -199,7 +199,7 @@ the canonical source, with `<ChapterGlossary>` + `<CourseGlossary>` +
 `<GlossaryTerm>` as the three consumers reading from the build-time
 index. PR-C1 shipped the replacement;
 [ADR 0038](../decisions/0038-pedagogy-index-pattern.md) codifies the
-pattern. Trio 3 therefore shipped as `<CollapsibleCard>` +
+pattern. Trio 3 therefore shipped as `<CollapsibleCard>` (renamed to `<Dropdown>` in PR #168) +
 `<KeyEquation>` only; the glossary-shaped slot moved into Bucket C.
 :::
 

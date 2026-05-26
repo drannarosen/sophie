@@ -45,7 +45,7 @@ future slide-deck print mode (ADR 0006) inherits for free.
 | Bucket / PR | Status | Description |
 |---|---|---|
 | PR-C1 (#36) | ✓ merged | Definitions + glossary consumers + Aside title-required |
-| PR-C2 (#37) | ✓ merged | Equations index + `<EqRef>` + KaTeX dep + 2 consumers |
+| PR-C2 (#37) | ✓ merged | Equations index + `<EqRef>` (renamed to `<EquationRef>` in PR #102) + KaTeX dep + 2 consumers |
 | PR-C3 (#38) | ✓ merged | Key-insights + figures + misconceptions + `createPedagogyStore<T>` factory + two-tier figures |
 | Phase-1 closeout (#39) | ✓ merged | 14 PR-C2/C3 followup items + HoverCard hydration race fix |
 | PR-C4 (#40) | ✓ merged | LO course roll-up + `<ChapterRef>` + systematic build-time audit invariants + SoTA condition-based e2e waits + scroll-spy production fix |

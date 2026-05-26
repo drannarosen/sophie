@@ -37,7 +37,7 @@ validation:
 ## Context
 
 Sophie's chapter components — `<Predict>`, `<Aside kind="key-insight">`,
-`<ComprehensionGate>`, `<Reflection>`, `<CollapsibleCard>`,
+`<ComprehensionGate>`, `<Reflection>`, `<Dropdown>`,
 `<Aside kind="misconception">`, `<KeyEquation>`, and the rest — each
 *implement* a pedagogical move. `<Predict>` elicits prior models;
 `<Aside kind="misconception">` confronts wrong models; `<Reflection>`

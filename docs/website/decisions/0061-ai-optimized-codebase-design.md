@@ -175,7 +175,7 @@ Rationale: docs are *templates the AI copies* when authoring new
 content. Stale ADR examples are worse than missing ADRs — they
 actively mislead the next session. See
 [[feedback_docs_no_drift]] for the failure-mode log (12 stale
-`<EqRef>` references caught in the 2026-05-18 audit).
+`<EqRef>` references caught in the 2026-05-18 audit; `<EqRef>` was renamed to `<EquationRef>` in PR #102).
 
 ### Rule 6 — Tests split with source
 
@@ -206,7 +206,8 @@ The 2026-05-18 post-PR-A audit Bucket-C plan expands per these rules:
 
 ### Doc-discipline consequences
 
-The audit's P1 doc-drift sweep (12 files referencing `<EqRef>` or
+The audit's P1 doc-drift sweep (12 files referencing the
+then-current `<EqRef>` — renamed to `<EquationRef>` in PR #102 — or
 pre-rename `<KeyEquation id title>`) becomes a Bucket-B item — not
 because it was undone in PR-A, but because Rule 5 retroactively
 requires it.

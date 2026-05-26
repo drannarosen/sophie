@@ -149,7 +149,7 @@ parallel co-located bespoke export in `@sophie/components`.
 
 - Pedagogy `lucide-react` adoption: a follow-up refactor PR (P2
   on the Bucket B PR 6 audit) migrates inline SVGs in
-  `<KeyEquation>`, `<CollapsibleCard>` expander, and other
+  `<KeyEquation>`, `<Dropdown>` expander, and other
   pedagogy components to `lucide-react`. Adds the dep to
   `@sophie/components/package.json`. Low-risk mechanical refactor.
 - New chrome primitives in Bucket B PR 7 (search modal —
