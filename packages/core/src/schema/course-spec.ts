@@ -1,5 +1,16 @@
 import { z } from "zod";
 import { type AuditFinding, AuditFindingSchema } from "./audit.js";
+// v0.2 chrome clusters per ADR 0080 v0.2 amendment +
+// docs/plans/2026-05-26-course-info-projection-design.md. Sibling-file
+// layout per ADR 0061 LOC budget (this file is the contract barrel).
+import { AccessibilitySchema } from "./course-spec-v02-accessibility.js";
+import { ContactSchema } from "./course-spec-v02-contact.js";
+import { GradingSchema } from "./course-spec-v02-grading.js";
+import { InfoPagesSchema } from "./course-spec-v02-info-pages.js";
+import { LandingSchema } from "./course-spec-v02-landing.js";
+import { ObjectiveSchema } from "./course-spec-v02-objectives.js";
+import { OfficeHourSchema } from "./course-spec-v02-office-hours.js";
+import { PrereqSchema } from "./course-spec-v02-prereqs.js";
 import { NonEmptyString, Slug } from "./primitives.js";
 
 /**
@@ -169,15 +180,10 @@ const PrincipleSchema = z
 
 // ─── Section 6: assessment ──────────────────────────────────────────
 
-const GradeWeightSchema = z
-  .object({
-    category: Slug,
-    /** Weighted percentage; the full set must sum to 100 (refine below). */
-    weight: z.number().nonnegative(),
-    count: z.number().int().positive().optional(),
-    label: NonEmptyString,
-  })
-  .strict();
+// v0.2: GradeWeightSchema REMOVED (clean break per ADR 0080 v0.2
+// amendment + Anna's H1/H5). Replaced by the top-level GradingSchema
+// imported from course-spec-v02-grading.js — grading.categories carries
+// the structured weight + drop_lowest + late_policy_ref data.
 
 const HomeworkRubricSchema = z
   .object({
@@ -221,22 +227,20 @@ const ExamPolicySchema = z
   })
   .strict();
 
+// v0.2: grade_weights REMOVED; category_refs added as the audit-
+// coverage pointer into grading.categories[*].id. Top-level
+// cross-refine on CourseSpecSchema verifies referential integrity
+// (every category_refs entry must exist as a declared grading
+// category id).
 const AssessmentSectionSchema = z
   .object({
     philosophy: NonEmptyString,
-    grade_weights: z.array(GradeWeightSchema).min(1),
+    category_refs: z.array(Slug).min(1),
     homework_workflow: HomeworkWorkflowSchema.optional(),
     growth_memos: GrowthMemosSchema.optional(),
     exam_policy: ExamPolicySchema.optional(),
   })
-  .strict()
-  .refine(
-    (a) => a.grade_weights.reduce((sum, w) => sum + w.weight, 0) === 100,
-    {
-      message: "grade_weights must sum to 100",
-      path: ["grade_weights"],
-    }
-  );
+  .strict();
 
 // ─── Section 7: quality_bars ────────────────────────────────────────
 
@@ -333,12 +337,40 @@ export const CourseSpecSchema = z
     terminal_goals: z.array(TerminalGoalSchema).min(1),
     principles: z.array(PrincipleSchema).default([]),
     assessment: AssessmentSectionSchema,
+    /** v0.2: required top-level block; replaces v0.1 assessment.grade_weights. */
+    grading: GradingSchema,
     quality_bars: QualityBarsSchema,
     discovery: DiscoverySchema,
     spec_version: z.literal(COURSE_SPEC_VERSION),
     schema: z.literal(COURSE_SPEC_SCHEMA_ID),
+    // ─── v0.2 chrome clusters (additive; optional) ─────────────────
+    // Course-info projection per ADR 0080 v0.2 amendment +
+    // docs/plans/2026-05-26-course-info-projection-design.md.
+    objectives: z.array(ObjectiveSchema).optional(),
+    prereqs: z.array(PrereqSchema).optional(),
+    office_hours: z.array(OfficeHourSchema).optional(),
+    contact: ContactSchema.optional(),
+    accessibility: AccessibilitySchema.optional(),
+    /** Opaque path to schedule.yaml; loader/iCal ship in follow-up sprint per H6. */
+    schedule_ref: z.string().optional(),
+    info_pages: InfoPagesSchema.optional(),
+    landing: LandingSchema.optional(),
   })
-  .strict();
+  .strict()
+  // Cross-refine: every assessment.category_refs entry must reference a
+  // declared grading.categories[*].id. Audit invariants (QB5) lean on
+  // this for "every TG → ≥1 assessment-measured category."
+  .refine(
+    (spec) => {
+      const declaredIds = new Set(spec.grading.categories.map((c) => c.id));
+      return spec.assessment.category_refs.every((ref) => declaredIds.has(ref));
+    },
+    {
+      message:
+        "assessment.category_refs entries must all reference declared grading.categories[*].id",
+      path: ["assessment", "category_refs"],
+    }
+  );
 
 export type CourseSpec = z.infer<typeof CourseSpecSchema>;
 

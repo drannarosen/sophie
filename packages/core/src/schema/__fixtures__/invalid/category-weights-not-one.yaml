@@ -189,27 +189,17 @@ assessment:
     naming your assumptions, and being able to defend your reasoning
     under closed-book conditions.
 
-  grade_weights:
-    - category: homework
-      weight: 30
-      count: 9
-      label: "HW 1–9 problem sets; weekly grade memo included"
-    - category: growth-memos
-      weight: 10
-      count: 2
-      label: "Mid-term reflections; one after each midterm; scored on reflection quality"
-    - category: scholarly-engagement
-      weight: 10
-      label: "iClicker / in-class participation"
-    - category: midterm-1
-      weight: 15
-      label: "Closed-book; formula sheet provided"
-    - category: midterm-2
-      weight: 15
-      label: "Closed-book; formula sheet provided"
-    - category: final-exam
-      weight: 21
-      label: "Cumulative; closed-book; formula sheet provided"
+  # v0.2: grade_weights REMOVED. The invariant violation this fixture
+  # exercises is now "grading.categories weights do not sum to 1.0"
+  # (top-level `grading:` block below — final-exam.weight is 0.21
+  # instead of 0.20, total = 1.01).
+  category_refs:
+    - homework
+    - growth-memos
+    - scholarly-engagement
+    - midterm-1
+    - midterm-2
+    - final-exam
 
   homework_workflow:
     submission_day: tuesday
@@ -271,6 +261,21 @@ quality_bars:
     - id: QB10-multi-representation
       scope: [key-equation]
       check: "Visual + numerical + symbolic forms (Sophie multi-rep partial)."
+
+# v0.2 — grading.categories with weights summing to 1.01 (final-exam
+# is 0.21 instead of 0.20). The refine() invariant should reject this.
+grading:
+  categories:
+    - { id: homework,             name: "Problem sets",         weight: 0.30 }
+    - { id: growth-memos,         name: "Growth memos",         weight: 0.10 }
+    - { id: scholarly-engagement, name: "Scholarly engagement", weight: 0.10 }
+    - { id: midterm-1,            name: "Midterm 1",            weight: 0.15 }
+    - { id: midterm-2,            name: "Midterm 2",            weight: 0.15 }
+    - { id: final-exam,           name: "Final exam",           weight: 0.21 }
+  letter_scale:
+    - { grade: "A", min: 93 }
+    - { grade: "B", min: 83 }
+    - { grade: "F", min: 0 }
 
 discovery:
   sections: "src/content/sections/*.json"
