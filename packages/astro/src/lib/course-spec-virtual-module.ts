@@ -52,11 +52,21 @@ interface VitePluginLike {
 export const COURSE_SPEC_VIRTUAL_ID = "virtual:sophie/course-spec";
 const RESOLVED_ID = `\0${COURSE_SPEC_VIRTUAL_ID}`;
 
-export function courseSpecVirtualModule(spec: CourseSpec): VitePluginLike {
+/**
+ * `spec` can be `null` when the consumer hasn't authored
+ * `course.sophie.yaml` yet. We still register the virtual module
+ * (exporting `null`) so importers like TextbookLayout can
+ * `import { courseSpec } from "virtual:sophie/course-spec"` without
+ * the import resolution failing at build time. Consumers handle the
+ * `null` case explicitly (skip __setCourseSpec, skip the script tag).
+ */
+export function courseSpecVirtualModule(
+  spec: CourseSpec | null
+): VitePluginLike {
   // JSON.stringify is sufficient because the validated CourseSpec is
   // plain JSON (every Zod-derived field resolves to a JSON-
   // serializable primitive or array/object thereof — see ADR 0080's
-  // strict-object discipline).
+  // strict-object discipline). null serializes as the literal `null`.
   const literal = JSON.stringify(spec);
   return {
     name: "sophie:course-spec",

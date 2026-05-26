@@ -134,12 +134,13 @@ export function defineSophieIntegration(
               // Course-info projection (2026-05-26) — consumer's
               // parsed course.sophie.yaml exposed as
               // `virtual:sophie/course-spec` for chrome components +
-              // info-page layouts. Null spec means the consumer
-              // hasn't migrated to v0.2 chrome yet → skip the plugin
-              // so existing routes keep working.
-              ...(courseSpec
-                ? [courseSpecVirtualModule(courseSpec) as never]
-                : []),
+              // info-page layouts. Always registered so
+              // `import { courseSpec } from "virtual:sophie/course-spec"`
+              // resolves at build time even when the consumer has no
+              // spec yet (the export is `null` in that case;
+              // TextbookLayout + chrome components handle null
+              // explicitly).
+              courseSpecVirtualModule(courseSpec) as never,
               // Pre-parse author-trap lint (issues #190, #193) — scans
               // raw `.mdx` text for multi-line inline `$...$` and raw
               // `<` before a non-letter, and throws curated errors with

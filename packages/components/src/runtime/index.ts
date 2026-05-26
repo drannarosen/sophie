@@ -6,6 +6,12 @@ export type {
   BroadcastMessage,
 } from "./BroadcastChannel.ts";
 export { createBroadcastChannel } from "./BroadcastChannel.ts";
+// Course-info projection (2026-05-26) — singleton store backing the
+// useCourseSpec() hook per H3. Public `useCourseSpec` is the
+// consumer-facing read; SSR-side `__setCourseSpec` is internal
+// and re-exported from `/internal/store-hydration` per the existing
+// __set* pattern.
+export { getCourseSpec, useCourseSpec } from "./course-spec-store.ts";
 export { getUserId } from "./getUserId.ts";
 export { IndexedDBResponseStore } from "./IndexedDBResponseStore.ts";
 export { MathText } from "./MathText.tsx";

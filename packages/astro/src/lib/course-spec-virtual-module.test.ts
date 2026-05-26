@@ -77,3 +77,19 @@ describe("courseSpecVirtualModule — plugin shape", () => {
     expect("handleHotUpdate" in plugin).toBe(false);
   });
 });
+
+describe("courseSpecVirtualModule — null-spec back-compat", () => {
+  test("emits `courseSpec = null` when no spec is loaded (consumer hasn't authored course.sophie.yaml yet)", () => {
+    const plugin = courseSpecVirtualModule(null);
+    const load = plugin.load as (id: string) => string | undefined;
+    const code = load(RESOLVED_ID);
+    expect(code).toBeDefined();
+    expect(code).toContain("export const courseSpec = null");
+  });
+
+  test("still resolves the virtual id when spec is null (import always succeeds)", () => {
+    const plugin = courseSpecVirtualModule(null);
+    const resolveId = plugin.resolveId as (id: string) => string | undefined;
+    expect(resolveId(COURSE_SPEC_VIRTUAL_ID)).toBe(RESOLVED_ID);
+  });
+});
