@@ -57,6 +57,9 @@
     "./components/ChapterTitle.astro": "./dist/components/ChapterTitle.astro",
     "./components/TocToggle.astro": "./dist/components/TocToggle.astro",
     "./routes/reading.astro": "./dist/routes/reading.astro",
+    "./routes/course-landing.astro": "./dist/routes/course-landing.astro",
+    "./routes/section-landing.astro": "./dist/routes/section-landing.astro",
+    "./routes/info-page.astro": "./dist/routes/info-page.astro",
     "./styles/textbook-layout.css": "./dist/styles/textbook-layout.css"
   },
   "files": [
