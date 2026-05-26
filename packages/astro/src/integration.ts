@@ -189,6 +189,63 @@ export function defineSophieIntegration(
           );
         }
 
+        // ─── Course-info projection (2026-05-26) ──────────────────
+        // When the consumer has authored course.sophie.yaml, inject
+        // the course-website chrome routes: landing + per-section
+        // landings + per-info_pages static pages. Shadow-warn each
+        // mirrors ADR 0082 §A2.6 per fix M4.
+        if (courseSpec) {
+          // Course landing — pattern "/" — dispatcher reads
+          // courseSpec.landing.layout (or integration override).
+          injectRoute({
+            pattern: "/",
+            entrypoint: "@sophie/astro/routes/course-landing.astro",
+          });
+          const consumerIndexPath = path.join(
+            consumerRoot,
+            "src/pages/index.astro"
+          );
+          if (fs.existsSync(consumerIndexPath)) {
+            logger.warn(
+              `[sophie] Consumer has src/pages/index.astro at ${consumerIndexPath}. ` +
+                `This will shadow the injected landing route from @sophie/astro/routes/course-landing.astro ` +
+                `(Astro issue #3809). Delete the consumer file to use the platform's landing. ` +
+                `See ADR-0082 § A2.6.`
+            );
+          }
+
+          // Section landing — pattern "/sections/[section]/" —
+          // getStaticPaths in the route file enumerates sections
+          // from the content collection.
+          injectRoute({
+            pattern: "/sections/[section]/",
+            entrypoint: "@sophie/astro/routes/section-landing.astro",
+          });
+
+          // Info pages — one static route per info_pages slug. Each
+          // route file reads its slug from Astro.url.pathname (per
+          // fix B3 — no getStaticPaths because the URL pattern is
+          // parameter-less).
+          for (const slug of Object.keys(courseSpec.info_pages ?? {})) {
+            injectRoute({
+              pattern: `/${slug}/`,
+              entrypoint: "@sophie/astro/routes/info-page.astro",
+            });
+            const consumerSlugPath = path.join(
+              consumerRoot,
+              `src/pages/${slug}.astro`
+            );
+            if (fs.existsSync(consumerSlugPath)) {
+              logger.warn(
+                `[sophie] Consumer has src/pages/${slug}.astro at ${consumerSlugPath}. ` +
+                  `This will shadow the injected /${slug}/ route from @sophie/astro/routes/info-page.astro. ` +
+                  `Delete the consumer file to use the platform's info-page dispatcher. ` +
+                  `See ADR-0082 § A2.6.`
+              );
+            }
+          }
+        }
+
         // Issue #189 — `practice.mdx` discovered-but-unrouted warning.
         // `practice` is a valid ArtifactType (ADR 0067) but no
         // /units/<unit>/practice route is injected yet; the route ships
