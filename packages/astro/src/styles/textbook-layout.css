@@ -20,6 +20,34 @@
  * later PRs (5, 4 + 6 respectively).
  */
 
+/*
+ * Document-level horizontal-overflow defense.
+ *
+ * Off-canvas drawers (`.sophie-toc-drawer`, future popovers) are
+ * `position: fixed` with `transform: translateX(100%)` to slide off
+ * the viewport when closed. CSS transforms DO contribute to
+ * `body.scrollWidth` and `getBoundingClientRect` even for fixed
+ * elements, so the drawer's post-transform bounding box pushes the
+ * document horizontally — at 375 px viewport, by exactly the drawer's
+ * 320 px width, surfacing as horizontal page scroll the user can
+ * trigger by swiping.
+ *
+ * `overflow-x: clip` on `<html>` defends the document from any such
+ * leak class — present and future. Preferred over `overflow-x: hidden`
+ * because `clip` does NOT create a scroll container, so it preserves
+ * sticky positioning (the topbar + sidebar both rely on this) and
+ * scroll-snap behavior. The defense is structural rather than
+ * per-component (AGENTS.md "structural fixes over targeted patches").
+ *
+ * Surfaced 2026-05-25 root-cause investigation for issue #187
+ * (M3-L2 hydrostatic-equilibrium pilot reported 182 px overflow that
+ * the original ticket attributed to a `<pre>` block; the real culprit
+ * was the TocDrawer).
+ */
+html {
+  overflow-x: clip;
+}
+
 .sophie-shell {
   /* MyST-style proportions (2026-05-21 follow-up): slimmer sidebars
      so the content column reads with a comfortable MyST-like line
