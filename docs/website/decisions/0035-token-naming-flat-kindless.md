@@ -6,9 +6,30 @@ tags:
   - naming-convention
 status: shipped
 validation:
-  status: unvalidated
-  last_validated_date: null
-  evidence: []
+  status: validated
+  last_validated_date: "2026-05-25"
+  evidence:
+    - kind: deployment
+      ref: packages/theme/src/tokens.ts
+      date: "2026-05-25"
+      notes: "Canonical token surface uses flat `var(--sophie-*)` names: `--sophie-bg`, `--sophie-text`, `--sophie-text-2`, `--sophie-surface-{1,2,3}`, `--sophie-border`, `--sophie-brand-{teal,rose,violet}`, etc. The kind-less infix pattern this ADR ratifies is in active force at the source-of-truth file."
+    - kind: deployment
+      ref: packages/theme/scripts/generate-css.ts
+      date: "2026-05-25"
+      notes: "Generator emits the `--sophie-*` flat-name CSS variables for both `:root` and `[data-theme=\"dark\"]` — the build pipeline output matches the naming convention this ADR locks."
+    - kind: test
+      ref: packages/theme/src/tokens.test.ts
+      date: "2026-05-25"
+      notes: "Table-driven tests assert flat `--sophie-role-{observable,model,inference,approximation}` token emission in both root and dark-theme scopes. Regression on the naming convention breaks these tests first."
+    - kind: review
+      ref: docs/reviews/2026-05-12-bucket-b-pr2-audit.md
+      date: "2026-05-25"
+      notes: "The originating Bucket B PR 2 audit surfaced the kind-infix drift this ADR was authored to ratify; PR #31 fixed the four mis-prefixed call sites in `textbook-layout.css` and the ADR locked the actually-shipped convention thereafter."
+  notes: |
+    The flat kind-less naming convention is in active force at every layer:
+    the canonical `tokens.ts` source, the generated CSS output, and the
+    unit test surface. ADR 0005's original kind-infix sketch was never
+    adopted; this ADR ratifies the as-shipped convention.
 ---
 
 # ADR 0035: Theme tokens use flat, kind-less names

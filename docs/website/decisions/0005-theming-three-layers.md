@@ -7,9 +7,37 @@ tags:
   - tailwind
 status: shipped
 validation:
-  status: unvalidated
-  last_validated_date: null
-  evidence: []
+  status: validated
+  last_validated_date: "2026-05-25"
+  evidence:
+    - kind: deployment
+      ref: packages/theme/src/tokens.ts
+      date: "2026-05-25"
+      notes: "Layer 1 (single source of truth) shipped — 130-line canonical TS token object exporting `tokens.color.*`, `tokens.spacing.*`, `tokens.font.*`, etc. Every CSS variable name flows from this file via the `v()` helper."
+    - kind: deployment
+      ref: packages/theme/scripts/generate-css.ts
+      date: "2026-05-25"
+      notes: "Layer 2 (delivery) — build-time generator emits `dist/theme.css` with CSS custom properties keyed by `:root` + `[data-theme=\"dark\"]`. The Tailwind `@theme` emit lives in the sibling `generate-tailwind.ts` script; refinement of 'Tailwind preset' → CSS-first is locked in ADR 0026."
+    - kind: deployment
+      ref: packages/components/src
+      date: "2026-05-25"
+      notes: "Layer 3 (consumption) — 45 `*.module.css` files across `@sophie/components` reference the CSS custom properties from Layer 2. Components remain framework-pure with no inline Tailwind dependency."
+    - kind: test
+      ref: packages/theme/src/tokens.test.ts
+      date: "2026-05-25"
+      notes: "Token table-driven tests verify the `--sophie-role-*` CSS variables are emitted with the expected oklch values in both `:root` and `[data-theme=\"dark\"]` scopes, exercising Layer 1 → Layer 2 flow."
+    - kind: manual
+      ref: AGENTS.md
+      date: "2026-05-25"
+      notes: "AGENTS.md 'Locked decisions' table cites ADR 0005 as the routine-reasoning ADR governing theming, and the SCSS-porting hard rule lists the eight source files this ADR was designed to absorb."
+  notes: |
+    The three-layer model is in active force across the codebase. Layer 1
+    (`packages/theme/src/tokens.ts`) is the single TS source; Layer 2 is
+    emitted at build time by the `generate-css.ts` + `generate-tailwind.ts`
+    scripts; Layer 3 is realized in the 45 `*.module.css` files under
+    `@sophie/components`. ADR 0026 amends Layer 2's delivery mechanism
+    (CSS-first `@theme` rather than JS preset) without changing the
+    three-layer concept.
 ---
 
 # ADR 0005: Three-layer theming (TS tokens → CSS vars + Tailwind preset; CSS Modules in components)

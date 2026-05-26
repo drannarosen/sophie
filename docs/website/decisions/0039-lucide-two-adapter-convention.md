@@ -8,9 +8,36 @@ tags:
   - lucide
 status: shipped
 validation:
-  status: unvalidated
-  last_validated_date: null
-  evidence: []
+  status: validated
+  last_validated_date: "2026-05-25"
+  evidence:
+    - kind: deployment
+      ref: packages/astro/package.json
+      date: "2026-05-25"
+      notes: "`lucide-static` is declared as a dependency of `@sophie/astro` — the chrome-side adapter this ADR locks."
+    - kind: deployment
+      ref: packages/components/package.json
+      date: "2026-05-25"
+      notes: "`lucide-react` is declared as a dependency of `@sophie/components` — the pedagogy-side adapter this ADR locks. The two-adapter split shipped at the package-boundary level."
+    - kind: deployment
+      ref: packages/astro/src/icons/index.ts
+      date: "2026-05-25"
+      notes: "The chrome icon barrel re-exports `lucide-static` SVG strings via the single swap point this ADR's import-discipline section specifies. Header comment cites the future ADR 0037 (now ADR 0039 itself)."
+    - kind: deployment
+      ref: packages/components/src/primitives/ChromeTitleBar/ChromeTitleBar.tsx
+      date: "2026-05-25"
+      notes: "Canonical pedagogy-side consumer importing directly from `lucide-react` per the no-barrel + tree-shake discipline this ADR locks."
+    - kind: deployment
+      ref: packages/components/src/components/GlossaryTerm/GlossaryTerm.tsx
+      date: "2026-05-25"
+      notes: "Additional pedagogy consumer of `lucide-react` direct-import — the convention scaled across ≥10 React component files (FigureRef, EquationRef, LearningObjectives, ConfidenceCheck, EffortLog, ChapterRef, Predict, etc.) per grep."
+  notes: |
+    The two-adapter convention is in active force across both package
+    boundaries: `@sophie/astro` declares `lucide-static` + re-exports
+    through the icon barrel; `@sophie/components` declares `lucide-react`
+    + imports directly from it (no re-export barrel) per the tree-shake
+    discipline. The pedagogy half this ADR queued as a follow-up
+    mechanical PR has landed and scaled to 10+ component consumers.
 ---
 
 # ADR 0039: Two-adapter Lucide icon convention (`lucide-static` for chrome, `lucide-react` for pedagogy)

@@ -7,9 +7,39 @@ tags:
   - primitives
 status: shipped
 validation:
-  status: unvalidated
-  last_validated_date: null
-  evidence: []
+  status: validated
+  last_validated_date: "2026-05-25"
+  evidence:
+    - kind: deployment
+      ref: packages/components/package.json
+      date: "2026-05-25"
+      notes: "Six Radix subpackages are declared as runtime dependencies in `@sophie/components`: `@radix-ui/react-accordion`, `@radix-ui/react-collapsible`, `@radix-ui/react-dialog`, `@radix-ui/react-hover-card`, `@radix-ui/react-slider`, `@radix-ui/react-tabs`. The v1 primitives this ADR scoped (Slider, Tabs, Collapsible, Tooltip→HoverCard, Dialog) are all in active use."
+    - kind: deployment
+      ref: packages/components/src/components/Tabs/Tabs.tsx
+      date: "2026-05-25"
+      notes: "Radix Tabs primitive composes the `<Example>` worked/anti/applied tabs pattern this ADR named in scope. Pairs with axe-core a11y tests per ADR 0004."
+    - kind: deployment
+      ref: packages/components/src/components/Search/SearchModal.tsx
+      date: "2026-05-25"
+      notes: "Radix Dialog primitive composes the search modal — the phase-2 dialog primitive this ADR queued has landed and is consumer-facing."
+    - kind: deployment
+      ref: packages/components/src/interactive/ParameterSlider.tsx
+      date: "2026-05-25"
+      notes: "Radix Slider primitive composes interactive parameter sliders, the v1 primitive this ADR named for `<Prediction>` and adjacent confidence-shaped components."
+    - kind: deployment
+      ref: packages/components/src/components/GlossaryTerm/GlossaryTerm.tsx
+      date: "2026-05-25"
+      notes: "Radix HoverCard primitive composes the glossary-term tooltip, the v1 tooltip primitive this ADR named in scope (specifically: `@radix-ui/react-tooltip` was substituted with `@radix-ui/react-hover-card` for richer content rendering)."
+    - kind: manual
+      ref: AGENTS.md
+      date: "2026-05-25"
+      notes: "AGENTS.md 'Locked decisions' table cites ADR 0019 as the routine-reasoning ADR governing a11y primitives. Radix is the de-facto headless primitives substrate in the codebase."
+  notes: |
+    Nine files across `@sophie/components` import from `@radix-ui/*` and six
+    Radix subpackages ship as declared deps. The v1 primitives this ADR scoped
+    (Slider, Tabs, Collapsible, Tooltip, Dialog) are all in active use, with
+    `react-hover-card` substituting for `react-tooltip` for richer popover
+    content. Phase-2 Dialog has landed via the search modal, consumer-facing.
 ---
 
 # ADR 0019: Radix UI primitives for accessible interactive components

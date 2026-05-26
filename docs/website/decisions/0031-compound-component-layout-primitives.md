@@ -7,9 +7,39 @@ tags:
   - api-design
 status: shipped
 validation:
-  status: unvalidated
-  last_validated_date: null
-  evidence: []
+  status: validated
+  last_validated_date: "2026-05-25"
+  evidence:
+    - kind: deployment
+      ref: packages/astro/src/components/TextbookLayout.astro
+      date: "2026-05-25"
+      notes: "Assembled `<TextbookLayout>` component shipped — the one-line default this ADR locks as the ~95%-consumer path."
+    - kind: deployment
+      ref: packages/astro/src/components/TopBar.astro
+      date: "2026-05-25"
+      notes: "`<TopBar>` primitive shipped alongside the assembled layout — sophisticated consumers compose it directly."
+    - kind: deployment
+      ref: packages/astro/src/components/Sidebar.astro
+      date: "2026-05-25"
+      notes: "`<Sidebar>` primitive shipped — composes inside TextbookLayout or directly as a layout slot."
+    - kind: deployment
+      ref: packages/astro/src/components/ContentColumn.astro
+      date: "2026-05-25"
+      notes: "`<ContentColumn>` primitive shipped — the content-area primitive this ADR named in scope."
+    - kind: deployment
+      ref: packages/astro/src/components/RightColumn.astro
+      date: "2026-05-25"
+      notes: "`<RightColumn>` primitive shipped — the right-rail primitive completing the four-primitive set."
+    - kind: deployment
+      ref: packages/astro/src/components/SidebarToggle.astro
+      date: "2026-05-25"
+      notes: "`<SidebarToggle>` chrome-state primitive shipped — pairs with the compound layout via the preference factory from ADR 0036."
+  notes: |
+    All six primitives this ADR named (assembled TextbookLayout + the five
+    underlying layout/chrome primitives) ship in `@sophie/astro`. The
+    compound-component pattern is in active force — consumers can use the
+    one-line `<TextbookLayout>` default OR compose the primitives directly,
+    matching the Radix/React-Aria/Starlight packaging shape this ADR cited.
 ---
 
 # ADR 0031: Compound-component pattern for layout primitives

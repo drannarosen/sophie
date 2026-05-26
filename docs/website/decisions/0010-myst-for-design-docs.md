@@ -7,9 +7,31 @@ tags:
   - meta
 status: shipped
 validation:
-  status: unvalidated
-  last_validated_date: null
-  evidence: []
+  status: validated
+  last_validated_date: "2026-05-25"
+  evidence:
+    - kind: deployment
+      ref: docs/website/myst.yml
+      date: "2026-05-25"
+      notes: "MyST project config shipped at `docs/website/myst.yml` — the design-docs site is authored under `docs/website/` with `mystmd` as the renderer, exactly as this ADR specifies."
+    - kind: deployment
+      ref: docs/website/decisions
+      date: "2026-05-25"
+      notes: "All 78 ADRs (0001-0079 with 0050 reserved) live under `docs/website/decisions/` as `.md` files with MyST frontmatter — the design-doc surface this ADR was authored to host."
+    - kind: manual
+      ref: AGENTS.md
+      date: "2026-05-25"
+      notes: "AGENTS.md 'Where things live' table names `docs/website/` (MyST site) as the canonical location for design docs and ADRs, and the dev-loop instructions cite `npx mystmd start` + `npx mystmd build --html` as the operating commands."
+    - kind: audit
+      ref: packages/astro/src/lib/validation/index-generator.ts
+      date: "2026-05-25"
+      notes: "The validation index generator parses MyST frontmatter blocks across `docs/website/decisions/` + `docs/website/reference/` to produce the build-generated dashboard at `/status/validation/`. The audit infrastructure assumes MyST as the authoring substrate."
+  notes: |
+    The MyST docs site is the substrate for every design doc in Sophie —
+    ADRs, reference docs, plans, reviews, vision essays — and the
+    validation-tracker audit pipeline reads its frontmatter directly. The
+    "indefinitely deferred" migration to Sophie-self-hosted docs (per ADR 0023
+    vertical-slice-first) remains deferred; MyST is the operating reality.
 ---
 
 # ADR 0010: MyST for design docs; Sophie-hosted docs later
