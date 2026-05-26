@@ -1,5 +1,10 @@
-import type { KeyInsightEntry, PedagogyIndex } from "@sophie/core/schema";
-import { describe, expect, test } from "vitest";
+import type {
+  KeyInsightEntry,
+  PedagogyIndex,
+  UnitEntry,
+} from "@sophie/core/schema";
+import { describe, expect, it, test } from "vitest";
+import { runPedagogyAudit } from "../index.ts";
 import type { FindingSink } from "../types.ts";
 import { checkKISlugUnique } from "./key-insights.ts";
 
@@ -140,5 +145,55 @@ describe("KI-slug-unique audit — KeyInsight slug uniqueness (ADR 0070 W4c D4)"
     expect(sink.errors[0]?.message).toContain("u1");
     expect(sink.errors[0]?.message).toContain("u2");
     expect(sink.errors[0]?.message).toContain("u3");
+  });
+});
+
+// ---------------------------------------------------------------------
+// K1 — chapters with zero <KeyInsight>s (INFO). Split out of
+// runner.test.ts per A+ Phase E (ADR 0061 Rule 3). The K1 audit runs
+// inside `runPedagogyAudit` (orchestrator-level dispatch), so these
+// tests exercise the runner end-to-end rather than calling the per-
+// invariant helper directly.
+// ---------------------------------------------------------------------
+
+const unitSpoiler: UnitEntry = {
+  id: "spoiler-alerts",
+  type: "lecture",
+  title: "Spoiler Alerts",
+  order: 1,
+  prereqs: [],
+  section_id: "core",
+  chapter: "spoiler-alerts",
+  status: "stable",
+};
+
+describe("K1 — chapters with zero <KeyInsight>s (INFO)", () => {
+  it("emits an INFO finding for every chapter that has no key-insights", () => {
+    const index: PedagogyIndex = {
+      ...emptyIndex(),
+      units: [unitSpoiler],
+      keyInsights: [],
+    };
+    const report = runPedagogyAudit(index);
+    const k1 = report.info.filter((i) => i.code === "K1");
+    expect(k1).toHaveLength(1);
+    expect(k1[0]).toMatchObject({ severity: "INFO", code: "K1" });
+    expect(k1[0]?.message).toContain("spoiler-alerts");
+  });
+
+  it("does not flag a chapter that has at least one key-insight", () => {
+    const keyInsight: KeyInsightEntry = {
+      body: "<p>x</p>",
+      unit: "spoiler-alerts",
+      anchor: "ki-1",
+      slug: "spoiler-alerts-ki-1",
+    };
+    const index: PedagogyIndex = {
+      ...emptyIndex(),
+      units: [unitSpoiler],
+      keyInsights: [keyInsight],
+    };
+    const report = runPedagogyAudit(index);
+    expect(report.info.filter((i) => i.code === "K1")).toEqual([]);
   });
 });
