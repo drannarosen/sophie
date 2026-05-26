@@ -40,6 +40,12 @@ export {
   type ChapterSection,
   ChapterSectionSchema,
 } from "./chapter-section.js";
+// v0.2 chrome cluster types (course-info projection, ADR 0080 v0.2
+// amendment + docs/plans/2026-05-26-course-info-projection-design.md).
+export {
+  type CourseInfoFragment,
+  CourseInfoFragmentSchema,
+} from "./course-info-fragment.js";
 export {
   COURSE_SPEC_SCHEMA_ID,
   COURSE_SPEC_VERSION,
@@ -49,8 +55,6 @@ export {
   PedagogyPatternSchema,
   validateCourseSpec,
 } from "./course-spec.js";
-// v0.2 chrome cluster types (course-info projection, ADR 0080 v0.2
-// amendment + docs/plans/2026-05-26-course-info-projection-design.md).
 export {
   type Accessibility,
   AccessibilitySchema,
