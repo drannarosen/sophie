@@ -50,11 +50,6 @@ const TEST_THRESHOLDS = { info: 500, warning: 800, error: 1200 } as const;
  * this list, future regressions on the same path fail CI.
  */
 const GRANDFATHERED: ReadonlyArray<string> = [
-  // Test-file umbrellas accepted at C3+C6; per-method split would
-  // create one tiny file per accumulator method, over-decomposing
-  // the source-mirror shape.
-  "packages/astro/src/lib/pedagogy-audit/runner.test.ts",
-  "packages/astro/src/lib/pedagogy-index/accumulator.test.ts",
   // Audit-invariant test files retain umbrella shape: each tests
   // one invariant family but exercises many fixture paths.
   "packages/astro/src/lib/pedagogy-audit/invariants/biography.test.ts",
