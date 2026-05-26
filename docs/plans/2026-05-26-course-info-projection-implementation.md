@@ -1,8 +1,46 @@
 # Course-info projection — Implementation Plan
 
+> **Revised 2026-05-26 (post-review).** This plan was critically reviewed
+> against the current `course-spec.ts` (371 LOC, `.strict()` everywhere) +
+> its 324-line `course-spec.test.ts` (30+ test pins) + `integration.ts` +
+> `figures-virtual-module.ts`. The original draft had three blockers that
+> wouldn't execute (broken test fixture, dual-shape grading, broken
+> `getStaticPaths`) and ~10 mechanical drifts. Anna resolved the
+> architectural decision points in-thread; this revision integrates them.
+> Review trail is at `~/.claude/plans/i-m-picking-up-the-peppy-fog.md`.
+>
+> **Anna's resolved decisions (2026-05-26):**
+>
+> | # | Decision | Choice |
+> |---|---|---|
+> | H1/H5 | Grading shape | **Replace v0.1 `assessment.grade_weights` with new `grading.categories`** (sum to 1.0; drop_lowest + late_policy_ref). ASTR 201 fixture migrates in-place; ADR 0080 v0.2 amendment documents the break. SoTA over simple per `feedback_no_backcompat_prelaunch`. |
+> | H2 | Landing override | **Add `"custom"` to `landing.layout` enum.** One declarative path. |
+> | H3 | `useCourseSpec()` hook | **Keep hook for test mockability.** Cleaner than vitest resolve.alias for virtual-module mocking. |
+> | H4/B5 | `compose:` typing | **Strict union** (known data keys + `prose/<slug>` regex). Per ADR 0080 §5 strict-by-default. *Proceeding under Auto Mode; Anna corrects if she wants loose.* |
+> | H6 | Phase 5 (iCal + schedule.yaml) | **Deferred to follow-up sprint.** ScheduleSchema needs its own focused design pass + ADR. This sprint ships Phases 1-4 + 6-7 only (renumbered to 1-4 + 5-6 below). |
+>
+> **Concrete revisions applied below:**
+>
+> 1. Task 1.1: reading list extended with existing `course-spec.test.ts` + `course-spec-astr-201.yaml` fixture.
+> 2. Task 1.2: rewritten — extends the existing test file; uses `loadFixture()` as v0.1 base (per fix B1).
+> 3. Task 1.3: v0.2 fields land in **sibling files** (ADR 0061 LOC budget — `course-spec.ts` already 371 LOC); `assessment.grade_weights` **removed**; `assessment.category_refs` added as audit-coverage pointer; all imports `.js`.
+> 4. New Task 1.3a: `landing.layout: "custom"` enum value + schema test.
+> 5. New Task 1.3b: `info_pages.compose:` strict union schema.
+> 6. Task 1.7: structural `VitePluginLike` interface (mirror `figures-virtual-module.ts:12-16`); R8 HMR-strategy header comment.
+> 7. Task 2.1: fake hook context uses `tmpdir` consumer fixture so `fs.existsSync` + `warnOnUnroutedPracticeMdx` don't throw.
+> 8. Task 2.3: `info-page.astro` drops `getStaticPaths`; reads slug from `Astro.url.pathname` (per fix B3).
+> 9. Verification gates: every phase adds `pnpm astro check` + Pagefind sanity check.
+> 10. Phase 3 layouts: axe assertions cover desktop + 375 px.
+> 11. **Phase 5 (iCal + schedule.yaml) removed.** Renumber Phase 6 → 5, Phase 7 → 6.
+> 12. Phase 5 (formerly 6): explicit delete of ASTR 201's `src/pages/index.astro` + astro.config wiring step.
+> 13. `useCourseSpec()` hook kept (per H3) with JSDoc explaining mockability rationale.
+> 14. All imports use `.js` extensions per project ESM convention.
+>
+> ---
+
 > **For Claude:** REQUIRED SUB-SKILL: Use `superpowers:executing-plans` to implement this plan task-by-task. Use `superpowers:test-driven-development` for every task that adds behavior (test → fail → impl → pass → commit). Use `superpowers:verification-before-completion` before declaring any task done.
 
-**Goal:** Ship the Tier-2 course-info projection — `course.sophie.yaml` v0.2 schema + prose-fragment collection + 8 injected routes (course landing, section landings, syllabus, schedule, instructor, policies, accommodations, schedule.ics) + 5 chrome components — so every Sophie course gets navigable course-website chrome without per-page authoring.
+**Goal:** Ship the Tier-2 course-info projection — `course.sophie.yaml` v0.2 schema + prose-fragment collection + 7 injected routes (course landing, section landings, syllabus, schedule, instructor, policies, accommodations) + 5 chrome components — so every Sophie course gets navigable course-website chrome without per-page authoring. **iCal export (`/schedule.ics` + schedule.yaml) deferred to follow-up sprint per Anna's H6 decision** (ScheduleSchema needs its own design pass).
 
 **Architecture:** Three-layer projection. Layer 1: `course.sophie.yaml` v0.2 carries structural data (grading, objectives, prereqs, contact, office hours, schedule_ref, info_pages, landing config). Layer 2: prose fragments at `src/content/course-info/` carry authored prose. Layer 3: composition layouts in `@sophie/components` read both and render pages. `defineSophieIntegration` injects all routes from the spec at config-setup. Single source → many views; updating the spec updates web + iCal + (future) PDF in lockstep.
 
@@ -70,254 +108,234 @@ Expected: `Test Files  1 failed | 106 passed` — the one pre-existing failure i
 
 ## Phase 1 — Schema layer
 
-### Task 1.1: Add `WorkedExample`-precedent boilerplate — read the existing schema cluster
+### Task 1.1: Orientation — read the existing schema cluster + test file
 
-**Goal:** Get oriented in the existing course-spec + pedagogy-index entries cluster.
+**Goal:** Get oriented in the existing course-spec + pedagogy-index entries cluster + the **existing 324-line test file** (per fix B1).
 
-**No code yet.** Read these three files end-to-end:
+**No code yet.** Read these end-to-end:
 
-- `packages/core/src/schema/course-spec.ts` — current v0.1 shape; identity-focused.
-- `packages/core/src/schema/pedagogy-index-entries/omi-flow.ts` — example of a recent schema-cluster addition (the OMIFlowEntry pattern).
-- `packages/core/src/schema/pedagogy-index-entries/worked-example.ts` — most recent schema addition (shipped last cycle in PR #197).
+- `packages/core/src/schema/course-spec.ts` (371 LOC) — current v0.1 eight-section `.strict()` shape. **Note `assessment.grade_weights` — this is the field being replaced in Task 1.3.**
+- `packages/core/src/schema/course-spec.test.ts` (324 LOC, 30+ tests) — **the v0.2 tests must extend this file, not replace it.** Note the `loadFixture()` pattern at lines 14-22 and the `valid()` helper at line 20.
+- `packages/core/src/schema/__fixtures__/course-spec-astr-201.yaml` — the canonical v0.1 fixture; v0.2 tests spread this + add clusters.
+- `packages/core/src/schema/pedagogy-index-entries/omi-flow.ts` — schema-cluster precedent (the OMIFlowEntry pattern).
+- `packages/core/src/schema/pedagogy-index-entries/worked-example.ts` — most recent schema addition (PR #197).
 
 You're modeling the v0.2 schema design after these — same Zod patterns, same docstring shape, same export-via-barrel discipline (ADR 0061 rule 1: focused files).
 
 **No commit.** Orientation step.
 
-### Task 1.2: Failing test — `CourseSpecSchema` v0.2 accepts new clusters
+### Task 1.2: Failing tests — `CourseSpecSchema` v0.2 (extend existing test file)
 
 **Files:**
-- Test: `packages/core/src/schema/course-spec.test.ts` (modify or create — check if it exists first)
+- Modify: `packages/core/src/schema/course-spec.test.ts` (existing 324-line file)
+- Modify: `packages/core/src/schema/__fixtures__/course-spec-astr-201.yaml` (migrate grade_weights → grading.categories)
 
-**Step 1: Check existing test file:**
+**Important context (per fix B1).** The existing test file pins ~30
+invariants including `.strict()`-rejection of unknown top-level keys.
+The v0.2 additions must:
+1. Land as new top-level keys on the existing `.strict()` schema (`.strict()` is preserved; new keys are explicitly added to the object shape).
+2. Migrate the existing fixture so `assessment.grade_weights` becomes `grading.categories` (per H1/H5 clean-break).
+3. Update the existing "rejects weights not summing to 100" test → "rejects grading.categories weights not summing to 1.0" (rename + adjust expected error message).
 
-```bash
-ls packages/core/src/schema/course-spec.test.ts 2>&1
-```
+**Step 1: Migrate `course-spec-astr-201.yaml` fixture.** Replace the
+`assessment.grade_weights` block with `grading.categories` (rescaled to
+sum to 1.0) + add a minimal `objectives`, `office_hours`, `contact`,
+`accessibility`, `info_pages`, `landing` cluster matching the design doc.
+Keep `assessment` (philosophy/homework_workflow/growth_memos/exam_policy)
+but **remove `grade_weights`** and add `category_refs:` pointing into the
+new `grading.categories[*].id` set.
 
-If it exists, read it. If not, this task creates it.
-
-**Step 2: Add (or write) a failing test that asserts the v0.2 fields parse:**
+**Step 2: Add new acceptance tests to `course-spec.test.ts`** under a
+new `describe("CourseSpecSchema v0.2 — new clusters", ...)` block. Spread
+the existing `valid()` fixture per the existing pattern (lines 24-64):
 
 ```ts
-import { describe, expect, test } from "vitest";
-import { CourseSpecSchema } from "./course-spec.ts";
-
-describe("CourseSpecSchema v0.2", () => {
-  const v01Base = {
-    identity: {
-      id: "astr-201",
-      title: "Astronomy for Science Majors",
-      code: "ASTR 201",
-      term: "Spring 2027",
-      institution: "San Diego State University",
-      instructor: "Anna Rosen",
-      voice: "anna-rosen",
-      voice_register: "sophomore-quantitative",
-    },
-  };
-
-  test("accepts objectives cluster", () => {
-    const result = CourseSpecSchema.safeParse({
-      ...v01Base,
-      objectives: [
-        { id: "lo-1", verb: "Analyze", body: "stellar spectra to infer composition" },
-      ],
-    });
-    expect(result.success).toBe(true);
+describe("CourseSpecSchema v0.2 — new clusters", () => {
+  it("accepts objectives cluster", () => {
+    const parsed = CourseSpecSchema.parse(valid());
+    expect(parsed.objectives?.[0]?.id).toBeDefined();
   });
 
-  test("accepts grading + categories with drop_lowest + letter_scale", () => {
-    const result = CourseSpecSchema.safeParse({
-      ...v01Base,
-      grading: {
-        categories: [
-          { id: "ps", name: "Problem sets", weight: 0.4, drop_lowest: 1 },
-          { id: "mt", name: "Midterm", weight: 0.25 },
-          { id: "fn", name: "Final", weight: 0.35 },
-        ],
-        letter_scale: [
-          { grade: "A", min: 93 },
-          { grade: "B", min: 83 },
-        ],
-      },
-    });
-    expect(result.success).toBe(true);
+  it("accepts grading.categories summing to 1.0 (refine)", () => {
+    const parsed = CourseSpecSchema.parse(valid());
+    const sum = parsed.grading.categories.reduce((s, c) => s + c.weight, 0);
+    expect(Math.abs(sum - 1.0)).toBeLessThan(0.001);
   });
 
-  test("accepts office_hours array", () => {
-    const result = CourseSpecSchema.safeParse({
-      ...v01Base,
-      office_hours: [
-        { day: "Tuesday", start_time: "14:00", end_time: "15:30", location: "P-149", modality: "in-person", by_appointment: false },
-      ],
-    });
-    expect(result.success).toBe(true);
+  it("accepts office_hours array", () => { /* ... */ });
+  it("accepts contact with async_channel", () => { /* ... */ });
+  it("accepts accessibility cluster", () => { /* ... */ });
+
+  it("accepts info_pages with strict compose: union", () => {
+    const data = valid();
+    const broken = { ...data, info_pages: {
+      syllabus: { layout: "SyllabusPage", compose: ["objectives", "prose/policies"] },
+    }};
+    expect(() => CourseSpecSchema.parse(broken)).not.toThrow();
   });
 
-  test("accepts info_pages with compose list", () => {
-    const result = CourseSpecSchema.safeParse({
-      ...v01Base,
-      info_pages: {
-        syllabus: {
-          layout: "SyllabusPage",
-          compose: ["objectives", "grading", "prose/policies"],
-        },
-        instructor: { layout: "InstructorPage", prose: "prose/instructor-bio" },
-      },
-    });
-    expect(result.success).toBe(true);
+  it("rejects info_pages.compose entries that aren't known data keys or prose/<slug>", () => {
+    const data = valid();
+    const broken = { ...data, info_pages: {
+      syllabus: { layout: "SyllabusPage", compose: ["objetctives"] },  // typo
+    }};
+    expect(() => CourseSpecSchema.parse(broken)).toThrow();
   });
 
-  test("rejects info_pages slug colliding with reserved set", () => {
-    const result = CourseSpecSchema.safeParse({
-      ...v01Base,
-      info_pages: {
-        units: { layout: "SyllabusPage" },  // reserved
-      },
-    });
-    expect(result.success).toBe(false);
-    if (!result.success) {
-      expect(result.error.message).toMatch(/reserved/i);
+  it("accepts landing.layout: 'custom' (integration-override path)", () => { /* ... */ });
+
+  it("defaults landing.layout to 'simple-list' when omitted", () => { /* ... */ });
+
+  it.each(["units", "sections", "library", "_astro", "_server", "_image", "pagefind"])(
+    "rejects info_pages slug colliding with reserved set: %s",
+    (reserved) => {
+      const data = valid();
+      const broken = { ...data, info_pages: { [reserved]: { layout: "SyllabusPage" } }};
+      expect(() => CourseSpecSchema.parse(broken)).toThrow(/reserved/i);
     }
+  );
+});
+
+describe("CourseSpecSchema v0.2 — grade_weights → grading migration (clean break)", () => {
+  it("rejects the old assessment.grade_weights shape (clean break per ADR 0080 v0.2)", () => {
+    const data = valid();
+    const broken = { ...data, assessment: { ...data.assessment, grade_weights: [
+      { category: "hw", weight: 100, label: "HW" },
+    ]}};
+    expect(() => CourseSpecSchema.parse(broken)).toThrow();
   });
+
+  it("rejects grading.categories weights not summing to 1.0", () => {
+    const data = valid();
+    const broken = { ...data, grading: { ...data.grading, categories: [
+      { id: "hw", name: "HW", weight: 0.5 },
+      { id: "fn", name: "Final", weight: 0.49 },
+    ]}};
+    expect(() => CourseSpecSchema.parse(broken)).toThrow(/sum to 1\.0/);
+  });
+
+  it("requires assessment.category_refs to reference declared grading.categories", () => { /* ... */ });
 });
 ```
 
-**Step 3: Run test — expect FAIL:**
+**Step 3: Update the existing v0.1 test** at line 67-90 ("rejects
+weights not summing to 100") — rename to reference `grading.categories`
++ test the 1.0-sum invariant. The old fixture file `invalid/weights-not-100.yaml`
+gets renamed to `invalid/category-weights-not-one.yaml` + updated.
+
+**Step 4: Run tests — expect FAIL:**
 
 ```bash
-cd packages/core && pnpm vitest run src/schema/course-spec.test.ts 2>&1 | tail -10
+cd packages/core && pnpm vitest run src/schema/course-spec.test.ts 2>&1 | tail -15
 ```
 
-Expected: all 5 tests fail (the v0.2 fields aren't in the schema yet).
+Expected: the new v0.2 tests fail (schemas don't exist yet); the existing
+tests that referenced `grade_weights` also fail until Task 1.3 ships.
 
 **No commit until impl + test pass together (Task 1.3).**
 
-### Task 1.3: Implement `CourseSpecSchema` v0.2
+### Task 1.3: Implement `CourseSpecSchema` v0.2 (sibling files; remove grade_weights)
 
-**Files:**
-- Modify: `packages/core/src/schema/course-spec.ts`
+**Files (per fix M7 — ADR 0061 LOC budget; current `course-spec.ts` is 371 LOC):**
+- Create: `packages/core/src/schema/course-spec-v02-objectives.ts`
+- Create: `packages/core/src/schema/course-spec-v02-prereqs.ts`
+- Create: `packages/core/src/schema/course-spec-v02-grading.ts` (replaces `assessment.grade_weights`)
+- Create: `packages/core/src/schema/course-spec-v02-office-hours.ts`
+- Create: `packages/core/src/schema/course-spec-v02-contact.ts`
+- Create: `packages/core/src/schema/course-spec-v02-accessibility.ts`
+- Create: `packages/core/src/schema/course-spec-v02-info-pages.ts` (includes ComposeEntrySchema strict union per H4/B5)
+- Create: `packages/core/src/schema/course-spec-v02-landing.ts` (includes "custom" enum value per H2)
+- Modify: `packages/core/src/schema/course-spec.ts` (barrel + extend `CourseSpecSchema` + remove `grade_weights`; add `category_refs`)
 
-**Step 1: Read the current file:**
+**Step 1: Read the current file** to find `AssessmentSectionSchema` (lines ~170-240) — this is the one structural mutation, not just additive.
 
-```bash
-cat packages/core/src/schema/course-spec.ts | head -50
-```
-
-Identify where `CourseSpecSchema` is declared and the identity block ends.
-
-**Step 2: Add the new Zod schemas + extend `CourseSpecSchema`.** Per ADR 0061 rule 1 (focused files): if `course-spec.ts` is already > 200 LOC, split the v0.2 clusters into sibling files (`course-spec-grading.ts`, `course-spec-info-pages.ts`, etc.) and re-export from `course-spec.ts`. Otherwise inline.
-
-Key additions (Zod 4 syntax — note `.passthrough()` is removed in Zod 4; use the default `.strict()` or unspecified loose for forward-compat):
+**Step 2: Author each sibling file.** All imports use `.js` (per fix B8). Pattern (using grading as example):
 
 ```ts
+// packages/core/src/schema/course-spec-v02-grading.ts
 import { z } from "zod";
-import { NonEmptyString, Slug } from "./primitives.ts";
+import { NonEmptyString, Slug } from "./primitives.js";
 
-// ─── Objectives ──────────────────────────────────────────
-const ObjectiveSchema = z.object({
-  id: Slug,
-  verb: NonEmptyString,
-  body: NonEmptyString,
-  assessed_by: z.array(Slug).optional(),
-});
-export type Objective = z.infer<typeof ObjectiveSchema>;
-
-// ─── Prereqs ─────────────────────────────────────────────
-const PrereqSchema = z.object({
-  kind: z.enum(["course", "skill", "topic"]),
-  ref: NonEmptyString,
-  required: z.boolean(),
-  note: z.string().optional(),
-});
-export type Prereq = z.infer<typeof PrereqSchema>;
-
-// ─── Grading ─────────────────────────────────────────────
-const GradingCategorySchema = z.object({
+export const GradingCategorySchema = z.object({
   id: Slug,
   name: NonEmptyString,
   weight: z.number().min(0).max(1),
   count: z.number().int().positive().optional(),
   drop_lowest: z.number().int().nonnegative().optional(),
-  late_policy_ref: z.string().optional(),  // "prose/<slug>"
-});
+  late_policy_ref: z.string().regex(/^prose\//).optional(),
+}).strict();
 export type GradingCategory = z.infer<typeof GradingCategorySchema>;
 
-const LetterScaleEntrySchema = z.object({
+export const LetterScaleEntrySchema = z.object({
   grade: NonEmptyString,
   min: z.number().min(0).max(100),
-});
+}).strict();
 
-const GradingSchema = z.object({
+export const GradingSchema = z.object({
   categories: z.array(GradingCategorySchema)
     .min(1)
     .refine(
       (cats) => Math.abs(cats.reduce((s, c) => s + c.weight, 0) - 1.0) < 0.001,
-      { message: "Grading category weights must sum to 1.0 (±0.001)" }
+      { message: "grading.categories weights must sum to 1.0 (±0.001)" }
     ),
   letter_scale: z.array(LetterScaleEntrySchema).min(1),
-  curve_policy_ref: z.string().optional(),
-});
+  curve_policy_ref: z.string().regex(/^prose\//).optional(),
+}).strict();
+```
 
-// ─── Office hours ────────────────────────────────────────
-const OfficeHourSchema = z.object({
-  day: z.enum(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]),
-  start_time: z.string().regex(/^\d{2}:\d{2}$/, "HH:MM 24-hour"),
-  end_time: z.string().regex(/^\d{2}:\d{2}$/, "HH:MM 24-hour"),
-  location: NonEmptyString,
-  modality: z.enum(["in-person", "online", "hybrid"]),
-  by_appointment: z.boolean(),
-  note: z.string().optional(),
-});
-export type OfficeHour = z.infer<typeof OfficeHourSchema>;
+```ts
+// packages/core/src/schema/course-spec-v02-info-pages.ts
+import { z } from "zod";
+import { NonEmptyString } from "./primitives.js";
 
-// ─── Contact ─────────────────────────────────────────────
-const ContactSchema = z.object({
-  email: z.string().email(),
-  phone: z.string().optional(),
-  response_window_hours: z.number().int().positive(),
-  async_channel: z.object({
-    kind: z.enum(["slack", "discord", "canvas-msg"]),
-    ref: NonEmptyString,
-  }).optional(),
-});
+// Strict union per H4/B5 — known data keys OR prose/<slug> regex.
+// Defends the class at the schema layer rather than surfacing typos at
+// runtime in the compose evaluator (Phase 3).
+const KNOWN_COMPOSE_DATA_KEYS = [
+  "objectives", "prereqs", "grading", "office_hours",
+  "accessibility", "contact", "schedule_overview",
+] as const;
 
-// ─── Accessibility ───────────────────────────────────────
-const AccessibilitySchema = z.object({
-  drc_link: z.string().url(),
-  contact_email: z.string().email(),
-  request_deadline_weeks: z.number().int().nonnegative(),
-  prose_ref: z.string().optional(),
-});
+export const ComposeEntrySchema = z.union([
+  z.enum(KNOWN_COMPOSE_DATA_KEYS),
+  z.string().regex(/^prose\/[a-z][a-z0-9-]*$/, "prose-fragment ref must be prose/<kebab-slug>"),
+]);
+export type ComposeEntry = z.infer<typeof ComposeEntrySchema>;
 
-// ─── Info pages ──────────────────────────────────────────
+export const InfoPageDeclarationSchema = z.object({
+  layout: NonEmptyString,
+  compose: z.array(ComposeEntrySchema).optional(),
+  prose: z.string().regex(/^prose\//).optional(),
+}).strict();
+
+// Reserved slugs defend the slug-collision class at the schema layer.
+// Includes Sophie-injected routes (units, sections) + Astro internal
+// prefixes + Pagefind output dir. Bridge slugs (library) reserved for
+// future ADR 0068 work.
 const RESERVED_SLUGS = new Set([
   "units", "sections", "library", "_astro", "_server", "_image", "pagefind",
 ]);
 
-const InfoPageDeclarationSchema = z.object({
-  layout: NonEmptyString,
-  compose: z.array(z.string()).optional(),
-  prose: z.string().optional(),
-});
-
-const InfoPagesSchema = z.record(
-  z.string().regex(/^[a-z][a-z0-9-]*$/, "lowercase-kebab-case slug"),
+export const InfoPagesSchema = z.record(
+  z.string().regex(/^[a-z][a-z0-9-]*$/, "info_pages key must be lowercase-kebab-case slug"),
   InfoPageDeclarationSchema
 ).refine(
-  (pages) => {
-    for (const slug of Object.keys(pages)) {
-      if (RESERVED_SLUGS.has(slug)) return false;
-    }
-    return true;
-  },
+  (pages) => Object.keys(pages).every((slug) => !RESERVED_SLUGS.has(slug)),
   { message: `info_pages slug is reserved (${[...RESERVED_SLUGS].join(", ")})` }
 );
+```
 
-// ─── Landing ─────────────────────────────────────────────
-const LandingSchema = z.object({
-  layout: z.enum(["hero-with-modules", "simple-list", "prose-with-toc"]).default("simple-list"),
+```ts
+// packages/core/src/schema/course-spec-v02-landing.ts
+import { z } from "zod";
+import { NonEmptyString } from "./primitives.js";
+
+// "custom" per H2 — explicit schema declaration that the integration
+// override path (defineSophieIntegration({ landings: { course } }))
+// is in effect. Otherwise schema enum default applies.
+export const LandingSchema = z.object({
+  layout: z.enum(["hero-with-modules", "simple-list", "prose-with-toc", "custom"])
+    .default("simple-list"),
   hero: z.object({
     title: z.string().optional(),
     tagline: z.string().optional(),
@@ -325,31 +343,67 @@ const LandingSchema = z.object({
     cta: z.object({
       label: NonEmptyString,
       href: NonEmptyString,
-    }).optional(),
-  }).optional(),
+    }).strict().optional(),
+  }).strict().optional(),
   show_announcements: z.boolean().optional(),
-});
+}).strict();
+```
 
-// ─── Extend CourseSpecSchema ─────────────────────────────
-// (Find existing CourseSpecSchema; add the v0.2 fields as optionals so v0.1
-// specs still parse. Reserved schedule_ref is a string path — actual
-// schedule.yaml loading is Phase 5's concern.)
+Other sibling files (`objectives`, `prereqs`, `office-hours`, `contact`,
+`accessibility`) follow the same shape — pure Zod, `.strict()` everywhere,
+`.js` imports, type-exports via `z.infer`. Each is ~30-50 LOC.
+
+**Step 3: Wire into `course-spec.ts` barrel + mutate `AssessmentSectionSchema`.**
+
+```ts
+// packages/core/src/schema/course-spec.ts (extend, not rewrite)
+import { GradingSchema, type GradingCategory } from "./course-spec-v02-grading.js";
+import { InfoPagesSchema } from "./course-spec-v02-info-pages.js";
+import { LandingSchema } from "./course-spec-v02-landing.js";
+// ... other v02 imports
+
+// MUTATION (per H1/H5 clean break): assessment.grade_weights is REMOVED.
+// assessment.category_refs is added as an audit-coverage pointer into
+// grading.categories[*].id. Audit invariants (QB6/QB7) can now verify
+// "every grading category is referenced by ≥1 assessment surface."
+const AssessmentSectionSchema = z
+  .object({
+    philosophy: NonEmptyString,
+    category_refs: z.array(Slug).min(1),  // ← REPLACES grade_weights
+    homework_workflow: HomeworkWorkflowSchema.optional(),
+    growth_memos: GrowthMemosSchema.optional(),
+    exam_policy: ExamPolicySchema.optional(),
+  })
+  .strict();
+// NOTE: the existing .refine() on grade_weights summing to 100 is REMOVED
+// (the new sum-to-1.0 invariant lives on GradingSchema).
+
 export const CourseSpecSchema = z.object({
-  identity: /* … existing v0.1 IdentitySchema … */,
-
-  // v0.2 additive clusters (all optional; v0.1 specs continue to parse):
+  identity: IdentitySchema,
+  audience: AudienceSchema,
+  pedagogy: PedagogySchema,
+  terminal_goals: z.array(TerminalGoalSchema).min(1),
+  principles: z.array(PrincipleSchema).default([]),
+  assessment: AssessmentSectionSchema,         // ← mutated (category_refs)
+  grading: GradingSchema,                      // ← NEW (required at v0.2; replaces grade_weights)
+  quality_bars: QualityBarsSchema,
+  discovery: DiscoverySchema,
+  spec_version: z.literal(COURSE_SPEC_VERSION),
+  schema: z.literal(COURSE_SPEC_SCHEMA_ID),
+  // v0.2 additive (optional — courses can opt into chrome incrementally):
   objectives: z.array(ObjectiveSchema).optional(),
   prereqs: z.array(PrereqSchema).optional(),
-  grading: GradingSchema.optional(),
   office_hours: z.array(OfficeHourSchema).optional(),
   contact: ContactSchema.optional(),
   accessibility: AccessibilitySchema.optional(),
-  schedule_ref: z.string().optional(),
   info_pages: InfoPagesSchema.optional(),
   landing: LandingSchema.optional(),
-});
+}).strict();
 export type CourseSpec = z.infer<typeof CourseSpecSchema>;
 ```
+
+Cross-refine: add a top-level `.refine()` asserting every
+`assessment.category_refs` entry exists in `grading.categories[*].id`.
 
 **Step 3: Run tests — expect PASS:**
 
@@ -359,10 +413,10 @@ cd packages/core && pnpm vitest run src/schema/course-spec.test.ts 2>&1 | tail -
 
 Expected: 5/5 pass.
 
-**Step 4: Run biome on touched files:**
+**Step 4: Run biome on all new + touched files:**
 
 ```bash
-pnpm exec biome check --write packages/core/src/schema/course-spec.ts packages/core/src/schema/course-spec.test.ts 2>&1 | tail -3
+pnpm exec biome check --write packages/core/src/schema/ 2>&1 | tail -3
 ```
 
 Expected: no errors. Auto-fix may rearrange imports — that's fine.
@@ -370,24 +424,31 @@ Expected: no errors. Auto-fix may rearrange imports — that's fine.
 **Step 5: Commit:**
 
 ```bash
-git add packages/core/src/schema/course-spec.ts packages/core/src/schema/course-spec.test.ts
-git commit -m "feat(core): CourseSpecSchema v0.2 — objectives/grading/office-hours/contact/accessibility/info-pages/landing clusters (additive)
+git add packages/core/src/schema/
+git commit -m "feat(core): CourseSpecSchema v0.2 — replace grade_weights with grading; add chrome clusters
 
-v0.1 specs continue to parse (all new fields optional). Adds:
+Clean break per ADR 0080 v0.2 (no back-compat pre-launch per feedback_no_backcompat_prelaunch):
+- assessment.grade_weights REMOVED; replaced by required grading.categories
+  (sum to 1.0 ±0.001) + assessment.category_refs (audit-coverage pointer)
+- grading.categories adds drop_lowest? + late_policy_ref? for richer
+  audit invariants (QB6/QB7) than the v0.1 grade_weights shape supported
+
+Additive v0.2 chrome clusters (all optional; courses opt in incrementally):
 - ObjectiveSchema + PrereqSchema for course-level LOs + prereqs
-- GradingSchema with weight-sums-to-1 invariant + drop_lowest + letter_scale
 - OfficeHourSchema (modality enum, HH:MM regex, by_appointment)
 - ContactSchema (email validation, async_channel)
-- AccessibilitySchema (DRC link, request deadline)
-- schedule_ref string (Phase 5 loads schedule.yaml)
-- InfoPagesSchema with reserved-slug refinement (defends collision class
-  at schema layer per AGENTS.md 'structural fixes over targeted patches')
-- LandingSchema with pluggable layout enum
+- AccessibilitySchema (DRC link, request_deadline_weeks)
+- InfoPagesSchema with strict compose: union (known data keys |
+  prose/<slug>) + reserved-slug refinement
+- LandingSchema with 'custom' enum value for integration-override path
 
-Tests: 5 cases covering objectives, grading invariant, office_hours,
-info_pages compose lists, and reserved-slug rejection.
+Sibling-file layout per ADR 0061 LOC budget (course-spec.ts was 371 LOC):
+  course-spec-v02-{grading,info-pages,landing,objectives,...}.ts
 
-Phase 1 of the course-info-projection sprint (docs/plans/2026-05-26-course-info-projection-design.md)."
+Phase 1 of the course-info-projection sprint
+(docs/plans/2026-05-26-course-info-projection-design.md +
+docs/plans/2026-05-26-course-info-projection-implementation.md
+post-review revision)."
 ```
 
 ### Task 1.4: Re-export new types from `@sophie/core/schema` barrel
@@ -566,7 +627,10 @@ Filename slug is the id; no id field. ADR 0042 ai_contribution mirror."
 cat packages/astro/src/lib/figures-virtual-module.ts
 ```
 
-Note: it's a Vite plugin that exposes a `virtual:sophie/figures` module with the figure registry baked in at config-setup time. Mirror the shape for course-spec.
+**Critical patterns to mirror (per fixes B7 + M6):**
+- **Structural `VitePluginLike` interface** at lines 12-16; NOT `import("vite").Plugin`. `@sophie/astro` resolves to vite@8 while Astro 6 ships vite@7 types — two `Plugin` shapes coexist and TS structural-checks them as incompatible. The cast bypasses the version mismatch only.
+- **R8 HMR-strategy header comment** declaring: "closure-captured at config-setup time; figures changes do not HMR — editing course.sophie.yaml requires a dev-server restart. This is deliberate per ADR 0082 § Consequences (mirrors figures-virtual-module)."
+- **Null-byte prefix on resolved ID** (`\0virtual:sophie/course-spec`) — Vite's convention for marking IDs as "do not externalize."
 
 **Step 2: Write the failing test first:**
 
@@ -623,34 +687,55 @@ describe("courseSpecVirtualModule", () => {
 pnpm vitest run src/lib/course-spec-virtual-module.test.ts 2>&1 | tail -5
 ```
 
-**Step 4: Implement (mirror figures-virtual-module.ts shape):**
+**Step 4: Implement (mirror figures-virtual-module.ts shape exactly):**
 
 ```ts
 import type { CourseSpec } from "@sophie/core/schema";
-import type { Plugin as VitePlugin } from "vite";
-
-const MODULE_ID = "virtual:sophie/course-spec";
-const RESOLVED_ID = `\0${MODULE_ID}`;
 
 /**
- * Vite plugin that exposes the consumer's `course.sophie.yaml` (parsed +
- * validated) as a virtual module. Components + layouts import it via:
+ * Structural type for the minimal Vite plugin shape we return.
+ * Mirrors `figures-virtual-module.ts` (per fix B7) to dodge the
+ * vite@7-vs-vite@8 type collision: @sophie/astro resolves to vite@8
+ * while Astro 6 ships vite@7 types; the two `Plugin` shapes are
+ * structurally-incompatible at the TS level. Keeping the type local
+ * + inferable bypasses the version mismatch.
+ */
+interface VitePluginLike {
+  name: string;
+  resolveId(id: string): string | undefined;
+  load(id: string): string | undefined;
+}
+
+/**
+ * Vite plugin that exposes the consumer's `course.sophie.yaml` (parsed
+ * + validated by course-spec-loader) as a virtual module. Chrome
+ * components + layouts import it via:
  *
  *   import { courseSpec } from "virtual:sophie/course-spec";
  *
- * The spec is captured by closure at config-setup time; changes require
- * a dev-server restart (same trade-off as virtual:sophie/figures per
- * ADR 0082; no HMR by design — the spec is global course state).
+ * **R8 HMR strategy declaration.** The spec is **closure-captured at
+ * config-setup time**. Production builds and dev mode both bake the
+ * spec literal once; editing course.sophie.yaml requires a dev-server
+ * restart. No `handleHotUpdate` hook is exposed — the no-HMR semantics
+ * are structural, not "easy to forget." Mirrors the figures-virtual-
+ * module trade-off per ADR 0082 § Consequences (the spec is global
+ * course state; rare edits; dev-restart cost acceptable).
  */
-export function courseSpecVirtualModule(spec: CourseSpec): VitePlugin {
+export const COURSE_SPEC_VIRTUAL_ID = "virtual:sophie/course-spec";
+const RESOLVED_ID = `\0${COURSE_SPEC_VIRTUAL_ID}`;
+
+export function courseSpecVirtualModule(spec: CourseSpec): VitePluginLike {
+  // JSON.stringify is sufficient because the validated CourseSpec is
+  // plain JSON (no functions, Maps, Dates, etc. — every Zod field
+  // resolves to a JSON-serializable primitive or array/object thereof).
   const literal = JSON.stringify(spec);
   return {
-    name: "sophie:course-spec-virtual-module",
-    resolveId(id) {
-      if (id === MODULE_ID) return RESOLVED_ID;
+    name: "sophie:course-spec",
+    resolveId(id: string): string | undefined {
+      if (id === COURSE_SPEC_VIRTUAL_ID) return RESOLVED_ID;
       return undefined;
     },
-    load(id) {
+    load(id: string): string | undefined {
       if (id !== RESOLVED_ID) return undefined;
       return `export const courseSpec = ${literal};\n`;
     },
@@ -838,7 +923,7 @@ cd /Users/anna/Teaching/sophie/.worktrees/feat-course-info-projection
 pnpm exec biome check 2>&1 | tail -3
 ```
 
-Expected: 818 files, 0 errors, 0 warnings.
+Expected: ~830 files (new schema files raise the count), 0 errors, 0 warnings.
 
 ```bash
 cd packages/core && pnpm vitest run 2>&1 | tail -5
@@ -853,7 +938,15 @@ cd /Users/anna/Teaching/sophie/.worktrees/feat-course-info-projection/docs/websi
 
 Expected: `0`.
 
-**Phase 1 done.** Schema layer + virtual module live. Move to Phase 2.
+**Astro check** (per fix M3):
+```bash
+cd /Users/anna/Teaching/sophie/.worktrees/feat-course-info-projection
+pnpm turbo run check --filter=@sophie/astro --filter=smoke 2>&1 | tail -3
+```
+
+Expected: 0 errors. The new virtual module + loader must type-check cleanly.
+
+**Phase 1 done.** Schema layer + virtual module live. Pause + report to Anna before Phase 2.
 
 ---
 
@@ -1037,7 +1130,9 @@ const units = (await getCollection("units"))
 />
 ```
 
-**info-page.astro:**
+**info-page.astro** (revised per fix B3 — drop `getStaticPaths`; each
+injected slug route is a parameter-less static URL, so the dispatcher
+reads the slug from `Astro.url.pathname` at render time):
 
 ```astro
 ---
@@ -1052,23 +1147,24 @@ const LAYOUTS = {
   SyllabusPage, SchedulePage, InstructorPage, PoliciesPage, AccommodationsPage,
 };
 
-// Astro's getStaticPaths gives us the slug from URL; look up decl.
-export async function getStaticPaths() {
-  const { courseSpec } = await import("virtual:sophie/course-spec");
-  return Object.keys(courseSpec.info_pages ?? {}).map((slug) => ({
-    params: { __slug: slug },
-    props: { slug, decl: courseSpec.info_pages[slug] },
-  }));
+// Each info_pages entry is injected as its OWN static route by
+// defineSophieIntegration (e.g. /syllabus/, /policies/). There is no
+// [param] segment in the URL pattern, so getStaticPaths does not apply.
+// Read the slug from the URL at render time; spec lookup gives us the
+// layout + composition declaration.
+const slug = Astro.url.pathname.replace(/^\/|\/$/g, "");
+const decl = courseSpec.info_pages?.[slug];
+if (!decl) {
+  throw new Error(
+    `[sophie] info-page.astro: no info_pages[${slug}] declared in course.sophie.yaml. ` +
+      `The integration injected /${slug}/ but the spec doesn't carry a declaration for it. ` +
+      `This is a build-time invariant violation — check course.sophie.yaml's info_pages block.`
+  );
 }
-
-// Note: Astro injected route uses `/:slug/`, not a `[slug]` param —
-// inject-route patterns and getStaticPaths interact via the
-// integration's per-slug injection (one route per slug). Single page
-// dispatcher per the design.
-
-const { slug, decl } = Astro.props;
-const Layout = LAYOUTS[decl.layout];
-if (!Layout) throw new Error(`info_pages[${slug}].layout '${decl.layout}' not in shipped layouts`);
+const Layout = LAYOUTS[decl.layout as keyof typeof LAYOUTS];
+if (!Layout) {
+  throw new Error(`[sophie] info_pages[${slug}].layout '${decl.layout}' not in shipped layouts`);
+}
 ---
 
 <Layout client:load spec={courseSpec} decl={decl} />
@@ -1321,103 +1417,124 @@ Each component is small (~50-80 LOC + test). Use `data-` attributes for runtime 
 
 ---
 
-## Phase 5 — iCal export
+## Phase 5 — iCal export — DEFERRED to follow-up sprint (per H6)
 
-### Task 5.1: Build the iCal emitter
+**Status:** Per Anna's H6 decision (2026-05-26), Phase 5 (iCal route +
+hand-rolled emitter) is deferred from this sprint. Reason: it depends on
+a `schedule.yaml` schema that doesn't yet exist in `@sophie/core`. That
+schema (week → date mapping, recurrence rules, holidays, multi-section
+logic) deserves its own focused design pass + ADR amendment to ADR 0080,
+not an inline minimal stub.
 
-**Files:**
-- Create: `packages/astro/src/lib/ical-emitter.ts`
-- Test: `packages/astro/src/lib/ical-emitter.test.ts`
+**Triggers for the follow-up sprint:**
 
-Hand-rolled per the design (avoids new-dep HITL gate). ~50 LOC. Emits standards-compliant iCal (RFC 5545).
+- Design pass: `schedule.yaml` shape (weeks vs flat day-list; recurrence
+  for office hours; holiday handling; multi-section logic for COMP 521).
+- ADR amendment to ADR 0080 declaring the schedule schema + its
+  relationship to `course.sophie.yaml`'s `schedule_ref` pointer.
+- Implementation: `@sophie/core/schema/schedule.ts` +
+  `@sophie/astro/src/lib/schedule-loader.ts` +
+  `@sophie/astro/src/lib/ical-emitter.ts` + `/schedule.ics` route.
+- Smoke E2E: iCal output passes `node-ical` parse + semantic assertions
+  (VEVENT count, DTSTART, RRULE).
 
-**TDD with `node-ical` (dev-only dep, install in this task) parsing the output**:
-
-```bash
-pnpm add -D node-ical --filter=@sophie/astro
-```
-
-Then test asserts the emitted text parses cleanly + has the expected VEVENT count + DTSTART values + RRULE for office hours.
-
-### Task 5.2: Inject `/schedule.ics` route
-
-**Files:**
-- Create: `packages/astro/src/routes/schedule-ics.ts` (Astro endpoint, not .astro)
-- Modify: `packages/astro/src/integration.ts` (add `injectRoute({ pattern: "/schedule.ics", entrypoint: "@sophie/astro/routes/schedule-ics.ts" })`)
-
-```ts
-// packages/astro/src/routes/schedule-ics.ts
-import { courseSpec } from "virtual:sophie/course-spec";
-import { emitIcal } from "@sophie/astro/lib/ical-emitter";
-import { getCollection } from "astro:content";
-import type { APIRoute } from "astro";
-
-export const GET: APIRoute = async () => {
-  const units = (await getCollection("units")).map((u) => u.data);
-  const ical = emitIcal({ spec: courseSpec, units });
-  return new Response(ical, {
-    headers: { "Content-Type": "text/calendar; charset=utf-8" },
-  });
-};
-```
-
-Commit.
-
-### Task 5.3: Phase 5 verification.
-
-**Phase 5 done.**
+**Effect on this sprint:** Phases 6 → 5 and 7 → 6 (renumbered below).
+The original `schedule_ref` field on `CourseSpecSchema` v0.2 is kept as
+an optional opaque string — it's a forward reference; the iCal sprint
+fills in the loader + emitter.
 
 ---
 
-## Phase 6 — astr201 integration
+## Phase 5 — astr201 integration (formerly Phase 6)
 
-### Task 6.1: Coordinate with parallel session
+### Task 5.1: Coordinate with parallel session
 
 **Before touching astr201/**: confirm the parallel chapter-migration session has paused or is on a non-conflicting branch. Send Anna a message asking for the green-light. Don't proceed without it.
 
-### Task 6.2: Fill out astr201's `course.sophie.yaml` v0.2
+### Task 5.2: Delete ASTR 201's hand-rolled `src/pages/index.astro` (per fix M4)
 
-Add the new clusters (objectives, grading, office_hours, contact, accessibility, info_pages, landing). Use real ASTR 201 Spring 2027 data; ask Anna for specifics where unclear.
+**Critical step that was missing from the original plan.** ASTR 201
+ships a hand-rolled landing at `src/pages/index.astro` (per
+design-doc context line 13). When `@sophie/astro` injects `/`, the
+consumer file shadows the injected route per ADR 0082 §A2.6 + Astro
+issue #3809 — meaning the injected `<CourseLanding*>` will NOT render
+until the consumer file is removed.
 
-### Task 6.3: Author the prose fragments
+```bash
+cd /Users/anna/Teaching/astr201
+git rm src/pages/index.astro
+```
+
+Commit on a `feat/sophie-course-info` branch in astr201/ with message
+explaining the removal cites this sprint + ADR 0082 §A2.6.
+
+### Task 5.3: Wire `@sophie/astro` integration in astr201's `astro.config.mjs` (per fix M5)
+
+If a custom landing override is wanted, pass `landings.course` to
+`defineSophieIntegration` here. Otherwise the spec's `landing.layout`
+enum default applies (`"simple-list"`).
+
+### Task 5.4: Fill out astr201's `course.sophie.yaml` v0.2
+
+Add the new clusters (objectives, grading.categories, office_hours,
+contact, accessibility, info_pages, landing). **Migrate
+`assessment.grade_weights` → `grading.categories`** + add
+`assessment.category_refs` pointer. Use real ASTR 201 Spring 2027 data;
+ask Anna for specifics where unclear.
+
+### Task 5.5: Author the prose fragments (per fix M10)
 
 Create `src/content/course-info/`:
-- `policies.mdx`
-- `accommodations.mdx`
-- `instructor-bio.mdx`
-- `late-work.mdx`
-- `course-thesis.mdx`
 
-Each is small (1-3 paragraphs). Ask Anna for content.
+**Mandatory for v0.2 done (3 fragments):**
+- `policies.mdx` — late-work, attendance, academic integrity, AI policy
+- `accommodations.mdx` — DRC process, request deadlines, specifics
+- `instructor-bio.mdx` — background, research, teaching philosophy
 
-### Task 6.4: Build + verify all 8 routes render
+**Aspirational (ship if time):**
+- `late-work.mdx` — separate from policies if granularity wanted
+- `course-thesis.mdx` — what the course is about (one paragraph)
+
+Each is small (1-3 paragraphs). Ask Anna for content; pause at each
+fragment per HITL.
+
+### Task 5.6: Build + verify all 7 routes render
+
+(7 routes now, not 8 — iCal deferred per H6.)
 
 ```bash
 cd /Users/anna/Teaching/astr201 && pnpm install && pnpm build
 ```
 
-Then `pnpm preview` + open each URL + verify visual + content correctness.
+Then `pnpm preview` + open each URL + verify visual + content correctness:
+`/`, `/sections/[section]/`, `/units/[unit]/reading/`, `/syllabus/`,
+`/schedule/`, `/instructor/`, `/policies/`, `/accommodations/`.
 
-### Task 6.5: Author + run a new e2e spec
+**Verify Pagefind picks up info pages** (per fix M2):
+```bash
+ls dist/pagefind/ && grep -c "syllabus\|policies" dist/pagefind/pagefind-entry.json || true
+```
 
-`examples/smoke/e2e/info-pages.spec.ts` (or astr201's equivalent if it has its own e2e setup) — axe-clean assertion per route at desktop + 375 px.
+### Task 5.7: Author + run a new e2e spec
 
-### Task 6.6: Phase 6 verification + commit astr201 changes.
+`examples/smoke/e2e/info-pages.spec.ts` (or astr201's equivalent if it has its own e2e setup) — axe-clean assertion per route at **desktop + 375 px** (per fix M8).
 
-**Phase 6 done.**
+### Task 5.8: Phase 5 verification + commit astr201 changes.
+
+**Phase 5 done.**
 
 ---
 
-## Phase 7 — ADRs + docs
+## Phase 6 — ADRs + docs (formerly Phase 7)
 
-### Task 7.1: Write ADR 0086 (projection pattern + chrome-vs-pedagogy boundary)
+### Task 6.1: Write ADR 0086 (projection pattern + chrome-vs-pedagogy boundary)
 
 **Files:**
 - Create: `docs/website/decisions/0086-course-info-projection-pattern.md`
 
 Use the existing ADR template at `docs/website/decisions/template.md`. Cite this design doc as the evidence base. Lock the locked decisions from the design as "Decision" sections.
 
-### Task 7.2: Amend ADR 0080 to v0.2
+### Task 6.2: Amend ADR 0080 to v0.2
 
 **Files:**
 - Modify: `docs/website/decisions/0080-course-spec-format-v0-1.md`
@@ -1428,14 +1545,14 @@ Either:
 
 Pick whichever has precedent in the existing ADR cluster.
 
-### Task 7.3: Update `chapter-components.md` with the Course-management chrome section
+### Task 6.3: Update `chapter-components.md` with the Course-management chrome section
 
 **Files:**
 - Modify: `docs/website/reference/chapter-components.md`
 
 Add a new section: "Course-management chrome components" with each of the 5 components (props + default-schema-lookup behavior + when to override).
 
-### Task 7.4: Regenerate validation dashboard (ADR 0080 status changed)
+### Task 6.4: Regenerate validation dashboard (ADR 0080 status changed)
 
 ```bash
 pnpm tsx scripts/regenerate-validation-index.mts
@@ -1444,7 +1561,7 @@ git diff docs/website/status/validation.md
 
 Commit the regenerated dashboard.
 
-### Task 7.5: Final-pass verification
+### Task 6.5: Final-pass verification
 
 ```bash
 pnpm exec biome check 2>&1 | tail -3
@@ -1452,11 +1569,17 @@ pnpm turbo run test 2>&1 | tail -5
 cd docs/website && npx mystmd build --html 2>&1 | grep -c "⚠"
 cd /Users/anna/Teaching/sophie/.worktrees/feat-course-info-projection
 pnpm lint:axe-render 2>&1 | tail -3
+pnpm turbo run check --filter=@sophie/astro --filter=smoke 2>&1 | tail -3   # astro check per fix M3
 ```
 
-All 4 expected clean. The 1 pre-existing failure on `index-generator.integration.test.ts` is the only red.
+All 5 expected clean. The 1 pre-existing failure on `index-generator.integration.test.ts` is the only red.
 
-### Task 7.6: Open the PR
+**Pagefind sanity check** (per fix M2 — info pages indexed in `dist/pagefind/`; iCal route absent since Phase 5 deferred):
+```bash
+ls dist/pagefind/ && ls dist/syllabus/index.html dist/policies/index.html 2>/dev/null
+```
+
+### Task 6.6: Open the PR
 
 Per AGENTS.md HITL: ask Anna confirmation in plain text before pushing/opening.
 
@@ -1470,23 +1593,26 @@ PR body should include:
 
 Branch is already pushed (each commit in each phase pushes its own); PR creation is the final step.
 
-**Phase 7 done. Sprint complete.**
+**Phase 6 done. Sprint complete (Phases 1-4 + 5-6 of revised plan).**
 
 ---
 
-## Verification — sprint definition of done (re-stated)
+## Verification — sprint definition of done (revised 2026-05-26)
 
-- All 8 routes injected by `@sophie/astro` render in astr201 dev + build.
-- axe-core clean (0 violations, WCAG 2.1 AA) at desktop + 375 px on all 8 routes.
-- iCal output validates against RFC 5545 (unit test).
-- `pnpm exec biome check` 0/0.
+- All 7 routes injected by `@sophie/astro` render in astr201 dev + build (`/`, `/sections/[section]/`, `/units/[unit]/reading/`, `/syllabus/`, `/schedule/`, `/instructor/`, `/policies/`, `/accommodations/` — iCal route deferred per H6).
+- axe-core clean (0 violations, WCAG 2.1 AA) at **desktop + 375 px** on all 7 routes (per fix M8).
+- `pnpm exec biome check` 0/0 warnings.
 - `pnpm vitest run` clean across @sophie/core + @sophie/components + @sophie/astro.
+- `pnpm turbo run check` clean (astro check; per fix M3).
 - `npx mystmd build --html` in `docs/website/` 0 ⚠.
 - `pnpm lint:axe-render` clean (R11).
-- ADR 0086 (projection pattern) shipped; ADR 0080 amended to v0.2.
-- `docs/website/status/validation.md` regenerated.
-- ASTR 201 `course.sophie.yaml` filled with real data + 5 prose fragments authored.
+- Pagefind index includes info pages (per fix M2).
+- ADR 0086 (projection pattern) shipped; ADR 0080 amended to v0.2 (clean break: grade_weights → grading.categories).
+- `docs/website/status/validation.md` regenerated (`pnpm tsx scripts/regenerate-validation-index.mts`).
+- ASTR 201 `course.sophie.yaml` filled with real data + ≥3 mandatory prose fragments authored (policies + accommodations + instructor-bio) + `src/pages/index.astro` deleted.
 - Anna confirms the syllabus page reads cleanly + matches what she'd hand a student day 1.
+
+**Deferred to follow-up sprint (per H6):** iCal export, `schedule.yaml` schema, `/schedule.ics` route.
 
 ---
 
