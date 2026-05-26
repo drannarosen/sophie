@@ -247,6 +247,7 @@ project:
         - file: pilots/m3-l3-nuclear-fusion.md
         - file: pilots/m1-l1-spoiler-alerts.md
         - file: pilots/m1-l3-gravity-and-orbits.md
+        - file: pilots/m1-l4-light-as-information.md
     - title: Status
       children:
         - file: status/roadmap.md
