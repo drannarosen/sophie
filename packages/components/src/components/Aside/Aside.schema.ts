@@ -67,6 +67,15 @@ export const AsidePropsSchema = z
      * agree.
      */
     name: z.string().optional(),
+    /**
+     * Course-level canonical flag for `kind === "definition"` (ADR 0086).
+     * A term may be defined in multiple chapters; the one marked
+     * `canonical` is shown in the `/library/glossary` room. At most one
+     * chapter may mark a given slug canonical (build-time guard). Ignored
+     * on non-definition kinds. Boolean-presence prop:
+     * `<Aside kind="definition" title="X" canonical>`.
+     */
+    canonical: z.boolean().optional(),
     children: z.custom<ReactNode>(),
     /**
      * ADR 0044 misconception-graph fields. Only meaningful when

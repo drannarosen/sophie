@@ -1,5 +1,6 @@
 ---
 import { indexAccumulator } from "../lib/pedagogy-index/accumulator";
+import { canonicalDefinitions } from "../lib/pedagogy-index/canonical-definitions";
 import LibraryCollectionShell from "./LibraryCollectionShell.astro";
 
 const { definitions } = indexAccumulator.asPedagogyIndex();
@@ -32,7 +33,13 @@ export interface Props {
 
 const { heading = "Glossary" } = Astro.props;
 
-const sorted = [...definitions].sort((a, b) => a.term.localeCompare(b.term));
+// ADR 0086: a term may be defined in multiple chapters (cross-lecture
+// reinforcement). The course glossary shows ONE entry per slug — the
+// canonical one when a chapter opts in via `<Aside ... canonical>`, else
+// the first-accumulated definition. See `canonicalDefinitions`.
+const sorted = canonicalDefinitions(definitions).sort((a, b) =>
+  a.term.localeCompare(b.term)
+);
 ---
 
 <LibraryCollectionShell

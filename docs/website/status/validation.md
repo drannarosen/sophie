@@ -23,12 +23,12 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 
 | Status | Count |
 |---|---|
-| Validated | 31 |
+| Validated | 32 |
 | In progress | 19 |
 | Unvalidated | 61 |
 | Re-validation needed | 0 |
 | Missing block | 0 |
-| Total | 111 |
+| Total | 112 |
 
 ## Lifecycle summary
 
@@ -38,14 +38,14 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 | Accepted design | 38 |
 | Mixed | 1 |
 | Future package split | 9 |
-| No status | 0 |
-| Total | 111 |
+| No status | 1 |
+| Total | 112 |
 
 ## Evidence kinds
 
 | Kind | Count |
 |---|---|
-| test | 92 |
+| test | 94 |
 | chapter | 9 |
 | review | 28 |
 | deployment | 66 |
@@ -54,7 +54,13 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 
 ## Extractor findings
 
-_No extractor findings (V0 + V8) surfaced during this build._
+| Code | Count |
+|---|---|
+| S0 | 1 |
+
+### Findings list
+
+- **INFO S0** — S0: docs/website/decisions/0086-multi-chapter-glossary-definitions.md: page-level 'status:' field has unknown value (got: "accepted"; expected one of: shipped, accepted-design, mixed, future-package-split). (docs/website/decisions/0086-multi-chapter-glossary-definitions.md)
 
 ## Contracts
 
@@ -146,6 +152,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0083-cl1-client-directive-invariant.md](/cl1-client-directive-invariant/) | validated | accepted design | 2026-05-25 | audit, deployment, test | Shipped as part of the post-PR-#172 hardening sequence; closes the "missing client:* directive" failure mode that ADR 0038 Amendment 2 defends structurally via the `useHydrated` gate. CL1 is the build-time defence; the gate is the runtime defence; together they form a defence-in-depth pair against the React #418 hydration mismatch class for store-backed components in packed consumers.  |
 | [docs/website/decisions/0084-packed-smoke-ci-gate.md](/packed-smoke-ci-gate/) | validated | accepted design | 2026-05-25 | deployment, manual, test | Shipped in PR #176 (PR-D1) as the CI-runtime layer of the hydration- class defense family. Pairs with ADR 0038 Amendment 2 (runtime `useHydrated` gate) + ADR 0083 (build-time CL1 invariant) + future ADR 0085 (authoring-affordance `_template/` skeleton). The four layers together close the React #418 hydration regression class structurally; the packed-smoke gate is what catches the bug in the consumer-shape pnpm workspace resolution cannot exercise by construction.  |
 | [docs/website/decisions/0085-component-template-skeleton.md](/component-template-skeleton/) | validated | accepted design | 2026-05-25 | deployment, manual, test | Shipped in PR #177 as the authoring-affordance layer of the React #418 hydration-class defense family. Pairs with ADR 0038 Amendment 2 (runtime `useHydrated` gate) + ADR 0083 (build-time CL1 invariant) + ADR 0084 (CI-runtime packed-smoke gate). The four ADRs collectively close the regression class: runtime structural defense, build-time static analysis, CI-runtime consumer-shape coverage, and authoring affordance.  |
+| [docs/website/decisions/0086-multi-chapter-glossary-definitions.md](/multi-chapter-glossary-definitions/) | validated | — | 2026-05-26 | test |  |
 
 ### Reference docs
 

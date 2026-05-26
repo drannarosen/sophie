@@ -53,6 +53,7 @@ export function extractDefinitions(
       body: renderChildrenToHtml(el.children),
       unit: unitId,
       anchor: slug,
+      canonical: attrs.canonical === true,
     });
   });
 

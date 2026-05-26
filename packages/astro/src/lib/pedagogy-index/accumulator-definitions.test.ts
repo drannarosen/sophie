@@ -16,6 +16,7 @@ describe("indexAccumulator (cross-chapter)", () => {
         body: "",
         unit: "ch-a",
         anchor: "parallax",
+        canonical: false,
       },
     ]);
     indexAccumulator.addDefinitions([
@@ -25,6 +26,7 @@ describe("indexAccumulator (cross-chapter)", () => {
         body: "",
         unit: "ch-b",
         anchor: "flux",
+        canonical: false,
       },
     ]);
 
@@ -34,28 +36,84 @@ describe("indexAccumulator (cross-chapter)", () => {
     expect(terms).toEqual(["Flux", "Parallax"]);
   });
 
-  test("throws on cross-chapter slug duplication", () => {
+  test("ADR 0086: same slug in multiple chapters is allowed; both entries retained", () => {
     indexAccumulator.addDefinitions([
       {
-        term: "Standard candle",
-        slug: "standard-candle",
-        body: "",
+        term: "Kirchhoff's laws",
+        slug: "kirchhoffs-laws",
+        body: "L4 wording",
         unit: "ch-a",
-        anchor: "standard-candle",
+        anchor: "kirchhoffs-laws",
+        canonical: false,
       },
     ]);
 
     expect(() =>
       indexAccumulator.addDefinitions([
         {
-          term: "Standard candle",
-          slug: "standard-candle",
-          body: "",
+          term: "Kirchhoff's laws",
+          slug: "kirchhoffs-laws",
+          body: "M2-L3 wording",
           unit: "ch-b",
-          anchor: "standard-candle",
+          anchor: "kirchhoffs-laws",
+          canonical: false,
         },
       ])
-    ).toThrow(/multiple chapters/i);
+    ).not.toThrow();
+
+    const index = indexAccumulator.asPedagogyIndex();
+    const both = index.definitions.filter((d) => d.slug === "kirchhoffs-laws");
+    expect(both).toHaveLength(2);
+    expect(both.map((d) => d.unit).sort()).toEqual(["ch-a", "ch-b"]);
+  });
+
+  test("ADR 0086: two chapters marking one slug canonical throws", () => {
+    indexAccumulator.addDefinitions([
+      {
+        term: "Blackbody",
+        slug: "blackbody",
+        body: "",
+        unit: "ch-a",
+        anchor: "blackbody",
+        canonical: true,
+      },
+    ]);
+
+    expect(() =>
+      indexAccumulator.addDefinitions([
+        {
+          term: "Blackbody",
+          slug: "blackbody",
+          body: "",
+          unit: "ch-b",
+          anchor: "blackbody",
+          canonical: true,
+        },
+      ])
+    ).toThrow(/canonical in multiple chapters/i);
+  });
+
+  test("ADR 0086: one canonical + one non-canonical for a slug is fine", () => {
+    expect(() =>
+      indexAccumulator.addDefinitions([
+        {
+          term: "Spectroscopy",
+          slug: "spectroscopy",
+          body: "",
+          unit: "ch-a",
+          anchor: "spectroscopy",
+          canonical: true,
+        },
+        {
+          term: "Spectroscopy",
+          slug: "spectroscopy",
+          body: "",
+          unit: "ch-b",
+          anchor: "spectroscopy",
+          canonical: false,
+        },
+      ])
+    ).not.toThrow();
   });
 
   test("clearUnit removes only that chapter's entries", () => {
@@ -66,6 +124,7 @@ describe("indexAccumulator (cross-chapter)", () => {
         body: "",
         unit: "ch-a",
         anchor: "alpha",
+        canonical: false,
       },
       {
         term: "Beta",
@@ -73,6 +132,7 @@ describe("indexAccumulator (cross-chapter)", () => {
         body: "",
         unit: "ch-b",
         anchor: "beta",
+        canonical: false,
       },
     ]);
 
@@ -84,7 +144,7 @@ describe("indexAccumulator (cross-chapter)", () => {
     expect(inB).toHaveLength(1);
   });
 
-  test("re-adding a chapter's entries after clearUnit does not throw cross-chapter", () => {
+  test("re-adding a chapter's entries after clearUnit does not throw", () => {
     indexAccumulator.addDefinitions([
       {
         term: "Gamma",
@@ -92,6 +152,7 @@ describe("indexAccumulator (cross-chapter)", () => {
         body: "",
         unit: "ch-a",
         anchor: "gamma",
+        canonical: true,
       },
     ]);
     indexAccumulator.clearUnit("ch-a");
@@ -104,6 +165,7 @@ describe("indexAccumulator (cross-chapter)", () => {
           body: "",
           unit: "ch-a",
           anchor: "gamma",
+          canonical: true,
         },
       ])
     ).not.toThrow();
