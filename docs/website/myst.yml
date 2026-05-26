@@ -242,6 +242,7 @@ project:
       children:
         - file: pilots/_template.md
         - file: pilots/m2-l3-spectra-composition.md
+        - file: pilots/m3-l2-hydrostatic-equilibrium.md
     - title: Status
       children:
         - file: status/roadmap.md
