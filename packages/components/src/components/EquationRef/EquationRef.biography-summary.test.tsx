@@ -1,5 +1,6 @@
 import type { Biography } from "@sophie/core/schema";
 import { render, screen } from "@testing-library/react";
+import { axe } from "jest-axe";
 import { describe, expect, it } from "vitest";
 import { BiographySummary } from "./EquationRef.biography-summary.tsx";
 
@@ -179,5 +180,33 @@ describe("<BiographySummary>", () => {
     expect(
       container.querySelector("[data-sophie-equation-biography]")
     ).not.toBeNull();
+  });
+
+  // ADR 0004 — axe-core a11y gate. BiographySummary is the
+  // student-facing summary line rendered inside `<EquationRef>` popover
+  // content (count of assumptions/misuses + first typed assumption).
+  // Parent `EquationRef.test.tsx` axe-tests the full popover, but the
+  // sub-component owns its own DOM (data-sophie-equation-biography
+  // region) and merits dedicated axe coverage in the fullest content
+  // shape it renders.
+  it("is axe-clean with assumptions + misuses + typed assumption", async () => {
+    const { container } = render(
+      <BiographySummary
+        biography={{
+          ...emptyBiography,
+          assumptions: [
+            {
+              body: "x",
+              type: "thermal-equilibrium",
+              epistemicRole: "assumption",
+            },
+            { body: "y", epistemicRole: "assumption" },
+          ],
+          common_misuses: [{ body: "m" }],
+        }}
+      />
+    );
+    const results = await axe(container);
+    expect(results.violations).toEqual([]);
   });
 });

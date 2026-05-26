@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
+import { axe } from "jest-axe";
 import { describe, expect, it, vi } from "vitest";
 import { RetrievalCard } from "./RetrievalCard.tsx";
 
@@ -132,5 +133,25 @@ describe("<RetrievalCard>", () => {
     expect(root.style.getPropertyValue("--card-band-color")).toMatch(
       /spaced-band/
     );
+  });
+
+  // ADR 0004 — axe-core a11y gate. RetrievalCard is the internal
+  // primitive that powers `<RetrievalPrompt>`, `<SpacedReview>`, and
+  // `<SkillReview>`. Each public wrapper has its own axe coverage,
+  // but the primitive itself owns the disclosure / textarea / reveal /
+  // self-assess UI — student-rendered surface that must be axe-clean
+  // in every visible state of its state machine (collapsed, expanded,
+  // revealed, assessed).
+  it.each([
+    "collapsed",
+    "expanded",
+    "revealed",
+    "assessed",
+  ] as const)("is axe-clean in state '%s'", async (initialState) => {
+    const { container } = render(
+      <RetrievalCard {...baseProps} initialState={initialState} />
+    );
+    const results = await axe(container);
+    expect(results.violations).toEqual([]);
   });
 });
