@@ -245,6 +245,22 @@ PR. The vertical slice (extractor → schema → accumulator → e2e)
 followed the established misconception-shape template per ADR 0061
 Rule 4 (filename-as-discovery-key).
 
+### R-0080-A2 — Course-info projection as 2nd refactor-outward instance (2026-05-26)
+
+The course-info projection sprint
+([PR #199](https://github.com/drannarosen/sophie/pull/199), commit
+`4e0730e`) is the second large-scale example of this ADR's "refactor
+outward as patterns emerge" pattern. After
+[ADR 0082](./0082-chapter-layout-extraction.md) lifted the
+reading-route shape out of consumer repos into
+`@sophie/astro/routes/` + `@sophie/components/`, course-info
+chrome follows the same path: data + prose-fragment projection +
+route injection all live in the platform; consumer repos declare
+intent via `course.sophie.yaml` and author prose at
+`src/content/course-info/`. The astr-201 consumer validated the
+projection shape during the sprint's Phase 6 fixture migration. See
+[ADR 0080 Amendment 2](./0080-course-spec-format-v0-1.md#amendment-2-assessment-grade-weights-clean-break-course-info-projection-2026-05-26).
+
 ## References
 
 - Late-session honesty check (May 2026): "is this the best way to

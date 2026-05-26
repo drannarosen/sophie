@@ -241,6 +241,19 @@ IDs exist + are appropriately typed.
 - **2026-05-22 (W2)** — File-layout migration activated; chapter MDX
   moved to `sections/<sec>/units/<unit>/reading.mdx`; ChapterEntry +
   ModuleEntry deleted; ArtifactEntry surfaced. See W2 design doc.
+- **2026-05-26 (R-0080-A2)** — **Course-info prose fragments are
+  boundary-clarified as *not* artifacts.** The course-info projection
+  sprint
+  ([PR #199](https://github.com/drannarosen/sophie/pull/199), commit
+  `4e0730e`) introduces `src/content/course-info/<slug>.mdx` prose
+  fragments referenced from `course.sophie.yaml` by string ref
+  (`"prose/<slug>"`). These are **course-level singletons**, not
+  pedagogical Artifacts in this ADR's Section/Unit/Artifact hierarchy.
+  They are validated by `CourseInfoFragmentSchema` (in
+  `@sophie/core/schema`), composed into info-page layouts by the
+  spec's `info_pages.compose:` block, and not indexed by
+  `PedagogyIndex`. See
+  [ADR 0080 Amendment 2](./0080-course-spec-format-v0-1.md#amendment-2-assessment-grade-weights-clean-break-course-info-projection-2026-05-26).
 
 ## References
 

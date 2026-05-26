@@ -138,6 +138,30 @@ following the same Zod-as-source-of-truth shape; no schema for
 `<Callout variant="the-more-you-know">` ships because that variant
 sits outside the taxonomy by design.
 
+### R-0080-A2 — Schema placement rule clarification (2026-05-26)
+
+The course-info projection sprint
+([PR #199](https://github.com/drannarosen/sophie/pull/199), commit
+`4e0730e`) introduced `CourseInfoFragmentSchema` — the Astro
+content-collection frontmatter validator for prose fragments at
+`src/content/course-info/`. The original design doc proposed
+shipping it from `@sophie/astro` (where the content collection lives)
+to localize the schema next to its consumer. The shipped reality
+chose `@sophie/core/schema` instead, formalizing the placement rule:
+
+**All Zod schemas co-locate in `@sophie/core/schema` even when only
+one package consumes them.** Two practical consequences:
+
+- `@sophie/astro` takes no direct Zod dep; `@sophie/components`
+  takes no direct Zod dep; the dependency graph collapses Zod to a
+  single bottom-of-graph package (`@sophie/core`).
+- AI authors looking for "where do the schemas live" have one
+  answer that scales. `course-spec-v02-*.ts` siblings of the
+  existing ~30 schemas demonstrate the pattern (8 new files added
+  in the same sprint).
+
+See [ADR 0080 Amendment 2](./0080-course-spec-format-v0-1.md#amendment-2-assessment-grade-weights-clean-break-course-info-projection-2026-05-26).
+
 ## References
 
 - Brainstorming session, schema-sourcing pin (May 2026).
