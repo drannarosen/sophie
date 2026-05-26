@@ -34,10 +34,15 @@ export function checkOrphans(
   }
 
   // F4 — registry figure with zero usages.
+  // #191 (WS B+D): `kind === "rep-figure"` (emitted by `extractMultiReps`
+  // for `<RepFigure refName>` children) now counts as a usage so
+  // MultiRep-only references don't false-positive as orphans.
   const usedFigureNames = new Set<string>();
   for (const use of index.figureUsages) usedFigureNames.add(use.name);
   for (const usage of index.inlineRefUsages) {
-    if (usage.kind === "figure-ref") usedFigureNames.add(usage.refKey);
+    if (usage.kind === "figure-ref" || usage.kind === "rep-figure") {
+      usedFigureNames.add(usage.refKey);
+    }
   }
   for (const fig of index.figureRegistry) {
     if (usedFigureNames.has(fig.name)) continue;

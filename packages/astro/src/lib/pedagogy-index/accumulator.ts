@@ -23,6 +23,7 @@ import type {
   SpacedReviewEntry,
   TopicEntry,
   UnitEntry,
+  WorkedExampleEntry,
 } from "@sophie/core/schema";
 
 /**
@@ -173,6 +174,14 @@ interface GlobalIndexState {
    */
   omiFlows: Map<string, OMIFlowEntry>;
   /**
+   * Per-unit `<WorkedExample>` callsites (ADR 0081 + WS B+D). Keyed by
+   * `${unit}#${anchor}` so two chapters can each have a `we-1`
+   * auto-anchor without collision. Populated by `extractWorkedExamples`.
+   * Consumed by WE-1 (units-at-every-step) and WE-2 (Problem + Result
+   * completeness) invariants.
+   */
+  workedExamples: Map<string, WorkedExampleEntry>;
+  /**
    * Per-unit `<RetrievalPrompt>` callsites (Wedge B1). Keyed by
    * `${unit}#${anchor}` so two chapters can each have an `rp-1`
    * auto-anchor without collision. Populated by
@@ -232,6 +241,7 @@ function getGlobalState(): GlobalIndexState {
       interventions: new Map(),
       deepDives: new Map(),
       omiFlows: new Map(),
+      workedExamples: new Map(),
       retrievalPrompts: new Map(),
       spacedReviews: new Map(),
       skillReviews: new Map(),
@@ -307,6 +317,11 @@ class IndexAccumulator {
     for (const [key, entry] of state.omiFlows) {
       if (entry.unit === unitId) {
         state.omiFlows.delete(key);
+      }
+    }
+    for (const [key, entry] of state.workedExamples) {
+      if (entry.unit === unitId) {
+        state.workedExamples.delete(key);
       }
     }
     for (const [key, entry] of state.retrievalPrompts) {
@@ -727,6 +742,31 @@ class IndexAccumulator {
   }
 
   /**
+   * Add a chapter's extracted `<WorkedExample>` callsites (ADR 0081 +
+   * WS B+D). Auto-anchors of the shape `we-${N}` are chapter-scoped
+   * (each chapter restarts its counter at 1) and NOT subject to cross-
+   * chapter collision checks. Explicit-id-derived anchors (and
+   * title-derived `we-${slug(title)}` anchors) are subject to the
+   * cross-chapter uniqueness check.
+   */
+  addWorkedExamples(entries: ReadonlyArray<WorkedExampleEntry>): void {
+    const state = getGlobalState();
+    for (const entry of entries) {
+      if (/^we-\d+$/.test(entry.anchor)) continue;
+      for (const existing of state.workedExamples.values()) {
+        if (existing.unit !== entry.unit && existing.anchor === entry.anchor) {
+          throw new Error(
+            `WorkedExample anchor "${entry.anchor}" defined in multiple chapters: "${existing.unit}" and "${entry.unit}". Resolution: change one of the \`id\`/\`title\` props to disambiguate.`
+          );
+        }
+      }
+    }
+    for (const entry of entries) {
+      state.workedExamples.set(`${entry.unit}#${entry.anchor}`, entry);
+    }
+  }
+
+  /**
    * Add a chapter's extracted `<RetrievalPrompt>` entries (Wedge B1).
    * Anchors are auto-generated (`rp-${counter}`) and chapter-scoped, so
    * no cross-chapter collision check is required; the intra-chapter
@@ -855,6 +895,7 @@ class IndexAccumulator {
       interventions: Array.from(state.interventions.values()),
       deepDives: Array.from(state.deepDives.values()),
       omiFlows: Array.from(state.omiFlows.values()),
+      workedExamples: Array.from(state.workedExamples.values()),
       retrievalPrompts: Array.from(state.retrievalPrompts.values()),
       spacedReviews: Array.from(state.spacedReviews.values()),
       skillReviews: Array.from(state.skillReviews.values()),
@@ -899,6 +940,7 @@ export function resetIndexAccumulator(): void {
   state.interventions.clear();
   state.deepDives.clear();
   state.omiFlows.clear();
+  state.workedExamples.clear();
   state.retrievalPrompts.clear();
   state.spacedReviews.clear();
   state.skillReviews.clear();

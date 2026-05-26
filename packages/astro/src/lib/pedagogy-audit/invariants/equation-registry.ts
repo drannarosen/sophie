@@ -35,13 +35,24 @@ export function checkEquationRegistry(
   }
 
   // R2 WARNING — registry entry has zero citations.
+  // #191 (WS B+D): `kind === "rep-equation"` (emitted by `extractMultiReps`
+  // for `<RepEquation refKey>` children) now counts as a citation so
+  // equations referenced only via a `<MultiRep>` binding don't
+  // false-positive as orphans. `<EquationRef refId>` callsites
+  // (`kind === "eq-ref"`) remain out of scope for R2 by pre-existing
+  // design — EquationRef is inline cross-ref text, not a citation
+  // that exercises the registry; changing that semantic is a separate
+  // decision.
   const citedRefIds = new Set(index.equationCitations.map((c) => c.refId));
+  for (const usage of index.inlineRefUsages) {
+    if (usage.kind === "rep-equation") citedRefIds.add(usage.refKey);
+  }
   for (const eq of index.equations) {
     if (citedRefIds.has(eq.id)) continue;
     sink.warnings.push({
       severity: "WARNING",
       code: "R2",
-      message: `R2: equation registry entry "${eq.id}" is declared but no chapter cites it via <KeyEquation refId="${eq.id}">. Either reference it from a chapter or remove the registry file.`,
+      message: `R2: equation registry entry "${eq.id}" is declared but no chapter cites it via <KeyEquation refId="${eq.id}"> or <RepEquation refKey="${eq.id}">. Either reference it from a chapter or remove the registry file.`,
       location: { anchor: eq.id },
     });
   }

@@ -165,6 +165,8 @@ export {
   TopicEntrySchema,
   type UnitEntry,
   UnitEntrySchema,
+  type WorkedExampleEntry,
+  WorkedExampleEntrySchema,
 } from "./pedagogy-index-entries/index.js";
 export {
   type PracticeAttempt,

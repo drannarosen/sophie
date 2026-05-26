@@ -45,7 +45,7 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 
 | Kind | Count |
 |---|---|
-| test | 91 |
+| test | 92 |
 | chapter | 9 |
 | review | 28 |
 | deployment | 66 |

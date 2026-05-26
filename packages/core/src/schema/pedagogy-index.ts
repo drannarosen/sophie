@@ -23,6 +23,7 @@ import {
   SpacedReviewEntrySchema,
   TopicEntrySchema,
   UnitEntrySchema,
+  WorkedExampleEntrySchema,
 } from "./pedagogy-index-entries/index.ts";
 
 /**
@@ -98,6 +99,14 @@ export const PedagogyIndexSchema = z.object({
    * three slot bodies (observable / model / inference).
    */
   omiFlows: z.array(OMIFlowEntrySchema).readonly().default([]),
+  /**
+   * Per-unit `<WorkedExample>` callsites (ADR 0081). Populated by
+   * `extractWorkedExamples`. The audit invariants WE-1 (units-at-every-
+   * step / QB6 coverage) + WE-2 (Problem + Result completeness) consume
+   * the per-entry `slots` summary. Defaults to `[]` so consumer apps
+   * authored before the WS B+D extractor shipped keep working.
+   */
+  workedExamples: z.array(WorkedExampleEntrySchema).readonly().default([]),
   /** Per-unit learning objectives, populated by the extractor. */
   objectives: z.array(ObjectiveEntrySchema).readonly(),
   /** Per-unit inline-ref callsites — populated by the extractor for the audit pass. */

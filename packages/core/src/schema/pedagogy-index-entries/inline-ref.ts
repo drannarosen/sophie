@@ -10,16 +10,25 @@ import { NonEmptyString, Slug } from "../primitives.ts";
  */
 
 /**
- * Kind discriminator for inline-ref callsites. Mirrors the four
- * inline cross-ref components: `<GlossaryTerm>`, `<EquationRef>`,
- * `<FigureRef>`, `<ChapterRef>`. The audit pass uses these to
- * detect undefined targets (D4, E4, F2, C1).
+ * Kind discriminator for inline-ref callsites. Originally mirrored the
+ * four inline cross-ref components (`<GlossaryTerm>`, `<EquationRef>`,
+ * `<FigureRef>`, `<ChapterRef>`). Extended for WS B+D
+ * ([issue #191](https://github.com/drannarosen/sophie/issues/191)) to
+ * also cover the two MultiRep child-mode cross-refs (`<RepFigure>`,
+ * `<RepEquation>`) so MultiRep-only references count toward F4
+ * (orphan figure) and R-series equation-citation invariants — at the
+ * INDEX layer, not as an audit-layer special case. Audit consumers
+ * filter on `kind` to attribute each finding.
  */
 export const InlineRefKindSchema = z.enum([
   "glossary-term",
   "eq-ref",
   "figure-ref",
   "chapter-ref",
+  /** MultiRep `<RepFigure refName="X">` — counts as a figure usage for F4. */
+  "rep-figure",
+  /** MultiRep `<RepEquation refKey="X">` — counts as an equation citation for R-series invariants. */
+  "rep-equation",
 ]);
 export type InlineRefKind = z.infer<typeof InlineRefKindSchema>;
 
@@ -35,6 +44,8 @@ export type InlineRefKind = z.infer<typeof InlineRefKindSchema>;
  *   - `eq-ref`        → `<EquationRef refId="X">` → `X`
  *   - `figure-ref`    → `<FigureRef name="X">`   → `X`
  *   - `chapter-ref`   → `<ChapterRef slug="X">`  → `X`
+ *   - `rep-figure`    → `<RepFigure refName="X">` (inside `<MultiRep>`) → `X`
+ *   - `rep-equation`  → `<RepEquation refKey="X">` (inside `<MultiRep>`) → `X`
  */
 export const InlineRefUsageEntrySchema = z.object({
   kind: InlineRefKindSchema,
