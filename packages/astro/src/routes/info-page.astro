@@ -1,4 +1,15 @@
 ---
+import type { CollectionEntry } from "astro:content";
+import { getCollection } from "astro:content";
+import AccommodationsPage from "../components/AccommodationsPage.astro";
+import InstructorPage from "../components/InstructorPage.astro";
+import PoliciesPage from "../components/PoliciesPage.astro";
+import SchedulePage from "../components/SchedulePage.astro";
+import SyllabusPage from "../components/SyllabusPage.astro";
+import {
+  evaluateCompose,
+  type ProseFragmentRef,
+} from "../lib/compose-evaluator.ts";
 import { courseSpec } from "virtual:sophie/course-spec";
 
 /**
@@ -9,11 +20,16 @@ import { courseSpec } from "virtual:sophie/course-spec";
  * B3), so the slug is read from `Astro.url.pathname` at render time
  * and looked up in courseSpec.info_pages.
  *
- * Phase 3 (info-page layouts + compose evaluator) fills in the
- * LAYOUTS lookup with real SyllabusPage / SchedulePage /
- * InstructorPage / PoliciesPage / AccommodationsPage components.
- * Until then, this dispatcher renders a placeholder so the build
- * succeeds + the route surface is observable.
+ * The dispatcher:
+ *   1. Reads slug from URL → looks up info_pages[slug] declaration
+ *   2. Pre-loads the course-info content collection (prose fragments)
+ *   3. For SyllabusPage's compose: list, runs the compose evaluator
+ *   4. Dispatches to the matching .astro layout component
+ *
+ * Per Anna's H7 = Option B: layouts are .astro orchestrators in
+ * @sophie/astro/components/ (matches ChapterLayout precedent);
+ * structural data renders via React sub-components from
+ * @sophie/components, prose via Astro <Content components={...}>.
  */
 
 const slug = Astro.url.pathname.replace(/^\/|\/$/g, "");
@@ -26,24 +42,73 @@ if (!decl) {
   );
 }
 
-// Phase 3 will replace this placeholder with the real layout dispatch.
-// Until then we render a minimal acknowledgement page so smoke + axe
-// can exercise the injected route surface.
+// Load prose fragments. Consumer apps must declare a `course-info`
+// content collection (CourseInfoFragmentSchema from @sophie/core/schema)
+// in their content.config.ts. Empty/missing collection is tolerated;
+// individual prose refs throw via the compose evaluator + layout
+// look-ups if specifically referenced.
+let fragments: CollectionEntry<"course-info">[] = [];
+try {
+  fragments = await getCollection("course-info");
+} catch {
+  // Collection not declared by consumer — layouts that need prose
+  // fragments will surface curated errors via the lookup. Single-
+  // prose layouts (Policies/Accommodations/Instructor) gracefully
+  // degrade to a "fragment not authored yet" notice.
+  fragments = [];
+}
+
+const proseEntries: Record<string, CollectionEntry<"course-info">> = {};
+const proseLookup: Record<string, ProseFragmentRef> = {};
+for (const entry of fragments) {
+  proseEntries[entry.id] = entry;
+  proseLookup[`prose/${entry.id}`] = {
+    slug: entry.id,
+    frontmatter: entry.data,
+  };
+}
+
+// Dispatch based on declared layout name.
+const layoutName = decl.layout;
 ---
 
-<!doctype html>
-<html lang='en'>
-  <head>
-    <meta charset='utf-8' />
-    <title>{decl.layout} — {courseSpec.identity.title}</title>
-  </head>
-  <body>
-    <main>
-      <h1>{decl.layout}</h1>
-      <p>
-        Placeholder for <code>/{slug}/</code> — layout {decl.layout} ships in
-        Phase 3 of the course-info-projection sprint.
-      </p>
-    </main>
-  </body>
-</html>
+{layoutName === "SyllabusPage" && (() => {
+  const composedItems = evaluateCompose({
+    compose: decl.compose,
+    spec: courseSpec,
+    proseLookup,
+  });
+  return (
+    <SyllabusPage
+      spec={courseSpec}
+      composedItems={composedItems}
+      proseEntries={proseEntries}
+    />
+  );
+})()}
+
+{layoutName === "SchedulePage" && <SchedulePage spec={courseSpec} />}
+
+{layoutName === "InstructorPage" && (() => {
+  const proseRef = decl.prose;
+  const proseEntry = proseRef
+    ? proseEntries[proseRef.replace(/^prose\//, "")]
+    : undefined;
+  return <InstructorPage spec={courseSpec} proseEntry={proseEntry} />;
+})()}
+
+{layoutName === "PoliciesPage" && (() => {
+  const proseRef = decl.prose;
+  const proseEntry = proseRef
+    ? proseEntries[proseRef.replace(/^prose\//, "")]
+    : undefined;
+  return <PoliciesPage spec={courseSpec} proseEntry={proseEntry} />;
+})()}
+
+{layoutName === "AccommodationsPage" && (() => {
+  const proseRef = decl.prose;
+  const proseEntry = proseRef
+    ? proseEntries[proseRef.replace(/^prose\//, "")]
+    : undefined;
+  return <AccommodationsPage spec={courseSpec} proseEntry={proseEntry} />;
+})()}

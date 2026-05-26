@@ -1,0 +1,39 @@
+---
+import { AccessibilitySection } from "@sophie/components";
+import type { CollectionEntry } from "astro:content";
+import { render } from "astro:content";
+import { makeStaticComponents } from "../components.tsx";
+import type { CourseSpec } from "@sophie/core/schema";
+import InfoPageShell from "./InfoPageShell.astro";
+import { figures } from "virtual:sophie/figures";
+
+/**
+ * Accommodations page layout. Renders the AccessibilitySection
+ * (DRC link / contact / request deadline from spec.accessibility) +
+ * a prose fragment with institution-specific accommodations language
+ * (typically `prose/accommodations`).
+ */
+interface Props {
+  spec: CourseSpec;
+  proseEntry: CollectionEntry<"course-info"> | undefined;
+}
+
+const { spec, proseEntry } = Astro.props;
+const chromeComponents = makeStaticComponents({ figures });
+const ProseContent = proseEntry ? (await render(proseEntry)).Content : null;
+---
+
+<InfoPageShell
+  title={`Accommodations — ${spec.identity.title}`}
+  description={`Accessibility and accommodations for ${spec.identity.code}.`}
+>
+  <main aria-labelledby='accommodations-title'>
+    <h1 id='accommodations-title'>Accessibility & Accommodations</h1>
+
+    {spec.accessibility && (
+      <AccessibilitySection accessibility={spec.accessibility} />
+    )}
+
+    {ProseContent && <ProseContent components={chromeComponents} />}
+  </main>
+</InfoPageShell>

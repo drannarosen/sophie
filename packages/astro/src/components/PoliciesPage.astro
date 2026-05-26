@@ -1,0 +1,43 @@
+---
+import type { CollectionEntry } from "astro:content";
+import { render } from "astro:content";
+import { makeStaticComponents } from "../components.tsx";
+import type { CourseSpec } from "@sophie/core/schema";
+import InfoPageShell from "./InfoPageShell.astro";
+import { figures } from "virtual:sophie/figures";
+
+/**
+ * Policies page layout. Renders a single prose fragment (typically
+ * `prose/policies`) — the spec declares `info_pages.policies.prose:
+ * "prose/policies"`. No structural-data composition; this is the
+ * prose-heavy version of the chrome layouts.
+ */
+interface Props {
+  spec: CourseSpec;
+  proseEntry: CollectionEntry<"course-info"> | undefined;
+}
+
+const { spec, proseEntry } = Astro.props;
+const chromeComponents = makeStaticComponents({ figures });
+const ProseContent = proseEntry ? (await render(proseEntry)).Content : null;
+const proseTitle = proseEntry?.data.title ?? "Course policies";
+---
+
+<InfoPageShell
+  title={`${proseTitle} — ${spec.identity.title}`}
+  description={`Course policies for ${spec.identity.code}.`}
+>
+  <main aria-labelledby='policies-title'>
+    <h1 id='policies-title'>{proseTitle}</h1>
+    {ProseContent ? (
+      <ProseContent components={chromeComponents} />
+    ) : (
+      <p>
+        <em>
+          No <code>prose/policies</code> fragment is authored in
+          <code>src/content/course-info/</code> yet.
+        </em>
+      </p>
+    )}
+  </main>
+</InfoPageShell>

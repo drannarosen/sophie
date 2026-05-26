@@ -1,0 +1,49 @@
+---
+import { ContactCard, OfficeHoursTable } from "@sophie/components";
+import type { CollectionEntry } from "astro:content";
+import { render } from "astro:content";
+import { makeStaticComponents } from "../components.tsx";
+import type { CourseSpec } from "@sophie/core/schema";
+import InfoPageShell from "./InfoPageShell.astro";
+import { figures } from "virtual:sophie/figures";
+
+/**
+ * Instructor page layout. Renders contact card + office-hours table
+ * + a single prose fragment (typically `prose/instructor-bio`) declared
+ * via `info_pages.instructor.prose`.
+ *
+ * Distinct from SyllabusPage's compose-list orchestration: instructor
+ * page has a fixed structural shape (contact → hours → bio), so the
+ * spec declares a single `prose:` ref rather than a `compose:` list.
+ */
+interface Props {
+  spec: CourseSpec;
+  proseEntry: CollectionEntry<"course-info"> | undefined;
+}
+
+const { spec, proseEntry } = Astro.props;
+const chromeComponents = makeStaticComponents({ figures });
+const ProseContent = proseEntry ? (await render(proseEntry)).Content : null;
+---
+
+<InfoPageShell
+  title={`Instructor — ${spec.identity.title}`}
+  description={`Contact, office hours, and bio for ${spec.identity.instructor}.`}
+>
+  <main aria-labelledby='instructor-title'>
+    <h1 id='instructor-title'>Instructor</h1>
+
+    {spec.contact && (
+      <ContactCard
+        contact={spec.contact}
+        instructor={spec.identity.instructor}
+      />
+    )}
+
+    {spec.office_hours && spec.office_hours.length > 0 && (
+      <OfficeHoursTable hours={spec.office_hours} />
+    )}
+
+    {ProseContent && <ProseContent components={chromeComponents} />}
+  </main>
+</InfoPageShell>
