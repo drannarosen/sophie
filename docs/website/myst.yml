@@ -244,6 +244,7 @@ project:
         - file: pilots/m2-l3-spectra-composition.md
         - file: pilots/m3-l2-hydrostatic-equilibrium.md
         - file: pilots/m2-l2-surface-flux-and-colors.md
+        - file: pilots/m3-l3-nuclear-fusion.md
     - title: Status
       children:
         - file: status/roadmap.md
