@@ -25,7 +25,7 @@ orthogonal labels** — a *granularity* axis (what kind of change)
 and a *severity* axis (how much human attention it needs). The
 labels are independent: a structural change can be routine
 (formatting a list item) or breaking (removing the last
-`<EqRef>` to an equation other chapters cite).
+`<EquationRef>` to an equation other chapters cite).
 
 The authoring decision behind this taxonomy lives in
 [ADR 0045](../decisions/0045-pedagogical-diff-curriculum-ci.md).
@@ -142,7 +142,7 @@ it. Triggers:
 
 | Trigger | Field surfaced |
 |---|---|
-| `<EqRef slug="X">` newly resolves / was newly broken / changed target | `before_target`, `after_target` |
+| `<EquationRef slug="X">` newly resolves / was newly broken / changed target | `before_target`, `after_target` |
 | `<FigureRef name="X">` newly resolves / was newly broken / changed target | `before_target`, `after_target` |
 | `<GlossaryTerm name="X">` newly resolves / was newly broken | `before_target`, `after_target` |
 | `<ChapterRef slug="X">` newly resolves / was newly broken | `before_target`, `after_target` |
@@ -150,7 +150,7 @@ it. Triggers:
 | Misconception `related_misconceptions` list changed | `before_related`, `after_related` |
 | `<Intervention addresses="X">` target changed | `before_addresses`, `after_addresses` |
 | `<MultiRep>` `<RepEquation refKey>` / `<RepFigure refName>` / `<RepCode refName>` target changed | `before_ref`, `after_ref` |
-| `<KeyEquation>` anchor reused by `<EqRef>` from another chapter | reverse-reference change |
+| `<KeyEquation>` anchor reused by `<EquationRef>` from another chapter | reverse-reference change |
 
 `change_kind` field values: `"resolved"` | `"broken"` |
 `"target_changed"` | `"list_changed"`.
@@ -215,7 +215,7 @@ Real pedagogical change. Triggers (any of):
 Reviewer attention required; CI fails (exit 1). Triggers (any of):
 
 - Any `relational` item where a target newly *fails* to resolve
-  (broken `<EqRef>`, `<FigureRef>`, `<GlossaryTerm>`,
+  (broken `<EquationRef>`, `<FigureRef>`, `<GlossaryTerm>`,
   `<ChapterRef>`, `prerequisite_misconceptions`, `concept_refs`).
 - Any `conformance` item that adds an **ERROR-tier** audit
   warning (NR4, MG1, I2, etc.).

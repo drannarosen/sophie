@@ -43,7 +43,7 @@ Sophie has one existing state primitive:
 [`useInteractive`](./0007-persistence-indexeddb.md) (ADR 0007,
 refined by ADR 0029 — BroadcastChannel LWW). It is *per-component,
 per-student, durable*: a `<Predict>` answer, a
-`<CollapsibleCard>` open/closed state, a `<CodeCell>` code body —
+`<Dropdown>` open/closed state, a `<CodeCell>` code body —
 each writes through to IndexedDB with last-write-wins cross-tab
 sync. Conflating linked-rep cursor state with `useInteractive`
 would either burn ~60 IndexedDB writes per second of slider drag

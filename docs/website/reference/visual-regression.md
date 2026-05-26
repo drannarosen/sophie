@@ -156,7 +156,7 @@ The Docker-on-Mac escape hatch (run an Ubuntu container that matches CI exactly)
 
 ### Popover-default-closed stories don't capture popover content
 
-Tracked as [issue #57](https://github.com/drannarosen/sophie/issues/57). Components like `<EqRef>` render an inline pill that opens a popover containing the actual content (KaTeX math, in EqRef's case). The popover defaults to closed, so the captured baseline shows only the trigger pill. The popover-open visual contract is uncovered.
+Tracked as [issue #57](https://github.com/drannarosen/sophie/issues/57). Components like `<EquationRef>` render an inline pill that opens a popover containing the actual content (KaTeX math, in EquationRef's case). The popover defaults to closed, so the captured baseline shows only the trigger pill. The popover-open visual contract is uncovered.
 
 Fix path: add a Storybook `play()` function to the story that clicks the trigger before the test-runner snapshots. Out of scope for the VR-baseline PR (#53); tracked for Workstream 3 component-polish PRs.
 
