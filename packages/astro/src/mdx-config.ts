@@ -6,6 +6,7 @@ import remarkMath from "remark-math";
 import type { Pluggable } from "unified";
 import { skillReviewResolverRemarkPlugin } from "./lib/mdx-plugins/skill-review-resolver.ts";
 import { pedagogyIndexRemarkPlugin } from "./lib/pedagogy-index/orchestrator.ts";
+import { rehypeKatexDisplayA11y } from "./lib/pedagogy-index/transforms/katex-display-a11y.ts";
 
 /**
  * Default `topicsDir` for the SkillReview self-closing resolver (ADR
@@ -36,6 +37,15 @@ const DEFAULT_TOPICS_DIR = resolve(process.cwd(), "src/content/topics");
  *                            consumed by `virtual:sophie/pedagogy-index`
  *                            (ADR 0038)
  * - `rehype-katex`         — render the math AST nodes via KaTeX
+ * - `rehypeKatexDisplayA11y` — stamp `tabindex="0"` + `role="group"`
+ *                            + `aria-label` onto `.katex-display`
+ *                            scroll containers so keyboard users can
+ *                            scroll wide equations on narrow viewports
+ *                            (closes axe `scrollable-region-focusable`
+ *                            on mobile per issue #192; ADR 0004 a11y
+ *                            mandate). Must run AFTER `rehype-katex`
+ *                            so the `.katex-display` elements exist
+ *                            in the hast tree.
  *
  * The components map is consumer-supplied per-page via
  * `<Content components={makeStaticComponents({figures})}>`. See
@@ -52,5 +62,5 @@ export const sophieMdxOptions = {
     ] as Pluggable,
     pedagogyIndexRemarkPlugin,
   ] as Pluggable[],
-  rehypePlugins: [rehypeKatex],
+  rehypePlugins: [rehypeKatex, rehypeKatexDisplayA11y],
 };

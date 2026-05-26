@@ -717,6 +717,56 @@ triage cycle (2026-05-25): ADR 0073's broader assessment schema
 may want a different route shape, and committing the route now
 risks back-compat work later.
 
+## Mobile rendering + a11y guarantees
+
+The shipped `ChapterLayout` ([ADR 0082](../decisions/0082-chapter-layout-extraction.md))
+ships two document-layer defenses that authors don't need to
+think about — but should know exist so unexpected behavior on
+narrow viewports points the right direction during debugging.
+
+**Off-canvas overflow defense — `html { overflow-x: clip }`.**
+Off-canvas drawers (the mobile TocDrawer, future popovers) are
+`position: fixed` with `transform: translateX(100%)` to slide off
+the viewport when closed. CSS transforms contribute to
+`body.scrollWidth` even for fixed elements, so the drawer's
+post-transform bounding box pushes the document horizontally
+without this defense. `overflow-x: clip` on `<html>` (in
+`packages/astro/src/styles/textbook-layout.css`) defends the
+document layer against the whole class of off-canvas leaks.
+`clip` is preferred over `hidden` because it does NOT create a
+scroll container, so it preserves sticky positioning (topbar +
+sidebar both rely on this) and scroll-snap behavior. Originating
+finding: M3-L2 pilot's Surprise #3 / [issue #187](https://github.com/drannarosen/sophie/issues/187).
+
+**KaTeX-display keyboard a11y — `rehypeKatexDisplayA11y` plugin.**
+`rehype-katex` emits display equations as
+`<span class="katex-display">…</span>`; the shipped layout applies
+`overflow-x: auto` so wide equations scroll within their column.
+Without `tabindex="0"` + an accessible name on the scroll
+container, axe-core flags `scrollable-region-focusable` (keyboard-
+only users can't reach scrolled content). A build-time rehype
+plugin (`packages/astro/src/lib/pedagogy-index/transforms/katex-display-a11y.ts`,
+wired into [`packages/astro/src/mdx-config.ts`](../decisions/0082-chapter-layout-extraction.md))
+stamps `tabindex="0"` + `role="group"` + `aria-label="Equation, scrollable"`
+on every `.katex-display` it sees. Build-time over runtime JS to
+avoid the React #418 hydration class the [`useHydrated`](../decisions/0083-use-hydrated.md)
+gates were built to defend against. Per R10 (AGENTS.md), the role
+is `group` (named focusable region inside the chapter's `<main>`
+landmark), not a landmark. Originating finding: M2-L2 pilot's
+Surprise #2 / [issue #192](https://github.com/drannarosen/sophie/issues/192).
+
+Display math authored via React components that bypass
+`rehype-katex` (e.g., `<KeyEquation refId>` callsites which
+render through the component layer at hydration time) do NOT
+inherit these attributes. They're typically not flagged because
+their container CSS keeps them un-scrollable, but if a future
+audit catches a React-rendered `.katex-display` failing
+`scrollable-region-focusable`, the fix belongs at the React
+component layer — same `tabindex`/`role`/`aria-label` triple.
+
+The regression guard is `examples/smoke/e2e/mobile-chapter-a11y.spec.ts`
+against the minimal `mobile-a11y-fixture` chapter.
+
 ## When to use each component
 
 | Use case | Component |

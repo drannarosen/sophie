@@ -1,0 +1,11 @@
+{
+  "id": "mobile-a11y-fixture",
+  "type": "lecture",
+  "title": "Mobile a11y fixture",
+  "order": 3,
+  "prereqs": [],
+  "section_id": "foundations",
+  "chapter": "mobile-a11y-fixture",
+  "status": "stable",
+  "description": "(smoke fixture — minimal chapter that hosts display math + a wide pre block so the mobile-chapter-a11y e2e spec can regression-guard the WS A drawer-overflow defense (issue #187) and KaTeX-display keyboard a11y (issue #192) without tripping on unrelated pre-existing violations in other smoke chapters.)"
+}

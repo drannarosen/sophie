@@ -1,0 +1,50 @@
+---
+id: "mobile-a11y-fixture"
+title: "Mobile a11y fixture"
+chapter: 99
+order: 3
+lang: "en"
+description: "Minimal chapter that exercises display math + a wide pre block; backs the mobile-chapter-a11y.spec.ts regression guard for WS A (issues #187, #192)."
+tags: ["test-fixture", "a11y"]
+---
+
+This stub chapter exists so the `mobile-chapter-a11y.spec.ts` e2e
+regression guard has a content surface to scan at 375 px:
+
+- one display-math equation, so the `rehypeKatexDisplayA11y` plugin
+  fires and the resulting `.katex-display` scroll container can be
+  asserted focusable + named (closes issue #192).
+- one wide ASCII `<pre>` block, so the `html { overflow-x: clip }`
+  defense can be asserted to prevent user-visible horizontal scroll
+  (closes issue #187).
+
+Authoring intentionally avoids tables (pre-existing
+`scrollable-region-focusable` violation), GFM task-list checkboxes
+(pre-existing `label` violation), and asides/callouts (pre-existing
+`.margin-note` carve-out) so the spec asserts the WS A fixes
+without conflating with unrelated baseline issues.
+
+## Display math
+
+The Schwarzschild radius of a non-rotating black hole:
+
+$$
+r_s = \frac{2 G M}{c^2}
+$$
+
+Inline math like $E = mc^2$ stays inline.
+
+## Wide pre block
+
+```text
+Gravity Scoreboard ——————————————————————————————————————————————————————————
+| star      |  mass (Msun)  |  radius (Rsun)  |  Tc (K)  |  Pc (dyne/cm^2)  |
+|-----------|---------------|-----------------|----------|------------------|
+| Sun       |       1.0     |        1.0      |  1.5e7   |     2.3e17       |
+| Sirius A  |       2.0     |        1.7      |  2.6e7   |     8.4e17       |
+| Betelgeuse|     ~17       |     ~900        |  ~6e7    |       ~1e15      |
+```
+
+This `<pre>` is 583 characters of glyphs wide on a monospaced font —
+wide enough to overflow its 327 px chapter column at 375 px viewport
+and force the WS A defenses to kick in.
