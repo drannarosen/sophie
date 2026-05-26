@@ -216,6 +216,36 @@ deliberately untracked — the first ADR-blessed precedent for
 component-contract decision, even when it produces no schema
 entry.
 
+### R-0080-A2 — Course-management chrome family ships (2026-05-26)
+
+The course-info projection sprint
+([PR #199](https://github.com/drannarosen/sophie/pull/199), commit
+`4e0730e`) shipped a new five-component chrome family at
+`@sophie/components/chrome/`: `<Due>`, `<Points>`, `<Reading>`,
+`<OfficeHours>`, `<Week>`. All carry the **chrome classification**
+per [ADR 0058](./0058-epistemic-component-contract.md) — no
+epistemic role. Plus **six React layout sub-components** in
+`@sophie/components` (`ObjectivesSection`, `GradingTable`,
+`OfficeHoursTable`, `ContactCard`, `AccessibilitySection`,
+`PrereqsList`) compose under `.astro` orchestrators in
+`@sophie/astro/src/components/`.
+
+This ADR's component-contract obligations all held:
+
+- **Axe-on-render coverage** stayed clean — `pnpm lint:axe-render`
+  reports 58/58 post-sprint.
+- **`serialize` separate from render** unchanged.
+- **`useInteractive` for persistence** — not applicable; chrome
+  components read from the SSR-setter `useCourseSpec()` store
+  (`pedagogy-store.ts:14-22` doctrine), not IndexedDB. See
+  ADR 0080 Amendment 2 for the store-pattern provenance.
+- **Composition rules** — the chrome components compose freely
+  inside chapter MDX AND prose fragments at
+  `src/content/course-info/`.
+
+See [ADR 0080 Amendment 2](./0080-course-spec-format-v0-1.md#amendment-2-assessment-grade-weights-clean-break-course-info-projection-2026-05-26)
+for the decision trail.
+
 ## References
 
 - Brainstorming session, contract-revisions Q (May 2026).

@@ -610,6 +610,39 @@ documents the full Library shell extraction; [ADR 0079 W4c
 entry](./0079-topic-registry-and-resolution-pattern.md#id-2026-05-23-wedge-b-followup-w4c-pra-2-graduation-topic-spec-card-body-inline-rendering)
 documents the Topic Spec page changes.
 
+### R-0080-A2 — Chrome vs. pedagogy component-set split (2026-05-26)
+
+The course-info projection sprint
+([PR #199](https://github.com/drannarosen/sophie/pull/199), commit
+`4e0730e`) operationalizes this ADR's chrome-vs-pedagogy boundary at
+the code level. Two factories ship at
+[`packages/astro/src/components.tsx`](https://github.com/drannarosen/sophie/blob/main/packages/astro/src/components.tsx):
+
+- `makeStaticComponents({ figures })` — chapter MDX; full set
+  including the eight epistemic-role pedagogy primitives.
+- `makeChromeComponents({ figures })` — course-info prose fragments
+  at `src/content/course-info/`; excludes pedagogy primitives
+  (`<OMIFlow>`, `<WorkedExample>`, `<MultiRep>`, `<Intervention>`)
+  whose meaning depends on chapter context. Includes the inline
+  chrome subset (`<Callout>`, `<GlossaryTerm>`, `<KeyEquation>`,
+  `<EquationRef>`, `<FigureRef>`, `<Aside>`).
+
+Plus a separate family of **five MDX-authorable course-management
+chrome components** at `@sophie/components/chrome/`: `<Due>`,
+`<Points>`, `<Reading>`, `<OfficeHours>`, `<Week>`. All carry **no
+epistemic role** per this ADR's chrome classification; they read
+course data via `useCourseSpec()` (SSR-setter store doctrine, not a
+`virtual:` import in `@sophie/components`).
+
+The boundary is now structurally enforced: an AI author cannot
+accidentally emit `<OMIFlow>` inside a course-info prose fragment
+because `makeChromeComponents` doesn't expose it. The eight-role
+taxonomy stays optional + additive (§2); this amendment names the
+boundary at which the set is sliced.
+
+See [ADR 0080 Amendment 2](./0080-course-spec-format-v0-1.md#amendment-2-assessment-grade-weights-clean-break-course-info-projection-2026-05-26)
+for the projection-pattern decision trail.
+
 ## References
 
 - [ADR 0003 — Zod as source of truth](./0003-zod-as-source-of-truth.md)

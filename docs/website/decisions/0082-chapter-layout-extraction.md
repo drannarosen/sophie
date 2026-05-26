@@ -283,6 +283,35 @@ This ADR is validated by four artifacts, listed in the frontmatter
    shape against regression by exercising the
    pack-and-install path the way astr201 consumes the integration.
 
+## Revisions
+
+### R-0080-A2 — Course-info route-injection + 2nd virtual-module extension (2026-05-26)
+
+The course-info projection sprint
+([PR #199](https://github.com/drannarosen/sophie/pull/199), commit
+`4e0730e`) extends this ADR's route-injection precedent to
+spec-driven plural routes. `defineSophieIntegration` now injects up
+to seven additional routes at `astro:config:setup`:
+
+- `/` (course landing — dispatcher to one of three built-in layouts
+  or `"custom"` integration-override)
+- `/sections/[section]/` (section landing)
+- one `/<slug>/` per declared `info_pages` entry (five ship today:
+  `/syllabus/`, `/schedule/`, `/instructor/`, `/policies/`,
+  `/accommodations/`)
+
+Each is spec-driven and dispatcher-based, mirroring the
+`/units/[unit]/reading` precedent. `virtual:sophie/course-spec` is
+the **second instance** of this ADR's virtual-module pattern (first:
+`virtual:sophie/figures`) — the deferred ScheduleSchema sprint is the
+predicted third. Always-register shape: factory accepts `CourseSpec |
+null` and returns the plugin unconditionally; integration null-guards
+route injection separately. Dispatcher routes consume the export via
+AGENTS.md R12 (type-narrowing throw at frontmatter top).
+
+See [ADR 0080 Amendment 2](./0080-course-spec-format-v0-1.md#amendment-2-assessment-grade-weights-clean-break-course-info-projection-2026-05-26)
+for the projection-pattern decision trail.
+
 ## References
 
 - [ADR 0023](0023-vertical-slice-build-order.md) — vertical-slice-

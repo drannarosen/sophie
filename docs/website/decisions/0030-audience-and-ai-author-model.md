@@ -262,6 +262,35 @@ The four content-authoring AI roles remain unchanged; ADR 0061
 simply formalizes that platform-code authoring is a sibling
 discipline with its own conventions.
 
+### R-0080-A2 — Platform-code AI-authorship example at scale (2026-05-26)
+
+The course-info projection sprint
+([PR #199](https://github.com/drannarosen/sophie/pull/199), commit
+`4e0730e`) exemplifies AI-primary authoring of platform code under
+HITL supervision at sprint scale: 14 AI-authored commits, 92 files,
++4826 / −255 LOC, shipped as one PR against a coordinated design doc
++ implementation plan + code review. Process highlights:
+
+- **H1–H7 architectural decisions resolved via in-thread
+  `AskUserQuestion`** rather than asynchronous review, with the HITL
+  mandate honored at every decision point (clean break on
+  `grade_weights`, sibling-file split shape, strict-union compose,
+  H7 = Option B layout shape, custom-landing enum value, second
+  cross-refine added per review I3).
+- **Phases 1–4 graded A− at the closure review**; C1 / C2 / I1–I4
+  + 3 minors all merged pre-PR.
+- **Sibling-file LOC budget validated** per
+  [ADR 0061](./0061-ai-optimized-codebase-design.md) — 8 new schema
+  files at 20–91 LOC each.
+- **AGENTS.md R12 (virtual-module type-narrowing at dispatcher
+  entry)** added as a standing review rule from this sprint's
+  code-review surface; class established by two virtual modules
+  (`figures` + `course-spec`), defends the deferred ScheduleSchema
+  third instance.
+
+See [ADR 0080 Amendment 2](./0080-course-spec-format-v0-1.md#amendment-2-assessment-grade-weights-clean-break-course-info-projection-2026-05-26)
+for the projection-pattern decision trail.
+
 ## References
 
 - [overview.md §1–§2](../overview.md) — full audience and

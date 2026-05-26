@@ -268,3 +268,16 @@ and Bucket C (expanded scope per the consequences table above).
 
 §1 — 2026-05-18 — ADR created alongside the post-PR-A audit. First
 application: the audit's revised Bucket-C scope.
+
+§2 — 2026-05-26 — **Sibling-file LOC budget validated at scale by the
+course-info projection sprint**
+([PR #199](https://github.com/drannarosen/sophie/pull/199), commit
+`4e0730e`). Eight new course-spec sibling-file schemas shipped:
+`course-spec-v02-{objectives,prereqs,grading,office-hours,contact,accessibility,info-pages,landing}.ts`,
+each 20–91 LOC. Main `course-spec.ts` grew 371→404 LOC, well within
+the 500-warn budget. The barrel re-export pattern at
+[`packages/core/src/schema/course-spec.ts`](https://github.com/drannarosen/sophie/blob/main/packages/core/src/schema/course-spec.ts)
+plus filename-routing-by-cluster carried 14 AI-authored sprint
+commits end-to-end without scaffolding friction. Rules 1 (focused
+files), 3 (LOC budget), and 4 (filename routing) all load-bearing.
+See [ADR 0080 Amendment 2](./0080-course-spec-format-v0-1.md#amendment-2-assessment-grade-weights-clean-break-course-info-projection-2026-05-26).
