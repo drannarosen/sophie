@@ -8,7 +8,7 @@ tags:
   - spec-driven
 status: shipped
 validation:
-  status: in-progress
+  status: validated
   last_validated_date: "2026-05-26"
   evidence:
     - kind: test
@@ -31,6 +31,22 @@ validation:
       ref: packages/core/src/schema/__fixtures__/course-spec-astr-201.yaml
       date: "2026-05-26"
       notes: "Valid fixture's `discovery:` block reshaped to ADR 0067 (`sections` / `units` / `artifacts` globs + `registries: { equations, figures }`); CLI smoke `sophie validate` against the updated fixture still exits 0."
+    - kind: test
+      ref: packages/core/src/schema/course-spec.test.ts
+      date: "2026-05-26"
+      notes: "Amendment 2 — v0.2-shape cluster + clean-break tests (PR #199): grade_weights .strict() rejection pin (lines 94-105); grading.categories weights-sum-to-1.0 refine; assessment.category_refs cross-refine into grading.categories[*].id; objectives[*].assessed_by cross-refine (added per code-review I3); info_pages.compose strict-union (known-data-keys | prose-fragment regex); info_pages reserved-slug refine (units/sections/library/_astro/_server/_image/pagefind); landing.layout custom enum value; ObjectiveSchema/PrereqSchema/OfficeHourSchema/ContactSchema/AccessibilitySchema acceptance."
+    - kind: deployment
+      ref: packages/core/src/schema/course-spec-v02-grading.ts
+      date: "2026-05-26"
+      notes: "Amendment 2 — 8 sibling-file schemas shipped per ADR 0061 LOC budget (20–91 LOC each): course-spec-v02-{grading,info-pages,landing,objectives,prereqs,office-hours,contact,accessibility}.ts. course-spec.ts grew 371→404 LOC, within 500-warn budget. AI-author navigation by filename worked end-to-end across 14 sprint commits."
+    - kind: deployment
+      ref: packages/astro/src/lib/course-spec-virtual-module.ts
+      date: "2026-05-26"
+      notes: "Amendment 2 — virtual:sophie/course-spec virtual module (mirrors virtual:sophie/figures pattern from ADR 0082). Always-register shape: factory accepts CourseSpec | null, returns plugin unconditionally; integration null-guards route injection separately. Dispatcher routes type-narrow at entry per AGENTS.md R12."
+    - kind: deployment
+      ref: packages/astro/src/components/SyllabusPage.astro
+      date: "2026-05-26"
+      notes: "Amendment 2 — H7 = Option B projection pattern: 5 .astro layout orchestrators (Syllabus/Schedule/Instructor/Policies/Accommodations) + 6 React sub-components (ObjectivesSection/GradingTable/OfficeHoursTable/ContactCard/AccessibilitySection/PrereqsList) shipped. SchedulePage placeholder per H6 (iCal + schedule.yaml deferred to follow-up sprint). 5 MDX-authorable chrome components (Due/Points/Reading/OfficeHours/Week) at @sophie/components/chrome/ ship the useCourseSpec() hook via SSR-setter + script-tag store pattern."
 ---
 
 # ADR 0080: Course Spec format v0.1
@@ -83,7 +99,7 @@ file Sophie-recognizable. Eight non-nesting top-level sections:
 | `pedagogy` | registered pattern (`observable_model_inference` at v0.1), required moves, named tools, callouts, multi-track |
 | `terminal_goals` | what students leave with — distilled from per-lecture objectives |
 | `principles` | non-negotiables AI authoring + audit honor |
-| `assessment` | philosophy + grade weights (must sum to 100) + workflow + exam policy |
+| `assessment` | philosophy + grade weights (must sum to 100) + workflow + exam policy (see Amendment 2 for the 2026-05-26 clean break: `grade_weights` removed; new top-level `grading.categories` weights sum to 1.0; `assessment.category_refs` audit-coverage pointer) |
 | `quality_bars` | `required` (errors) + `recommended` (warnings) audit invariants |
 | `discovery` | filesystem glob conventions Sophie uses to find Sections, Units, Artifacts, and registries (ADR 0067 hierarchy — see Amendment 1 for the v0.1 reshape applied 2026-05-26) |
 
@@ -145,8 +161,13 @@ explicit `spec_version` bumps (§4).
 
 Plus one structural refine: `assessment.grade_weights` must sum to
 exactly 100; deviation surfaces as `assessment.grade_weights:
-grade_weights must sum to 100` (smoke-tested via
-[`__fixtures__/invalid/weights-not-100.yaml`](https://github.com/drannarosen/sophie/blob/main/packages/core/src/schema/__fixtures__/invalid/weights-not-100.yaml)).
+grade_weights must sum to 100`.
+
+**Amendment 2 (2026-05-26) supersedes this refine.** `assessment.grade_weights`
+is removed; the new top-level `grading.categories[*].weight` invariant
+is sum to 1.0 ±0.001 (Zod refine, not 100), smoke-tested via
+[`__fixtures__/invalid/category-weights-not-one.yaml`](https://github.com/drannarosen/sophie/blob/main/packages/core/src/schema/__fixtures__/invalid/category-weights-not-one.yaml)
+(file renamed in-place from `weights-not-100.yaml`). See Amendment 2.
 
 ## Rationale
 
@@ -338,6 +359,210 @@ git history + this Amendment block.
 - `@sophie/astro`'s `TextbookLayout` path-derivation now has a
   declarative source-of-truth at the Course-Spec level matching its
   implementation.
+
+### Amendment 2 — `assessment.grade_weights` clean break + course-info projection (2026-05-26)
+
+**Trigger.** Course-info projection sprint
+([PR #199](https://github.com/drannarosen/sophie/pull/199), commit
+`4e0730e`). ASTR 201 (Sprint 2) needed Tier-2 course-website chrome
+shipping from the platform — syllabus / schedule / instructor /
+policies / accommodations pages projected from `course.sophie.yaml`
++ named MDX prose fragments, rather than hand-authored per course.
+The v0.1 spec carried no structural fields for objectives, prereqs,
+grading categories, office hours, contact, accessibility, info-page
+declarations, or landing-layout choice — all eight clusters added in
+this amendment. Authoritative companions:
+[design doc](../../plans/2026-05-26-course-info-projection-design.md),
+[implementation plan](../../plans/2026-05-26-course-info-projection-implementation.md),
+[code review](../../reviews/2026-05-26-course-info-projection-phases-1-4.md).
+
+**Clean break: `assessment.grade_weights` removed.** Per
+`feedback_no_backcompat_prelaunch` (zero production students; one
+consumer course; no in-flight content to migrate). The v0.1 shape
+(`grade_weights: [{ category, weight, label }]` summing to 100) is
+**removed** from `AssessmentSectionSchema`. Replacements:
+
+- **Required**: top-level `grading: { categories[...], letter_scale[...],
+  curve_policy_ref? }`. Each `categories[i]` carries `{ id, name,
+  weight, count?, drop_lowest?, late_policy_ref? }`. Weights sum to
+  **1.0 ± 0.001** (Zod refine), not 100.
+- **Required**: `assessment.category_refs: [Slug]` as an
+  audit-coverage pointer into `grading.categories[*].id`. Enables
+  audit invariants (QB6/QB7) that the previous flat `grade_weights`
+  shape couldn't express.
+- **Test-fixture migration**: `weights-not-100.yaml → category-weights-not-one.yaml`
+  (rename in place); existing test "rejects weights not summing to 100"
+  renamed to "rejects grading.categories weights not summing to 1.0";
+  one new test pins `.strict()` rejection of legacy `assessment.grade_weights`
+  ([`course-spec.test.ts:94-105`](https://github.com/drannarosen/sophie/blob/main/packages/core/src/schema/course-spec.test.ts)).
+
+**Seven new optional clusters (additive; courses opt in incrementally).**
+All eight v0.2-shape clusters ship as **sibling files** per
+[ADR 0061](./0061-codebase-optimized-for-ai-coding.md) LOC budget
+(`course-spec.ts` grew 371 → 404 LOC, well within 500-warn):
+
+| Cluster | Sibling file | Notes |
+|---|---|---|
+| `objectives` | `course-spec-v02-objectives.ts` | course-level LOs with optional `assessed_by: [category_id]` cross-refine |
+| `prereqs` | `course-spec-v02-prereqs.ts` | course / skill / topic refs |
+| `grading` | `course-spec-v02-grading.ts` | required at v0.2; replaces `grade_weights` (see Clean break above) |
+| `office_hours` | `course-spec-v02-office-hours.ts` | modality enum, HH:MM regex, `by_appointment` boolean |
+| `contact` | `course-spec-v02-contact.ts` | email validation, optional `async_channel` (slack / discord / canvas-msg) |
+| `accessibility` | `course-spec-v02-accessibility.ts` | DRC link, `request_deadline_weeks`, optional prose ref |
+| `info_pages` | `course-spec-v02-info-pages.ts` | drives route injection (see Projection pattern below) |
+| `landing` | `course-spec-v02-landing.ts` | pluggable landing layout (see `"custom"` enum below) |
+
+Each sibling file is 20–91 LOC; barrel re-exports at `course-spec.ts`.
+Validates ADR 0061's "AI-author navigation by filename" claim
+end-to-end across 14 sprint commits.
+
+**Strict-union `info_pages.compose:` + reserved-slug refine (H4/B5).**
+`info_pages.compose` is a `z.union([known_data_keys_enum,
+prose-fragment-regex])`. Typos like `"objetctives"` fail at
+schema-parse time, not at compose-evaluator render time. Defends the
+class at the schema layer rather than via runtime branches in the
+evaluator. Reserved `info_pages` slugs (`units`, `sections`,
+`library`, `_astro`, `_server`, `_image`, `pagefind`) are rejected by
+a second refine — defends slug collisions with Sophie-injected routes
+and Astro / Pagefind internals.
+
+**Three cross-refines on `CourseSpecSchema`.**
+
+| Source | Target | Catches |
+|---|---|---|
+| `assessment.category_refs[]` | `grading.categories[*].id` | unreferenced grading category vs. unreferenced assessment surface |
+| `objectives[*].assessed_by[]` | `grading.categories[*].id` | objective claims assessment by a category that doesn't exist (added per review I3 pre-merge) |
+| `info_pages` keys + reserved set | (refine) | slug collision class defended at schema layer |
+
+**Projection pattern operationalizes [ADR 0082](./0082-chapter-layout-extraction.md).**
+`@sophie/astro` reads `course.sophie.yaml` at `astro:config:setup`
+and `injectRoute`s up to seven routes:
+
+- `/` — course landing (dispatcher to `hero-with-modules` |
+  `simple-list` | `prose-with-toc` | `"custom"`-override)
+- `/sections/[section]/` — section landing
+- `/<slug>/` — one route per declared `info_pages` entry (five ship
+  today: `/syllabus/`, `/schedule/`, `/instructor/`, `/policies/`,
+  `/accommodations/`)
+
+Layouts are **`.astro` orchestrators** in
+[`packages/astro/src/components/`](https://github.com/drannarosen/sophie/tree/main/packages/astro/src/components)
+composing **six React sub-components** in `@sophie/components`
+(`ObjectivesSection`, `GradingTable`, `OfficeHoursTable`, `ContactCard`,
+`AccessibilitySection`, `PrereqsList`). Per **H7 = Option B** — matches
+the `ChapterLayout` precedent and lets prose fragments use the full
+chrome-component set via `<Content components={chromeComponents}>`.
+The original design-doc framing ("`@sophie/components` exports
+`<SyllabusPage>`") is superseded.
+
+A new **`virtual:sophie/course-spec` virtual module** mirrors the
+`virtual:sophie/figures` pattern — second instance of the pattern
+established by [ADR 0082](./0082-chapter-layout-extraction.md); the
+deferred ScheduleSchema sprint will be the predicted third. Always-
+register shape: factory takes `CourseSpec | null` and returns the
+plugin unconditionally; consumers narrow at dispatcher entry per
+AGENTS.md R12.
+
+**Chrome vs. pedagogy: component-set split (operationalizes
+[ADR 0058](./0058-epistemic-component-contract.md)).** Two factories
+ship at [`packages/astro/src/components.tsx`](https://github.com/drannarosen/sophie/blob/main/packages/astro/src/components.tsx):
+
+- `makeStaticComponents({ figures })` — chapter MDX; full set
+  including the eight epistemic-role pedagogy primitives.
+- `makeChromeComponents({ figures })` — course-info prose fragments
+  at `src/content/course-info/`; excludes pedagogy primitives
+  (`<OMIFlow>`, `<WorkedExample>`, `<MultiRep>`, `<Intervention>`)
+  whose meaning depends on chapter context; **includes** the inline
+  chrome subset (`<Callout>`, `<GlossaryTerm>`, `<KeyEquation>`,
+  `<EquationRef>`, `<FigureRef>`, `<Aside>`).
+
+Plus a separate family of **five MDX-authorable course-management
+chrome components** at `@sophie/components/chrome/`: `<Due>`,
+`<Points>`, `<Reading>`, `<OfficeHours>`, `<Week>`. These read course
+data via the `useCourseSpec()` hook, which is backed by an SSR-setter
++ script-tag store (`pedagogy-store.ts:14-22` doctrine — no
+`virtual:` imports in `@sophie/components`, which is framework-pure
+per ADR 0001). All five are chrome with no epistemic role.
+
+**`landing.layout: "custom"` enum value (H2).** Explicit schema
+declaration that the integration-override path
+(`defineSophieIntegration({ landings: { course, section } })`) is in
+effect. Enum default is `"simple-list"`. The four-value enum guards
+against typos in the override declaration at parse time.
+
+**Schema location: `@sophie/core/schema` (clarification).**
+`CourseInfoFragmentSchema` (Astro content-collection frontmatter
+validator for prose fragments at `src/content/course-info/`) ships in
+`@sophie/core/schema`, not `@sophie/astro` as the design doc proposed.
+Convention clarification: all Zod schemas co-locate in `@sophie/core/schema`
+even when only one package consumes them; `@sophie/astro` takes no
+direct Zod dep.
+
+**Deferred (out of scope).** iCal export (`/schedule.ics`) and
+`schedule.yaml` source-of-truth deferred per **H6** to a follow-up
+sprint with its own focused design pass + ADR. `SchedulePage.astro`
+ships as a v0.2 placeholder. The `"schedule_overview"` value parses
+clean inside `info_pages.compose` (it's in `KNOWN_COMPOSE_DATA_KEYS`)
+but the compose evaluator throws a curated "not yet" error at render
+time — forward-compatible without breaking the schema's closed union.
+
+**Why `spec_version` stays at `"0.1"`.** Amendment 1's prose
+predicted "cross-shape breaks trigger a real v0.2 bump"; Amendment 2
+is a cross-shape break and the sprint still chose to keep
+`COURSE_SPEC_VERSION = "0.1"`. Two reasons: (1) `feedback_no_backcompat_prelaunch`
+remains the operative discipline — zero production students, one
+consumer course (astr-201) which the sprint migrated in-place;
+(2) the alternative (a `course-spec-v02.ts` file alongside the v0.1
+schema, plus a separate `schema:` literal for consumer YAML) would
+have multiplied surface area for an internal-only versioning marker.
+The honest framing: pre-launch zero-consumer state still favors
+clean-break-in-place over version-bump ceremony. A `spec_version`
+bump to `"0.2"` becomes the right move when (a) COMP 521 or ASTR 101
+land as a second Sophie-shaped course AND (b) ASTR 201 has authored
+substantial content against the spec — i.e., when actual backward-
+compat cost would exist. **Open follow-up**: revisit `spec_version`
+on the second-consumer trigger.
+
+**Why the amendment lives in 0080 rather than a new ADR.** Same
+rationale as Amendment 1 + an additional constraint: ADR 0086 was
+allocated to the multi-chapter glossary definitions sprint
+([PR #202](https://github.com/drannarosen/sophie/pull/202),
+2026-05-26). Consolidating into Amendment 2 preserves a single
+decision trail across all course-spec amendments; cross-references
+from ADRs 0082, 0058, 0061, 0004, 0030 all anchor here rather than
+fragmenting across two course-spec ADRs.
+
+**Consequences.**
+
+- ASTR 201 `course.sophie.yaml` extended with `grading`,
+  `objectives`, `office_hours`, `contact`, `accessibility`,
+  `info_pages`, and `landing` clusters during Phase 6 of the sprint;
+  the fixture at
+  [`packages/core/src/schema/__fixtures__/course-spec-astr-201.yaml`](https://github.com/drannarosen/sophie/blob/main/packages/core/src/schema/__fixtures__/course-spec-astr-201.yaml)
+  carries the migrated v0.1-shape with all v0.2-shape clusters
+  populated.
+- The original v0.1 `grade_weights` shape is **rejected** by the
+  schema; new test pins
+  [`course-spec.test.ts:94-105`](https://github.com/drannarosen/sophie/blob/main/packages/core/src/schema/course-spec.test.ts)
+  catches any regression to the legacy shape.
+- AGENTS.md gains **R12** (virtual-module type-narrowing at
+  dispatcher entry) — defends the class of bugs surfaced as code-
+  review issue C1 ("unguarded null deref on `courseSpec`" in three
+  dispatchers, fixed pre-merge). Two virtual modules
+  (`virtual:sophie/figures` + `virtual:sophie/course-spec`) establish
+  the class; the deferred ScheduleSchema sprint is the predicted
+  third instance.
+- Code review C2 ("silent `prereqs` skip in `SyllabusPage.astro`")
+  led to a **sixth** React sub-component (`PrereqsList`) shipping
+  before merge — the design doc's "five sub-components" framing is
+  out of date.
+- Code review I3 led to the second cross-refine
+  (`objectives[*].assessed_by` → `grading.categories[*].id`) shipping
+  before merge.
+- New author-facing reference doc lands at
+  [`reference/course-info-schema.md`](../reference/course-info-schema.md)
+  covering the v0.2-shape clusters, prose-fragment authoring
+  conventions, and the chrome-vs-pedagogy component-set split.
 
 ## References
 
