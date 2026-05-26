@@ -49,6 +49,48 @@ export {
   PedagogyPatternSchema,
   validateCourseSpec,
 } from "./course-spec.js";
+// v0.2 chrome cluster types (course-info projection, ADR 0080 v0.2
+// amendment + docs/plans/2026-05-26-course-info-projection-design.md).
+export {
+  type Accessibility,
+  AccessibilitySchema,
+} from "./course-spec-v02-accessibility.js";
+export {
+  type Contact,
+  ContactSchema,
+} from "./course-spec-v02-contact.js";
+export {
+  type Grading,
+  type GradingCategory,
+  GradingCategorySchema,
+  GradingSchema,
+  type LetterScaleEntry,
+  LetterScaleEntrySchema,
+} from "./course-spec-v02-grading.js";
+export {
+  type ComposeEntry,
+  ComposeEntrySchema,
+  type InfoPageDeclaration,
+  InfoPageDeclarationSchema,
+  type InfoPages,
+  InfoPagesSchema,
+} from "./course-spec-v02-info-pages.js";
+export {
+  type Landing,
+  LandingSchema,
+} from "./course-spec-v02-landing.js";
+export {
+  type Objective,
+  ObjectiveSchema,
+} from "./course-spec-v02-objectives.js";
+export {
+  type OfficeHour,
+  OfficeHourSchema,
+} from "./course-spec-v02-office-hours.js";
+export {
+  type Prereq,
+  PrereqSchema,
+} from "./course-spec-v02-prereqs.js";
 export {
   EPISTEMIC_ROLES,
   type EpistemicRole,
