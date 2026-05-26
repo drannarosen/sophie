@@ -7,9 +7,27 @@ tags:
   - dashboards
 status: shipped
 validation:
-  status: unvalidated
-  last_validated_date: null
-  evidence: []
+  status: validated
+  last_validated_date: "2026-05-25"
+  evidence:
+    - kind: deployment
+      ref: packages/components/package.json
+      date: "2026-05-25"
+      notes: "`@observablehq/plot` ^0.6.17 ships as a runtime dependency of `@sophie/components`, the library choice this ADR locks."
+    - kind: deployment
+      ref: packages/components/src/figures/BlackbodyExplorer/BlackbodyExplorer.tsx
+      date: "2026-05-25"
+      notes: "BlackbodyExplorer composes Observable Plot via `import * as Plot from \"@observablehq/plot\"` — the canonical first consumer for an interactive scientific figure rendering SVG via Plot inside a React island. Pairs with the BlackbodyExplorer storybook + contract + axe test files in the same directory."
+    - kind: test
+      ref: packages/components/src/figures/BlackbodyExplorer/BlackbodyExplorer.test.tsx
+      date: "2026-05-25"
+      notes: "Unit test exercises Plot-rendered output for the BlackbodyExplorer consumer. The Plot-grammar approach this ADR specifies survives the test suite."
+  notes: |
+    Observable Plot is the data-viz substrate for `@sophie/components`. The
+    BlackbodyExplorer figure is the canonical first consumer — it pairs Plot's
+    grammar with a React-island parameter slider. Future v2 dashboards +
+    `<CalibrationCurve>` (v3) inherit the same `@observablehq/plot` dep
+    declaration without re-litigating the choice.
 ---
 
 # ADR 0021: Observable Plot for data viz and dashboards

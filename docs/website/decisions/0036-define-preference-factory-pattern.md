@@ -8,9 +8,43 @@ tags:
   - preferences
 status: shipped
 validation:
-  status: unvalidated
-  last_validated_date: null
-  evidence: []
+  status: validated
+  last_validated_date: "2026-05-25"
+  evidence:
+    - kind: deployment
+      ref: packages/astro/src/preferences/define.ts
+      date: "2026-05-25"
+      notes: "The `definePreference` factory shipped at the canonical path this ADR specifies. Returns the `{ read, write, subscribe, bindToggle, bootScript }` surface this ADR locks."
+    - kind: deployment
+      ref: packages/astro/src/preferences/sidebar.ts
+      date: "2026-05-25"
+      notes: "Sidebar preference consumer — the canonical first factory call exporting a singleton, exactly the pattern this ADR's example illustrates."
+    - kind: deployment
+      ref: packages/astro/src/preferences/theme.ts
+      date: "2026-05-25"
+      notes: "Theme (light/dark) preference consumer composed through the factory — second consumer paying for the abstraction."
+    - kind: deployment
+      ref: packages/astro/src/preferences/view-mode.ts
+      date: "2026-05-25"
+      notes: "View-mode preference consumer (Bucket B PR 5) — third consumer, confirming the factory paid for itself across the 4+ Bucket B preferences this ADR queued."
+    - kind: deployment
+      ref: packages/astro/src/preferences/right-sidebar.ts
+      date: "2026-05-25"
+      notes: "Right-sidebar preference consumer — fourth singleton, all five chrome preferences now flow through the factory shape locked here."
+    - kind: deployment
+      ref: packages/astro/src/preferences/disclosures.ts
+      date: "2026-05-25"
+      notes: "Disclosures preference consumer — fifth singleton; the factory surface scaled across Bucket B without re-litigation."
+    - kind: test
+      ref: packages/astro/src/preferences/define.test.ts
+      date: "2026-05-25"
+      notes: "Unit tests on the factory itself exercise the localStorage round-trip + attribute-reflection + cross-tab sync invariants this ADR specifies."
+  notes: |
+    The `definePreference` factory shipped and scaled to five consumers
+    (sidebar, theme, view-mode, right-sidebar, disclosures), each as a
+    singleton export with the factory-returned surface. Companion test files
+    per consumer (`theme.test.ts`, `view-mode.test.ts`) exercise the
+    invariants the ADR locks.
 ---
 
 # ADR 0036: `definePreference` factory + `resolve` / `resolveExpression` pattern

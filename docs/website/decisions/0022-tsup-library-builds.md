@@ -8,9 +8,36 @@ tags:
   - packaging
 status: shipped
 validation:
-  status: unvalidated
-  last_validated_date: null
-  evidence: []
+  status: validated
+  last_validated_date: "2026-05-25"
+  evidence:
+    - kind: deployment
+      ref: packages/core/tsup.config.ts
+      date: "2026-05-25"
+      notes: "`@sophie/core` ships a tsup config file — the bundler choice this ADR locks is in active force at the schema package boundary."
+    - kind: deployment
+      ref: packages/components/tsup.config.ts
+      date: "2026-05-25"
+      notes: "`@sophie/components` ships a tsup config file — the canonical pedagogy-component package builds via tsup."
+    - kind: deployment
+      ref: packages/theme/tsup.config.ts
+      date: "2026-05-25"
+      notes: "`@sophie/theme` ships a tsup config file — the design-tokens package builds via tsup, producing ESM + CJS + d.ts."
+    - kind: deployment
+      ref: packages/cli/tsup.config.ts
+      date: "2026-05-25"
+      notes: "`@sophie/cli` ships a tsup config file — the CLI package builds via tsup."
+    - kind: deployment
+      ref: packages/astro/tsup.config.ts
+      date: "2026-05-25"
+      notes: "`@sophie/astro` ships a tsup config file — even the Astro integration package this ADR called out as a special case builds via tsup (with Astro-aware externals)."
+  notes: |
+    All five published `@sophie/*` packages ship a `tsup.config.ts` and build
+    via tsup. The bundler choice this ADR locks is uniform across the
+    package graph; no package has migrated to webpack/rollup/Vite-library
+    mode. The "~8 publishable packages" projection in the ADR Context now
+    rolls up to 5 shipped packages — schema collapsed into `@sophie/core`;
+    other planned packages remain pre-vertical-slice per ADR 0023.
 ---
 
 # ADR 0022: tsup for `@sophie/*` library package builds

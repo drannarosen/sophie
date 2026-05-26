@@ -8,9 +8,33 @@ tags:
   - phase-0
 status: shipped
 validation:
-  status: unvalidated
-  last_validated_date: null
-  evidence: []
+  status: validated
+  last_validated_date: "2026-05-25"
+  evidence:
+    - kind: deployment
+      ref: packages/theme/scripts/generate-tailwind.ts
+      date: "2026-05-25"
+      notes: "The Tailwind v4 `@theme { ... }` directive is emitted by this generator script at build time (line 78) — the CSS-first configuration this ADR locks. No `tailwind.config.{js,ts}` file exists in the repo; the directive replaces the v3 JS preset entirely."
+    - kind: deployment
+      ref: packages/theme/package.json
+      date: "2026-05-25"
+      notes: "`@sophie/theme` package description names 'Tailwind v4 `@theme` emit' explicitly and exports `./tailwind` → `./dist/tailwind.css` as the Tailwind-consumption entry point. The package.json description is the human-facing assertion that v4 (not v3) is in force."
+    - kind: deployment
+      ref: packages/theme/scripts/generate-css.ts
+      date: "2026-05-25"
+      notes: "Companion generator emits the CSS variables that the `@theme` directive consumes. Layer 1 (TS tokens) → Layer 2 (CSS + `@theme` emit) is the v4 CSS-first chain this ADR specifies."
+    - kind: manual
+      ref: packages/theme/scripts/generate-tailwind.ts
+      date: "2026-05-25"
+      notes: "Generated CSS preamble begins with `@import \"./theme.css\";` then opens `@theme { ... }` — the v4 import-then-directive pattern. The absence of a `tailwind.config.{js,ts}` file alongside this emit confirms the CSS-first commitment."
+  notes: |
+    Tailwind v4 with CSS-first `@theme` directive is in active force. The
+    `generate-tailwind.ts` script emits a CSS file that opens with
+    `@import "./theme.css";` then `@theme { ... }`. No `tailwind.config.{js,ts}`
+    JS preset file exists in the repo, confirming the v3 escape hatch
+    described in 'Alternatives considered' was rejected as designed. The
+    three-layer model from ADR 0005 is preserved; this ADR refines Layer 2's
+    delivery mechanism to CSS-first.
 ---
 
 # ADR 0026: Tailwind v4 (CSS-first configuration)

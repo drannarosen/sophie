@@ -23,9 +23,9 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 
 | Status | Count |
 |---|---|
-| Validated | 21 |
+| Validated | 31 |
 | In progress | 19 |
-| Unvalidated | 71 |
+| Unvalidated | 61 |
 | Re-validation needed | 0 |
 | Missing block | 0 |
 | Total | 111 |
@@ -45,12 +45,12 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 
 | Kind | Count |
 |---|---|
-| test | 87 |
+| test | 91 |
 | chapter | 9 |
-| review | 27 |
-| deployment | 27 |
-| audit | 8 |
-| manual | 36 |
+| review | 28 |
+| deployment | 66 |
+| audit | 9 |
+| manual | 40 |
 
 ## Extractor findings
 
@@ -66,12 +66,12 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0002-renderer-astro-mdx.md](/renderer-astro-mdx/) | validated | shipped | 2026-05-16 | chapter, review, test | Astro 6 + MDX confirmed across the bucket B+C smoke build; the renderer-choice contract held under the smoke chapters and the components matrix. |
 | [docs/website/decisions/0003-zod-as-source-of-truth.md](/zod-as-source-of-truth/) | validated | shipped | 2026-05-16 | review, test | Every load-bearing data shape in `@sophie/core` is a Zod schema; downstream packages type-infer via z.infer. No drift detected in the audit. |
 | [docs/website/decisions/0004-component-contract-revisions.md](/component-contract-revisions/) | validated | shipped | 2026-05-16 | chapter, review, test | Component contract (serialize separate from render, axe-core mandatory, useInteractive for persistence, composition rules) confirmed across every shipped component as of the bucket B+C audit. |
-| [docs/website/decisions/0005-theming-three-layers.md](/theming-three-layers/) | unvalidated | shipped | — | — |  |
+| [docs/website/decisions/0005-theming-three-layers.md](/theming-three-layers/) | validated | shipped | 2026-05-25 | deployment, manual, test | The three-layer model is in active force across the codebase. Layer 1 (`packages/theme/src/tokens.ts`) is the single TS source; Layer 2 is emitted at build time by the `generate-css.ts` + `generate-tailwind.ts` scripts; Layer 3 is realized in the 45 `*.module.css` files under `@sophie/components`. ADR 0026 amends Layer 2's delivery mechanism (CSS-first `@theme` rather than JS preset) without changing the three-layer concept.  |
 | [docs/website/decisions/0006-slides-revealjs.md](/slides-revealjs/) | unvalidated | accepted design | — | — |  |
 | [docs/website/decisions/0007-persistence-indexeddb.md](/persistence-indexeddb/) | validated | shipped | 2026-05-22 | chapter, deployment, review, test | Build-time + smoke-environment validation complete; multi-cohort outcomes deferred to ASTR 201 fa26. |
 | [docs/website/decisions/0008-cosmic-playground-protocol.md](/cosmic-playground-protocol/) | unvalidated | accepted design | — | — |  |
 | [docs/website/decisions/0009-i18n-deferred.md](/i18n-deferred/) | unvalidated | accepted design | — | — |  |
-| [docs/website/decisions/0010-myst-for-design-docs.md](/myst-for-design-docs/) | unvalidated | shipped | — | — |  |
+| [docs/website/decisions/0010-myst-for-design-docs.md](/myst-for-design-docs/) | validated | shipped | 2026-05-25 | audit, deployment, manual | The MyST docs site is the substrate for every design doc in Sophie — ADRs, reference docs, plans, reviews, vision essays — and the validation-tracker audit pipeline reads its frontmatter directly. The "indefinitely deferred" migration to Sophie-self-hosted docs (per ADR 0023 vertical-slice-first) remains deferred; MyST is the operating reality.  |
 | [docs/website/decisions/0011-pnpm-package-manager.md](/pnpm-package-manager/) | validated | shipped | 2026-05-16 | manual, review | pnpm is the only sanctioned JS package manager (per CLAUDE.md); enforcement is by convention + CI lockfile-frozen install. |
 | [docs/website/decisions/0012-uv-python-tooling.md](/uv-python-tooling/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0013-biome-lint-format.md](/biome-lint-format/) | validated | shipped | 2026-05-16 | manual, review | Biome replaces ESLint + Prettier; 0-error/0-warning discipline enforced per PR (CLAUDE.md conventions). |
@@ -80,27 +80,27 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0016-react-flow-for-concept-maps.md](/react-flow-for-concept-maps/) | unvalidated | future package split | — | — |  |
 | [docs/website/decisions/0017-rename-sophia-to-sophie.md](/rename-sophia-to-sophie/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0018-codemirror-6-for-codecell.md](/codemirror-6-for-codecell/) | unvalidated | accepted design | — | — |  |
-| [docs/website/decisions/0019-radix-ui-primitives.md](/radix-ui-primitives/) | unvalidated | shipped | — | — |  |
+| [docs/website/decisions/0019-radix-ui-primitives.md](/radix-ui-primitives/) | validated | shipped | 2026-05-25 | deployment, manual | Nine files across `@sophie/components` import from `@radix-ui/*` and six Radix subpackages ship as declared deps. The v1 primitives this ADR scoped (Slider, Tabs, Collapsible, Tooltip, Dialog) are all in active use, with `react-hover-card` substituting for `react-tooltip` for richer popover content. Phase-2 Dialog has landed via the search modal, consumer-facing.  |
 | [docs/website/decisions/0020-shiki-syntax-highlighting.md](/shiki-syntax-highlighting/) | unvalidated | accepted design | — | — |  |
-| [docs/website/decisions/0021-observable-plot-data-viz.md](/observable-plot-data-viz/) | unvalidated | shipped | — | — |  |
-| [docs/website/decisions/0022-tsup-library-builds.md](/tsup-library-builds/) | unvalidated | shipped | — | — |  |
+| [docs/website/decisions/0021-observable-plot-data-viz.md](/observable-plot-data-viz/) | validated | shipped | 2026-05-25 | deployment, test | Observable Plot is the data-viz substrate for `@sophie/components`. The BlackbodyExplorer figure is the canonical first consumer — it pairs Plot's grammar with a React-island parameter slider. Future v2 dashboards + `<CalibrationCurve>` (v3) inherit the same `@observablehq/plot` dep declaration without re-litigating the choice.  |
+| [docs/website/decisions/0022-tsup-library-builds.md](/tsup-library-builds/) | validated | shipped | 2026-05-25 | deployment | All five published `@sophie/*` packages ship a `tsup.config.ts` and build via tsup. The bundler choice this ADR locks is uniform across the package graph; no package has migrated to webpack/rollup/Vite-library mode. The "~8 publishable packages" projection in the ADR Context now rolls up to 5 shipped packages — schema collapsed into `@sophie/core`; other planned packages remain pre-vertical-slice per ADR 0023.  |
 | [docs/website/decisions/0023-vertical-slice-build-order.md](/vertical-slice-build-order/) | validated | shipped | 2026-05-25 | deployment, manual, review | The 2026-05-25 SoTA audit + companion state-of-platform review + the just-landed PR sequence #168-#177 collectively demonstrate the ADR is in active force. Each PR in the sequence extended Sophie's surface only after a concrete prior consumer surfaced the need — chrome after pedagogy; ChapterLayout extraction after smoke duplicated the route shape; the _template skeleton after the fifth store-backed component re-paid the gate-convention recall tax. AGENTS.md cites ADR 0023 as a routine-reasoning ADR that governs every PR scoping decision. No remaining lean-Phase-0 work pre-dates the refactor-outward step; no remaining package was speculatively pre-built under this ADR's authority.  |
 | [docs/website/decisions/0024-license-agpl.md](/license-agpl/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0025-phase-0-actual-scope.md](/phase-0-actual-scope/) | unvalidated | shipped | — | — |  |
-| [docs/website/decisions/0026-tailwind-v4-css-first.md](/tailwind-v4-css-first/) | unvalidated | shipped | — | — |  |
+| [docs/website/decisions/0026-tailwind-v4-css-first.md](/tailwind-v4-css-first/) | validated | shipped | 2026-05-25 | deployment, manual | Tailwind v4 with CSS-first `@theme` directive is in active force. The `generate-tailwind.ts` script emits a CSS file that opens with `@import "./theme.css";` then `@theme { ... }`. No `tailwind.config.{js,ts}` JS preset file exists in the repo, confirming the v3 escape hatch described in 'Alternatives considered' was rejected as designed. The three-layer model from ADR 0005 is preserved; this ADR refines Layer 2's delivery mechanism to CSS-first.  |
 | [docs/website/decisions/0027-mdx-render-boundary-prop-threading.md](/mdx-render-boundary-prop-threading/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0028-storybook-setup.md](/storybook-setup/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0029-broadcast-channel-last-write-wins.md](/broadcast-channel-last-write-wins/) | validated | shipped | 2026-05-22 | review, test | ADR 0007 refinement; LWW timestamping confirmed via the useInteractive + useInteractiveRange test suites. 2026-05-22 Wedge B1 amendment: same-tab local fan-out added to unblock sibling-hook same-tab sync (senderId guard preserves the no-self-echo semantic). No cross-tab production cohort data yet (deferred to fa26). |
 | [docs/website/decisions/0030-audience-and-ai-author-model.md](/audience-and-ai-author-model/) | validated | shipped | 2026-05-25 | audit, deployment, manual, review | The HITL mandate codified in AGENTS.md + the entire post-PR-#168 commit log (every commit AI-authored under Anna's review) + the just-landed family of ADRs 0083/0084/0085 (each AI-drafted under HITL supervision in this same Phase A PR) together constitute the operating evidence that the four-AI-role + supervisor model is in active force. The Design-system 18/20 grade in the state-of-platform review is a concrete output-quality signal. The pedagogy- audit runner is the structural-supervision infrastructure that makes instructor-as-supervisor tractable at the scale of an AI-primary-author codebase. Multi-cohort outcomes from the AI-author-as-content-author path (downstream ASTR 201 fa26 cohort) remain deferred to a future re-validation; the AI-author-of-platform-code path (ADR 0061 amendment) is fully shipped.  |
-| [docs/website/decisions/0031-compound-component-layout-primitives.md](/compound-component-layout-primitives/) | unvalidated | shipped | — | — |  |
+| [docs/website/decisions/0031-compound-component-layout-primitives.md](/compound-component-layout-primitives/) | validated | shipped | 2026-05-25 | deployment | All six primitives this ADR named (assembled TextbookLayout + the five underlying layout/chrome primitives) ship in `@sophie/astro`. The compound-component pattern is in active force — consumers can use the one-line `<TextbookLayout>` default OR compose the primitives directly, matching the Radix/React-Aria/Starlight packaging shape this ADR cited.  |
 | [docs/website/decisions/0032-vanilla-js-chrome-state.md](/vanilla-js-chrome-state/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0033-is-inline-outside-react-island.md](/is-inline-outside-react-island/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0034-empty-slot-collapse-pattern.md](/empty-slot-collapse-pattern/) | unvalidated | shipped | — | — |  |
-| [docs/website/decisions/0035-token-naming-flat-kindless.md](/token-naming-flat-kindless/) | unvalidated | shipped | — | — |  |
-| [docs/website/decisions/0036-define-preference-factory-pattern.md](/define-preference-factory-pattern/) | unvalidated | shipped | — | — |  |
+| [docs/website/decisions/0035-token-naming-flat-kindless.md](/token-naming-flat-kindless/) | validated | shipped | 2026-05-25 | deployment, review, test | The flat kind-less naming convention is in active force at every layer: the canonical `tokens.ts` source, the generated CSS output, and the unit test surface. ADR 0005's original kind-infix sketch was never adopted; this ADR ratifies the as-shipped convention.  |
+| [docs/website/decisions/0036-define-preference-factory-pattern.md](/define-preference-factory-pattern/) | validated | shipped | 2026-05-25 | deployment, test | The `definePreference` factory shipped and scaled to five consumers (sidebar, theme, view-mode, right-sidebar, disclosures), each as a singleton export with the factory-returned surface. Companion test files per consumer (`theme.test.ts`, `view-mode.test.ts`) exercise the invariants the ADR locks.  |
 | [docs/website/decisions/0037-cross-bundle-dom-attribute-observation.md](/cross-bundle-dom-attribute-observation/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0038-pedagogy-index-pattern.md](/pedagogy-index-pattern/) | validated | shipped | 2026-05-25 | audit, chapter, review, test | The pedagogy-index pattern is the load-bearing reference architecture for ADRs 0042/0043/0044/0045/0056; pattern itself is validated, downstream consumers ship in tranches (see 0044/0045/0046 in-progress). Amendment 2 (2026-05-25) added the `useHydrated`-at-top SSR-gate convention covering the five store-gated components, defending the whole class against the packed-copy SSR-ordering hazard. |
-| [docs/website/decisions/0039-lucide-two-adapter-convention.md](/lucide-two-adapter-convention/) | unvalidated | shipped | — | — |  |
+| [docs/website/decisions/0039-lucide-two-adapter-convention.md](/lucide-two-adapter-convention/) | validated | shipped | 2026-05-25 | deployment | The two-adapter convention is in active force across both package boundaries: `@sophie/astro` declares `lucide-static` + re-exports through the icon barrel; `@sophie/components` declares `lucide-react` + imports directly from it (no re-export barrel) per the tree-shake discipline. The pedagogy half this ADR queued as a follow-up mechanical PR has landed and scaled to 10+ component consumers.  |
 | [docs/website/decisions/0040-teaching-decision-records.md](/teaching-decision-records/) | in progress | accepted design | 2026-05-16 | deployment, review | Contract spec'd + cross-referenced; tooling + TDR-coverage audit invariant not yet wired. Code lands in a follow-up PR (separate from the validation tracker rollout). |
 | [docs/website/decisions/0041-teaching-move-library.md](/teaching-move-library/) | in progress | accepted design | 2026-05-16 | deployment, manual, review | Taxonomy spec'd in reference doc; no automated audit of move IDs against pedagogy-contract.reasoning_style yet. Code follow-up tracked. |
 | [docs/website/decisions/0042-pedagogy-contract-and-ai-contribution-ledger.md](/pedagogy-contract-and-ai-contribution-ledger/) | in progress | accepted design | 2026-05-16 | deployment, manual, review | Schema + reference docs are stable; runtime renderer + audit invariants land in follow-up work. |
