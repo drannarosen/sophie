@@ -56,15 +56,15 @@ describe("rehypeKatexDisplayA11y", () => {
   test("does not stamp inline math (.katex without -display)", () => {
     const tree = root([el("span", ["katex"])]);
     rehypeKatexDisplayA11y()(tree);
-    const inline = tree.children[0];
-    expect(inline?.properties).toEqual({ className: ["katex"] });
+    const inline = tree.children[0] as Element;
+    expect(inline.properties).toEqual({ className: ["katex"] });
   });
 
   test("does not stamp arbitrary elements", () => {
     const tree = root([el("p", undefined), el("div", ["sophie-content"])]);
     rehypeKatexDisplayA11y()(tree);
-    expect(tree.children[0]?.properties).toEqual({});
-    expect(tree.children[1]?.properties).toEqual({
+    expect((tree.children[0] as Element).properties).toEqual({});
+    expect((tree.children[1] as Element).properties).toEqual({
       className: ["sophie-content"],
     });
   });
@@ -101,8 +101,8 @@ describe("rehypeKatexDisplayA11y", () => {
       el("div", ["wrapper"], [el("span", ["katex-display"])]),
     ]);
     rehypeKatexDisplayA11y()(tree);
-    const wrapper = tree.children[0];
-    const display = wrapper?.children[0] as Element;
+    const wrapper = tree.children[0] as Element;
+    const display = wrapper.children[0] as Element;
     expect(display.properties).toMatchObject({
       tabIndex: 0,
       role: "group",

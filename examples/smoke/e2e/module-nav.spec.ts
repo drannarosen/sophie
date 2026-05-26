@@ -47,18 +47,20 @@ test.describe("PR 3: Module/chapter sidebar nav", () => {
     const foundations = page.locator(
       ".sophie-module[data-module='foundations'] .sophie-chapter-list a"
     );
-    // Three foundations chapters post-ADR-0060: the EquationBiography
-    // PR-γ inline-fixture chapter (`wiens-law-fixture.mdx`, order=4)
-    // was deleted in Batch 6 — biographies live in the registry now
-    // (examples/smoke/src/content/equations/), so the inline-biography
-    // chapter test case is obsolete. The Intervention PR-γ smoke
-    // fixture (`misconception-fixture.mdx`, order=3) remains.
-    await expect(foundations).toHaveCount(3);
+    // Four foundations chapters: Spoiler Alerts, Measuring the Sky,
+    // Misconceptions and Interventions (Intervention PR-γ fixture), and
+    // Mobile a11y fixture (WS A regression-guard fixture backing
+    // `examples/smoke/e2e/mobile-chapter-a11y.spec.ts` — closes #187,
+    // #192). The EquationBiography PR-γ inline-fixture chapter
+    // (`wiens-law-fixture.mdx`, order=4) was deleted in Batch 6 —
+    // biographies live in the registry now.
+    await expect(foundations).toHaveCount(4);
     await expect(foundations.nth(0)).toHaveText(/Spoiler Alerts/);
     await expect(foundations.nth(1)).toHaveText(/Measuring the Sky/);
     await expect(foundations.nth(2)).toHaveText(
       /Misconceptions and Interventions/
     );
+    await expect(foundations.nth(3)).toHaveText(/Mobile a11y fixture/);
 
     const stars = page.locator(
       ".sophie-module[data-module='stars'] .sophie-chapter-list a"
