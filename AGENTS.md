@@ -314,7 +314,7 @@ to every PR, every design decision, every refactor.
   Integration test I3 catches this on the unit job; catching it
   locally first is faster.
 
-- **Standing PR-review rules (R6–R10).** Apply on every PR; cite by
+- **Standing PR-review rules (R6–R11).** Apply on every PR; cite by
   number in review comments.
   - **R6 — MyST anchor verification.** Cited ADR sections use
     MyST heading-slug, not `#L\d+` GitHub line-anchors. Catch:
@@ -366,6 +366,23 @@ to every PR, every design decision, every refactor.
     used `<main>` inside the chapter layout, `CourseObjectives`
     had a nameless `<section>`, `TopicSpecContent` used
     `<article>` instead of a landmark).
+  - **R11 — axe-on-render coverage.** Every `*.test.tsx` under
+    `packages/components/src/` that calls `render(` must also call
+    one of `axe(`, `AxeBuilder`, or `toHaveNoViolations` — render
+    without axe violates ADR 0004's "axe-core tests are mandatory
+    on every component PR" mandate. Enforced by
+    `scripts/lint-axe-render.ts` (run via `pnpm lint:axe-render`,
+    wired into the CI `lint` job). Audit-traceable exclusions live
+    in the script header: `runtime/**`, `_helpers/**`, `__mocks__/**`,
+    `_template/**`, `use<Name>.test.tsx` hook tests, and
+    `interactive/ParameterCursor.test.tsx` (invisible side-effect
+    component asserting store state, not DOM). Originating finding:
+    P3 closure audit (`docs/reviews/2026-05-25-axe-coverage-audit.md`,
+    PR #185) — pre-audit coverage was 42/44 with two quiet gaps
+    (`RetrievalCard.test.tsx`, `EquationRef.biography-summary.test.tsx`)
+    that the coarser grep missed; the R11 wave additionally caught a
+    third (`InlineMath.test.tsx` rendering real KaTeX DOM with zero
+    axe calls).
 
   See `feedback_review_rules_r6_r10.md` (under
   `~/.claude/projects/-Users-anna-Teaching-sophie/memory/`) for origin

@@ -1,4 +1,5 @@
 import { render } from "@testing-library/react";
+import { axe } from "jest-axe";
 import { describe, expect, test } from "vitest";
 import { InlineMath } from "./InlineMath.tsx";
 
@@ -42,5 +43,13 @@ describe("<InlineMath>", () => {
     expect(container.querySelector(".katex-mathml math")).not.toBeNull();
     // No aria-label on the wrapping span (would be aria-prohibited-attr).
     expect(container.querySelector("span[aria-label]")).toBeNull();
+  });
+
+  test("axe-core: no accessibility violations on rendered KaTeX DOM", async () => {
+    const { container } = render(
+      <InlineMath>{String.raw`B_\lambda(T) = \frac{2hc^2}{\lambda^5}`}</InlineMath>
+    );
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
   });
 });
