@@ -163,14 +163,17 @@ Conversion-dominated again — the platform was ready, including MultiRep.
 
 ## Platform issues to file
 
-Against `drannarosen/sophie` (candidates — awaiting Anna, as with the m3-l2 set #187–190):
+Filed against `drannarosen/sophie` this session:
 
-1. **F4 should count `<RepFigure>` / `<RepEquation>` usages** (Surprise 1) — new.
-2. **`.katex-display` `scrollable-region-focusable` at mobile width** (Surprise 2)
-   — confirms the closure-review known deferral; may fold into the [#187] mobile-
-   layout fix.
-3. **Authoring guidance + lint: raw `<digit` MDX hazard** (Surprise 3) — extends [#190].
-4. **Soften the `<MultiRep>` 🚧 status in the chapter-components reference** (Surprise 4).
+1. **[#191](https://github.com/drannarosen/sophie/issues/191) — F4 should count
+   `<RepFigure>` / `<RepEquation>` usages** (Surprise 1) — new.
+2. **[#192](https://github.com/drannarosen/sophie/issues/192) — `.katex-display`
+   `scrollable-region-focusable` at mobile width** (Surprise 2) — confirms the
+   closure-review known deferral; pairs with the [#187] mobile-layout fix.
+3. **[#193](https://github.com/drannarosen/sophie/issues/193) — raw `<digit` MDX
+   authoring hazard** (Surprise 3) — extends [#190].
+4. **[#194](https://github.com/drannarosen/sophie/issues/194) — soften the
+   `<MultiRep>` 🚧 status in the chapter-components reference** (Surprise 4).
 
 ## Success criteria
 
