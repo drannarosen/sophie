@@ -236,6 +236,127 @@ directly in MDX.
 </Dropdown>
 ```
 
+### Course-management chrome (course-info projection, 2026-05-26)
+
+Five MDX-authorable chrome components shipped via the course-info
+projection sprint
+([PR #199](https://github.com/drannarosen/sophie/pull/199), see
+[ADR 0080 Amendment 2](../decisions/0080-course-spec-format-v0-1.md#amendment-2-assessment-grade-weights-clean-break-course-info-projection-2026-05-26)).
+Author-typable inside chapter MDX **or** course-info prose fragments
+at `src/content/course-info/<slug>.mdx`. Render course-management
+metadata (due dates, point values, reading assignments, office hours,
+week labels) sourced from `course.sophie.yaml`.
+
+They are **chrome, not pedagogy**: no `epistemicRole` per
+[ADR 0058](../decisions/0058-epistemic-component-contract.md); no
+contribution to `PedagogyIndex`; no audit invariants. The
+chrome-vs-pedagogy boundary is structurally enforced — pedagogy
+primitives (`<OMIFlow>`, `<WorkedExample>`, `<MultiRep>`,
+`<Intervention>`) are excluded from `makeChromeComponents` (the
+prose-fragment factory) but present in `makeStaticComponents` (the
+chapter factory). These five live in BOTH factories.
+
+All five read course data via the `useCourseSpec()` hook, which is
+backed by a SSR-setter + script-tag store (`pedagogy-store.ts:14-22`
+doctrine — no `virtual:` imports in `@sophie/components`, which is
+framework-pure per [ADR 0001](../decisions/0001-platform-not-monorepo.md)).
+The hook throws a curated error when rendered in a consumer without
+a `course.sophie.yaml`.
+
+#### `<Due>` — due-date badge
+
+Renders an upcoming or past due date.
+
+```mdx
+<Due />                                       {/* schema lookup */}
+<Due date="2026-09-15" of="reading" />        {/* explicit override */}
+```
+
+| Prop | Type | Default |
+| --- | --- | --- |
+| `date` | `YYYY-MM-DD` string | resolved from chapter context |
+| `of` | `"reading" \| "problem-set" \| "exam" \| "growth-memo"` | resolved from chapter context |
+
+UTC parsing avoids SSR/client TZ shift; `2026-12-31` renders
+consistently in both SSR and hydration regardless of viewer TZ.
+
+#### `<Points>` — points-badge
+
+Renders a points-or-percentage badge for an assessment surface.
+
+```mdx
+<Points value={20} category="problem-set" />
+```
+
+| Prop | Type | Notes |
+| --- | --- | --- |
+| `value` | `number` | absolute points; required |
+| `category` | string | must match `grading.categories[*].id` in spec; required |
+
+Throws a curated error listing known category ids if `category`
+doesn't resolve.
+
+#### `<Reading>` — textbook reading reference
+
+Prose-string-typed for v1 (YAGNI; structured shape deferred per
+ADR 0080 A2 design until a second consumer appears).
+
+```mdx
+<Reading source="Carroll & Ostlie §6.3" pages="247-260" />
+```
+
+| Prop | Type |
+| --- | --- |
+| `source` | `string` (textbook short-name + section) — required |
+| `pages` | `string` (e.g. `"247-260"`) — required |
+
+No schema lookup at v1 — `source` is required. Future graduation to
+structured `{ textbook_id, chapter, pages: { start, end } }` waits
+for a textbook-reading-list page consumer.
+
+#### `<OfficeHours>` — next upcoming office-hours slot
+
+```mdx
+<OfficeHours />
+```
+
+No props. Reads from `course.sophie.yaml`'s `office_hours[]` cluster.
+If the spec has no `office_hours:` block, renders the author-visible
+empty state `Office hours: not set` (visible to authors as
+"fix me," not silently absent).
+
+> **Naming note.** The source file is internally named
+> `OfficeHoursChrome.tsx` to disambiguate from `OfficeHoursTable.tsx`
+> (a React sub-component used inside `InstructorPage.astro`). The
+> `@sophie/components` barrel aliases the export to `<OfficeHours>` —
+> authors type the shorter form.
+
+#### `<Week>` — week label
+
+```mdx
+<Week n={4} />
+```
+
+| Prop | Type |
+| --- | --- |
+| `n` | positive integer — required |
+
+Throws on `NaN`, negative, or non-integer values.
+
+#### Chrome-vs-pedagogy boundary at the factory layer
+
+The component-set boundary is enforced via two factories at
+[`packages/astro/src/components.tsx`](https://github.com/drannarosen/sophie/blob/main/packages/astro/src/components.tsx):
+
+| Factory | Used in | Allowed |
+| --- | --- | --- |
+| `makeStaticComponents({ figures })` | chapter MDX (`reading.mdx`) | full set: 8 epistemic-role pedagogy primitives + inline chrome (`<Callout>`, `<GlossaryTerm>`, `<KeyEquation>`, `<EquationRef>`, `<FigureRef>`, `<Aside>`) + the 5 course-management chrome above |
+| `makeChromeComponents({ figures })` | course-info prose fragments (`src/content/course-info/<slug>.mdx`) | inline chrome subset + 5 course-management chrome above; **excludes** `<OMIFlow>`, `<WorkedExample>`, `<MultiRep>`, `<Intervention>` (pedagogy primitives whose meaning depends on chapter context) |
+
+See [course-info-schema.md](./course-info-schema.md) for the
+prose-fragment authoring reference and the full allowed/excluded
+component lists.
+
 ### Interactive React island
 
 #### Persistence-bearing (IndexedDB state)
