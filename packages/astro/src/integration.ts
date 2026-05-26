@@ -5,6 +5,8 @@ import mdx from "@astrojs/mdx";
 import react from "@astrojs/react";
 import type { FigureRegistryEntry } from "@sophie/core/schema";
 import type { AstroIntegration } from "astro";
+import { loadCourseSpec } from "./lib/course-spec-loader.ts";
+import { courseSpecVirtualModule } from "./lib/course-spec-virtual-module.ts";
 import { figuresVirtualModule } from "./lib/figures-virtual-module.ts";
 import { warnOnUnroutedPracticeMdx } from "./lib/integration/practice-mdx-warning.ts";
 import { mdxAuthorTrapsVitePlugin } from "./lib/mdx-plugins/mdx-author-traps.ts";
@@ -96,6 +98,17 @@ export function defineSophieIntegration(
     hooks: {
       "astro:config:setup": ({ config, injectRoute, updateConfig, logger }) => {
         const topicsDir = resolve(process.cwd(), "src/content/topics");
+
+        // Load + validate course.sophie.yaml at config-setup. Returns
+        // null when the consumer hasn't authored a spec yet (back-
+        // compat with consumers that haven't migrated to v0.2 chrome);
+        // throws curated error on malformed/invalid spec (author
+        // errors that must surface at config-setup, not silently
+        // degrade to "no chrome routes"). Course-info projection
+        // sprint (docs/plans/2026-05-26-course-info-projection-*.md).
+        const consumerRoot = fileURLToPath(config.root);
+        const courseSpec = loadCourseSpec(consumerRoot);
+
         updateConfig({
           integrations: [mdx(sophieMdxOptions), react()],
           vite: {
@@ -118,6 +131,16 @@ export function defineSophieIntegration(
               // config-parse time; figures changes require a dev-
               // server restart (no HMR by design).
               figuresVirtualModule(options.figures) as never,
+              // Course-info projection (2026-05-26) — consumer's
+              // parsed course.sophie.yaml exposed as
+              // `virtual:sophie/course-spec` for chrome components +
+              // info-page layouts. Always registered so
+              // `import { courseSpec } from "virtual:sophie/course-spec"`
+              // resolves at build time even when the consumer has no
+              // spec yet (the export is `null` in that case;
+              // TextbookLayout + chrome components handle null
+              // explicitly).
+              courseSpecVirtualModule(courseSpec) as never,
               // Pre-parse author-trap lint (issues #190, #193) — scans
               // raw `.mdx` text for multi-line inline `$...$` and raw
               // `<` before a non-letter, and throws curated errors with
@@ -153,7 +176,7 @@ export function defineSophieIntegration(
         // file-based routes win over injected routes silently; surfacing
         // this at config-setup time prevents confusion when the
         // platform route appears not to apply.
-        const consumerRoot = fileURLToPath(config.root);
+        // (consumerRoot computed above for the course-spec loader.)
         const consumerRoutePath = path.join(
           consumerRoot,
           "src/pages/units/[unit]/reading.astro"
@@ -165,6 +188,63 @@ export function defineSophieIntegration(
               `(Astro issue #3809). Delete the consumer file to use the platform's reading route. ` +
               `See ADR-0082 § A2.6.`
           );
+        }
+
+        // ─── Course-info projection (2026-05-26) ──────────────────
+        // When the consumer has authored course.sophie.yaml, inject
+        // the course-website chrome routes: landing + per-section
+        // landings + per-info_pages static pages. Shadow-warn each
+        // mirrors ADR 0082 §A2.6 per fix M4.
+        if (courseSpec) {
+          // Course landing — pattern "/" — dispatcher reads
+          // courseSpec.landing.layout (or integration override).
+          injectRoute({
+            pattern: "/",
+            entrypoint: "@sophie/astro/routes/course-landing.astro",
+          });
+          const consumerIndexPath = path.join(
+            consumerRoot,
+            "src/pages/index.astro"
+          );
+          if (fs.existsSync(consumerIndexPath)) {
+            logger.warn(
+              `[sophie] Consumer has src/pages/index.astro at ${consumerIndexPath}. ` +
+                `This will shadow the injected landing route from @sophie/astro/routes/course-landing.astro ` +
+                `(Astro issue #3809). Delete the consumer file to use the platform's landing. ` +
+                `See ADR-0082 § A2.6.`
+            );
+          }
+
+          // Section landing — pattern "/sections/[section]/" —
+          // getStaticPaths in the route file enumerates sections
+          // from the content collection.
+          injectRoute({
+            pattern: "/sections/[section]/",
+            entrypoint: "@sophie/astro/routes/section-landing.astro",
+          });
+
+          // Info pages — one static route per info_pages slug. Each
+          // route file reads its slug from Astro.url.pathname (per
+          // fix B3 — no getStaticPaths because the URL pattern is
+          // parameter-less).
+          for (const slug of Object.keys(courseSpec.info_pages ?? {})) {
+            injectRoute({
+              pattern: `/${slug}/`,
+              entrypoint: "@sophie/astro/routes/info-page.astro",
+            });
+            const consumerSlugPath = path.join(
+              consumerRoot,
+              `src/pages/${slug}.astro`
+            );
+            if (fs.existsSync(consumerSlugPath)) {
+              logger.warn(
+                `[sophie] Consumer has src/pages/${slug}.astro at ${consumerSlugPath}. ` +
+                  `This will shadow the injected /${slug}/ route from @sophie/astro/routes/info-page.astro. ` +
+                  `Delete the consumer file to use the platform's info-page dispatcher. ` +
+                  `See ADR-0082 § A2.6.`
+              );
+            }
+          }
         }
 
         // Issue #189 — `practice.mdx` discovered-but-unrouted warning.

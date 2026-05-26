@@ -39,13 +39,20 @@ describe("CourseSpecSchema — valid ASTR 201 draft", () => {
     expect(parsed.terminal_goals[0]?.id).toBe("TG1");
   });
 
-  it("parses grade weights summing to 100", () => {
+  it("parses grading.categories summing to 1.0 (v0.2 — replaces v0.1 grade_weights)", () => {
     const parsed = CourseSpecSchema.parse(valid());
-    const total = parsed.assessment.grade_weights.reduce(
-      (s, w) => s + w.weight,
-      0
-    );
-    expect(total).toBe(100);
+    const total = parsed.grading.categories.reduce((s, c) => s + c.weight, 0);
+    expect(Math.abs(total - 1.0)).toBeLessThan(0.001);
+  });
+
+  it("parses assessment.category_refs as audit-coverage pointer into grading.categories", () => {
+    const parsed = CourseSpecSchema.parse(valid());
+    expect(parsed.assessment.category_refs).toContain("homework");
+    expect(parsed.assessment.category_refs).toContain("final-exam");
+    const declaredIds = new Set(parsed.grading.categories.map((c) => c.id));
+    for (const ref of parsed.assessment.category_refs) {
+      expect(declaredIds).toContain(ref);
+    }
   });
 
   it("locks spec_version and schema id literals", () => {
@@ -64,36 +71,37 @@ describe("CourseSpecSchema — valid ASTR 201 draft", () => {
 });
 
 describe("CourseSpecSchema — rejects malformed inputs", () => {
-  it("rejects weights not summing to 100 (refine)", () => {
+  it("rejects grading.categories weights not summing to 1.0 (v0.2 refine)", () => {
+    const data = valid();
+    const broken = {
+      ...data,
+      grading: {
+        ...(data.grading as Record<string, unknown>),
+        categories: [
+          { id: "homework", name: "HW", weight: 0.5 },
+          { id: "final-exam", name: "Final", weight: 0.49 },
+        ],
+      },
+    };
+    expect(() => CourseSpecSchema.parse(broken)).toThrow(/sum to 1\.0/);
+  });
+
+  it("rejects category-weights-not-one.yaml fixture (loaded from disk)", () => {
+    const broken = loadFixture("invalid/category-weights-not-one.yaml");
+    expect(() => CourseSpecSchema.parse(broken)).toThrow(/sum to 1\.0/);
+  });
+
+  it("rejects the legacy v0.1 grade_weights shape (clean break per ADR 0080 v0.2)", () => {
     const data = valid();
     const broken = {
       ...data,
       assessment: {
         ...(data.assessment as Record<string, unknown>),
-        grade_weights: [
-          {
-            category: "homework",
-            weight: 50,
-            label: "HW",
-          },
-          {
-            category: "final-exam",
-            weight: 49,
-            label: "Final",
-          },
-        ],
+        grade_weights: [{ category: "hw", weight: 100, label: "HW" }],
       },
     };
-    expect(() => CourseSpecSchema.parse(broken)).toThrow(
-      /grade_weights must sum to 100/
-    );
-  });
-
-  it("rejects weights-not-100.yaml fixture (loaded from disk)", () => {
-    const broken = loadFixture("invalid/weights-not-100.yaml");
-    expect(() => CourseSpecSchema.parse(broken)).toThrow(
-      /grade_weights must sum to 100/
-    );
+    // .strict() rejects the unknown `grade_weights` key.
+    expect(() => CourseSpecSchema.parse(broken)).toThrow();
   });
 
   it("rejects unknown pedagogy.pattern (enum)", () => {
@@ -320,5 +328,167 @@ describe("validateCourseSpec helper", () => {
     expect(findings.some((f) => f.message.includes("pedagogy.pattern"))).toBe(
       true
     );
+  });
+});
+
+// ───────────────────────────────────────────────────────────────────
+// v0.2 clusters — course-info projection (ADR 0080 v0.2 amendment +
+// docs/plans/2026-05-26-course-info-projection-design.md). All optional
+// chrome clusters are populated in the canonical fixture so the
+// acceptance test stays small (spread + override).
+// ───────────────────────────────────────────────────────────────────
+
+describe("CourseSpecSchema v0.2 — chrome clusters", () => {
+  it("accepts objectives cluster", () => {
+    const parsed = CourseSpecSchema.parse(valid());
+    expect(parsed.objectives?.[0]?.id).toBe("lo-1");
+    expect(parsed.objectives?.[0]?.verb).toBe("Infer");
+  });
+
+  it("accepts office_hours array with modality enum + HH:MM regex", () => {
+    const parsed = CourseSpecSchema.parse(valid());
+    expect(parsed.office_hours?.[0]?.day).toBe("Tuesday");
+    expect(parsed.office_hours?.[0]?.modality).toBe("in-person");
+  });
+
+  it("accepts contact with email + async_channel", () => {
+    const parsed = CourseSpecSchema.parse(valid());
+    expect(parsed.contact?.email).toBe("alrosen@sdsu.edu");
+    expect(parsed.contact?.async_channel?.kind).toBe("canvas-msg");
+  });
+
+  it("accepts accessibility cluster (DRC link, request deadline weeks)", () => {
+    const parsed = CourseSpecSchema.parse(valid());
+    expect(parsed.accessibility?.drc_link).toMatch(/^https?:\/\//);
+    expect(parsed.accessibility?.request_deadline_weeks).toBe(2);
+  });
+
+  it("accepts info_pages with strict compose: union (data keys + prose/<slug>)", () => {
+    const parsed = CourseSpecSchema.parse(valid());
+    expect(parsed.info_pages?.syllabus?.compose).toContain("objectives");
+    expect(parsed.info_pages?.syllabus?.compose).toContain("prose/policies");
+  });
+
+  it("rejects info_pages declarations with unknown layout names (per review I1 — enum, not NonEmptyString)", () => {
+    const data = valid();
+    const broken = {
+      ...data,
+      info_pages: {
+        syllabus: { layout: "TypoPage" }, // not one of the 5 known layouts
+      },
+    };
+    expect(() => CourseSpecSchema.parse(broken)).toThrow();
+  });
+
+  it("rejects info_pages.compose entries that are neither known data keys nor prose/<slug>", () => {
+    const data = valid();
+    const broken = {
+      ...data,
+      info_pages: {
+        syllabus: {
+          layout: "SyllabusPage",
+          compose: ["objetctives"], // typo — should be objectives
+        },
+      },
+    };
+    expect(() => CourseSpecSchema.parse(broken)).toThrow();
+  });
+
+  it("accepts landing.layout: 'custom' (integration-override path per H2)", () => {
+    const data = valid();
+    const extended = {
+      ...data,
+      landing: { layout: "custom" },
+    };
+    expect(() => CourseSpecSchema.parse(extended)).not.toThrow();
+  });
+
+  it("defaults landing.layout to 'simple-list' when layout is omitted", () => {
+    const data = valid();
+    const extended = { ...data, landing: {} };
+    const parsed = CourseSpecSchema.parse(extended);
+    expect(parsed.landing?.layout).toBe("simple-list");
+  });
+
+  // Schema-validated slugs (kebab-case, no leading underscore) that
+  // collide with Sophie-injected routes are caught by the
+  // reserved-slug refine on InfoPagesSchema.
+  it.each([
+    "units",
+    "sections",
+    "library",
+    "pagefind",
+  ])("rejects info_pages slug colliding with Sophie-reserved set: %s", (reserved) => {
+    const data = valid();
+    const broken = {
+      ...data,
+      info_pages: { [reserved]: { layout: "SyllabusPage" } },
+    };
+    expect(() => CourseSpecSchema.parse(broken)).toThrow(/reserved/i);
+  });
+
+  // Astro-internal prefixes (`_astro`, `_server`, `_image`) start with
+  // underscore — caught by the kebab-case key regex (different rule,
+  // same outcome). Both defenses combined foreclose the collision class.
+  it.each([
+    "_astro",
+    "_server",
+    "_image",
+  ])("rejects info_pages slug with Astro-internal underscore prefix: %s", (reserved) => {
+    const data = valid();
+    const broken = {
+      ...data,
+      info_pages: { [reserved]: { layout: "SyllabusPage" } },
+    };
+    expect(() => CourseSpecSchema.parse(broken)).toThrow();
+  });
+});
+
+describe("CourseSpecSchema v0.2 — grading invariants", () => {
+  it("rejects objectives[*].assessed_by entries that don't reference declared grading.categories (I3 cross-refine)", () => {
+    const data = valid();
+    const broken = {
+      ...data,
+      objectives: [
+        {
+          id: "lo-x",
+          verb: "Test",
+          body: "the cross-refine",
+          assessed_by: ["nonexistent-category"],
+        },
+      ],
+    };
+    expect(() => CourseSpecSchema.parse(broken)).toThrow();
+  });
+
+  it("requires assessment.category_refs to reference declared grading.categories", () => {
+    const data = valid();
+    const broken = {
+      ...data,
+      assessment: {
+        ...(data.assessment as Record<string, unknown>),
+        category_refs: ["nonexistent-category"],
+      },
+    };
+    expect(() => CourseSpecSchema.parse(broken)).toThrow();
+  });
+
+  it("requires assessment.category_refs to be non-empty", () => {
+    const data = valid();
+    const broken = {
+      ...data,
+      assessment: {
+        ...(data.assessment as Record<string, unknown>),
+        category_refs: [],
+      },
+    };
+    expect(() => CourseSpecSchema.parse(broken)).toThrow();
+  });
+
+  it("accepts grading.categories with drop_lowest + late_policy_ref", () => {
+    const parsed = CourseSpecSchema.parse(valid());
+    const homework = parsed.grading.categories.find((c) => c.id === "homework");
+    expect(homework?.drop_lowest).toBe(1);
+    expect(homework?.late_policy_ref).toBe("prose/late-work");
   });
 });

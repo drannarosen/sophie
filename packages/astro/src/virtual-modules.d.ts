@@ -34,3 +34,16 @@ declare module "virtual:sophie/figures" {
    */
   export const figures: Record<string, FigureRegistryEntry>;
 }
+
+declare module "virtual:sophie/course-spec" {
+  import type { CourseSpec } from "@sophie/core/schema";
+
+  /**
+   * Consumer's parsed `course.sophie.yaml`. Populated by
+   * `defineSophieIntegration` via `courseSpecVirtualModule()`. Always
+   * registered — `null` when the consumer hasn't authored a spec yet
+   * (TextbookLayout + chrome components handle null explicitly).
+   * Course-info projection design (2026-05-26).
+   */
+  export const courseSpec: CourseSpec | null;
+}

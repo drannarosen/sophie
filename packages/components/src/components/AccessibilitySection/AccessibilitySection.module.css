@@ -1,0 +1,45 @@
+.section {
+  margin-block: var(--sophie-space-6);
+}
+
+.title {
+  font-family: var(--sophie-font-serif);
+  font-size: var(--sophie-font-size-h2, 1.5rem);
+  color: var(--sophie-text-strong);
+  margin: 0 0 var(--sophie-space-3) 0;
+  border-bottom: 1px solid var(--sophie-border);
+  padding-block-end: var(--sophie-space-2);
+}
+
+.card {
+  padding: var(--sophie-space-4);
+  border-radius: var(--sophie-radius-md);
+  background: var(--sophie-surface-1);
+  border: 1px solid var(--sophie-border);
+}
+
+.row {
+  display: flex;
+  gap: var(--sophie-space-2);
+  margin-block: var(--sophie-space-2);
+  flex-wrap: wrap;
+}
+
+.label {
+  font-weight: 600;
+  color: var(--sophie-text-strong);
+  min-width: 10ch;
+}
+
+.value {
+  color: var(--sophie-text);
+}
+
+.value a {
+  color: var(--sophie-link);
+}
+
+.value a:focus-visible {
+  outline: 2px solid var(--sophie-focus-ring);
+  outline-offset: 2px;
+}

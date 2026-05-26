@@ -1,5 +1,13 @@
 // Components
 
+// Course-info projection — chrome sub-components composed by the
+// .astro layout shells (per Anna's H7 = Option B). Each is a
+// labeled <section> region (R10) used inside the page-level <main>
+// owned by the layout.
+export {
+  AccessibilitySection,
+  type AccessibilitySectionProps,
+} from "./components/AccessibilitySection/index.ts";
 export type { AsideProps } from "./components/Aside/Aside.schema.ts";
 export {
   Aside,
@@ -76,6 +84,18 @@ export {
   ConfidenceCheckPropsSchema,
   confidenceCheckContract,
 } from "./components/ConfidenceCheck/index.ts";
+export {
+  ContactCard,
+  type ContactCardProps,
+} from "./components/ContactCard/index.ts";
+// Course-info projection (2026-05-26) — top-level page shells exposed
+// as React islands from the platform-shipped routes.
+export {
+  HeroWithModules,
+  ProseWithToc,
+  SimpleList,
+  type SimpleListProps,
+} from "./components/CourseLanding/index.ts";
 export type { DerivationStepProps } from "./components/DerivationStep/index.ts";
 export {
   DERIVATION_STEP_EPISTEMIC_ROLE,
@@ -93,6 +113,14 @@ export {
   DropdownPropsSchema,
   dropdownContract,
 } from "./components/Dropdown/index.ts";
+// Course-info projection (2026-05-26) — course-management chrome
+// components per the design doc's "C pack". Inline elements (no
+// landmarks); hybrid props-or-schema where applicable. Used by
+// authors inside chapter MDX. <OfficeHoursChrome> is aliased as
+// <OfficeHours> at the public name so authors write
+// `<OfficeHours />` in MDX; the internal name disambiguates from
+// the info-page section component <OfficeHoursTable>.
+export { Due, type DueProps } from "./components/Due/index.ts";
 export type {
   EffortLevel,
   EffortLogProps,
@@ -127,6 +155,10 @@ export {
   GlossaryTermPropsSchema,
   glossaryTermContract,
 } from "./components/GlossaryTerm/index.ts";
+export {
+  GradingTable,
+  type GradingTableProps,
+} from "./components/GradingTable/index.ts";
 export type { GridProps } from "./components/Grid/Grid.schema.ts";
 export {
   Grid,
@@ -171,6 +203,10 @@ export {
   Objective,
   ObjectivePropsSchema,
 } from "./components/Objective/index.ts";
+export {
+  ObjectivesSection,
+  type ObjectivesSectionProps,
+} from "./components/ObjectivesSection/index.ts";
 export type { ObservableProps } from "./components/Observable/index.ts";
 export {
   OBSERVABLE_EPISTEMIC_ROLE,
@@ -178,6 +214,11 @@ export {
   ObservablePropsSchema,
   observableContract,
 } from "./components/Observable/index.ts";
+export { OfficeHoursChrome as OfficeHours } from "./components/OfficeHoursChrome/index.ts";
+export {
+  OfficeHoursTable,
+  type OfficeHoursTableProps,
+} from "./components/OfficeHoursTable/index.ts";
 export type {
   OMIFlowProps,
   OMIFlowSlotProps,
@@ -188,6 +229,7 @@ export {
   OMIFlowSlotPropsSchema,
   omiFlowContract,
 } from "./components/OMIFlow/index.ts";
+export { Points, type PointsProps } from "./components/Points/index.ts";
 export type {
   PredictPrompt,
   PredictProps,
@@ -199,6 +241,11 @@ export {
   PredictPropsSchema,
   predictContract,
 } from "./components/Predict/index.ts";
+export {
+  PrereqsList,
+  type PrereqsListProps,
+} from "./components/PrereqsList/index.ts";
+export { Reading, type ReadingProps } from "./components/Reading/index.ts";
 export type { ReflectionProps } from "./components/Reflection/index.ts";
 export {
   Reflection,
@@ -231,6 +278,10 @@ export {
 } from "./components/RetrievalPrompt/index.ts";
 export type { SearchResult } from "./components/Search/index.ts";
 export { SearchModal } from "./components/Search/index.ts";
+export {
+  SectionLanding,
+  type SectionLandingProps,
+} from "./components/SectionLanding/index.ts";
 export type { SkillReviewProps } from "./components/SkillReview/index.ts";
 export {
   SkillReview,
@@ -260,6 +311,7 @@ export {
   UnitsPropsSchema,
   unitsContract,
 } from "./components/Units/index.ts";
+export { Week, type WeekProps } from "./components/Week/index.ts";
 export type {
   WorkedExampleDimCheckProps,
   WorkedExampleProblemProps,
@@ -345,6 +397,7 @@ export type {
 export {
   IndexedDBResponseStore,
   ProfileProvider,
+  useCourseSpec,
   useHydrated,
   useInteractive,
   useProfile,

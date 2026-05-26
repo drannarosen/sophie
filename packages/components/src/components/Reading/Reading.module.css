@@ -1,0 +1,26 @@
+.reading {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--sophie-space-1);
+  padding: 2px 8px;
+  border-radius: var(--sophie-radius-sm);
+  background: var(--sophie-surface-2);
+  color: var(--sophie-text);
+  border: 1px solid var(--sophie-border);
+  font-size: var(--sophie-font-size-small, 0.875rem);
+}
+
+.icon {
+  opacity: 0.6;
+  font-size: 0.8em;
+}
+
+.source {
+  font-style: italic;
+  color: var(--sophie-text-strong);
+}
+
+.pages {
+  color: var(--sophie-text-muted);
+  font-variant-numeric: tabular-nums;
+}

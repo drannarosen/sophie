@@ -1,0 +1,61 @@
+---
+import {
+  HeroWithModules,
+  ProseWithToc,
+  SimpleList,
+} from "@sophie/components";
+import { getCollection } from "astro:content";
+import { courseSpec } from "virtual:sophie/course-spec";
+
+/**
+ * Course landing dispatcher. Pattern: `/`. Injected by
+ * defineSophieIntegration when course.sophie.yaml is present.
+ *
+ * Reads `landing.layout` from the spec to pick one of the three
+ * built-in layouts (`simple-list`, `hero-with-modules`,
+ * `prose-with-toc`). When `"custom"` is declared, the consumer must
+ * shadow this route with their own `src/pages/index.astro` (per
+ * H2/B4 — schema is the declarative locus; the override path was
+ * future-proofed in landing-schema). v0.2 ships SimpleList as the
+ * real implementation; the other two delegate to it pending follow-up
+ * sprints.
+ */
+// Defensive null guard — runtime-unreachable today because the
+// integration only injects `/` when courseSpec is non-null, but
+// declaring the invariant at the route boundary documents the
+// contract + narrows the type from `CourseSpec | null` (per the
+// virtual module's always-register signature). Per Phase 1-4
+// review C1.
+if (!courseSpec) {
+  throw new Error(
+    "[sophie] course-landing.astro: virtual:sophie/course-spec exported null. " +
+      "This route should only be injected when course.sophie.yaml is present. " +
+      "Check the integration's injectRoute guard."
+  );
+}
+
+const LAYOUTS = {
+  "simple-list": SimpleList,
+  "hero-with-modules": HeroWithModules,
+  "prose-with-toc": ProseWithToc,
+} as const;
+
+const layoutKey = courseSpec.landing?.layout ?? "simple-list";
+
+if (layoutKey === "custom") {
+  throw new Error(
+    "[sophie] landing.layout: 'custom' requires a consumer-shadow at src/pages/index.astro. " +
+      "Either author the override file or change landing.layout to one of: simple-list, hero-with-modules, prose-with-toc."
+  );
+}
+
+const Layout = LAYOUTS[layoutKey] ?? SimpleList;
+
+// JSON-stringified content collections — sections + units shape the
+// flat unit-list rendering. Filtered + sorted client-side by the
+// layout component.
+const sections = (await getCollection("sections")).map((s) => s.data);
+const units = (await getCollection("units")).map((u) => u.data);
+---
+
+<Layout client:load spec={courseSpec} sections={sections} units={units} />

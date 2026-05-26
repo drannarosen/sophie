@@ -1,0 +1,96 @@
+---
+import {
+  AccessibilitySection,
+  ContactCard,
+  GradingTable,
+  ObjectivesSection,
+  OfficeHoursTable,
+  PrereqsList,
+} from "@sophie/components";
+import type { CollectionEntry } from "astro:content";
+import { render } from "astro:content";
+import { makeStaticComponents } from "../components.tsx";
+import type { ComposedItem } from "../lib/compose-evaluator.ts";
+import type { CourseSpec } from "@sophie/core/schema";
+import InfoPageShell from "./InfoPageShell.astro";
+import { figures } from "virtual:sophie/figures";
+
+/**
+ * Syllabus page layout — composes objectives + grading + office_hours
+ * + accessibility + contact + arbitrary prose fragments according to
+ * the spec's `info_pages.syllabus.compose: [...]` list.
+ *
+ * Per Anna's H7 = Option B: this .astro file is the orchestrator;
+ * structural data goes through React sub-components (axe-clean per
+ * R10 + R11); prose fragments render via <Content components={...}>
+ * so MDX-allowed chrome components (Callout, GlossaryTerm, etc.)
+ * still work inside prose.
+ */
+
+interface Props {
+  spec: CourseSpec;
+  composedItems: ComposedItem[];
+  proseEntries: Record<string, CollectionEntry<"course-info">>;
+}
+
+const { spec, composedItems, proseEntries } = Astro.props;
+const chromeComponents = makeStaticComponents({ figures });
+
+// Pre-resolve prose <Content> for each prose item so the JSX below
+// stays sync. Mirrors reading.astro's `const { Content } = await
+// render(artifact);` pattern (one await before the markup).
+const resolved = await Promise.all(
+  composedItems.map(async (item) => {
+    if (item.kind === "prose") {
+      const entry = proseEntries[item.slug];
+      if (!entry) {
+        throw new Error(
+          `[sophie] SyllabusPage: prose entry not found for slug '${item.slug}'. ` +
+            `The compose evaluator resolved it but the content collection lookup failed.`
+        );
+      }
+      const { Content } = await render(entry);
+      return { ...item, Content };
+    }
+    return item;
+  })
+);
+---
+
+<InfoPageShell
+  title={`Syllabus — ${spec.identity.title}`}
+  description={spec.identity.description}
+>
+  <main aria-labelledby='syllabus-title'>
+    <h1 id='syllabus-title'>{spec.identity.code}: {spec.identity.title}</h1>
+    {spec.identity.subtitle && <p>{spec.identity.subtitle}</p>}
+
+    {resolved.map((item) => {
+      if (item.kind === "prose") {
+        const ProseContent = item.Content;
+        return <ProseContent components={chromeComponents} />;
+      }
+      switch (item.key) {
+        case "objectives":
+          return <ObjectivesSection objectives={item.value} />;
+        case "grading":
+          return <GradingTable grading={item.value} />;
+        case "office_hours":
+          return <OfficeHoursTable hours={item.value} />;
+        case "contact":
+          return (
+            <ContactCard
+              contact={item.value}
+              instructor={spec.identity.instructor}
+            />
+          );
+        case "accessibility":
+          return <AccessibilitySection accessibility={item.value} />;
+        case "prereqs":
+          return <PrereqsList prereqs={item.value} />;
+        default:
+          return null;
+      }
+    })}
+  </main>
+</InfoPageShell>

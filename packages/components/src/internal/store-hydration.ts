@@ -35,6 +35,11 @@ export { __setObjectives } from "../components/Objective/objectives-store.ts";
 // / `<ArtifactRef>` consumers. ArtifactEntry is a discriminated union
 // over scope (unit | section).
 export { __setArtifacts } from "../runtime/artifacts-store.ts";
+// Course-info projection (2026-05-26) — consumer's parsed
+// course.sophie.yaml exposed as a singleton store backing the
+// useCourseSpec() hook. Per H3 (test mockability). TextbookLayout
+// is the SSR caller; consumer apps never call this directly.
+export { __setCourseSpec } from "../runtime/course-spec-store.ts";
 // Wedge B-followup (W1) — Section + Unit consumer-supplied collections
 // per ADR 0067. Surfaced for `<SpacedReview section=…>` rendering and
 // the audit graduations (PRA-1 / SR-1). Stores live in `runtime/`

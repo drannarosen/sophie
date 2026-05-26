@@ -1,0 +1,36 @@
+---
+import type { CourseSpec } from "@sophie/core/schema";
+import InfoPageShell from "./InfoPageShell.astro";
+
+/**
+ * Schedule page layout — v0.2 placeholder. The actual schedule shape
+ * (weeks → date map, recurrence, per-unit due dates, exam dates)
+ * depends on schedule.yaml, which Anna deferred from this sprint
+ * (H6: ScheduleSchema needs its own focused design pass + ADR).
+ *
+ * For v0.2 this renders a "schedule coming soon" notice + a link
+ * back to the landing. The iCal follow-up sprint replaces this with
+ * the real implementation (week-by-week table, due dates, exam
+ * dates, downloadable .ics).
+ */
+interface Props {
+  spec: CourseSpec;
+}
+
+const { spec } = Astro.props;
+---
+
+<InfoPageShell
+  title={`Schedule — ${spec.identity.title}`}
+  description={`Course schedule for ${spec.identity.code}.`}
+>
+  <main aria-labelledby='schedule-title'>
+    <h1 id='schedule-title'>Course Schedule</h1>
+    <p>
+      The full course schedule ships with the iCal + schedule.yaml
+      sprint (deferred from v0.2). Until then, see the
+      <a href='/'>course landing</a> for unit ordering and each unit's reading
+      for its place in the term.
+    </p>
+  </main>
+</InfoPageShell>

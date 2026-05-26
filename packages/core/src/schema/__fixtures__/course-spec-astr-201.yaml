@@ -188,27 +188,18 @@ assessment:
     naming your assumptions, and being able to defend your reasoning
     under closed-book conditions.
 
-  grade_weights:
-    - category: homework
-      weight: 30
-      count: 9
-      label: "HW 1–9 problem sets; weekly grade memo included"
-    - category: growth-memos
-      weight: 10
-      count: 2
-      label: "Mid-term reflections; one after each midterm; scored on reflection quality"
-    - category: scholarly-engagement
-      weight: 10
-      label: "iClicker / in-class participation"
-    - category: midterm-1
-      weight: 15
-      label: "Closed-book; formula sheet provided"
-    - category: midterm-2
-      weight: 15
-      label: "Closed-book; formula sheet provided"
-    - category: final-exam
-      weight: 20
-      label: "Cumulative; closed-book; formula sheet provided"
+  # v0.2: grade_weights REMOVED; replaced by required top-level
+  # `grading.categories` (sum to 1.0). `category_refs` declares which
+  # categories this course actually assesses, so audit invariants
+  # (QB5 in particular) can verify "every TG → ≥1 assessment item"
+  # against the declared category set.
+  category_refs:
+    - homework
+    - growth-memos
+    - scholarly-engagement
+    - midterm-1
+    - midterm-2
+    - final-exam
 
   homework_workflow:
     submission_day: tuesday
@@ -270,6 +261,112 @@ quality_bars:
     - id: QB10-multi-representation
       scope: [key-equation]
       check: "Visual + numerical + symbolic forms (Sophie multi-rep partial)."
+
+# v0.2 — grading (top-level, required; replaces assessment.grade_weights).
+# Weights sum to 1.0 (±0.001). drop_lowest + late_policy_ref support
+# richer audit invariants than the v0.1 grade_weights shape did.
+grading:
+  categories:
+    - id: homework
+      name: "Problem sets"
+      weight: 0.30
+      count: 9
+      drop_lowest: 1
+      late_policy_ref: "prose/late-work"
+    - id: growth-memos
+      name: "Growth memos"
+      weight: 0.10
+      count: 2
+    - id: scholarly-engagement
+      name: "Scholarly engagement"
+      weight: 0.10
+    - id: midterm-1
+      name: "Midterm 1"
+      weight: 0.15
+    - id: midterm-2
+      name: "Midterm 2"
+      weight: 0.15
+    - id: final-exam
+      name: "Final exam"
+      weight: 0.20
+  letter_scale:
+    - { grade: "A",  min: 93 }
+    - { grade: "A-", min: 90 }
+    - { grade: "B+", min: 87 }
+    - { grade: "B",  min: 83 }
+    - { grade: "B-", min: 80 }
+    - { grade: "C+", min: 77 }
+    - { grade: "C",  min: 73 }
+    - { grade: "C-", min: 70 }
+    - { grade: "D",  min: 60 }
+    - { grade: "F",  min: 0 }
+
+# v0.2 — course-level learning objectives. Optional; populate as the
+# course-level chrome layer matures.
+objectives:
+  - id: lo-1
+    verb: "Infer"
+    body: "physical properties (distance, T, M, L) from constrained observations."
+    assessed_by: [midterm-1, midterm-2, final-exam, homework]
+  - id: lo-2
+    verb: "Pressure-test"
+    body: "simplified models of astrophysical systems by naming their assumptions."
+    assessed_by: [homework, growth-memos]
+
+# v0.2 — office hours (recurrence supplied by schedule.yaml when iCal
+# export ships in the follow-up sprint).
+office_hours:
+  - day: Tuesday
+    start_time: "14:00"
+    end_time: "15:30"
+    location: "P-149"
+    modality: "in-person"
+    by_appointment: false
+
+# v0.2 — contact + async channel.
+contact:
+  email: "alrosen@sdsu.edu"
+  response_window_hours: 24
+  async_channel:
+    kind: "canvas-msg"
+    ref: "course-channel"
+
+# v0.2 — accessibility / DRC.
+accessibility:
+  drc_link: "https://sds.sdsu.edu"
+  contact_email: "sds@sdsu.edu"
+  request_deadline_weeks: 2
+  prose_ref: "prose/accommodations"
+
+# v0.2 — info_pages drives route injection by @sophie/astro at config-
+# setup. Each key becomes its own `/<slug>/` static route.
+info_pages:
+  syllabus:
+    layout: "SyllabusPage"
+    compose:
+      - objectives
+      - grading
+      - office_hours
+      - accessibility
+      - "prose/policies"
+  schedule:
+    layout: "SchedulePage"
+  instructor:
+    layout: "InstructorPage"
+    prose: "prose/instructor-bio"
+  policies:
+    layout: "PoliciesPage"
+    prose: "prose/policies"
+  accommodations:
+    layout: "AccommodationsPage"
+    prose: "prose/accommodations"
+
+# v0.2 — landing layout (pluggable; "custom" reserved for the
+# integration-override path per H2).
+landing:
+  layout: "hero-with-modules"
+  hero:
+    tagline: "A quantitative introduction to astrophysics — extracting physical insight from limited observations."
 
 discovery:
   sections: "src/content/sections/*.json"

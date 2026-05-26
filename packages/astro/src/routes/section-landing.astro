@@ -1,0 +1,44 @@
+---
+import { SectionLanding } from "@sophie/components";
+import { getCollection } from "astro:content";
+import { courseSpec } from "virtual:sophie/course-spec";
+
+/**
+ * Section landing route. Pattern: `/sections/[section]/`. Injected by
+ * defineSophieIntegration when course.sophie.yaml is present.
+ *
+ * Standard getStaticPaths shape — one route per section in the
+ * content collection. Filters units by `section_id === section.slug`
+ * and passes them to the layout, which handles draft-status
+ * filtering + order sorting + the visual shell.
+ */
+export async function getStaticPaths() {
+  const sections = (await getCollection("sections")).map((s) => s.data);
+  const units = (await getCollection("units")).map((u) => u.data);
+  return sections.map((section) => ({
+    params: { section: section.slug },
+    props: { section, units },
+  }));
+}
+
+// Defensive null guard — runtime-unreachable today (integration
+// only injects /sections/[section]/ when courseSpec is non-null),
+// but documents the invariant at the route boundary. Per Phase 1-4
+// review C1.
+if (!courseSpec) {
+  throw new Error(
+    "[sophie] section-landing.astro: virtual:sophie/course-spec exported null. " +
+      "This route should only be injected when course.sophie.yaml is present. " +
+      "Check the integration's injectRoute guard."
+  );
+}
+
+const { section, units } = Astro.props;
+---
+
+<SectionLanding
+  client:load
+  spec={courseSpec}
+  section={section}
+  units={units}
+/>

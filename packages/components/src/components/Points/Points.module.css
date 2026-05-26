@@ -1,0 +1,30 @@
+.points {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--sophie-space-1);
+  padding: 2px 8px;
+  border-radius: var(--sophie-radius-sm);
+  background: var(--sophie-surface-2);
+  border: 1px solid var(--sophie-border);
+  font-size: var(--sophie-font-size-small, 0.875rem);
+  font-variant-numeric: tabular-nums;
+}
+
+.value {
+  font-weight: 600;
+  color: var(--sophie-text-strong);
+}
+
+.divider {
+  color: var(--sophie-text-muted);
+  margin-inline: 2px;
+}
+
+.category {
+  color: var(--sophie-text);
+}
+
+.weight {
+  color: var(--sophie-text-muted);
+  margin-inline-start: var(--sophie-space-1);
+}

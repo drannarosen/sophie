@@ -5,6 +5,7 @@ import "../styles/textbook-layout.css";
 // the only consumer; consumer apps never call these directly.
 import {
   __setArtifacts,
+  __setCourseSpec,
   __setEquationCitations,
   __setEquations,
   __setFigureRegistry,
@@ -36,6 +37,11 @@ import SidebarToggle from "./SidebarToggle.astro";
 import ThemeToggle from "./ThemeToggle.astro";
 import TopBar from "./TopBar.astro";
 import ViewModeToggle from "./ViewModeToggle.astro";
+// Course-info projection (2026-05-26) — consumer's parsed
+// course.sophie.yaml exposed as a virtual module. `null` when the
+// consumer hasn't authored a spec yet; SSR-side __setCourseSpec
+// guards on null below.
+import { courseSpec } from "virtual:sophie/course-spec";
 
 interface Props {
   /**
@@ -265,6 +271,15 @@ __setObjectives(pedagogy.objectives);
 __setSections(pedagogy.sections);
 __setUnits(pedagogy.units);
 __setArtifacts(pedagogy.artifacts);
+// Course-info projection (2026-05-26) — hydrate the React-side
+// courseSpecStore so chrome components in chapter MDX (<Points>,
+// <OfficeHours>, etc.) can read structured spec data via the
+// useCourseSpec() hook. Null spec (consumer hasn't authored
+// course.sophie.yaml yet) → skip; the hook throws with a curated
+// message if a chrome component is used regardless.
+if (courseSpec) {
+  __setCourseSpec(courseSpec);
+}
 // Serialize the same payloads into <script> tags so each role's
 // client-side store can hydrate after React mount. Server-side module
 // state doesn't survive to the wire, so without these script tags
@@ -317,6 +332,13 @@ const pedagogyArtifactsJson = JSON.stringify(pedagogy.artifacts).replace(
   /</g,
   "\\u003c"
 );
+// Course-info projection (2026-05-26) — courseSpec payload for
+// client-side hydration of the courseSpecStore (used by
+// useCourseSpec() in chrome components: <Points>, <OfficeHours>,
+// etc.). Null spec → empty string → script tag emits `null`.
+const courseSpecJson = courseSpec
+  ? JSON.stringify(courseSpec).replace(/</g, "\\u003c")
+  : "null";
 
 // Detect empty named slots so the corresponding grid columns can
 // collapse to 0 width — avoids wasted chrome in PR 1 where the sidebar
@@ -451,6 +473,18 @@ const collapsedVars = [
   id='sophie-pedagogy-artifacts'
   type='application/json'
   set:html={pedagogyArtifactsJson}
+/>
+{/* Course-info projection (2026-05-26) — courseSpec payload for
+    client-side hydration of the courseSpecStore. Used by chrome
+    components in chapter MDX (<Points>, <OfficeHours>, etc.) via
+    the useCourseSpec() hook. Always emitted; value is `null` when
+    the consumer hasn't authored course.sophie.yaml yet (hook throws
+    if a chrome component reads then). */}
+<script
+  is:inline
+  id='sophie-course-spec'
+  type='application/json'
+  set:html={courseSpecJson}
 />
 
 <div

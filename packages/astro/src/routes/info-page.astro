@@ -1,0 +1,126 @@
+---
+import type { CollectionEntry } from "astro:content";
+import { getCollection } from "astro:content";
+import AccommodationsPage from "../components/AccommodationsPage.astro";
+import InstructorPage from "../components/InstructorPage.astro";
+import PoliciesPage from "../components/PoliciesPage.astro";
+import SchedulePage from "../components/SchedulePage.astro";
+import SyllabusPage from "../components/SyllabusPage.astro";
+import {
+  evaluateCompose,
+  type ProseFragmentRef,
+} from "../lib/compose-evaluator.ts";
+import { courseSpec } from "virtual:sophie/course-spec";
+
+/**
+ * Info-page dispatcher. Each `info_pages[<slug>]` declared in
+ * course.sophie.yaml is injected by defineSophieIntegration as its
+ * own static route at `/<slug>/`. This file is reused across all of
+ * them — there's no `[param]` segment in the URL pattern (per fix
+ * B3), so the slug is read from `Astro.url.pathname` at render time
+ * and looked up in courseSpec.info_pages.
+ *
+ * The dispatcher:
+ *   1. Reads slug from URL → looks up info_pages[slug] declaration
+ *   2. Pre-loads the course-info content collection (prose fragments)
+ *   3. For SyllabusPage's compose: list, runs the compose evaluator
+ *   4. Dispatches to the matching .astro layout component
+ *
+ * Per Anna's H7 = Option B: layouts are .astro orchestrators in
+ * @sophie/astro/components/ (matches ChapterLayout precedent);
+ * structural data renders via React sub-components from
+ * @sophie/components, prose via Astro <Content components={...}>.
+ */
+
+// Defensive null guard — runtime-unreachable today (integration
+// only injects /<slug>/ when courseSpec is non-null), but documents
+// the invariant at the route boundary + narrows the type from
+// `CourseSpec | null`. Per Phase 1-4 review C1.
+if (!courseSpec) {
+  throw new Error(
+    "[sophie] info-page.astro: virtual:sophie/course-spec exported null. " +
+      "This route should only be injected when course.sophie.yaml is present. " +
+      "Check the integration's injectRoute guard."
+  );
+}
+
+const slug = Astro.url.pathname.replace(/^\/|\/$/g, "");
+const decl = courseSpec.info_pages?.[slug];
+if (!decl) {
+  throw new Error(
+    `[sophie] info-page.astro: no info_pages[${slug}] declared in course.sophie.yaml. ` +
+      `The integration injected /${slug}/ but the spec doesn't carry a declaration for it. ` +
+      `Build-time invariant violation — check course.sophie.yaml's info_pages block.`
+  );
+}
+
+// Load prose fragments. Consumer apps must declare a `course-info`
+// content collection (CourseInfoFragmentSchema from @sophie/core/schema)
+// in their content.config.ts. Empty/missing collection is tolerated;
+// individual prose refs throw via the compose evaluator + layout
+// look-ups if specifically referenced.
+let fragments: CollectionEntry<"course-info">[] = [];
+try {
+  fragments = await getCollection("course-info");
+} catch {
+  // Collection not declared by consumer — layouts that need prose
+  // fragments will surface curated errors via the lookup. Single-
+  // prose layouts (Policies/Accommodations/Instructor) gracefully
+  // degrade to a "fragment not authored yet" notice.
+  fragments = [];
+}
+
+const proseEntries: Record<string, CollectionEntry<"course-info">> = {};
+const proseLookup: Record<string, ProseFragmentRef> = {};
+for (const entry of fragments) {
+  proseEntries[entry.id] = entry;
+  proseLookup[`prose/${entry.id}`] = {
+    slug: entry.id,
+    frontmatter: entry.data,
+  };
+}
+
+// Dispatch based on declared layout name.
+const layoutName = decl.layout;
+---
+
+{layoutName === "SyllabusPage" && (() => {
+  const composedItems = evaluateCompose({
+    compose: decl.compose,
+    spec: courseSpec,
+    proseLookup,
+  });
+  return (
+    <SyllabusPage
+      spec={courseSpec}
+      composedItems={composedItems}
+      proseEntries={proseEntries}
+    />
+  );
+})()}
+
+{layoutName === "SchedulePage" && <SchedulePage spec={courseSpec} />}
+
+{layoutName === "InstructorPage" && (() => {
+  const proseRef = decl.prose;
+  const proseEntry = proseRef
+    ? proseEntries[proseRef.replace(/^prose\//, "")]
+    : undefined;
+  return <InstructorPage spec={courseSpec} proseEntry={proseEntry} />;
+})()}
+
+{layoutName === "PoliciesPage" && (() => {
+  const proseRef = decl.prose;
+  const proseEntry = proseRef
+    ? proseEntries[proseRef.replace(/^prose\//, "")]
+    : undefined;
+  return <PoliciesPage spec={courseSpec} proseEntry={proseEntry} />;
+})()}
+
+{layoutName === "AccommodationsPage" && (() => {
+  const proseRef = decl.prose;
+  const proseEntry = proseRef
+    ? proseEntries[proseRef.replace(/^prose\//, "")]
+    : undefined;
+  return <AccommodationsPage spec={courseSpec} proseEntry={proseEntry} />;
+})()}

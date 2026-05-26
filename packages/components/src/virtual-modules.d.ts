@@ -22,3 +22,15 @@ declare module "virtual:sophie/pedagogy-index" {
   export const figureUsages: ReadonlyArray<FigureUsageEntry>;
   export const misconceptions: ReadonlyArray<MisconceptionEntry>;
 }
+
+declare module "virtual:sophie/course-spec" {
+  import type { CourseSpec } from "@sophie/core/schema";
+
+  /**
+   * Consumer's parsed `course.sophie.yaml`, or `null` when the
+   * consumer hasn't authored a spec yet. Importers must handle the
+   * null case explicitly (skip __setCourseSpec, skip the script
+   * tag). Per the course-info projection design (2026-05-26).
+   */
+  export const courseSpec: CourseSpec | null;
+}
