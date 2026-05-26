@@ -210,22 +210,47 @@ pilot 2 would make pilot 2 bounded and conversion-dominated — paid off.
 
 ## Platform issues to file
 
-Filed against `drannarosen/sophie` this session:
+Filed against `drannarosen/sophie` this session, all closed in the
+WS-A/B/C/E triage cycle (2026-05-26):
 
 1. **[#187](https://github.com/drannarosen/sophie/issues/187) — `ChapterLayout`
-   `<pre>` mobile overflow** — add `overflow-x:auto`/`max-width` to `<pre>`
-   (Surprise 3).
+   `<pre>` mobile overflow** — Surprise 3. **Closed by [PR #195](https://github.com/drannarosen/sophie/pull/195).**
+   *Corrected root cause:* the `<pre>` block was a red herring (correctly
+   clamped by the existing `.sophie-content pre { overflow-x:auto }` rule).
+   The real culprit was the **TocDrawer aside** when closed — its
+   `position:fixed` + `transform: translateX(100%)` post-transform bounding
+   box contributed to `body.scrollWidth` even though fixed. Fix:
+   `html { overflow-x: clip }` at the document layer (defends the whole
+   class of off-canvas drawer/popover leaks, not just this drawer). See the
+   [#187 root-cause comment](https://github.com/drannarosen/sophie/issues/187#issuecomment-4540202278)
+   for the investigation writeup.
 2. **[#188](https://github.com/drannarosen/sophie/issues/188) —
    `<WorkedExample>` pedagogy-index extractor + slot-coverage invariant** —
-   ADR 0081 deferred items (Surprise 5).
+   ADR 0081 deferred items (Surprise 5). **Closed by [PR #197](https://github.com/drannarosen/sophie/pull/197).**
+   `extractWorkedExamples` + WE-1 (units-at-every-step / QB6 coverage) +
+   WE-2 (Problem + Result completeness) + WE-3 (unknown-child R7
+   disposition) ship.
 3. **[#189](https://github.com/drannarosen/sophie/issues/189) — `practice`
    artifact type + route** (or documented ADR 0073 dependency) (Surprise 4).
+   **Closed by [PR #196](https://github.com/drannarosen/sophie/pull/196).**
+   `practice` is in fact a valid `ArtifactType` per ADR 0067; the gap was
+   the missing `/units/<unit>/practice` route. Resolved as option (b)
+   warn-and-defer: integration emits a build-time WARNING per discovered
+   `practice.mdx`, route shape deferred to ADR 0073 implementation.
 4. **[#190](https://github.com/drannarosen/sophie/issues/190) — multi-line
-   inline-math authoring hazard** — document + optional lint (Surprise 1). The
-   `<Units>` symbol/unit contract (Surprise 2) is noted there as related.
+   inline-math authoring hazard** — document + optional lint (Surprise 1).
+   **Closed by [PR #196](https://github.com/drannarosen/sophie/pull/196).**
+   New `mdxAuthorTrapsVitePlugin` (Vite `transform` hook, `enforce: "pre"`)
+   scans raw `.mdx` text before MDX/acorn and throws curated errors. Rule
+   narrowed from "any multi-line `$...$`" to "multi-line with TeX-spacing-
+   macro `{...\<non-letter>...}` braces" after the first-pass scanner
+   false-positived on the smoke fixture's `doppler-shift.mdx` equation
+   registry (which has only `\<letter>{...}` braces). The `<Units>`
+   symbol/unit contract (Surprise 2) was not separately fixed; remains
+   documented in the chapter-author reference's authoring guidance.
 5. **Carry-over from m2-l3 (still unfiled):** `<Video>`, Track-A/B
-   `<DifficultyPath>`, and the course-management chrome pack — none blocked this
-   chapter, but they remain open.
+   `<DifficultyPath>`, and the course-management chrome pack — none blocked
+   this chapter and none surfaced in this triage cycle; still open.
 
 ## Success criteria
 
@@ -242,6 +267,6 @@ Filed against `drannarosen/sophie` this session:
 - ✅ axe-core **0 violations / 31 passes in light *and* dark mode** (WCAG 2.1 AA);
   content-integrity (380 KaTeX nodes, all figures loaded, no leaked MDX, no
   literal `$$`, no paragraph-split); **no hydration/React #418 errors**.
-- ⚠️ Mobile `<pre>` overflow — platform CSS finding (not a chapter defect).
-- ⚠️ `practice.mdx` authored; no render route yet — platform finding.
-- ⬚ Not committed/PR'd — awaiting Anna's HITL sign-off.
+- ✅ Mobile horizontal-overflow finding closed by [Sophie PR #195](https://github.com/drannarosen/sophie/pull/195) (root cause was the TocDrawer's post-transform bounding box, not `<pre>` — see the corrected root-cause section above).
+- ✅ `practice.mdx` discovered-but-unrouted finding closed by [Sophie PR #196](https://github.com/drannarosen/sophie/pull/196) (warn-and-defer per option b).
+- ✅ Pilot chapter committed + pushed to astr201 main (commit [`5775aeb`](https://github.com/drannarosen/astr201/commit/5775aeb)); HITL sign-off received 2026-05-26.

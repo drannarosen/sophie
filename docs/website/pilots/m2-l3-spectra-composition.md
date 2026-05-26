@@ -163,14 +163,14 @@ These recommendations were the draft notes that became [ADR 0064](../decisions/0
 
 ## Platform issues to file
 
-These were noted in the original plan's Phase 3.3 list as "confirm scope with Anna before filing." None filed this session. Each warrants one issue against `drannarosen/sophie`. Per [ADR 0064](../decisions/0064-chapter-migration-playbook.md) §3 these **should** be filed before the next pilot starts.
+These were noted in the original plan's Phase 3.3 list as "confirm scope with Anna before filing." Per [ADR 0064](../decisions/0064-chapter-migration-playbook.md) §3 these **should** be filed before the next pilot starts. Status updated 2026-05-26 after the WS-A/B/C/E triage cycle landed Sophie PRs #195/#196/#197.
 
-1. **Doc-correction:** ADR 0063 + accepted-features §A8 name "Module 3" as the OMIFlow motivating chapter. Actual content is Module 2 Lecture 3. Update the ADR examples block.
-2. **Gap: `<Video>` component.** Quarto's `{{< video URL >}}` shortcode. Even a thin `<iframe>`-with-aspect-ratio wrapper would unblock most future chapters.
-3. **Gap: `<WorkedExample>` component.** Five worked examples in this chapter alone, approximated with `<Callout variant="deep-dive" title="Worked Example N — …">`. A dedicated component would carry epistemic role (a worked example is an observable → model → inference at miniature scale) and could be audited like OMIFlow.
-4. **Gap: Track A / Track B branching.** The frontmatter `track` field (Sprint I-A) tags a chapter at the *whole-chapter* level. Per-section forking needs `<DifficultyPath>` or `<Track>` primitives — both unbuilt.
-5. **Sophie audit warning CT-3 candidate:** the misconception graph currently flags unreferenced declarations; an analogous warning for *over-referenced* shortcodes or *unused* registered figures would help the migration workflow.
-6. **Future, not blocking:** course-management chrome pack (`<Due>`, `<Points>`, `<Reading>`, `<Canvas>`, `<OfficeHours>`, `<Week>`) — defer until a second migration target is an index or homework page.
+1. **Doc-correction:** ADR 0063 + accepted-features §A8 name "Module 3" as the OMIFlow motivating chapter. Actual content is Module 2 Lecture 3. Update the ADR examples block. (Still unfiled.)
+2. **Gap: `<Video>` component.** Quarto's `{{< video URL >}}` shortcode. Even a thin `<iframe>`-with-aspect-ratio wrapper would unblock most future chapters. (Still unfiled; no consumer-course migration has needed it yet.)
+3. **Gap: `<WorkedExample>` component.** Five worked examples in this chapter alone, approximated with `<Callout variant="deep-dive" title="Worked Example N — …">`. **Component shipped via ADR 0081** ahead of m3-l2 (which then exercised it for the first time); m3-l2 filed [#188](https://github.com/drannarosen/sophie/issues/188) for the pedagogy-index extractor + slot-coverage invariant, **closed by [Sophie PR #197](https://github.com/drannarosen/sophie/pull/197)** in the WS-A/B/C/E triage cycle.
+4. **Gap: Track A / Track B branching.** The frontmatter `track` field (Sprint I-A) tags a chapter at the *whole-chapter* level. Per-section forking needs `<DifficultyPath>` or `<Track>` primitives — both unbuilt. (Still unfiled.)
+5. **Sophie audit warning CT-3 candidate:** the misconception graph currently flags unreferenced declarations; an analogous warning for *over-referenced* shortcodes or *unused* registered figures would help the migration workflow. (Still unfiled.)
+6. **Future, not blocking:** course-management chrome pack (`<Due>`, `<Points>`, `<Reading>`, `<Canvas>`, `<OfficeHours>`, `<Week>`) — defer until a second migration target is an index or homework page. (Still unfiled.)
 
 ## Success criteria
 

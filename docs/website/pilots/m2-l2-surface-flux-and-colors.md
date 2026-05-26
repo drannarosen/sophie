@@ -163,17 +163,42 @@ Conversion-dominated again — the platform was ready, including MultiRep.
 
 ## Platform issues to file
 
-Filed against `drannarosen/sophie` this session:
+Filed against `drannarosen/sophie` this session, all closed in the
+WS-A/B/C/E triage cycle (2026-05-26):
 
 1. **[#191](https://github.com/drannarosen/sophie/issues/191) — F4 should count
-   `<RepFigure>` / `<RepEquation>` usages** (Surprise 1) — new.
+   `<RepFigure>` / `<RepEquation>` usages** (Surprise 1). **Closed by
+   [PR #197](https://github.com/drannarosen/sophie/pull/197).** Resolved by
+   extending `InlineRefKindSchema` with `"rep-figure"` + `"rep-equation"`
+   (the existing "anything that references a thing by name" surface);
+   `extractMultiReps` now emits an `InlineRefUsageEntry` per Rep* child,
+   and F4 (orphan figure) + R2 (orphan equation) each picked up a one-line
+   OR-clause. MultiRep-only references no longer false-positive as
+   orphans, without F4/R2 needing to know MultiRep's internal shape (SoTA
+   "invert source of truth" per AGENTS.md).
 2. **[#192](https://github.com/drannarosen/sophie/issues/192) — `.katex-display`
-   `scrollable-region-focusable` at mobile width** (Surprise 2) — confirms the
-   closure-review known deferral; pairs with the [#187] mobile-layout fix.
+   `scrollable-region-focusable` at mobile width** (Surprise 2). **Closed by
+   [PR #195](https://github.com/drannarosen/sophie/pull/195).** New build-time
+   `rehypeKatexDisplayA11y` plugin stamps `tabindex="0"` + `role="group"` +
+   `aria-label="Equation, scrollable"` on every `.katex-display` emitted by
+   `rehype-katex`. Build-time over runtime JS to avoid the React #418
+   hydration class the useHydrated-gate family was built to defend against.
 3. **[#193](https://github.com/drannarosen/sophie/issues/193) — raw `<digit` MDX
-   authoring hazard** (Surprise 3) — extends [#190].
+   authoring hazard** (Surprise 3). **Closed by [PR #196](https://github.com/drannarosen/sophie/pull/196).**
+   Folded into the `mdxAuthorTrapsVitePlugin` lint pair (alongside
+   the multi-line inline-math trap from m3-l2 #190). Pre-parse Vite
+   `transform` hook with `enforce: "pre"` scans raw `.mdx` text for both
+   traps and throws curated `file:line:col` errors before MDX/acorn can
+   fail with opaque "Unexpected character" / "Expecting Unicode escape"
+   messages.
 4. **[#194](https://github.com/drannarosen/sophie/issues/194) — soften the
    `<MultiRep>` 🚧 status in the chapter-components reference** (Surprise 4).
+   **Closed by [PR #197](https://github.com/drannarosen/sophie/pull/197).**
+   Dropped 🚧 in four places (the `<MultiRep>` row, the
+   `<RepVerbal>/<RepEquation>/<RepFigure>` row, the `<ChapterMultiReps>`
+   row, and the "When to use each component" entry); kept 🚧 only on
+   genuinely-deferred pieces (`<RepCode>` pending `<CodeCell>` per ADR
+   0018; MR3 + MR5 ship with `<RepCode>`).
 
 ## Success criteria
 
@@ -186,7 +211,6 @@ Filed against `drannarosen/sophie` this session:
 - ✅ `pnpm build` **0 errors, 0 warnings** (12 benign infos); `astro check` 0/0/0; Biome clean.
 - ✅ axe-core **0 violations / 31 passes desktop-light**; render integrity (218 KaTeX,
   12 figures loaded, 2 MultiRep binding cards as landmarks, no leaked MDX, no hydration errors).
-- ⚠️ Mobile: no *visible* overflow; 1 dark/mobile axe finding (`scrollable-region-focusable`
-  on `.katex-display`) — platform a11y gap, known deferral, not a chapter defect.
-- ⚠️ `practice.mdx` authored; no render route yet (issue #189).
-- ⬚ Not committed/PR'd — awaiting Anna's HITL sign-off.
+- ✅ Mobile dark/`.katex-display` `scrollable-region-focusable` axe finding closed by [Sophie PR #195](https://github.com/drannarosen/sophie/pull/195).
+- ✅ `practice.mdx` discovered-but-unrouted finding closed by [Sophie PR #196](https://github.com/drannarosen/sophie/pull/196) (warn-and-defer).
+- ✅ Pilot chapter committed + pushed to astr201 main (commit [`890433c`](https://github.com/drannarosen/astr201/commit/890433c)); HITL sign-off received 2026-05-26.
