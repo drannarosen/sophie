@@ -167,7 +167,8 @@ The 11 below are the routine-reasoning subset; full catalog
 | Audience + AI authoring          | 0030 | AI as primary author; four AI roles (author/pedagogy/domain/brainstorm); instructor as supervisor (HITL)                  |
 | Pedagogy-index pattern           | 0038 | Pedagogy index serialized from MDX AST; consumed by audit, diff, AI authoring                                             |
 | **Epistemic Component Contract** | 0058 | **Eight-role taxonomy** (optional, additive); amends 0003/0004/0044/0046; underwrites Reasoning-OS thesis                  |
-| **AI-optimized codebase design** | 0061 | **AI is primary author of platform code, not just content**: 6 rules (focused files, Write-over-Edit, LOC budget 300/500/800, filename routing, atomic docs, tests split with source); amends 0023/0030 |
+| **AI-optimized codebase design** | 0061 | **AI is primary author of platform code, not just content**: 6 rules (focused files, Write-over-Edit, LOC budget 300/500/800, filename routing, atomic docs, tests split with source); amends 0023/0030. **Validated at scale by the 8-file course-spec v0.2-shape split in PR #199** (sibling files 20–91 LOC each; main schema 371→404 LOC within budget). |
+| **Course-spec format** | 0080 | **v0.1 + Amendment 1 (discovery reshape to ADR 0067)** + **Amendment 2 (PR #199, 2026-05-26)**: clean-break removal of `assessment.grade_weights` → required top-level `grading.categories` (sum to 1.0); 7 new optional clusters (objectives, prereqs, office_hours, contact, accessibility, info_pages, landing); strict-union `info_pages.compose:`; reserved-slug refine; `landing.layout: "custom"` enum; 3 cross-refines; projection-pattern + chrome-vs-pedagogy boundary operationalized. `spec_version` stays at `"0.1"` (pre-launch zero-consumer state). |
 | **Chapter migration playbook**   | 0064 | Six locked rules + seven-step protocol; fixed-template pilot report under `docs/website/pilots/`; halt on missing-component gaps (no inline workarounds); next pilot must differ in structural density |
 
 ## Engineering principles
@@ -383,6 +384,54 @@ to every PR, every design decision, every refactor.
     that the coarser grep missed; the R11 wave additionally caught a
     third (`InlineMath.test.tsx` rendering real KaTeX DOM with zero
     axe calls).
+
+  - **R12 — Virtual-module type-narrowing at dispatcher entry (for
+    nullable exports).** Every dispatcher route (`.astro` file in
+    `packages/astro/src/routes/`) that imports a virtual-module
+    export typed `T | null` must open its frontmatter with
+    `if (!<importName>) throw new Error(...)` to narrow the type.
+    The throw is structurally unreachable when the integration
+    null-guards route injection upstream (the architectural
+    invariant), but documents the invariant in code AND defends
+    against future mutations — if the injection guard is accidentally
+    removed, the throw surfaces the regression at first render rather
+    than as a confusing nullish-property crash deep in composition.
+
+    **Scope clarification.** R12 applies *only* to nullable
+    virtual-module exports. Currently nullable:
+    `virtual:sophie/course-spec` (`CourseSpec | null`). Non-nullable
+    (R12 does not apply): `virtual:sophie/figures` (always an object,
+    possibly empty); `virtual:sophie/pedagogy-index`. Check shapes
+    at [`packages/astro/src/virtual-modules.d.ts`](packages/astro/src/virtual-modules.d.ts).
+    The deferred ScheduleSchema virtual module is the predicted
+    third instance with a `T | null` shape per the always-register
+    pattern memorialized in
+    `feedback_always_register_virtual_module.md`.
+
+    **Primary enforcement: TS type-checker.** Astro check + `pnpm
+    typecheck` already catch unguarded property access on a
+    `T | null` export — the throw is what *narrows* the type for the
+    rest of the file. The grep gate below is a defense-in-depth
+    check at the file level.
+
+    **Pre-merge grep gate (multi-line tolerant):**
+
+    ```bash
+    for f in $(grep -lE 'from "virtual:sophie/course-spec"' packages/astro/src/routes/*.astro 2>/dev/null); do
+      grep -q "if (!" "$f" && grep -q "throw" "$f" || echo "MISSING-R12: $f"
+    done
+    ```
+
+    Returns empty when clean. Extend the pattern when a new nullable
+    virtual module ships (substitute `course-spec` for the new
+    module name and run both checks).
+
+    Originating finding: course-info-projection sprint code review C1
+    (`docs/reviews/2026-05-26-course-info-projection-phases-1-4.md`).
+    Three dispatchers fixed pre-merge:
+    `course-landing.astro`, `section-landing.astro`,
+    `info-page.astro`. See
+    [ADR 0080 Amendment 2](docs/website/decisions/0080-course-spec-format-v0-1.md#amendment-2-assessment-grade-weights-clean-break-course-info-projection-2026-05-26).
 
   See `feedback_review_rules_r6_r10.md` (under
   `~/.claude/projects/-Users-anna-Teaching-sophie/memory/`) for origin
