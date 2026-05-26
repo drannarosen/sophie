@@ -81,6 +81,23 @@ jobs:
         # CI rejects PRs that reintroduce the retired name outside an
         # intentional narrative context. Fails CI on any drift.
         run: pnpm lint:docs-drift
+      - name: axe-on-render coverage (R11, 2026-05-25)
+        # AGENTS.md R11 + ADR 0004's "axe-core tests are mandatory on
+        # every component PR" mandate. Every *.test.tsx under
+        # packages/components/src/ that calls render() must also call
+        # axe(), AxeBuilder, or toHaveNoViolations. Render-without-axe
+        # is the class-of-issue this gate defends: P3 closure audit
+        # (PR #185) found 2 quiet gaps in a coverage state advertised
+        # as 100% (RetrievalCard, EquationRef biography-summary); the
+        # R11 wave found a third (InlineMath rendered KaTeX DOM with
+        # zero axe calls — caught only by the finer-grained per-file
+        # render/axe pairing this script enforces). Without R11 the
+        # ADR 0004 mandate is aspirational rather than verified; with
+        # R11 it's a CI invariant. Audit-traceable exclusions
+        # (runtime/, _helpers/, __mocks__/, _template/, use*.test.tsx,
+        # ParameterCursor) live in the script header. Fails CI on any
+        # render() without paired axe().
+        run: pnpm lint:axe-render
 
   typecheck:
     name: typecheck
