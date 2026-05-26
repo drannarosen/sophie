@@ -282,3 +282,95 @@ new files don't collide with chapter content).
 - `docs/website/status/validation.md` regenerated per the AGENTS.md rule.
 - ASTR 201's `course.sophie.yaml` filled out with real grading scheme, objectives, prereqs, office hours, accessibility info, and 4-5 prose fragments authored.
 - Manual: Anna confirms the syllabus page reads cleanly + matches what she'd hand a student on day 1.
+
+---
+
+## Post-implementation amendments (appended 2026-05-26 post-merge)
+
+Reconciliation between this design doc and what shipped in PR #199.
+**Authoritative source for what shipped**:
+[ADR 0080 Amendment 2](../website/decisions/0080-course-spec-format-v0-1.md#amendment-2-assessment-grade-weights-clean-break-course-info-projection-2026-05-26).
+This appendix is a reading-convenience pointer for sprint-context
+readers; nine known deviations from the design as drafted:
+
+### 1. Layouts ship as `.astro`, not React (H7 = Option B)
+
+Design § "Layer 3" said "`@sophie/components` exports
+`<SyllabusPage>`, `<SchedulePage>`, etc." **Shipped reality**:
+layouts are `.astro` orchestrators in
+`packages/astro/src/components/`. React **sub-components**
+(`ObjectivesSection`, `GradingTable`, `OfficeHoursTable`,
+`ContactCard`, `AccessibilitySection`, `PrereqsList`) ship in
+`@sophie/components`. Per H7 Option B — matches the `ChapterLayout`
+precedent and lets prose fragments use the full chrome component set
+via `<Content components={chromeComponents}>`.
+
+### 2. `CourseInfoFragmentSchema` lives in `@sophie/core/schema`
+
+Design § "Layer 2" said the schema is "shipped from `@sophie/astro`."
+**Shipped reality**: `@sophie/core/schema`. Consistency rule: all
+Zod schemas co-locate in core; `@sophie/astro` takes no direct Zod
+dep. See ADR 0003 R-0080-A2.
+
+### 3. Six React sub-components, not five
+
+Phase 3 enumerated five. Phase 4 code-review issue C2 surfaced a
+silent-`prereqs`-skip foot-gun; `PrereqsList` shipped pre-merge to
+close it. Design's "five sub-components" framing is out of date.
+
+### 4. `landing.layout: "custom"` is also a schema enum value (H2)
+
+Design § "Pluggable landings" described `custom` as
+"integration-arg override." **Shipped reality**: also a schema enum
+value, declaring the override is in effect. The four-value enum
+guards against typos in the override declaration at parse time.
+
+### 5. `info_pages.compose:` is a strict union (H4/B5)
+
+Design § "Schema design" described `compose:` permissively. **Shipped
+reality**: `z.union([known_data_keys_enum, prose-fragment-regex])`.
+Typos like `"objetctives"` fail at schema-parse time, not at the
+compose-evaluator render time.
+
+### 6. Two cross-refines on `CourseSpecSchema`, not one
+
+Design described one cross-refine
+(`assessment.category_refs → grading.categories[*].id`). **Shipped
+reality**: a second cross-refine (`objectives[*].assessed_by[] →
+grading.categories[*].id`) was added per review I3 pre-merge.
+
+### 7. `useCourseSpec()` uses SSR-setter pattern, not direct virtual-module import
+
+Design § "Chrome components" said the hook reads spec data "via a
+new `useCourseSpec()` hook backed by `virtual:sophie/course-spec`."
+**Shipped reality**: SSR-setter + script-tag pattern per
+`pedagogy-store.ts:14-22` doctrine. The store sits in
+`@sophie/components`; the setter is called from `TextbookLayout.astro`
+(`@sophie/astro`). `@sophie/components` never imports `virtual:...`
+(bare-Node imports would hit `ERR_UNKNOWN_URL_SCHEME` outside Vite).
+
+### 8. `OfficeHoursChrome → OfficeHours` rename at the barrel
+
+The MDX chrome component's source file is named `OfficeHoursChrome`
+internally to disambiguate from `OfficeHoursTable` (React sub-component
+used inside `InstructorPage.astro`). The `@sophie/components` barrel
+aliases the export to `<OfficeHours>` — authors type the shorter form.
+
+### 9. Phase 5 (iCal + `schedule.yaml`) deferred per H6
+
+Design § "Sprint sequencing" listed iCal under Phase 5. **Shipped
+reality**: deferred. `SchedulePage.astro` ships as a v0.2 placeholder.
+ScheduleSchema gets its own focused design pass + ADR when the
+follow-up sprint starts. `"schedule_overview"` validates clean in
+`info_pages.compose` (it's in `KNOWN_COMPOSE_DATA_KEYS`) but the
+compose evaluator throws a curated "not yet" error at render time —
+forward-compatible without breaking the schema's closed union.
+
+### Also — `spec_version` stays at `"0.1"`
+
+Design + this plan both used "v0.2" framing throughout. **Shipped
+reality**: `COURSE_SPEC_VERSION = "0.1"` (no version bump). The
+"v0.2-shape" label describes the cluster set, not a version-literal
+bump. ADR 0080 § "Why `spec_version` stays at 0.1" documents the
+honest tension with Amendment 1's prior prediction. Open follow-up:
+revisit on second-consumer trigger.
