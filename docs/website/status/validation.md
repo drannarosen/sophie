@@ -25,20 +25,20 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 |---|---|
 | Validated | 33 |
 | In progress | 18 |
-| Unvalidated | 61 |
+| Unvalidated | 62 |
 | Re-validation needed | 0 |
-| Missing block | 1 |
+| Missing block | 0 |
 | Total | 113 |
 
 ## Lifecycle summary
 
 | Lifecycle | Count |
 |---|---|
-| Shipped | 63 |
+| Shipped | 64 |
 | Accepted design | 39 |
 | Mixed | 1 |
 | Future package split | 9 |
-| No status | 1 |
+| No status | 0 |
 | Total | 113 |
 
 ## Evidence kinds
@@ -158,7 +158,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/reference/cli.md](/cli/) | unvalidated | mixed | — | — |  |
 | [docs/website/reference/component-contract.md](/component-contract/) | in progress | shipped | 2026-05-22 | manual, review, test |  |
 | [docs/website/reference/content-schema.md](/content-schema/) | unvalidated | shipped | — | — |  |
-| [docs/website/reference/course-info-schema.md](/course-info-schema/) | _missing_ | — | — | — | no validation block |
+| [docs/website/reference/course-info-schema.md](/course-info-schema/) | unvalidated | shipped | — | — |  |
 | [docs/website/reference/course-schedule.md](/course-schedule/) | unvalidated | accepted design | — | — |  |
 | [docs/website/reference/equation-biography-schema.md](/equation-biography-schema/) | unvalidated | shipped | — | — |  |
 | [docs/website/reference/equation-registry-schema.md](/equation-registry-schema/) | unvalidated | shipped | — | — |  |

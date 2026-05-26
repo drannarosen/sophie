@@ -1,3 +1,21 @@
+---
+title: Course-info schema reference
+short_title: Course-info schema
+description: >-
+  course.sophie.yaml v0.2-shape clusters (objectives, prereqs, office_hours,
+  contact, accessibility, info_pages, landing) + prose fragments at
+  src/content/course-info/, and how the course-info projection renders them.
+tags:
+  - schema
+  - course-info
+  - reference
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
+status: shipped
+---
+
 # Course-info schema reference
 
 Reference for authoring Sophie course-info pages: `course.sophie.yaml`
