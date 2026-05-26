@@ -5,6 +5,8 @@ import mdx from "@astrojs/mdx";
 import react from "@astrojs/react";
 import type { FigureRegistryEntry } from "@sophie/core/schema";
 import type { AstroIntegration } from "astro";
+import { loadCourseSpec } from "./lib/course-spec-loader.ts";
+import { courseSpecVirtualModule } from "./lib/course-spec-virtual-module.ts";
 import { figuresVirtualModule } from "./lib/figures-virtual-module.ts";
 import { warnOnUnroutedPracticeMdx } from "./lib/integration/practice-mdx-warning.ts";
 import { mdxAuthorTrapsVitePlugin } from "./lib/mdx-plugins/mdx-author-traps.ts";
@@ -96,6 +98,17 @@ export function defineSophieIntegration(
     hooks: {
       "astro:config:setup": ({ config, injectRoute, updateConfig, logger }) => {
         const topicsDir = resolve(process.cwd(), "src/content/topics");
+
+        // Load + validate course.sophie.yaml at config-setup. Returns
+        // null when the consumer hasn't authored a spec yet (back-
+        // compat with consumers that haven't migrated to v0.2 chrome);
+        // throws curated error on malformed/invalid spec (author
+        // errors that must surface at config-setup, not silently
+        // degrade to "no chrome routes"). Course-info projection
+        // sprint (docs/plans/2026-05-26-course-info-projection-*.md).
+        const consumerRoot = fileURLToPath(config.root);
+        const courseSpec = loadCourseSpec(consumerRoot);
+
         updateConfig({
           integrations: [mdx(sophieMdxOptions), react()],
           vite: {
@@ -118,6 +131,15 @@ export function defineSophieIntegration(
               // config-parse time; figures changes require a dev-
               // server restart (no HMR by design).
               figuresVirtualModule(options.figures) as never,
+              // Course-info projection (2026-05-26) — consumer's
+              // parsed course.sophie.yaml exposed as
+              // `virtual:sophie/course-spec` for chrome components +
+              // info-page layouts. Null spec means the consumer
+              // hasn't migrated to v0.2 chrome yet → skip the plugin
+              // so existing routes keep working.
+              ...(courseSpec
+                ? [courseSpecVirtualModule(courseSpec) as never]
+                : []),
               // Pre-parse author-trap lint (issues #190, #193) — scans
               // raw `.mdx` text for multi-line inline `$...$` and raw
               // `<` before a non-letter, and throws curated errors with
@@ -153,7 +175,7 @@ export function defineSophieIntegration(
         // file-based routes win over injected routes silently; surfacing
         // this at config-setup time prevents confusion when the
         // platform route appears not to apply.
-        const consumerRoot = fileURLToPath(config.root);
+        // (consumerRoot computed above for the course-spec loader.)
         const consumerRoutePath = path.join(
           consumerRoot,
           "src/pages/units/[unit]/reading.astro"
