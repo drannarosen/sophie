@@ -6,6 +6,8 @@ import react from "@astrojs/react";
 import type { FigureRegistryEntry } from "@sophie/core/schema";
 import type { AstroIntegration } from "astro";
 import { figuresVirtualModule } from "./lib/figures-virtual-module.ts";
+import { warnOnUnroutedPracticeMdx } from "./lib/integration/practice-mdx-warning.ts";
+import { mdxAuthorTrapsVitePlugin } from "./lib/mdx-plugins/mdx-author-traps.ts";
 import { skillReviewResolverVitePlugin } from "./lib/mdx-plugins/skill-review-resolver-vite.ts";
 import { buildPagefindIndex } from "./lib/pagefind-postbuild.ts";
 import { pedagogyIndexVirtualModule } from "./lib/pedagogy-index-virtual-module.ts";
@@ -116,6 +118,14 @@ export function defineSophieIntegration(
               // config-parse time; figures changes require a dev-
               // server restart (no HMR by design).
               figuresVirtualModule(options.figures) as never,
+              // Pre-parse author-trap lint (issues #190, #193) — scans
+              // raw `.mdx` text for multi-line inline `$...$` and raw
+              // `<` before a non-letter, and throws curated errors with
+              // file:line:col before MDX/acorn can fail with opaque
+              // "Expecting Unicode escape sequence" / "Unexpected
+              // character before name" errors. `enforce: "pre"` so it
+              // beats `@astrojs/mdx`'s transform to the source.
+              mdxAuthorTrapsVitePlugin() as never,
             ],
             ssr: {
               noExternal: SOPHIE_NO_EXTERNAL,
@@ -156,6 +166,17 @@ export function defineSophieIntegration(
               `See ADR-0082 § A2.6.`
           );
         }
+
+        // Issue #189 — `practice.mdx` discovered-but-unrouted warning.
+        // `practice` is a valid ArtifactType (ADR 0067) but no
+        // /units/<unit>/practice route is injected yet; the route ships
+        // with ADR 0073 (unified assessment schema, unimplemented).
+        // Warn consumers so authors aren't surprised when their
+        // practice content silently never renders.
+        warnOnUnroutedPracticeMdx(
+          path.join(consumerRoot, "src/content"),
+          logger
+        );
 
         logger.info("Sophie integration loaded (MDX + React)");
       },

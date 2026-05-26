@@ -638,6 +638,85 @@ miss; R1–R4 for cross-reference integrity between registry
 declarations and chapter citations); fix authoring errors at build
 time, not at runtime.
 
+## Authoring traps (build-time-enforced)
+
+Two MDX parse traps surfaced from the ADR 0064 chapter-migration
+pilots produce opaque acorn errors far from the author's intent.
+`@sophie/astro` ships a pre-parse Vite plugin
+(`packages/astro/src/lib/mdx-plugins/mdx-author-traps.ts`) that
+scans raw `.mdx` text BEFORE MDX/acorn runs and throws curated
+`file:line:col` errors instead.
+
+### Trap 1 — multi-line inline `$...$` math with TeX spacing macros
+
+Inline math `$...$` should stay on a **single line** by convention.
+The lint specifically flags the case that breaks MDX: a span that
+wraps across a newline AND contains a `{...}` block whose body has
+a `\` followed by a NON-letter (TeX spacing macros `\,` `\;` `\!`
+`\\` etc.). When this happens, `remark-math` fails to recognize
+the span, MDX hands the `{...}` to acorn as a JSX expression, and
+acorn fails with *"Expecting Unicode escape sequence"* on the
+`\<non-letter>`.
+
+Multi-line spans containing only `\<letter>{...}` (e.g.,
+`\lambda_{\text{obs}}`, `\sqrt{(1+\beta)/(1-\beta)}`) are
+empirically tolerated by the current MDX/remark-math pipeline and
+NOT flagged — but single-line discipline is still the recommended
+authoring convention; rely on the lint as a safety net, not a
+permission slip.
+
+| Wrong (flagged) | Right |
+|---|---|
+| `$\mathrm{erg\,K^{-1}}` + newline + `{(\,)}$` (wraps; contains `\,` in braces) | `$\mathrm{erg\,K^{-1}}(\,)$` (single line) |
+| (or use display) | `$$\mathrm{erg\,K^{-1}}(\,)$$` |
+
+Originating finding: M3-L2 pilot Surprise #1 / [issue #190](https://github.com/drannarosen/sophie/issues/190).
+
+### Trap 2 — raw `<` before a non-letter
+
+A literal `<` followed by anything that is not a letter, `/`, `!`,
+`?`, or whitespace makes MDX read the span as the start of a JSX
+tag — and acorn fails with *"Unexpected character `N` before
+name"*. The classic offender is `<3,700 K` in a table cell.
+Escape as `&lt;` or wrap in math.
+
+| Wrong | Right |
+|---|---|
+| `\| M \| <3,700 K \| ... \|` | `\| M \| &lt;3,700 K \| ... \|` |
+| | `\| M \| $<3{,}700$ K \| ... \|` |
+
+Both `<` inside inline code spans (`` `<3` ``) and inside fenced
+code blocks (` ``` ... ``` `) are left alone — the lint scanner
+masks code regions before checking.
+
+Originating finding: M2-L2 pilot Surprise #3 / [issue #193](https://github.com/drannarosen/sophie/issues/193).
+
+## `practice.mdx` deferral (no route yet)
+
+`practice` is a valid [`ArtifactType`](https://github.com/drannarosen/sophie/blob/main/packages/core/src/schema/artifact.ts)
+per [ADR 0067](../decisions/0067-section-level-artifacts.md), so
+authoring `src/content/sections/<sec>/units/<unit>/practice.mdx`
+builds clean against the content collection. But `@sophie/astro`
+[(ADR 0082)](../decisions/0082-chapter-layout-extraction.md)
+**does not yet inject a `/units/<unit>/practice` route** — the
+route ships with [ADR 0073](../decisions/0073-unified-assessment-schema.md)
+(unified assessment schema, unimplemented). Practice content
+authored today silently never renders.
+
+To make this gap visible, the integration emits a build-time
+WARNING per `practice.mdx` it discovers, pointing at the
+tracking issue ([#189](https://github.com/drannarosen/sophie/issues/189)).
+Authors can: (a) ignore the warning and ship practice content
+ahead of ADR 0073, (b) move the file out of `src/content/sections/`
+to suppress the warning, or (c) wait for ADR 0073 to land before
+authoring.
+
+The decision to warn-and-defer (rather than ship a single-purpose
+`practice` artifact type + route now) was made in the WS-A/B/C/E
+triage cycle (2026-05-25): ADR 0073's broader assessment schema
+may want a different route shape, and committing the route now
+risks back-compat work later.
+
 ## When to use each component
 
 | Use case | Component |
