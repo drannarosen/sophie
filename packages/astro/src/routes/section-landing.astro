@@ -1,0 +1,32 @@
+---
+import { SectionLanding } from "@sophie/components";
+import { getCollection } from "astro:content";
+import { courseSpec } from "virtual:sophie/course-spec";
+
+/**
+ * Section landing route. Pattern: `/sections/[section]/`. Injected by
+ * defineSophieIntegration when course.sophie.yaml is present.
+ *
+ * Standard getStaticPaths shape — one route per section in the
+ * content collection. Filters units by `section_id === section.slug`
+ * and passes them to the layout, which handles draft-status
+ * filtering + order sorting + the visual shell.
+ */
+export async function getStaticPaths() {
+  const sections = (await getCollection("sections")).map((s) => s.data);
+  const units = (await getCollection("units")).map((u) => u.data);
+  return sections.map((section) => ({
+    params: { section: section.slug },
+    props: { section, units },
+  }));
+}
+
+const { section, units } = Astro.props;
+---
+
+<SectionLanding
+  client:load
+  spec={courseSpec}
+  section={section}
+  units={units}
+/>

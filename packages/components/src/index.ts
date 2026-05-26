@@ -76,6 +76,14 @@ export {
   ConfidenceCheckPropsSchema,
   confidenceCheckContract,
 } from "./components/ConfidenceCheck/index.ts";
+// Course-info projection (2026-05-26) — top-level page shells exposed
+// as React islands from the platform-shipped routes.
+export {
+  HeroWithModules,
+  ProseWithToc,
+  SimpleList,
+  type SimpleListProps,
+} from "./components/CourseLanding/index.ts";
 export type { DerivationStepProps } from "./components/DerivationStep/index.ts";
 export {
   DERIVATION_STEP_EPISTEMIC_ROLE,
@@ -231,6 +239,10 @@ export {
 } from "./components/RetrievalPrompt/index.ts";
 export type { SearchResult } from "./components/Search/index.ts";
 export { SearchModal } from "./components/Search/index.ts";
+export {
+  SectionLanding,
+  type SectionLandingProps,
+} from "./components/SectionLanding/index.ts";
 export type { SkillReviewProps } from "./components/SkillReview/index.ts";
 export {
   SkillReview,

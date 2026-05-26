@@ -1,0 +1,49 @@
+---
+import { courseSpec } from "virtual:sophie/course-spec";
+
+/**
+ * Info-page dispatcher. Each `info_pages[<slug>]` declared in
+ * course.sophie.yaml is injected by defineSophieIntegration as its
+ * own static route at `/<slug>/`. This file is reused across all of
+ * them — there's no `[param]` segment in the URL pattern (per fix
+ * B3), so the slug is read from `Astro.url.pathname` at render time
+ * and looked up in courseSpec.info_pages.
+ *
+ * Phase 3 (info-page layouts + compose evaluator) fills in the
+ * LAYOUTS lookup with real SyllabusPage / SchedulePage /
+ * InstructorPage / PoliciesPage / AccommodationsPage components.
+ * Until then, this dispatcher renders a placeholder so the build
+ * succeeds + the route surface is observable.
+ */
+
+const slug = Astro.url.pathname.replace(/^\/|\/$/g, "");
+const decl = courseSpec.info_pages?.[slug];
+if (!decl) {
+  throw new Error(
+    `[sophie] info-page.astro: no info_pages[${slug}] declared in course.sophie.yaml. ` +
+      `The integration injected /${slug}/ but the spec doesn't carry a declaration for it. ` +
+      `Build-time invariant violation — check course.sophie.yaml's info_pages block.`
+  );
+}
+
+// Phase 3 will replace this placeholder with the real layout dispatch.
+// Until then we render a minimal acknowledgement page so smoke + axe
+// can exercise the injected route surface.
+---
+
+<!doctype html>
+<html lang='en'>
+  <head>
+    <meta charset='utf-8' />
+    <title>{decl.layout} — {courseSpec.identity.title}</title>
+  </head>
+  <body>
+    <main>
+      <h1>{decl.layout}</h1>
+      <p>
+        Placeholder for <code>/{slug}/</code> — layout {decl.layout} ships in
+        Phase 3 of the course-info-projection sprint.
+      </p>
+    </main>
+  </body>
+</html>
