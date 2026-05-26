@@ -30,6 +30,7 @@
     "lint:links": "tsx scripts/link-check.ts",
     "lint:status": "tsx scripts/lint-status.ts",
     "lint:shims": "tsx scripts/lint-shims.ts",
+    "lint:docs-drift": "tsx scripts/lint-docs-drift.ts",
     "format": "biome format --write .",
     "typecheck": "turbo run typecheck"
   },
