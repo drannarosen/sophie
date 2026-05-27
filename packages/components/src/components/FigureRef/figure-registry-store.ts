@@ -19,6 +19,12 @@ const store = createPedagogyStore<FigureRegistryEntry>({
   scriptId: "sophie-figure-registry",
   logTag: "[FigureRef:registry]",
   keyOf: (f) => f.name,
+  // The registry is a flat name→asset namespace; a duplicate `name`
+  // silently overwrites an earlier figure's asset metadata (the exact
+  // class PR β.3 targets). Figure names are unique by contract, so
+  // fail the build on collision. Complements the build-time
+  // key/name-match guard in `figures-virtual-module.ts`.
+  onDuplicateKey: "throw",
 });
 
 export const __setFigureRegistry = store.set;

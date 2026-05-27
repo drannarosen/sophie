@@ -81,6 +81,19 @@ describe("figure-registry-store", () => {
     expect(lookupFigureRegistry("nonexistent")).toBeUndefined();
   });
 
+  it("throws on a duplicate figure name (PR β.3 — names are unique by contract)", async () => {
+    const { __setFigureRegistry } = await import("./figure-registry-store.ts");
+
+    const ladderDup: FigureRegistryEntry = {
+      ...m51,
+      name: "cosmic-distance-ladder", // collides with cosmicDistanceLadder
+    };
+
+    expect(() =>
+      __setFigureRegistry([cosmicDistanceLadder, ladderDup])
+    ).toThrowError(/cosmic-distance-ladder/);
+  });
+
   it("hydrates from <script id='sophie-figure-registry'> on first lookup when no SSR setter was called", async () => {
     const script = document.createElement("script");
     script.id = "sophie-figure-registry";

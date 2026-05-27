@@ -148,6 +148,30 @@ describe("createPedagogyStore", () => {
     expect(store.all()).toEqual([]);
   });
 
+  const gamma: SampleEntry = { slug: "alpha", label: "Gamma entry (dup key)" };
+
+  it("default set() keeps the last entry on a duplicate key (last-write-wins)", () => {
+    const store = createPedagogyStore<SampleEntry>({
+      scriptId: "sophie-test-store-dup-default",
+      logTag: "[test:dup-default]",
+      keyOf: (e) => e.slug,
+    });
+
+    expect(() => store.set([alpha, gamma])).not.toThrow();
+    expect(store.lookup("alpha")).toEqual(gamma);
+  });
+
+  it('onDuplicateKey: "throw" fails on a duplicate key, naming it', () => {
+    const store = createPedagogyStore<SampleEntry>({
+      scriptId: "sophie-test-store-dup-throw",
+      logTag: "[test:dup-throw]",
+      keyOf: (e) => e.slug,
+      onDuplicateKey: "throw",
+    });
+
+    expect(() => store.set([alpha, gamma])).toThrowError(/alpha/);
+  });
+
   it("all() hydrates from the script tag on first call if no setter ran (W1)", () => {
     const script = document.createElement("script");
     script.id = "sophie-test-store-all-hydrate";

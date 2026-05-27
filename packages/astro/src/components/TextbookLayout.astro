@@ -21,6 +21,7 @@ import { artifactsFromCollection } from "../lib/artifacts-from-collection";
 import {
   auditExitCode,
   formatAuditReport,
+  formatAuditThrowMessage,
   runAuditOncePerProcess,
 } from "../lib/audit-cache";
 import { loadConsumerRegistry } from "../lib/notation-registry-loader";
@@ -224,9 +225,9 @@ if (auditReport !== null) {
     // with a stack trace and the offending file context. Preferred over
     // `process.exit(1)` because it cooperates with Astro's logger and
     // dev-server HMR overlay rather than killing the parent process.
-    throw new Error(
-      "Pedagogy audit found errors. See preceding output for details."
-    );
+    // The message inlines the first ERROR findings so authors see the
+    // failing invariants without scrolling up to the console.log above.
+    throw new Error(formatAuditThrowMessage(auditReport));
   }
 }
 // All four setters follow the same pattern (ADR 0038 Revisions

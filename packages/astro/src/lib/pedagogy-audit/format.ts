@@ -84,3 +84,40 @@ export function formatAuditReport(report: AuditReport): string {
 export function auditExitCode(report: AuditReport): 0 | 1 {
   return report.errors.length > 0 ? 1 : 0;
 }
+
+const MAX_INLINE_ERRORS = 10;
+const MAX_THROW_MESSAGE_LENGTH = 120;
+
+function formatThrowErrorLine(f: AuditFinding): string {
+  const truncated =
+    f.message.length > MAX_THROW_MESSAGE_LENGTH
+      ? `${f.message.slice(0, MAX_THROW_MESSAGE_LENGTH)}…`
+      : f.message;
+  const unit = f.location?.unit;
+  const loc = unit
+    ? ` [chapter: ${unit}${f.location?.anchor ? `, anchor: ${f.location.anchor}` : ""}]`
+    : "";
+  return `  [${f.code}] ${truncated}${loc}`;
+}
+
+/**
+ * Build the `Error` message thrown by `TextbookLayout.astro` when the
+ * pedagogy audit finds ERROR-severity findings (PR β.2). Inlines the
+ * first 10 `[code] message [chapter, anchor]` lines so the failing
+ * invariants are visible in the throw itself — authors no longer have
+ * to scroll up through the full `formatAuditReport` console.log to find
+ * them. The full report (warnings + info included) still prints above
+ * the throw via `formatAuditReport`.
+ */
+export function formatAuditThrowMessage(report: AuditReport): string {
+  const n = report.errors.length;
+  const header = `Pedagogy audit found ${n} error${n === 1 ? "" : "s"}:`;
+  const lines = report.errors
+    .slice(0, MAX_INLINE_ERRORS)
+    .map(formatThrowErrorLine);
+  const overflow =
+    n > MAX_INLINE_ERRORS
+      ? `\n  …and ${n - MAX_INLINE_ERRORS} more — see preceding output`
+      : "";
+  return `${header}\n${lines.join("\n")}${overflow}\n\nSee preceding output for full details + warnings + info.`;
+}

@@ -34,7 +34,13 @@ import type { Plugin as VitePlugin } from "vite";
  *    (U+0033) before name" on a span like `<3,700`. Authoring
  *    rule: escape as `&lt;` (or wrap in math, e.g. `$<3{,}700$`).
  *
- * Both rules surfaced from the ADR 0064 chapter-migration pilots
+ * 3. **`<` before a LETTER inside inline `$...$` math** (e.g.
+ *    `$M(<r)$`). Unlike traps 1–2 this is NOT a parse failure —
+ *    remark-math tolerates it — so it surfaces as a non-blocking
+ *    `this.warn` (NOT a throw), nudging authors toward `\lt`
+ *    (TeX strict-less-than).
+ *
+ * Traps 1–2 surfaced from the ADR 0064 chapter-migration pilots
  * (m3-l2 Surprise #1, m2-l2 Surprise #3). Documented in
  * `docs/website/reference/chapter-components.md` ("Authoring
  * traps" section).
@@ -51,6 +57,13 @@ export function mdxAuthorTrapsVitePlugin(): VitePlugin {
       // Skip node_modules so dep-shipped .mdx (rare but possible)
       // isn't lint-gated by Sophie's authoring conventions.
       if (id.includes("/node_modules/")) return null;
+      // Trap 3 is a discipline NUDGE, not a parse failure: remark-math
+      // empirically tolerates `<letter` inside `$...$`, so it routes
+      // through `this.warn` (non-blocking) rather than the throwing
+      // `findings` array below. `this` is Rollup's TransformPluginContext.
+      for (const f of findLtBeforeLetterInMath(code)) {
+        this.warn(formatLtBeforeLetterInMath(id, f));
+      }
       const findings = [
         ...findMultiLineInlineMath(code).map((f) => formatMultiLineMath(id, f)),
         ...findRawLessThanNonLetter(code).map((f) => formatRawLt(id, f)),
@@ -226,6 +239,62 @@ export function findRawLessThanNonLetter(code: string): SourceFinding[] {
   return findings;
 }
 
+/**
+ * Find a raw `<` immediately before a LETTER inside a `$...$` (or
+ * single-line `$$...$$`) math span (e.g. `$M(<r)$`, `$a<bc$`). Unlike
+ * Trap 2's `findRawLessThanNonLetter` (a `<`-before-non-letter PARSE
+ * failure that throws), this case renders fine — remark-math tolerates
+ * it — but `<letter` collides with TeX's less-than convention and
+ * reads as a stray relation. The recommended fix is `\lt` (strict
+ * less-than), which applies equally in inline and display math. The
+ * Vite hook routes these findings through `this.warn` (non-blocking)
+ * rather than the throwing `findings` array.
+ *
+ * `<` before a DIGIT (`$v_r<0$`, `$<3{,}700$`) is left to Trap 2's
+ * domain and deliberately ignored here. Skips fenced code (the same
+ * `^\s*``` ` toggle Trap 2 uses), inline code spans, and single-line
+ * MDX JSX expression comments.
+ */
+export function findLtBeforeLetterInMath(code: string): SourceFinding[] {
+  const findings: SourceFinding[] = [];
+  const lines = code.split("\n");
+  let inFence = false;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i] ?? "";
+    if (/^\s*```/.test(line)) {
+      inFence = !inFence;
+      continue;
+    }
+    if (inFence) continue;
+    // Mask single-line MDX JSX comments and inline code spans so
+    // `<letter` inside them isn't flagged. Same-length space
+    // replacement keeps column offsets aligned with the original line.
+    // (Per-line scan: a JSX comment that wraps across lines is rare and
+    // warn-only, so it's not worth a whole-document pre-pass here.)
+    const masked = line
+      .replace(/\{\/\*.*?\*\/\}/g, (m) => " ".repeat(m.length))
+      .replace(/`[^`]*`/g, (m) => " ".repeat(m.length));
+    const spanRe = /\$([^$\n]+?)\$/g;
+    let span: RegExpExecArray | null = spanRe.exec(masked);
+    while (span !== null) {
+      const body = span[1] ?? "";
+      const ltRe = /<(?=[a-zA-Z])/g;
+      let lt: RegExpExecArray | null = ltRe.exec(body);
+      while (lt !== null) {
+        findings.push({
+          line: i + 1,
+          // span.index = `$`; +1 past the `$`; +lt.index into body; +1 → 1-based.
+          column: span.index + 1 + lt.index + 1,
+          snippet: line,
+        });
+        lt = ltRe.exec(body);
+      }
+      span = spanRe.exec(masked);
+    }
+  }
+  return findings;
+}
+
 /* ────────────────────────────────────────────────────────────── */
 /* Helpers.                                                       */
 /* ────────────────────────────────────────────────────────────── */
@@ -297,6 +366,15 @@ function formatRawLt(id: string, f: SourceFinding): string {
     `  Raw \`<\` before a non-letter character is parsed by MDX as the ` +
     `start of a JSX tag, and acorn fails with "Unexpected character before name".\n` +
     `  Fix: escape as \`&lt;\`, or wrap in math (e.g. \`$<3{,}700$\`).\n` +
+    `  Snippet: ${f.snippet}`
+  );
+}
+
+function formatLtBeforeLetterInMath(id: string, f: SourceFinding): string {
+  return (
+    `Found \`<\` before a letter inside inline math on ${id}:${f.line}:${f.column}. ` +
+    `This renders but conflicts with the math less-than convention. ` +
+    `Fix: replace \`<\` with \`\\lt\` (TeX strict-less-than) — e.g. \`$v_r \\lt 0$\` not \`$v_r<0$\`.\n` +
     `  Snippet: ${f.snippet}`
   );
 }

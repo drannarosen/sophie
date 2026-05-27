@@ -33,6 +33,21 @@ export interface PedagogyStoreOptions<T> {
   logTag: string;
   /** Function that returns the lookup key for an entry (typically the slug or name). */
   keyOf: (entry: T) => string;
+  /**
+   * How `set()` handles two entries that produce the same `keyOf` key.
+   * Defaults to `"last-write-wins"` — the historical behavior, and
+   * correct for most stores, whose `keyOf` is legitimately non-unique:
+   * artifacts share a unit id across view-kinds (reading/practice/
+   * slides), per-callsite USAGE stores share `unit#name` across
+   * citations, and definitions/objectives recur by `slug`/`anchor`
+   * across chapters (deliberate cross-chapter reinforcement), with
+   * canonical resolution reading the parallel array snapshot. A store
+   * opts into `"throw"` only when its key is globally unique by
+   * contract AND a collision means an authoring mistake worth failing
+   * the build — currently just the figure registry (`name`), where a
+   * duplicate figure name silently overwrites asset metadata.
+   */
+  onDuplicateKey?: "throw" | "last-write-wins";
 }
 
 export interface PedagogyStore<T> {
@@ -95,7 +110,19 @@ export function createPedagogyStore<T>(
       // Explicit setter wins; suppress later auto-hydration so a
       // test or future consumer can override the script-tag payload.
       hydratedFromScript = true;
-      byKey = new Map(entries.map((e) => [opts.keyOf(e), e]));
+      const throwOnDuplicate = opts.onDuplicateKey === "throw";
+      const next = new Map<string, T>();
+      for (const e of entries) {
+        const key = opts.keyOf(e);
+        if (throwOnDuplicate && next.has(key)) {
+          throw new Error(
+            `${opts.logTag} duplicate key "${key}" in set(). If this key is ` +
+              `intentionally non-unique, set onDuplicateKey: "last-write-wins".`
+          );
+        }
+        next.set(key, e);
+      }
+      byKey = next;
     },
     lookup(key) {
       hydrateFromScriptTagIfPresent();
