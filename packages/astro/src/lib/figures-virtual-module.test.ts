@@ -116,3 +116,21 @@ describe("figuresVirtualModule — load", () => {
     expect(src).toContain("export const figures = {}");
   });
 });
+
+describe("figuresVirtualModule — build guards (PR β.3)", () => {
+  test("throws when an entry key does not match its `name` field", () => {
+    expect(() =>
+      figuresVirtualModule({
+        "wrong-key": {
+          name: "hr-diagram",
+          src: "/figures/hr-diagram.png",
+          alt: "HR diagram.",
+        },
+      })
+    ).toThrowError(/wrong-key.*hr-diagram/);
+  });
+
+  test("accepts a registry whose every key matches its `name` field", () => {
+    expect(() => figuresVirtualModule(FIXTURE_REGISTRY)).not.toThrow();
+  });
+});

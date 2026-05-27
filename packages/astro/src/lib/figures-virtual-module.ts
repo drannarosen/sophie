@@ -46,6 +46,21 @@ const RESOLVED_ID = `\0${FIGURES_VIRTUAL_ID}`;
 export function figuresVirtualModule(
   figures: Record<string, FigureRegistryEntry>
 ): VitePluginLike {
+  // Boundary guard (PR β.3): the registry key IS the lookup key the
+  // figure-registry store + `<FigureRef name>` resolve against, so a
+  // key that disagrees with its own `name` field would silently
+  // mis-resolve a chapter's figure references. Fail the build instead.
+  // (Duplicate keys can't surface here — the input is an object
+  // literal, which collapses repeated keys at parse time; the
+  // figure-registry store's `onDuplicateKey: "throw"` default guards
+  // any dynamic construction path.)
+  for (const [key, entry] of Object.entries(figures)) {
+    if (key !== entry.name) {
+      throw new Error(
+        `figures.ts entry key "${key}" does not match its name field "${entry.name}"`
+      );
+    }
+  }
   return {
     name: "sophie:figures",
 

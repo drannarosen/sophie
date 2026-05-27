@@ -22,7 +22,11 @@
  * component.
  */
 import type { PedagogyIndex } from "@sophie/core/schema";
-import { auditExitCode, formatAuditReport } from "./pedagogy-audit/format.ts";
+import {
+  auditExitCode,
+  formatAuditReport,
+  formatAuditThrowMessage,
+} from "./pedagogy-audit/format.ts";
 import { runPedagogyAudit } from "./pedagogy-audit/runner.ts";
 import type { AuditExtras, AuditReport } from "./pedagogy-audit/types.ts";
 
@@ -76,4 +80,4 @@ export function __resetAuditCacheForTesting(): void {
 }
 
 /** Re-export the helpers callers usually want alongside the cached runner. */
-export { auditExitCode, formatAuditReport };
+export { auditExitCode, formatAuditReport, formatAuditThrowMessage };

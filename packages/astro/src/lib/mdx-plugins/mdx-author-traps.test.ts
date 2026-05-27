@@ -1,5 +1,6 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import {
+  findLtBeforeLetterInMath,
   findMultiLineInlineMath,
   findRawLessThanNonLetter,
   mdxAuthorTrapsVitePlugin,
@@ -126,6 +127,57 @@ describe("findRawLessThanNonLetter", () => {
   });
 });
 
+describe("findLtBeforeLetterInMath", () => {
+  test("`$v_r<0$` — `<` before a digit is NOT flagged (that's Trap 2's job)", () => {
+    expect(
+      findLtBeforeLetterInMath("Radial velocity $v_r<0$ means blueshift.")
+    ).toEqual([]);
+  });
+
+  test("`$M(<r)$` — `<` before a letter is flagged", () => {
+    const code = "Enclosed mass $M(<r)$ grows with radius.";
+    const findings = findLtBeforeLetterInMath(code);
+    expect(findings).toHaveLength(1);
+    // `$` is at column 15; body `M(<r)` puts `<` at body offset 2,
+    // so the 1-based column is 15 (`$`) + 1 (`M`) + 1 (`(`) = 18.
+    expect(findings[0]).toMatchObject({ line: 1, column: 18 });
+  });
+
+  test("`$a<bc$` — `<` before a letter is flagged", () => {
+    const findings = findLtBeforeLetterInMath("Inequality $a<bc$ holds.");
+    expect(findings).toHaveLength(1);
+  });
+
+  test("`$<3{,}700$` — `<` before a digit is NOT flagged", () => {
+    expect(findLtBeforeLetterInMath("Cool stars are $<3{,}700$ K.")).toEqual(
+      []
+    );
+  });
+
+  test("`<r` inside an inline code span is masked (no finding)", () => {
+    expect(findLtBeforeLetterInMath("Compare `$M(<r)$` literally.")).toEqual(
+      []
+    );
+  });
+
+  test("`<r` inside an MDX JSX comment is masked (no finding)", () => {
+    expect(findLtBeforeLetterInMath("{/* $M(<r)$ */} not rendered.")).toEqual(
+      []
+    );
+  });
+
+  test("`<r` outside math is NOT flagged (Trap 2 territory)", () => {
+    expect(findLtBeforeLetterInMath("Bare text with <r outside math.")).toEqual(
+      []
+    );
+  });
+
+  test("inside a fenced code block is ignored", () => {
+    const code = "```text\n$M(<r)$ in a fence\n```\n";
+    expect(findLtBeforeLetterInMath(code)).toEqual([]);
+  });
+});
+
 describe("mdxAuthorTrapsVitePlugin", () => {
   type TransformResult =
     | string
@@ -181,5 +233,18 @@ describe("mdxAuthorTrapsVitePlugin", () => {
     expect(msg).toMatch(/2 authoring traps/);
     expect(msg).toMatch(/Multi-line inline math/);
     expect(msg).toMatch(/Raw `<` before a non-letter/);
+  });
+
+  test("`<letter` in math warns via this.warn and does NOT throw", () => {
+    const code = "Enclosed mass $M(<r)$ grows.\n";
+    const warn = vi.fn();
+    const plugin = mdxAuthorTrapsVitePlugin();
+    const handler = plugin.transform as TransformFn | { handler: TransformFn };
+    const fn = typeof handler === "function" ? handler : handler.handler;
+    // `.call({ warn }, …)` provides the Rollup TransformPluginContext shim.
+    const result = fn.call({ warn }, code, "/repo/src/content/foo.mdx");
+    expect(result).toBeNull();
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0]?.[0]).toContain("\\lt");
   });
 });

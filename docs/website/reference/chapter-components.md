@@ -83,7 +83,7 @@ This page is the chapter author's quick reference.
 | `<Aside kind="misconception">` | Source for `PedagogyIndex.misconceptions` (short variant). |
 | `<Aside kind="note">` / `kind="digression">` | Non-indexed marginal asides; no pedagogy-index role. |
 | `<Callout>` (and `variant="key-insight"` / `variant="misconception"` / `variant="deep-dive"`) | Static variant ships pure-display; the `key-insight` and `misconception` variants ALSO feed the index (long-form). `variant="deep-dive"` feeds `PedagogyIndex.deepDives` per [ADR 0058 §R-deep-dive](../decisions/0058-epistemic-component-contract.md); `variant="the-more-you-know"` is intentionally NOT tracked (taxonomy boundary). |
-| `<Figure>` | Source for `PedagogyIndex.figureUsages` (per-chapter record of where each registry figure appears). Resolves `name` against the consumer-supplied `figureRegistry`. |
+| `<Figure>` | Source for `PedagogyIndex.figureUsages` (per-chapter record of where each registry figure appears). Resolves `name` against the consumer-supplied `figureRegistry`. The `figures.ts` registry is guarded at build time: each entry's record key must equal its `name` field (a mismatched entry fails the build with a curated error; record keys are already unique by JS object-literal construction). |
 | `<KeyEquation refId="...">` | Chapter-side citation of a registry equation per [ADR 0060](../decisions/0060-registry-ecosystem.md). `refId` resolves to a registry MDX entry at `src/content/equations/<refId>.mdx`. Body of the registry MDX carries the biography children (Observable / Assumption / BreaksWhen / Units / CommonMisuse / DerivationStep) + frontmatter (`title`, `tex`, `symbols`, `constants`, `related`); the chapter `<KeyEquation>` block accepts optional framing prose children for chapter-specific context. Optional `showDerivation` (expand derivation steps inline) and `hideRelated` (suppress related-equations footer) flags. Citations populate `PedagogyIndex.equationCitations`; declarations populate `PedagogyIndex.equations`. |
 | `<Objective>` | Pure-display primitive. Only meaningful as a child of `<LearningObjectives>`; the remark extractor walks it during MDX parse to populate `PedagogyIndex.objectives`. |
 | `<MultiRep>` | Children-mode source for `PedagogyIndex.multiReps` (per [ADR 0043](../decisions/0043-notation-registry-multirep-alignment-audit.md); v1 design locked in [2026-05-17 design doc](../../plans/2026-05-17-multirep-design.md)). Wraps `<RepVerbal>`, `<RepEquation refKey symbol>`, `<RepFigure refName symbolLabel>` children at v1 — one concept across multiple representational modes. Feeds the **MR1, MR2, MR4, MR6 + NR1–NR4** Representation Alignment Audit invariants. **v1 children-mode validated end-to-end by the [M2-L2 Surface Flux & Colors pilot](../pilots/m2-l2-surface-flux-and-colors.md) (2026-05-25): two bindings, R10-compliant `aria-labelledby` landmarks, 0 MR/NR audit warnings.** Per WS B+D ([issue #191](https://github.com/drannarosen/sophie/issues/191)), `<RepFigure refName>` and `<RepEquation refKey>` callsites now count toward F4 (orphan figure) and R-series equation invariants — MultiRep-only references no longer false-positive as orphans. **Remaining deferrals:** `<RepCode>` (pending `<CodeCell>`, ADR 0018) + MR3 / MR5 invariants (ship with `<RepCode>`); `<RepIntuition>` dropped 2026-05-14 (intuition framing belongs in `<RepVerbal>`). |
@@ -911,7 +911,9 @@ pilots produce opaque acorn errors far from the author's intent.
 `@sophie/astro` ships a pre-parse Vite plugin
 (`packages/astro/src/lib/mdx-plugins/mdx-author-traps.ts`) that
 scans raw `.mdx` text BEFORE MDX/acorn runs and throws curated
-`file:line:col` errors instead.
+`file:line:col` errors instead. A third, non-blocking trap (Trap 3
+below) warns on a math-convention slip that renders fine but reads
+wrong.
 
 ### Trap 1 — multi-line inline `$...$` math with TeX spacing macros
 
@@ -956,6 +958,23 @@ code blocks (` ``` ... ``` `) are left alone — the lint scanner
 masks code regions before checking.
 
 Originating finding: M2-L2 pilot Surprise #3 / [issue #193](https://github.com/drannarosen/sophie/issues/193).
+
+### Trap 3 — `<` before a letter inside math (WARN-only)
+
+Inside `$...$` (or single-line `$$...$$`) math, a literal `<`
+immediately before a **letter** (e.g. `$M(<r)$`, `$a<bc$`) renders —
+`remark-math` tolerates it — but conflicts with the math less-than
+convention and reads as a stray relation. This trap is
+**non-blocking**: it emits a build WARNING (not a throw), suggesting
+`\lt` (TeX strict-less-than), which applies equally in inline and
+display math. `<` before a *digit* (`$v_r<0$`, `$<3{,}700$`) is left
+to Trap 2's domain and not flagged here. Code spans, fenced blocks,
+and single-line MDX JSX expression comments are masked.
+
+| Wrong (warned) | Right |
+|---|---|
+| `$M(<r)$` | `$M(\lt r)$` |
+| `$a<bc$` | `$a \lt bc$` |
 
 (practice-mdx-route)=
 
