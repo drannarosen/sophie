@@ -256,6 +256,7 @@ project:
         - file: pilots/m3-l1-ages-lifetimes.md
         - file: pilots/m3-l4-radiation-transport.md
         - file: pilots/m3-l5-stellar-structure-scalings.md
+        - file: pilots/m3-l6-mass-limits.md
     - title: Status
       children:
         - file: status/roadmap.md
