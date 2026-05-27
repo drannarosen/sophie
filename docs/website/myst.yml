@@ -254,6 +254,7 @@ project:
         - file: pilots/m2-l4-weighing-stars.md
         - file: pilots/m2-l5-hr-diagram.md
         - file: pilots/m3-l1-ages-lifetimes.md
+        - file: pilots/m3-l4-radiation-transport.md
     - title: Status
       children:
         - file: status/roadmap.md
