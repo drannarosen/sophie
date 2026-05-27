@@ -252,6 +252,7 @@ project:
         - file: pilots/m1-l4-light-as-information.md
         - file: pilots/m2-l1-distance-and-parallax.md
         - file: pilots/m2-l4-weighing-stars.md
+        - file: pilots/m2-l5-hr-diagram.md
     - title: Status
       children:
         - file: status/roadmap.md
