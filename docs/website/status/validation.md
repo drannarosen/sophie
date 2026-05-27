@@ -24,22 +24,22 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 | Status | Count |
 |---|---|
 | Validated | 33 |
-| In progress | 18 |
-| Unvalidated | 62 |
+| In progress | 20 |
+| Unvalidated | 61 |
 | Re-validation needed | 0 |
 | Missing block | 0 |
-| Total | 113 |
+| Total | 114 |
 
 ## Lifecycle summary
 
 | Lifecycle | Count |
 |---|---|
-| Shipped | 64 |
+| Shipped | 65 |
 | Accepted design | 39 |
 | Mixed | 1 |
 | Future package split | 9 |
 | No status | 0 |
-| Total | 113 |
+| Total | 114 |
 
 ## Evidence kinds
 
@@ -47,8 +47,8 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 |---|---|
 | test | 95 |
 | chapter | 9 |
-| review | 28 |
-| deployment | 69 |
+| review | 29 |
+| deployment | 76 |
 | audit | 9 |
 | manual | 40 |
 
@@ -133,7 +133,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0070-library-room-and-registry-spec-pages.md](/library-room-and-registry-spec-pages/) | in progress | accepted design | 2026-05-23 | deployment, test |  |
 | [docs/website/decisions/0071-pyodide-computational-labs.md](/pyodide-computational-labs/) | unvalidated | accepted design | — | — |  |
 | [docs/website/decisions/0072-three-tier-build-priority.md](/three-tier-build-priority/) | unvalidated | accepted design | — | — |  |
-| [docs/website/decisions/0073-unified-assessment-schema.md](/unified-assessment-schema/) | unvalidated | accepted design | — | — |  |
+| [docs/website/decisions/0073-unified-assessment-schema.md](/unified-assessment-schema/) | in progress | accepted design | 2026-05-27 | deployment, review |  |
 | [docs/website/decisions/0074-instructor-authoring-cost-metric.md](/instructor-authoring-cost-metric/) | unvalidated | accepted design | — | — |  |
 | [docs/website/decisions/0075-student-ux-cognitive-load-governance.md](/student-ux-cognitive-load-governance/) | unvalidated | accepted design | — | — |  |
 | [docs/website/decisions/0076-student-learning-cockpit.md](/student-learning-cockpit/) | unvalidated | accepted design | — | — |  |
@@ -162,6 +162,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/reference/course-schedule.md](/course-schedule/) | unvalidated | accepted design | — | — |  |
 | [docs/website/reference/equation-biography-schema.md](/equation-biography-schema/) | unvalidated | shipped | — | — |  |
 | [docs/website/reference/equation-registry-schema.md](/equation-registry-schema/) | unvalidated | shipped | — | — |  |
+| [docs/website/reference/formative-assessment-authoring.md](/formative-assessment-authoring/) | in progress | shipped | 2026-05-27 | — |  |
 | [docs/website/reference/glossary.md](/glossary/) | unvalidated | shipped | — | — |  |
 | [docs/website/reference/intervention-library.md](/intervention-library/) | in progress | shipped | 2026-05-22 | chapter, test |  |
 | [docs/website/reference/misconception-graph-schema.md](/misconception-graph-schema/) | unvalidated | shipped | — | — |  |

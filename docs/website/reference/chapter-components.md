@@ -484,6 +484,33 @@ surfaces, but they render the body differently:
 Authors who need to preserve structured content should rely on the
 popover; the inline footnote is for short summary text.
 
+### Formative family (v1, ADR 0073 Amendment 1)
+
+:::{note}
+**Pre-launch placeholder.** The six formative-family MDX components
+(`<MCQ>`, `<MultiSelect>`, `<FillBlank>`, `<NumericQuestion>`,
+`<QuickCheck>`, `<PracticeProblem>`) and two shared reveal primitives
+(`<Solution>`, `<Hint>`) ship across PRs 3–9 of the
+[formative-assessment implementation plan](../../plans/2026-05-27-formative-assessment-implementation.md).
+Design locked by
+[ADR 0073 Amendment 1](../decisions/0073-unified-assessment-schema.md#amendment-1-formative-with-reveal-v1-2026-05-27).
+Author how-to:
+[formative-assessment-authoring.md](./formative-assessment-authoring.md).
+
+This section's table of components fills in as each PR lands.
+:::
+
+| Component | Role | Ships in |
+|---|---|---|
+| `<PracticeProblem>` | Bare practice shell (context owner) | PR 4 |
+| `<Solution>` | Shared full-reveal primitive | PR 4 |
+| `<Hint number={N}>` | Shared progressive-reveal primitive | PR 4 |
+| `<QuickCheck>` | Free-response, solution-only | PR 5 |
+| `<MCQ>` | Single-best-answer (radio) | PR 6 |
+| `<MultiSelect>` | Select-all-that-apply (checkbox) | PR 7 |
+| `<FillBlank>` | Text-fill with inline slots | PR 8 |
+| `<NumericQuestion>` | Numeric answer + tolerance + unit | PR 9 |
+
 ### Astro consumer (server-rendered aggregator)
 
 #### Chapter-level (used inside MDX)

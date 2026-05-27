@@ -11,9 +11,41 @@ tags:
   - course-website
 status: accepted-design
 validation:
-  status: unvalidated
-  last_validated_date: null
-  evidence: []
+  status: in-progress
+  last_validated_date: "2026-05-27"
+  evidence:
+    - kind: review
+      ref: "PR 2 of formative-assessment plan (ADR 0073 Amendment 1)"
+      date: "2026-05-27"
+      notes: "Amendment 1 — formative-with-reveal v1 schema locked (six MDX components + two shared reveals + practice route + AS-1..5 audit invariants). Pure design/documentation; no code changes."
+    - kind: deployment
+      ref: "PR 3 of formative-assessment plan"
+      date: null
+      notes: "PR 3 — practice route (/units/[unit]/practice) + N-tab `<ChapterLayout>` link-bar + Issue #189 retirement (placeholder; backfill on merge)."
+    - kind: deployment
+      ref: "PR 4 of formative-assessment plan"
+      date: null
+      notes: "PR 4 — `<Solution>` + `<Hint>` + `<PracticeProblem>` + `FormativeContext` provider (placeholder; backfill on merge)."
+    - kind: deployment
+      ref: "PR 5 of formative-assessment plan"
+      date: null
+      notes: "PR 5 — `<QuickCheck>` + `extractFormative` (QuickCheck branch) + AS-2 invariant + `PedagogyIndex.formatives` bucket (placeholder; backfill on merge)."
+    - kind: deployment
+      ref: "PR 6 of formative-assessment plan"
+      date: null
+      notes: "PR 6 — `<MCQ>` + AS-1 invariant + `@radix-ui/react-radio-group` (placeholder; backfill on merge)."
+    - kind: deployment
+      ref: "PR 7 of formative-assessment plan"
+      date: null
+      notes: "PR 7 — `<MultiSelect>` + AS-5 invariant + `@radix-ui/react-checkbox` (placeholder; backfill on merge)."
+    - kind: deployment
+      ref: "PR 8 of formative-assessment plan"
+      date: null
+      notes: "PR 8 — `<FillBlank>` + AS-3 invariant (placeholder; backfill on merge)."
+    - kind: deployment
+      ref: "PR 9 of formative-assessment plan"
+      date: null
+      notes: "PR 9 — `<NumericQuestion>` + AS-4 invariant; closes the v1 formative-family wave (placeholder; backfill on merge). Graduates `validation.status` to `validated`."
 ---
 
 # ADR 0073: Unified Assessment schema with type-variants (assignment / practice / diagnostic / exam) + BKT mastery
@@ -257,3 +289,295 @@ Once BKT state exists per skill, UI adapts:
   "Individualized Bayesian Knowledge Tracing models."
 - Pelánek, R. (2017). "Bayesian Knowledge Tracing, Logistic Models,
   and Beyond..."
+
+## Amendments
+
+### Amendment 1 — Formative-with-reveal v1 (2026-05-27)
+
+**Title.** Formative-with-reveal v1 surface: six MDX components +
+two shared reveals + practice route + AS-1..5 audit invariants.
+Grading, attempt-tracking, BKT, `<Assignment>`, and
+`<RetrievalPrompt>`-as-wrapper unification deferred to v2.
+
+**Trigger.** Formative-assessment sprint
+([implementation plan](../../plans/2026-05-27-formative-assessment-implementation.md),
+[design doc](../../plans/2026-05-27-formative-assessment-design.md)).
+ASTR 201 has ~35 prose practice problems already authored across
+M3-L10 + M4 that need a visible practice surface immediately. The
+broader ADR 0073 design (four-variant Assessment + Rubric + BKT) is
+the right long-term shape; the wave that ships *first* is the
+narrowest subset that gets practice items routed, reveals working,
+and audit invariants in place. v2 widens to the full four-variant
+union + grading + attempt tracking. This amendment is the single
+citation point for PRs 3–9 of the implementation plan.
+
+#### 1. Scope — strict subset of the locked ADR 0073 design
+
+v1 ships `Assessment[type=practice]` only. The schema field
+`Assessment.type` is locked at v1 to the literal `"practice"`; v2
+widens to the four-variant union declared in §"Unified Assessment
+schema" above. The §"Rubric as first-class artifact",
+§"Auto-grading scope", §"Open-ended written grading", §"BKT mastery
+model", §"Per-student-per-skill state", §"Diagnostic timing — three
+windows", and §"Adaptive surfacing (Tier 2)" sections remain
+accepted-design but unimplemented; v1 does not ship their machinery
+and does not contradict their decisions. v1 does
+not ship the `Assessment` Zod schema either — the wave's authored
+shape is six MDX components, and the only schema material that
+lands is a new `FormativeAnswer` discriminated union normalized
+onto a `FormativeEntry` in the pedagogy index (see §4 + §5 below).
+
+#### 2. The six v1 MDX components + two shared reveals
+
+| Component | Role | Audit invariant |
+|---|---|---|
+| `<MCQ>` | single-best-answer; built on `@radix-ui/react-radio-group` per ADR 0019 | AS-1 (ERROR): exactly one `<MCQ.Choice correct>` |
+| `<MultiSelect>` | select-all-that-apply; built on `@radix-ui/react-checkbox` per ADR 0019 | AS-5 (ERROR): at least one `correct` choice |
+| `<FillBlank>` | text-fill with inline `<FillBlank.Slot>` children | AS-3 (WARN): at least one `<FillBlank.Slot>` |
+| `<NumericQuestion>` | numeric answer + tolerance + optional unit | AS-4 (ERROR): exactly one `<NumericQuestion.Answer>` |
+| `<QuickCheck>` | free-response, solution-only | AS-2 (WARN) applies via §5 |
+| `<PracticeProblem>` | bare practice shell; context owner for `<Solution>`/`<Hint>` when no formative child wraps | AS-2 (WARN) applies via §5 |
+
+Two shared reveal primitives, used inside any of the six parents:
+
+- `<Solution>` — reveal primitive; persistence key
+  `solution:${parentId}:open`, namespaced by the parent
+  formative item's `id`.
+- `<Hint number={N}>` — progressive reveal; persistence key
+  `hint:${parentId}:${n}:open`, same namespace.
+
+The six parents are the formative *family*. The two reveals are
+not formative items themselves — they are reveal primitives that
+attach to a formative parent. This is the structural reason for
+the parent-context discipline in §3.
+
+#### 3. Author surface — parent-context threading
+
+Only the six formative-family parents declare `course` / `unit` / `id`
+per ADR 0027's slug discipline; `<Solution>` and `<Hint>` declare
+nothing. The reveals read context from a React provider mounted by
+the parent and **throw at render** if not nested inside one of the
+six. The rationale: IndexedDB persistence keys for reveals must
+namespace under the formative item that owns them, not a free-floating
+reveal — otherwise two practice problems on the same page with the
+same hint number would collide. The formative parent owns the
+IDB namespace; the reveals share it via context. Per the framework-
+purity rule in ADR 0001, the provider lives in `@sophie/components`
+and reads no virtual modules.
+
+#### 4. Answer contract — JSX-native + index-normalized discriminated union
+
+Authors type answers as JSX, not as YAML or JSON props. The two
+shapes are **boolean-presence on choices** (`<MCQ.Choice correct>`,
+`<MultiSelect.Choice correct>`) and **value attributes on dedicated
+answer children** (`<NumericQuestion.Answer value={9.81}
+tolerance={0.05} toleranceKind="relative" unit="m/s^2" />`,
+`<FillBlank.Slot id="x" correct="42" />`). The pedagogy-index
+extractor materializes a typed `FormativeAnswer` discriminated
+union onto each `FormativeEntry`:
+
+```ts
+type FormativeAnswer =
+  | { type: "single-choice"; correct: string }
+  | { type: "multi-choice"; correct: string[] }
+  | { type: "fill-blank"; blanks: Array<{ id: string; correct: string }> }
+  | {
+      type: "numeric";
+      value: number;
+      tolerance: number;
+      toleranceKind: "absolute" | "relative";
+      unit?: string;
+    }
+  | { type: "solution-only" };
+```
+
+This is the **grading seam**. v1 does not run a grader against
+`FormativeAnswer`; v2 does, by reading the entry from the
+pedagogy index and wrapping the runtime component in `useInteractive`
+per §9.c below. Authoring the answer in JSX at v1 costs nothing
+additional and locks the v2-ready data shape into the index from
+day one.
+
+#### 5. Pedagogy-index bucket + five audit invariants
+
+A new top-level bucket joins the existing pedagogy-index pattern
+per [ADR 0038](./0038-pedagogy-index-pattern.md):
+
+```ts
+PedagogyIndex.formatives: readonly FormativeEntry[]
+```
+
+`FormativeEntry` carries (at minimum) `{ kind, unit, anchor, id,
+answer: FormativeAnswer | null, hasSolution: boolean, hints: number }`.
+The `unit + anchor` shape is the v2-readiness on-ramp for cross-unit
+references (see §9.a).
+
+The five audit invariants enforced by the pedagogy-index extractor
+per ADR 0038's audit pattern:
+
+| ID | Severity | Trigger | Author resolution |
+|---|---|---|---|
+| **AS-1** | ERROR | `<MCQ>` does not have exactly one `<MCQ.Choice correct>` | Mark exactly one choice with `correct` |
+| **AS-2** | WARN | A formative item (any of the six) has no `<Solution>` child | Add a `<Solution>` — authored-but-answerless items are the silently-missing-Aside class for the formative family |
+| **AS-3** | WARN | `<FillBlank>` has zero `<FillBlank.Slot>` children | Add at least one `<FillBlank.Slot>` |
+| **AS-4** | ERROR | `<NumericQuestion>` does not have exactly one `<NumericQuestion.Answer>` child | Provide exactly one answer child with `value` + `tolerance` |
+| **AS-5** | ERROR | `<MultiSelect>` has zero choices marked `correct` | Mark at least one `<MultiSelect.Choice correct>` |
+
+ERROR-severity invariants halt the build per the existing audit
+contract; WARN-severity invariants surface in the audit report and
+in CI logs but do not halt. AS-2's WARN posture is deliberate: a
+formative item without a solution is a likely authoring gap but a
+legitimate intermediate state during drafting; the audit notifies
+rather than blocks.
+
+#### 6. Practice route
+
+`/units/[unit]/practice` is injected by `@sophie/astro` at
+`astro:config:setup`, mirroring the reading route per
+[ADR 0082](./0082-chapter-layout-extraction.md). The route reads
+`practice.mdx` for the unit and renders it through
+`makeStaticComponents` — the chapter-MDX factory at
+`packages/astro/src/components.tsx`. Issue #189 (the
+practice-content-not-visible warning) retires when PR 3 ships;
+its warning file is deleted in the same PR.
+
+#### 7. `<ChapterLayout>` link-bar
+
+The chapter-layout link-bar gains an N-tab affordance from day one
+— `Reading | Slides | Practice` — even though slides are not in this
+amendment's scope. Slides slot in when their own ADR ships. Each
+tab renders conditionally on the artifact's availability for the
+unit (per the projection pattern formalized in ADR 0082): if the
+unit declares no `practice.mdx`, the Practice tab does not render.
+A trailing CTA ("→ Practice this lecture") lands at the end of
+`reading.astro` when a practice artifact exists. The N-tab shape is
+forward-compat with the v2 `<Assignment>` work — assignments live
+at course-level routes (§9.a) and do not add a fourth per-unit tab.
+
+#### 8. Stable anchors
+
+Every formative-family parent accepts an optional `id` prop that
+overrides the `form-${counter}` auto-anchor. The auto-counter
+suffices for v1 because cross-unit references do not yet exist;
+the explicit `id` shape is the v2-readiness on-ramp for the
+`<Assignment>` cross-unit reference seam declared in §9.a. Authors
+who do not provide `id` get a stable auto-anchor; authors who do
+provide `id` opt their item into being referenceable from a future
+assignment without changing any other shape.
+
+#### 9. v2-foreshadowing — three locked design seams
+
+These three seams are **locked at v1** even though their machinery
+ships later, because each one constrains the v1 data shape (the
+`FormativeEntry` schema, the `<RetrievalPrompt>` children-mode, the
+attempt-record shape). Locking them now prevents v2 from being a
+breaking-rewrite.
+
+##### 9.a `<Assignment>` references practice items by `(unitId, anchor)` tuples across multiple units
+
+The v2 `<Assignment>` MDX component references practice items by
+`(unitId, anchor)` tuples *across multiple units* — not by intra-unit
+anchor list, not by inline item authoring. The
+`FormativeEntry.unit + .anchor` shape **is** the cross-unit reference
+seam; v2 adds no new field. Authoring shape:
+
+```mdx
+<Assignment
+  id="hw-3"
+  items={[
+    { unit: "rotation-curves", anchor: "form-3" },
+    { unit: "dark-matter-evidence", anchor: "core-q" },
+  ]}
+  due="2026-10-15T23:59"
+  late={{ policy: "grade_floor", floor: 0.5 }}
+/>
+```
+
+Assignments live at a **course-level route** (`/assignments/[id]`),
+not under `/units/[unit]/`. This is the structural reason the
+per-unit link-bar stays Reading|Slides|Practice and does not gain
+an Assignments tab — assignments are course-scoped, not unit-scoped.
+
+##### 9.b `<RetrievalPrompt>` widens to wrap any formative child
+
+In v1, `<RetrievalPrompt>` is the retrieval-family component with
+its existing `target` prop semantics (skill-bridge / spaced-review).
+In v2, `<RetrievalPrompt>` widens to **wrap** any formative child —
+`<MCQ>`, `<MultiSelect>`, `<FillBlank>`, `<NumericQuestion>`,
+`<QuickCheck>`. The retrieval-family components own the
+spaced-review / skill-bridge machinery; the formative-family
+components own the question content. The v2 PR rewrites
+`<RetrievalPrompt>`'s children-mode while preserving the existing
+`target`-prop semantics; the `useRetrievalAttempt` attempt-record
+shape gains a discriminated union over `FormativeAnswer` rather
+than the v1 free-text record. No formative-family component
+authored in v1 needs to change to opt in to retrieval scheduling
+at v2 — wrapping is purely additive.
+
+##### 9.c Grading turns on by reading `FormativeEntry.answer` from the index
+
+v2 grading is **a render-time wrap, not an authoring change**. The
+v2 PR reads `FormativeEntry.answer` from the pedagogy index at
+chapter-MDX compile time and wraps each runtime formative component
+in `useInteractive` attempt-tracking per ADRs 0004 + 0007. No
+call-site changes for authors. The v2 attempt-record shape attributes
+attempts to specific formative occurrences via `formative.id` — the
+stable `id` shape from §8 is the join key into the index. BKT state
+itself remains keyed by `(user_id, course_id, skill_id)` per
+§"Per-student-per-skill state" above; the formative-attempt-to-skill
+mapping is the v2 design surface this amendment leaves open. The
+`useInteractive` integration is the seam where the formative family
+meets the locked broader ADR 0073 BKT design.
+
+#### 10. What v1 explicitly does NOT do
+
+- Auto-grading (any of the eight grader types in
+  §"Auto-grading scope" above)
+- Attempt tracking
+- Score persistence
+- `<Assignment>` MDX component
+- `<RetrievalPrompt>` body widening
+- Per-choice feedback on `<MCQ>`
+- Self-grade after reveal ("got it / partial / missed")
+- Ordering / matching / categorization / diagram-labeling questions
+- Numeric-tolerance comparison at runtime (tolerance + unit data IS captured in the index per §4; v1 just doesn't compare student input against them)
+- Submission flow
+- `Rubric` / `Criterion` schemas
+- `Assessment.schedule` / `Assessment.stakes` / `Assessment.submission`
+  / `Assessment.feedback` blocks
+- BKT state initialization or update
+
+Each is locked-design but unimplemented; v2 turns them on without
+contradicting v1's shape.
+
+#### 11. PR sequencing locked
+
+The 12-PR sequence in
+[`docs/plans/2026-05-27-formative-assessment-implementation.md`](../../plans/2026-05-27-formative-assessment-implementation.md)
+is the appendix-referenced sequencing for this amendment. PRs 3–9
+are the formative-family wave (practice route + link-bar; reveals
++ `<PracticeProblem>` + context provider; `<QuickCheck>` + index
+bucket + AS-2; `<MCQ>` + AS-1; `<MultiSelect>` + AS-5;
+`<FillBlank>` + AS-3; `<NumericQuestion>` + AS-4). PRs 1, 10, 11,
+12 are Track-B side-channels (Video component; author-trap lint;
+audit-error DX; figures duplicate-key guard). Each formative-family
+PR cites this Amendment as its design source.
+
+#### 12. Validation block
+
+The page-level `status:` stays `accepted-design` — Sophie's convention
+(per ADR 0080's amendment precedent) tracks broad-vision status at the
+page level while amendments live in the `## Amendments` section and
+amendment-progress lives in the `validation:` block. Frontmatter
+changes for Amendment 1:
+
+- `validation.status: unvalidated → in-progress`
+- `validation.last_validated_date: null → "2026-05-27"`
+- `validation.evidence`: one `kind: review` entry for PR 2 (this
+  amendment) and seven `kind: deployment` placeholder entries for
+  PRs 3–9 (backfilled with merge dates as each PR lands).
+
+`validation.status` graduates to `validated` when all PRs 3–9
+have merged and the ASTR 201 formative-family adoption pass lands
+(the ~35 existing prose practice problems migrated onto the new
+components).
