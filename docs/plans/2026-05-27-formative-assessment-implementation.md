@@ -52,6 +52,23 @@ PR 4 shipped a different architecture than this plan originally described. The a
 
 ---
 
+## Consolidation note (2026-05-27) — PRs 5–12 bundled into PRs β + α
+
+Following PR 4's merge (commit `195d8fd` on `main`), the remaining 8 PRs were bundled into 2 to reduce CI cost (8 × ~10 min = ~80 min of CI minutes → 2 × ~10 min = ~20 min; ~75% reduction). Honest framing: the per-component PR sequence was the right shape *before* PR 4 shipped the cross-cutting `sophieAutoImportsRemarkPlugin` infrastructure. Once the plugin pre-registered all six v1 formative parents and once PRs 5–9 collapsed to "component + tests + extractor branch + audit invariant" each, the per-PR CI overhead exceeded the per-PR isolation value. The four Track-B fast wins (PRs 10–12 plus the already-shipped PR 1) are similarly tiny and independent — bundling them removes 2 CI cycles at no merge-conflict risk.
+
+**New canonical execution shape:**
+
+| Bundle | Replaces | Scope |
+|---|---|---|
+| **PR β (Track B fast wins)** | PRs 10, 11, 12 | Author-trap `\lt` lint extension + audit-error DX + `figures.ts` duplicate-key build guard. Three small independent fixes touching different files; combined ~130 LOC. No new Storybook stories — no VR baseline workflow trigger needed. |
+| **PR α (Formative parents)** | PRs 5, 6, 7, 8, 9 | `<QuickCheck>` + `<MCQ>` + `<MultiSelect>` + `<FillBlank>` + `<NumericQuestion>` — all five formative parents, plus the shared `FormativeAnswer` schema, formative pedagogy-index extractor (six-parent walk), AS-1..AS-5 audit invariants, and the two new Radix deps. Single VR baseline workflow trigger covers all new Storybook stories at once. |
+
+**Recommended order: PR β FIRST, then PR α.** The audit-error DX improvement in PR β makes PR α's debug experience materially better — when AS-1..AS-5 audit invariants fire during PR α development, the `[ERROR Rxx]` detail prints inline in the build throw rather than buried up the log. PR β also serves as a confidence-builder ahead of the larger PR α bundle.
+
+**Audit trail preserved.** The original PR 5–12 sections below are kept verbatim as the design source for the bundles — each is marked `**(Bundled — see PR α / PR β above)**`. Do not execute them as standalone PRs; the bundle sections (`## PR β` and `## PR α`) are the new source of truth.
+
+---
+
 ## Cross-cutting conventions (apply on every PR)
 
 | Rule | Enforcement |
@@ -854,7 +871,223 @@ PracticeProblem.Prompt = Prompt;
 
 ---
 
-## PR 5 (Track A) — `<QuickCheck>` + formative index extractor + AS-2 invariant
+## PR β (Track B) — Fast wins bundle: author-trap lint + audit DX + figures guard
+
+**Replaces:** PRs 10 + 11 + 12 (preserved below as audit trail).
+
+**Branch:** `feat/track-b-fast-wins-bundle`
+**Squash-merge per ADR 0055.**
+
+Three small independent fixes; all touch different files; no merge-conflict risk; combined ~130 LOC plus tests. No new Storybook stories (no VR baseline trigger needed). Lands FIRST per the consolidation note — confidence-builder ahead of PR α, and the audit-error DX improvement materially benefits PR α's debug experience.
+
+### Files
+
+| Action | Path |
+|---|---|
+| Modify | `packages/astro/src/lib/mdx-plugins/mdx-author-traps.ts` (add `findLtBeforeLetterInMath` scanner + integrate into the plugin transform) |
+| Modify | `packages/astro/src/lib/mdx-plugins/mdx-author-traps.test.ts` (add tests for the new scanner) |
+| Modify | `packages/astro/src/components/TextbookLayout.astro` (lines 215–231 — replace generic throw with `[ERROR …]`-detail message) |
+| Create | `packages/astro/src/components/textbook-layout-audit-throw.test.ts` (asserts thrown message contains code + chapter/anchor markers) |
+| Modify | `packages/components/src/runtime/pedagogy-store.ts` (`createPedagogyStore.set()` validates uniqueness; throws on collision) |
+| Modify | `packages/components/src/runtime/pedagogy-store.test.ts` (collision throw tests) |
+| Modify | `packages/astro/src/lib/figures-virtual-module.ts` (validate uniqueness + key/name match at the boundary — defense-in-depth) |
+| Create | `packages/astro/src/lib/figures-virtual-module.test.ts` (or extend the existing test file) — assert mismatched-key/name and duplicate throws fire |
+| Modify | `docs/website/reference/chapter-components.md` (third authoring-trap entry: `\lt` for `<letter` in math; Figure-section note on the duplicate-key guard) |
+| Modify | `docs/website/decisions/0064-chapter-migration-playbook.md` (closure-status update — the trap-3 lint closes the `<r` author-trap class identified during the M2–M4 migration pass) |
+
+### Sub-bundle β.1 — Author-trap lint: `<` before letter in math; suggest `\lt`
+
+Extend the trap scanner: inside an inline `$...$` math span (single-line, the current convention), if the body contains `<` followed by a letter, emit a curated WARN finding suggesting `\lt`. The existing trap-2 regex (`/<(?=[^a-zA-Z\s/!?>])/g`) catches `<3`, `<.5` etc. but not `<r` or `<beta`.
+
+Design + code per the historical `## PR 10 (Track B)` section below. WARN not ERROR — empirically tolerated by the current remark-math pipeline; this lint is a discipline nudge, not a blocker. Mask JSX comments `{/* … */}` to avoid false positives (Task 10.4 path (a)).
+
+**Tasks β.1.1–β.1.5** mirror the original Tasks 10.1–10.5 verbatim (write failing tests for the scanner across the documented fixtures; implement `findLtBeforeLetterInMath`; wire as WARN; mask JSX comments; update `chapter-components.md` §"Authoring traps" with trap-3).
+
+### Sub-bundle β.2 — Audit-error DX: print `[ERROR …]` detail in throw
+
+The current throw at [`packages/astro/src/components/TextbookLayout.astro:227-229`](../../packages/astro/src/components/TextbookLayout.astro) is generic ("See preceding output for details"); detail is buried in `console.log(formatAuditReport(...))` two lines earlier. Authors scroll up through build output to find the failing `[ERROR Rxx]`.
+
+Design + code per the historical `## PR 11 (Track B)` section below — slice the first 10 errors into the throw message with code + chapter/anchor markers; overflow line for the remainder.
+
+**Tasks β.2.1–β.2.3** mirror the original Tasks 11.1–11.3 (failing test asserting `[D4]` / `[AS-1]` + `chapter:` markers; implement the throw shape; smoke build verification with the AS-2 fixture introduced by PR α).
+
+### Sub-bundle β.3 — `figures.ts` duplicate-key + key/name-mismatch build guard
+
+Two-layer fix per the historical `## PR 12 (Track B)` section below:
+
+- **Layer 1 — generic in `pedagogyStore`:** add `onDuplicateKey?: "throw" | "warn" | "last-write-wins"` option (default `"throw"`).
+- **Layer 2 — figure virtual module:** validate `key === entry.name` AND duplicate-key uniqueness at the build boundary; fail the build with a curated message naming the colliding name + resolution (unit-suffix rename pattern).
+
+**Tasks β.3.1–β.3.5** mirror the original Tasks 12.1–12.5 (failing tests for both layers; implement layer 1; implement layer 2; chapter-components.md Figure-section note; smoke fixture under `figures.invalid.ts.disabled` + meta-test asserting throw shape).
+
+### Bundle-level tasks
+
+**Task β.0: Branch from `main` at the post-PR-4 tip** (`195d8fd` at session start). Confirm clean baseline: `pnpm biome check`, `pnpm turbo run typecheck`, `pnpm turbo run test` all green.
+
+**Task β.X: Verification gate (full).**
+
+```bash
+pnpm biome check                          # zero warnings (full output grep, not tail)
+pnpm turbo run typecheck                  # zero errors
+pnpm turbo run test                       # all packages green; new tests added in this bundle PASS
+pnpm turbo run lint                       # axe-render gate clean
+pnpm lint:axe-render                      # explicit
+pnpm --filter smoke build                 # prod build clean; verify both the new AS-2 fixture WARN AND the new throw-detail message format surface in the audit output
+npx mystmd build --html                   # docs build
+grep -c "⚠" docs/website/_build/html/...  # zero MyST content warnings (emoji only)
+pnpm test:e2e                             # full e2e suite (no e2e changes in this bundle, but the smoke dist must still pass — verifies trap-3 lint didn't break authored math anywhere in the smoke fixture set)
+```
+
+**R6 spot-check.** Any new cross-references in the docs touched by this bundle use heading-slug anchors, not `#L\d+`. Grep: `grep -rE "#L[0-9]+" docs/website/` returns no hits for files modified in this PR.
+
+**Task β.Y: Commit + open PR.** **HITL confirm before push.** PR title `feat: Track B fast wins bundle — mdx-lint \lt + audit-DX + figures dup-key guard`. Body cites ADR 0064 (author-trap class closure), the M2–M4 migration findings, and references the consolidation note. Closes the three Track-B issues if open.
+
+**Task β.Z: CI notes — no VR baselines required.** This bundle adds zero new Storybook stories; the `vr-update.yml` workflow trigger only fires on PR α. CI lanes: lint + unit + smoke + e2e — same gate as any code PR.
+
+---
+
+## PR α (Track A) — Formative parents bundle: QuickCheck + MCQ + MultiSelect + FillBlank + NumericQuestion
+
+**Replaces:** PRs 5 + 6 + 7 + 8 + 9 (preserved below as audit trail).
+
+**Branch:** `feat/formative-parents-bundle`
+**Squash-merge per ADR 0055.**
+
+Ships the five formative parents in one PR, plus the shared `FormativeAnswer` schema + extractor + AS-1..AS-5 audit invariants + the two new Radix deps. All five components share an identical structural pattern (component dir + extractor branch + audit invariant); the plugin registry already pre-registers them per PR 4; single VR baseline workflow trigger covers all new stories at once.
+
+**Per-component PR isolation is deliberately collapsed** — once PR 4 shipped the cross-cutting `sophieAutoImportsRemarkPlugin`, the formative parents became near-identical leaf components that each follow the same pattern. Five separate PRs would each pay the same ~10-min CI cost for the same kind of work.
+
+### Shared infrastructure (ships once in this PR)
+
+| Path | Role |
+|---|---|
+| Create: `packages/core/src/schema/pedagogy-index-entries/formative.ts` | `FormativeKindSchema` + `FormativeAnswerSchema` discriminated union + `FormativeEntrySchema`. Five answer variants: `single-choice` / `multi-choice` / `fill-blank` / `numeric` / `solution-only`. |
+| Modify: `packages/core/src/schema/pedagogy-index.ts` (~line 84) | Add `formatives: z.array(FormativeEntrySchema).readonly().default([])`; update the canonical anchor-prefix table comment with the `form-` row. |
+| Create: `packages/astro/src/lib/pedagogy-index/extractors/formative.ts` | Six-parent walk (QuickCheck, MCQ, MultiSelect, FillBlank, NumericQuestion, PracticeProblem); materializes `FormativeAnswer` per kind; emits intra-chapter anchor-collision throw on duplicate explicit `id`. |
+| Create: `packages/astro/src/lib/pedagogy-index/extractors/formative.test.ts` | Fixture-driven tests covering all six parent kinds + each answer variant + collision throw + auto-counter overrides. |
+| Modify: `packages/astro/src/lib/pedagogy-index/accumulator.ts` | Add `formatives: Map<string, FormativeEntry>` field + `addFormatives()` method + `clearUnit()` reset + surface in `asPedagogyIndex()`. |
+| Create: `packages/astro/src/lib/pedagogy-audit/invariants/formative.ts` | AS-1..AS-5 in one file. AS-1 + AS-4 + AS-5 are ERROR; AS-2 + AS-3 are WARN. |
+| Create: `packages/astro/src/lib/pedagogy-audit/invariants/formative.test.ts` | Each invariant tested against positive + negative fixtures. |
+| Modify: `packages/astro/src/lib/pedagogy-audit/runner.ts` | Import + call `checkFormative(index, sink)` immediately after `checkWorkedExamples`. |
+| Modify: `packages/components/package.json` | Add `@radix-ui/react-radio-group@^1.x` + `@radix-ui/react-checkbox@^1.x` deps. Run `pnpm install --frozen-lockfile` locally per pre-PR lockfile rule. |
+| Modify: `packages/components/src/index.ts` | Barrel-export all five new components. |
+| Verify (no edit): `packages/astro/src/lib/mdx-plugins/sophie-auto-imports.ts` | All five parents already pre-registered in `SOPHIE_INTERACTIVE_COMPONENTS` + `SOPHIE_FORMATIVE_PARENTS` per PR 4. Confirm only. |
+
+### Per-component table
+
+| Component | Audit invariant | Notes | Persistence key |
+|---|---|---|---|
+| `<QuickCheck>` | AS-2 WARN | Free-response, solution-only; foundational because it exercises the `solution-only` answer variant. No new dep. | (no own key; descendants own) |
+| `<MCQ>` | AS-1 ERROR | Radix RadioGroup; adds `@radix-ui/react-radio-group`. `<MCQ.Choice correct>` boolean-presence; slugify text content for choice id; throws on duplicate slug. | `mcq:${parentId}:selected` |
+| `<MultiSelect>` | AS-5 ERROR | Radix Checkbox; adds `@radix-ui/react-checkbox`. `multi-choice` variant; no upper bound on `correct` count. | `multi-select:${parentId}:selected` |
+| `<FillBlank>` | AS-3 WARN | Native `<input type="text">` slots inline within `<FillBlank.Prompt>`. Slot ids unique within block. No tolerance enforcement in v1. | `fillblank:${parentId}:${slotId}:value` |
+| `<NumericQuestion>` | AS-4 ERROR | Single `<input type="text">` + self-closing `<NumericQuestion.Answer value tolerance toleranceKind unit?>` declarative child. | `numeric:${parentId}:value` |
+
+### Per-component sub-sections — each is its own independent slice within the bundle
+
+#### α.1 — `<QuickCheck>` + AS-2 + extractor `solution-only` branch
+
+Simplest answer contract; ships first within the bundle because it exercises the shared `FormativeAnswer` plumbing without the additional choice/slot/numeric-attribute complexity.
+
+**Files:** `packages/components/src/components/QuickCheck/` (six-file component dir).
+
+**Tasks α.1.1–α.1.7** mirror the original PR-5 Tasks 5.1–5.16 with the following bundle-level adjustments:
+- Tasks 5.1 + 5.2 (FormativeAnswer schema + tests) → ship as α.0.1 + α.0.2 in the shared-infra section (ships once, not per component).
+- Task 5.3 (extend `PedagogyIndexSchema`) → shared infra.
+- Task 5.4 + 5.5 (QuickCheck failing test + implementation) → α.1.1 + α.1.2 (pass explicit `course`/`unit`/`id` props directly; no provider wrapper per PR 4 pivot).
+- Task 5.6 + 5.7 (`extractFormative` failing test + impl with QuickCheck-only branch) → shared infra α.0.3 + α.0.4, BUT scoped to all six parent names from the start (the six-parent walk is the shared shape; per-kind answer materialization adds in α.2–α.5).
+- Task 5.8 (accumulator wire-up) → shared infra α.0.5.
+- Task 5.9 + 5.10 (AS-2 failing test + impl) → α.1.3 + α.1.4.
+- Task 5.11 (audit-runner wire-up) → shared infra α.0.6.
+- Task 5.12 (smoke fixture with QuickCheck + intentional AS-2) → α.1.5.
+- Task 5.13 (verify auto-imports registry) → bundle-level verify α.V.1.
+- Task 5.14 (chapter-components.md QuickCheck row) → α.1.6.
+
+#### α.2 — `<MCQ>` + AS-1 + extractor `single-choice` branch + `@radix-ui/react-radio-group`
+
+**Files:** `packages/components/src/components/MCQ/` (six-file component dir; .tsx exports `MCQ` + `MCQ.Prompt` + `MCQ.Choice` via member-access).
+
+**Tasks α.2.1–α.2.6** mirror the original PR-6 Tasks 6.1–6.10. Dep-add (`@radix-ui/react-radio-group`) folds into the bundle-level dep-add at α.0.7. Extractor MCQ-branch (count `correct` children, materialize `single-choice` answer) lands at α.0.8. AS-1 invariant addition at α.2.3. Smoke fixture at α.2.5 (clean MDX surface — no imports, no `client:load`, no `course`/`unit`/`parentId` on children).
+
+#### α.3 — `<MultiSelect>` + AS-5 + extractor `multi-choice` branch + `@radix-ui/react-checkbox`
+
+Structurally identical to α.2 with checkbox semantics.
+
+**Files:** `packages/components/src/components/MultiSelect/` (six-file dir).
+
+**Tasks α.3.1–α.3.6** mirror the original PR-7 task shape. AS-5 ERROR fires on zero `correct` choices. `multi-choice` extractor branch at α.0.9.
+
+#### α.4 — `<FillBlank>` + AS-3 + extractor `fill-blank` branch
+
+**Files:** `packages/components/src/components/FillBlank/` (six-file dir).
+
+**Tasks α.4.1–α.4.6** mirror the original PR-8 task shape. `<FillBlank.Slot id correct>` rendered as controlled `<input>` inline within `<FillBlank.Prompt>` MDX flow. Slot ids unique within block; collision throws. `fill-blank` extractor branch (walk slot children, build `blanks: [{ id, correct }]`) at α.0.10. AS-3 WARN at α.4.3.
+
+#### α.5 — `<NumericQuestion>` + AS-4 + extractor `numeric` branch
+
+**Files:** `packages/components/src/components/NumericQuestion/` (six-file dir).
+
+**Tasks α.5.1–α.5.6** mirror the original PR-9 task shape. Runtime renders single `<input type="text">` (not `number` — student input might include commas/units; v1 doesn't validate shape). Extractor reads attributes from self-closing `<NumericQuestion.Answer>` child at α.0.11. AS-4 ERROR fires on count !== 1.
+
+### Shared-infra task ordering (α.0.*)
+
+Recommended sequence within the bundle to keep each commit-in-progress green:
+
+1. **α.0.1:** Add `FormativeAnswer` + `FormativeEntry` schemas + tests (all five variants).
+2. **α.0.2:** Extend `PedagogyIndexSchema` with `formatives` field + anchor-prefix table comment.
+3. **α.0.7:** Add the two Radix deps (`pnpm add … --filter @sophie/components`); run `pnpm install --frozen-lockfile`.
+4. Per-component α.X.* in order (α.1 → α.2 → α.3 → α.4 → α.5) — each adds its component dir, its extractor branch (α.0.3-α.0.11 land incrementally interleaved with components), its audit-invariant branch, smoke fixture additions, and chapter-components.md row.
+5. **α.0.5 + α.0.6:** Accumulator + audit-runner wire-up land when α.1 starts (need them green for any per-component testing).
+
+Each per-component slice may be implemented in its own commit on the bundle branch (so the bundle is reviewable as a sequence of well-scoped commits before the final squash-merge), or as one large commit — Anna's call at PR-open time.
+
+### Bundle-level tasks
+
+**Task α.V.0: Branch from `main` after PR β merges.** Confirm clean baseline: `pnpm biome check`, `pnpm turbo run typecheck`, `pnpm turbo run test` all green at the post-β tip.
+
+**Task α.V.1: Verify plugin registry.** Confirm all five new parents present in `SOPHIE_INTERACTIVE_COMPONENTS` AND `SOPHIE_FORMATIVE_PARENTS` in `packages/astro/src/lib/mdx-plugins/sophie-auto-imports.ts`. **Already pre-registered in PR 4** — read-only check. None of α's components register in `makeStaticComponents` (hydration-bearing) or `makeChromeComponents` (pedagogy ≠ chrome per ADR 0058 §R-0080-A2).
+
+**Task α.V.2: Smoke fixture coverage.** Modify `examples/smoke/src/content/sections/foundations/units/chrome-primitives-demo/practice.mdx` to include at least one callsite of each new component with clean author surface (no imports, no `client:load`, no `course`/`unit`/`parentId` on `<Solution>`/`<Hint>` children — plugin injects all three). Include at least one intentional AS-2 (QuickCheck without Solution), AS-3 (FillBlank without slots), AS-1 (MCQ with two `correct`), AS-4 (NumericQuestion with two Answers), and AS-5 (MultiSelect with zero `correct`) — each gated behind a `# AS-N fixture (expected WARN|ERROR)` heading. The ERROR fixtures land in a **separate `practice-audit-errors.mdx`** file that the smoke build deliberately does NOT load (kept as `practice-audit-errors.mdx.disabled` or excluded via frontmatter `draft: true`); a meta-test imports + runs the extractor on the disabled file and asserts the expected findings shape. This avoids breaking the smoke build while still exercising the ERROR paths in tests.
+
+**Task α.V.3: Full verification gate.**
+
+```bash
+pnpm biome check                          # zero warnings (full output grep)
+pnpm turbo run typecheck                  # zero errors
+pnpm turbo run test                       # all packages green; AS-1..AS-5 invariant tests PASS
+pnpm turbo run lint                       # axe-render gate clean
+pnpm lint:axe-render                      # explicit — five new components × multiple test files all must call axe
+pnpm --filter smoke build                 # prod build clean; verify all five components render in /units/.../practice; AS-2 + AS-3 WARNs surface in build output
+npx mystmd build --html                   # docs build
+grep -c "⚠" docs/website/_build/html/...  # zero MyST content warnings
+pnpm test:e2e                             # full e2e suite green
+```
+
+**R6 spot-check** — heading-slug cross-refs only, no `#L\d+` in any docs touched.
+
+**R7 spot-check** — the extractor has a single silent-skip filter at the parent-name predicate (`if (!FORMATIVE_PARENT_NAMES.has(...)) return;`). This is the intended walk filter, not an audit gap — every formative parent we care about IS in the registry. R7 disposition: paired audit invariants AS-1..AS-5 cover every parent kind we walk; no silent-skip risk. Document this disposition with a one-line comment at the filter site referencing R7.
+
+**R11 spot-check** — every new `*.test.tsx` under `packages/components/src/components/{QuickCheck,MCQ,MultiSelect,FillBlank,NumericQuestion}/` calls `render(` AND `axe(` / `AxeBuilder` / `toHaveNoViolations`. The CI `lint` job enforces via `scripts/lint-axe-render.ts`.
+
+**Task α.V.4: Storybook VR baseline seed (single workflow trigger covers all five components).** After first CI run on the bundle PR, trigger `vr-update.yml` GitHub Actions workflow to seed Chromatic/Loki baselines for ALL new stories at once. Then push a no-op empty commit (`git commit --allow-empty -m "chore: trigger CI after VR baselines"`) to re-trigger CI and pick up the baselines. This is **the** consolidation win on the CI-cost front — one VR baseline cycle instead of five.
+
+**Task α.V.5: Update validation dashboard.** Backfill `docs/website/decisions/0073-unified-assessment-schema.md` Amendment 1 `validation.evidence` block with the bundle PR ref + the five components. Regenerate `docs/website/status/validation.md` per AGENTS.md "Validation-dashboard regen on ADR status change" (I3 integration test catches this on the unit job).
+
+**Task α.V.6: Update chapter-components.md.** Fill out the five new rows in the Formative-family section landed by PR 4. Cross-link to `formative-assessment-authoring.md`.
+
+**Task α.V.7: Commit + open PR.** **HITL confirm before push.** PR title `feat: formative parents bundle — QuickCheck + MCQ + MultiSelect + FillBlank + NumericQuestion + AS-1..AS-5`. Body anchors the bundle to Amendment 1 + the consolidation note + lists the five components + five invariants + two Radix deps + the closure of the formative-with-reveal v1 wave.
+
+**Task α.V.8: After merge, open the v2 tracking issue** referencing §v2-foreshadowing seams (Assignment cross-unit refs, RetrievalPrompt body widening, grading turn-on). The astr201 consumer-repo adoption pass (`.quiz` → `<MCQ>`, tip-Callout → `<QuickCheck>`, etc.) is a separate follow-on session — out of scope for this Sophie session.
+
+### CI notes — single VR baseline trigger
+
+PR α adds Storybook stories for five new components (15+ stories total across primary + reveal-state + edge-case variants). All five components are visually distinct; each needs its own VR baseline. The `vr-update.yml` workflow handles them all in one run — much cheaper than five separate workflow runs in five separate PRs. After the workflow finishes seeding, push an empty commit to retrigger CI and pick up the new baselines into the bundle PR.
+
+---
+
+## PR 5 (Track A) — `<QuickCheck>` + formative index extractor + AS-2 invariant — **(Bundled — see PR α above)**
+
+> **Preserved for audit trail.** This section is the design source for the `α.1` sub-bundle inside PR α; do NOT execute as a standalone PR. The shared-infrastructure tasks (FormativeAnswer schema, extractor, accumulator wire-up, audit runner wire-up) ship once across the PR α bundle, not per-component.
 
 Simplest answer contract first (solution-only); ships the index-bucket plumbing the next four PRs reuse. **Scope shrunk by PR 4** — the auto-imports plugin + parent-prop threading already exist; this PR just adds the component, the `FormativeEntry` schema, the extractor (which walks an already-threaded tree), and the AS-2 invariant. No plugin changes required.
 
@@ -1139,7 +1372,9 @@ export function checkFormative(index: PedagogyIndex, sink: FindingSink): void {
 
 ---
 
-## PR 6 (Track A) — `<MCQ>` + AS-1 + `@radix-ui/react-radio-group`
+## PR 6 (Track A) — `<MCQ>` + AS-1 + `@radix-ui/react-radio-group` — **(Bundled — see PR α above)**
+
+> **Preserved for audit trail.** This section is the design source for the `α.2` sub-bundle inside PR α; do NOT execute as a standalone PR.
 
 Auto-imports + `client:load` + parent-prop threading already handled by `sophieAutoImportsRemarkPlugin` (PR 4). `MCQ` is pre-registered in both `SOPHIE_INTERACTIVE_COMPONENTS` and `SOPHIE_FORMATIVE_PARENTS`. The component just declares `course/unit/id` props; the plugin handles the rest.
 
@@ -1183,7 +1418,9 @@ Auto-imports + `client:load` + parent-prop threading already handled by `sophieA
 
 ---
 
-## PR 7 (Track A) — `<MultiSelect>` + AS-5 + `@radix-ui/react-checkbox`
+## PR 7 (Track A) — `<MultiSelect>` + AS-5 + `@radix-ui/react-checkbox` — **(Bundled — see PR α above)**
+
+> **Preserved for audit trail.** This section is the design source for the `α.3` sub-bundle inside PR α; do NOT execute as a standalone PR.
 
 Structurally identical to PR 6 with checkbox semantics instead of radios. `MultiSelect` already in `SOPHIE_INTERACTIVE_COMPONENTS` + `SOPHIE_FORMATIVE_PARENTS` (PR 4).
 
@@ -1202,7 +1439,9 @@ Structurally identical to PR 6 with checkbox semantics instead of radios. `Multi
 
 ---
 
-## PR 8 (Track A) — `<FillBlank>` + AS-3
+## PR 8 (Track A) — `<FillBlank>` + AS-3 — **(Bundled — see PR α above)**
+
+> **Preserved for audit trail.** This section is the design source for the `α.4` sub-bundle inside PR α; do NOT execute as a standalone PR.
 
 `FillBlank` already in `SOPHIE_INTERACTIVE_COMPONENTS` + `SOPHIE_FORMATIVE_PARENTS` (PR 4); plugin threads parent props to nested `<Solution>`/`<Hint>` at compile time.
 
@@ -1223,7 +1462,9 @@ Structurally identical to PR 6 with checkbox semantics instead of radios. `Multi
 
 ---
 
-## PR 9 (Track A) — `<NumericQuestion>` + AS-4
+## PR 9 (Track A) — `<NumericQuestion>` + AS-4 — **(Bundled — see PR α above)**
+
+> **Preserved for audit trail.** This section is the design source for the `α.5` sub-bundle inside PR α; do NOT execute as a standalone PR.
 
 `NumericQuestion` already in `SOPHIE_INTERACTIVE_COMPONENTS` + `SOPHIE_FORMATIVE_PARENTS` (PR 4); plugin threads parent props at compile time.
 
@@ -1251,7 +1492,9 @@ After PR 9 merges:
 
 ---
 
-## PR 10 (Track B) — Author-trap lint extension: warn on `<` before letter in math; suggest `\lt`
+## PR 10 (Track B) — Author-trap lint extension: warn on `<` before letter in math; suggest `\lt` — **(Bundled — see PR β above)**
+
+> **Preserved for audit trail.** This section is the design source for sub-bundle `β.1` inside PR β; do NOT execute as a standalone PR.
 
 **Branch:** `feat/mdx-author-traps-math-lt`
 
@@ -1325,7 +1568,9 @@ Plus a `formatLtBeforeLetterInMath` helper that produces the curated error: *"Fo
 
 ---
 
-## PR 11 (Track B) — Audit-error DX: print `[ERROR …]` detail in the throw message
+## PR 11 (Track B) — Audit-error DX: print `[ERROR …]` detail in the throw message — **(Bundled — see PR β above)**
+
+> **Preserved for audit trail.** This section is the design source for sub-bundle `β.2` inside PR β; do NOT execute as a standalone PR.
 
 **Branch:** `feat/audit-error-dx`
 
@@ -1377,7 +1622,9 @@ throw new Error(
 
 ---
 
-## PR 12 (Track B) — `figures.ts` duplicate-key build guard
+## PR 12 (Track B) — `figures.ts` duplicate-key build guard — **(Bundled — see PR β above)**
+
+> **Preserved for audit trail.** This section is the design source for sub-bundle `β.3` inside PR β; do NOT execute as a standalone PR.
 
 **Branch:** `feat/figures-duplicate-key-guard`
 
@@ -1446,7 +1693,7 @@ The mismatched-key-vs-name check (`key !== entry.name`) IS a real authoring trap
 
 ## Verification — what "done" looks like for this session
 
-After all 12 PRs merge, the following are observable:
+After PRs 1 + 2 + 3 + 4 (already shipped) + **PR β + PR α** (the two bundles consolidating the original PRs 5–12) merge — net six PRs landed instead of the original twelve — the following are observable:
 
 1. **Visibility fix landed** — `practice.mdx` files render at `/units/<unit>/practice`; ~35 problems across M3-L10 + M4 are now student-visible (verified by Playwright e2e against astr201 prod build).
 2. **Six formative MDX components shipped** — `<MCQ>`, `<MultiSelect>`, `<FillBlank>`, `<NumericQuestion>`, `<QuickCheck>`, `<PracticeProblem>` — each with parent-context threading + Solution/Hint composition + axe-clean tests + Storybook stories + reference-doc entries.
@@ -1457,7 +1704,7 @@ After all 12 PRs merge, the following are observable:
 7. **Audit-error DX improved** — build-time errors print `[ERROR …]` detail inline in the throw.
 8. **Figures.ts duplicate-key build guard prevents the silent-overwrite class.**
 9. **ADR 0073 Amendment 1** is the single citation point for everything above; §v2-foreshadowing names the three deferred design seams.
-10. **All 12 PRs land with zero biome warnings, axe-on-render coverage, R6–R12 compliance** per AGENTS.md.
+10. **All six landed PRs (1, 2, 3, 4, β, α) ship with zero biome warnings, axe-on-render coverage, R6–R12 compliance** per AGENTS.md.
 
 The astr201 adoption pass (consumer-repo follow-on) is the natural next session — incremental per-reading conversion of `.quiz` → `<MCQ>`, tip-Callout reveals → `<QuickCheck>`, numeric blanks → `<NumericQuestion>`, etc. It's deliberately out of scope here.
 
@@ -1465,20 +1712,17 @@ The astr201 adoption pass (consumer-repo follow-on) is the natural next session 
 
 ## Critical files to revisit before starting each PR
 
+**Canonical bundle order: PR β → PR α.** The per-original-PR rows below are kept for the audit trail; the two bundle rows at the top are the new source of truth.
+
 | When starting | Re-read |
 |---|---|
-| PR 1 (Video) | `docs/website/decisions/0064-chapter-migration-playbook.md` §3 (gap protocol); `docs/website/reference/chapter-components.md` static-components table; one existing static-component impl as model (`packages/components/src/components/Aside/`) |
-| PR 2 (ADR Amendment 1) | The full existing `0073-unified-assessment-schema.md`; ADR 0080 Amendment 2 as precedent shape; the design doc at `docs/plans/2026-05-27-formative-assessment-design.md` |
-| PR 3 (Practice route) | `packages/astro/src/routes/reading.astro` (the sibling pattern); ADR 0082 (route-injection mechanism); the #189-warning file before deleting |
-| PR 4 (Reveals + plugin) | **SHIPPED 2026-05-27** (commit `3ba8867`). Reference for PRs 5–9: `packages/astro/src/lib/mdx-plugins/sophie-auto-imports.ts` (the three-job remark plugin); `packages/components/src/components/Solution/` and `Hint/` and `PracticeProblem/` (the prop-shape templates the next five formative parents mirror); ADR 0073 Amendment 1 §3 (compile-time threading design); `formative-assessment-authoring.md` (author-surface contract) |
-| PR 5 (QuickCheck + index) | `packages/astro/src/lib/pedagogy-index/extractors/worked-examples.ts` (the model extractor); the accumulator at `packages/astro/src/lib/pedagogy-index/accumulator.ts`; `FindingSink` interface |
-| PR 6 (MCQ) | `@radix-ui/react-radio-group` docs (Context7); ADR 0019; the `<MCQ.Choice>` slugify pattern in `Dropdown.tsx` |
-| PR 7 (MultiSelect) | `@radix-ui/react-checkbox` docs; PR 6's MCQ implementation as immediate analog |
-| PR 8 (FillBlank) | The inline-slot rendering pattern (no exact analog; design from first principles using `<input type="text">` + useInteractive) |
-| PR 9 (NumericQuestion) | PR 8 FillBlank for single-input pattern |
-| PR 10 (mdx-author-traps) | The existing `mdx-author-traps.ts`; ADR 0064 §6 + the existing chapter-components.md "Authoring traps" section |
-| PR 11 (audit-error DX) | `TextbookLayout.astro` lines 215–231; `format.ts` lines 36–49 |
-| PR 12 (figures dup-key) | `pedagogy-store.ts` lines 94–99; `figures-virtual-module.ts` (the boundary); chapter-components.md Figure section |
+| **PR β** (fast wins bundle — author-trap `\lt` + audit-DX + figures dup-key guard) | The existing `mdx-author-traps.ts`; ADR 0064 §6 + the existing chapter-components.md "Authoring traps" section; `TextbookLayout.astro` lines 215–231 + `format.ts` lines 36–49; `pedagogy-store.ts` lines 94–99; `figures-virtual-module.ts` (the boundary); the three preserved historical sections below (PR 10 / PR 11 / PR 12) for the original task lists |
+| **PR α** (formative parents bundle — QuickCheck + MCQ + MultiSelect + FillBlank + NumericQuestion + AS-1..5) | `packages/astro/src/lib/mdx-plugins/sophie-auto-imports.ts` (registries already pre-populated; verify only); `packages/components/src/components/Solution/`, `Hint/`, `PracticeProblem/` (PR 4 prop-shape templates); ADR 0073 Amendment 1 §3 (compile-time threading design); `formative-assessment-authoring.md`; `packages/astro/src/lib/pedagogy-index/extractors/worked-examples.ts` (extractor model); the accumulator at `pedagogy-index/accumulator.ts`; `FindingSink` interface; `@radix-ui/react-radio-group` + `@radix-ui/react-checkbox` docs (Context7) + ADR 0019; the `<MCQ.Choice>` slugify pattern in `Dropdown.tsx`; the five preserved historical sections below (PR 5–9) for original per-component task lists |
+| PR 1 (Video) — **shipped** | `docs/website/decisions/0064-chapter-migration-playbook.md` §3 (gap protocol); `docs/website/reference/chapter-components.md` static-components table; one existing static-component impl as model (`packages/components/src/components/Aside/`) |
+| PR 2 (ADR Amendment 1) — **shipped** | The full existing `0073-unified-assessment-schema.md`; ADR 0080 Amendment 2 as precedent shape; the design doc at `docs/plans/2026-05-27-formative-assessment-design.md` |
+| PR 3 (Practice route) — **shipped** | `packages/astro/src/routes/reading.astro` (the sibling pattern); ADR 0082 (route-injection mechanism); the #189-warning file before deleting |
+| PR 4 (Reveals + plugin) — **shipped 2026-05-27** | Commit `3ba8867`. Reference for PR α: `packages/astro/src/lib/mdx-plugins/sophie-auto-imports.ts` (the three-job remark plugin); `packages/components/src/components/Solution/` and `Hint/` and `PracticeProblem/` (the prop-shape templates the next five formative parents mirror); ADR 0073 Amendment 1 §3 (compile-time threading design); `formative-assessment-authoring.md` (author-surface contract) |
+| PR 5–9, 10–12 (historical, per-PR) | **Bundled into PR α + PR β above.** Preserved below for audit trail only — do not execute as standalone PRs. |
 
 ---
 
@@ -1486,6 +1730,6 @@ The astr201 adoption pass (consumer-repo follow-on) is the natural next session 
 
 Plan complete. Recommended execution mode per **superpowers:writing-plans**:
 
-**Subagent-Driven (this session)** — dispatch fresh subagent per task; review between tasks; fast iteration with quality gates at every component. **For this plan specifically**, given the 12-PR scope and the HITL mandate, my recommendation is **Parallel Session per PR-batch** rather than per-task — open a new session per PR (or per 2–3 closely-related PRs), use `superpowers:executing-plans` in that session, and return for HITL confirmation at each push/PR-creation/merge.
+**Subagent-Driven (this session)** — dispatch fresh subagent per task; review between tasks; fast iteration with quality gates at every component. **For this plan specifically** (post-consolidation: PRs 1–4 shipped + PR β + PR α remaining), the HITL mandate still applies — open a session per remaining bundle (one for PR β, one for PR α), use `superpowers:executing-plans` in that session, and return for HITL confirmation at each push/PR-creation/merge.
 
 The plan stays in `~/.claude/plans/` (this file) AND `docs/plans/` (after Task 0 copy) as the single execution-input artifact.
