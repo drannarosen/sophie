@@ -99,6 +99,19 @@ const config: TestRunnerConfig = {
     expect.extend({ toMatchImageSnapshot });
   },
   async preVisit(page) {
+    // Block known cross-origin iframe-embed hosts so `waitForPageReady`
+    // (network-idle) stays deterministic on CI. Stories rendering real
+    // <iframe> elements (e.g. <Video> embed) would otherwise hang
+    // waiting for hosts CI cannot reach (or can but slowly). The
+    // blocked iframe still renders its element box, so axe still
+    // validates `frame-title` + the figure landmark, and VR captures
+    // a deterministic empty iframe rectangle. Pattern, not patch:
+    // future embed stories that point at additional hosts extend
+    // this regex rather than each opting out individually.
+    await page.route(
+      /(?:youtube-nocookie\.com|youtube\.com\/embed|player\.vimeo\.com|example\.org|example\.com|example\.edu)/,
+      (route) => route.abort()
+    );
     await injectAxe(page);
   },
   async postVisit(page, context) {
