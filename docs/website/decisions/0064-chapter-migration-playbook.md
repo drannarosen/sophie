@@ -149,6 +149,19 @@ loses the structural-role signal a dedicated `<WorkedExample>`
 component would have carried. Going forward this approximation is
 not allowed; the gap blocks the next migration that surfaces it.
 
+**✅ Closed gap — `<Video>` (PR 1 of the formative-assessment plan,
+2026-05-27):** several pilots (M2-L3, M2-L5, M3-L7, M3-L10) approximated
+the Quarto `{{< video URL >}}` shortcode as a link `<Callout>` because no
+embed component existed. PR 1 ships `<Video>` in `@sophie/components` with
+privacy-light defaults (`youtube-nocookie` host, lazy iframe loading,
+`referrerpolicy="strict-origin-when-cross-origin"`), required `title`
+(axe `frame-title`) and `caption` (`<figcaption>`), and three providers
+(`youtube` / `vimeo` / `raw`). Chrome per [ADR 0058](./0058-epistemic-component-contract.md);
+ships in `makeStaticComponents`. The link-Callout workaround is retired
+for future migrations; previously-shipped chapters may be backfilled
+opportunistically. See the `<Video>` row in
+[chapter-components.md](../reference/chapter-components.md#static-astro-rendered).
+
 Exception: doc-level cosmetic gaps (a missing icon variant, a
 missing Tailwind utility) may ship inline with a tracked TODO + an
 issue link. The test: does the gap distort *epistemic structure*
