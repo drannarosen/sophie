@@ -9,11 +9,16 @@ import TextbookHead from "@sophie/astro/components/TextbookHead.astro";
 import TextbookLayout from "@sophie/astro/components/TextbookLayout.astro";
 import TocDrawer from "@sophie/astro/components/TocDrawer.astro";
 import TocSidebar from "@sophie/astro/components/TocSidebar.astro";
+import UnitViewLinkBar from "./UnitViewLinkBar.astro";
 import { buildModuleNavInputs, indexAccumulator } from "@sophie/astro";
 import { SophieChapter } from "@sophie/astro/client";
 import { getCollection } from "astro:content";
 import type { MarkdownHeading } from "astro";
 import { figures as figureRegistry } from "virtual:sophie/figures";
+import {
+  getAvailableUnitViews,
+  type UnitViewKind,
+} from "../lib/unit-views";
 
 // Convert the consumer-owned figures registry (a named-keyed map; see
 // `src/content/figures.ts`) into the array shape `<TextbookLayout>`
@@ -56,9 +61,22 @@ interface Props {
   currentChapterSlug?: string;
   /** Chapter headings (h1-h6) extracted by Astro's render(). */
   headings?: ReadonlyArray<MarkdownHeading>;
+  /**
+   * Which peer-view is currently rendered — `reading` (default),
+   * `slides`, or `practice`. Per ADR 0073 Amendment 1 §7: drives the
+   * `<UnitViewLinkBar>` `aria-current` state and the trailing
+   * "Practice this lecture" CTA (rendered only on reading views when
+   * the unit also ships a practice artifact).
+   */
+  viewKind?: UnitViewKind;
 }
 
-const { frontmatter, currentChapterSlug, headings = [] } = Astro.props;
+const {
+  frontmatter,
+  currentChapterSlug,
+  headings = [],
+  viewKind = "reading",
+} = Astro.props;
 
 // Only populate the right-column slot when the chapter has H2 headings.
 const hasToc = headings.some((h) => h.depth === 2);
@@ -75,6 +93,21 @@ const { modules, chapters: navChapters } = buildModuleNavInputs(
   sections,
   units,
 );
+
+// ADR 0073 Amendment 1 §7 — derive the peer-view set (reading | slides
+// | practice) available for the current unit. Drives the
+// <UnitViewLinkBar> + the trailing "Practice this lecture" CTA on
+// reading views. `currentChapterSlug` IS the unit id per W2/D4.
+const artifacts = await getCollection("artifacts");
+const draftUnitIds = new Set(
+  units.filter((u) => u.status === "draft").map((u) => u.id),
+);
+const unitIdForViews = currentChapterSlug ?? "";
+const availableViews = getAvailableUnitViews({
+  unit: unitIdForViews,
+  artifacts,
+  draftUnitIds,
+});
 // Pagination sort needs `status` to filter drafts; the helper drops
 // that field for nav-purity. Derive a paginable list with the same
 // bridge-filtering applied (so prev/next never points at a bridge
@@ -194,7 +227,28 @@ const next = nextRaw
           reading={frontmatter.reading}
           track={frontmatter.track}
         />
+        {
+          availableViews.length > 1 && (
+            <UnitViewLinkBar
+              unit={unitIdForViews}
+              current={viewKind}
+              availableViews={availableViews}
+            />
+          )
+        }
         <slot />
+        {
+          viewKind === "reading" && availableViews.includes("practice") && (
+            <aside class='sophie-reading-end-cta'>
+              <a
+                href={`/units/${unitIdForViews}/practice`}
+                class='sophie-reading-end-cta__link'
+              >
+                → Practice this lecture
+              </a>
+            </aside>
+          )
+        }
         <ChapterPagination previous={previous} next={next} />
         <ChapterFooter
           authors={frontmatter.authors}

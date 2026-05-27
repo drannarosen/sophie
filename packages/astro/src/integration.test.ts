@@ -7,14 +7,14 @@ import { defineSophieIntegration } from "./integration.ts";
 /**
  * Integration-test coverage for `defineSophieIntegration`'s route
  * injection at `astro:config:setup`. Fake hook context per fix T1 —
- * uses a tmpdir-rooted consumer fixture so `fs.existsSync` +
- * `warnOnUnroutedPracticeMdx` don't throw.
+ * uses a tmpdir-rooted consumer fixture so `fs.existsSync` doesn't
+ * throw on the discovery walks.
  *
  * Covers two paths:
- *  1. Consumer with no course.sophie.yaml — only the legacy
- *     /units/[unit]/reading route is injected (back-compat).
- *  2. Consumer with a valid course.sophie.yaml — landing route +
- *     section-landing route + per-info_pages routes are also injected.
+ *  1. Consumer with no course.sophie.yaml — only the per-unit reading
+ *     and practice routes are injected (no course-spec landing routes).
+ *  2. Consumer with a valid course.sophie.yaml — reading + practice +
+ *     landing + section-landing + per-info_pages routes are injected.
  */
 
 const MINIMAL_VALID_SPEC = `
@@ -113,7 +113,8 @@ describe("defineSophieIntegration — route injection (course-info projection)",
 
   beforeEach(() => {
     consumerRoot = mkdtempSync(path.join(tmpdir(), "sophie-integration-"));
-    // Empty src/content so warnOnUnroutedPracticeMdx has a directory to walk.
+    // Empty src/content so the integration's content-discovery walks
+    // don't throw on the missing directory.
     fs.mkdirSync(path.join(consumerRoot, "src", "content"), {
       recursive: true,
     });
@@ -123,16 +124,17 @@ describe("defineSophieIntegration — route injection (course-info projection)",
     rmSync(consumerRoot, { recursive: true, force: true });
   });
 
-  test("injects only the legacy reading route when no course.sophie.yaml exists (back-compat)", () => {
+  test("injects per-unit reading + practice routes when no course.sophie.yaml exists (no course-spec landing)", () => {
     const { injected } = runSetupHook(consumerRoot);
     const patterns = injected.map((r) => r.pattern);
     expect(patterns).toContain("/units/[unit]/reading");
+    expect(patterns).toContain("/units/[unit]/practice");
     expect(patterns).not.toContain("/");
     expect(patterns).not.toContain("/sections/[section]/");
     expect(patterns).not.toContain("/syllabus/");
   });
 
-  test("injects landing + section-landing + info-page routes when course.sophie.yaml is present", () => {
+  test("injects per-unit + landing + section-landing + info-page routes when course.sophie.yaml is present", () => {
     fs.writeFileSync(
       path.join(consumerRoot, "course.sophie.yaml"),
       MINIMAL_VALID_SPEC
@@ -140,6 +142,7 @@ describe("defineSophieIntegration — route injection (course-info projection)",
     const { injected } = runSetupHook(consumerRoot);
     const patterns = injected.map((r) => r.pattern);
     expect(patterns).toContain("/units/[unit]/reading");
+    expect(patterns).toContain("/units/[unit]/practice");
     expect(patterns).toContain("/");
     expect(patterns).toContain("/sections/[section]/");
     expect(patterns).toContain("/syllabus/");

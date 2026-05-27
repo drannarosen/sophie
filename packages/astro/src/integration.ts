@@ -8,7 +8,6 @@ import type { AstroIntegration } from "astro";
 import { loadCourseSpec } from "./lib/course-spec-loader.ts";
 import { courseSpecVirtualModule } from "./lib/course-spec-virtual-module.ts";
 import { figuresVirtualModule } from "./lib/figures-virtual-module.ts";
-import { warnOnUnroutedPracticeMdx } from "./lib/integration/practice-mdx-warning.ts";
 import { mdxAuthorTrapsVitePlugin } from "./lib/mdx-plugins/mdx-author-traps.ts";
 import { skillReviewResolverVitePlugin } from "./lib/mdx-plugins/skill-review-resolver-vite.ts";
 import { buildPagefindIndex } from "./lib/pagefind-postbuild.ts";
@@ -171,6 +170,15 @@ export function defineSophieIntegration(
           entrypoint: "@sophie/astro/routes/reading.astro",
         });
 
+        // ADR 0073 Amendment 1 §7 — practice route mirrors reading.
+        // Retires issue #189's "discovered-but-unrouted" warning: the
+        // `/units/<unit>/practice` URL now exists for every unit that
+        // ships a practice.mdx artifact.
+        injectRoute({
+          pattern: "/units/[unit]/practice",
+          entrypoint: "@sophie/astro/routes/practice.astro",
+        });
+
         // ADR 0082 § A2.6 — warn when a consumer ships a file at the
         // same route pattern as the injected route. Per Astro #3809,
         // file-based routes win over injected routes silently; surfacing
@@ -246,17 +254,6 @@ export function defineSophieIntegration(
             }
           }
         }
-
-        // Issue #189 — `practice.mdx` discovered-but-unrouted warning.
-        // `practice` is a valid ArtifactType (ADR 0067) but no
-        // /units/<unit>/practice route is injected yet; the route ships
-        // with ADR 0073 (unified assessment schema, unimplemented).
-        // Warn consumers so authors aren't surprised when their
-        // practice content silently never renders.
-        warnOnUnroutedPracticeMdx(
-          path.join(consumerRoot, "src/content"),
-          logger
-        );
 
         logger.info("Sophie integration loaded (MDX + React)");
       },

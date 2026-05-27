@@ -10,23 +10,21 @@ import ChapterLayout from "../components/ChapterLayout.astro";
 const components = makeStaticComponents({ figures });
 
 export async function getStaticPaths() {
-  // W2/D1 (Path A) + D5: routes for every reading-artifact in the
-  // artifacts collection. ADR 0051 graduates per W2/D2 — drafts now
-  // live on UnitEntry.status; filter the route-set against the units
-  // collection so draft units don't render student-facing routes.
+  // ADR 0073 Amendment 1 §7 — practice route mirrors reading. Routes
+  // for every practice-artifact in the artifacts collection. Drafts
+  // excluded per ADR 0051 / W2/D2.
   const artifacts = await getCollection("artifacts");
   const units = await getCollection("units");
   const draftUnitIds = new Set(
     units.filter((u) => u.data.status === "draft").map((u) => u.data.id),
   );
-  const readings = artifacts.filter(
+  const practices = artifacts.filter(
     (a) =>
-      a.id.endsWith("/reading") &&
-      // Path-derived unit id is path-position-2 (<sec>/units/<unit>/reading
-      // per the artifacts collection's content.config.ts base path).
+      a.id.endsWith("/practice") &&
+      // Path-derived unit id is path-position-2 (<sec>/units/<unit>/practice).
       !draftUnitIds.has(a.id.split("/")[2] ?? ""),
   );
-  return readings.map((artifact) => {
+  return practices.map((artifact) => {
     const unitId = artifact.id.split("/")[2] ?? "";
     return { params: { unit: unitId }, props: { artifact } };
   });
@@ -40,7 +38,7 @@ const { Content, headings } = await render(artifact);
   frontmatter={artifact.data}
   currentChapterSlug={artifact.data.id}
   headings={headings}
-  viewKind="reading"
+  viewKind="practice"
 >
   <Content components={components} />
 </ChapterLayout>

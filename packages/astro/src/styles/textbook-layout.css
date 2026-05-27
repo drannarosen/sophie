@@ -1633,3 +1633,60 @@ html {
   );
   background: var(--sophie-validation-re-validation-needed-bg);
 }
+
+/* Unit-view link-bar — Reading | Slides | Practice peer-view navigation.
+   Per ADR 0073 Amendment 1 §7. Link-shaped (not stateful Radix Tabs)
+   because each view is a static page; bookmarkable URLs are the right
+   shape. Tabs render conditionally on artifact presence. */
+.sophie-unit-view-link-bar {
+  display: flex;
+  gap: var(--sophie-space-2);
+  padding-block-end: var(--sophie-space-3);
+  border-block-end: 1px solid var(--sophie-border-subtle);
+  margin-block-end: var(--sophie-space-4);
+}
+.sophie-unit-view-link-bar__tab {
+  padding: var(--sophie-space-2) var(--sophie-space-3);
+  border-radius: var(--sophie-radius-md);
+  color: var(--sophie-text-muted);
+  text-decoration: none;
+  font-weight: var(--sophie-weight-medium);
+}
+.sophie-unit-view-link-bar__tab:hover {
+  color: var(--sophie-text);
+  background: var(--sophie-surface-2);
+}
+.sophie-unit-view-link-bar__tab--active {
+  color: var(--sophie-text);
+  background: color-mix(in srgb, var(--sophie-accent) 8%, transparent);
+}
+.sophie-unit-view-link-bar__tab[aria-current="page"] {
+  font-weight: var(--sophie-weight-semibold);
+}
+.sophie-unit-view-link-bar__tab:focus-visible {
+  outline: var(--sophie-focus-width) solid var(--sophie-focus-color);
+  outline-offset: 2px;
+}
+
+/* Trailing "Practice this lecture" CTA — rendered at the end of a
+   reading view when the unit ships a practice artifact. Per ADR 0073
+   Amendment 1 §7. */
+.sophie-reading-end-cta {
+  margin-block-start: var(--sophie-space-6);
+  padding: var(--sophie-space-4);
+  border: 1px solid var(--sophie-border-subtle);
+  border-radius: var(--sophie-radius-lg);
+  background: var(--sophie-surface-1);
+}
+.sophie-reading-end-cta__link {
+  font-weight: var(--sophie-weight-semibold);
+  color: var(--sophie-text);
+  text-decoration: none;
+}
+.sophie-reading-end-cta__link:hover {
+  color: var(--sophie-accent);
+}
+.sophie-reading-end-cta__link:focus-visible {
+  outline: var(--sophie-focus-width) solid var(--sophie-focus-color);
+  outline-offset: 2px;
+}

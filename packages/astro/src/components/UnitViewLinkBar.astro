@@ -1,0 +1,44 @@
+---
+import type { UnitViewKind } from "../lib/unit-views.ts";
+
+interface Props {
+  unit: string;
+  current: UnitViewKind;
+  availableViews: ReadonlyArray<UnitViewKind>;
+}
+
+const { unit, current, availableViews } = Astro.props;
+
+const labelMap: Record<UnitViewKind, string> = {
+  reading: "Reading",
+  slides: "Slides",
+  practice: "Practice",
+};
+
+// Order locked: reading → slides → practice (read → see → do). The
+// helper already returns the views in this order, but re-filtering
+// here guards against callers that pass an unordered set.
+const orderedViews: ReadonlyArray<UnitViewKind> = [
+  "reading",
+  "slides",
+  "practice",
+];
+const tabs = orderedViews.filter((v) => availableViews.includes(v));
+---
+
+<nav class='sophie-unit-view-link-bar' aria-label='Unit views'>
+  {
+    tabs.map((v) => (
+      <a
+        href={`/units/${unit}/${v}`}
+        aria-current={v === current ? "page" : undefined}
+        class:list={[
+          "sophie-unit-view-link-bar__tab",
+          v === current && "sophie-unit-view-link-bar__tab--active",
+        ]}
+      >
+        {labelMap[v]}
+      </a>
+    ))
+  }
+</nav>
