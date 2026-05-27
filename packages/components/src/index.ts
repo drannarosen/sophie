@@ -311,6 +311,16 @@ export {
   UnitsPropsSchema,
   unitsContract,
 } from "./components/Units/index.ts";
+export type {
+  VideoProps,
+  VideoProvider,
+} from "./components/Video/index.ts";
+export {
+  Video,
+  VideoPropsSchema,
+  VideoProviderSchema,
+  videoContract,
+} from "./components/Video/index.ts";
 export { Week, type WeekProps } from "./components/Week/index.ts";
 export type {
   WorkedExampleDimCheckProps,

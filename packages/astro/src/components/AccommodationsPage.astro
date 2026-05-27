@@ -2,7 +2,7 @@
 import { AccessibilitySection } from "@sophie/components";
 import type { CollectionEntry } from "astro:content";
 import { render } from "astro:content";
-import { makeStaticComponents } from "../components.tsx";
+import { makeChromeComponents } from "../components.tsx";
 import type { CourseSpec } from "@sophie/core/schema";
 import InfoPageShell from "./InfoPageShell.astro";
 import { figures } from "virtual:sophie/figures";
@@ -19,7 +19,7 @@ interface Props {
 }
 
 const { spec, proseEntry } = Astro.props;
-const chromeComponents = makeStaticComponents({ figures });
+const chromeComponents = makeChromeComponents({ figures });
 const ProseContent = proseEntry ? (await render(proseEntry)).Content : null;
 ---
 

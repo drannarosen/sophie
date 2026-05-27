@@ -92,6 +92,7 @@ This page is the chapter author's quick reference.
 | `<Intervention>` 🚧 in-progress | Children-mode source for `PedagogyIndex.interventions` (per [ADR 0044](../decisions/0044-misconception-graph-and-intervention-library.md); v1 design locked in [2026-05-17 design doc](../../plans/2026-05-17-intervention-design.md)). Nests inside a misconception `<Aside>` or `<Callout variant="misconception">` (`addresses="this"`) — or stands outside with an explicit `addresses="<misc-slug>"`. `type` references the 12 canonical interventions in `intervention-index.ts` or `"custom"`. Feeds the **MG3 + MG4 + I1–I3** audit invariants. (I4 deferred until ADR 0041 `move-index.ts` ships.) |
 | `<Observable>` / `<Assumption>` / `<Units>` / `<BreaksWhen>` / `<CommonMisuse>` / `<DerivationStep>` | Biography children of an equation (per [ADR 0046](../decisions/0046-equation-biography.md) + [ADR 0060](../decisions/0060-registry-ecosystem.md)). **Authored in the equation registry MDX body** at `src/content/equations/<id>.mdx`, NOT chapter-side. Make an equation's observational meaning, assumptions, units, validity domain, common student misuses, and derivation first-class structured metadata. Each declares its `epistemicRole` as a hardcoded const (Observable→observable, Assumption→assumption, BreaksWhen→approximation, Units→none, CommonMisuse→cross-refs misconception, DerivationStep→model). `<Units>` is now optional per [ADR 0046 §R10](../decisions/0046-equation-biography.md) — the notation registry resolves units by symbol; per-equation `<Units>` children only needed when a symbol isn't in the registry. Feeds the **E7 + E8 + E9** audit invariants (only fire when biography children present); the R1–R4 invariants police citation-vs-declaration cross-reference integrity. See [equation-registry-schema](equation-registry-schema.md) for the registry MDX shape. |
 | `<WorkedExample>` | Compound primitive for step-by-step applied quantitative reasoning (per [ADR 0081](../decisions/0081-worked-example-component.md)). Slots bind by component identity: `<WorkedExample.Problem>` (givens) / `<WorkedExample.Step label="…">` (repeatable; mirrors `<DerivationStep>`) / `<WorkedExample.DimCheck>` (dimensional verification) / `<WorkedExample.Result>` (answer + interpretation). Root renders a `<section aria-labelledby>` region with `data-epistemic-role="numerical"`; `<WorkedExample.DimCheck>` carries `data-dim-check` as the **QB6** ("units shown at every step") audit hook. **Replaces the disallowed `<Callout variant="deep-dive">` approximation** for worked examples ([ADR 0064](../decisions/0064-chapter-migration-playbook.md) §3). Per WS B+D ([issue #188](https://github.com/drannarosen/sophie/issues/188)), the pedagogy-index extractor + audit invariants ship: `extractWorkedExamples` populates `PedagogyIndex.workedExamples` with per-callsite slot-coverage summaries; **WE-1** WARN (≥1 `<Step>` AND zero `<DimCheck>` — QB6 coverage gap), **WE-2** ERROR (missing `<Problem>` or `<Result>`), and **WE-3** WARN (unknown JSX flow child, R7 disposition) consume them. |
+| `<Video>` | Privacy-light third-party video embed (YouTube / Vimeo / arbitrary iframe). Three providers via the discriminated `provider=` prop: `provider="youtube"` (default; renders against the `youtube-nocookie.com` host with `lazy` iframe loading and `referrerpolicy="strict-origin-when-cross-origin"`), `provider="vimeo"` (player.vimeo.com), `provider="raw"` (caller-supplied `src=`). Required `title` (string) satisfies axe's `frame-title` rule; required `caption` renders inside `<figcaption>` paired with the iframe under a `<figure>`. Optional `credit`, `width` / `height` overrides. Chrome, not pedagogy — no `epistemicRole`, no pedagogy-index contribution, no audit invariants per [ADR 0058](../decisions/0058-epistemic-component-contract.md) (chrome-vs-pedagogy boundary). Ships in `makeStaticComponents`. Closes the [ADR 0064](../decisions/0064-chapter-migration-playbook.md) video-as-link workaround gap (M3-L7, M3-L10, M2-L5, M2-L3 readings all approximated `{{< video URL >}}` shortcodes as link Callouts because no embed component existed). |
 
 ### Chrome primitives (PR 5, Phase B)
 
@@ -350,8 +351,8 @@ The component-set boundary is enforced via two factories at
 
 | Factory | Used in | Allowed |
 | --- | --- | --- |
-| `makeStaticComponents({ figures })` | chapter MDX (`reading.mdx`) | full set: 8 epistemic-role pedagogy primitives + inline chrome (`<Callout>`, `<GlossaryTerm>`, `<KeyEquation>`, `<EquationRef>`, `<FigureRef>`, `<Aside>`) + the 5 course-management chrome above |
-| `makeChromeComponents({ figures })` | course-info prose fragments (`src/content/course-info/<slug>.mdx`) | inline chrome subset + 5 course-management chrome above; **excludes** `<OMIFlow>`, `<WorkedExample>`, `<MultiRep>`, `<Intervention>` (pedagogy primitives whose meaning depends on chapter context) |
+| `makeStaticComponents({ figures })` | chapter MDX (`reading.mdx`) | shared chrome subset (inline chrome `<Callout>`, `<GlossaryTerm>`, `<KeyEquation>`, `<EquationRef>`, `<FigureRef>`, `<ChapterRef>`, `<Aside>`, `<Figure>`; static media chrome `<Video>`; the 5 course-management chrome `<Due>` / `<OfficeHours>` / `<Points>` / `<Reading>` / `<Week>`) + pedagogy primitives currently registered (`<WorkedExample>`; future `<OMIFlow>`/`<MultiRep>`/`<Intervention>` pending factory-registration per ADR 0058 §R-0080-A2) |
+| `makeChromeComponents({ figures })` | course-info prose fragments (`src/content/course-info/<slug>.mdx`) | shared chrome subset only; **excludes** `<WorkedExample>` (and future `<OMIFlow>`/`<MultiRep>`/`<Intervention>` pedagogy primitives whose meaning depends on chapter context) |
 
 See [course-info-schema.md](./course-info-schema.md) for the
 prose-fragment authoring reference and the full allowed/excluded
@@ -572,6 +573,13 @@ A photon is a packet of light.
 This relationship matters here because we want to map peak
 wavelength to temperature for the example star below.
 </KeyEquation>
+
+{/* Privacy-light video embed; three providers. */}
+<Video id="MO0r930Sn_8" title="Rubin Observatory — first light" caption="Rubin Observatory completes commissioning" credit="LSST/NSF" />
+
+<Video id="123456789" provider="vimeo" title="ScienceClic — Big Bang nucleosynthesis" caption="The first three minutes" credit="ScienceClic" />
+
+<Video src="https://example.org/keplers-second-law.mp4" provider="raw" title="Kepler's second law animation" caption="Equal areas in equal times" />
 ```
 
 The page that renders the MDX wires the map:
@@ -902,6 +910,7 @@ against the minimal `mobile-a11y-fixture` chapter.
 | Optional technical depth on the chapter's topic (derivation, mechanism, worked detail) — collapsible | `<Callout variant="deep-dive" id="..." title="...">` (tracked in `PedagogyIndex.deepDives` per [ADR 0058 §R-deep-dive](../decisions/0058-epistemic-component-contract.md)) |
 | Adjacent enrichment (history, cultural connections, fun facts) — collapsible | `<Callout variant="the-more-you-know" title="...">` (intentionally NOT tracked — outside the eight-role taxonomy per ADR 0058 §R-deep-dive) |
 | An image with caption + credit | `<Figure>` (registry-resolved) |
+| Embed a privacy-light third-party video (YouTube/Vimeo) or arbitrary iframe source | `<Video id="..." title="..." caption="..." />` (default YouTube via `youtube-nocookie`; `provider="vimeo"` or `provider="raw" src="..."` for other sources) |
 | A named equation block citing a registry entry | `<KeyEquation refId="X">` (registry-resolved per [ADR 0060](../decisions/0060-registry-ecosystem.md)) |
 | Inline reference to a defined term | `<GlossaryTerm name="X">term</GlossaryTerm>` |
 | Inline reference to an equation | `<EquationRef refId="X" />` |
