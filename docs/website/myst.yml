@@ -257,6 +257,7 @@ project:
         - file: pilots/m3-l4-radiation-transport.md
         - file: pilots/m3-l5-stellar-structure-scalings.md
         - file: pilots/m3-l6-mass-limits.md
+        - file: pilots/m3-l7-low-mass-evolution.md
     - title: Status
       children:
         - file: status/roadmap.md
