@@ -41,6 +41,13 @@ export default defineConfig({
     // files. Must exist at dist/lib/artifacts-from-collection.js to
     // resolve from the copied-verbatim .astro files in dist/components/.
     "lib/artifacts-from-collection": "src/lib/artifacts-from-collection.ts",
+    // `lib/unit-views` enumerates peer-views (reading | slides |
+    // practice) available for a unit, based on artifact presence
+    // in the content collection (ADR 0073 Amendment 1 §7). Imported
+    // by ChapterLayout.astro; must exist at dist/lib/unit-views.js
+    // to resolve from the copied-verbatim .astro files in
+    // dist/components/.
+    "lib/unit-views": "src/lib/unit-views.ts",
     // `lib/pedagogy-index/accumulator` is the cross-chapter
     // `IndexAccumulator` singleton (ADR 0038; C1 split under ADR 0061).
     // Imported by 12 .astro chrome components (TextbookLayout,

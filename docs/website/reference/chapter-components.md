@@ -490,10 +490,12 @@ popover; the inline footnote is for short summary text.
 **Pre-launch placeholder.** The six formative-family MDX components
 (`<MCQ>`, `<MultiSelect>`, `<FillBlank>`, `<NumericQuestion>`,
 `<QuickCheck>`, `<PracticeProblem>`) and two shared reveal primitives
-(`<Solution>`, `<Hint>`) ship across PRs 3–9 of the
+(`<Solution>`, `<Hint>`) ship across PRs 4–9 of the
 [formative-assessment implementation plan](../../plans/2026-05-27-formative-assessment-implementation.md).
-Design locked by
-[ADR 0073 Amendment 1](../decisions/0073-unified-assessment-schema.md#amendment-1-formative-with-reveal-v1-2026-05-27).
+PR 3 (the practice route + link-bar + trailing CTA) shipped the
+authoring surface these components target — see the
+[`practice.mdx` route](#practice-mdx-route) section above. Design locked by
+[ADR 0073 Amendment 1](../decisions/0073-unified-assessment-schema.md#amendments).
 Author how-to:
 [formative-assessment-authoring.md](./formative-assessment-authoring.md).
 
@@ -847,31 +849,53 @@ masks code regions before checking.
 
 Originating finding: M2-L2 pilot Surprise #3 / [issue #193](https://github.com/drannarosen/sophie/issues/193).
 
-## `practice.mdx` deferral (no route yet)
+(practice-mdx-route)=
+
+## `practice.mdx` route
 
 `practice` is a valid [`ArtifactType`](https://github.com/drannarosen/sophie/blob/main/packages/core/src/schema/artifact.ts)
-per [ADR 0067](../decisions/0067-section-level-artifacts.md), so
-authoring `src/content/sections/<sec>/units/<unit>/practice.mdx`
-builds clean against the content collection. But `@sophie/astro`
-[(ADR 0082)](../decisions/0082-chapter-layout-extraction.md)
-**does not yet inject a `/units/<unit>/practice` route** — the
-route ships with [ADR 0073](../decisions/0073-unified-assessment-schema.md)
-(unified assessment schema, unimplemented). Practice content
-authored today silently never renders.
+per [ADR 0067](../decisions/0067-section-level-artifacts.md).
+Authoring `src/content/sections/<sec>/units/<unit>/practice.mdx`
+publishes at `/units/<unit>/practice` — `@sophie/astro` injects
+the route at `astro:config:setup` mirroring the existing
+`/units/<unit>/reading` shape per
+[ADR 0082](../decisions/0082-chapter-layout-extraction.md) (see
+the [R-practice-route revision](../decisions/0082-chapter-layout-extraction.md#revisions)).
+Draft units are excluded per
+[ADR 0051](../decisions/0051-draft-content-shipping.md). The
+route's design source is
+[ADR 0073 Amendment 1](../decisions/0073-unified-assessment-schema.md#amendments).
 
-To make this gap visible, the integration emits a build-time
-WARNING per `practice.mdx` it discovers, pointing at the
-tracking issue ([#189](https://github.com/drannarosen/sophie/issues/189)).
-Authors can: (a) ignore the warning and ship practice content
-ahead of ADR 0073, (b) move the file out of `src/content/sections/`
-to suppress the warning, or (c) wait for ADR 0073 to land before
-authoring.
+**Same authoring surface as `reading.mdx`.** Both routes render
+through the same `makeStaticComponents({ figures })` factory, so
+every MDX component documented above (`<Callout>`, `<Aside>`,
+`<KeyEquation>`, `<Figure>`, `<MultiRep>`, `<OMIFlow>`, etc.) is
+available in `practice.mdx` with identical semantics + identical
+audit coverage. Frontmatter shape matches `reading.mdx` (per the
+artifact content-collection schema). The formative-family components (PRs 4–9 of the
+formative-assessment plan — see the *Formative family* section
+below) become available in both `reading.mdx` and `practice.mdx`
+as each PR lands.
 
-The decision to warn-and-defer (rather than ship a single-purpose
-`practice` artifact type + route now) was made in the WS-A/B/C/E
-triage cycle (2026-05-25): ADR 0073's broader assessment schema
-may want a different route shape, and committing the route now
-risks back-compat work later.
+**`<ChapterLayout>` link-bar.** Above the chapter title,
+`ChapterLayout` renders an N-tab affordance — Reading | Slides |
+Practice — listing only the views with artifacts present for the
+current unit. Tab-styled link anchors (not stateful Radix Tabs)
+so each view is a bookmarkable static page; the active view
+carries `aria-current="page"` for screen-reader + visual
+indication. CSS class is `.sophie-unit-view-link-bar` (BEM); the
+`<nav>` is labelled "Unit views". Order is locked
+`reading → slides → practice` (read → see → do); slides not yet
+shipping but the bar is N-tab-ready so slides slot in zero-cost
+when their ADR lands.
+
+**Trailing CTA on `reading.astro`.** When the unit has a
+`practice.mdx`, the reading view ends with a "→ Practice this
+lecture" card linking to `/units/<unit>/practice` — the
+pedagogical exit-ramp from passive reading to active practice.
+CSS class is `.sophie-reading-end-cta`. The CTA renders only when
+the practice artifact is present; absent practice means absent
+card, no broken-link surface.
 
 ## Mobile rendering + a11y guarantees
 

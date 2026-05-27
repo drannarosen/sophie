@@ -312,6 +312,59 @@ AGENTS.md R12 (type-narrowing throw at frontmatter top).
 See [ADR 0080 Amendment 2](./0080-course-spec-format-v0-1.md#amendment-2-assessment-grade-weights-clean-break-course-info-projection-2026-05-26)
 for the projection-pattern decision trail.
 
+### R-practice-route — Second injected route + N-tab unit-view link-bar (2026-05-27)
+
+Second injected route shipped per
+[ADR 0073 Amendment 1](./0073-unified-assessment-schema.md#amendments):
+`/units/[unit]/practice` mirrors the reading route's
+`getStaticPaths` shape (filter artifacts by `endsWith("/practice")`;
+exclude draft units per [ADR 0051](./0051-draft-content-shipping.md))
+and renders `practice.mdx` through the same `makeStaticComponents`
+factory. PR 3 of the
+[formative-assessment plan](../../plans/2026-05-27-formative-assessment-implementation.md)
+is the implementing change.
+
+Three additions to the layout chrome:
+
+- **`<UnitViewLinkBar>`** — N-tab affordance (Reading | Slides |
+  Practice) at the top of `<ChapterLayout>`, conditional on
+  artifact presence per unit. Slides not yet implemented; the bar
+  is N-tab-ready from day one so slides slot in zero-cost when
+  their ADR ships. Link-shaped (tab-styled anchors, not stateful
+  Radix Tabs) so each view is a bookmarkable static page. Active
+  view carries `aria-current="page"`. CSS class
+  `.sophie-unit-view-link-bar` (BEM).
+- **Trailing CTA** — "→ Practice this lecture" card at the
+  bottom of `reading.astro` when the unit has a practice
+  artifact. The pedagogical exit-ramp from the reading view to
+  the practice view. CSS class `.sophie-reading-end-cta`.
+- **`getAvailableUnitViews` helper** at
+  `packages/astro/src/lib/unit-views.ts` — pure function
+  (artifacts × draftUnitIds × unit) → ordered `UnitViewKind[]`.
+  Used by `<ChapterLayout>` to compute the link-bar's available
+  views. Built as an internal tsup entry; not exposed in
+  `package.json` exports (consumed only by the copied-verbatim
+  `ChapterLayout.astro` in `dist/components/`).
+
+Three deletions to the integration:
+
+- `packages/astro/src/lib/integration/practice-mdx-warning.ts`
+  (the #189 warn-and-defer emitter).
+- The `warnOnUnroutedPracticeMdx(...)` call + import in
+  `integration.ts`.
+- The companion test file
+  (`practice-mdx-warning.test.ts`).
+
+Issue [#189](https://github.com/drannarosen/sophie/issues/189)
+closes with this PR.
+
+One new export from `@sophie/astro`:
+
+- `./routes/practice.astro` — the route entrypoint, mirroring
+  the existing `./routes/reading.astro` export shape.
+  Auto-injected by `defineSophieIntegration` at
+  `astro:config:setup` (consumer repos do nothing).
+
 ## References
 
 - [ADR 0023](0023-vertical-slice-build-order.md) — vertical-slice-
