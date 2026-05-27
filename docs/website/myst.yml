@@ -251,6 +251,7 @@ project:
         - file: pilots/m1-l3-gravity-and-orbits.md
         - file: pilots/m1-l4-light-as-information.md
         - file: pilots/m2-l1-distance-and-parallax.md
+        - file: pilots/m2-l4-weighing-stars.md
     - title: Status
       children:
         - file: status/roadmap.md
