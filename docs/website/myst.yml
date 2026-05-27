@@ -262,6 +262,7 @@ project:
         - file: pilots/m3-l9-high-mass-evolution-supernovae.md
         - file: pilots/m3-l10-neutron-stars-black-holes.md
         - file: pilots/m4-l1-galaxies-as-ecosystems.md
+        - file: pilots/m4-l2-the-dynamical-universe.md
     - title: Status
       children:
         - file: status/roadmap.md

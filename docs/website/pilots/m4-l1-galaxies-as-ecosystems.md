@@ -50,13 +50,18 @@ M3-L7/L9 precedent: OMIFlow only for clean strict-3 arcs.)
 ### Glossary canonical (ADR 0086)
 
 The Module 4 opener and the **home of the galaxy-ecosystem vocabulary**, so it takes
-**12 terms canonical** — all new ownership, no collisions, no takeovers: Baryon,
+**12 terms canonical** at L1 time — all new ownership, no collisions: Baryon,
 Baryon cycle, Cold gas, Dark matter, Dust, Feedback, Galaxy morphology, Interstellar
 medium, Metal enrichment, Neutral hydrogen, Starburst, Tidal interaction. Ten come
 from the source's explicit glossary; `baryon` (defined inline in Part 4) and
-`dark matter` (mentioned in Part 2) are added per the glossary-enrichment exception.
-**Dark matter is taken canonical here at Anna's call** even though L2 (the dynamical
-universe) is its physics home — L2 will reference it.
+`dark matter` (mentioned in Part 2) were added per the glossary-enrichment exception.
+
+> **Follow-up (M4-L2 takeover).** `dark matter` was initially taken canonical here, but
+> at the M4-L2 gate Anna moved its canonical home to **L2 — The Dynamical Universe**
+> (rotation curves + the Bullet Cluster are its physics home). L1's `<Aside>` was
+> dropped to a non-canonical local definition. So L1 now owns **11 canonical** terms +
+> a non-canonical `dark matter` def; L2 owns `dark matter` canonical. (Routine
+> "canonical takeover when migrating a term's true home out of order.")
 
 ### Equation registry
 
@@ -132,5 +137,6 @@ link-Callout remap.
   planned)**; 0 iframes + 1 YouTube link; no leaked MDX; the section sidebar reads
   Foundations → HR Diagram → Stellar Structure → **Galaxies & Cosmology** with L1
   `aria-current`; axe **0 violations desktop, light + dark**.
-- ✅ ADR 0086: 12 galaxies-cosmology terms canonical here (no collisions, no takeovers).
+- ✅ ADR 0086: 12 terms canonical here at L1 time (no collisions). Later corrected by
+  the M4-L2 dark-matter takeover → L1 now owns 11 canonical + a non-canonical dark-matter def.
 - ✅ **Module 4 opened.** Zero edits to `/Users/anna/Teaching/astr201-sp26/`.
