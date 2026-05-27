@@ -4,7 +4,7 @@
 
 **Goal:** Ship the formative-assessment family (six components + two shared reveals + practice route + audit invariants) as ADR 0073 Amendment 1, plus four independent reading-hardening fast wins from the ASTR 201 Modules 1–4 migration. v1 renders + reveals; grading deferred but seamed.
 
-**Architecture:** Two tracks across **12 PRs**. Track A is one ADR amendment + eight bottom-up PRs that ship six MDX formative components (`<MCQ>`, `<MultiSelect>`, `<FillBlank>`, `<NumericQuestion>`, `<QuickCheck>`, `<PracticeProblem>`) and two shared reveal primitives (`<Solution>`, `<Hint>`), backed by a new `formatives` pedagogy-index bucket with five audit invariants (AS-1..AS-5), rendered via an injected `/units/[unit]/practice` route alongside an N-tab `Reading | Slides | Practice` link-bar in `<ChapterLayout>`. Track B is four independent fast wins: `<Video>` (closes ADR 0064 gap), author-trap lint extension, audit-error DX, figures.ts duplicate-key guard. Foundational shape: parent-context threading (only `<MCQ>` / `<MultiSelect>` / `<FillBlank>` / `<NumericQuestion>` / `<QuickCheck>` / `<PracticeProblem>` own `course/unit/id`; `<Solution>` / `<Hint>` read context, throw if not under a formative parent); answer-contract as discriminated union materialized by the extractor onto `FormativeEntry`; grading + retrieval-unification + cross-unit `<Assignment>` deferred to v2 with the seam locked in §v2-foreshadowing.
+**Architecture:** Two tracks across **12 PRs**. Track A is one ADR amendment + eight bottom-up PRs that ship six MDX formative components (`<MCQ>`, `<MultiSelect>`, `<FillBlank>`, `<NumericQuestion>`, `<QuickCheck>`, `<PracticeProblem>`) and two shared reveal primitives (`<Solution>`, `<Hint>`), backed by a new `formatives` pedagogy-index bucket with five audit invariants (AS-1..AS-5), rendered via an injected `/units/[unit]/practice` route alongside an N-tab `Reading | Slides | Practice` link-bar in `<ChapterLayout>`. Track B is four independent fast wins: `<Video>` (closes ADR 0064 gap), author-trap lint extension, audit-error DX, figures.ts duplicate-key guard. Foundational shape: **compile-time parent-prop threading** via `sophieAutoImportsRemarkPlugin` (shipped PR 4) — only `<MCQ>` / `<MultiSelect>` / `<FillBlank>` / `<NumericQuestion>` / `<QuickCheck>` / `<PracticeProblem>` declare `course/unit/id`; the remark plugin walks the MDX AST at compile time and threads those values onto every nested `<Solution>` / `<Hint>` as `course` / `unit` / `parentId` props (curated MDX-compile error when missing); answer-contract as discriminated union materialized by the extractor onto `FormativeEntry`; grading + retrieval-unification + cross-unit `<Assignment>` deferred to v2 with the seam locked in §v2-foreshadowing.
 
 **Tech stack:** Sophie monorepo — pnpm + Turborepo (per ADR 0011/0014); Astro 6 + `@astrojs/mdx`; React 19 islands per ADR 0001/0027; Zod v4 schemas per ADR 0003; Radix UI primitives per ADR 0019 (adds `@radix-ui/react-radio-group` + `@radix-ui/react-checkbox` to the existing six); IndexedDB persistence via `useInteractive` per ADR 0007; Biome lint + format per ADR 0013; Vitest + axe-core test discipline per ADR 0004 + R11.
 
@@ -25,6 +25,33 @@ The ASTR 201 Modules 1–4 reading migration (23 readings across 4 modules; `pil
 
 ADR 0073 (`docs/website/decisions/0073-unified-assessment-schema.md`) already locks the full Assessment + Rubric + BKT design as `accepted-design`. This work ships **as Amendment 1 to ADR 0073**, locking the formative-with-reveal v1 wave as a strict subset of the existing schema. Grading, attempt-tracking, BKT, the `<Assignment>` shape, and the `<RetrievalPrompt>`-as-MCQ-wrapper unification are all deferred to v2 but the seams are explicit in §v2-foreshadowing.
 
+## Lessons from PR 4 — architectural pivot (READ BEFORE PRs 5–9)
+
+PR 4 shipped a different architecture than this plan originally described. The author-surface contract is unchanged — consumer-course MDX still writes `<PracticeProblem course unit id>` with bare `<Solution>` / `<Hint>` children — but the **implementation moved from a runtime React Context to a compile-time remark plugin**. This is a meaningful design change, not a minor adjustment. The full design now lives in [ADR 0073 Amendment 1 §3](../website/decisions/0073-unified-assessment-schema.md#amendment-1-section-3-author-surface-and-parent-prop-threading) and [`docs/website/reference/formative-assessment-authoring.md`](../website/reference/formative-assessment-authoring.md); this section is the in-plan summary for future-Anna landing on PRs 5–9 after a context gap.
+
+**Why the pivot.** The original plan threaded `course/unit/parentId` from `<PracticeProblem>` to nested `<Solution>` / `<Hint>` via a `FormativeContext` React provider. Empirically does not work in Astro's MDX island model: each top-level MDX JSX tag SSRs as its own React tree, so React Context cannot span sibling islands. The `experimentalReactChildren: true` Astro flag does NOT fix this for compound formative-family blocks. `useFormativeContext` threw on every `<Solution>` during smoke SSR.
+
+**The fix — `sophieAutoImportsRemarkPlugin`** at [`packages/astro/src/lib/mdx-plugins/sophie-auto-imports.ts`](../../packages/astro/src/lib/mdx-plugins/sophie-auto-imports.ts) does THREE jobs at MDX compile time:
+
+1. **Auto-injects `import { … } from "@sophie/components"`** for any used Sophie interactive or content-only component (registries: `SOPHIE_INTERACTIVE_COMPONENTS`, `SOPHIE_CONTENT_AUTO_IMPORT`).
+2. **Auto-injects `client:load`** as a boolean-presence attribute on interactive components (unless author already declared a different client directive).
+3. **Walks formative-parent blocks and threads `course`/`unit`/`parentId` to nested `<Solution>` / `<Hint>` descendants** — registries: `SOPHIE_FORMATIVE_PARENTS` (all six v1 parents pre-registered) and `SOPHIE_FORMATIVE_CHILDREN` (`Solution`, `Hint`). Curated MDX-compile error names the file + parent when `course`/`unit`/`id` is missing.
+
+**What this means for PRs 5–9 (compound effect — read every bullet):**
+
+- **The plugin's formative-parent registry is ALREADY COMPLETE.** All six v1 parents (`PracticeProblem`, `MCQ`, `MultiSelect`, `FillBlank`, `NumericQuestion`, `QuickCheck`) are pre-registered in `SOPHIE_FORMATIVE_PARENTS`. When PRs 5–9 ship those parent components, **the plugin already knows about them — no plugin changes needed in those PRs.**
+- **Drop all `FormativeContext` / `FormativeProvider` / `useFormativeContext` references** from PR 5–9 designs. The components accept explicit `course` / `unit` / `parentId` props; the plugin supplies them at compile time. No provider element appears in the rendered tree.
+- **Tests pass explicit props.** Component tests no longer need a `<FormativeProvider>` wrapper; pass `course`/`unit`/`parentId` directly. Storybook stories do the same.
+- **Formative-family components do NOT register in `makeStaticComponents`.** Static-mapped components can't carry `client:load` (the map doesn't carry hydration metadata), and `useInteractive` hydration is mandatory for store-backed reveals. Components that hydrate inside MDX MUST flow through the auto-imports plugin — i.e., be registered in `SOPHIE_INTERACTIVE_COMPONENTS`. **Per ADR 0058 §R-0080-A2, formative-family components are also excluded from `makeChromeComponents` (chrome ≠ pedagogy).**
+- **No runtime `course`/`unit`/`id` validation on formative parents.** When a parent is missing `course`/`unit`/`id`, the plugin throws an MDX-compile-time error with file:line position — better DX than a runtime React Context throw. Parent components should NOT re-validate at render time (unreachable; plugin catches first).
+- **Path-shape correction.** Use `segs[1] === "units" && segs[2] === unit` when parsing artifact paths (PR 3 correction); the original plan's `segs[0] === "sections"` shape is wrong.
+- **Storybook VR baseline workflow** recurs per PR: after first CI run on a PR adding new stories, trigger `vr-update.yml` GitHub Actions workflow to seed baselines, then push a no-op commit to re-trigger CI and pick up the baselines.
+- **Pedagogy-index extractor unchanged in design.** PR 5 still creates `packages/astro/src/lib/pedagogy-index/extractors/formative.ts`. The plugin runs BEFORE the extractor in the MDX pipeline; by the time the extractor walks the tree, `course` / `unit` / `parentId` are already present on children. The extractor doesn't change architecture — it just emits `FormativeEntry` records from the (now-pre-threaded) AST.
+
+**Net effect:** PRs 5–9 task lists shrink — the cross-cutting infrastructure (auto-imports, client:load injection, parent-prop threading, plugin registry) already exists. Per-component PR scope is now: component + tests + storybook + (for PR 5+) the formative pedagogy-index extractor + audit invariant + any §v2-foreshadowing-relevant ADR 0073 Amendment 1 updates.
+
+---
+
 ## Cross-cutting conventions (apply on every PR)
 
 | Rule | Enforcement |
@@ -32,8 +59,9 @@ ADR 0073 (`docs/website/decisions/0073-unified-assessment-schema.md`) already lo
 | Zero biome warnings | `pnpm biome check` — full output grep for "warning" + "error"; tail-only insufficient (per `feedback_biome_verification.md` memory) |
 | axe-on-render (R11) | Every `*.test.tsx` calling `render(` must also call `axe(` / `AxeBuilder` / `toHaveNoViolations`; `pnpm lint:axe-render` gate |
 | Component contract (ADR 0004) | `*.schema.ts` + `*.contract.ts` + `*.test.tsx` + `*.stories.tsx` siblings per component dir |
-| `course/unit/id` props (ADR 0027) | Persistence-bearing components require all three; declared on the formative-family parent only — `<Solution>` / `<Hint>` read from React context |
-| `client:load` mandatory (ADR 0038 §A2) | All store-backed components hydrate as islands; SSR fallback via `useHydrated()` |
+| `course/unit/id` props (ADR 0027) | Persistence-bearing components require all three; declared on the formative-family parent only — `<Solution>` / `<Hint>` receive `course` / `unit` / `parentId` props threaded by `sophieAutoImportsRemarkPlugin` at MDX compile time (NOT React context — see "Lessons from PR 4" above) |
+| `client:load` mandatory (ADR 0038 §A2) | All store-backed components hydrate as islands; SSR fallback via `useHydrated()`. In consumer-course MDX, `client:load` is **auto-injected by `sophieAutoImportsRemarkPlugin`** for components registered in `SOPHIE_INTERACTIVE_COMPONENTS` — authors write none. Author-declared `client:visible` / `client:idle` / `client:only` / `client:media` always wins |
+| Author-surface imports | Consumer-course MDX writes zero `import` statements and zero `client:*` directives. `sophieAutoImportsRemarkPlugin` injects both at compile time. **When adding a new interactive component, register it in `SOPHIE_INTERACTIVE_COMPONENTS` in [`packages/astro/src/lib/mdx-plugins/sophie-auto-imports.ts`](../../packages/astro/src/lib/mdx-plugins/sophie-auto-imports.ts) (and `SOPHIE_FORMATIVE_PARENTS` if it owns a formative-family namespace)** |
 | MyST anchor verification (R6) | Cited ADR sections use heading-slug, not `#L\d+` — grep `docs/website/**/*.md` for `#L[0-9]+` |
 | Silent-skip extractor disposition (R7) | Every silent-skip filter has paired audit invariant OR `findings.push` at filter site |
 | Canonical `FindingSink` (R9-production) | One `interface FindingSink` declaration per `packages/*/src/`; tests prefer canonical import |
@@ -291,7 +319,7 @@ ADR-first per the design doc. No code changes; pure design/documentation. Lands 
    - `<Solution>` — shared reveal primitive; persistence key `solution:${parentId}:open`.
    - `<Hint number={N}>` — shared progressive reveal; persistence key `hint:${parentId}:${n}:open`.
 
-3. **Author surface — parent-context threading.** Only the six formative-family parents declare `course`/`unit`/`id`; `<Solution>` / `<Hint>` read context from the parent React provider and **throw at render** if not inside one of the six. The IDB namespace is owned by the formative item; reveals share it.
+3. **Author surface — compile-time parent-prop threading.** Only the six formative-family parents declare `course`/`unit`/`id`; `<Solution>` / `<Hint>` receive `course` / `unit` / `parentId` props injected at MDX-compile time by `sophieAutoImportsRemarkPlugin` (shipped PR 4 — see "Lessons from PR 4" callout). When a parent is missing `course`/`unit`/`id` the plugin throws a curated MDX-compile error with file:line position (better DX than the originally-planned runtime React Context throw, which empirically does not work across Astro MDX islands). The IDB namespace is owned by the formative item; reveals share it.
 
 4. **Answer contract — JSX-native + index-normalized discriminated union.** Authors type boolean-presence (`<MCQ.Choice correct>`) or value attributes (`<NumericQuestion.Answer value={…} tolerance={…} />`). The extractor materializes a typed `FormativeAnswer` discriminated union onto `FormativeEntry`:
 
@@ -320,7 +348,7 @@ ADR-first per the design doc. No code changes; pure design/documentation. Lands 
 9. **§v2-foreshadowing.** Three locked design seams:
    - **`<Assignment>` references practice items by `(unitId, anchor)` tuples across multiple units** — not by intra-unit anchor list, not by inline item authoring. The `FormativeEntry.unit + .anchor` shape is the cross-unit reference seam. Assignments live at a course-level route (`/assignments/[id]`), NOT under `/units/[unit]/`; the per-unit link-bar stays Reading|Slides|Practice.
    - **`<RetrievalPrompt>` widens to wrap any formative child** (`<MCQ>`/`<MultiSelect>`/`<FillBlank>`/`<NumericQuestion>`/`<QuickCheck>`). The retrieval-family components own the spaced-review/skill-bridge machinery; the formative-family components own the question content. v2 PR rewrites `<RetrievalPrompt>`'s children-mode while preserving existing target-prop semantics; `useRetrievalAttempt` attempt-record shape gains a discriminated union over the formative answer types.
-   - **Grading turns on by reading `FormativeEntry.answer` from the index** + wrapping the runtime components in `useInteractive` attempt-tracking. No call-site changes. BKT updates per ADR 0073 §"BKT mastery model" key attempts by `(student, formative.id)`.
+   - **Grading turns on by reading `FormativeEntry.answer` from the index** + wrapping the runtime components in `useInteractive` attempt-tracking. The v2 attempt-tracking layer reads `course` / `unit` / `parentId` from the **compile-time-threaded props** the remark plugin injected (PR 4 pivot) — not from a runtime React context. No call-site changes. BKT updates per ADR 0073 §"BKT mastery model" key attempts by `(student, formative.id)`.
 
 10. **What v1 explicitly does NOT do.** Auto-grading; attempt tracking; score persistence; `<Assignment>` MDX component; `<RetrievalPrompt>` body widening; per-choice feedback on MCQ; self-grade-after-reveal ("got it / partial / missed"); ordering / matching / categorization / diagram-labeling questions; numeric-tolerance enforcement; submission flow; `Rubric` / `Criterion`. All listed in the design doc's "Deferred (YAGNI, revisit later)" + this amendment's deferred set.
 
@@ -581,9 +609,35 @@ This deliberately ships WITHOUT the new components (PR 4+ ships those) — confi
 
 ---
 
-## PR 4 (Track A) — `<Solution>` + `<Hint>` + `<PracticeProblem>` + formative-context provider
+## PR 4 (Track A) — `<Solution>` + `<Hint>` + `<PracticeProblem>` + `sophieAutoImportsRemarkPlugin` — **SHIPPED 2026-05-27**
 
-Foundation everything reuses. Three new components + one React context. No pedagogy-index integration yet (PR 5 ships that); reveal-only behavior is locally testable.
+**Commit:** `3ba8867` on `feat/solution-hint-practice-problem`.
+
+**Status:** Shipped. The implementation pivoted from the originally-planned `FormativeContext` React provider to a compile-time remark plugin — see "Lessons from PR 4" callout above for the architectural pivot summary, and [ADR 0073 Amendment 1 §3](../website/decisions/0073-unified-assessment-schema.md#amendment-1-section-3-author-surface-and-parent-prop-threading) for the full design. This section is preserved as the audit trail; the in-flight design captured in the task list below is **not the shipped shape**.
+
+### What actually shipped
+
+| Path | Role |
+|---|---|
+| [`packages/astro/src/lib/mdx-plugins/sophie-auto-imports.ts`](../../packages/astro/src/lib/mdx-plugins/sophie-auto-imports.ts) | Compile-time remark plugin: auto-imports + `client:load` injection + parent-prop threading for the formative family. Three registries: `SOPHIE_INTERACTIVE_COMPONENTS`, `SOPHIE_CONTENT_AUTO_IMPORT`, `SOPHIE_FORMATIVE_PARENTS` (all six v1 parents pre-registered), `SOPHIE_FORMATIVE_CHILDREN` (`Solution`, `Hint`). |
+| [`packages/astro/src/lib/mdx-plugins/sophie-auto-imports.test.ts`](../../packages/astro/src/lib/mdx-plugins/sophie-auto-imports.test.ts) | 37 tests covering all three plugin responsibilities + curated-error shape on missing `course`/`unit`/`id`. |
+| `packages/components/src/components/Solution/` | Full-reveal primitive. Radix Accordion + `useInteractive`; key `solution:${parentId}:open`. SSR-fallback via `useHydrated`. Accepts explicit `course` / `unit` / `parentId` props (plugin-supplied at compile time). |
+| `packages/components/src/components/Hint/` | Progressive-reveal. Key `hint:${parentId}:${n}:open`; N independent siblings supported. Same explicit-props shape. |
+| `packages/components/src/components/PracticeProblem/` | Bare practice shell; compound `<PracticeProblem.Prompt>` slot; renders `<section aria-labelledby>` per R10. The namespace owner the remark plugin reads from. |
+| `packages/astro/src/styles/textbook-layout.css` | `.sophie-reveal` print-mode auto-expand class (parallels `.sophie-dropdown`). |
+| `docs/website/reference/chapter-components.md` | Formative-family section: Solution / Hint / PracticeProblem rows filled. |
+| `docs/website/reference/formative-assessment-authoring.md` | Author-facing how-to: clean MDX surface (no imports, no `client:load`, no `course`/`unit`/`parentId` on children); curated MDX-compile error contract. |
+| `docs/website/decisions/0073-unified-assessment-schema.md` Amendment 1 §3 | Updated to describe compile-time threading instead of React Context. |
+
+**What did NOT ship from the original plan:** `packages/components/src/runtime/FormativeContext.tsx` (never created — pivoted before merge). Solution/Hint/PracticeProblem are also **not registered in `makeStaticComponents`** — they flow through the auto-imports plugin like any other hydration-bearing interactive component, because `makeStaticComponents` cannot carry `client:load`.
+
+### Why the pivot (honest framing)
+
+React Context cannot span Astro MDX islands. Each top-level MDX JSX tag SSRs as its own React tree; Context never spans them. `experimentalReactChildren: true` does NOT fix this for compound formative blocks. `useFormativeContext` threw on every `<Solution>` during smoke SSR. This is an architectural finding, not a tactical adjustment — the original plan's runtime-Context shape was structurally incompatible with Astro's island model, and the pivot moves the same authored ergonomics (clean MDX, no imports, no manual props) from runtime React Context to MDX-compile time. Author surface unchanged; implementation strictly stronger (compile-time errors with file:line vs runtime React throws).
+
+### Original task list (historical record — NOT what shipped)
+
+The tasks below are the pre-pivot design; preserved for audit trail. The actual shipped shape is described in the "What actually shipped" section above + ADR 0073 Amendment 1 §3.
 
 **Branch:** `feat/solution-hint-practice-problem`
 
@@ -802,7 +856,7 @@ PracticeProblem.Prompt = Prompt;
 
 ## PR 5 (Track A) — `<QuickCheck>` + formative index extractor + AS-2 invariant
 
-Simplest answer contract first (solution-only); ships the index-bucket plumbing the next four PRs reuse.
+Simplest answer contract first (solution-only); ships the index-bucket plumbing the next four PRs reuse. **Scope shrunk by PR 4** — the auto-imports plugin + parent-prop threading already exist; this PR just adds the component, the `FormativeEntry` schema, the extractor (which walks an already-threaded tree), and the AS-2 invariant. No plugin changes required.
 
 **Branch:** `feat/quickcheck-and-formative-index`
 
@@ -817,7 +871,8 @@ Simplest answer contract first (solution-only); ships the index-bucket plumbing 
 | Modify | `packages/astro/src/lib/pedagogy-index/accumulator.ts` (add `addFormatives()` + `Map<string, FormativeEntry>` instance field; wire into `clearUnit()` reset; surface via `asPedagogyIndex()`) |
 | Create | `packages/astro/src/lib/pedagogy-audit/invariants/formative.ts` (AS-2 implementation; AS-1/3/4/5 added in subsequent PRs) |
 | Modify | `packages/astro/src/lib/pedagogy-audit/runner.ts` (import + call `checkFormative(index, sink)` after `checkWorkedExamples`) |
-| Modify | `packages/components/src/index.ts` + `packages/astro/src/components.tsx` |
+| Modify | `packages/components/src/index.ts` (barrel export) |
+| Verify | `packages/astro/src/lib/mdx-plugins/sophie-auto-imports.ts` — `QuickCheck` is already in `SOPHIE_INTERACTIVE_COMPONENTS` and `SOPHIE_FORMATIVE_PARENTS` (PR 4); no edit required, just confirm |
 | Modify | `docs/website/reference/chapter-components.md` (QuickCheck row) |
 
 ### Design — `FormativeEntry` schema
@@ -869,9 +924,11 @@ export type FormativeAnswer = z.infer<typeof FormativeAnswerSchema>;
 
 ### Design — `<QuickCheck>`
 
+`<QuickCheck>` is the namespace owner for nested `<Solution>` / `<Hint>` children. Per PR 4's pivot, the parent does NOT wrap children in a React provider; `sophieAutoImportsRemarkPlugin` (already shipped) reads `course` / `unit` / `id` from `<QuickCheck>` at MDX compile time and threads them onto every nested `<Solution>` / `<Hint>` as `course` / `unit` / `parentId` props. PR 5 must add `"QuickCheck"` to the plugin's `SOPHIE_FORMATIVE_PARENTS` registry — **already done in PR 4** (all six v1 parents pre-registered).
+
 ```tsx
 // packages/components/src/components/QuickCheck/QuickCheck.tsx
-import { FormativeProvider } from "../../runtime/FormativeContext.tsx";
+import styles from "./QuickCheck.module.css";
 
 interface QuickCheckProps {
   course: string;
@@ -884,24 +941,27 @@ function Prompt({ children }: { children: React.ReactNode }) {
   return <div className={styles.prompt}>{children}</div>;
 }
 
-export function QuickCheck({ course, unit, id, children }: QuickCheckProps) {
+export function QuickCheck({ course, unit: _unit, id, children }: QuickCheckProps) {
+  // course/unit are namespace anchors read by the remark plugin and threaded
+  // onto nested <Solution>/<Hint> at compile time; the component itself just
+  // renders a labelled section. No React provider needed.
   return (
-    <FormativeProvider value={{ course, unit, parentId: id, parentKind: "quickcheck" }}>
-      <section
-        className={styles.root}
-        data-pedagogy-role="quickcheck"
-        data-formative-anchor={id}
-        aria-labelledby={`${id}-label`}
-      >
-        <h3 id={`${id}-label`} className={styles.label}>Quick check</h3>
-        {children}
-      </section>
-    </FormativeProvider>
+    <section
+      className={styles.root}
+      data-pedagogy-role="quickcheck"
+      data-formative-anchor={id}
+      aria-labelledby={`${id}-label`}
+    >
+      <h3 id={`${id}-label`} className={styles.label}>Quick check</h3>
+      {children}
+    </section>
   );
 }
 
 QuickCheck.Prompt = Prompt;
 ```
+
+(Per ADR 0027 `<QuickCheck>` still requires `course`/`unit`/`id` props — the plugin asserts their presence at compile time and throws a curated MDX-compile error with file:line position when missing. No runtime validation needed.)
 
 ### Design — `extractFormative` (v1: QuickCheck-only branch)
 
@@ -1034,12 +1094,12 @@ export function checkFormative(index: PedagogyIndex, sink: FindingSink): void {
 
 **Task 5.3: Extend `PedagogyIndexSchema`.** Modify `packages/core/src/schema/pedagogy-index.ts` line ~84 — add `formatives: z.array(FormativeEntrySchema).readonly().default([])` to the schema; update the canonical anchor-prefix table comment at lines 35–58 with the `form-` row.
 
-**Task 5.4: Write failing test for `<QuickCheck>` rendering.** Path: `packages/components/src/components/QuickCheck/QuickCheck.test.tsx`. Tests:
+**Task 5.4: Write failing test for `<QuickCheck>` rendering.** Path: `packages/components/src/components/QuickCheck/QuickCheck.test.tsx`. Tests pass `course`/`unit`/`id` directly (no provider wrapper — compile-time threading per PR 4 pivot):
 - Renders `<section data-pedagogy-role="quickcheck" data-formative-anchor={id} aria-labelledby={…}>` per R10.
-- Establishes `FormativeContext` (nested `<Solution>` works without props).
+- Renders nested `<Solution>` and `<Hint>` when given explicit `course`/`unit`/`parentId` props (mirroring what the remark plugin will inject in MDX at compile time).
 - axe-clean with prompt + solution.
 
-**Task 5.5: Implement `<QuickCheck>`** per design above.
+**Task 5.5: Implement `<QuickCheck>`** per design above. No React provider; the component just renders a labelled section. `course`/`unit` are namespace anchors read by the remark plugin upstream.
 
 **Task 5.6: Write failing tests for `extractFormative`.** Path: `packages/astro/src/lib/pedagogy-index/extractors/formative.test.ts`. Fixtures (use the same MDX-parse helper the worked-examples extractor uses):
 - A QuickCheck with `<QuickCheck.Prompt>` + `<Solution>` → one entry, `hasSolution: true`, kind `quickcheck`, answer `{ type: "solution-only" }`.
@@ -1065,19 +1125,23 @@ export function checkFormative(index: PedagogyIndex, sink: FindingSink): void {
 
 **Task 5.11: Wire into audit runner.** Modify `packages/astro/src/lib/pedagogy-audit/runner.ts` — import + call `checkFormative(index, sink)` immediately after `checkWorkedExamples`.
 
-**Task 5.12: Add a smoke fixture exercising QuickCheck.** Modify `examples/smoke/src/content/sections/foundations/units/chrome-primitives-demo/practice.mdx` to add at least one `<QuickCheck>` callsite with Solution + Hint. Also one without Solution to exercise AS-2 — gated behind a `# AS-2 fixture (expected WARN)` heading so reviewers know it's intentional.
+**Task 5.12: Add a smoke fixture exercising QuickCheck.** Modify `examples/smoke/src/content/sections/foundations/units/chrome-primitives-demo/practice.mdx` to add at least one `<QuickCheck course unit id>` callsite with Solution + Hint children. Also one without Solution to exercise AS-2 — gated behind a `# AS-2 fixture (expected WARN)` heading so reviewers know it's intentional. **Clean author surface** per PR 4 pivot: NO `import` statements, NO `client:load` directive, NO `course`/`unit`/`parentId` on `<Solution>` / `<Hint>` children — the remark plugin injects all three at compile time.
 
-**Task 5.13: Wire QuickCheck into `makeStaticComponents`.** Pedagogy primitive — included in `makeStaticComponents`, excluded from `makeChromeComponents`.
+**Task 5.13: Confirm `<QuickCheck>` is registered in `SOPHIE_INTERACTIVE_COMPONENTS` AND `SOPHIE_FORMATIVE_PARENTS`** in `packages/astro/src/lib/mdx-plugins/sophie-auto-imports.ts`. **Already pre-registered in PR 4** — verify only. Do NOT register in `makeStaticComponents` (static-mapped components cannot carry `client:load`; the plugin handles import + hydration directive injection). Excluded from `makeChromeComponents` per ADR 0058 §R-0080-A2 (pedagogy ≠ chrome).
 
 **Task 5.14: Update chapter-components.md** with the QuickCheck reference doc entry.
 
 **Task 5.15: Verification gate** (per cross-cutting conventions). Run smoke build — confirm AS-2 WARN surfaces in the audit output with `[WARNING AS-2]` detail.
 
-**Task 5.16: Commit + open PR.** **HITL confirm before push.** PR title `feat: <QuickCheck> + formative index bucket + AS-2 (ADR 0073 A1 PR 4/8)`.
+**Task 5.16: Storybook VR baseline seed.** After first CI run, trigger the `vr-update.yml` GitHub Actions workflow to seed Chromatic/Loki baselines for the new QuickCheck stories. Then push a no-op commit to re-trigger CI and pick up the baselines. Recurs per PR adding new stories.
+
+**Task 5.17: Commit + open PR.** **HITL confirm before push.** PR title `feat: <QuickCheck> + formative index bucket + AS-2 (ADR 0073 A1 PR 4/8)`.
 
 ---
 
 ## PR 6 (Track A) — `<MCQ>` + AS-1 + `@radix-ui/react-radio-group`
+
+Auto-imports + `client:load` + parent-prop threading already handled by `sophieAutoImportsRemarkPlugin` (PR 4). `MCQ` is pre-registered in both `SOPHIE_INTERACTIVE_COMPONENTS` and `SOPHIE_FORMATIVE_PARENTS`. The component just declares `course/unit/id` props; the plugin handles the rest.
 
 ### Files
 
@@ -1085,9 +1149,10 @@ export function checkFormative(index: PedagogyIndex, sink: FindingSink): void {
 |---|---|
 | Modify | `packages/components/package.json` (add `@radix-ui/react-radio-group@^1.x` dep) |
 | Create | `packages/components/src/components/MCQ/` (six-file dir; the .tsx exports `MCQ`, `MCQ.Prompt`, `MCQ.Choice` via member-access) |
-| Modify | `packages/astro/src/lib/pedagogy-index/extractors/formative.ts` (add `MCQ` to `FORMATIVE_PARENT_NAMES`; add MCQ-branch to the answer materialization — count `correct` choices, build `{ type: "single-choice", correct: slugifyOf(correctChoice) }`) |
+| Modify | `packages/astro/src/lib/pedagogy-index/extractors/formative.ts` (add MCQ-branch to the answer materialization — count `correct` choices, build `{ type: "single-choice", correct: slugifyOf(correctChoice) }`; note `MCQ` is already in the registry-equivalent walk via PR 5's `FORMATIVE_PARENT_NAMES`) |
 | Modify | `packages/astro/src/lib/pedagogy-audit/invariants/formative.ts` (add AS-1 ERROR branch for `kind: "mcq"`) |
-| Modify | `packages/astro/src/components.tsx` (register MCQ + member-access exports in factories) |
+| Modify | `packages/components/src/index.ts` (barrel export) |
+| Verify | `sophie-auto-imports.ts` — `MCQ` already in `SOPHIE_INTERACTIVE_COMPONENTS` + `SOPHIE_FORMATIVE_PARENTS` (PR 4); no edit required |
 | Modify | `docs/website/reference/chapter-components.md` |
 
 ### Per-PR notes
@@ -1097,20 +1162,22 @@ export function checkFormative(index: PedagogyIndex, sink: FindingSink): void {
 - AS-1 ERROR: count of `correct` choices !== 1. The error message names which choices were marked.
 - Radix RadioGroup keyboard ergonomics: arrow keys navigate, space selects, focus management is automatic.
 - The runtime renders all choices; on reveal (via the nested `<Solution>`), the correct choice gets a `data-correct="true"` attribute styled with a checkmark (this is the reveal-only UX; no auto-grading).
+- `<MCQ>` does NOT register in `makeStaticComponents` — hydration-bearing components flow through the auto-imports plugin.
+- Tests pass explicit `course`/`unit`/`id` directly (no provider wrapper); smoke MDX writes clean author surface (no imports, no `client:load`).
 
 ### Tasks (TDD)
 
 **Task 6.1:** `pnpm add @radix-ui/react-radio-group --filter @sophie/components`. Update lockfile. Run `pnpm install --frozen-lockfile` to verify.
 
-**Task 6.2:** Write failing tests for `<MCQ>` — render shape (Radix RadioGroup), keyboard nav (arrow keys), reveal interaction with nested Solution, axe-clean, throws on duplicate choice slugs.
+**Task 6.2:** Write failing tests for `<MCQ>` — render shape (Radix RadioGroup), keyboard nav (arrow keys), reveal interaction with nested Solution (pass `course`/`unit`/`parentId` props directly), axe-clean, throws on duplicate choice slugs.
 
-**Task 6.3:** Implement `<MCQ>` + `<MCQ.Prompt>` + `<MCQ.Choice>` member-access exports.
+**Task 6.3:** Implement `<MCQ>` + `<MCQ.Prompt>` + `<MCQ.Choice>` member-access exports. No React provider; the plugin threads parent props to nested `<Solution>`/`<Hint>` at compile time.
 
 **Task 6.4:** Extend `extractFormative` with the MCQ branch — count `<MCQ.Choice correct>` children, materialize `{ type: "single-choice", correct: slug }`. When count !== 1, the answer is still emitted (with the first correct choice's slug, or a placeholder if zero) but AS-1 fires.
 
 **Task 6.5:** Add AS-1 invariant in `checkFormative`.
 
-**Task 6.6–6.9:** Wire registration + reference doc + smoke fixture + verification gate.
+**Task 6.6–6.9:** Add barrel export + reference doc + smoke fixture (clean MDX surface) + verification gate + Storybook VR baseline seed via `vr-update.yml`.
 
 **Task 6.10:** **HITL confirm before push.** PR title `feat: <MCQ> + AS-1 + Radix RadioGroup (ADR 0073 A1 PR 5/8)`.
 
@@ -1118,26 +1185,29 @@ export function checkFormative(index: PedagogyIndex, sink: FindingSink): void {
 
 ## PR 7 (Track A) — `<MultiSelect>` + AS-5 + `@radix-ui/react-checkbox`
 
-Structurally identical to PR 6 with checkbox semantics instead of radios.
+Structurally identical to PR 6 with checkbox semantics instead of radios. `MultiSelect` already in `SOPHIE_INTERACTIVE_COMPONENTS` + `SOPHIE_FORMATIVE_PARENTS` (PR 4).
 
 ### Files
-- Same shape as PR 6: new dep, new component dir, extend extractor + audit + factories + reference doc.
+- Same shape as PR 6: new dep, new component dir, extend extractor + audit + barrel export + reference doc. **No plugin changes** (already registered). **No `makeStaticComponents` registration** (hydration-bearing).
 
 ### Per-PR notes
 - Radix Checkbox primitive (`@radix-ui/react-checkbox`); a list of `<MultiSelect.Choice>` each backed by a Radix Checkbox.
 - AS-5 ERROR: count of `correct` choices < 1 (zero correct = malformed).
 - No upper bound on `correct` count (could be all four).
 - `FormativeAnswer` variant: `{ type: "multi-choice", correct: string[] }`.
+- Tests pass `course`/`unit`/`id` directly; smoke MDX writes clean author surface.
 
 ### Tasks
-**6 tasks** following the TDD shape of PR 6. **HITL confirm before push.** PR title `feat: <MultiSelect> + AS-5 + Radix Checkbox (ADR 0073 A1 PR 6/8)`.
+**6 tasks** following the TDD shape of PR 6 + Storybook VR baseline seed via `vr-update.yml`. **HITL confirm before push.** PR title `feat: <MultiSelect> + AS-5 + Radix Checkbox (ADR 0073 A1 PR 6/8)`.
 
 ---
 
 ## PR 8 (Track A) — `<FillBlank>` + AS-3
 
+`FillBlank` already in `SOPHIE_INTERACTIVE_COMPONENTS` + `SOPHIE_FORMATIVE_PARENTS` (PR 4); plugin threads parent props to nested `<Solution>`/`<Hint>` at compile time.
+
 ### Files
-- Same shape: new component dir, extend extractor + audit + factories + reference doc.
+- Same shape: new component dir, extend extractor + audit + barrel export + reference doc. **No plugin changes** (already registered).
 - No new dep (uses native `<input type="text">`).
 
 ### Per-PR notes
@@ -1146,16 +1216,19 @@ Structurally identical to PR 6 with checkbox semantics instead of radios.
 - Treat numeric answers as text (`correct="656"`) — no tolerance enforcement in v1 since v1 doesn't grade. Future `<NumericQuestion>` is the typed shape (PR 9).
 - AS-3 WARN: zero `<FillBlank.Slot>` children = malformed prompt.
 - Slot ids must be unique within a FillBlank (throws on collision; mirrors MCQ choice pattern).
+- Tests pass `course`/`unit`/`id` directly; smoke MDX writes clean author surface.
 
 ### Tasks
-**8–10 tasks** including the slot-walking extension to `extractFormative`. **HITL confirm before push.** PR title `feat: <FillBlank> + AS-3 (ADR 0073 A1 PR 7/8)`.
+**8–10 tasks** including the slot-walking extension to `extractFormative` + Storybook VR baseline seed via `vr-update.yml`. **HITL confirm before push.** PR title `feat: <FillBlank> + AS-3 (ADR 0073 A1 PR 7/8)`.
 
 ---
 
 ## PR 9 (Track A) — `<NumericQuestion>` + AS-4
 
+`NumericQuestion` already in `SOPHIE_INTERACTIVE_COMPONENTS` + `SOPHIE_FORMATIVE_PARENTS` (PR 4); plugin threads parent props at compile time.
+
 ### Files
-- Same shape; no new dep.
+- Same shape; no new dep. **No plugin changes** (already registered).
 
 ### Per-PR notes
 - `<NumericQuestion.Answer value={…} tolerance={…} toleranceKind="absolute|relative" unit?={…} />` — self-closing element; renders nothing at v1; the extractor reads its attributes.
@@ -1163,9 +1236,10 @@ Structurally identical to PR 6 with checkbox semantics instead of radios.
 - Persistence key: `numeric:${parentId}:value`.
 - AS-4 ERROR: count of `<NumericQuestion.Answer>` !== 1.
 - `FormativeAnswer` variant: `{ type: "numeric", value, tolerance, toleranceKind, unit? }`.
+- Tests pass `course`/`unit`/`id` directly; smoke MDX writes clean author surface.
 
 ### Tasks
-**8–10 tasks** including the `<NumericQuestion.Answer>` attribute-reading in `extractFormative`. **HITL confirm before push.** PR title `feat: <NumericQuestion> + AS-4 — closes v1 formative family (ADR 0073 A1 PR 8/8)`.
+**8–10 tasks** including the `<NumericQuestion.Answer>` attribute-reading in `extractFormative` + Storybook VR baseline seed via `vr-update.yml`. **HITL confirm before push.** PR title `feat: <NumericQuestion> + AS-4 — closes v1 formative family (ADR 0073 A1 PR 8/8)`.
 
 ### Notes on closing the v1 wave
 
@@ -1396,7 +1470,7 @@ The astr201 adoption pass (consumer-repo follow-on) is the natural next session 
 | PR 1 (Video) | `docs/website/decisions/0064-chapter-migration-playbook.md` §3 (gap protocol); `docs/website/reference/chapter-components.md` static-components table; one existing static-component impl as model (`packages/components/src/components/Aside/`) |
 | PR 2 (ADR Amendment 1) | The full existing `0073-unified-assessment-schema.md`; ADR 0080 Amendment 2 as precedent shape; the design doc at `docs/plans/2026-05-27-formative-assessment-design.md` |
 | PR 3 (Practice route) | `packages/astro/src/routes/reading.astro` (the sibling pattern); ADR 0082 (route-injection mechanism); the #189-warning file before deleting |
-| PR 4 (Reveals + Context) | `packages/components/src/components/Dropdown/Dropdown.tsx` (the Radix Accordion + useInteractive pattern); `packages/components/src/runtime/pedagogy-store.ts` (the doctrine: never import virtual: into @sophie/components); ADR 0027 (prop threading) |
+| PR 4 (Reveals + plugin) | **SHIPPED 2026-05-27** (commit `3ba8867`). Reference for PRs 5–9: `packages/astro/src/lib/mdx-plugins/sophie-auto-imports.ts` (the three-job remark plugin); `packages/components/src/components/Solution/` and `Hint/` and `PracticeProblem/` (the prop-shape templates the next five formative parents mirror); ADR 0073 Amendment 1 §3 (compile-time threading design); `formative-assessment-authoring.md` (author-surface contract) |
 | PR 5 (QuickCheck + index) | `packages/astro/src/lib/pedagogy-index/extractors/worked-examples.ts` (the model extractor); the accumulator at `packages/astro/src/lib/pedagogy-index/accumulator.ts`; `FindingSink` interface |
 | PR 6 (MCQ) | `@radix-ui/react-radio-group` docs (Context7); ADR 0019; the `<MCQ.Choice>` slugify pattern in `Dropdown.tsx` |
 | PR 7 (MultiSelect) | `@radix-ui/react-checkbox` docs; PR 6's MCQ implementation as immediate analog |

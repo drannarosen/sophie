@@ -1,0 +1,108 @@
+/* Formative reveal — Solution.
+ *
+ * Mirrors the Dropdown chrome aesthetic (3px left accent, soft surface,
+ * chevron rotation) but with a distinct accent color so reveal reads
+ * visually as a pedagogy primitive rather than chrome. Print-mode
+ * auto-expansion is delivered by the global `.sophie-reveal` class
+ * (textbook-layout.css) — parallel to `.sophie-dropdown`.
+ */
+
+.root {
+  display: flex;
+  flex-direction: column;
+  margin-block: var(--sophie-space-3);
+}
+
+.item {
+  border-inline-start: 3px solid var(--sophie-accent);
+  border-radius: var(--sophie-radius-sm);
+  background: var(--sophie-surface-1);
+  box-shadow: var(--sophie-shadow-card);
+  overflow: hidden;
+}
+
+.header {
+  /* Radix wraps the Trigger in a <h3> via Accordion.Header; strip
+   * default header margin/padding so the button owns layout. */
+  display: block;
+  margin: 0;
+  padding: 0;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+.trigger {
+  display: flex;
+  align-items: center;
+  gap: var(--sophie-space-2);
+  width: 100%;
+  padding: var(--sophie-space-3) var(--sophie-space-4);
+  background: transparent;
+  border: 0;
+  font: inherit;
+  font-weight: var(--sophie-weight-semibold);
+  color: var(--sophie-text);
+  text-align: start;
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+.trigger:hover {
+  background: color-mix(in oklch, var(--sophie-accent) 6%, transparent);
+}
+
+.trigger:focus-visible {
+  outline: 2px solid var(--sophie-accent);
+  outline-offset: -2px;
+}
+
+.trigger:disabled {
+  cursor: progress;
+  opacity: 0.6;
+}
+
+.chevron {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-inline-end: 2px solid var(--sophie-text-muted);
+  border-block-end: 2px solid var(--sophie-text-muted);
+  transform: rotate(-45deg);
+  transition: transform 200ms ease;
+  flex-shrink: 0;
+}
+
+.trigger[data-state="open"] .chevron {
+  transform: rotate(45deg);
+}
+
+.trigger:hover .chevron {
+  border-color: var(--sophie-accent);
+}
+
+.label {
+  flex: 1;
+}
+
+.content {
+  padding-inline-start: calc(
+    var(--sophie-space-4, 1rem) +
+    var(--sophie-space-2, 0.5rem)
+  );
+  padding-inline-end: var(--sophie-space-4, 1rem);
+  padding-block-end: var(--sophie-space-4, 1rem);
+  background: var(--sophie-surface-2);
+  font-size: var(--sophie-text-sm);
+  line-height: var(--sophie-leading-prose);
+  color: var(--sophie-text);
+}
+
+.content :is(p, li) {
+  margin-block: var(--sophie-space-2, 0.5rem);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron,
+  .trigger {
+    transition: none;
+  }
+}

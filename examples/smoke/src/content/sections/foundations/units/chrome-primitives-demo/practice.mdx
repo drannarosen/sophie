@@ -4,12 +4,36 @@ title: "Practice — Chrome Primitives Demo"
 chapter: 4
 order: 4
 lang: "en"
-description: "Smoke practice fixture exercising the /units/<unit>/practice route injected by ADR 0073 Amendment 1."
+description: "Smoke practice fixture exercising the formative family (PracticeProblem / Solution / Hint) via Sophie's compile-time auto-imports + parent-prop threading."
 tags: ["foundations", "chrome"]
 ---
 
 # Practice problems
 
-**Problem 1.** What is the H-alpha wavelength? *(656.3 nm — the n=3 → n=2 transition)*
+<PracticeProblem course="smoke" unit="chrome-primitives-demo" id="halpha-wavelength">
+  <PracticeProblem.Prompt>
+    What is the wavelength of the H$\alpha$ line, and what atomic
+    transition does it correspond to?
+  </PracticeProblem.Prompt>
 
-**Problem 2.** From $M(<r) = rv^2/G$, find $r$ when $v = 220$ km/s and $M = 10^{11}\,M_\odot$. *(~9.4 kpc)*
+  <Hint number={1}>H$\alpha$ is part of the Balmer series.</Hint>
+  <Hint number={2}>The Balmer series transitions all end at $n=2$.</Hint>
+
+  <Solution>
+    H$\alpha$ has wavelength $\lambda = 656.3$ nm and corresponds to
+    the $n=3 \to n=2$ electronic transition in atomic hydrogen.
+  </Solution>
+</PracticeProblem>
+
+<PracticeProblem course="smoke" unit="chrome-primitives-demo" id="enclosed-mass">
+  <PracticeProblem.Prompt>
+    From the virial relation $M(r) = rv^2 / G$, find the radius $r$
+    when $v = 220$ km/s and $M = 10^{11}\,M_\odot$.
+  </PracticeProblem.Prompt>
+
+  <Hint number={1}>Solve algebraically for $r$ first; then convert to CGS.</Hint>
+
+  <Solution>
+    $r = GM/v^2 \approx 9.4$ kpc — a typical galactic radius.
+  </Solution>
+</PracticeProblem>

@@ -25,7 +25,7 @@ validation:
     - kind: deployment
       ref: "PR 4 of formative-assessment plan"
       date: null
-      notes: "PR 4 — `<Solution>` + `<Hint>` + `<PracticeProblem>` + `FormativeContext` provider (placeholder; backfill on merge)."
+      notes: "PR 4 — `<Solution>` + `<Hint>` + `<PracticeProblem>` + `sophieAutoImportsRemarkPlugin` for MDX-compile-time prop threading (placeholder; backfill on merge)."
     - kind: deployment
       ref: "PR 5 of formative-assessment plan"
       date: null
@@ -351,19 +351,59 @@ not formative items themselves — they are reveal primitives that
 attach to a formative parent. This is the structural reason for
 the parent-context discipline in §3.
 
-#### 3. Author surface — parent-context threading
+#### 3. Author surface — compile-time prop threading
 
 Only the six formative-family parents declare `course` / `unit` / `id`
-per ADR 0027's slug discipline; `<Solution>` and `<Hint>` declare
-nothing. The reveals read context from a React provider mounted by
-the parent and **throw at render** if not nested inside one of the
-six. The rationale: IndexedDB persistence keys for reveals must
-namespace under the formative item that owns them, not a free-floating
-reveal — otherwise two practice problems on the same page with the
-same hint number would collide. The formative parent owns the
-IDB namespace; the reveals share it via context. Per the framework-
-purity rule in ADR 0001, the provider lives in `@sophie/components`
-and reads no virtual modules.
+per ADR 0027's slug discipline; `<Solution>` and `<Hint>` are
+authored with no namespace props at all. The author surface is
+minimal — no `import { … } from "@sophie/components"`, no
+`client:load`, no `course` / `unit` / `parentId` on the reveals:
+
+```mdx
+<PracticeProblem course="astr201" unit="m1-l2" id="kepler-3">
+  <Hint number={1}>Apply Kepler's third law.</Hint>
+  <Solution>$T = 1$ year.</Solution>
+</PracticeProblem>
+```
+
+**The "parent-context threading" promise is realized at MDX-compile
+time via `sophieAutoImportsRemarkPlugin`, not at runtime via React
+Context.** The plugin (at
+`packages/astro/src/lib/mdx-plugins/sophie-auto-imports.ts`) runs as
+part of the chapter-MDX pipeline before `remark-math` and does three
+things: (1) auto-injects the `@sophie/components` import line with
+every interactive component used in the file, (2) marks every
+interactive callsite with `client:load`, and (3) walks each
+formative parent's subtree and writes its `course` / `unit` / `id`
+as explicit `course` / `unit` / `parentId` props on every nested
+`<Solution>` and `<Hint>`. Authors get the same ergonomics as a
+runtime-Context design without the Context's runtime constraints.
+
+**Why not React Context?** The original Context-based design
+mounted a `FormativeContext` provider in `<PracticeProblem>` and
+consumed it with `useFormativeContext()` in `<Solution>` / `<Hint>`.
+That shape didn't survive Astro's MDX island model: each top-level
+JSX tag in an MDX file SSRs as its own React tree, so a Context
+provider mounted by an outer JSX tag is invisible to a sibling
+JSX tag — even when the sibling looks nested in the authored MDX,
+Astro splits them into independent islands at render. Compile-time
+prop threading sidesteps the island boundary entirely: the plugin
+writes literal `course` / `unit` / `parentId` props onto each child
+element while the tree is still a single mdast, before MDX hands
+fragments off to Astro for island compilation.
+
+**Failure modes are loud and curated.** Missing `course` / `unit` /
+`id` on a formative-parent shell halts the MDX compile with a
+`file:line` error naming the gap; declaring any of the three as a
+JSX expression (e.g. `course={courseSlug}` instead of
+`course="astr201"`) raises a distinct error pointing at the
+expression callsite. The plugin runs before `remark-math` so `$…$`
+content inside formative-family children is unaffected by the JSX
+rewrites. The rationale for the strict namespace discipline carries
+over: IndexedDB persistence keys for reveals must namespace under
+the formative item that owns them; the compile-time threading
+enforces that invariant structurally rather than relying on a
+runtime hook.
 
 #### 4. Answer contract — JSX-native + index-normalized discriminated union
 
@@ -556,7 +596,8 @@ The 12-PR sequence in
 [`docs/plans/2026-05-27-formative-assessment-implementation.md`](../../plans/2026-05-27-formative-assessment-implementation.md)
 is the appendix-referenced sequencing for this amendment. PRs 3–9
 are the formative-family wave (practice route + link-bar; reveals
-+ `<PracticeProblem>` + context provider; `<QuickCheck>` + index
++ `<PracticeProblem>` + `sophieAutoImportsRemarkPlugin`
+compile-time prop threading; `<QuickCheck>` + index
 bucket + AS-2; `<MCQ>` + AS-1; `<MultiSelect>` + AS-5;
 `<FillBlank>` + AS-3; `<NumericQuestion>` + AS-4). PRs 1, 10, 11,
 12 are Track-B side-channels (Video component; author-trap lint;

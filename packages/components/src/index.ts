@@ -165,6 +165,12 @@ export {
   GridPropsSchema,
   gridContract,
 } from "./components/Grid/index.ts";
+export type { HintProps } from "./components/Hint/index.ts";
+export {
+  Hint,
+  HintPropsSchema,
+  hintContract,
+} from "./components/Hint/index.ts";
 export type { InteractiveCheckboxProps } from "./components/InteractiveCheckbox/InteractiveCheckbox.schema.ts";
 export {
   InteractiveCheckbox,
@@ -231,6 +237,16 @@ export {
 } from "./components/OMIFlow/index.ts";
 export { Points, type PointsProps } from "./components/Points/index.ts";
 export type {
+  PracticeProblemPromptProps,
+  PracticeProblemProps,
+} from "./components/PracticeProblem/index.ts";
+export {
+  PracticeProblem,
+  PracticeProblemPromptPropsSchema,
+  PracticeProblemPropsSchema,
+  practiceProblemContract,
+} from "./components/PracticeProblem/index.ts";
+export type {
   PredictPrompt,
   PredictProps,
   PredictState,
@@ -288,6 +304,12 @@ export {
   SkillReviewPropsSchema,
   skillReviewContract,
 } from "./components/SkillReview/index.ts";
+export type { SolutionProps } from "./components/Solution/index.ts";
+export {
+  Solution,
+  SolutionPropsSchema,
+  solutionContract,
+} from "./components/Solution/index.ts";
 export type { SpacedReviewProps } from "./components/SpacedReview/index.ts";
 export {
   SpacedReview,

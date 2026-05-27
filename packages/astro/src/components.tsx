@@ -126,10 +126,17 @@ function buildChromeSubset({ figures }: { figures: FigureRegistry }) {
  * in `reading.astro`. Full set: chrome subset + pedagogy primitives
  * whose meaning depends on chapter context.
  *
- * Pedagogy primitives currently registered: `<WorkedExample>`. Future
- * primitives (`<OMIFlow>`, `<MultiRep>`, `<Intervention>`) are not yet
- * registered through this factory pending their factory-registration
- * design pass — see ADR 0058 §R-0080-A2 (chrome-vs-pedagogy boundary).
+ * Pedagogy primitives currently registered: `<WorkedExample>` (content-
+ * only). The formative family (`<PracticeProblem>` / `<Solution>` /
+ * `<Hint>` per ADR 0073 Amendment 1) is NOT mapped here — those
+ * components require `client:load` to hydrate `useInteractive`, and
+ * Astro's `<Content components>` map cannot carry client directives.
+ * Instead they flow through the `sophieAutoImportsRemarkPlugin` which
+ * injects explicit `import { … } from "@sophie/components"` plus
+ * `client:load` plus parent-prop threading at MDX-compile time. Future
+ * primitives (`<OMIFlow>`, `<MultiRep>`, `<Intervention>`) follow the
+ * same auto-import path once their factory-registration design pass
+ * lands — see ADR 0058 §R-0080-A2 (chrome-vs-pedagogy boundary).
  *
  * Per ADR 0027.
  */

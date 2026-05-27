@@ -5,6 +5,7 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import type { Pluggable } from "unified";
 import { skillReviewResolverRemarkPlugin } from "./lib/mdx-plugins/skill-review-resolver.ts";
+import { sophieAutoImportsRemarkPlugin } from "./lib/mdx-plugins/sophie-auto-imports.ts";
 import { pedagogyIndexRemarkPlugin } from "./lib/pedagogy-index/orchestrator.ts";
 import { rehypeKatexDisplayA11y } from "./lib/pedagogy-index/transforms/katex-display-a11y.ts";
 
@@ -22,6 +23,16 @@ const DEFAULT_TOPICS_DIR = resolve(process.cwd(), "src/content/topics");
  * - `remark-gfm`           — GitHub-flavored markdown (tables, autolinks, etc.)
  * - `remark-frontmatter`   — recognize YAML frontmatter (Astro Content
  *                            Collections handle parsing)
+ * - `sophieAutoImportsRemarkPlugin` — auto-import Sophie interactive
+ *                            components into the MDX ESM block, inject
+ *                            `client:load` directives, and thread the
+ *                            formative parent's `course`/`unit`/`id`
+ *                            into nested `<Solution>` / `<Hint>`
+ *                            children (ADR 0073 Amendment 1; ADR 0061
+ *                            Rule 4 author surface). Must precede
+ *                            `remark-math` so `$…$` content inside
+ *                            formative-family children is unaffected
+ *                            by the JSX rewrites.
  * - `remark-math`          — parse `$inline$` and `$$display$$` into math
  *                            AST nodes (must precede rehype-katex)
  * - `skillReviewResolverRemarkPlugin` — expand
@@ -55,6 +66,7 @@ export const sophieMdxOptions = {
   remarkPlugins: [
     remarkGfm,
     remarkFrontmatter,
+    sophieAutoImportsRemarkPlugin,
     remarkMath,
     [
       skillReviewResolverRemarkPlugin,
