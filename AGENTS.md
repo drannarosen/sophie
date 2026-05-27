@@ -145,9 +145,13 @@ happens in the per-course directories, not here.
 | ASTR 201 (Intro Astrophysics) | `/Users/anna/Teaching/astr201-sp26/modules/`  | Quarto `.qmd`; migration to Sophie `.mdx` planned |
 
 Migration protocol locked in [ADR 0064](docs/website/decisions/0064-chapter-migration-playbook.md)
-(six rules, seven-step protocol, structural-density rotation);
-worked-example pilot at [`pilots/m2-l3-spectra-composition.md`](docs/website/pilots/m2-l3-spectra-composition.md).
-Read ADR 0064 before scoping the next migration.
+(six rules, seven-step protocol, structural-density rotation); the
+original worked-example pilot's findings are folded into ADR 0064
+itself (the smoke-example pilot is recoverable in git history). The
+report at [`pilots/m2-l3-spectra-composition.md`](docs/website/pilots/m2-l3-spectra-composition.md)
+now documents the M2-L3 **consumer** migration; the other
+`pilots/m2-*`/`m1-*`/`m3-*` reports are the per-chapter consumer
+migration records. Read ADR 0064 before scoping the next migration.
 
 ## Locked decisions — most-cited ADRs
 

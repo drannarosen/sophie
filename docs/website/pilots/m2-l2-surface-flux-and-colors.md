@@ -22,7 +22,7 @@ dominant profile:
 
 | Pilot | Dominant profile |
 | --- | --- |
-| m2-l3 Spectra & Composition | OMI spine + GlossaryTerm density |
+| m2-l3 Spectra & Composition (smoke pilot) | OMI spine + GlossaryTerm density |
 | m3-l2 Hydrostatic Equilibrium | equation / derivation / worked-example density |
 | **m2-l2 Surface Flux & Colors** | **multi-representation (`<MultiRep>`) + visual/scaling** |
 
