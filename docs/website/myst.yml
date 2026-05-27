@@ -261,6 +261,7 @@ project:
         - file: pilots/m3-l8-degeneracy-chandrasekhar.md
         - file: pilots/m3-l9-high-mass-evolution-supernovae.md
         - file: pilots/m3-l10-neutron-stars-black-holes.md
+        - file: pilots/m4-l1-galaxies-as-ecosystems.md
     - title: Status
       children:
         - file: status/roadmap.md
