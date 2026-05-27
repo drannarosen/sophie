@@ -504,14 +504,122 @@ This section's table of components fills in as each PR lands.
 
 | Component | Role | Ships in |
 |---|---|---|
-| `<PracticeProblem>` | Bare practice shell (context owner) | PR 4 |
-| `<Solution>` | Shared full-reveal primitive | PR 4 |
-| `<Hint number={N}>` | Shared progressive-reveal primitive | PR 4 |
+| `<PracticeProblem>` | Bare practice shell (context owner) | Shipped in PR 4 |
+| `<Solution>` | Shared full-reveal primitive | Shipped in PR 4 |
+| `<Hint number={N}>` | Shared progressive-reveal primitive | Shipped in PR 4 |
 | `<QuickCheck>` | Free-response, solution-only | PR 5 |
 | `<MCQ>` | Single-best-answer (radio) | PR 6 |
 | `<MultiSelect>` | Select-all-that-apply (checkbox) | PR 7 |
 | `<FillBlank>` | Text-fill with inline slots | PR 8 |
 | `<NumericQuestion>` | Numeric answer + tolerance + unit | PR 9 |
+
+#### `<PracticeProblem>` — formative shell + namespace owner
+
+The bare-practice shell of the formative family. Owns the
+`(course, unit, id)` namespace that nested `<Solution>` and
+`<Hint>` descendants inherit at MDX-compile time — the shell itself
+owns no IDB key. Renders as a labeled `<section
+aria-labelledby={`${id}-label`}>` landmark (R10 named-region
+pattern; the visible `<h3>` "Practice problem" doubles as the
+section's accessible name and pedagogy header).
+
+| Prop | Type | Default | Notes |
+|---|---|---|---|
+| `course` | `string` | required | IDB course key per [ADR 0027](../decisions/0027-mdx-render-boundary-prop-threading.md). Must be a static string literal — `course="astr201"`, not `course={courseSlug}`. |
+| `unit` | `string` | required | IDB unit key per ADR 0027. Static string literal. |
+| `id` | `string` | required | Namespace for descendants' persistence keys (`solution:${id}:open`, `hint:${id}:${n}:open`). Static string literal. |
+| `children` | `ReactNode` | required | Optional `<PracticeProblem.Prompt>` plus any number of `<Hint>` + a `<Solution>`. |
+
+`<PracticeProblem.Prompt>` is structurally optional — authors may
+put `<Hint>` / `<Solution>` as direct children when the prompt is
+supplied by surrounding chapter prose.
+
+**Author surface — no imports, no `client:load`, no manual prop
+threading.** The chapter-MDX pipeline runs the
+`sophieAutoImportsRemarkPlugin` (at
+`packages/astro/src/lib/mdx-plugins/sophie-auto-imports.ts`) which:
+
+- Injects `import { PracticeProblem, Solution, Hint } from "@sophie/components"` at the top of the compiled MDX.
+- Marks each interactive callsite with `client:load`.
+- Reads `course` / `unit` / `id` off the `<PracticeProblem>` shell and threads them as `course` / `unit` / `parentId` onto every nested `<Solution>` / `<Hint>`.
+
+If the shell omits `course`, `unit`, or `id` — or declares any of
+them as a JSX expression (`course={courseSlug}` instead of
+`course="astr201"`) — the plugin halts the MDX compile with a
+curated `file:line` error so the author sees the gap before the
+build proceeds. (The earlier React-Context-based design didn't
+survive Astro's island model; see
+[ADR 0073 Amendment 1](../decisions/0073-unified-assessment-schema.md#amendment-1-formative-with-reveal-v1-2026-05-27)
+§3 "Author surface — compile-time prop threading".)
+
+```mdx
+<PracticeProblem
+  course="astr201"
+  unit="m1-l2"
+  id="kepler-3"
+>
+  <PracticeProblem.Prompt>
+    Compute $T$ for $a = 1$ AU around a $1\,M_\odot$ star.
+  </PracticeProblem.Prompt>
+  <Hint number={1}>Apply Kepler's third law in solar units.</Hint>
+  <Solution>$T = a^{3/2} = 1$ year.</Solution>
+</PracticeProblem>
+```
+
+#### `<Solution>` — full-reveal disclosure
+
+Single canonical "show the worked answer" disclosure inside any
+formative-parent scope. Receives `course` / `unit` / `parentId`
+from its nearest formative-parent ancestor — the
+`sophieAutoImportsRemarkPlugin` reads the parent shell's `(course,
+unit, id)` at MDX-compile time and writes them as explicit props
+on every descendant `<Solution>` (and `<Hint>`). Persistence via
+`useInteractive` ([ADRs 0004](../decisions/0004-component-contract.md)
++ [0007](../decisions/0007-indexeddb-persistence.md)) under the key
+`solution:${parentId}:open` (a `string[]` — multi-shape carried
+through from Radix Accordion even though `<Solution>` only ever has
+one slug).
+
+| Prop | Type | Default | Notes |
+|---|---|---|---|
+| `label` | `string?` | flips "Show solution" (closed) / "Hide solution" (open) | Custom label stays fixed across both states. |
+| `children` | `ReactNode` | required | Solution body — full markdown / MDX supported. |
+| `course` / `unit` / `parentId` | `string` | injected | **Do not author.** The remark plugin writes these from the nearest formative-parent ancestor; explicit author overrides win when set, but the common path is to omit them entirely. |
+
+Carries `data-pedagogy-role="solution"` plus the global
+`sophie-reveal` class — the print-mode contract hook that
+auto-expands disclosures in handouts.
+
+```mdx
+<Solution>
+  H$\alpha$ is the $n=3 \to n=2$ transition; $\lambda = 656.3$ nm.
+</Solution>
+```
+
+#### `<Hint number={N}>` — progressive-reveal sibling
+
+Graduated-help sibling of `<Solution>`. Multiple `<Hint>` instances
+at different `number` values render independently — each persists
+its own open/closed state under the key
+`hint:${parentId}:${number}:open`. The `number` is 1-indexed and
+part of the persistence-key identity (so authors don't rely on
+render-order inference; the dependency is surfaced rather than
+hidden per W1).
+
+| Prop | Type | Default | Notes |
+|---|---|---|---|
+| `number` | positive integer | required | 1-indexed sequence number — part of the persistence-key identity. |
+| `label` | `string?` | `"Hint ${number}"` | Trigger-label override. |
+| `children` | `ReactNode` | required | Hint body. |
+| `course` / `unit` / `parentId` | `string` | injected | **Do not author.** The remark plugin writes these from the nearest formative-parent ancestor (same threading as `<Solution>`). |
+
+Carries `data-pedagogy-role="hint"` plus the `sophie-reveal`
+print-mode class.
+
+```mdx
+<Hint number={1}>Start from Kepler's third law.</Hint>
+<Hint number={2}>Take the cube root of $a^3$.</Hint>
+```
 
 ### Astro consumer (server-rendered aggregator)
 

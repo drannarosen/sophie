@@ -55,13 +55,29 @@ const expectedChromeKeys = [
   "Figure",
 ] as const;
 
+/**
+ * Pedagogy primitives present in makeStaticComponents but excluded from
+ * makeChromeComponents per ADR 0058 §R-0080-A2 (chrome-vs-pedagogy
+ * boundary). Single source of truth for both the static-only assertion
+ * and the structural set-difference cross-check.
+ *
+ * The formative family (`<PracticeProblem>` / `<Solution>` / `<Hint>`
+ * per ADR 0073 Amendment 1) is NOT in this list — those components
+ * require `client:load` hydration that the static-map shape cannot
+ * carry, so the `sophieAutoImportsRemarkPlugin` injects them at
+ * MDX-compile time instead (see `lib/mdx-plugins/sophie-auto-imports.ts`).
+ */
+const expectedStaticOnlyKeys = ["WorkedExample"] as const;
+
 describe("makeStaticComponents", () => {
   it("returns a map with every chrome key plus pedagogy primitives", () => {
     const components = makeStaticComponents({ figures: registry });
     for (const key of expectedChromeKeys) {
       expect(components).toHaveProperty(key);
     }
-    expect(components).toHaveProperty("WorkedExample");
+    for (const key of expectedStaticOnlyKeys) {
+      expect(components).toHaveProperty(key);
+    }
   });
 
   it("each chrome component reference resolves to the @sophie/components export", () => {
@@ -153,9 +169,11 @@ describe("makeChromeComponents", () => {
     expect(components.Week).toBe(Week);
   });
 
-  it("excludes WorkedExample (chrome-vs-pedagogy boundary per ADR 0058 §R-0080-A2)", () => {
+  it("excludes pedagogy primitives (chrome-vs-pedagogy boundary per ADR 0058 §R-0080-A2)", () => {
     const components = makeChromeComponents({ figures: registry });
-    expect(components).not.toHaveProperty("WorkedExample");
+    for (const key of expectedStaticOnlyKeys) {
+      expect(components).not.toHaveProperty(key);
+    }
   });
 
   it("Figure resolves a name through the bound registry", () => {
@@ -192,10 +210,10 @@ describe("chrome-vs-pedagogy boundary (structural cross-check)", () => {
     }
   });
 
-  it("the difference is exactly the pedagogy primitives (currently: WorkedExample)", () => {
+  it("the difference is exactly the pedagogy primitives (WorkedExample)", () => {
     const stat = makeStaticComponents({ figures: registry });
     const chrome = makeChromeComponents({ figures: registry });
     const extraKeys = Object.keys(stat).filter((k) => !(k in chrome));
-    expect(extraKeys.sort()).toEqual(["WorkedExample"]);
+    expect(extraKeys.sort()).toEqual([...expectedStaticOnlyKeys].sort());
   });
 });

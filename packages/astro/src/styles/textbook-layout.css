@@ -1564,6 +1564,18 @@ html {
     display: none;
   }
 
+  /* Solution / Hint reveals: same intent as Dropdown — printed
+     handouts contain the worked solution + all hints rather than
+     just the closed disclosure headers. Parallel to `.sophie-dropdown`
+     above; emitted by both `<Solution>` and `<Hint>` so the same
+     global hook covers the entire formative-reveal family. */
+  .sophie-reveal [data-state] {
+    display: block;
+  }
+  .sophie-reveal [aria-hidden="true"] {
+    display: none;
+  }
+
   /* Predict: hide the reveal button and any revealed content, so the
      printed worksheet shows the prompts (with whatever the student
      wrote in the textareas) but does NOT spoil the gated discussion
