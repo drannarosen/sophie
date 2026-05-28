@@ -20,7 +20,7 @@
   margin: 0 0 var(--sophie-space-3);
   font-size: var(--sophie-text-sm);
   font-weight: var(--sophie-weight-semibold);
-  color: var(--sophie-accent);
+  color: var(--sophie-brand-teal-text);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }

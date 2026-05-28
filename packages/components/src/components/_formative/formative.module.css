@@ -40,7 +40,7 @@
   margin: 0 0 var(--sophie-space-3);
   font-size: var(--sophie-text-sm);
   font-weight: var(--sophie-weight-semibold);
-  color: var(--sophie-brand-teal);
+  color: var(--sophie-brand-teal-text);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -80,14 +80,14 @@
   outline-offset: 2px;
 }
 
-/* Reveal-only correctness affordance (v1 does not auto-grade). The
- * static `data-correct` attribute is the source of truth the extractor
- * + this CSS read; the trailing checkmark is decorative. */
-:global([data-pedagogy-role="mcq"] label:has(input[data-correct])::after) {
-  content: " ✓";
-  color: var(--sophie-brand-teal);
-  font-weight: var(--sophie-weight-semibold);
-}
+/* NO unconditional correct-answer marker in v1. The `data-correct`
+ * attribute stays on the correct `<input>` (the extractor's source of
+ * truth + a v2 auto-grading/reveal hook), but it is NOT decorated here:
+ * a CSS `::after` checkmark would show the answer to BOTH sighted and
+ * screen-reader users before they answer (it surfaces in the control's
+ * accessible name), and ADR 0073 v1 has no cross-island reveal state to
+ * gate it on. The answer is disclosed by the student opening <Solution>.
+ * Reveal-gated correctness marking is deferred to v2. */
 
 @media (prefers-reduced-motion: reduce) {
   :global([data-pedagogy-role="mcq"] label) {
@@ -114,7 +114,7 @@
   margin: 0 0 var(--sophie-space-3);
   font-size: var(--sophie-text-sm);
   font-weight: var(--sophie-weight-semibold);
-  color: var(--sophie-brand-teal);
+  color: var(--sophie-brand-teal-text);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -157,17 +157,11 @@
   outline-offset: 2px;
 }
 
-/* Reveal-only correctness affordance (v1 does not auto-grade). Each
- * correct choice's `<input>` carries `data-correct`; the trailing
- * checkmark is decorative. */
-:global(
-  [data-pedagogy-role="multi-select"]
-  label:has(input[data-correct])::after
-) {
-  content: " ✓";
-  color: var(--sophie-brand-teal);
-  font-weight: var(--sophie-weight-semibold);
-}
+/* NO unconditional correct-answer marker in v1 (see the MCQ note above):
+ * each correct `<input>` keeps `data-correct` for the extractor + v2, but
+ * no `::after` checkmark — it would leak the answer (visually and in the
+ * accessible name) before the student answers, and v1 has no cross-island
+ * reveal state to gate it on. Reveal-gated marking is deferred to v2. */
 
 @media (prefers-reduced-motion: reduce) {
   :global([data-pedagogy-role="multi-select"] label) {
@@ -196,7 +190,7 @@
   margin: 0 0 var(--sophie-space-3);
   font-size: var(--sophie-text-sm);
   font-weight: var(--sophie-weight-semibold);
-  color: var(--sophie-brand-teal);
+  color: var(--sophie-brand-teal-text);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }

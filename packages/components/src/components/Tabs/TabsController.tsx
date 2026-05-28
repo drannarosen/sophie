@@ -111,11 +111,18 @@ export function TabsController({ id }: TabsControllerProps) {
       handlers.push({ el: tab, click, key });
     }
 
+    // Hydration signal: marks the tab group interactive once listeners are
+    // wired. Lets tests wait on a real state change (condition-based, not a
+    // timeout) before driving the controls, and gives CSS/UX a hook to know
+    // the controller is live.
+    root.setAttribute("data-hydrated", "true");
+
     return () => {
       for (const h of handlers) {
         h.el.removeEventListener("click", h.click);
         h.el.removeEventListener("keydown", h.key);
       }
+      root.removeAttribute("data-hydrated");
     };
   }, [id]);
 
