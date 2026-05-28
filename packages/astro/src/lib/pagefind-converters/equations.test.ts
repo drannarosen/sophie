@@ -47,6 +47,20 @@ describe("toEquationRecord", () => {
     );
   });
 
+  test("meta.html carries the build-time prerendered html (ADR 0090)", () => {
+    const fixtureWithHtml: EquationEntry = {
+      ...fixture,
+      html: '<span class="katex katex-display">…</span>',
+    };
+    expect(toEquationRecord(fixtureWithHtml, ctx).meta.html).toBe(
+      '<span class="katex katex-display">…</span>'
+    );
+  });
+
+  test("omits meta.html when the entry carries no prerendered html", () => {
+    expect(toEquationRecord(fixture, ctx).meta.html).toBeUndefined();
+  });
+
   test("content includes the equation title (so prose-text search hits)", () => {
     expect(toEquationRecord(fixture, ctx).content).toContain(
       "Stefan-Boltzmann luminosity"

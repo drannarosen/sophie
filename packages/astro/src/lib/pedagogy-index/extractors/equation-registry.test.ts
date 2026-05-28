@@ -1,5 +1,7 @@
 import type { EquationRegistryEntry } from "@sophie/core/schema";
 import { beforeEach, describe, expect, test } from "vitest";
+import { formatUnitTex } from "../../math-render/format-unit-tex.ts";
+import { renderMath } from "../../math-render/render-math.ts";
 import { para, root } from "../_test-helpers.ts";
 import {
   extractEquationRegistryDeclaration,
@@ -86,5 +88,65 @@ describe("extractEquationRegistryDeclaration (pure, registry walker)", () => {
     expect(entry.constants).toHaveLength(1);
     expect(entry.rearranged_forms).toHaveLength(1);
     expect(entry.related).toHaveLength(1);
+  });
+});
+
+describe("extractEquationRegistryDeclaration prerendered html (ADR 0090)", () => {
+  const frontmatter: EquationRegistryEntry = {
+    id: "wiens-law",
+    title: "Wien's Law",
+    tex: "\\lambda_{peak} = b T^{-1}",
+    symbols: ["T", "\\lambda_{peak}"],
+    constants: [{ symbol: "b", value: "0.29", unit: "cm s^{-1}" }],
+    rearranged_forms: [{ tex: "T = b \\lambda_{peak}^{-1}", solves_for: "T" }],
+  };
+
+  test("bakes display-mode html on the primary equation", () => {
+    const entry = extractEquationRegistryDeclaration(
+      root([]) as never,
+      frontmatter
+    );
+    expect(entry.html).toContain('class="katex"');
+    // Display mode differs from an inline render of the same latex.
+    expect(entry.html).not.toBe(renderMath(frontmatter.tex).html);
+    expect(entry.html).toBe(
+      renderMath(frontmatter.tex, { displayMode: true }).html
+    );
+  });
+
+  test("bakes display-mode html on each rearranged form", () => {
+    const entry = extractEquationRegistryDeclaration(
+      root([]) as never,
+      frontmatter
+    );
+    expect(entry.rearranged_forms?.[0]?.html).toContain('class="katex"');
+    expect(entry.rearranged_forms?.[0]?.html).toBe(
+      renderMath("T = b \\lambda_{peak}^{-1}", { displayMode: true }).html
+    );
+  });
+
+  test("bakes inline-mode symbol/value/unit html on each constant", () => {
+    const entry = extractEquationRegistryDeclaration(
+      root([]) as never,
+      frontmatter
+    );
+    const c = entry.constants?.[0];
+    expect(c?.symbol_html).toContain('class="katex"');
+    expect(c?.value_html).toContain('class="katex"');
+    expect(c?.unit_html).toContain('class="katex"');
+    expect(c?.symbol_html).toBe(renderMath("b", { displayMode: false }).html);
+    expect(c?.unit_html).toBe(
+      renderMath(formatUnitTex("cm s^{-1}"), { displayMode: false }).html
+    );
+  });
+
+  test("omits unit_html when the constant has no unit", () => {
+    const entry = extractEquationRegistryDeclaration(root([]) as never, {
+      ...frontmatter,
+      constants: [{ symbol: "b", value: "0.29" }],
+    });
+    const c = entry.constants?.[0];
+    expect(c?.symbol_html).toBeDefined();
+    expect(c?.unit_html).toBeUndefined();
   });
 });

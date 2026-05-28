@@ -38,6 +38,10 @@ export const toEquationRecord: EntityToPagefindRecord<EquationEntry> = (
       locator: `Equations · ${ctx.moduleTitle}`,
       tex: entity.tex,
       slug: entity.id,
+      // Build-time prerendered KaTeX html (ADR 0090) so ResultCard
+      // renders the equation without owning KaTeX. Populated by the
+      // equation-registry extractor on the same accumulated entity.
+      ...(entity.html ? { html: entity.html } : {}),
     },
     filters: {
       type: ["equation"],
