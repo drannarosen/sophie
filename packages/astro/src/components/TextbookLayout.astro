@@ -162,72 +162,48 @@ indexAccumulator.setSections(sections.map((s) => s.data));
 indexAccumulator.setUnits(units.map((u) => u.data));
 indexAccumulator.setArtifacts(artifactsFromCollection(allArtifacts));
 const pedagogy = indexAccumulator.asPedagogyIndex();
-// PR-C4: run the systematic build-time audit pass once per build,
-// after the index is fully populated. Errors fail the build; warnings
-// + info print but allow the build to continue. See
-// packages/astro/src/lib/pedagogy-audit/ for the invariant list.
-//
-// The cache decision (run once in prod, every render in dev) lives in
-// `runAuditOncePerProcess` (lib/audit-cache.ts). This caller only does
-// the steps that depend on the .astro frontmatter: collecting
-// `draftUnitIds` from `allChapters`, populating the accumulator
-// with contract validations, and reporting the audit's verdict.
-//
-// ADR 0051 CS2 graduated to W2/D2 (Placement 1): draft status now
-// lives on UnitEntry. The audit's `index.units` still carries drafts
-// (no pre-filter in TextbookLayout post-W2 — route-level filtering
-// happens in pages/units/[unit]/reading.astro instead). Compute the
-// draft id list from `units` so CS2 INFO surfaces with the same shape
-// authors see today.
-const draftUnitIds = units
-  .filter((u) => u.data.status === "draft")
-  .map((u) => u.data.id);
-
-// ADR 0056 PR 3: walk docs/website/{decisions,reference}/ to collect
-// contract validations (V0+V8 surfaced as extractor findings; V1–V7
-// run in the audit). `process.cwd()` is the consumer-app dir at build
-// time, which IS the repo root for the smoke fixture and for the
-// canonical Sophie repo layout. Evidence refs are repo-root-relative
-// and resolve via the same `repoRoot` passed to `runPedagogyAudit`.
-const repoRoot = process.cwd();
-const { entries: contractValidations, findings: extractorFindings } =
-  await extractContractValidations(repoRoot);
-indexAccumulator.setContractValidations(contractValidations, extractorFindings);
-
-// PR-ε: load the consumer's Notation Registry (ADR 0043) and thread
-// it into the audit pass. Module-level cache in
-// `notation-registry-loader.ts` means this call is free when
-// `<ChapterMultiReps>` already loaded the same registry during MDX
-// render (in-MDX `<ChapterMultiReps>` evaluates before TextbookLayout's
-// frontmatter per Astro's children-before-parent order — see that
-// component's frontmatter comment). Returns `{ registry: null }` when
-// the consumer hasn't opted in via
-// `pedagogy-contract.yaml.math_and_units_standards.notation_registry`
-// (per ADR 0042 + ADR 0043 §opt-in seam); audit NR/MR invariants
-// silently skip. Throws (build-failing) when contract opts in but
-// `notation-registry.yaml` is missing — the loader's resolution
-// message instructs the author to either create the file or drop the
-// opt-in.
-const { registry: notationRegistry } = loadConsumerRegistry(repoRoot);
-
-// Re-snapshot AFTER the validation extractor populates the accumulator
-// so `runPedagogyAudit` sees the contract validations + extractor findings.
-const pedagogyWithContracts = indexAccumulator.asPedagogyIndex();
-const auditReport = runAuditOncePerProcess(
-  pedagogyWithContracts,
-  { draftUnitIds, repoRoot, notationRegistry },
-  import.meta.env.PROD,
-);
-if (auditReport !== null) {
-  console.log(formatAuditReport(auditReport));
-  if (auditExitCode(auditReport) !== 0) {
-    // Astro's build pipeline surfaces thrown errors as build failures
-    // with a stack trace and the offending file context. Preferred over
-    // `process.exit(1)` because it cooperates with Astro's logger and
-    // dev-server HMR overlay rather than killing the parent process.
-    // The message inlines the first ERROR findings so authors see the
-    // failing invariants without scrolling up to the console.log above.
-    throw new Error(formatAuditThrowMessage(auditReport));
+// Pedagogy audit (ADR 0073 PR-C4 + ADR 0088). DEV ONLY: run the audit
+// per-render so authors get live HMR feedback as they edit. In a PROD
+// build the corpus-wide audit runs ONCE at the integration's
+// `astro:build:done` hook (ADR 0088) — which reads this same accumulator,
+// extracts contract validations there (once, not per page), and emits
+// `dist/.sophie/pedagogy-audit.json` + gates. So the layout neither
+// extracts contracts nor audits/gates in prod; `import.meta.env.DEV` is
+// statically false in a prod build, so Vite tree-shakes this whole block
+// (and its dev-only imports) out of the bundle.
+if (import.meta.env.DEV) {
+  // ADR 0056 PR 3: walk docs/website/{decisions,reference}/ to collect
+  // contract validations (V0+V8 surfaced as extractor findings; V1–V7 run
+  // in the audit). `process.cwd()` is the consumer-app dir, which IS the
+  // repo root for the smoke fixture + the canonical Sophie layout; evidence
+  // refs resolve against the same `repoRoot` passed to runPedagogyAudit.
+  const repoRoot = process.cwd();
+  const { entries: contractValidations, findings: extractorFindings } =
+    await extractContractValidations(repoRoot);
+  indexAccumulator.setContractValidations(
+    contractValidations,
+    extractorFindings
+  );
+  // ADR 0051 CS2: draft status lives on UnitEntry; one CS2 INFO per draft.
+  const draftUnitIds = units
+    .filter((u) => u.data.status === "draft")
+    .map((u) => u.data.id);
+  // PR-ε: consumer Notation Registry (ADR 0043), module-cached so this is
+  // free when <ChapterMultiReps> already loaded it during MDX render.
+  // `{ registry: null }` when the consumer hasn't opted in (NR/MR skip).
+  const { registry: notationRegistry } = loadConsumerRegistry(repoRoot);
+  const auditReport = runAuditOncePerProcess(
+    indexAccumulator.asPedagogyIndex(),
+    { draftUnitIds, repoRoot, notationRegistry },
+    import.meta.env.PROD
+  );
+  if (auditReport !== null) {
+    console.log(formatAuditReport(auditReport));
+    if (auditExitCode(auditReport) !== 0) {
+      // Throwing cooperates with Astro's dev HMR overlay (vs process.exit);
+      // the message inlines the first ERROR findings.
+      throw new Error(formatAuditThrowMessage(auditReport));
+    }
   }
 }
 // All four setters follow the same pattern (ADR 0038 Revisions

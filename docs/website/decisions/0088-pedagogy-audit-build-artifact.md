@@ -6,21 +6,32 @@ tags:
   - integration
   - artifact
   - ci
-status: accepted-design
+status: shipped
 validation:
-  status: in-progress
+  status: validated
   last_validated_date: "2026-05-28"
   evidence:
-    - kind: review
-      ref: docs/plans/2026-05-28-pedagogy-audit-artifact-proposal.md
+    - kind: deployment
+      ref: packages/astro/src/integration.ts
       date: "2026-05-28"
-      notes: "Design approved in-thread (five decisions resolved: mode-split trigger, prod-only artifact, deterministic envelope, deferred CLI, new ADR). Implementation pending a follow-up code PR (build-done trigger + writePedagogyAuditJson + dev-only layout guard + tests)."
+      notes: "The `astro:build:done` hook runs the corpus-wide audit (accumulator-reading + contract extraction here, once), emits `dist/.sophie/pedagogy-audit.json` via writePedagogyAuditJson, then gates (throw on ERROR). TextbookLayout's audit is dev-only (import.meta.env.DEV-guarded)."
+    - kind: deployment
+      ref: packages/astro/src/lib/pedagogy-audit/emit.ts
+      date: "2026-05-28"
+      notes: "Deterministic artifact envelope { artifact_version, summary, errors, warnings, infos } — no timestamp; byte-identical for a given corpus."
+    - kind: test
+      ref: packages/astro/src/lib/pedagogy-audit/emit.test.ts
+      date: "2026-05-28"
+      notes: "Unit tests assert the envelope mapping (counts + arrays), the empty/no-corpus case, and determinism (stable key order, no time-varying fields)."
+    - kind: test
+      ref: examples/packed-smoke/e2e/pedagogy-audit-artifact.spec.ts
+      date: "2026-05-28"
+      notes: "Integration proof: a packed-tarball consumer's prod build emits dist/.sophie/pedagogy-audit.json with the versioned envelope + summary counts matching the build log."
   notes: |
-    Accepted-design: the trigger / artifact / gating decision is locked; no
-    code shipped at ADR-creation time. The integration build-done
-    implementation + `dist/.sophie/pedagogy-audit.json` emit land in a
-    follow-up PR that flips this block to validated with deployment + test
-    evidence. Originating audit item: P2.4
+    Shipped: build-done trigger + artifact + dev-only layout guard.
+    Implemented via the accumulator-reading approach (the integration reads
+    the already-populated index pagefind-style, extracts contract validations
+    once at build-done). Originating audit item: P2.4
     (docs/reviews/2026-05-28-platform-hardening-audit.md).
 ---
 
@@ -28,7 +39,7 @@ validation:
 
 :::{admonition} ADR metadata
 
-- **Status**: accepted-design
+- **Status**: shipped
 - **Deciders**: anna
 - **Related**: [0038](./0038-pedagogy-index-pattern.md) (index the audit
   consumes), [0045](./0045-pedagogical-diff-curriculum-ci.md) (the
@@ -43,9 +54,10 @@ The build-time pedagogy audit is correct and runs in production, but its
 emission is sub-SoTA for a distributable platform (audit P2.4):
 
 1. **Layout-coupled trigger.** It fires from `TextbookLayout.astro` via
-   `runAuditOncePerProcess` (`audit-cache.ts`). A build rendering **no
-   chapter page** (e.g. a course-info/landing-only projection) never
-   triggers the corpus-wide audit at all — it silently no-ops.
+   `runAuditOncePerProcess` (`audit-cache.ts`) — the corpus-wide gate is a
+   *side-effect of rendering a chapter page* rather than a defined build
+   step. (A build with no chapter page also skips it, but such a build has
+   no pedagogy corpus to audit, so that case is moot — see Consequences.)
 2. **`console.log`-only output.** `formatAuditReport` prints to stdout
    (concatenated into a page's render stream). There is no machine-readable
    artifact for CI gates, `sophie diff`, dashboards, or the instructor view.
@@ -68,10 +80,14 @@ without violating ADR 0001 framework purity.
    can inspect it even on a failing build.
 2. **Mode-split trigger.** Prod builds run the audit once at `astro:build:done`
    (emit artifact, then gate) — the single authoritative, layout-independent
-   trigger, and the architecturally correct home for a whole-corpus check.
-   Dev keeps `TextbookLayout`'s per-render `console.log` audit for live HMR
-   feedback. This fixes the spec-only-build no-op while preserving the dev
-   loop.
+   gate location, and the architecturally correct home for a whole-corpus
+   check. Contract validations are extracted **here** (once) rather than
+   per-chapter-page in the layout. Implemented via the **accumulator-reading**
+   approach: the hook reads the already-populated index (pagefind-style — every
+   route has pre-rendered by build-done, so the layout's setters have run), not
+   by re-deriving the corpus via Astro's content API (unavailable in the
+   integration hook). Dev keeps `TextbookLayout`'s per-render `console.log`
+   audit for live HMR feedback.
 3. **Deterministic envelope.** Keep `artifact_version`; **omit** any
    `generatedAt` timestamp so the artifact is byte-identical for a given
    corpus (reproducible, diff-clean), matching `pedagogy-index.json`.
@@ -91,8 +107,8 @@ without violating ADR 0001 framework purity.
   Rejected — kills dev-mode audit feedback (no `astro:build:done` in `astro
   dev`); authors wouldn't see findings until a full build.
 - **Keep the layout audit in prod and also emit at build-done.** Rejected —
-  runs the audit twice in prod, two sources of truth, and doesn't fix the
-  spec-only-build no-op.
+  runs the audit twice in prod, two sources of truth, and keeps the gate
+  coupled to page render.
 - **Amend ADR 0045 instead of a new ADR.** Rejected — 0045 is narrowly the
   `sophie diff` artifact contract; the trigger relocation + gating-semantics
   shift is a distinct architectural decision that would bloat 0045 past its
@@ -100,15 +116,23 @@ without violating ADR 0001 framework purity.
 
 ## Consequences
 
-**Easier:** a course-info-only build now audits (the bug this fixes); CI and
-future tooling consume a stable JSON artifact; the corpus-wide gate lives
-where the corpus is guaranteed complete; dev feedback is unchanged.
+**Easier:** CI and future tooling consume a stable, machine-readable JSON
+artifact; the corpus-wide gate is a defined build step (not a chapter-render
+side-effect), living where the corpus is guaranteed complete; contract
+validations are extracted once instead of per chapter page; dev feedback is
+unchanged.
 
-**Harder:** two trigger paths (dev-layout + prod-build-done); the
-integration must assemble the same `AuditExtras` (`draftUnitIds`,
-`repoRoot`, `notationRegistry`, contract validations) `TextbookLayout`
-assembles today; a failing build now aborts at end-of-build rather than
-mid-render (marginally later, architecturally correct).
+**Harder:** two trigger paths (dev-layout + prod-build-done); the build-done
+audit relies on the layout's accumulator setters having run during page
+renders (true for any build with chapter pages — and a build with none has
+no corpus to audit). Truly render-independent auditing would require Astro's
+content API in the integration hook (unavailable; out of scope). A failing
+build now aborts at end-of-build rather than mid-render (marginally later,
+architecturally correct).
+
+**Scope honesty:** the layout-coupling motivation is about *gate placement*,
+not a "silent skip" bug — a no-chapter build has nothing to audit, and the
+accumulator-reading approach doesn't independently re-derive the corpus.
 
 ## References
 

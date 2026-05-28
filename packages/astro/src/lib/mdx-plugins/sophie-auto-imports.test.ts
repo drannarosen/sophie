@@ -8,7 +8,7 @@ import type {
 } from "mdast-util-mdx-jsx";
 import { mdxjs } from "micromark-extension-mdxjs";
 import { unified } from "unified";
-import { describe, expect, test } from "vitest";
+import { beforeAll, describe, expect, test } from "vitest";
 import {
   SOPHIE_AUTO_IMPORTED_COMPONENTS,
   SOPHIE_COMPONENT_IMPORT_SOURCE,
@@ -457,16 +457,29 @@ describe("sophieAutoImportsRemarkPlugin — component registries", () => {
     }
   });
 
-  test("every auto-imported interactive component resolves to a real export from its mapped source", async () => {
+  // Cold dynamic imports of the BUILT dist (large ESM chunks: the main
+  // barrel + the Plot-bundled figures subpath). Hoisted into beforeAll with
+  // a generous hook timeout so the slow I/O doesn't count against the 5s
+  // per-test budget — under CI parallel-load contention those two imports
+  // were tripping a 5000ms timeout (flake, not a logic failure).
+  let barrel: Record<string, unknown>;
+  let figures: Record<string, unknown>;
+  beforeAll(async () => {
+    barrel = (await import("@sophie/components")) as Record<string, unknown>;
+    figures = (await import("@sophie/components/figures")) as Record<
+      string,
+      unknown
+    >;
+  }, 30_000);
+
+  test("every auto-imported interactive component resolves to a real export from its mapped source", () => {
     // Invariant true throughout the conversion: the plugin never names a
     // component its mapped source doesn't export (a dangling auto-import
     // would be a build-time ERR_MODULE_NOT_FOUND in the consumer course).
     // Most components resolve to the main `@sophie/components` barrel;
     // Plot-using figures resolve to the `@sophie/components/figures`
-    // subpath (ADR 0022 amendment). Read both modules' named exports and
-    // assert each component is exported from ITS source.
-    const barrel = await import("@sophie/components");
-    const figures = await import("@sophie/components/figures");
+    // subpath (ADR 0022 amendment). Assert each component is exported from
+    // ITS mapped source (modules loaded once in beforeAll above).
     for (const name of SOPHIE_INTERACTIVE_COMPONENTS) {
       const source =
         SOPHIE_COMPONENT_IMPORT_SOURCE.get(name) ?? "@sophie/components";
