@@ -10,8 +10,16 @@ tags:
 status: shipped
 validation:
   status: validated
-  last_validated_date: "2026-05-25"
+  last_validated_date: "2026-05-28"
   evidence:
+    - kind: test
+      ref: packages/astro/src/lib/pedagogy-index/accumulator-artifact-scoping.test.ts
+      date: "2026-05-28"
+      notes: "Amendment 3 — artifact-scoped internal keys. No-clobber across reading.mdx + practice.mdx in one unit, per-artifact clear (clearUnitArtifact), intra-unit cross-artifact explicit-anchor collision throw, distinct artifact-prefixed auto-anchors, append-only over-clear shield. Serialized output byte-unchanged (asPedagogyIndex() strips the internal _artifactId)."
+    - kind: test
+      ref: packages/astro/src/lib/pedagogy-index/orchestrator.test.ts
+      date: "2026-05-28"
+      notes: "Amendment 3 — two-file-unit integration: a unit with reading.mdx + practice.mdx yields all formatives from both, and an HMR re-parse of one artifact keeps the sibling's entries. The (reading|practice).mdx chapter-pass broadening + AS-1..5 firing on practice.mdx-authored formatives."
     - kind: test
       ref: packages/astro/src/lib/pedagogy-index/
       date: "2026-05-13"
@@ -828,6 +836,65 @@ flowing prose in the footnote; the **popover** still receives the
 full block structure (its `<div>` container is block-safe). New
 unit test fixture `multi-block` pins the contract; existing tests
 unchanged.
+
+## Amendment 3 (2026-05-28 — artifact-scoped index keys)
+
+A unit is no longer a single MDX file. The formative-with-reveal v1
+work ([ADR 0073 Amendment 1](./0073-unified-assessment-schema.md#amendment-1-formative-with-reveal-v1-2026-05-27))
+introduced `practice.mdx` alongside `reading.mdx` for the same
+`unitId`, and slides (`slides.mdx`) are the predicted third. The
+chapter extraction pass originally gated on `reading.mdx` only, so
+formatives authored in `practice.mdx` were never extracted and AS-1..5
+never fired. Naively broadening the gate to index both files
+**clobbered**, because `reading.mdx` and `practice.mdx` share a
+`unitId` and the accumulator's `clearUnit(unitId)` wiped the whole
+unit's entries — re-parsing one artifact erased the other's.
+
+### A3.1 — Internal keys are artifact-scoped; serialized shapes are unchanged
+
+The accumulator now keys every per-unit category **internally** by
+`${unit}#${artifactId}#${anchor}`, and `clearUnit(unitId)` becomes
+`clearUnitArtifact(unitId, artifactId)` — deleting only that
+`(unit, artifact)` pair. Append-only collections (equation citations,
+inline-ref usages, appended findings) carry an internal `_artifactId`
+that is **stripped at serialization**, so `asPedagogyIndex()` output is
+byte-unchanged. The serialized `FormativeEntry` shapes and all
+`@sophie/core` Zod schemas are untouched ([ADR 0003](./0003-zod-as-source-of-truth.md)
+honored; `packages/core` not modified). This is an **internal-key-only**
+refactor: the role-aggregation principle and the source → index →
+consumer pipeline are unchanged.
+
+### A3.2 — The chapter pass broadened to `(reading|practice).mdx`
+
+`getArtifactId(filePath)` is the filename stem; `isChapterFilePath` +
+`defaultGetChapterSlug` broadened to match `(reading|practice).mdx`
+(forward-compatible for `slides.mdx`). The `artifactId` is threaded to
+every `add*` method, every extractor, and `clearUnitArtifact`. A unit
+composed of multiple artifacts therefore contributes from each without
+clobbering: `reading.mdx` and `practice.mdx` (and future `slides.mdx`)
+each add their entries under their own artifact key.
+
+### A3.3 — Positional auto-anchors are artifact-prefixed
+
+Positional auto-anchors (`form`/`we`/`omi`/`dd`/`ki`/`misc`/`rp`/`sp`/
+`sk`-N) are prefixed by artifact — `practice-form-1`, not `form-1` — so
+two artifacts in one unit cannot produce identical logical anchors.
+Explicit author-set anchors and content/DOM-coupled anchors (`fig-`,
+`-citation-`, `lo-`, `intervention`, `mr-<concept>`) stay unprefixed.
+A new intra-unit cross-artifact explicit-anchor collision throw guards
+the case where two artifacts in the same unit set the same explicit
+anchor (across the seven affected categories).
+
+### A3.4 — Validation
+
+This amendment touches the `validation:` block (re-validates the
+accumulator after the refactor). `docs/website/status/validation.md`
+is regenerated in the same PR per AGENTS.md's
+validation-dashboard-regen rule. Evidence: the
+`accumulator-artifact-scoping.test.ts` suite (no-clobber, per-artifact
+clear, collision throw, distinct auto-anchors) + the orchestrator
+two-file-unit integration test + the AS-1..5-fire-on-practice-mdx
+proof from the formative compound-island bundle.
 
 ## ADR 0038 family — hydration-class defenses
 

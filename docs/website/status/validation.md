@@ -24,31 +24,31 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 | Status | Count |
 |---|---|
 | Validated | 33 |
-| In progress | 20 |
+| In progress | 21 |
 | Unvalidated | 61 |
 | Re-validation needed | 0 |
 | Missing block | 0 |
-| Total | 114 |
+| Total | 115 |
 
 ## Lifecycle summary
 
 | Lifecycle | Count |
 |---|---|
-| Shipped | 65 |
+| Shipped | 66 |
 | Accepted design | 39 |
 | Mixed | 1 |
 | Future package split | 9 |
 | No status | 0 |
-| Total | 114 |
+| Total | 115 |
 
 ## Evidence kinds
 
 | Kind | Count |
 |---|---|
-| test | 95 |
+| test | 102 |
 | chapter | 9 |
-| review | 29 |
-| deployment | 76 |
+| review | 31 |
+| deployment | 74 |
 | audit | 9 |
 | manual | 40 |
 
@@ -99,7 +99,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0035-token-naming-flat-kindless.md](/token-naming-flat-kindless/) | validated | shipped | 2026-05-25 | deployment, review, test | The flat kind-less naming convention is in active force at every layer: the canonical `tokens.ts` source, the generated CSS output, and the unit test surface. ADR 0005's original kind-infix sketch was never adopted; this ADR ratifies the as-shipped convention.  |
 | [docs/website/decisions/0036-define-preference-factory-pattern.md](/define-preference-factory-pattern/) | validated | shipped | 2026-05-25 | deployment, test | The `definePreference` factory shipped and scaled to five consumers (sidebar, theme, view-mode, right-sidebar, disclosures), each as a singleton export with the factory-returned surface. Companion test files per consumer (`theme.test.ts`, `view-mode.test.ts`) exercise the invariants the ADR locks.  |
 | [docs/website/decisions/0037-cross-bundle-dom-attribute-observation.md](/cross-bundle-dom-attribute-observation/) | unvalidated | shipped | — | — |  |
-| [docs/website/decisions/0038-pedagogy-index-pattern.md](/pedagogy-index-pattern/) | validated | shipped | 2026-05-25 | audit, chapter, review, test | The pedagogy-index pattern is the load-bearing reference architecture for ADRs 0042/0043/0044/0045/0056; pattern itself is validated, downstream consumers ship in tranches (see 0044/0045/0046 in-progress). Amendment 2 (2026-05-25) added the `useHydrated`-at-top SSR-gate convention covering the five store-gated components, defending the whole class against the packed-copy SSR-ordering hazard. |
+| [docs/website/decisions/0038-pedagogy-index-pattern.md](/pedagogy-index-pattern/) | validated | shipped | 2026-05-28 | audit, chapter, review, test | The pedagogy-index pattern is the load-bearing reference architecture for ADRs 0042/0043/0044/0045/0056; pattern itself is validated, downstream consumers ship in tranches (see 0044/0045/0046 in-progress). Amendment 2 (2026-05-25) added the `useHydrated`-at-top SSR-gate convention covering the five store-gated components, defending the whole class against the packed-copy SSR-ordering hazard. |
 | [docs/website/decisions/0039-lucide-two-adapter-convention.md](/lucide-two-adapter-convention/) | validated | shipped | 2026-05-25 | deployment | The two-adapter convention is in active force across both package boundaries: `@sophie/astro` declares `lucide-static` + re-exports through the icon barrel; `@sophie/components` declares `lucide-react` + imports directly from it (no re-export barrel) per the tree-shake discipline. The pedagogy half this ADR queued as a follow-up mechanical PR has landed and scaled to 10+ component consumers.  |
 | [docs/website/decisions/0040-teaching-decision-records.md](/teaching-decision-records/) | in progress | accepted design | 2026-05-16 | deployment, review | Contract spec'd + cross-referenced; tooling + TDR-coverage audit invariant not yet wired. Code lands in a follow-up PR (separate from the validation tracker rollout). |
 | [docs/website/decisions/0041-teaching-move-library.md](/teaching-move-library/) | in progress | accepted design | 2026-05-16 | deployment, manual, review | Taxonomy spec'd in reference doc; no automated audit of move IDs against pedagogy-contract.reasoning_style yet. Code follow-up tracked. |
@@ -133,7 +133,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0070-library-room-and-registry-spec-pages.md](/library-room-and-registry-spec-pages/) | in progress | accepted design | 2026-05-23 | deployment, test |  |
 | [docs/website/decisions/0071-pyodide-computational-labs.md](/pyodide-computational-labs/) | unvalidated | accepted design | — | — |  |
 | [docs/website/decisions/0072-three-tier-build-priority.md](/three-tier-build-priority/) | unvalidated | accepted design | — | — |  |
-| [docs/website/decisions/0073-unified-assessment-schema.md](/unified-assessment-schema/) | in progress | accepted design | 2026-05-27 | deployment, review |  |
+| [docs/website/decisions/0073-unified-assessment-schema.md](/unified-assessment-schema/) | in progress | accepted design | 2026-05-28 | deployment, review, test |  |
 | [docs/website/decisions/0074-instructor-authoring-cost-metric.md](/instructor-authoring-cost-metric/) | unvalidated | accepted design | — | — |  |
 | [docs/website/decisions/0075-student-ux-cognitive-load-governance.md](/student-ux-cognitive-load-governance/) | unvalidated | accepted design | — | — |  |
 | [docs/website/decisions/0076-student-learning-cockpit.md](/student-learning-cockpit/) | unvalidated | accepted design | — | — |  |
@@ -147,6 +147,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0084-packed-smoke-ci-gate.md](/packed-smoke-ci-gate/) | validated | accepted design | 2026-05-25 | deployment, manual, test | Shipped in PR #176 (PR-D1) as the CI-runtime layer of the hydration- class defense family. Pairs with ADR 0038 Amendment 2 (runtime `useHydrated` gate) + ADR 0083 (build-time CL1 invariant) + future ADR 0085 (authoring-affordance `_template/` skeleton). The four layers together close the React #418 hydration regression class structurally; the packed-smoke gate is what catches the bug in the consumer-shape pnpm workspace resolution cannot exercise by construction.  |
 | [docs/website/decisions/0085-component-template-skeleton.md](/component-template-skeleton/) | validated | accepted design | 2026-05-25 | deployment, manual, test | Shipped in PR #177 as the authoring-affordance layer of the React #418 hydration-class defense family. Pairs with ADR 0038 Amendment 2 (runtime `useHydrated` gate) + ADR 0083 (build-time CL1 invariant) + ADR 0084 (CI-runtime packed-smoke gate). The four ADRs collectively close the regression class: runtime structural defense, build-time static analysis, CI-runtime consumer-shape coverage, and authoring affordance.  |
 | [docs/website/decisions/0086-multi-chapter-glossary-definitions.md](/multi-chapter-glossary-definitions/) | validated | accepted design | 2026-05-26 | test |  |
+| [docs/website/decisions/0087-compound-island-transform.md](/compound-island-transform/) | in progress | shipped | 2026-05-28 | review, test |  |
 
 ### Reference docs
 
@@ -162,7 +163,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/reference/course-schedule.md](/course-schedule/) | unvalidated | accepted design | — | — |  |
 | [docs/website/reference/equation-biography-schema.md](/equation-biography-schema/) | unvalidated | shipped | — | — |  |
 | [docs/website/reference/equation-registry-schema.md](/equation-registry-schema/) | unvalidated | shipped | — | — |  |
-| [docs/website/reference/formative-assessment-authoring.md](/formative-assessment-authoring/) | in progress | shipped | 2026-05-27 | — |  |
+| [docs/website/reference/formative-assessment-authoring.md](/formative-assessment-authoring/) | in progress | shipped | 2026-05-28 | review, test |  |
 | [docs/website/reference/glossary.md](/glossary/) | unvalidated | shipped | — | — |  |
 | [docs/website/reference/intervention-library.md](/intervention-library/) | in progress | shipped | 2026-05-22 | chapter, test |  |
 | [docs/website/reference/misconception-graph-schema.md](/misconception-graph-schema/) | unvalidated | shipped | — | — |  |

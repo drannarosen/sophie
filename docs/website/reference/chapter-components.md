@@ -505,16 +505,29 @@ Author how-to:
 This section's table of components fills in as each PR lands.
 :::
 
-| Component | Role | Ships in |
+| Component | Role | Status |
 |---|---|---|
-| `<PracticeProblem>` | Bare practice shell (context owner) | Shipped in PR 4 |
-| `<Solution>` | Shared full-reveal primitive | Shipped in PR 4 |
-| `<Hint number={N}>` | Shared progressive-reveal primitive | Shipped in PR 4 |
-| `<QuickCheck>` | Free-response, solution-only | PR 5 |
-| `<MCQ>` | Single-best-answer (radio) | PR 6 |
-| `<MultiSelect>` | Select-all-that-apply (checkbox) | PR 7 |
-| `<FillBlank>` | Text-fill with inline slots | PR 8 |
-| `<NumericQuestion>` | Numeric answer + tolerance + unit | PR 9 |
+| `<PracticeProblem>` | Bare practice shell (context owner) | Shipped |
+| `<Solution>` | Shared full-reveal primitive | Shipped |
+| `<Hint number={N}>` | Shared progressive-reveal primitive | Shipped |
+| `<MCQ>` | Single-best-answer (radio) | Shipped (virtual tag — [ADR 0087](../decisions/0087-compound-island-transform.md)) |
+| `<MultiSelect>` | Select-all-that-apply (checkbox) | Shipped (virtual tag) |
+| `<FillBlank>` | Text-fill with inline slots | Shipped (virtual tag) |
+| `<QuickCheck>` | Free-response, solution-only | Not yet shipped |
+| `<NumericQuestion>` | Numeric answer + tolerance + unit | Not yet shipped |
+
+`<MCQ>` / `<MultiSelect>` / `<FillBlank>` are **compile-time virtual
+tags** — `sophieCompoundExpandRemarkPlugin` lowers each into static
+native markup (`<fieldset>` of native radio/checkbox inputs, or prompt
+prose with inline `<input data-fb-slot>`) plus a self-injected
+childless `*Controller client:load` island that restores + persists
+input via `useInteractive`. Authors never import them or write
+`client:load`; children are member-access (`MCQ.Choice`,
+`MultiSelect.Choice`, `FillBlank.Slot`). See
+[ADR 0087](../decisions/0087-compound-island-transform.md) for why
+runtime children-introspection rendered empty in the real build, and
+[formative-assessment-authoring.md](./formative-assessment-authoring.md)
+for the authoring surface + per-component examples.
 
 #### `<PracticeProblem>` — formative shell + namespace owner
 
@@ -622,6 +635,80 @@ print-mode class.
 ```mdx
 <Hint number={1}>Start from Kepler's third law.</Hint>
 <Hint number={2}>Take the cube root of $a^3$.</Hint>
+```
+
+#### `<MCQ>` — single-best-answer (compile-time virtual tag)
+
+Lowered by `sophieCompoundExpandRemarkPlugin` into a `<section
+data-pedagogy-role="mcq">` → `<fieldset role="radiogroup">` of native
+`<label><input type="radio">` pairs + a self-injected `<MCQController
+client:load />` island ([ADR 0087](../decisions/0087-compound-island-transform.md)).
+The tag never reaches React; the only real export is the null-render
+`MCQController`. No import, no `client:load` to author. Choice bodies
+stay live MDX, so a nested `<GlossaryTerm>` or `$math$` inside a choice
+hydrates/renders normally.
+
+| Prop | Type | Notes |
+|---|---|---|
+| `course` / `unit` / `id` | `string` (required) | Static string literals per [ADR 0027](../decisions/0027-mdx-render-boundary-prop-threading.md). `id` is the formative anchor + persistence namespace. |
+| children | `MCQ.Prompt?` + n × `MCQ.Choice` | Member-access children. Exactly one `<MCQ.Choice correct>` (AS-1 ERROR otherwise). |
+
+`correct` emits `data-correct` on the input (extractor + v2 source of
+truth); v1 ships **no visible correct-answer marker** (it would leak
+the answer) — disclose via `<Solution>`. Duplicate choice slugs throw
+at MDX-compile time.
+
+```mdx
+<MCQ course="astr201" unit="m1-l2" id="hydrogen-line">
+  <MCQ.Prompt>Which transition produces H$\alpha$?</MCQ.Prompt>
+  <MCQ.Choice correct>$n = 3 \to n = 2$</MCQ.Choice>
+  <MCQ.Choice>$n = 2 \to n = 1$</MCQ.Choice>
+  <Solution>The Balmer $n=3 \to n=2$ line at 656.3 nm.</Solution>
+</MCQ>
+```
+
+#### `<MultiSelect>` — select-all-that-apply (compile-time virtual tag)
+
+Same treatment as `<MCQ>`, lowered to a plain `<fieldset>` (no
+`radiogroup` role — wrong semantics for multi-select) of native
+`<label><input type="checkbox">` pairs + a `<MultiSelectController
+client:load />` island.
+
+| Prop | Type | Notes |
+|---|---|---|
+| `course` / `unit` / `id` | `string` (required) | Static string literals per ADR 0027. |
+| children | `MultiSelect.Prompt?` + n × `MultiSelect.Choice` | Member-access children. At least one `<MultiSelect.Choice correct>` (AS-5 ERROR otherwise). |
+
+```mdx
+<MultiSelect course="astr201" unit="m3-l1" id="fusion-products">
+  <MultiSelect.Prompt>Which elements form in core H burning?</MultiSelect.Prompt>
+  <MultiSelect.Choice correct>Helium</MultiSelect.Choice>
+  <MultiSelect.Choice>Iron</MultiSelect.Choice>
+  <Solution>Only helium.</Solution>
+</MultiSelect>
+```
+
+#### `<FillBlank>` — inline text-fill (compile-time virtual tag)
+
+Lowered to the prompt prose with each inline `<FillBlank.Slot>`
+replaced by an inline `<input type="text" data-fb-slot>` + a
+`<FillBlankController client:load />` island. The slot's `correct`
+answer is read by the extractor only — it is **never** emitted into the
+DOM (it would leak); the value lives in the pedagogy index.
+
+| Prop | Type | Notes |
+|---|---|---|
+| `course` / `unit` / `id` | `string` (required) | Static string literals per ADR 0027. |
+| children | `FillBlank.Prompt` with inline `FillBlank.Slot` | At least one `<FillBlank.Slot>` (AS-3 WARN otherwise). Slot ids unique within the `<FillBlank>` (duplicate throws at compile time). |
+
+```mdx
+<FillBlank course="astr201" unit="m2-l3" id="wien-law">
+  <FillBlank.Prompt>
+    A hotter blackbody peaks at a <FillBlank.Slot id="dir" correct="shorter" />
+    wavelength.
+  </FillBlank.Prompt>
+  <Solution>$\lambda_{\max} \propto 1/T$ — hotter is bluer.</Solution>
+</FillBlank>
 ```
 
 ### Astro consumer (server-rendered aggregator)

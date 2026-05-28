@@ -13,8 +13,16 @@ tags:
   - reference
 validation:
   status: in-progress
-  last_validated_date: "2026-05-27"
-  evidence: []
+  last_validated_date: "2026-05-28"
+  evidence:
+    - kind: test
+      ref: examples/smoke/e2e/formative-render.spec.ts
+      date: "2026-05-28"
+      notes: "The authored MCQ/MultiSelect/FillBlank surface this page documents renders correctly in the real build (per ADR 0087): native controls present, nested island in a choice body hydrates, axe-clean."
+    - kind: review
+      ref: docs/website/decisions/0087-compound-island-transform.md
+      date: "2026-05-28"
+      notes: "MCQ/MultiSelect/FillBlank documented as compile-time virtual tags lowered by sophieCompoundExpandRemarkPlugin; member-access children, no manual imports/client:load, no v1 correct-marker, reveal via Solution."
 status: shipped
 ---
 
@@ -25,12 +33,13 @@ This page is the author-facing companion to
 The amendment locks the design; this page shows how to use it.
 
 :::{note}
-**Pre-launch.** PRs 3–9 of the formative-assessment implementation plan
-ship the six components incrementally. This authoring how-to fills in
-as each PR lands. PR 4 has shipped `<PracticeProblem>` + `<Solution>` +
-`<Hint>` (this page documents them below); the four formative-family
-parents (`<QuickCheck>` / `<MCQ>` / `<MultiSelect>` / `<FillBlank>` /
-`<NumericQuestion>`) ship in PRs 5–9.
+**Pre-launch.** This authoring how-to fills in as each component lands.
+Shipped: `<PracticeProblem>` + `<Solution>` + `<Hint>` (PR 4); and
+`<MCQ>` / `<MultiSelect>` / `<FillBlank>` as **compile-time virtual
+tags** lowered by `sophieCompoundExpandRemarkPlugin` per
+[ADR 0087](../decisions/0087-compound-island-transform.md) (this page
+documents all of them below). Still to land: `<QuickCheck>` and
+`<NumericQuestion>`.
 :::
 
 ## When to use which component
@@ -102,19 +111,97 @@ different implementation layer. See
 
 ### `<MCQ>`
 
-*(Coming in PR 6.)*
+Single-best-answer multiple choice. A **compile-time virtual tag** —
+`sophieCompoundExpandRemarkPlugin` lowers it at MDX-compile time into a
+`<fieldset role="radiogroup">` of native `<label><input type="radio">`
+pairs plus a self-injected `<MCQController client:load />` island that
+restores + persists the student's selection
+([ADR 0087](../decisions/0087-compound-island-transform.md)). You never
+import it or write `client:load`.
+
+**Authoring shape.** `<MCQ>` wraps an optional `<MCQ.Prompt>` plus n ×
+`<MCQ.Choice>` (member-access children). Mark exactly one choice
+`correct` (AS-1 ERROR otherwise). Choice bodies are live MDX — a
+nested `<GlossaryTerm>` or `$math$` inside a choice hydrates / renders
+normally.
+
+| Prop | Type | Notes |
+|---|---|---|
+| `course` / `unit` / `id` | `string` (required) | Static string literals per ADR 0027. `id` is the formative anchor + persistence namespace. |
+| `<MCQ.Choice correct>` | boolean presence | Exactly one choice carries `correct` (AS-1). The correct flag emits `data-correct` on the input (extractor + v2 source of truth); v1 ships **no visible correct-answer marker** — the answer is disclosed via `<Solution>`. |
+
+```mdx
+<MCQ course="astr201" unit="m1-l2" id="hydrogen-line">
+  <MCQ.Prompt>Which transition produces H$\alpha$?</MCQ.Prompt>
+  <MCQ.Choice correct>$n = 3 \to n = 2$</MCQ.Choice>
+  <MCQ.Choice>$n = 2 \to n = 1$</MCQ.Choice>
+  <MCQ.Choice>$n = 4 \to n = 2$</MCQ.Choice>
+  <Solution>H$\alpha$ is the Balmer $n=3 \to n=2$ line at 656.3 nm.</Solution>
+</MCQ>
+```
+
+Duplicate choice slugs (two choices that slugify identically) throw at
+MDX-compile time, naming the `<MCQ>` `id` — set an explicit `id` on one
+`<MCQ.Choice>` or reword it.
 
 ### `<MultiSelect>`
 
-*(Coming in PR 7.)*
+Select-all-that-apply. Same virtual-tag treatment as `<MCQ>` but
+lowered to a plain `<fieldset>` (no `radiogroup` role — wrong semantics
+for multi-select) of native `<label><input type="checkbox">` pairs +
+a `<MultiSelectController client:load />` island.
+
+**Authoring shape.** `<MultiSelect>` wraps an optional
+`<MultiSelect.Prompt>` plus n × `<MultiSelect.Choice>`. Mark **at least
+one** choice `correct` (AS-5 ERROR otherwise).
+
+| Prop | Type | Notes |
+|---|---|---|
+| `course` / `unit` / `id` | `string` (required) | Static string literals per ADR 0027. |
+| `<MultiSelect.Choice correct>` | boolean presence | ≥1 choice carries `correct` (AS-5). Emits `data-correct`; no visible v1 marker. |
+
+```mdx
+<MultiSelect course="astr201" unit="m3-l1" id="stellar-fusion">
+  <MultiSelect.Prompt>Which elements form in core hydrogen burning?</MultiSelect.Prompt>
+  <MultiSelect.Choice correct>Helium</MultiSelect.Choice>
+  <MultiSelect.Choice>Carbon</MultiSelect.Choice>
+  <MultiSelect.Choice>Iron</MultiSelect.Choice>
+  <Solution>Only helium — heavier elements need later burning stages.</Solution>
+</MultiSelect>
+```
 
 ### `<FillBlank>`
 
-*(Coming in PR 8.)*
+Text-fill with inline blanks. Virtual tag lowered to the prompt prose
+with each inline `<FillBlank.Slot>` replaced by an inline
+`<input type="text" data-fb-slot>` + a `<FillBlankController
+client:load />` island.
+
+**Authoring shape.** `<FillBlank>` wraps a `<FillBlank.Prompt>` whose
+prose contains one or more inline `<FillBlank.Slot id correct />`
+elements (AS-3 WARN if zero slots). Slot ids must be unique within a
+single `<FillBlank>` (duplicate throws at MDX-compile time).
+
+| Prop | Type | Notes |
+|---|---|---|
+| `course` / `unit` / `id` | `string` (required) | Static string literals per ADR 0027. |
+| `<FillBlank.Slot id correct />` | `id: string`, `correct: string` | The `correct` answer is read by the extractor only — it is **never** emitted into the rendered DOM (it would leak to students). It lives in the pedagogy index. |
+
+```mdx
+<FillBlank course="astr201" unit="m2-l3" id="wien-law">
+  <FillBlank.Prompt>
+    A hotter blackbody peaks at a <FillBlank.Slot id="dir" correct="shorter" />
+    wavelength.
+  </FillBlank.Prompt>
+  <Solution>$\lambda_{\max} \propto 1/T$ — hotter means shorter (bluer).</Solution>
+</FillBlank>
+```
 
 ### `<NumericQuestion>`
 
-*(Coming in PR 9.)*
+*(Not yet shipped — design locked in
+[ADR 0073 Amendment 1](../decisions/0073-unified-assessment-schema.md#amendment-1-formative-with-reveal-v1-2026-05-27)
+§4; AS-4 ERROR: exactly one `<NumericQuestion.Answer>`.)*
 
 ### `<QuickCheck>`
 
@@ -195,8 +282,9 @@ scope. Pairs with `<Hint>` (the graduated-help sibling).
 
 **Authoring requirement.** Nest inside one of the six
 formative-family parents (`<MCQ>` / `<MultiSelect>` / `<FillBlank>` /
-`<NumericQuestion>` / `<QuickCheck>` / `<PracticeProblem>`). At v1
-only `<PracticeProblem>` is shipped; PRs 5–9 add the other five.
+`<NumericQuestion>` / `<QuickCheck>` / `<PracticeProblem>`).
+`<PracticeProblem>`, `<MCQ>`, `<MultiSelect>`, and `<FillBlank>` are
+shipped; `<QuickCheck>` and `<NumericQuestion>` are still to land.
 Do NOT write `course`, `unit`, or `parentId` props — the
 `sophieAutoImportsRemarkPlugin` threads them from the wrapping
 parent at MDX-compile time. Bare `<Solution>` outside any
@@ -296,8 +384,16 @@ the on-ramp.
   without a solution; the reverse — a solution without a
   formative item — has no audit signal yet (PR 11 lint job is
   expected to add one).
-- *(Coming with PRs 5–9.)* Choice slug collisions in `<MCQ>` /
-  `<MultiSelect>`.
+- **Duplicate choice/slot slugs.** Two `<MCQ.Choice>` /
+  `<MultiSelect.Choice>` that slugify identically, or two
+  `<FillBlank.Slot>` with the same `id`, throw at MDX-compile time
+  (loud `file:line`-adjacent error naming the parent `id`). Reword the
+  choice or set an explicit `id` on one
+  ([ADR 0087](../decisions/0087-compound-island-transform.md)).
+- **Expecting a visible "correct" checkmark.** v1 ships no
+  unconditional correct-answer marker — it would leak the answer
+  (visible + in the accessible name) before the student responds.
+  Disclose the answer via `<Solution>`; reveal-gated marking is v2.
 
 ## See also
 

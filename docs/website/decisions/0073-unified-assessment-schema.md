@@ -12,7 +12,7 @@ tags:
 status: accepted-design
 validation:
   status: in-progress
-  last_validated_date: "2026-05-27"
+  last_validated_date: "2026-05-28"
   evidence:
     - kind: review
       ref: "PR 2 of formative-assessment plan (ADR 0073 Amendment 1)"
@@ -31,17 +31,13 @@ validation:
       date: null
       notes: "PR 5 — `<QuickCheck>` + `extractFormative` (QuickCheck branch) + AS-2 invariant + `PedagogyIndex.formatives` bucket (placeholder; backfill on merge)."
     - kind: deployment
-      ref: "PR 6 of formative-assessment plan"
-      date: null
-      notes: "PR 6 — `<MCQ>` + AS-1 invariant + `@radix-ui/react-radio-group` (placeholder; backfill on merge)."
-    - kind: deployment
-      ref: "PR 7 of formative-assessment plan"
-      date: null
-      notes: "PR 7 — `<MultiSelect>` + AS-5 invariant + `@radix-ui/react-checkbox` (placeholder; backfill on merge)."
-    - kind: deployment
-      ref: "PR 8 of formative-assessment plan"
-      date: null
-      notes: "PR 8 — `<FillBlank>` + AS-3 invariant (placeholder; backfill on merge)."
+      ref: "compound-island-transform bundle (ADR 0087)"
+      date: "2026-05-28"
+      notes: "`<MCQ>` (AS-1) + `<MultiSelect>` (AS-5) + `<FillBlank>` (AS-3) shipped as compile-time virtual tags lowered by `sophieCompoundExpandRemarkPlugin` per ADR 0087 — NOT runtime React islands. Native radio/checkbox/text inputs supersede the originally-planned `@radix-ui/react-radio-group` + `@radix-ui/react-checkbox` (both removed). Supersedes the PR 6/7/8 placeholders."
+    - kind: test
+      ref: examples/smoke/e2e/formative-render.spec.ts
+      date: "2026-05-28"
+      notes: "Build-level render+axe gate proving the shipped MCQ/MultiSelect/FillBlank render in the real build (the empty-render bug the runtime-introspection design hit; see ADR 0087) and AS-1..5 fire on the authored shape."
     - kind: deployment
       ref: "PR 9 of formative-assessment plan"
       date: null
