@@ -407,16 +407,11 @@ export {
   listRegistered,
   registerComponent,
 } from "./contract/index.ts";
-// Figures — domain-specific interactive figures. v1 ships
-// <BlackbodyExplorer> here as the canonical Reasoning-OS contract
-// demonstration; long-term, astronomy-specific figures graduate to
-// a Sophie Astro sub-brand package per ADR 0001.
-export type { BlackbodyExplorerProps } from "./figures/BlackbodyExplorer/index.ts";
-export {
-  BlackbodyExplorer,
-  BlackbodyExplorerPropsSchema,
-  blackbodyExplorerContract,
-} from "./figures/BlackbodyExplorer/index.ts";
+// Figures — domain-specific interactive figures (Plot-using) live behind
+// the `@sophie/components/figures` subpath entry, NOT this main barrel, so
+// @observablehq/plot + d3 stay out of the main module graph. Import via
+// `import { BlackbodyExplorer } from "@sophie/components/figures"`. See
+// src/figures/index.ts + the ADR 0022 amendment.
 // Interactive — A11 linked-representation primitive (per ADR 0059)
 export type {
   ParameterCursorProps,

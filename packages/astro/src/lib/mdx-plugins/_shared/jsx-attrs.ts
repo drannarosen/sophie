@@ -20,6 +20,15 @@ import { mdxjs } from "micromark-extension-mdxjs";
 export const SOPHIE_COMPONENTS_PACKAGE = "@sophie/components";
 
 /**
+ * Subpath entry for Plot-using interactive figures. Figures are bundled
+ * (not externalized) into `@sophie/components/figures` so @observablehq/plot
+ * + d3 stay OUT of the main barrel's module graph (ADR 0022 amendment). The
+ * auto-import plugin maps figure components to this specifier and emits one
+ * grouped import per distinct source.
+ */
+export const SOPHIE_FIGURES_PACKAGE = "@sophie/components/figures";
+
+/**
  * Structural mdast-util-mdxjs-esm node type — declared locally so the
  * plugins only depend on `mdast-util-mdx-jsx` + `mdast-util-from-markdown`
  * (already in @sophie/astro's package.json). The full `MdxjsEsm` type
@@ -55,10 +64,11 @@ export interface MdxjsEsmNode {
  * acorn directly — fewer moving parts, identical output.
  */
 export function buildImportEsmNode(
-  componentNames: readonly string[]
+  componentNames: readonly string[],
+  packageSpecifier: string = SOPHIE_COMPONENTS_PACKAGE
 ): MdxjsEsmNode {
   const sorted = [...componentNames].sort();
-  const source = `import { ${sorted.join(", ")} } from "${SOPHIE_COMPONENTS_PACKAGE}";\n`;
+  const source = `import { ${sorted.join(", ")} } from "${packageSpecifier}";\n`;
   const ast = fromMarkdown(source, {
     extensions: [mdxjs()],
     mdastExtensions: [mdxFromMarkdown()],
@@ -76,11 +86,12 @@ export function buildImportEsmNode(
 }
 
 /**
- * Locate an `import … from "@sophie/components"` ImportDeclaration
- * inside any existing top-level `mdxjsEsm` node. Returns the node,
- * the specific declaration inside its estree, plus the names it
- * already imports — or `null` when no Sophie-components import
- * exists yet.
+ * Locate an `import … from "<packageSpecifier>"` ImportDeclaration
+ * inside any existing top-level `mdxjsEsm` node (`packageSpecifier`
+ * defaults to `@sophie/components`; pass `@sophie/components/figures`
+ * to match a figures-subpath import). Returns the node, the specific
+ * declaration inside its estree, plus the names it already imports —
+ * or `null` when no matching import exists yet.
  *
  * A single `mdxjsEsm` node may carry MULTIPLE author-written import
  * statements (MDX parses consecutive `import` lines without blank
@@ -90,9 +101,12 @@ export function buildImportEsmNode(
  * would drop sibling imports (e.g. an `.astro` component imported
  * alongside Sophie components) and break the chapter MDX at compile.
  */
-export function findExistingSophieImport(tree: {
-  children: ReadonlyArray<RootContent>;
-}): {
+export function findExistingSophieImport(
+  tree: {
+    children: ReadonlyArray<RootContent>;
+  },
+  packageSpecifier: string = SOPHIE_COMPONENTS_PACKAGE
+): {
   node: MdxjsEsmNode;
   decl: {
     specifiers?: ReadonlyArray<{
@@ -110,7 +124,7 @@ export function findExistingSophieImport(tree: {
     for (const stmt of program.body) {
       if (stmt.type !== "ImportDeclaration") continue;
       if (typeof stmt.source?.value !== "string") continue;
-      if (stmt.source.value !== SOPHIE_COMPONENTS_PACKAGE) continue;
+      if (stmt.source.value !== packageSpecifier) continue;
       const names = new Set<string>();
       for (const spec of stmt.specifiers ?? []) {
         if (spec.type !== "ImportSpecifier") continue;

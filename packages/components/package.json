@@ -18,6 +18,10 @@
       "types": "./dist/runtime/index.d.ts",
       "import": "./dist/runtime/index.js"
     },
+    "./figures": {
+      "types": "./dist/figures/index.d.ts",
+      "import": "./dist/figures/index.js"
+    },
     "./internal/store-hydration": {
       "types": "./dist/internal/store-hydration.d.ts",
       "import": "./dist/internal/store-hydration.js"
@@ -45,8 +49,11 @@
     "react": "^19.2.6",
     "react-dom": "^19.2.6"
   },
+  "sideEffects": [
+    "**/*.css",
+    "*.css"
+  ],
   "dependencies": {
-    "@observablehq/plot": "^0.6.17",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-collapsible": "^1.1.12",
     "@radix-ui/react-dialog": "^1.1.15",
@@ -61,6 +68,7 @@
     "zustand": "^5.0.13"
   },
   "devDependencies": {
+    "@observablehq/plot": "^0.6.17",
     "@storybook/addon-a11y": "^10.3.6",
     "@storybook/addon-themes": "^10.3.6",
     "@storybook/react-vite": "^10.3.6",

@@ -41,3 +41,15 @@ The figure <FigureRef client:load name="test-figure" /> illustrates the
 concept.
 
 Continue at <ChapterRef client:load chapter="packed-smoke-chapter" />.
+
+## Interactive figure (Plot bundling proof)
+
+`<BlackbodyExplorer>` is the sole `@observablehq/plot` consumer. It is
+deliberately NOT imported by hand here: the Sophie auto-import plugin
+injects `import { BlackbodyExplorer } from "@sophie/components/figures"`
+(the Plot-isolation subpath) plus `client:load`. Rendering its Plot
+`<svg>` in this packed-tarball consumer proves the CJS→ESM interop is
+resolved at build time with zero `optimizeDeps` config — the whole point
+of the distributability work (ADR 0022 amendment).
+
+<BlackbodyExplorer id="bb-demo" initialTemperatureK={5772} />

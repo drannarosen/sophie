@@ -45,10 +45,10 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 
 | Kind | Count |
 |---|---|
-| test | 102 |
+| test | 103 |
 | chapter | 9 |
 | review | 31 |
-| deployment | 73 |
+| deployment | 74 |
 | audit | 9 |
 | manual | 40 |
 
@@ -82,8 +82,8 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0018-codemirror-6-for-codecell.md](/codemirror-6-for-codecell/) | unvalidated | accepted design | — | — |  |
 | [docs/website/decisions/0019-radix-ui-primitives.md](/radix-ui-primitives/) | validated | shipped | 2026-05-28 | deployment, manual | Files across `@sophie/components` import from `@radix-ui/*` and five Radix subpackages ship as declared deps. The v1 primitives this ADR scoped (Slider, Collapsible, Tooltip, Dialog) are in active use, with `react-hover-card` substituting for `react-tooltip` for richer popover content. Phase-2 Dialog has landed via the search modal, consumer-facing. `@radix-ui/react-tabs` was removed when `<Tabs>` moved to a hand-rolled ARIA-tabs controller (Amendment 1 / ADR 0087).  |
 | [docs/website/decisions/0020-shiki-syntax-highlighting.md](/shiki-syntax-highlighting/) | unvalidated | accepted design | — | — |  |
-| [docs/website/decisions/0021-observable-plot-data-viz.md](/observable-plot-data-viz/) | validated | shipped | 2026-05-25 | deployment, test | Observable Plot is the data-viz substrate for `@sophie/components`. The BlackbodyExplorer figure is the canonical first consumer — it pairs Plot's grammar with a React-island parameter slider. Future v2 dashboards + `<CalibrationCurve>` (v3) inherit the same `@observablehq/plot` dep declaration without re-litigating the choice.  |
-| [docs/website/decisions/0022-tsup-library-builds.md](/tsup-library-builds/) | validated | shipped | 2026-05-25 | deployment | All five published `@sophie/*` packages ship a `tsup.config.ts` and build via tsup. The bundler choice this ADR locks is uniform across the package graph; no package has migrated to webpack/rollup/Vite-library mode. The "~8 publishable packages" projection in the ADR Context now rolls up to 5 shipped packages — schema collapsed into `@sophie/core`; other planned packages remain pre-vertical-slice per ADR 0023.  |
+| [docs/website/decisions/0021-observable-plot-data-viz.md](/observable-plot-data-viz/) | validated | shipped | 2026-05-28 | deployment, test | Observable Plot is the data-viz substrate for `@sophie/components`. The BlackbodyExplorer figure is the canonical first consumer — it pairs Plot's grammar with a React-island parameter slider. Future v2 dashboards + `<CalibrationCurve>` (v3) inherit the same `@observablehq/plot` dep declaration without re-litigating the choice. Packaging amended 2026-05-28: Plot is bundled (devDependency) + isolated to the `@sophie/components/figures` subpath per ADR 0022 Amendment 1.  |
+| [docs/website/decisions/0022-tsup-library-builds.md](/tsup-library-builds/) | validated | shipped | 2026-05-28 | deployment, test | All five published `@sophie/*` packages ship a `tsup.config.ts` and build via tsup. The bundler choice this ADR locks is uniform across the package graph; no package has migrated to webpack/rollup/Vite-library mode. The "~8 publishable packages" projection in the ADR Context now rolls up to 5 shipped packages — schema collapsed into `@sophie/core`; other planned packages remain pre-vertical-slice per ADR 0023.  |
 | [docs/website/decisions/0023-vertical-slice-build-order.md](/vertical-slice-build-order/) | validated | shipped | 2026-05-25 | deployment, manual, review | The 2026-05-25 SoTA audit + companion state-of-platform review + the just-landed PR sequence #168-#177 collectively demonstrate the ADR is in active force. Each PR in the sequence extended Sophie's surface only after a concrete prior consumer surfaced the need — chrome after pedagogy; ChapterLayout extraction after smoke duplicated the route shape; the _template skeleton after the fifth store-backed component re-paid the gate-convention recall tax. AGENTS.md cites ADR 0023 as a routine-reasoning ADR that governs every PR scoping decision. No remaining lean-Phase-0 work pre-dates the refactor-outward step; no remaining package was speculatively pre-built under this ADR's authority.  |
 | [docs/website/decisions/0024-license-agpl.md](/license-agpl/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0025-phase-0-actual-scope.md](/phase-0-actual-scope/) | unvalidated | shipped | — | — |  |
