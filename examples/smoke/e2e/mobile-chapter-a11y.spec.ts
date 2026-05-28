@@ -30,7 +30,9 @@ import { expectChapterA11y } from "./_helpers/axe.ts";
 const FIXTURE_URL = "/units/mobile-a11y-fixture/reading";
 const MOBILE = { width: 375, height: 812 };
 
-test.describe("WS A — mobile ChapterLayout a11y (issues #187, #192)", () => {
+test.describe("WS A — mobile ChapterLayout a11y (issues #187, #192)", {
+  tag: "@axe",
+}, () => {
   test.beforeEach(async ({ page, context }) => {
     await context.clearCookies();
     await page.setViewportSize(MOBILE);

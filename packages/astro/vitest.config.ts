@@ -39,6 +39,9 @@ const config: ViteUserConfigWithTest = {
     environment: "jsdom",
     globals: true,
     setupFiles: ["./test-setup.ts"],
+    // Cap workers at half the cores so concurrent `turbo run test:unit`
+    // package runs don't oversubscribe the box (the flake source).
+    maxWorkers: "50%",
     coverage: {
       provider: "v8",
       reporter: ["text", "html", "json", "json-summary"],

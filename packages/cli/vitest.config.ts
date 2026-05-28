@@ -3,6 +3,9 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   test: {
     environment: "node",
+    // Cap workers at half the cores so concurrent `turbo run test:unit`
+    // package runs don't oversubscribe the box (the flake source).
+    maxWorkers: "50%",
     coverage: {
       provider: "v8",
       include: ["src/**/*.ts"],
