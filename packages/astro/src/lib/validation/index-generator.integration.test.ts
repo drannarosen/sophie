@@ -147,7 +147,11 @@ describe("validation/index-generator integration (I5 — href resolution)", () =
     }
     expect(
       unresolved,
-      `Dashboard hrefs that don't resolve to a MyST-rendered HTML artifact:\n` +
+      `Dashboard hrefs that don't resolve to a MyST-rendered HTML artifact ` +
+        `(most often a STALE ${HTML_BUILD} from before a new doc page landed — ` +
+        "the existsSync guard above only checks the dir exists, not that it's fresh). " +
+        "Rebuild with `pnpm exec turbo run build --filter=@sophie/docs` and re-run. " +
+        "(Through `turbo run test:unit` this is automatic via the @sophie/docs#build dependsOn edge.)\n" +
         unresolved.join("\n")
     ).toEqual([]);
   });
