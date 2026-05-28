@@ -11,6 +11,7 @@ import { unified } from "unified";
 import { describe, expect, test } from "vitest";
 import {
   SOPHIE_AUTO_IMPORTED_COMPONENTS,
+  SOPHIE_COMPONENT_IMPORT_SOURCE,
   SOPHIE_CONTENT_AUTO_IMPORT,
   SOPHIE_FORMATIVE_CHILDREN,
   SOPHIE_FORMATIVE_PARENTS,
@@ -65,7 +66,10 @@ function collectImports(tree: Root): MdxjsEsmNode[] {
     .map((c) => c as unknown as MdxjsEsmNode);
 }
 
-function importSpecifiers(node: MdxjsEsmNode): string[] {
+function importSpecifiers(
+  node: MdxjsEsmNode,
+  source = "@sophie/components"
+): string[] {
   const program = node.data?.estree;
   if (!program) return [];
   const out: string[] = [];
@@ -73,7 +77,7 @@ function importSpecifiers(node: MdxjsEsmNode): string[] {
     if (stmt.type !== "ImportDeclaration") continue;
     if (
       typeof stmt.source?.value !== "string" ||
-      stmt.source.value !== "@sophie/components"
+      stmt.source.value !== source
     ) {
       continue;
     }
@@ -453,15 +457,42 @@ describe("sophieAutoImportsRemarkPlugin — component registries", () => {
     }
   });
 
-  test("every auto-imported interactive component resolves to a real @sophie/components barrel export", async () => {
+  test("every auto-imported interactive component resolves to a real export from its mapped source", async () => {
     // Invariant true throughout the conversion: the plugin never names a
-    // component the barrel doesn't export (a dangling auto-import would
-    // be a build-time ERR_MODULE_NOT_FOUND in the consumer course). Read
-    // the barrel's named exports and assert coverage.
+    // component its mapped source doesn't export (a dangling auto-import
+    // would be a build-time ERR_MODULE_NOT_FOUND in the consumer course).
+    // Most components resolve to the main `@sophie/components` barrel;
+    // Plot-using figures resolve to the `@sophie/components/figures`
+    // subpath (ADR 0022 amendment). Read both modules' named exports and
+    // assert each component is exported from ITS source.
     const barrel = await import("@sophie/components");
+    const figures = await import("@sophie/components/figures");
     for (const name of SOPHIE_INTERACTIVE_COMPONENTS) {
-      expect(name in barrel).toBe(true);
+      const source =
+        SOPHIE_COMPONENT_IMPORT_SOURCE.get(name) ?? "@sophie/components";
+      const mod = source === "@sophie/components/figures" ? figures : barrel;
+      expect(name in mod).toBe(true);
     }
+  });
+
+  test("figure components auto-import from the @sophie/components/figures subpath, not the main barrel", async () => {
+    // Plot-using figures live behind a subpath entry so @observablehq/plot
+    // + d3 stay out of the main barrel's module graph (ADR 0022 amendment).
+    // The plugin must emit `<BlackbodyExplorer>`'s import from the subpath,
+    // grouped separately from main-barrel components used on the same page.
+    const tree = await applyPlugin(
+      `<GlossaryTerm name="parsec" />\n\n<BlackbodyExplorer />`
+    );
+    const imports = collectImports(tree);
+    // One import statement per distinct source.
+    const mainNames = imports.flatMap((n) => importSpecifiers(n));
+    const figureNames = imports.flatMap((n) =>
+      importSpecifiers(n, "@sophie/components/figures")
+    );
+    expect(mainNames).toEqual(["GlossaryTerm"]);
+    expect(figureNames).toEqual(["BlackbodyExplorer"]);
+    // BlackbodyExplorer must NOT leak into the main-barrel import.
+    expect(mainNames).not.toContain("BlackbodyExplorer");
   });
 
   test("SOPHIE_INTERACTIVE_COMPONENTS and SOPHIE_CONTENT_AUTO_IMPORT are disjoint", () => {

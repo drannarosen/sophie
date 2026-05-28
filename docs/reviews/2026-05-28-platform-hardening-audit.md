@@ -130,6 +130,13 @@ distributability + ADR-0019 drift account for the honest dip.)
   `examples/smoke/e2e/` (extend `formative-render.spec.ts` or a sibling).
   *Also wire EquationBiography into smoke; add Solution/Hint/SelfAssessment
   build-level coverage (could be P2).*
+  - **Partial (2026-05-28):** the distributability PR
+    (`feat/figures-subpath-plot-bundling`) added build-level render coverage
+    for `<BlackbodyExplorer>` — the sole Plot consumer, previously absent
+    from any e2e — in `examples/packed-smoke/e2e/blackbody-figure-render.spec.ts`
+    (render + hydration + zero-error; a11y already covered by its
+    component-level jest-axe test). The `<MultiRep>` build-level render+axe
+    assertion in `examples/smoke/` remains **open**.
 
 ### P2 — hardening with real pre-launch value
 
@@ -142,6 +149,15 @@ distributability + ADR-0019 drift account for the honest dip.)
   packed-smoke configs (closes the "belongs upstream eventually" TODO
   both carry). HITL: touches the public integration contract — confirm
   shape first.
+  - **Status (2026-05-28, `feat/figures-subpath-plot-bundling`):** the
+    `optimizeDeps` half is **superseded, not hoisted** — `@sophie/components`
+    now bundles Plot at the source (tsup `noExternal`) + isolates it to the
+    `@sophie/components/figures` subpath, so no consumer or integration needs
+    `optimizeDeps` at all. packed-smoke's block is deleted; astr201's is a
+    follow-up there. The `resolve.dedupe: ['react','react-dom']` half
+    **shipped** in `integration.ts`. See
+    [ADR 0022 Amendment 1](../website/decisions/0022-tsup-library-builds.md#amendments)
+    + [design doc](../plans/2026-05-28-distributability-design.md).
 - **P2.2 — Fix I5 build-order fragility (trustworthy local green).**
   `index-generator.integration.test.ts` fails locally against a stale
   `_build/html`. Options: (a) add a turbo `dependsOn` edge so astro
@@ -151,6 +167,9 @@ distributability + ADR-0019 drift account for the honest dip.)
 - **P2.3 — Add `"sideEffects": ["**/*.css","*.css"]`** to
   `@sophie/components` (and `@sophie/theme`) `package.json` so CSS-bundling
   vs JS-tree-shaking is explicit for distributed consumers.
+  - **Status (2026-05-28):** **shipped** in
+    `feat/figures-subpath-plot-bundling` on both packages (load-bearing for
+    the figures-subpath tree-shaking; ADR 0022 Amendment 1).
 - **P2.4 — Audit report → on-disk artifact + (optional)
   `astro:build:done` trigger.** Today the report is `console.log`-only
   (prints concatenated into a page: `…index.htmlPedagogy audit:`), and

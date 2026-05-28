@@ -8,16 +8,16 @@ tags:
 status: shipped
 validation:
   status: validated
-  last_validated_date: "2026-05-25"
+  last_validated_date: "2026-05-28"
   evidence:
     - kind: deployment
       ref: packages/components/package.json
-      date: "2026-05-25"
-      notes: "`@observablehq/plot` ^0.6.17 ships as a runtime dependency of `@sophie/components`, the library choice this ADR locks."
+      date: "2026-05-28"
+      notes: "`@observablehq/plot` ^0.6.17 is the data-viz library this ADR locks. As of the distributability work (ADR 0022 Amendment 1) it is BUNDLED into the dist via tsup `noExternal` and declared a `devDependency` (not a runtime dep / peer dep) — consumers never install it. The Plot *choice* is unchanged; only its packaging."
     - kind: deployment
-      ref: packages/components/src/figures/BlackbodyExplorer/BlackbodyExplorer.tsx
-      date: "2026-05-25"
-      notes: "BlackbodyExplorer composes Observable Plot via `import * as Plot from \"@observablehq/plot\"` — the canonical first consumer for an interactive scientific figure rendering SVG via Plot inside a React island. Pairs with the BlackbodyExplorer storybook + contract + axe test files in the same directory."
+      ref: packages/components/src/figures/index.ts
+      date: "2026-05-28"
+      notes: "Plot-using figures ship behind the `@sophie/components/figures` subpath entry so Plot + d3 stay out of the main barrel's module graph (ADR 0022 Amendment 1). BlackbodyExplorer composes Observable Plot via `import * as Plot from \"@observablehq/plot\"`."
     - kind: test
       ref: packages/components/src/figures/BlackbodyExplorer/BlackbodyExplorer.test.tsx
       date: "2026-05-25"
@@ -27,7 +27,9 @@ validation:
     BlackbodyExplorer figure is the canonical first consumer — it pairs Plot's
     grammar with a React-island parameter slider. Future v2 dashboards +
     `<CalibrationCurve>` (v3) inherit the same `@observablehq/plot` dep
-    declaration without re-litigating the choice.
+    declaration without re-litigating the choice. Packaging amended
+    2026-05-28: Plot is bundled (devDependency) + isolated to the
+    `@sophie/components/figures` subpath per ADR 0022 Amendment 1.
 ---
 
 # ADR 0021: Observable Plot for data viz and dashboards
@@ -152,6 +154,36 @@ latency components. Available as a `<Plot>` wrapper component in
   analysis.
 - A Storybook category "Visualizations" hosts plot-pattern
   examples chapter authors can copy.
+
+## Amendments
+
+### Amendment 1 — Plot bundled at source + figures subpath (2026-05-28)
+
+**Trigger.** Distributability hardening
+([design doc](../../plans/2026-05-28-distributability-design.md);
+[ADR 0022 Amendment 1](0022-tsup-library-builds.md#amendments)). This ADR
+locked Observable Plot as the data-viz library and originally projected it
+as a peer dep that consumers tree-shake. In practice Plot is ESM but pulls
+a CJS-only transitive (`interval-tree-1d`), which forced an `optimizeDeps`
+band-aid in every consumer.
+
+**Amends.** The library choice is unchanged. Its *packaging* is corrected:
+
+- **Bundled, not externalized.** `@sophie/components` bundles Plot into its
+  dist via tsup `noExternal` (esbuild resolves the CJS→ESM interop once at
+  build time). Plot moves from `dependencies` to `devDependencies` — it is
+  no longer a runtime dep or a peer dep (superseding the "adds
+  `@observablehq/plot` as a peer dep" trigger in §Triggers above).
+- **Subpath-isolated, not tree-shake-dependent.** Plot-using figures ship
+  behind `@sophie/components/figures`, so Plot stays out of the main
+  barrel's module graph entirely. This replaces the §Rationale "tree-shakable
+  for chapters without [a plot]" expectation with structural isolation: a
+  chapter without a figure never has Plot in its graph in the first place.
+
+The `<Plot>` wrapper, dashboards, `<CalibrationCurve>`, and `<ConceptLatency>`
+roadmap items inherit this packaging — new Plot-using components live under
+the `figures` subpath. See [ADR 0022 Amendment 1](0022-tsup-library-builds.md#amendments)
+for the general externalization/bundling policy.
 
 ## References
 

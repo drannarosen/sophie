@@ -10,6 +10,8 @@ import {
   buildImportEsmNode,
   buildImportSpecifier,
   findExistingSophieImport,
+  SOPHIE_COMPONENTS_PACKAGE,
+  SOPHIE_FIGURES_PACKAGE,
 } from "./_shared/jsx-attrs.ts";
 
 /**
@@ -195,6 +197,22 @@ export const SOPHIE_AUTO_IMPORTED_COMPONENTS: ReadonlySet<string> = new Set([
 ]);
 
 /**
+ * Per-component import source. Components NOT listed here default to the
+ * main `@sophie/components` barrel; listed components import from a subpath
+ * entry instead. Today the only subpath is `@sophie/components/figures`,
+ * which isolates @observablehq/plot + d3 from the main barrel's module
+ * graph (ADR 0022 amendment). `injectAutoImports` groups used components by
+ * source and emits one import per distinct source. Adding a future subpath
+ * component is a one-line map entry.
+ */
+export const SOPHIE_COMPONENT_IMPORT_SOURCE: ReadonlyMap<string, string> =
+  new Map([["BlackbodyExplorer", SOPHIE_FIGURES_PACKAGE]]);
+
+function importSourceFor(name: string): string {
+  return SOPHIE_COMPONENT_IMPORT_SOURCE.get(name) ?? SOPHIE_COMPONENTS_PACKAGE;
+}
+
+/**
  * Components that own a `(course, unit, id)` namespace and thread it
  * to formative-child descendants at compile time.
  *
@@ -337,36 +355,61 @@ function collectUsedAutoImportComponents(tree: Root): string[] {
 }
 
 /**
- * Job 1 + idempotency: ensure a single `import { … } from
- * "@sophie/components"` statement at the top of the tree imports
- * every interactive component used in the file.
+ * Job 1 + idempotency: ensure each distinct import source has one
+ * `import { … } from "<source>"` statement at the top of the tree
+ * covering every used component mapped to that source. Most components
+ * resolve to the main `@sophie/components` barrel; Plot-using figures
+ * resolve to the `@sophie/components/figures` subpath
+ * (`SOPHIE_COMPONENT_IMPORT_SOURCE`) so Plot stays out of the main
+ * barrel's module graph (ADR 0022 amendment).
  *
- * Two paths:
- * - **No existing import**: insert a fresh `mdxjsEsm` node at the top.
- * - **Existing import** (possibly co-located with non-Sophie imports
- *   in the same `mdxjsEsm` node): merge specifiers in-place into the
- *   matching ImportDeclaration's estree + regenerate the node's raw
- *   `value` source-text so both fields stay consistent. Sibling
- *   ImportDeclarations in the same `mdxjsEsm` node are untouched.
+ * Components are grouped by source, then each group is injected. Sources
+ * are processed in reverse-sorted order so successive `unshift`es leave
+ * the import statements in ascending source order at the top of the file.
  */
 function injectAutoImports(tree: Root): void {
   const usedNames = collectUsedAutoImportComponents(tree);
   if (usedNames.length === 0) return;
 
-  const existing = findExistingSophieImport(tree);
+  const namesBySource = new Map<string, string[]>();
+  for (const name of usedNames) {
+    const source = importSourceFor(name);
+    const group = namesBySource.get(source);
+    if (group) group.push(name);
+    else namesBySource.set(source, [name]);
+  }
+
+  for (const source of [...namesBySource.keys()].sort().reverse()) {
+    injectImportForSource(tree, namesBySource.get(source) as string[], source);
+  }
+}
+
+/**
+ * Inject (or merge into an existing) `import { … } from "<source>"`
+ * statement for one import source.
+ *
+ * Two paths:
+ * - **No existing import**: insert a fresh `mdxjsEsm` node at the top.
+ * - **Existing import** (possibly co-located with non-Sophie imports
+ *   in the same `mdxjsEsm` node): merge specifiers in-place into the
+ *   matching ImportDeclaration's estree. Sibling ImportDeclarations in
+ *   the same `mdxjsEsm` node are untouched — MDX's recma pass consumes
+ *   the estree directly, so the host node's raw `value` doesn't need to
+ *   be rebuilt.
+ */
+function injectImportForSource(
+  tree: Root,
+  names: readonly string[],
+  source: string
+): void {
+  const existing = findExistingSophieImport(tree, source);
   if (!existing) {
-    const importNode = buildImportEsmNode(usedNames);
+    const importNode = buildImportEsmNode(names, source);
     tree.children.unshift(importNode as unknown as RootContent);
     return;
   }
 
-  // Surgical merge: mutate the existing ImportDeclaration's specifiers
-  // array in place. Sibling ImportDeclarations in the same `mdxjsEsm`
-  // node (e.g. a default-import of an .astro component co-located with
-  // the @sophie/components named import) stay untouched — MDX's recma
-  // pass consumes the estree directly, so the host node's raw `value`
-  // doesn't need to be rebuilt.
-  const union = new Set<string>([...existing.names, ...usedNames]);
+  const union = new Set<string>([...existing.names, ...names]);
   const sortedNames = [...union].sort();
   const newSpecifiers = sortedNames.map(buildImportSpecifier);
   // Cast through `unknown` to swap the ReadonlyArray-typed specifiers

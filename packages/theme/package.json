@@ -5,6 +5,10 @@
   "license": "AGPL-3.0-or-later",
   "author": "Anna Rosen",
   "type": "module",
+  "sideEffects": [
+    "**/*.css",
+    "*.css"
+  ],
   "exports": {
     ".": {
       "types": "./dist/tokens.d.ts",

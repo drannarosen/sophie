@@ -8,6 +8,11 @@ export default defineConfig({
     // Internal store-hydration entry — TextbookLayout-only.
     // Per ADR 0061 R4 + 2026-05-19 architecture audit P2 #3.
     "internal/store-hydration": "src/internal/store-hydration.ts",
+    // Figures subpath entry — isolates @observablehq/plot + d3 (bundled
+    // via noExternal below) to `@sophie/components/figures` so the main
+    // barrel stays Plot-free. See ADR 0022 amendment + the figures
+    // barrel header.
+    "figures/index": "src/figures/index.ts",
   },
   format: ["esm"],
   target: "es2022",
@@ -21,6 +26,12 @@ export default defineConfig({
   // independent module-level singletons, which would break BroadcastChannel
   // sync and IDB write coordination. Caught in code review 2026-05-09.
   splitting: true,
+  // @observablehq/plot is bundled INTO the dist (not externalized) so the
+  // CJS→ESM interop of its transitive `interval-tree-1d` (pure CJS) is
+  // resolved once by esbuild at build time, yielding a clean-ESM dist.
+  // This removes the need for any consumer/integration `optimizeDeps`
+  // band-aid. splitting:true keeps Plot+d3 confined to the figure chunks.
+  noExternal: ["@observablehq/plot"],
   external: [
     "react",
     "react-dom",

@@ -157,6 +157,18 @@ export function defineSophieIntegration(
                 external: VITE_BUILD_EXTERNAL,
               },
             },
+            // Single React instance across the consumer app, the
+            // integration, and @sophie/components — React is a
+            // peerDependency of @sophie/components (externalized in its
+            // tsup build), so without dedupe a consumer can resolve two
+            // copies and hit hook-state / hydration (#418) errors. Belt-
+            // and-suspenders: packed-smoke already proves single-instance,
+            // this guards future consumers. (Platform-hardening audit P2.1
+            // — the non-band-aid half; the optimizeDeps half is obsoleted
+            // by @sophie/components bundling Plot at source, ADR 0022.)
+            resolve: {
+              dedupe: ["react", "react-dom"],
+            },
           },
         });
 
