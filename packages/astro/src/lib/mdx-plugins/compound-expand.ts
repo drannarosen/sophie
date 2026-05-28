@@ -1,134 +1,162 @@
 import type { Parent, Root, RootContent } from "mdast";
-import type { MdxJsxAttribute, MdxJsxFlowElement } from "mdast-util-mdx-jsx";
+import type { MdxJsxFlowElement } from "mdast-util-mdx-jsx";
+import type { Plugin } from "unified";
 import { visit } from "unist-util-visit";
+import { choiceSlug } from "../pedagogy-index/jsx-utils.ts";
+import {
+  attr,
+  buildImportEsmNode,
+  buildImportSpecifier,
+  findExistingSophieImport,
+  hasAttr,
+  jsxFlowEl,
+  readAttr,
+} from "./_shared/jsx-attrs.ts";
 
 /**
- * SPIKE (Task 1) — compile-time expansion of `<MCQ>` into static native
- * form markup + a childless `<MCQController>` island. Proves the
- * "static structure + controller island" mechanism end-to-end before
- * generalizing (Task 2). MCQ-only; integrated into
- * `sophieAutoImportsRemarkPlugin` AFTER reveal-threading so nested
- * `<Solution>`/`<Hint>` keep their threaded props, and BEFORE the
- * client:load + auto-import passes so `<MCQController>` (and any island
- * inside a choice body) get hydrated.
+ * Compile-time expansion of compound authoring tags (`<MCQ>`, …) into
+ * static native form markup + a childless controller island
+ * (`<MCQController>`). Authors write the high-level `<MCQ><MCQChoice>`
+ * shape; this transform lowers it to accessible SSR'd HTML (a
+ * `<fieldset role="radiogroup">` of `<label><input>` pairs) plus a
+ * hydration-bearing controller that wires up answer-checking against
+ * the `data-correct` attribute.
  *
- * NOT the final ordering — the real plugin runs last (after extraction);
- * see docs/plans/2026-05-27-compound-island-children-props-transform.md.
+ * **Chain position (ADR 0073 Amendment 1).** Registered LAST in the
+ * remark chain (after `pedagogyIndexRemarkPlugin`) so the formative
+ * extractor sees the *authored* `<MCQ><MCQChoice>` shape — slug
+ * derivation, AS-1..5 audit, and this transform's `<input value>`
+ * attribution all use the shared `choiceSlug`, so the extractor's index
+ * anchor and the rendered control agree. Because it runs after
+ * auto-imports, the auto-import pass cannot inject the controller's
+ * `import` / `client:load`; this transform self-injects both.
+ *
+ * The plugin is a pure mdast/MDX-JS transform — no filesystem access,
+ * no module-scoped caches, no HMR considerations (R8 N/A).
  */
 
-function attr(name: string, value: string | null): MdxJsxAttribute {
-  return { type: "mdxJsxAttribute", name, value };
+/**
+ * One row per compound authoring tag. Maps the parent name to the
+ * child names + emitted controller + native control type. **Active
+ * registry is MCQ-only for Task 2** — MultiSelect / FillBlank / Tabs
+ * rows land in later tasks once their controllers exist (adding a row
+ * whose controller component is absent would break the build, since
+ * the self-injected `import` would resolve to nothing). The shape is
+ * kept easy to extend: a new compound tag is one row + (eventually) a
+ * control-type branch in `buildControl`.
+ */
+interface CompoundIsland {
+  /** Authoring parent tag, e.g. `MCQ`. */
+  parent: string;
+  /** Prompt child tag, e.g. `MCQ.Prompt`. */
+  promptName: string;
+  /** Choice child tag, e.g. `MCQChoice`. */
+  choiceName: string;
+  /** Emitted controller island, e.g. `MCQController`. */
+  controllerName: string;
+  /** Native form control type for each choice, e.g. `radio`. */
+  controlType: "radio";
 }
 
-function jsxEl(
-  name: string,
-  attributes: MdxJsxAttribute[],
-  children: RootContent[]
+export const COMPOUND_ISLANDS: ReadonlyArray<CompoundIsland> = [
+  {
+    parent: "MCQ",
+    promptName: "MCQ.Prompt",
+    choiceName: "MCQChoice",
+    controllerName: "MCQController",
+    controlType: "radio",
+  },
+];
+
+const REGISTRY_BY_PARENT: ReadonlyMap<string, CompoundIsland> = new Map(
+  COMPOUND_ISLANDS.map((row) => [row.parent, row])
+);
+
+const isFlow = (node: RootContent): node is MdxJsxFlowElement =>
+  node.type === "mdxJsxFlowElement";
+
+/**
+ * Expand one compound-island parent into its static `<section>` +
+ * childless controller island. Throws on a duplicate choice slug,
+ * naming the parent `id` so the author can disambiguate.
+ */
+function expandIsland(
+  parent: MdxJsxFlowElement,
+  spec: CompoundIsland
 ): MdxJsxFlowElement {
-  return {
-    type: "mdxJsxFlowElement",
-    name,
-    attributes,
-    children: children as MdxJsxFlowElement["children"],
-  };
-}
-
-/** Plain-text content of an mdast subtree (for slug derivation). */
-function plainText(nodes: ReadonlyArray<RootContent> | undefined): string {
-  let out = "";
-  for (const node of nodes ?? []) {
-    if (node.type === "text" || node.type === "inlineCode") {
-      out += (node as { value: string }).value;
-    } else if ("children" in node) {
-      out += plainText((node as Parent).children as RootContent[]);
-    }
-  }
-  return out;
-}
-
-function readAttr(el: MdxJsxFlowElement, name: string): string | undefined {
-  for (const a of el.attributes) {
-    if (a.type === "mdxJsxAttribute" && a.name === name) {
-      return typeof a.value === "string" ? a.value : undefined;
-    }
-  }
-  return undefined;
-}
-
-function hasAttr(el: MdxJsxFlowElement, name: string): boolean {
-  return el.attributes.some(
-    (a) => a.type === "mdxJsxAttribute" && a.name === name
-  );
-}
-
-function isFlow(node: RootContent): node is MdxJsxFlowElement {
-  return node.type === "mdxJsxFlowElement";
-}
-
-function expandMcq(mcq: MdxJsxFlowElement): MdxJsxFlowElement {
-  const course = readAttr(mcq, "course") ?? "";
-  const unit = readAttr(mcq, "unit") ?? "";
-  const id = readAttr(mcq, "id") ?? "";
+  const course = readAttr(parent, "course") ?? "";
+  const unit = readAttr(parent, "unit") ?? "";
+  const id = readAttr(parent, "id") ?? "";
   const labelId = `${id}-label`;
 
   const promptNodes: RootContent[] = [];
   const labels: RootContent[] = [];
   const reveals: RootContent[] = [];
   const seenSlugs = new Set<string>();
-  let choiceIndex = 0;
 
-  for (const child of (mcq.children as RootContent[]) ?? []) {
+  for (const child of (parent.children as RootContent[]) ?? []) {
     if (!isFlow(child)) continue;
-    if (child.name === "MCQ.Prompt") {
+    if (child.name === spec.promptName) {
       promptNodes.push(...((child.children as RootContent[]) ?? []));
-    } else if (child.name === "MCQChoice") {
-      const explicit = readAttr(child, "id");
-      const body = (child.children as RootContent[]) ?? [];
-      const stripped = plainText(body)
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "");
-      const slug = explicit ?? (stripped !== "" ? stripped : `choice-${choiceIndex}`);
-      choiceIndex += 1;
+    } else if (child.name === spec.choiceName) {
+      const slug = choiceSlug(child);
       if (seenSlugs.has(slug)) {
         throw new Error(
-          `<MCQ id="${id}"> duplicate choice slug "${slug}". Supply a distinct \`id\` on one <MCQChoice>.`
+          `<${spec.parent} id="${id}"> has a duplicate choice slug "${slug}". Resolution: edit the choice text so it slugifies distinctly, or set an explicit \`id\` on one <${spec.choiceName}>.`
         );
       }
       seenSlugs.add(slug);
       const inputAttrs = [
-        attr("type", "radio"),
-        attr("name", `mcq-${id}`),
+        attr("type", spec.controlType),
+        attr("name", `${spec.parent.toLowerCase()}-${id}`),
         attr("value", slug),
         attr("id", `${id}-${slug}`),
       ];
-      if (hasAttr(child, "correct")) inputAttrs.push(attr("data-correct", "true"));
+      if (hasAttr(child, "correct")) {
+        inputAttrs.push(attr("data-correct", "true"));
+      }
       labels.push(
-        jsxEl("label", [], [jsxEl("input", inputAttrs, []), jsxEl("span", [], body)])
+        jsxFlowEl(
+          "label",
+          [],
+          [
+            jsxFlowEl("input", inputAttrs, []),
+            jsxFlowEl("span", [], (child.children as RootContent[]) ?? []),
+          ]
+        )
       );
     } else if (child.name === "Solution" || child.name === "Hint") {
       reveals.push(child);
     }
   }
 
-  return jsxEl(
+  return jsxFlowEl(
     "section",
     [
-      attr("data-pedagogy-role", "mcq"),
+      attr("data-pedagogy-role", spec.parent.toLowerCase()),
       attr("data-formative-anchor", id),
       attr("aria-labelledby", labelId),
     ],
     [
-      jsxEl("h3", [attr("id", labelId)], [{ type: "text", value: "Multiple choice" } as RootContent]),
+      jsxFlowEl(
+        "h3",
+        [attr("id", labelId)],
+        [{ type: "text", value: "Multiple choice" } as RootContent]
+      ),
       ...promptNodes,
-      jsxEl(
+      jsxFlowEl(
         "fieldset",
         [attr("role", "radiogroup"), attr("aria-labelledby", labelId)],
         labels
       ),
-      jsxEl(
-        "MCQController",
-        [attr("course", course), attr("unit", unit), attr("id", id)],
+      jsxFlowEl(
+        spec.controllerName,
+        [
+          attr("course", course),
+          attr("unit", unit),
+          attr("id", id),
+          attr("client:load", null),
+        ],
         []
       ),
       ...reveals,
@@ -136,16 +164,73 @@ function expandMcq(mcq: MdxJsxFlowElement): MdxJsxFlowElement {
   );
 }
 
-/** Replace every `<MCQ>` flow element in the tree with its expansion. */
+/**
+ * Ensure the tree's `@sophie/components` import includes every name in
+ * `controllerNames`. Merges into an existing import declaration when
+ * present (preserving sibling specifiers + sibling imports), else
+ * inserts a fresh `mdxjsEsm` node at the top. Idempotent: names already
+ * imported are a no-op.
+ */
+function injectControllerImports(
+  tree: Root,
+  controllerNames: ReadonlySet<string>
+): void {
+  if (controllerNames.size === 0) return;
+
+  const existing = findExistingSophieImport(tree);
+  if (!existing) {
+    const importNode = buildImportEsmNode([...controllerNames]);
+    tree.children.unshift(importNode as unknown as RootContent);
+    return;
+  }
+
+  const union = new Set<string>([...existing.names, ...controllerNames]);
+  if (union.size === existing.names.size) return;
+  const sortedNames = [...union].sort();
+  const newSpecifiers = sortedNames.map(buildImportSpecifier);
+  // Cast through `unknown` to swap the ReadonlyArray-typed specifiers
+  // field — the estree ImportDeclaration shape is mutable at runtime;
+  // the structural type declares it readonly to discourage accidental
+  // mutation elsewhere (mirrors `injectAutoImports`).
+  (
+    existing.decl as unknown as {
+      specifiers: typeof newSpecifiers;
+    }
+  ).specifiers = newSpecifiers;
+}
+
+/**
+ * Replace every compound-island parent (`<MCQ>`, …) in the tree with
+ * its expansion, then self-inject the emitted controllers' import +
+ * `client:load`. Idempotent: a second run finds no compound parents
+ * (the first run consumed them into `<section>`s), so it's a no-op.
+ */
 export function expandCompoundIslands(tree: Root): void {
-  const matches: Array<{ parent: Parent; node: MdxJsxFlowElement }> = [];
+  const matches: Array<{
+    parent: Parent;
+    node: MdxJsxFlowElement;
+    spec: CompoundIsland;
+  }> = [];
   visit(tree, "mdxJsxFlowElement", (node, _index, parent) => {
-    if ((node as MdxJsxFlowElement).name === "MCQ" && parent) {
-      matches.push({ parent: parent as Parent, node: node as MdxJsxFlowElement });
+    const el = node as MdxJsxFlowElement;
+    const spec = el.name ? REGISTRY_BY_PARENT.get(el.name) : undefined;
+    if (spec && parent) {
+      matches.push({ parent: parent as Parent, node: el, spec });
     }
   });
-  for (const { parent, node } of matches) {
+
+  const injectedControllers = new Set<string>();
+  for (const { parent, node, spec } of matches) {
     const i = parent.children.indexOf(node as RootContent);
-    if (i >= 0) parent.children.splice(i, 1, expandMcq(node) as RootContent);
+    if (i < 0) continue;
+    parent.children.splice(i, 1, expandIsland(node, spec) as RootContent);
+    injectedControllers.add(spec.controllerName);
   }
+
+  injectControllerImports(tree, injectedControllers);
 }
+
+export const sophieCompoundExpandRemarkPlugin: Plugin<[], Root> =
+  () => (tree) => {
+    expandCompoundIslands(tree);
+  };

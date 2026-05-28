@@ -1,3 +1,4 @@
+import { slugify } from "@sophie/core/schema";
 import { toHtml } from "hast-util-to-html";
 import { toHast } from "mdast-util-to-hast";
 import rehypeKatex from "rehype-katex";
@@ -299,6 +300,66 @@ export function extractPlainText(node: unknown): string {
   };
   walk(node);
   return parts.join("").trim();
+}
+
+/**
+ * Like `extractPlainText`, but ALSO concatenates the LaTeX `.value` of
+ * `math` (display) and `inlineMath` nodes. Used for slug derivation,
+ * where a math-only choice (`$n=2\to n=1$`) must produce a non-empty,
+ * distinct slug — `extractPlainText` is deliberately math-blind (it
+ * builds the index's searchable prompt summary per ADR 0038, where raw
+ * LaTeX is noise), so a separate walker is the correct shape here.
+ *
+ * Walks the four author-character-bearing leaf types: `text`,
+ * `inlineCode`, `math`, `inlineMath`. Other structural nodes
+ * contribute nothing.
+ */
+export function extractSlugText(node: unknown): string {
+  const parts: string[] = [];
+  const walk = (n: unknown): void => {
+    if (!n || typeof n !== "object") return;
+    const m = n as { type?: string; value?: unknown; children?: unknown };
+    if (
+      (m.type === "text" ||
+        m.type === "inlineCode" ||
+        m.type === "math" ||
+        m.type === "inlineMath") &&
+      typeof m.value === "string"
+    ) {
+      parts.push(m.value);
+    }
+    if (Array.isArray(m.children)) {
+      for (const child of m.children) walk(child);
+    }
+  };
+  walk(node);
+  return parts.join("").trim();
+}
+
+/**
+ * Slug for a choice element (MCQ / MultiSelect): an explicit `id` attr
+ * wins; otherwise the slug of the choice's math-aware text. Shared by
+ * the formative extractor (`collectChoices`) and the compound-island
+ * transform (`compound-expand.ts`) so both derive identical slugs —
+ * the extractor's index anchor and the transform's `<input value>` /
+ * `data-correct` attribution must agree. Math-only choices slug via
+ * `extractSlugText` (not `extractPlainText`, which would return `""`
+ * and collide).
+ */
+export function choiceSlug(node: {
+  attributes?: ReadonlyArray<{ type: string; name?: string; value?: unknown }>;
+}): string {
+  const explicit = readStringAttr(
+    node as {
+      attributes?: ReadonlyArray<{
+        type: string;
+        name: string;
+        value: unknown;
+      }>;
+    },
+    "id"
+  );
+  return explicit ?? slugify(extractSlugText(node));
 }
 
 export function isWhitespaceTextNode(node: unknown): boolean {

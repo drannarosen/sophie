@@ -8,6 +8,7 @@ import {
 import type { Root } from "mdast";
 import { visit } from "unist-util-visit";
 import {
+  choiceSlug,
   extractPlainText,
   type MdxJsxFlowElement,
   readStringAttr,
@@ -113,11 +114,6 @@ const isJsxFlowChild = (c: unknown): c is MdxJsxFlowElement =>
   !!c &&
   typeof c === "object" &&
   (c as { type?: string }).type === "mdxJsxFlowElement";
-
-/** Slug of a choice element: explicit `id` attr wins; else slug of text. */
-function choiceSlug(choice: MdxJsxFlowElement): string {
-  return readStringAttr(choice, "id") ?? slugify(extractPlainText(choice));
-}
 
 /**
  * Collect `{ correct, slug }` for each `<X.Choice>` child of an MCQ /
