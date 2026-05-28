@@ -516,9 +516,15 @@ describe("sophieAutoImportsRemarkPlugin — component registries", () => {
     // Linked-parameter ADR 0059 primitives
     expect(SOPHIE_INTERACTIVE_COMPONENTS.has("ParameterCursor")).toBe(true);
     expect(SOPHIE_INTERACTIVE_COMPONENTS.has("ParameterSlider")).toBe(true);
-    // Radix-backed tabs (needs hydration for tab switching)
-    expect(SOPHIE_INTERACTIVE_COMPONENTS.has("Tab")).toBe(true);
-    expect(SOPHIE_INTERACTIVE_COMPONENTS.has("Tabs")).toBe(true);
+    // `Tabs` / `Tab` are VIRTUAL authoring tags (Task 6 of the
+    // compound-island transform): expanded to static ARIA-tabs markup +
+    // a self-injected <TabsController> by
+    // sophieCompoundExpandRemarkPlugin. Neither the authoring tags nor
+    // the controller is auto-imported here — mirrors the MCQ /
+    // MultiSelect / FillBlank invariants below.
+    expect(SOPHIE_INTERACTIVE_COMPONENTS.has("Tab")).toBe(false);
+    expect(SOPHIE_INTERACTIVE_COMPONENTS.has("Tabs")).toBe(false);
+    expect(SOPHIE_INTERACTIVE_COMPONENTS.has("TabsController")).toBe(false);
   });
 
   test("content-only components are auto-imported but NOT marked client:load", async () => {

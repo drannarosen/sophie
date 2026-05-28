@@ -1,17 +1,42 @@
-/* Chrome primitive — Tabs.
+/* Tabs — global styles for the transform-emitted static ARIA-tabs markup.
  *
- * Visual aesthetic: underline-style trigger bar over the chapter's
- * surface-1 background; active tab carries the brand accent underline
- * + body weight. Composes only from existing tokens (ADR 0005); no
- * new tokens added Phase B.
- */
+ * `sophieCompoundExpandRemarkPlugin` lowers authored
+ * `<Tabs><Tab label="X">body</Tab>…</Tabs>` into:
+ *
+ *   <div data-sophie-tabs data-tabs-id="…">
+ *     <div role="tablist" aria-label="Tabs">
+ *       <button role="tab" aria-selected="true|false" tabindex="0|-1">…</button>
+ *       …
+ *     </div>
+ *     <div role="tabpanel" hidden?>…</div>
+ *     …
+ *     <TabsController id client:load />
+ *   </div>
+ *
+ * with NO CSS-Module class names — the structure exists only at
+ * MDX-compile time, never in React, so per-component CSS-Module hashes
+ * cannot attach. These rules therefore target the SEMANTIC structure +
+ * the `[data-sophie-tabs]` data hook and must ship UNMANGLED.
+ *
+ * CSS-pipeline note: the file is `.module.css` (not raw global `.css`)
+ * because `@sophie/components` ships styles through ONE bundle,
+ * `dist/styles.css`, built by `scripts/build-css-modules.ts` which globs
+ * `*.module.css`. Wrapping every rule in `:global(...)` makes
+ * postcss-modules emit selectors verbatim — same pattern as
+ * `_formative/formative.module.css`. ADR 0005.
+ *
+ * Visual aesthetic ports the previous Radix-based Tabs styling: an
+ * underline-style trigger bar over surface-1, active tab carrying the
+ * brand accent underline + body weight. The bare `[data-sophie-tabs]`
+ * scope keeps these rules from styling unrelated `role="tablist"`
+ * elsewhere on the page. */
 
-.root {
+:global([data-sophie-tabs]) {
   display: block;
   margin-block: var(--sophie-space-3);
 }
 
-.list {
+:global([data-sophie-tabs] > [role="tablist"]) {
   display: flex;
   flex-wrap: wrap;
   gap: var(--sophie-space-1);
@@ -19,7 +44,7 @@
   margin-block-end: var(--sophie-space-3);
 }
 
-.trigger {
+:global([data-sophie-tabs] [role="tab"]) {
   appearance: none;
   background: transparent;
   border: 0;
@@ -35,35 +60,37 @@
     border-color 150ms ease;
 }
 
-.trigger:hover {
+:global([data-sophie-tabs] [role="tab"]:hover) {
   color: var(--sophie-text);
 }
 
-.trigger:focus-visible {
+:global([data-sophie-tabs] [role="tab"]:focus-visible) {
   outline: 2px solid var(--sophie-accent);
   outline-offset: 2px;
   border-radius: var(--sophie-radius-xs);
 }
 
-.trigger[data-state="active"] {
+:global([data-sophie-tabs] [role="tab"][aria-selected="true"]) {
   color: var(--sophie-text);
   border-block-end-color: var(--sophie-accent);
   font-weight: var(--sophie-weight-semibold);
 }
 
-.content {
-  /* No padding — let the panel's own components own their margins. */
-  display: block;
-}
+/* Panels keep the default <div> block display via UA stylesheet — we
+ * deliberately do NOT set a `display: block` rule here, because doing so
+ * would tie the `[hidden]` behavior to a same-specificity arms race
+ * (forcing `display: none !important` on `[hidden]`). Leaving display
+ * unset lets the native `hidden` attribute win for free; the
+ * user-agent's `[hidden] { display: none }` rule applies unopposed. */
 
-.content:focus-visible {
+:global([data-sophie-tabs] > [role="tabpanel"]:focus-visible) {
   outline: 2px solid var(--sophie-accent);
   outline-offset: 2px;
   border-radius: var(--sophie-radius-sm);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .trigger {
+  :global([data-sophie-tabs] [role="tab"]) {
     transition: none;
   }
 }

@@ -1,3 +1,4 @@
+import { slugify } from "@sophie/core/schema";
 import type { Parent, Root, RootContent } from "mdast";
 import type { MdxJsxFlowElement, MdxJsxTextElement } from "mdast-util-mdx-jsx";
 import type { Plugin } from "unified";
@@ -16,14 +17,15 @@ import {
 
 /**
  * Compile-time expansion of compound authoring tags (`<MCQ>`,
- * `<MultiSelect>`, `<FillBlank>`) into static native form markup + a
- * childless controller island (`<MCQController>` /
- * `<MultiSelectController>` / `<FillBlankController>`). Authors write the
- * high-level member-access shape; this transform lowers it to accessible
- * SSR'd HTML plus a hydration-bearing controller that restores +
- * persists the student's input.
+ * `<MultiSelect>`, `<FillBlank>`, `<Tabs>`) into static native form +
+ * ARIA-tabs markup + a childless controller island (`<MCQController>` /
+ * `<MultiSelectController>` / `<FillBlankController>` / `<TabsController>`).
+ * Authors write the high-level shape; this transform lowers it to
+ * accessible SSR'd HTML plus a hydration-bearing controller that
+ * restores + persists the student's input (formative parents) or wires
+ * keyboard + ARIA-tabs selection (chrome `<Tabs>`).
  *
- * Two structurally-distinct expansion paths:
+ * Three structurally-distinct expansion paths:
  *
  *  - **Choice-based** (`<MCQ>` / `<MultiSelect>` — `expandIsland`): a
  *    `<fieldset>` of `<label><input>` pairs (`radiogroup` for
@@ -38,6 +40,13 @@ import {
  *    answer is NEVER emitted into the DOM (it would leak to students);
  *    the correct value lives only in the pedagogy index (the extractor
  *    reads it from the authored AST).
+ *  - **Tabs** (`<Tabs>` — `expandTabs`): an ARIA-tabs `<div role>` of
+ *    `<button role="tab">` triggers + sibling `<div role="tabpanel">`
+ *    bodies. Chrome, not pedagogy — no `course`/`unit`/`id` namespace,
+ *    no AS audit, no persistence (selection resets per page load). Tabs
+ *    structurally differs from the formative parents (separate buttons +
+ *    panels, not label-wrapped inputs), so it has its own path rather
+ *    than a contorted reuse of `expandIsland` (W2).
  *
  * **Chain position (ADR 0073 Amendment 1).** Registered LAST in the
  * remark chain (after `pedagogyIndexRemarkPlugin`) so the formative
@@ -58,13 +67,12 @@ import {
  * visible heading. **Active registry is MCQ + MultiSelect.** FillBlank
  * is deliberately ABSENT — it is slot-based (inline blanks in prose, no
  * fieldset/choices), so it has its own `FILL_BLANK` spec +
- * `expandFillBlank` path below rather than a row here. `<Tabs>` rows
- * land in a later task once their controller exists (adding a row whose
- * controller component is absent would break the build, since the
- * self-injected `import` would resolve to nothing). The shape is kept
- * easy to extend: a new choice-based tag is one row + (if it needs a
- * new native control) one branch in `expandIsland`'s control-type
- * handling.
+ * `expandFillBlank` path below rather than a row here. `<Tabs>` is also
+ * absent — it is structurally distinct (buttons + sibling panels, no
+ * fieldset/choices) and has its own `TABS` spec + `expandTabs` path. The
+ * shape is kept easy to extend: a new choice-based tag is one row + (if
+ * it needs a new native control) one branch in `expandIsland`'s
+ * control-type handling.
  */
 interface CompoundIsland {
   /** Authoring parent tag, e.g. `MCQ`. */
@@ -134,6 +142,21 @@ const FILL_BLANK = {
   controllerName: "FillBlankController",
   pedagogyRole: "fill-blank",
   heading: "Fill in the blank",
+} as const;
+
+/**
+ * Tabs spec — chrome (NOT a formative parent). Single-row counterpart to
+ * `FILL_BLANK`. Authored `<Tabs><Tab label="X">body</Tab>…</Tabs>` becomes
+ * an ARIA-tabs `<div data-sophie-tabs>` of `<button role="tab">` triggers
+ * over sibling `<div role="tabpanel">` bodies + a `<TabsController>`
+ * island. NO `course`/`unit`/`id` namespace and NO persistence — Tabs is
+ * ephemeral view state. Tab is intentionally standalone (not member-
+ * access `Tabs.Tab`): the transform reads `child.name === "Tab"`.
+ */
+const TABS = {
+  parent: "Tabs",
+  childName: "Tab",
+  controllerName: "TabsController",
 } as const;
 
 const isFlow = (node: RootContent): node is MdxJsxFlowElement =>
@@ -363,6 +386,116 @@ function expandFillBlank(parent: MdxJsxFlowElement): MdxJsxFlowElement {
 }
 
 /**
+ * Expand one `<Tabs>` into its static ARIA-tabs structure + childless
+ * `<TabsController>` island. Throws on a duplicate tab slug (derived
+ * from `label`), naming the parent so the author can disambiguate.
+ *
+ * `tabsId` is resolved up the stack (`expandCompoundIslands`) so the
+ * auto-id counter is stable across the entire tree visit; we accept it
+ * here as a parameter. `defaultLabel` (when present) → slug; else the
+ * first tab is the default. The default tab carries
+ * `aria-selected="true"` + `tabindex="0"` and its panel omits `hidden`;
+ * the rest carry `aria-selected="false"` + `tabindex="-1"` and their
+ * panels carry `hidden` (native HTML `hidden` attribute, not
+ * CSS-driven). Roving focus + automatic activation are wired by the
+ * controller on hydration; the static markup is fully usable without
+ * JS (the default tab's panel is visible, the rest are hidden).
+ *
+ * NO landmark element. `<Tabs>` lives inside the chapter `<main>`; per
+ * R10, components nested under a parent landmark must not introduce
+ * another. A plain `<div data-sophie-tabs>` is correct (not `<section>`
+ * / `<article>` / `<main>`).
+ *
+ * Tab panel bodies stay LIVE (the transform never serializes them),
+ * so nested islands inside a tab body hydrate normally.
+ */
+function expandTabs(
+  parent: MdxJsxFlowElement,
+  tabsId: string
+): MdxJsxFlowElement {
+  const defaultLabel = readAttr(parent, "defaultLabel");
+
+  const tabs: { slug: string; label: string; body: RootContent[] }[] = [];
+  const seenSlugs = new Set<string>();
+
+  for (const child of (parent.children as RootContent[]) ?? []) {
+    if (!isFlow(child)) continue;
+    if (child.name !== TABS.childName) continue;
+    const label = readAttr(child, "label") ?? "";
+    // `label` is a string attribute (not children), so plain `slugify` —
+    // `choiceSlug` operates on a node's body (math/inlineMath leaves) and
+    // doesn't apply here.
+    const slug = slugify(label);
+    if (seenSlugs.has(slug)) {
+      throw new Error(
+        `<Tabs id="${tabsId}"> has a duplicate tab slug "${slug}" (derived from label "${label}"). Two tabs cannot slugify to the same value. Resolution: rename one <Tab label="…">.`
+      );
+    }
+    seenSlugs.add(slug);
+    tabs.push({
+      slug,
+      label,
+      body: (child.children as RootContent[]) ?? [],
+    });
+  }
+
+  // Default selection: explicit `defaultLabel` → slug, else first tab.
+  // When `defaultLabel` is set but doesn't match any tab, no tab is
+  // marked default — the controller's first-mount pass still has
+  // `aria-selected="true"` on zero tabs, which is the loudly-broken
+  // shape the author should fix (mirrors the old component's behavior:
+  // Radix Tabs renders an empty trigger bar when defaultValue is
+  // unknown).
+  const defaultSlug =
+    defaultLabel !== undefined ? slugify(defaultLabel) : tabs[0]?.slug;
+
+  const tabButtons: RootContent[] = tabs.map(({ slug, label }) => {
+    const isDefault = slug === defaultSlug;
+    return jsxFlowEl(
+      "button",
+      [
+        attr("type", "button"),
+        attr("role", "tab"),
+        attr("id", `${tabsId}-tab-${slug}`),
+        attr("aria-controls", `${tabsId}-panel-${slug}`),
+        attr("aria-selected", isDefault ? "true" : "false"),
+        attr("tabindex", isDefault ? "0" : "-1"),
+      ],
+      [{ type: "text", value: label } as RootContent]
+    );
+  });
+
+  const tabPanels: RootContent[] = tabs.map(({ slug, body }) => {
+    const isDefault = slug === defaultSlug;
+    const panelAttrs = [
+      attr("role", "tabpanel"),
+      attr("id", `${tabsId}-panel-${slug}`),
+      attr("aria-labelledby", `${tabsId}-tab-${slug}`),
+    ];
+    if (!isDefault) panelAttrs.push(attr("hidden", null));
+    return jsxFlowEl("div", panelAttrs, body);
+  });
+
+  return jsxFlowEl(
+    "div",
+    [attr("data-sophie-tabs", null), attr("data-tabs-id", tabsId)],
+    [
+      jsxFlowEl(
+        "div",
+        [attr("role", "tablist"), attr("aria-label", "Tabs")],
+        tabButtons
+      ),
+      ...tabPanels,
+      jsxFlowEl(
+        TABS.controllerName,
+        [attr("id", tabsId), attr("client:load", null)],
+        []
+      ),
+    ]
+  );
+}
+
+/**
  * Ensure the tree's `@sophie/components` import includes every name in
  * `controllerNames`. Merges into an existing import declaration when
  * present (preserving sibling specifiers + sibling imports), else
@@ -398,46 +531,94 @@ function injectControllerImports(
 }
 
 /**
- * One queued expansion: a choice-based island (carries its
- * `CompoundIsland` spec) or the slot-based FillBlank (`spec: null`,
- * dispatched to `expandFillBlank`). The discriminant keeps the two
- * structurally-distinct paths separate without contorting either.
+ * One queued expansion. The `kind` discriminant routes to the matching
+ * `expand*` path:
+ *
+ *  - `"choice"` — `<MCQ>` / `<MultiSelect>` (carries its `CompoundIsland`
+ *    spec; dispatched to `expandIsland`).
+ *  - `"fillBlank"` — slot-based `<FillBlank>` (dispatched to
+ *    `expandFillBlank`).
+ *  - `"tabs"` — `<Tabs>` (dispatched to `expandTabs`; carries the
+ *    auto-generated `tabsId` resolved up the stack).
  */
-type ExpansionMatch = {
-  parent: Parent;
-  node: MdxJsxFlowElement;
-  spec: CompoundIsland | null;
-};
+type ExpansionMatch =
+  | {
+      kind: "choice";
+      parent: Parent;
+      node: MdxJsxFlowElement;
+      spec: CompoundIsland;
+    }
+  | { kind: "fillBlank"; parent: Parent; node: MdxJsxFlowElement }
+  | { kind: "tabs"; parent: Parent; node: MdxJsxFlowElement; tabsId: string };
 
 /**
  * Replace every compound-island parent (`<MCQ>`, `<MultiSelect>`,
- * `<FillBlank>`) in the tree with its expansion, then self-inject the
- * emitted controllers' import + `client:load`. Idempotent: a second run
- * finds no compound parents (the first run consumed them into
- * `<section>`s), so it's a no-op.
+ * `<FillBlank>`, `<Tabs>`) in the tree with its expansion, then self-
+ * inject the emitted controllers' import + `client:load`. Idempotent: a
+ * second run finds no compound parents (the first run consumed them
+ * into `<section>` / `<div data-sophie-tabs>`s), so it's a no-op.
+ *
+ * **Tabs auto-id.** Each `<Tabs>` gets a stable id when the author
+ * omitted one: `sophie-tabs-${N}`, where N counts `<Tabs>` occurrences
+ * in document order, 1-indexed. The counter is function-local: each
+ * MDX file (or HMR re-run) starts a fresh `expandCompoundIslands`
+ * call with N=0, so ids are per-file deterministic and never collide
+ * across files. Same input AST → same ids on every build. Idempotency
+ * holds because a second visit finds zero `<Tabs>` left to count
+ * (they were already lowered to `<div data-sophie-tabs>`). Authored
+ * ids do not advance the counter — it is consumed lazily, only when
+ * `id` is absent, so explicit ids never cause auto-ids to skip numbers.
  */
 export function expandCompoundIslands(tree: Root): void {
   const matches: ExpansionMatch[] = [];
+  let tabsAutoIdCounter = 0;
   visit(tree, "mdxJsxFlowElement", (node, _index, parent) => {
     const el = node as MdxJsxFlowElement;
     if (!parent || !el.name) return;
     const spec = REGISTRY_BY_PARENT.get(el.name);
     if (spec) {
-      matches.push({ parent: parent as Parent, node: el, spec });
+      matches.push({
+        kind: "choice",
+        parent: parent as Parent,
+        node: el,
+        spec,
+      });
     } else if (el.name === FILL_BLANK.parent) {
-      matches.push({ parent: parent as Parent, node: el, spec: null });
+      matches.push({ kind: "fillBlank", parent: parent as Parent, node: el });
+    } else if (el.name === TABS.parent) {
+      const authoredId = readAttr(el, "id");
+      const tabsId =
+        authoredId !== undefined && authoredId !== ""
+          ? authoredId
+          : `sophie-tabs-${++tabsAutoIdCounter}`;
+      matches.push({
+        kind: "tabs",
+        parent: parent as Parent,
+        node: el,
+        tabsId,
+      });
     }
   });
 
   const injectedControllers = new Set<string>();
-  for (const { parent, node, spec } of matches) {
+  for (const match of matches) {
+    const { parent, node } = match;
     const i = parent.children.indexOf(node as RootContent);
     if (i < 0) continue;
-    const expanded = spec ? expandIsland(node, spec) : expandFillBlank(node);
+    let expanded: MdxJsxFlowElement;
+    let controllerName: string;
+    if (match.kind === "choice") {
+      expanded = expandIsland(node, match.spec);
+      controllerName = match.spec.controllerName;
+    } else if (match.kind === "fillBlank") {
+      expanded = expandFillBlank(node);
+      controllerName = FILL_BLANK.controllerName;
+    } else {
+      expanded = expandTabs(node, match.tabsId);
+      controllerName = TABS.controllerName;
+    }
     parent.children.splice(i, 1, expanded as RootContent);
-    injectedControllers.add(
-      spec ? spec.controllerName : FILL_BLANK.controllerName
-    );
+    injectedControllers.add(controllerName);
   }
 
   injectControllerImports(tree, injectedControllers);

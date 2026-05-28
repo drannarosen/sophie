@@ -77,6 +77,17 @@
  *                               produced by sophieCompoundExpandRemarkPlugin,
  *                               not by React). Same carve-out as MCQController
  *                               (Task 5, compound-island transform).
+ *   - `components/Tabs/TabsController.test.tsx`
+ *                               null-render side-effect controller over the
+ *                               transform-emitted static ARIA-tabs DOM (a
+ *                               <div data-sophie-tabs> of <button role="tab">
+ *                               triggers + sibling <div role="tabpanel">
+ *                               bodies produced by
+ *                               sophieCompoundExpandRemarkPlugin, not by
+ *                               React). Same carve-out as MCQController
+ *                               (Task 6, compound-island transform). a11y of
+ *                               the emitted ARIA-tabs markup is verified at
+ *                               the build level (axe on the rendered page).
  *
  * Exit codes:
  *
@@ -154,6 +165,13 @@ function isExcluded(path: string): boolean {
   // packages/components/src/components/FillBlank/FillBlankController.tsx.
   if (path.endsWith("/components/FillBlank/FillBlankController.test.tsx"))
     return true;
+  // TabsController — same carve-out: a null-render side-effect island over
+  // the transform-emitted static ARIA-tabs DOM (<div data-sophie-tabs> of
+  // native <button role="tab"> triggers + sibling <div role="tabpanel">
+  // bodies, not React). The test asserts click + keyboard activation on a
+  // hand-written fixture; no component-owned a11y surface. See
+  // packages/components/src/components/Tabs/TabsController.tsx.
+  if (path.endsWith("/components/Tabs/TabsController.test.tsx")) return true;
   return false;
 }
 

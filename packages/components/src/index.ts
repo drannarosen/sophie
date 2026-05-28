@@ -356,17 +356,12 @@ export {
   SpacedReviewPropsSchema,
   spacedReviewContract,
 } from "./components/SpacedReview/index.ts";
+export type { TabsControllerProps } from "./components/Tabs/index.ts";
 export {
-  Tab,
-  TabPropsSchema,
-  Tabs,
-  TabsPropsSchema,
-  tabsContract,
+  TabsController,
+  TabsControllerPropsSchema,
+  tabsControllerContract,
 } from "./components/Tabs/index.ts";
-export type {
-  TabProps,
-  TabsProps,
-} from "./components/Tabs/Tabs.schema.ts";
 export type { UnitsProps } from "./components/Units/index.ts";
 export {
   Units,

@@ -154,23 +154,26 @@ best-practice rules).
 
 #### `<Tabs>` — non-persistent tabbed interface
 
-Compound shape backed by Radix Tabs ([ADR 0019](../decisions/0019-radix-ui-primitives.md)):
-`<Tabs>` wraps n × `<Tab label="…">` children. Each label slugifies
-into the Radix `value` identity; duplicate slugs throw at render
-(Q1 loud-feedback lock). Renders as a plain `<div>` — no landmark
-(no inherent name to anchor `<section aria-labelledby>` to per
-[R10](../../AGENTS.md)); Radix provides all ARIA semantics for the
-tablist + tabpanel interaction. NO persistence — view-state only;
-for persisted disclosure use `<Dropdown>`.
+Compound shape: `<Tabs>` wraps n × `<Tab label="…">` children. Authoring
+tags are VIRTUAL — `sophieCompoundExpandRemarkPlugin` lowers them at
+MDX-compile time into native ARIA-tabs markup (a `<div role="tablist">`
+of `<button role="tab">` triggers over sibling
+`<div role="tabpanel">` panels) plus a self-injected `<TabsController
+client:load />` island that wires click + ArrowLeft/ArrowRight/Home/End
+keyboard activation (the WAI-ARIA "automatic activation" tabs pattern).
+Each label slugifies into the tab/panel id pair; duplicate slugs throw
+at MDX-compile time (loud author feedback). Renders as a plain `<div
+data-sophie-tabs>` — no landmark (no inherent name to anchor
+`<section aria-labelledby>` to per [R10](../../AGENTS.md)). NO
+persistence — view-state only; for persisted disclosure use
+`<Dropdown>`.
 
 | Prop | Type | Default | Notes |
 |---|---|---|---|
-| `defaultLabel` | `string?` | first tab | Label of the tab open on first render. Slugified before passing to Radix as `defaultValue`. |
-| `id` | `string?` | — | Anchor id on the root. |
-| `className` | `string?` | — | Concatenated with the tabs root class. |
+| `defaultLabel` | `string?` | first tab | Label of the tab selected on first render. Slugified before matching against tab slugs. |
+| `id` | `string?` | auto | When omitted, the transform generates a stable `sophie-tabs-${N}` id (N = 1-indexed document order). When set, the authored id wins verbatim. |
 
-`<Tab>` props: `label: string` (required), `id?: string`,
-`children: ReactNode`.
+`<Tab>` props: `label: string` (required), `children: ReactNode`.
 
 ```mdx
 <Tabs defaultLabel="Composition">

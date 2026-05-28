@@ -99,18 +99,20 @@ import {
  * of the formative-assessment plan) — they auto-import + `client:load`
  * here.
  *
- * `MCQ`, `MultiSelect`, and `FillBlank` are deliberately ABSENT from
- * this set: all three are virtual authoring tags, expanded at
+ * `MCQ`, `MultiSelect`, `FillBlank`, AND `Tabs` / `Tab` are deliberately
+ * ABSENT from this set: all are virtual authoring tags, expanded at
  * MDX-compile time by `sophieCompoundExpandRemarkPlugin` into static
  * markup + a childless controller island (`<MCQController>` /
- * `<MultiSelectController>` / `<FillBlankController>`; Tasks 3–5 of the
- * compound-island transform). That transform self-injects each
- * controller's `import` + `client:load` because it runs LAST in the
- * chain (after this plugin); the auto-import path is never used for the
- * controllers. `MCQ` / `MultiSelect` / `FillBlank` stay in
- * `SOPHIE_FORMATIVE_PARENTS` below so the threading job still wires
- * `course`/`unit`/`parentId` onto nested `<Solution>` / `<Hint>`
- * children before the expansion runs.
+ * `<MultiSelectController>` / `<FillBlankController>` /
+ * `<TabsController>`; Tasks 3–6 of the compound-island transform). That
+ * transform self-injects each controller's `import` + `client:load`
+ * because it runs LAST in the chain (after this plugin); the auto-
+ * import path is never used for the controllers. `MCQ` / `MultiSelect`
+ * / `FillBlank` stay in `SOPHIE_FORMATIVE_PARENTS` below so the
+ * threading job still wires `course`/`unit`/`parentId` onto nested
+ * `<Solution>` / `<Hint>` children before the expansion runs; `Tabs` /
+ * `Tab` are chrome (NOT formative parents — no namespace, no
+ * threading), so they don't appear in any registry here.
  */
 export const SOPHIE_INTERACTIVE_COMPONENTS: ReadonlySet<string> = new Set([
   "BlackbodyExplorer",
@@ -138,8 +140,6 @@ export const SOPHIE_INTERACTIVE_COMPONENTS: ReadonlySet<string> = new Set([
   "SkillReview",
   "Solution",
   "SpacedReview",
-  "Tab",
-  "Tabs",
 ]);
 
 /**
