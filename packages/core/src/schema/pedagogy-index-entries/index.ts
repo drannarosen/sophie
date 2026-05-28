@@ -46,6 +46,14 @@ export {
   FigureUsageEntrySchema,
 } from "./figure.ts";
 export {
+  type FormativeAnswer,
+  FormativeAnswerSchema,
+  type FormativeEntry,
+  FormativeEntrySchema,
+  type FormativeKind,
+  FormativeKindSchema,
+} from "./formative.ts";
+export {
   type DeepDiveEntry,
   DeepDiveEntrySchema,
   type DefinitionEntry,

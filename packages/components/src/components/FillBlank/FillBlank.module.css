@@ -1,0 +1,58 @@
+/* Formative parent — FillBlank.
+ *
+ * Labeled `<section>` (R10 landmark) matching the formative family's
+ * soft-surface + left-accent treatment. `<FillBlank.Slot>` inputs flow
+ * inline within the prompt prose as underlined text fields.
+ */
+
+.root {
+  border-inline-start: 4px solid var(--sophie-brand-teal);
+  border-radius: var(--sophie-radius-md);
+  background: var(--sophie-surface-1);
+  padding: var(--sophie-space-4) var(--sophie-space-4) var(--sophie-space-3);
+  margin-block: var(--sophie-space-4);
+  box-shadow: var(--sophie-shadow-card);
+}
+
+.label {
+  margin: 0 0 var(--sophie-space-3);
+  font-size: var(--sophie-text-sm);
+  font-weight: var(--sophie-weight-semibold);
+  color: var(--sophie-brand-teal);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.prompt {
+  margin-block-end: var(--sophie-space-3);
+  line-height: var(--sophie-leading-prose);
+}
+
+.prompt :is(p, ul, ol) {
+  margin-block: var(--sophie-space-2);
+}
+
+.slot {
+  display: inline-block;
+  width: 8ch;
+  margin-inline: 0.15em;
+  padding: 0 var(--sophie-space-1);
+  font: inherit;
+  color: var(--sophie-text);
+  background: var(--sophie-surface-2);
+  border: 0;
+  border-block-end: 2px solid var(--sophie-text-muted);
+  border-radius: var(--sophie-radius-sm) var(--sophie-radius-sm) 0 0;
+  text-align: center;
+}
+
+.slot:focus-visible {
+  outline: none;
+  border-block-end-color: var(--sophie-brand-teal);
+  background: color-mix(in oklch, var(--sophie-brand-teal) 8%, transparent);
+}
+
+.slot:disabled {
+  cursor: progress;
+  opacity: 0.6;
+}

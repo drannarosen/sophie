@@ -4,7 +4,7 @@ title: "Practice — Chrome Primitives Demo"
 chapter: 4
 order: 4
 lang: "en"
-description: "Smoke practice fixture exercising the formative family (PracticeProblem / Solution / Hint) via Sophie's compile-time auto-imports + parent-prop threading."
+description: "Smoke practice fixture exercising the formative family (PracticeProblem / QuickCheck / MCQ / MultiSelect / FillBlank / NumericQuestion + Solution / Hint) via Sophie's compile-time auto-imports + parent-prop threading."
 tags: ["foundations", "chrome"]
 ---
 
@@ -37,3 +37,77 @@ tags: ["foundations", "chrome"]
     $r = GM/v^2 \approx 9.4$ kpc — a typical galactic radius.
   </Solution>
 </PracticeProblem>
+
+## Formative family
+
+<QuickCheck course="smoke" unit="chrome-primitives-demo" id="qc-balmer-series">
+  <QuickCheck.Prompt>
+    In your own words, why do all Balmer-series lines appear in the visible band?
+  </QuickCheck.Prompt>
+
+  <Hint number={1}>Consider the energy of the lower level common to the series.</Hint>
+
+  <Solution>
+    Every Balmer transition ends at $n=2$, whose energy gaps to higher
+    levels fall in the visible range.
+  </Solution>
+</QuickCheck>
+
+<MCQ course="smoke" unit="chrome-primitives-demo" id="mcq-halpha-transition">
+  <MCQ.Prompt>Which transition produces the H$\alpha$ line?</MCQ.Prompt>
+
+  <MCQChoice>$n=2 \to n=1$</MCQChoice>
+  <MCQChoice correct>$n=3 \to n=2$</MCQChoice>
+  <MCQChoice>A line in the <GlossaryTerm name="spectrum">spectrum</GlossaryTerm></MCQChoice>
+
+  <Solution>H$\alpha$ is the $n=3 \to n=2$ Balmer transition.</Solution>
+</MCQ>
+
+<MultiSelect course="smoke" unit="chrome-primitives-demo" id="ms-balmer-members">
+  <MultiSelect.Prompt>Which of these lines belong to the Balmer series?</MultiSelect.Prompt>
+
+  <MultiSelect.Choice correct>H$\alpha$ ($n=3 \to n=2$)</MultiSelect.Choice>
+  <MultiSelect.Choice correct>H$\beta$ ($n=4 \to n=2$)</MultiSelect.Choice>
+  <MultiSelect.Choice>Lyman-$\alpha$ ($n=2 \to n=1$)</MultiSelect.Choice>
+
+  <Solution>The Balmer series is every transition terminating at $n=2$.</Solution>
+</MultiSelect>
+
+<FillBlank course="smoke" unit="chrome-primitives-demo" id="fb-halpha-values">
+  <FillBlank.Prompt>
+    The H$\alpha$ line has wavelength <FillBlank.Slot id="lambda" correct="656.3" /> nm
+    and arises from the transition ending at principal quantum number
+    <FillBlank.Slot id="nlower" correct="2" />.
+  </FillBlank.Prompt>
+
+  <Solution>$\lambda = 656.3$ nm; the lower level is $n=2$.</Solution>
+</FillBlank>
+
+<NumericQuestion course="smoke" unit="chrome-primitives-demo" id="nq-enclosed-radius">
+  <NumericQuestion.Prompt>
+    From $M(r) = rv^2/G$ with $v = 220$ km/s and $M = 10^{11}\,M_\odot$,
+    compute $r$ in kpc.
+  </NumericQuestion.Prompt>
+
+  <NumericQuestion.Answer value={9.4} tolerance={0.5} toleranceKind="absolute" unit="kpc" />
+
+  <Solution>$r = GM/v^2 \approx 9.4$ kpc.</Solution>
+</NumericQuestion>
+
+## AS-2 fixture (expected WARN — formative item with no Solution)
+
+<QuickCheck course="smoke" unit="chrome-primitives-demo" id="qc-no-solution">
+  <QuickCheck.Prompt>
+    Self-check with no reveal authored yet — fires AS-2 (WARN) in the audit.
+  </QuickCheck.Prompt>
+</QuickCheck>
+
+## AS-3 fixture (expected WARN — FillBlank with no slots)
+
+<FillBlank course="smoke" unit="chrome-primitives-demo" id="fb-no-slots">
+  <FillBlank.Prompt>
+    A prompt with no inline slots — fires AS-3 (WARN) in the audit.
+  </FillBlank.Prompt>
+
+  <Solution>Intentionally slotless to exercise AS-3.</Solution>
+</FillBlank>

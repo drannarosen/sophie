@@ -1,0 +1,99 @@
+/* Formative parent — MCQ.
+ *
+ * Labeled `<section>` (R10 landmark) matching the formative family's
+ * soft-surface + left-accent treatment. Choices render as a Radix
+ * RadioGroup; correct choices carry data-correct="true" for a
+ * reveal-only checkmark (v1 does not auto-grade).
+ */
+
+.root {
+  border-inline-start: 4px solid var(--sophie-brand-teal);
+  border-radius: var(--sophie-radius-md);
+  background: var(--sophie-surface-1);
+  padding: var(--sophie-space-4) var(--sophie-space-4) var(--sophie-space-3);
+  margin-block: var(--sophie-space-4);
+  box-shadow: var(--sophie-shadow-card);
+}
+
+.label {
+  margin: 0 0 var(--sophie-space-3);
+  font-size: var(--sophie-text-sm);
+  font-weight: var(--sophie-weight-semibold);
+  color: var(--sophie-brand-teal);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.prompt {
+  margin-block-end: var(--sophie-space-3);
+}
+
+.prompt :is(p, ul, ol) {
+  margin-block: var(--sophie-space-2);
+}
+
+.choices {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sophie-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.choice {
+  display: flex;
+  align-items: center;
+  gap: var(--sophie-space-2);
+  padding: var(--sophie-space-2) var(--sophie-space-3);
+  border-radius: var(--sophie-radius-sm);
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+.choice:hover {
+  background: color-mix(in oklch, var(--sophie-brand-teal) 6%, transparent);
+}
+
+.radio {
+  flex-shrink: 0;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  border: 2px solid var(--sophie-text-muted);
+  background: var(--sophie-surface-1);
+  display: grid;
+  place-items: center;
+}
+
+.radio:focus-visible {
+  outline: 2px solid var(--sophie-brand-teal);
+  outline-offset: 2px;
+}
+
+.indicator {
+  display: block;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--sophie-brand-teal);
+}
+
+.choiceLabel {
+  flex: 1;
+}
+
+/* Reveal-only correctness affordance (no auto-grading in v1). The
+ * static data-correct attribute is the source of truth the extractor
+ * + CSS read; the trailing checkmark is decorative. */
+.choice:has([data-correct="true"]) .choiceLabel::after {
+  content: " ✓";
+  color: var(--sophie-brand-teal);
+  font-weight: var(--sophie-weight-semibold);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .choice {
+    transition: none;
+  }
+}

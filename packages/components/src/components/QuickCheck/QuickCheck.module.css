@@ -1,0 +1,34 @@
+/* Formative shell — QuickCheck.
+ *
+ * Renders as a labeled `<section>` (R10 landmark) inside the chapter
+ * layout's `<main>`. Same soft-surface + left-accent treatment as the
+ * other formative parents so the family reads consistently; the accent
+ * color distinguishes the self-check (free-response) shape from graded
+ * inputs.
+ */
+
+.root {
+  border-inline-start: 4px solid var(--sophie-accent);
+  border-radius: var(--sophie-radius-md);
+  background: var(--sophie-surface-1);
+  padding: var(--sophie-space-4) var(--sophie-space-4) var(--sophie-space-3);
+  margin-block: var(--sophie-space-4);
+  box-shadow: var(--sophie-shadow-card);
+}
+
+.label {
+  margin: 0 0 var(--sophie-space-3);
+  font-size: var(--sophie-text-sm);
+  font-weight: var(--sophie-weight-semibold);
+  color: var(--sophie-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.prompt {
+  margin-block-end: var(--sophie-space-3);
+}
+
+.prompt :is(p, ul, ol) {
+  margin-block: var(--sophie-space-2);
+}

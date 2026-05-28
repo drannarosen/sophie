@@ -938,6 +938,37 @@ describe("PedagogyIndexSchema", () => {
     }
   });
 
+  // ADR 0073 Amendment 1 — formatives optional with default [].
+  test("formatives defaults to [] when absent (forward-compat)", () => {
+    const result = PedagogyIndexSchema.safeParse(emptyIndex);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.formatives).toEqual([]);
+    }
+  });
+
+  test("accepts a populated formatives array", () => {
+    const result = PedagogyIndexSchema.safeParse({
+      ...emptyIndex,
+      formatives: [
+        {
+          unit: "stellar-structure",
+          anchor: "form-1",
+          kind: "mcq",
+          prompt: "Which force balances gravity in a star?",
+          answer: { type: "single-choice", correct: "pressure-gradient" },
+          hasSolution: true,
+          hintCount: 1,
+        },
+      ],
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.formatives).toHaveLength(1);
+      expect(result.data.formatives[0]?.anchor).toBe("form-1");
+    }
+  });
+
   test("accepts a populated multiReps array", () => {
     const result = PedagogyIndexSchema.safeParse({
       ...emptyIndex,

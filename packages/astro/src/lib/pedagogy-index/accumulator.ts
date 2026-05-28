@@ -9,6 +9,7 @@ import type {
   EquationEntry,
   FigureRegistryEntry,
   FigureUsageEntry,
+  FormativeEntry,
   InlineRefUsageEntry,
   InterventionEntry,
   KeyInsightEntry,
@@ -182,6 +183,13 @@ interface GlobalIndexState {
    */
   workedExamples: Map<string, WorkedExampleEntry>;
   /**
+   * Per-unit formative-assessment callsites (ADR 0073 Amendment 1).
+   * Keyed by `${unit}#${anchor}` so two chapters can each have a
+   * `form-1` auto-anchor without collision. Populated by
+   * `extractFormative`. Consumed by the AS-1..AS-5 audit invariants.
+   */
+  formatives: Map<string, FormativeEntry>;
+  /**
    * Per-unit `<RetrievalPrompt>` callsites (Wedge B1). Keyed by
    * `${unit}#${anchor}` so two chapters can each have an `rp-1`
    * auto-anchor without collision. Populated by
@@ -242,6 +250,7 @@ function getGlobalState(): GlobalIndexState {
       deepDives: new Map(),
       omiFlows: new Map(),
       workedExamples: new Map(),
+      formatives: new Map(),
       retrievalPrompts: new Map(),
       spacedReviews: new Map(),
       skillReviews: new Map(),
@@ -322,6 +331,11 @@ class IndexAccumulator {
     for (const [key, entry] of state.workedExamples) {
       if (entry.unit === unitId) {
         state.workedExamples.delete(key);
+      }
+    }
+    for (const [key, entry] of state.formatives) {
+      if (entry.unit === unitId) {
+        state.formatives.delete(key);
       }
     }
     for (const [key, entry] of state.retrievalPrompts) {
@@ -783,6 +797,31 @@ class IndexAccumulator {
   }
 
   /**
+   * Add a chapter's extracted formative-assessment callsites (ADR 0073
+   * Amendment 1). Auto-anchors of the shape `form-${N}` are chapter-
+   * scoped (each chapter restarts its counter at 1) and NOT subject to
+   * the cross-chapter collision check. Explicit-id-derived anchors are
+   * subject to it. Mirrors `addWorkedExamples` (intra-chapter collisions
+   * already throw in `extractFormative` before this method runs).
+   */
+  addFormatives(entries: ReadonlyArray<FormativeEntry>): void {
+    const state = getGlobalState();
+    for (const entry of entries) {
+      if (/^form-\d+$/.test(entry.anchor)) continue;
+      for (const existing of state.formatives.values()) {
+        if (existing.unit !== entry.unit && existing.anchor === entry.anchor) {
+          throw new Error(
+            `Formative anchor "${entry.anchor}" defined in multiple chapters: "${existing.unit}" and "${entry.unit}". Resolution: change one of the \`id\` props to disambiguate.`
+          );
+        }
+      }
+    }
+    for (const entry of entries) {
+      state.formatives.set(`${entry.unit}#${entry.anchor}`, entry);
+    }
+  }
+
+  /**
    * Add a chapter's extracted `<RetrievalPrompt>` entries (Wedge B1).
    * Anchors are auto-generated (`rp-${counter}`) and chapter-scoped, so
    * no cross-chapter collision check is required; the intra-chapter
@@ -912,6 +951,7 @@ class IndexAccumulator {
       deepDives: Array.from(state.deepDives.values()),
       omiFlows: Array.from(state.omiFlows.values()),
       workedExamples: Array.from(state.workedExamples.values()),
+      formatives: Array.from(state.formatives.values()),
       retrievalPrompts: Array.from(state.retrievalPrompts.values()),
       spacedReviews: Array.from(state.spacedReviews.values()),
       skillReviews: Array.from(state.skillReviews.values()),
@@ -957,6 +997,7 @@ export function resetIndexAccumulator(): void {
   state.deepDives.clear();
   state.omiFlows.clear();
   state.workedExamples.clear();
+  state.formatives.clear();
   state.retrievalPrompts.clear();
   state.spacedReviews.clear();
   state.skillReviews.clear();

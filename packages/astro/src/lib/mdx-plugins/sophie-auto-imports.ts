@@ -9,6 +9,7 @@ import type {
 import { mdxjs } from "micromark-extension-mdxjs";
 import type { Plugin } from "unified";
 import { visit } from "unist-util-visit";
+import { expandCompoundIslands } from "./compound-expand.ts";
 
 /**
  * Structural mdast-util-mdxjs-esm node type — declared locally so the
@@ -140,7 +141,7 @@ export const SOPHIE_INTERACTIVE_COMPONENTS: ReadonlySet<string> = new Set([
   "InteractiveCallout",
   "InteractiveCheckbox",
   "LearningObjectives",
-  "MCQ",
+  "MCQController",
   "MultiSelect",
   "NumericQuestion",
   "Objective",
@@ -669,9 +670,13 @@ export const sophieAutoImportsRemarkPlugin: Plugin<[], Root> =
         ? (file as { path: string }).path
         : "<unknown>";
     // Order matters: thread first (so child JSX attribute additions
-    // are seen by the client-load + auto-import passes), then add
-    // client directives, then collect imports.
+    // are seen by the client-load + auto-import passes), then expand
+    // compound islands (MCQ → static structure + <MCQController>) while
+    // reveals are still threaded, then add client directives, then
+    // collect imports (which pick up the injected <MCQController> +
+    // any island inside a choice body).
     threadFormativeParentProps(tree, filePath);
+    expandCompoundIslands(tree);
     injectClientLoadDirectives(tree);
     injectAutoImports(tree);
   };

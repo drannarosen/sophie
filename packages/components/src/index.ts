@@ -149,6 +149,18 @@ export {
   FigureRefPropsSchema,
   figureRefContract,
 } from "./components/FigureRef/index.ts";
+export type {
+  FillBlankPromptProps,
+  FillBlankProps,
+  FillBlankSlotProps,
+} from "./components/FillBlank/index.ts";
+export {
+  FillBlank,
+  FillBlankPromptPropsSchema,
+  FillBlankPropsSchema,
+  FillBlankSlotPropsSchema,
+  fillBlankContract,
+} from "./components/FillBlank/index.ts";
 export type { GlossaryTermProps } from "./components/GlossaryTerm/index.ts";
 export {
   GlossaryTerm,
@@ -198,12 +210,50 @@ export {
   LearningObjectivesPropsSchema,
   learningObjectivesContract,
 } from "./components/LearningObjectives/index.ts";
+export type {
+  MCQChoiceProps,
+  MCQPromptProps,
+  MCQProps,
+} from "./components/MCQ/index.ts";
+export {
+  MCQ,
+  MCQChoice,
+  MCQChoicePropsSchema,
+  MCQController,
+  MCQPromptPropsSchema,
+  MCQPropsSchema,
+  mcqContract,
+} from "./components/MCQ/index.ts";
 export type { MultiRepProps } from "./components/MultiRep/index.ts";
 export {
   MultiRep,
   MultiRepPropsSchema,
   multiRepContract,
 } from "./components/MultiRep/index.ts";
+export type {
+  MultiSelectChoiceProps,
+  MultiSelectPromptProps,
+  MultiSelectProps,
+} from "./components/MultiSelect/index.ts";
+export {
+  MultiSelect,
+  MultiSelectChoicePropsSchema,
+  MultiSelectPromptPropsSchema,
+  MultiSelectPropsSchema,
+  multiSelectContract,
+} from "./components/MultiSelect/index.ts";
+export type {
+  NumericQuestionAnswerProps,
+  NumericQuestionPromptProps,
+  NumericQuestionProps,
+} from "./components/NumericQuestion/index.ts";
+export {
+  NumericQuestion,
+  NumericQuestionAnswerPropsSchema,
+  NumericQuestionPromptPropsSchema,
+  NumericQuestionPropsSchema,
+  numericQuestionContract,
+} from "./components/NumericQuestion/index.ts";
 export type { ObjectiveProps } from "./components/Objective/index.ts";
 export {
   Objective,
@@ -261,6 +311,16 @@ export {
   PrereqsList,
   type PrereqsListProps,
 } from "./components/PrereqsList/index.ts";
+export type {
+  QuickCheckPromptProps,
+  QuickCheckProps,
+} from "./components/QuickCheck/index.ts";
+export {
+  QuickCheck,
+  QuickCheckPromptPropsSchema,
+  QuickCheckPropsSchema,
+  quickCheckContract,
+} from "./components/QuickCheck/index.ts";
 export { Reading, type ReadingProps } from "./components/Reading/index.ts";
 export type { ReflectionProps } from "./components/Reflection/index.ts";
 export {

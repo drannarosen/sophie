@@ -13,6 +13,7 @@ import { extractDefinitions } from "./extractors/definitions.ts";
 import { extractEquationCitations } from "./extractors/equation-citations.ts";
 import { extractEquationRegistryDeclaration } from "./extractors/equation-registry.ts";
 import { extractFigures } from "./extractors/figures.ts";
+import { extractFormative } from "./extractors/formative.ts";
 import { extractInlineRefUsages } from "./extractors/inline-refs.ts";
 import { extractInterventions } from "./extractors/interventions.ts";
 import { extractKeyInsights } from "./extractors/key-insights.ts";
@@ -295,6 +296,14 @@ export function pedagogyIndexRemarkPlugin(
     const workedExampleResult = extractWorkedExamples(tree, unitId);
     indexAccumulator.addWorkedExamples(workedExampleResult.entries);
     indexAccumulator.addExtractorFindings(workedExampleResult.findings);
+    // ADR 0073 Amendment 1 — formative-assessment extractor. One entry
+    // per formative-parent callsite; AS-1 / AS-4 / AS-5 ERROR findings
+    // are pushed at extract-time (count-bearing detection the
+    // materialized answer can't carry); AS-2 / AS-3 are derived in the
+    // audit phase by `checkFormative`.
+    const formativeResult = extractFormative(tree, unitId);
+    indexAccumulator.addFormatives(formativeResult.entries);
+    indexAccumulator.addExtractorFindings(formativeResult.findings);
     // Wedge B1 retrieval-family extractors. Each emits one entry per
     // matching JSX flow element; pure read pass (no mutation). PRA-1
     // (prereq activation), RET-1 (retrieval coverage), and SR-1

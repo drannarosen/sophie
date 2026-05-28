@@ -273,6 +273,34 @@ export function renderChildrenToHtml(children: ReadonlyArray<unknown>): string {
   return toHtml(hast);
 }
 
+/**
+ * Concatenate the plain-text content of an mdast subtree (the
+ * `<X.Prompt>` body for the formative extractor, ADR 0073 A1). Walks
+ * `text` + `inlineCode` descendants — the two leaf node types that
+ * carry author-visible characters — and joins their `.value`, then
+ * trims. Math, JSX, and other structural nodes contribute nothing
+ * (the index stores a searchable text summary, not rendered HTML, per
+ * ADR 0038's "data, not HTML" principle).
+ */
+export function extractPlainText(node: unknown): string {
+  const parts: string[] = [];
+  const walk = (n: unknown): void => {
+    if (!n || typeof n !== "object") return;
+    const m = n as { type?: string; value?: unknown; children?: unknown };
+    if (
+      (m.type === "text" || m.type === "inlineCode") &&
+      typeof m.value === "string"
+    ) {
+      parts.push(m.value);
+    }
+    if (Array.isArray(m.children)) {
+      for (const child of m.children) walk(child);
+    }
+  };
+  walk(node);
+  return parts.join("").trim();
+}
+
 export function isWhitespaceTextNode(node: unknown): boolean {
   if (!node || typeof node !== "object") return false;
   const n = node as { type?: string; value?: string };
