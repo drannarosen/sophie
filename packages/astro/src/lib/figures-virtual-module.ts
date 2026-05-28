@@ -1,19 +1,5 @@
 import type { FigureRegistryEntry } from "@sophie/core/schema";
-
-/**
- * Structural type for the minimal Vite plugin shape we return.
- * Avoids importing the Vite `Plugin` type directly, which differs
- * between vite@7 and vite@8 (both resolvable under @sophie/astro's
- * `^7 || ^8` peer range). The integration file casts the returned
- * value to `PluginOption` at the consumer boundary; here we keep the
- * type local and inferable so neither vite version's `Plugin` shape
- * leaks into our public API.
- */
-interface VitePluginLike {
-  name: string;
-  resolveId(id: string): string | undefined;
-  load(id: string): string | undefined;
-}
+import type { VitePluginLike } from "./vite-plugin-like";
 
 /**
  * Vite plugin that exposes the consumer-supplied figures registry as

@@ -1,20 +1,5 @@
 import type { CourseSpec } from "@sophie/core/schema";
-
-/**
- * Structural type for the minimal Vite plugin shape we return.
- * Avoids importing the Vite `Plugin` type directly, which differs
- * between vite@7 and vite@8 (both resolvable under @sophie/astro's
- * peer range). The integration file casts the returned value to
- * `PluginOption` at the consumer boundary; here we keep the type
- * local and inferable so neither vite version's `Plugin` shape leaks
- * into our public API. Mirrors figures-virtual-module.ts:12-16 per
- * fix B7 of the post-review revision.
- */
-interface VitePluginLike {
-  name: string;
-  resolveId(id: string): string | undefined;
-  load(id: string): string | undefined;
-}
+import type { VitePluginLike } from "./vite-plugin-like";
 
 /**
  * Vite plugin that exposes the consumer's `course.sophie.yaml`

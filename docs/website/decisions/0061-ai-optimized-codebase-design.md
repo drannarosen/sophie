@@ -307,12 +307,15 @@ rationale at the allowlist site (the same accountability culture as
 **Distinction from `grandfathered`.** `grandfathered` = existing tech debt
 that *should* be split eventually. `cohesive` = deliberately large and
 correct; splitting is *not* wanted. Reclassifying a currently-grandfathered
-file to `cohesive` is a deliberate per-file judgment, never automatic (e.g.
-`accumulator.ts` is reviewed on its merits, not reclassified by default).
+file to `cohesive` is a deliberate per-file judgment, never automatic — each
+candidate is reviewed on its merits.
 
 **Status.** Implemented in `scripts/loc-budget.ts` (this amendment is the
-design citation). The `COHESIVE` allowlist ships **empty** — reclassifying a
-currently-grandfathered file to `cohesive` is a deliberate per-file
-judgment, made separately. Verified end-to-end via `pnpm lint:loc
---include-existing` (a `cohesive` allowlist entry reports `(exempt:
-cohesive)`).
+design citation). The `COHESIVE` allowlist initially shipped **empty**; the
+first two reclassifications — `accumulator.ts` (the `IndexAccumulator`
+class, one cohesive unit per ADR 0038's role-aggregation principle) and
+`BlackbodyExplorer.tsx` (figure presentation + plotting glue, physics math
+already extracted to `_physics/blackbody.ts`) — were promoted from
+`grandfathered` after per-file review (2026-05-28). Verified end-to-end via
+`pnpm lint:loc --include-existing` (a `cohesive` allowlist entry reports
+`(exempt: cohesive)`).

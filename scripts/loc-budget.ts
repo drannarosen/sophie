@@ -2,7 +2,13 @@
 /**
  * Per-file LOC budget audit per ADR 0061 Rule 3.
  *
- * Reports counts of source TypeScript files exceeding three thresholds:
+ * Scans `.ts` / `.tsx` / `.astro` under `packages/`. `.astro` layouts
+ * and components are treated as source (source thresholds below); their
+ * frontmatter + template + scoped `<style>` count toward the total, so
+ * a large layout surfaces as a WARNING-to-split signal like any other
+ * source file.
+ *
+ * Reports counts of source files exceeding three thresholds:
  *
  *   300 LOC  INFO     review whether a split would help; not required
  *   500 LOC  WARNING  split planned for the next refactor cycle
@@ -63,18 +69,6 @@ const GRANDFATHERED: ReadonlyArray<string> = [
   // Largest pedagogy-index test: extractor-side biography traversal
   // edge cases (post-C6 rename of transform-equation-biography).
   "packages/astro/src/lib/pedagogy-index/extractors/biography.test.ts",
-  // accumulator.ts itself is currently above ERROR (>800 LOC).
-  // Splitting the IndexAccumulator class into per-method files would
-  // shadow the schema entries layout (which is already done in C4).
-  // The class is one cohesive unit per ADR 0038's role-aggregation
-  // principle.
-  "packages/astro/src/lib/pedagogy-index/accumulator.ts",
-  // Interactive-figure component; presentation + plotting glue only
-  // (physics math extracted to packages/components/src/_physics/blackbody.ts
-  // per A+ Phase D). Remaining LOC is the SpectrumPlot Observable Plot
-  // setup + the readout/swatch/approximation-toggle JSX; further splits
-  // would shadow the figure shape without removing complexity.
-  "packages/components/src/figures/BlackbodyExplorer/BlackbodyExplorer.tsx",
 ];
 
 /**
@@ -90,13 +84,26 @@ const GRANDFATHERED: ReadonlyArray<string> = [
  * The numeric tiers (300/500/800) are unchanged; this is a per-file,
  * justified escape hatch, not a global loosening.
  *
- * Empty by default: reclassifying a currently-grandfathered file to
- * `cohesive` is a deliberate per-file judgment (e.g. accumulator.ts +
- * BlackbodyExplorer.tsx already carry cohesion rationale in their
- * GRANDFATHERED notes above — the natural first candidates), made
- * separately, not by introducing this mechanism.
+ * Reclassifying a currently-grandfathered file to `cohesive` is a
+ * deliberate per-file judgment, not automatic. The two entries below
+ * were promoted from GRANDFATHERED because their notes describe genuine
+ * cohesion ("splitting scatters one responsibility"), not split-later
+ * tech debt.
  */
-const COHESIVE: ReadonlyArray<string> = [];
+const COHESIVE: ReadonlyArray<string> = [
+  // The IndexAccumulator class is one cohesive unit per ADR 0038's
+  // role-aggregation principle. Splitting it into per-method files would
+  // shadow the schema entries layout (already split in C4) and scatter
+  // one responsibility — indirection without reduced complexity. Above
+  // ERROR (>800 LOC) by deliberate design, not unaddressed debt.
+  "packages/astro/src/lib/pedagogy-index/accumulator.ts",
+  // Interactive-figure component: presentation + plotting glue only
+  // (physics math extracted to packages/components/src/_physics/blackbody.ts
+  // per A+ Phase D). Remaining LOC is the SpectrumPlot Observable Plot
+  // setup + the readout/swatch/approximation-toggle JSX; a further split
+  // would shadow the figure shape without removing complexity.
+  "packages/components/src/figures/BlackbodyExplorer/BlackbodyExplorer.tsx",
+];
 
 interface Finding {
   path: string;
@@ -129,7 +136,7 @@ function listSourceFiles(dir: string, out: string[] = []): string[] {
       listSourceFiles(full, out);
       continue;
     }
-    if (!/\.(ts|tsx)$/.test(name)) continue;
+    if (!/\.(ts|tsx|astro)$/.test(name)) continue;
     if (name.endsWith(".d.ts")) continue;
     out.push(full);
   }
