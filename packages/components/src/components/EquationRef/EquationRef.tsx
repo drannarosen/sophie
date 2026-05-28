@@ -1,7 +1,5 @@
 import * as HoverCard from "@radix-ui/react-hover-card";
-import katex from "katex";
 import { Sigma } from "lucide-react";
-import { useMemo } from "react";
 import { useHydrated } from "../../runtime/useHydrated.ts";
 import { BiographySummary } from "./EquationRef.biography-summary.tsx";
 import styles from "./EquationRef.module.css.js";
@@ -39,15 +37,6 @@ export function EquationRef({ refId, children }: EquationRefProps) {
   // fallback (`<>{children ?? refId}</>`) regardless of store state;
   // the full anchor + HoverCard appears post-mount.
   const hydrated = useHydrated();
-
-  const texHtml = useMemo(() => {
-    if (!entry?.tex) return "";
-    return katex.renderToString(entry.tex, {
-      displayMode: true,
-      throwOnError: false,
-      output: "html",
-    });
-  }, [entry?.tex]);
 
   if (!hydrated) {
     return <>{children ?? refId}</>;
@@ -106,8 +95,8 @@ export function EquationRef({ refId, children }: EquationRefProps) {
           <strong className={styles.title}>{entry.title}</strong>
           <div
             className={styles.tex}
-            // biome-ignore lint/security/noDangerouslySetInnerHtml: tex is rendered by katex.renderToString from registry-validated TeX source (not user-supplied content). ADR 0038 + design decision #10.
-            dangerouslySetInnerHTML={{ __html: texHtml }}
+            // biome-ignore lint/security/noDangerouslySetInnerHtml: build-time prerendered KaTeX html from the registry (ADR 0090) — not user input.
+            dangerouslySetInnerHTML={{ __html: entry.html ?? "" }}
           />
           <BiographySummary biography={entry.biography} />
           <HoverCard.Arrow className={styles.arrow} />
