@@ -13,6 +13,7 @@ vi.mock("../EquationRef/equations-store.ts", () => ({
         id: "wiens-law",
         title: "Wien's Law",
         tex: "\\lambda_{peak} = b T^{-1}",
+        html: '<span class="katex">PRIMARY_HTML_MARKER</span>',
         symbols: ["T", "\\lambda_{peak}"],
         biography: {
           observable: {
@@ -44,6 +45,7 @@ vi.mock("../EquationRef/equations-store.ts", () => ({
         id: "with-related",
         title: "Equation With Related",
         tex: "x = 1",
+        html: '<span class="katex">x=1</span>',
         symbols: ["x"],
         related: [
           {
@@ -54,13 +56,39 @@ vi.mock("../EquationRef/equations-store.ts", () => ({
         ],
       };
     }
+    if (refId === "with-rearranged") {
+      return {
+        id: "with-rearranged",
+        title: "Equation With Rearranged Forms",
+        tex: "x = y + z",
+        html: '<span class="katex">x=y+z</span>',
+        symbols: ["x", "y", "z"],
+        rearranged_forms: [
+          {
+            tex: "y = x - z",
+            solves_for: "y",
+            html: '<span class="katex">REARRANGED_HTML_MARKER</span>',
+          },
+        ],
+      };
+    }
     if (refId === "with-constants") {
       return {
         id: "with-constants",
         title: "Equation With Constants",
         tex: "F = m a",
+        html: '<span class="katex">F=ma</span>',
         symbols: ["F", "m", "a"],
-        constants: [{ symbol: "g", value: "9.81", unit: "m/s^2" }],
+        constants: [
+          {
+            symbol: "g",
+            value: "9.81",
+            unit: "m/s^2",
+            symbol_html: '<span class="katex">SYMBOL_HTML_MARKER</span>',
+            value_html: '<span class="katex">VALUE_HTML_MARKER</span>',
+            unit_html: '<span class="katex">UNIT_HTML_MARKER</span>',
+          },
+        ],
       };
     }
     return undefined;
@@ -116,24 +144,31 @@ describe("<KeyEquation> (ADR 0060 registry-shaped)", () => {
     expect(screen.queryByText(/Related:/)).not.toBeInTheDocument();
   });
 
-  it("renders constants strip from frontmatter when present", () => {
-    render(<KeyEquation refId='with-constants' />);
-    // Constants now render symbol + value + unit via KaTeX (<InlineTex>)
-    // so plain-text matchers no longer see "g" or "9.81 m/s^2" — the
-    // textContent is split across KaTeX-emitted spans. Assert on the
-    // constants <dl> structure instead.
+  it("renders the primary equation from the build-time prerendered html (ADR 0090)", () => {
+    const { container } = render(<KeyEquation refId='wiens-law' />);
+    // The component consumes `entry.html` (prerendered at build by
+    // renderMath) verbatim — it does not re-render from `entry.tex`
+    // at runtime. The unique marker proves the html prop is the source.
+    expect(container.innerHTML).toContain("PRIMARY_HTML_MARKER");
+  });
+
+  it("renders rearranged forms from each form's prerendered html (ADR 0090)", () => {
+    const { container } = render(<KeyEquation refId='with-rearranged' />);
+    expect(screen.getByText(/Rearranged forms/)).toBeInTheDocument();
+    expect(container.innerHTML).toContain("REARRANGED_HTML_MARKER");
+  });
+
+  it("renders constants from prerendered symbol/value/unit html (ADR 0090)", () => {
+    const { container } = render(<KeyEquation refId='with-constants' />);
     const constantsList = screen.getByLabelText(
       "Constants for Equation With Constants"
     );
     expect(constantsList).toBeInTheDocument();
-    // Symbol "g", value "9.81", and unit superscript appear in textContent
-    // even though wrapped in KaTeX markup.
-    expect(constantsList.textContent).toContain("g");
-    expect(constantsList.textContent).toContain("9.81");
-    // Unit rendered via KaTeX — confirms <InlineTex> path executed
-    // (the regression test for the 2026-05-21 KeyEquation.tsx refactor
-    // that swapped string interpolation for <InlineTex>).
-    expect(constantsList.querySelector(".katex")).toBeInTheDocument();
+    // Symbol, value, and unit each render their own build-time
+    // prerendered html (renderMath) — not a runtime katex call.
+    expect(container.innerHTML).toContain("SYMBOL_HTML_MARKER");
+    expect(container.innerHTML).toContain("VALUE_HTML_MARKER");
+    expect(container.innerHTML).toContain("UNIT_HTML_MARKER");
   });
 
   it("renders chapter framing prose at the top when children are provided", () => {

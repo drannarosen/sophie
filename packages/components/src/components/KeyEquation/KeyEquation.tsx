@@ -1,6 +1,5 @@
-import katex from "katex";
 import { Sigma } from "lucide-react";
-import { type ReactNode, useId, useMemo } from "react";
+import { type ReactNode, useId } from "react";
 import { useHydrated } from "../../runtime/useHydrated.ts";
 import { lookupCanonicalCitationByRefId } from "../EquationRef/equation-citations-store.ts";
 import { lookupEquation } from "../EquationRef/equations-store.ts";
@@ -8,35 +7,17 @@ import styles from "./KeyEquation.module.css.js";
 import type { KeyEquationProps } from "./KeyEquation.schema.ts";
 
 /**
- * Render an arbitrary LaTeX fragment as inline KaTeX HTML. Used for
- * constants rows (symbol, value, unit) where the registry holds the
- * fragments as raw LaTeX strings — KaTeX expects pre-wrapped math,
- * not the `$...$` markdown shorthand. Returns a `<span>` with
- * dangerouslySetInnerHTML so the rendered math sits inline.
+ * Render a build-time prerendered KaTeX html fragment inline. The
+ * registry bakes `{symbol,value,unit}_html` per constant at build
+ * (ADR 0090, via `renderMath`); the component renders the string
+ * verbatim rather than owning a runtime KaTeX call. Empty/absent
+ * html renders nothing.
  */
-function InlineTex({ tex }: { tex: string }): ReactNode {
-  const html = katex.renderToString(tex, {
-    displayMode: false,
-    throwOnError: false,
-    output: "html",
-  });
+function PrerenderedMath({ html }: { html: string | undefined }): ReactNode {
   return (
-    // biome-ignore lint/security/noDangerouslySetInnerHtml: tex rendered by katex from registry-validated source.
-    <span dangerouslySetInnerHTML={{ __html: html }} />
+    // biome-ignore lint/security/noDangerouslySetInnerHtml: build-time prerendered KaTeX html from the registry (ADR 0090) — not user input.
+    <span dangerouslySetInnerHTML={{ __html: html ?? "" }} />
   );
-}
-
-/**
- * Wrap a unit string for `\text{}` rendering. Author-friendly units
- * like "cm s^{-1}" mix prose ("cm", "s") and math ("^{-1}").
- * Wrapping the whole thing in `\text{}` preserves whitespace but
- * makes `^{-1}` literal; not wrapping kills whitespace ("cms-1").
- * The fix: re-enter math mode inside `\text{}` for each
- * `^{...}` / `_{...}` segment via `$...$`.
- */
-function formatUnitTex(unit: string): string {
-  const mathified = unit.replace(/([_^])(\{[^}]+\}|\S)/g, "$$$1$2$$");
-  return `\\text{${mathified}}`;
 }
 
 /**
@@ -87,30 +68,6 @@ export function KeyEquation({
   // the gate.
   const hydrated = useHydrated();
 
-  const texHtml = useMemo(() => {
-    if (!entry?.tex) return "";
-    return katex.renderToString(entry.tex, {
-      displayMode: true,
-      throwOnError: false,
-      output: "html",
-    });
-  }, [entry?.tex]);
-
-  const rearrangedHtml = useMemo(() => {
-    if (!entry?.rearranged_forms || entry.rearranged_forms.length === 0) {
-      return [];
-    }
-    return entry.rearranged_forms.map((form) => ({
-      tex: katex.renderToString(form.tex, {
-        displayMode: true,
-        throwOnError: false,
-        output: "html",
-      }),
-      solves_for: form.solves_for,
-      label: form.label,
-    }));
-  }, [entry?.rearranged_forms]);
-
   if (!hydrated) {
     return <>{children}</>;
   }
@@ -158,8 +115,8 @@ export function KeyEquation({
         <div className={styles.texRow}>
           <div
             className={styles.tex}
-            // biome-ignore lint/security/noDangerouslySetInnerHtml: tex is rendered by katex.renderToString from registry-validated TeX source (not user-supplied content).
-            dangerouslySetInnerHTML={{ __html: texHtml }}
+            // biome-ignore lint/security/noDangerouslySetInnerHtml: build-time prerendered KaTeX html from the registry (ADR 0090) — not user input.
+            dangerouslySetInnerHTML={{ __html: entry.html ?? "" }}
           />
           {eqLabel !== null && (
             <span className={styles.eqLabel} aria-hidden>
@@ -176,14 +133,14 @@ export function KeyEquation({
             {entry.constants.map((c) => (
               <div key={c.symbol} className={styles.constantRow}>
                 <dt className={styles.constantSymbol}>
-                  <InlineTex tex={c.symbol} />
+                  <PrerenderedMath html={c.symbol_html} />
                 </dt>
                 <dd className={styles.constantValue}>
-                  <InlineTex tex={c.value} />
+                  <PrerenderedMath html={c.value_html} />
                   {c.unit ? (
                     <>
                       {" "}
-                      <InlineTex tex={formatUnitTex(c.unit)} />
+                      <PrerenderedMath html={c.unit_html} />
                     </>
                   ) : null}
                   {c.name ? (
@@ -309,18 +266,18 @@ export function KeyEquation({
             </section>
           ))}
 
-        {rearrangedHtml.length > 0 && (
+        {entry.rearranged_forms && entry.rearranged_forms.length > 0 && (
           <div className={styles.rearrangedForms}>
             <h3 className={styles.subheading}>Rearranged forms</h3>
-            {rearrangedHtml.map((form) => (
+            {entry.rearranged_forms.map((form) => (
               <div key={form.solves_for} className={styles.rearrangedRow}>
                 <span className={styles.rearrangedLabel}>
                   {form.label ?? `Solves for ${form.solves_for}`}
                 </span>
                 <div
                   className={styles.rearrangedTex}
-                  // biome-ignore lint/security/noDangerouslySetInnerHtml: tex rendered by katex from registry-validated source.
-                  dangerouslySetInnerHTML={{ __html: form.tex }}
+                  // biome-ignore lint/security/noDangerouslySetInnerHtml: build-time prerendered KaTeX html from the registry (ADR 0090) — not user input.
+                  dangerouslySetInnerHTML={{ __html: form.html ?? "" }}
                 />
               </div>
             ))}
