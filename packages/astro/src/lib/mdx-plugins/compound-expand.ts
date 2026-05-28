@@ -16,7 +16,7 @@ import {
 /**
  * Compile-time expansion of compound authoring tags (`<MCQ>`, …) into
  * static native form markup + a childless controller island
- * (`<MCQController>`). Authors write the high-level `<MCQ><MCQChoice>`
+ * (`<MCQController>`). Authors write the high-level `<MCQ><MCQ.Choice>`
  * shape; this transform lowers it to accessible SSR'd HTML (a
  * `<fieldset role="radiogroup">` of `<label><input>` pairs) plus a
  * hydration-bearing controller that wires up answer-checking against
@@ -24,7 +24,7 @@ import {
  *
  * **Chain position (ADR 0073 Amendment 1).** Registered LAST in the
  * remark chain (after `pedagogyIndexRemarkPlugin`) so the formative
- * extractor sees the *authored* `<MCQ><MCQChoice>` shape — slug
+ * extractor sees the *authored* `<MCQ><MCQ.Choice>` shape — slug
  * derivation, AS-1..5 audit, and this transform's `<input value>`
  * attribution all use the shared `choiceSlug`, so the extractor's index
  * anchor and the rendered control agree. Because it runs after
@@ -38,7 +38,7 @@ import {
 /**
  * One row per compound authoring tag. Maps the parent name to the
  * child names + emitted controller + native control type. **Active
- * registry is MCQ-only for Task 2** — MultiSelect / FillBlank / Tabs
+ * registry is MCQ-only through Task 3** — MultiSelect / FillBlank / Tabs
  * rows land in later tasks once their controllers exist (adding a row
  * whose controller component is absent would break the build, since
  * the self-injected `import` would resolve to nothing). The shape is
@@ -50,7 +50,7 @@ interface CompoundIsland {
   parent: string;
   /** Prompt child tag, e.g. `MCQ.Prompt`. */
   promptName: string;
-  /** Choice child tag, e.g. `MCQChoice`. */
+  /** Choice child tag, e.g. `MCQ.Choice`. */
   choiceName: string;
   /** Emitted controller island, e.g. `MCQController`. */
   controllerName: string;
@@ -62,7 +62,7 @@ export const COMPOUND_ISLANDS: ReadonlyArray<CompoundIsland> = [
   {
     parent: "MCQ",
     promptName: "MCQ.Prompt",
-    choiceName: "MCQChoice",
+    choiceName: "MCQ.Choice",
     controllerName: "MCQController",
     controlType: "radio",
   },

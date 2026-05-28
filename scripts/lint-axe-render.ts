@@ -49,6 +49,20 @@
  *                               check. See `ParameterCursor.tsx` for the
  *                               component shape. Audit § "Judgment calls"
  *                               #2 (defensible-probe carve-out, R11 wave).
+ *   - `components/MCQ/MCQController.test.tsx`
+ *                               null-render side-effect controller over the
+ *                               transform-emitted static MCQ DOM (a
+ *                               `<fieldset>` of native radios produced by
+ *                               sophieCompoundExpandRemarkPlugin, not by
+ *                               React). The controller renders `null`; the
+ *                               test asserts useInteractive persistence on a
+ *                               hand-written DOM fixture, so there is no
+ *                               component-owned a11y surface to scan. a11y of
+ *                               the emitted markup is verified at the build
+ *                               level (native `<input type="radio" name>`
+ *                               gives keyboard + roving focus for free).
+ *                               Mirrors the ParameterCursor carve-out
+ *                               (Task 3, compound-island transform).
  *
  * Exit codes:
  *
@@ -104,6 +118,13 @@ function isExcluded(path: string): boolean {
   // state, not rendered DOM. No DOM a11y surface to check.
   // See packages/components/src/interactive/ParameterCursor.tsx.
   if (path.endsWith("/interactive/ParameterCursor.test.tsx")) return true;
+  // MCQController is a null-render side-effect island over the
+  // transform-emitted static MCQ DOM (native radios, not React); the
+  // test asserts useInteractive persistence on a hand-written fixture,
+  // so there's no component-owned a11y surface to scan. a11y of the
+  // emitted markup is verified at the build level. Mirrors
+  // ParameterCursor. See packages/components/src/components/MCQ/MCQController.tsx.
+  if (path.endsWith("/components/MCQ/MCQController.test.tsx")) return true;
   return false;
 }
 

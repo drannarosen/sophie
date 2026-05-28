@@ -52,9 +52,9 @@ const sampleMcqTree = (): Root =>
           [],
           [{ type: "paragraph", children: [text("Which transition?")] }]
         ),
-        el("MCQChoice", [], [text("None of these")]),
-        el("MCQChoice", [a("correct")], [inlineMath("n=2\\to n=1")]),
-        el("MCQChoice", [], [inlineMath("n=3\\to n=2")]),
+        el("MCQ.Choice", [], [text("None of these")]),
+        el("MCQ.Choice", [a("correct")], [inlineMath("n=2\\to n=1")]),
+        el("MCQ.Choice", [], [inlineMath("n=3\\to n=2")]),
       ]
     ),
   ]);
@@ -144,7 +144,7 @@ describe("COMPOUND_ISLANDS registry", () => {
     expect(COMPOUND_ISLANDS[0]).toMatchObject({
       parent: "MCQ",
       promptName: "MCQ.Prompt",
-      choiceName: "MCQChoice",
+      choiceName: "MCQ.Choice",
       controllerName: "MCQController",
       controlType: "radio",
     });
@@ -249,8 +249,8 @@ describe("expandCompoundIslands — robustness", () => {
         [a("id", "dup")],
         [
           el("MCQ.Prompt", [], [text("q")]),
-          el("MCQChoice", [a("correct")], [text("Same")]),
-          el("MCQChoice", [], [text("Same")]),
+          el("MCQ.Choice", [a("correct")], [text("Same")]),
+          el("MCQ.Choice", [], [text("Same")]),
         ]
       ),
     ]);
@@ -263,8 +263,8 @@ describe("expandCompoundIslands — robustness", () => {
             [a("id", "dup")],
             [
               el("MCQ.Prompt", [], [text("q")]),
-              el("MCQChoice", [a("correct")], [text("Same")]),
-              el("MCQChoice", [], [text("Same")]),
+              el("MCQ.Choice", [a("correct")], [text("Same")]),
+              el("MCQ.Choice", [], [text("Same")]),
             ]
           ),
         ])
@@ -302,8 +302,8 @@ describe("ordering invariant — expand runs after the pedagogy extractor", () =
     const { extractFormative } = await import(
       "../pedagogy-index/extractors/formative.ts"
     );
-    // Authored shape — the choice name the extractor reads is MCQChoice
-    // (the Task-3 rename to MCQ.Choice is out of scope here).
+    // Authored shape — the choice name the extractor reads is MCQ.Choice
+    // (member-access child tag, per Task 3).
     const tree = root([
       el(
         "MCQ",
@@ -314,9 +314,9 @@ describe("ordering invariant — expand runs after the pedagogy extractor", () =
             [],
             [{ type: "paragraph", children: [text("Which transition?")] }]
           ),
-          el("MCQChoice", [], [text("None")]),
-          el("MCQChoice", [a("correct")], [inlineMath("n=2\\to n=1")]),
-          el("MCQChoice", [], [inlineMath("n=3\\to n=2")]),
+          el("MCQ.Choice", [], [text("None")]),
+          el("MCQ.Choice", [a("correct")], [inlineMath("n=2\\to n=1")]),
+          el("MCQ.Choice", [], [inlineMath("n=3\\to n=2")]),
         ]
       ),
     ]) as unknown as Parameters<typeof extractFormative>[0];

@@ -210,19 +210,11 @@ export {
   LearningObjectivesPropsSchema,
   learningObjectivesContract,
 } from "./components/LearningObjectives/index.ts";
-export type {
-  MCQChoiceProps,
-  MCQPromptProps,
-  MCQProps,
-} from "./components/MCQ/index.ts";
+export type { MCQControllerProps } from "./components/MCQ/index.ts";
 export {
-  MCQ,
-  MCQChoice,
-  MCQChoicePropsSchema,
   MCQController,
-  MCQPromptPropsSchema,
-  MCQPropsSchema,
-  mcqContract,
+  MCQControllerPropsSchema,
+  mcqControllerContract,
 } from "./components/MCQ/index.ts";
 export type { MultiRepProps } from "./components/MultiRep/index.ts";
 export {

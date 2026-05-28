@@ -1,0 +1,92 @@
+/* Formative-family global styles — transform-emitted MCQ markup.
+ *
+ * `sophieCompoundExpandRemarkPlugin` lowers an authored `<MCQ>` into
+ * plain native form markup (`<section data-pedagogy-role="mcq">` →
+ * `<fieldset role="radiogroup">` → `<label><input type="radio">`) with
+ * NO CSS-Module class names — the structure exists only at MDX-compile
+ * time, never in React, so per-component CSS-Module hashes cannot
+ * attach. These rules therefore target the SEMANTIC structure + data
+ * hooks and must ship UNMANGLED.
+ *
+ * CSS-pipeline note (this is why the file is `.module.css`, not a raw
+ * global `.css`): `@sophie/components` ships styles through ONE bundle,
+ * `dist/styles.css`, built by `scripts/build-css-modules.ts`, which
+ * globs only `*.module.css` files and concatenates them; that bundle is
+ * the single stylesheet `@sophie/astro/<SophieChapter>` side-effect-
+ * imports. A raw `.css` side-effect import breaks Astro's Node ESM
+ * config-loader (documented in build-css-modules.ts §"Why no per-
+ * component side-effect"), and tsup's `external` only passes through
+ * `.module.css(.js)` companions. Wrapping every rule in `:global(...)`
+ * makes postcss-modules emit the selectors verbatim (the same pattern
+ * `KeyEquation.module.css` uses for `:global(.katex-display)`), so the
+ * rules reach the page through the existing pipeline with no new build
+ * step. The vitest config aliases `.module.css.js` → `.module.css`, so
+ * the bundling side-effect import works in unit tests too. ADR 0005. */
+
+:global([data-pedagogy-role="mcq"]) {
+  border-inline-start: 4px solid var(--sophie-brand-teal);
+  border-radius: var(--sophie-radius-md);
+  background: var(--sophie-surface-1);
+  padding: var(--sophie-space-4) var(--sophie-space-4) var(--sophie-space-3);
+  margin-block: var(--sophie-space-4);
+  box-shadow: var(--sophie-shadow-card);
+}
+
+:global([data-pedagogy-role="mcq"] > h3) {
+  margin: 0 0 var(--sophie-space-3);
+  font-size: var(--sophie-text-sm);
+  font-weight: var(--sophie-weight-semibold);
+  color: var(--sophie-brand-teal);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+:global([data-pedagogy-role="mcq"] fieldset[role="radiogroup"]) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sophie-space-2);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+:global([data-pedagogy-role="mcq"] label) {
+  display: flex;
+  align-items: center;
+  gap: var(--sophie-space-2);
+  padding: var(--sophie-space-2) var(--sophie-space-3);
+  border-radius: var(--sophie-radius-sm);
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+:global([data-pedagogy-role="mcq"] label:hover) {
+  background: color-mix(in oklch, var(--sophie-brand-teal) 6%, transparent);
+}
+
+:global([data-pedagogy-role="mcq"] input[type="radio"]) {
+  flex-shrink: 0;
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: var(--sophie-brand-teal);
+}
+
+:global([data-pedagogy-role="mcq"] input[type="radio"]:focus-visible) {
+  outline: 2px solid var(--sophie-brand-teal);
+  outline-offset: 2px;
+}
+
+/* Reveal-only correctness affordance (v1 does not auto-grade). The
+ * static `data-correct` attribute is the source of truth the extractor
+ * + this CSS read; the trailing checkmark is decorative. */
+:global([data-pedagogy-role="mcq"] label:has(input[data-correct])::after) {
+  content: " ✓";
+  color: var(--sophie-brand-teal);
+  font-weight: var(--sophie-weight-semibold);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :global([data-pedagogy-role="mcq"] label) {
+    transition: none;
+  }
+}

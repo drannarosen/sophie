@@ -56,7 +56,7 @@ const DEFAULT_TOPICS_DIR = resolve(process.cwd(), "src/content/topics");
  *                            self-inject the controller's import +
  *                            `client:load` (ADR 0073 Amendment 1). Runs
  *                            LAST so the pedagogy extractor above sees
- *                            the authored `<MCQ><MCQChoice>` shape; the
+ *                            the authored `<MCQ><MCQ.Choice>` shape; the
  *                            shared `choiceSlug` keeps the extractor's
  *                            index anchor and the rendered `<input>`
  *                            value in agreement.

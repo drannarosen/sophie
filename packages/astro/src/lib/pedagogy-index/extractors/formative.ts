@@ -213,7 +213,7 @@ function materializeAnswer(
     case "PracticeProblem":
       return { type: "solution-only" };
     case "MCQ": {
-      const choices = collectChoices(el, "MCQChoice", unitId, anchor);
+      const choices = collectChoices(el, "MCQ.Choice", unitId, anchor);
       const correct = choices.filter((c) => c.correct);
       if (correct.length !== 1) {
         // AS-1 ERROR — exactly one correct choice required. Pushed here
@@ -222,7 +222,7 @@ function materializeAnswer(
         findings.push({
           severity: "ERROR",
           code: "AS-1",
-          message: `AS-1: MCQ "${anchor}" in chapter "${unitId}" has ${correct.length} choices marked \`correct\`. Exactly one is required. Resolution: mark exactly one <MCQChoice correct>.`,
+          message: `AS-1: MCQ "${anchor}" in chapter "${unitId}" has ${correct.length} choices marked \`correct\`. Exactly one is required. Resolution: mark exactly one <MCQ.Choice correct>.`,
           location: { unit: unitId, anchor },
         });
       }

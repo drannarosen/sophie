@@ -17,7 +17,7 @@ const displayMath = (value: string) => ({ type: "math", value });
 
 const choice = (children: ReadonlyArray<unknown>, id?: string) => ({
   type: "mdxJsxFlowElement",
-  name: "MCQChoice",
+  name: "MCQ.Choice",
   attributes: id ? [{ type: "mdxJsxAttribute", name: "id", value: id }] : [],
   children,
 });

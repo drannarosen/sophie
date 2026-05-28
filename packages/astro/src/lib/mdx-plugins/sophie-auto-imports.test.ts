@@ -363,12 +363,13 @@ describe("sophieAutoImportsRemarkPlugin — Job 3: parent-prop threading", () =>
 });
 
 describe("sophieAutoImportsRemarkPlugin — component registries", () => {
-  test("SOPHIE_INTERACTIVE_COMPONENTS contains the v1 formative family + reveals", () => {
+  test("SOPHIE_INTERACTIVE_COMPONENTS contains the auto-imported v1 formative family + reveals (NOT virtual tags)", () => {
+    // Reveals + every React-rendered formative parent are auto-imported
+    // and `client:load`-injected by this plugin, so they live here.
     for (const name of [
       "PracticeProblem",
       "Hint",
       "Solution",
-      "MCQ",
       "MultiSelect",
       "FillBlank",
       "NumericQuestion",
@@ -376,6 +377,13 @@ describe("sophieAutoImportsRemarkPlugin — component registries", () => {
     ]) {
       expect(SOPHIE_INTERACTIVE_COMPONENTS.has(name)).toBe(true);
     }
+    // `MCQ` is a VIRTUAL authoring tag (Task 3): expanded to static
+    // markup + a self-injected `<MCQController>` by
+    // sophieCompoundExpandRemarkPlugin, so neither the tag nor the
+    // controller is auto-imported here. Asserting their ABSENCE is an
+    // invariant that stays true throughout the multi-task conversion.
+    expect(SOPHIE_INTERACTIVE_COMPONENTS.has("MCQ")).toBe(false);
+    expect(SOPHIE_INTERACTIVE_COMPONENTS.has("MCQController")).toBe(false);
   });
 
   test("SOPHIE_INTERACTIVE_COMPONENTS excludes static-mapped components (chrome / static media)", () => {
@@ -411,12 +419,36 @@ describe("sophieAutoImportsRemarkPlugin — component registries", () => {
     expect([...SOPHIE_FORMATIVE_CHILDREN].sort()).toEqual(["Hint", "Solution"]);
   });
 
-  test("every formative parent and child is in SOPHIE_INTERACTIVE_COMPONENTS", () => {
-    for (const name of SOPHIE_FORMATIVE_PARENTS) {
-      expect(SOPHIE_INTERACTIVE_COMPONENTS.has(name)).toBe(true);
-    }
+  test("every formative child is auto-imported; every formative parent is auto-imported OR a virtual tag", () => {
+    // Children (`<Solution>` / `<Hint>`) are always real React islands.
     for (const name of SOPHIE_FORMATIVE_CHILDREN) {
       expect(SOPHIE_INTERACTIVE_COMPONENTS.has(name)).toBe(true);
+    }
+    // A formative parent is EITHER auto-imported here (React-rendered:
+    // `<PracticeProblem>`, `<MultiSelect>`, …) OR a virtual authoring tag
+    // expanded by the compound-island transform (`<MCQ>`), which
+    // self-injects its controller instead. This disjunction is the
+    // invariant that survives the whole MCQ→virtual conversion.
+    const VIRTUAL_PARENTS: ReadonlySet<string> = new Set(["MCQ"]);
+    for (const name of SOPHIE_FORMATIVE_PARENTS) {
+      const autoImported = SOPHIE_INTERACTIVE_COMPONENTS.has(name);
+      const virtual = VIRTUAL_PARENTS.has(name);
+      expect(autoImported || virtual).toBe(true);
+      // Exactly one strategy — never both (a virtual tag must not also
+      // be auto-imported, or the transform's self-injected import would
+      // duplicate this plugin's).
+      expect(autoImported && virtual).toBe(false);
+    }
+  });
+
+  test("every auto-imported interactive component resolves to a real @sophie/components barrel export", async () => {
+    // Invariant true throughout the conversion: the plugin never names a
+    // component the barrel doesn't export (a dangling auto-import would
+    // be a build-time ERR_MODULE_NOT_FOUND in the consumer course). Read
+    // the barrel's named exports and assert coverage.
+    const barrel = await import("@sophie/components");
+    for (const name of SOPHIE_INTERACTIVE_COMPONENTS) {
+      expect(name in barrel).toBe(true);
     }
   });
 

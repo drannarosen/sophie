@@ -95,13 +95,22 @@ import {
  *     These are imported by `.astro` layouts directly, never by
  *     chapter MDX. They're outside this plugin's surface.
  *
- * Pre-emptive entries: `MCQ`, `MultiSelect`, `FillBlank`,
- * `NumericQuestion`, `QuickCheck` ship as components in PRs 5–9 of
- * the formative-assessment plan. They're listed here so the
- * registry remains the single source of truth and the
- * formative-parent threading job below has a stable contract — the
- * `injectClientLoadDirectives` job is a no-op until the component
- * is actually authored.
+ * Pre-emptive entries: `MultiSelect`, `FillBlank`, `NumericQuestion`,
+ * `QuickCheck` ship as components in PRs 5–9 of the formative-assessment
+ * plan. They're listed here so the registry remains the single source
+ * of truth and the formative-parent threading job below has a stable
+ * contract — the `injectClientLoadDirectives` job is a no-op until the
+ * component is actually authored.
+ *
+ * `MCQ` is deliberately ABSENT from this set: it is a virtual authoring
+ * tag, expanded at MDX-compile time by `sophieCompoundExpandRemarkPlugin`
+ * into static `<fieldset>` markup + a childless `<MCQController>` island
+ * (Task 3 of the compound-island transform). That transform self-injects
+ * the controller's `import` + `client:load` because it runs LAST in the
+ * chain (after this plugin); the auto-import path is never used for the
+ * controller. `MCQ` stays in `SOPHIE_FORMATIVE_PARENTS` below so the
+ * threading job still wires `course`/`unit`/`parentId` onto nested
+ * `<Solution>` / `<Hint>` children before the expansion runs.
  */
 export const SOPHIE_INTERACTIVE_COMPONENTS: ReadonlySet<string> = new Set([
   "BlackbodyExplorer",
@@ -118,7 +127,6 @@ export const SOPHIE_INTERACTIVE_COMPONENTS: ReadonlySet<string> = new Set([
   "InteractiveCallout",
   "InteractiveCheckbox",
   "LearningObjectives",
-  "MCQController",
   "MultiSelect",
   "NumericQuestion",
   "Objective",
@@ -192,12 +200,17 @@ export const SOPHIE_AUTO_IMPORTED_COMPONENTS: ReadonlySet<string> = new Set([
  * Components that own a `(course, unit, id)` namespace and thread it
  * to formative-child descendants at compile time.
  *
- * The v1 formative family per ADR 0073 Amendment 1. PRs 5–9 will add
- * `<MCQ>` / `<MultiSelect>` / `<FillBlank>` / `<NumericQuestion>` /
- * `<QuickCheck>` as components; they're listed here pre-emptively so
- * the threading job has a stable contract when those PRs land —
- * the plugin is the source of truth for "parent" status, not the
- * component implementations.
+ * The v1 formative family per ADR 0073 Amendment 1. "Parent" status is
+ * orthogonal to how a parent renders: `<MCQ>` is a virtual authoring tag
+ * (expanded to static markup + `<MCQController>` by
+ * `sophieCompoundExpandRemarkPlugin`), while `<MultiSelect>` /
+ * `<FillBlank>` / `<NumericQuestion>` / `<QuickCheck>` ship as React
+ * components in PRs 5–9. All six are listed here so the threading job
+ * has a stable contract regardless of render strategy — the plugin is
+ * the source of truth for "parent" status, not the implementations. The
+ * threading runs BEFORE compound-island expansion, so nested
+ * `<Solution>` / `<Hint>` children get `course`/`unit`/`parentId`
+ * whether or not the parent is later expanded away.
  */
 export const SOPHIE_FORMATIVE_PARENTS: ReadonlySet<string> = new Set([
   "FillBlank",
@@ -552,7 +565,7 @@ export const sophieAutoImportsRemarkPlugin: Plugin<[], Root> =
     // (MCQ → static structure + <MCQController>) is NOT done here — it
     // runs in `sophieCompoundExpandRemarkPlugin`, registered LAST in the
     // chain (after the pedagogy extractor) so the extractor sees the
-    // authored `<MCQ><MCQChoice>` shape; that plugin self-injects its
+    // authored `<MCQ><MCQ.Choice>` shape; that plugin self-injects its
     // own controller import + `client:load`.
     threadFormativeParentProps(tree, filePath);
     injectClientLoadDirectives(tree);

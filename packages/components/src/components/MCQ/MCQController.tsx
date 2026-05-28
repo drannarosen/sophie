@@ -1,5 +1,18 @@
 import { useEffect } from "react";
 import { useInteractive } from "../../runtime/useInteractive.ts";
+import type { MCQControllerProps } from "./MCQController.schema.ts";
+
+// Styling note (ADR 0005): the transform-emitted MCQ markup carries no
+// CSS-Module class names — it never reaches React — so its `:global`
+// rules live in `_formative/formative.module.css`. That file ships via
+// the shared `dist/styles.css` bundle, which `build-css-modules.ts`
+// builds by globbing EVERY `*.module.css` under src/ (independent of any
+// JS import) and which `@sophie/astro/<SophieChapter>` side-effect-
+// imports once. The controller therefore needs NO CSS import: a bare
+// cross-directory side-effect import (`../_formative/…`) would survive
+// into `dist/index.js` as a dangling path (tsup flattens companions to
+// dist root but does not rewrite `../`-prefixed module-css imports),
+// crashing the consumer barrel at runtime.
 
 /**
  * `<MCQController>` — the interactivity island for an `<MCQ>` whose
@@ -17,13 +30,12 @@ import { useInteractive } from "../../runtime/useInteractive.ts";
  * student's selection via `useInteractive` (key `mcq:${id}:selected`),
  * reaching into the static DOM by `name`. v1 does not auto-grade; the
  * correct choice carries a static `data-correct` attribute (CSS reveal).
+ *
+ * Props are typed from `MCQControllerPropsSchema` (ADR 0003 — Zod is the
+ * source of truth). The transform that emits this island validates
+ * `course`/`unit`/`id` upstream from the authored `<MCQ>`, so the
+ * controller types from the schema rather than re-parsing at render.
  */
-interface MCQControllerProps {
-  course: string;
-  unit: string;
-  id: string;
-}
-
 export function MCQController({ course, unit, id }: MCQControllerProps) {
   const { value: selected, setValue } = useInteractive<string>(
     course,
