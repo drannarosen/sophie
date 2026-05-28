@@ -8,7 +8,7 @@ tags:
 status: shipped
 validation:
   status: validated
-  last_validated_date: "2026-05-16"
+  last_validated_date: "2026-05-28"
   evidence:
     - kind: test
       ref: packages/components/src/components/Predict/Predict.contract.test.ts
@@ -25,7 +25,11 @@ validation:
     - kind: review
       ref: docs/reviews/2026-05-15-bucket-b-c-architecture-audit.md
       date: "2026-05-15"
-  notes: "Component contract (serialize separate from render, axe-core mandatory, useInteractive for persistence, composition rules) confirmed across every shipped component as of the bucket B+C audit."
+    - kind: test
+      ref: packages/components/src/components/KeyEquation/KeyEquation.test.tsx
+      date: "2026-05-28"
+      notes: "R-0090 amendment — KeyEquation / EquationRef / ResultCard consume build-time-prerendered html (single shared renderMath in @sophie/astro) and drop their katex import; jest-axe clean (R11). Contract TS shape unchanged; the amendment narrows how math-bearing components obtain rendered markup (ADR 0090)."
+  notes: "Component contract (serialize separate from render, axe-core mandatory, useInteractive for persistence, composition rules) confirmed across every shipped component as of the bucket B+C audit. R-0090 (2026-05-28): math-bearing components consume prerendered html for build-time-knowable math; runtime KaTeX reserved for the runtime tail."
 ---
 
 # ADR 0004: Component contract revisions
@@ -245,6 +249,28 @@ This ADR's component-contract obligations all held:
 
 See [ADR 0080 Amendment 2](./0080-course-spec-format-v0-1.md#amendment-2-assessment-grade-weights-clean-break-course-info-projection-2026-05-26)
 for the decision trail.
+
+### R-0090 — Math-bearing components consume prerendered html (2026-05-28)
+
+[ADR 0090](./0090-unified-build-time-math-rendering.md) refines the
+component contract for math rendering: **math-bearing components consume
+build-time-prerendered html for build-time-knowable math; runtime KaTeX
+is reserved for the genuine runtime tail.**
+
+`KeyEquation`, `EquationRef`, and `Search/ResultCard` no longer own a
+`katex` import — they render prerendered `html` (baked into the
+registry / search index via the single shared `renderMath` in
+`@sophie/astro`) as a plain string through `dangerouslySetInnerHTML`.
+This keeps `@sophie/components` framework-pure (ADR 0001) and gives ADR
+0089's speech layer a single build-time chokepoint.
+
+The contract's TypeScript shape (`PedagogyComponent<Props, State,
+Response>`) is unchanged; this amendment narrows *how* math-bearing
+components obtain their rendered markup, not the contract surface. The
+runtime tail — `MathText` component-children math and `BlackbodyExplorer`
+dynamic-value math — keeps its runtime KaTeX path by design (the math is
+not build-time-knowable). axe-on-render coverage (R11) stayed clean
+across the three migrated components.
 
 ## References
 
