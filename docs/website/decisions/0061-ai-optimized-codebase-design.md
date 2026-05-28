@@ -281,3 +281,36 @@ plus filename-routing-by-cluster carried 14 AI-authored sprint
 commits end-to-end without scaffolding friction. Rules 1 (focused
 files), 3 (LOC budget), and 4 (filename routing) all load-bearing.
 See [ADR 0080 Amendment 2](./0080-course-spec-format-v0-1.md#amendment-2-assessment-grade-weights-clean-break-course-info-projection-2026-05-26).
+
+## Amendments
+
+### Amendment 1 — `cohesive` LOC exemption (2026-05-28)
+
+**Trigger.** Post-hardening review (audit follow-up). Rule 3's LOC budget
+is a *proxy* for AI-navigability, not the goal itself. Some files are
+legitimately large because they are a **single cohesive responsibility** —
+a state machine, an exhaustive dispatcher, generated code — where splitting
+would scatter that responsibility across files and *increase* the AI's
+navigation cost, the opposite of Rule 1's intent. The existing exemption
+taxonomy (`schema-registry`, `barrel`) doesn't cover this, and
+`grandfathered` *mislabels* it (that reason means "tech debt, split later").
+
+**Amends Rule 3 — Exemptions.** Add a third exemption reason, **`cohesive`**,
+alongside `schema-registry` and `barrel`. A file may exceed the 800-LOC
+error ceiling under a `cohesive` exemption **only when splitting would
+scatter one responsibility / add indirection without reducing complexity** —
+not merely because it is large. Each `cohesive` exemption carries a one-line
+rationale at the allowlist site (the same accountability culture as
+`biome-ignore` + reason). The numeric tiers (300/500/800) are **unchanged** —
+`cohesive` is a per-file, justified escape hatch, not a global loosening.
+
+**Distinction from `grandfathered`.** `grandfathered` = existing tech debt
+that *should* be split eventually. `cohesive` = deliberately large and
+correct; splitting is *not* wanted. Reclassifying a currently-grandfathered
+file to `cohesive` is a deliberate per-file judgment, never automatic (e.g.
+`accumulator.ts` is reviewed on its merits, not reclassified by default).
+
+**Status.** Accepted-design. The `cohesive` reason string + allowlist
+support ship in a follow-up code PR (the `scripts/loc-budget.ts` change),
+which is where this amendment's deployment evidence lands. This amendment is
+the design citation for that PR.

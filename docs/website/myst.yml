@@ -242,6 +242,7 @@ project:
         - file: decisions/0085-component-template-skeleton.md
         - file: decisions/0086-multi-chapter-glossary-definitions.md
         - file: decisions/0087-compound-island-transform.md
+        - file: decisions/0088-pedagogy-audit-build-artifact.md
     - title: Pilots
       children:
         - file: pilots/_template.md
