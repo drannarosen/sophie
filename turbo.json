@@ -32,6 +32,10 @@
       "dependsOn": ["^build"],
       "outputs": ["coverage/**"]
     },
+    "@sophie/astro#test:unit": {
+      "dependsOn": ["^build", "@sophie/docs#build"],
+      "outputs": ["coverage/**"]
+    },
     "test:vr": {
       "dependsOn": ["build-storybook"],
       "inputs": [

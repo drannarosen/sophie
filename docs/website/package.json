@@ -5,7 +5,7 @@
   "description": "Sophie design documentation (MyST site at docs/website/). Workspace-promoted so the MyST plugin's runtime import of @sophie/astro resolves through pnpm symlinks + turbo's build-order graph.",
   "type": "module",
   "scripts": {
-    "build": "myst build --html",
+    "build": "rm -rf _build && myst build --html",
     "start": "myst start",
     "clean": "rm -rf _build"
   },
