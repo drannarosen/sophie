@@ -199,13 +199,15 @@ single `<FillBlank>` (duplicate throws at MDX-compile time).
 
 ### `<NumericQuestion>`
 
-*(Not yet shipped — design locked in
+Numeric answer with tolerance + unit. Shipped in v1 (design:
 [ADR 0073 Amendment 1](../decisions/0073-unified-assessment-schema.md#amendment-1-formative-with-reveal-v1-2026-05-27)
-§4; AS-4 ERROR: exactly one `<NumericQuestion.Answer>`.)*
+§4); AS-4 ERROR if not exactly one `<NumericQuestion.Answer>`.
 
 ### `<QuickCheck>`
 
-*(Coming in PR 5.)*
+Free-response prompt with a solution-only reveal (no machine-checked
+answer). Shipped in v1 (design:
+[ADR 0073 Amendment 1](../decisions/0073-unified-assessment-schema.md#amendment-1-formative-with-reveal-v1-2026-05-27)).
 
 ### `<PracticeProblem>`
 
@@ -293,8 +295,8 @@ rendered component will have no `parentId`-namespaced persistence;
 the chapter-author convention is always-nest.
 
 **Persistence.** Open/closed state persists via `useInteractive`
-([ADRs 0004](../decisions/0004-component-contract.md) +
-[0007](../decisions/0007-indexeddb-persistence.md)) under the key
+([ADRs 0004](../decisions/0004-component-contract-revisions.md) +
+[0007](../decisions/0007-persistence-indexeddb.md)) under the key
 `solution:${parentId}:open` (a `string[]` — multi-shape carried
 through from Radix Accordion even though `<Solution>` only ever has
 one slug). `parentId` is the wrapping formative parent's `id`.

@@ -90,9 +90,9 @@ const SOPHIE_NO_EXTERNAL = ["@sophie/astro", "@sophie/components"];
  * function form fires too late and the resolver tries to deep-import
  * inside the externalized package's bundled code.
  *
- * TODO: tighten or remove when Astro narrows `noExternal: ["astro"]`
- * to specific runtime entry-points instead of the whole package
- * (proposed upstream issue, B+D hybrid path D).
+ * TODO (#221): tighten or remove when Astro narrows
+ * `noExternal: ["astro"]` to specific runtime entry-points instead of
+ * the whole package (proposed upstream issue, B+D hybrid path D).
  */
 const VITE_BUILD_EXTERNAL: (string | RegExp)[] = [
   /^vite($|\/)/,

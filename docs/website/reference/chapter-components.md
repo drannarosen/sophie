@@ -193,8 +193,8 @@ Replaces `<CollapsibleCard>` from Phase A. Backed by Radix Accordion
 ([ADR 0019](../decisions/0019-radix-ui-primitives.md)); single- and
 multi-item forms share the same render path. Per-instance open/closed
 state persists via `useInteractive`
-([ADR 0004](../decisions/0004-component-contract.md),
-[ADR 0007](../decisions/0007-indexeddb-persistence.md)) under the key
+([ADR 0004](../decisions/0004-component-contract-revisions.md),
+[ADR 0007](../decisions/0007-persistence-indexeddb.md)) under the key
 `dropdown:${id}:open`. Per [ADR 0027](../decisions/0027-course-unit-id-required-props.md):
 `course`, `unit`, `id` are required. Use with `client:load` if placed
 directly in MDX.
@@ -513,8 +513,8 @@ This section's table of components fills in as each PR lands.
 | `<MCQ>` | Single-best-answer (radio) | Shipped (virtual tag — [ADR 0087](../decisions/0087-compound-island-transform.md)) |
 | `<MultiSelect>` | Select-all-that-apply (checkbox) | Shipped (virtual tag) |
 | `<FillBlank>` | Text-fill with inline slots | Shipped (virtual tag) |
-| `<QuickCheck>` | Free-response, solution-only | Not yet shipped |
-| `<NumericQuestion>` | Numeric answer + tolerance + unit | Not yet shipped |
+| `<QuickCheck>` | Free-response, solution-only | Shipped |
+| `<NumericQuestion>` | Numeric answer + tolerance + unit | Shipped |
 
 `<MCQ>` / `<MultiSelect>` / `<FillBlank>` are **compile-time virtual
 tags** — `sophieCompoundExpandRemarkPlugin` lowers each into static
@@ -590,8 +590,8 @@ from its nearest formative-parent ancestor — the
 `sophieAutoImportsRemarkPlugin` reads the parent shell's `(course,
 unit, id)` at MDX-compile time and writes them as explicit props
 on every descendant `<Solution>` (and `<Hint>`). Persistence via
-`useInteractive` ([ADRs 0004](../decisions/0004-component-contract.md)
-+ [0007](../decisions/0007-indexeddb-persistence.md)) under the key
+`useInteractive` ([ADRs 0004](../decisions/0004-component-contract-revisions.md)
++ [0007](../decisions/0007-persistence-indexeddb.md)) under the key
 `solution:${parentId}:open` (a `string[]` — multi-shape carried
 through from Radix Accordion even though `<Solution>` only ever has
 one slug).
