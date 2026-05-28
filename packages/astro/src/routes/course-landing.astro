@@ -6,6 +6,7 @@ import {
 } from "@sophie/components";
 import { getCollection } from "astro:content";
 import { courseSpec } from "virtual:sophie/course-spec";
+import InfoPageShell from "../components/InfoPageShell.astro";
 
 /**
  * Course landing dispatcher. Pattern: `/`. Injected by
@@ -34,12 +35,6 @@ if (!courseSpec) {
   );
 }
 
-const LAYOUTS = {
-  "simple-list": SimpleList,
-  "hero-with-modules": HeroWithModules,
-  "prose-with-toc": ProseWithToc,
-} as const;
-
 const layoutKey = courseSpec.landing?.layout ?? "simple-list";
 
 if (layoutKey === "custom") {
@@ -49,13 +44,37 @@ if (layoutKey === "custom") {
   );
 }
 
-const Layout = LAYOUTS[layoutKey] ?? SimpleList;
-
-// JSON-stringified content collections — sections + units shape the
-// flat unit-list rendering. Filtered + sorted client-side by the
-// layout component.
+// Sections + units shape the unit-list rendering; the layout filters
+// (draft units) + sorts (by `order`) internally.
 const sections = (await getCollection("sections")).map((s) => s.data);
 const units = (await getCollection("units")).map((u) => u.data);
 ---
 
-<Layout client:load spec={courseSpec} sections={sections} units={units} />
+{/*
+  InfoPageShell supplies the document chrome (<html>/<head> with
+  charset + viewport + title + stylesheet); the landing layout renders
+  its own <main> into the slot. Without the shell the page emits a bare
+  <main> with no <head>, so Astro has nowhere to inject the layout CSS
+  and the browser mis-decodes UTF-8 (no charset).
+
+  Explicit per-layout dispatch (mirrors info-page.astro). The landing
+  layouts are static presentational components — no client:load. A
+  dynamically-selected component variable (`<Layout client:.../>`)
+  cannot be statically resolved by Astro's hydration-script generator
+  ("No matching import has been found for `Layout`"), so each layout
+  is rendered by an explicit conditional instead.
+*/}
+<InfoPageShell
+  title={`${courseSpec.identity.code} — ${courseSpec.identity.title}`}
+  description={courseSpec.identity.description}
+>
+  {layoutKey === "simple-list" && (
+    <SimpleList spec={courseSpec} sections={sections} units={units} />
+  )}
+  {layoutKey === "hero-with-modules" && (
+    <HeroWithModules spec={courseSpec} sections={sections} units={units} />
+  )}
+  {layoutKey === "prose-with-toc" && (
+    <ProseWithToc spec={courseSpec} sections={sections} units={units} />
+  )}
+</InfoPageShell>
