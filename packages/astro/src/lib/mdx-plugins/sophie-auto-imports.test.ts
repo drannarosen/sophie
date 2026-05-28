@@ -370,20 +370,23 @@ describe("sophieAutoImportsRemarkPlugin — component registries", () => {
       "PracticeProblem",
       "Hint",
       "Solution",
-      "MultiSelect",
       "FillBlank",
       "NumericQuestion",
       "QuickCheck",
     ]) {
       expect(SOPHIE_INTERACTIVE_COMPONENTS.has(name)).toBe(true);
     }
-    // `MCQ` is a VIRTUAL authoring tag (Task 3): expanded to static
-    // markup + a self-injected `<MCQController>` by
+    // `MCQ` (Task 3) and `MultiSelect` (Task 4) are VIRTUAL authoring
+    // tags: expanded to static markup + a self-injected controller by
     // sophieCompoundExpandRemarkPlugin, so neither the tag nor the
     // controller is auto-imported here. Asserting their ABSENCE is an
     // invariant that stays true throughout the multi-task conversion.
     expect(SOPHIE_INTERACTIVE_COMPONENTS.has("MCQ")).toBe(false);
     expect(SOPHIE_INTERACTIVE_COMPONENTS.has("MCQController")).toBe(false);
+    expect(SOPHIE_INTERACTIVE_COMPONENTS.has("MultiSelect")).toBe(false);
+    expect(SOPHIE_INTERACTIVE_COMPONENTS.has("MultiSelectController")).toBe(
+      false
+    );
   });
 
   test("SOPHIE_INTERACTIVE_COMPONENTS excludes static-mapped components (chrome / static media)", () => {
@@ -425,11 +428,15 @@ describe("sophieAutoImportsRemarkPlugin — component registries", () => {
       expect(SOPHIE_INTERACTIVE_COMPONENTS.has(name)).toBe(true);
     }
     // A formative parent is EITHER auto-imported here (React-rendered:
-    // `<PracticeProblem>`, `<MultiSelect>`, …) OR a virtual authoring tag
-    // expanded by the compound-island transform (`<MCQ>`), which
-    // self-injects its controller instead. This disjunction is the
-    // invariant that survives the whole MCQ→virtual conversion.
-    const VIRTUAL_PARENTS: ReadonlySet<string> = new Set(["MCQ"]);
+    // `<PracticeProblem>`, `<FillBlank>`, …) OR a virtual authoring tag
+    // expanded by the compound-island transform (`<MCQ>`,
+    // `<MultiSelect>`), which self-injects its controller instead. This
+    // disjunction is the invariant that survives the whole
+    // compound-island conversion.
+    const VIRTUAL_PARENTS: ReadonlySet<string> = new Set([
+      "MCQ",
+      "MultiSelect",
+    ]);
     for (const name of SOPHIE_FORMATIVE_PARENTS) {
       const autoImported = SOPHIE_INTERACTIVE_COMPONENTS.has(name);
       const virtual = VIRTUAL_PARENTS.has(name);

@@ -222,17 +222,11 @@ export {
   MultiRepPropsSchema,
   multiRepContract,
 } from "./components/MultiRep/index.ts";
-export type {
-  MultiSelectChoiceProps,
-  MultiSelectPromptProps,
-  MultiSelectProps,
-} from "./components/MultiSelect/index.ts";
+export type { MultiSelectControllerProps } from "./components/MultiSelect/index.ts";
 export {
-  MultiSelect,
-  MultiSelectChoicePropsSchema,
-  MultiSelectPromptPropsSchema,
-  MultiSelectPropsSchema,
-  multiSelectContract,
+  MultiSelectController,
+  MultiSelectControllerPropsSchema,
+  multiSelectControllerContract,
 } from "./components/MultiSelect/index.ts";
 export type {
   NumericQuestionAnswerProps,

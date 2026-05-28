@@ -14,13 +14,15 @@ import {
 } from "./_shared/jsx-attrs.ts";
 
 /**
- * Compile-time expansion of compound authoring tags (`<MCQ>`, …) into
- * static native form markup + a childless controller island
- * (`<MCQController>`). Authors write the high-level `<MCQ><MCQ.Choice>`
- * shape; this transform lowers it to accessible SSR'd HTML (a
- * `<fieldset role="radiogroup">` of `<label><input>` pairs) plus a
- * hydration-bearing controller that wires up answer-checking against
- * the `data-correct` attribute.
+ * Compile-time expansion of compound authoring tags (`<MCQ>`,
+ * `<MultiSelect>`, …) into static native form markup + a childless
+ * controller island (`<MCQController>` / `<MultiSelectController>`).
+ * Authors write the high-level `<MCQ><MCQ.Choice>` shape; this transform
+ * lowers it to accessible SSR'd HTML (a `<fieldset>` of `<label><input>`
+ * pairs — `radiogroup` for single-select MCQ, a plain group for
+ * multi-select) plus a hydration-bearing controller that restores +
+ * persists the student's selection. The correct choice(s) carry a
+ * static `data-correct` attribute (CSS reveal; v1 does not auto-grade).
  *
  * **Chain position (ADR 0073 Amendment 1).** Registered LAST in the
  * remark chain (after `pedagogyIndexRemarkPlugin`) so the formative
@@ -37,13 +39,14 @@ import {
 
 /**
  * One row per compound authoring tag. Maps the parent name to the
- * child names + emitted controller + native control type. **Active
- * registry is MCQ-only through Task 3** — MultiSelect / FillBlank / Tabs
+ * child names + emitted controller + native control type + visible
+ * heading. **Active registry is MCQ + MultiSelect** — FillBlank / Tabs
  * rows land in later tasks once their controllers exist (adding a row
  * whose controller component is absent would break the build, since
  * the self-injected `import` would resolve to nothing). The shape is
- * kept easy to extend: a new compound tag is one row + (eventually) a
- * control-type branch in `buildControl`.
+ * kept easy to extend: a new compound tag is one row + (if it needs a
+ * new native control) one branch in `expandIsland`'s control-type
+ * handling.
  */
 interface CompoundIsland {
   /** Authoring parent tag, e.g. `MCQ`. */
@@ -54,8 +57,25 @@ interface CompoundIsland {
   choiceName: string;
   /** Emitted controller island, e.g. `MCQController`. */
   controllerName: string;
-  /** Native form control type for each choice, e.g. `radio`. */
-  controlType: "radio";
+  /**
+   * Native form control type for each choice. `radio` → single-select
+   * (one answer); `checkbox` → multi-select (many answers, many may be
+   * `correct`).
+   */
+  controlType: "radio" | "checkbox";
+  /**
+   * `data-pedagogy-role` stamped on the emitted `<section>` — the
+   * hyphenated kebab role the extractor + CSS + index schema read
+   * (`mcq`, `multi-select`). NOT derived from `parent.toLowerCase()`:
+   * `MultiSelect` lowercases to `multiselect`, but the role is
+   * `multi-select`. (The input `name` prefix, by contrast, stays the
+   * un-hyphenated `parent.toLowerCase()` — `multiselect-${id}` — which
+   * is internal to the transform↔controller coupling and never read by
+   * the role-keyed extractor.)
+   */
+  pedagogyRole: string;
+  /** Visible `<h3>` text for the emitted section. */
+  heading: string;
 }
 
 export const COMPOUND_ISLANDS: ReadonlyArray<CompoundIsland> = [
@@ -65,6 +85,17 @@ export const COMPOUND_ISLANDS: ReadonlyArray<CompoundIsland> = [
     choiceName: "MCQ.Choice",
     controllerName: "MCQController",
     controlType: "radio",
+    pedagogyRole: "mcq",
+    heading: "Multiple choice",
+  },
+  {
+    parent: "MultiSelect",
+    promptName: "MultiSelect.Prompt",
+    choiceName: "MultiSelect.Choice",
+    controllerName: "MultiSelectController",
+    controlType: "checkbox",
+    pedagogyRole: "multi-select",
+    heading: "Select all that apply",
   },
 ];
 
@@ -106,6 +137,10 @@ function expandIsland(
         );
       }
       seenSlugs.add(slug);
+      // `name` scheme is `${parent-lowercased}-${id}` — `mcq-${id}` /
+      // `multiselect-${id}`. CRITICAL coupling: the controller queries
+      // the inputs by this exact `name`, so the scheme must match the
+      // one each controller derives (`MCQController`, `MultiSelectController`).
       const inputAttrs = [
         attr("type", spec.controlType),
         attr("name", `${spec.parent.toLowerCase()}-${id}`),
@@ -130,10 +165,20 @@ function expandIsland(
     }
   }
 
+  // Fieldset grouping: a radio set is an ARIA `radiogroup` (the role
+  // that conveys single-select, roving-focus semantics to AT). A
+  // checkbox set must NOT be a `radiogroup` (wrong semantics — implies
+  // mutually-exclusive selection); a plain `<fieldset>` is already an
+  // implicit group, so no explicit role is needed.
+  const fieldsetAttrs =
+    spec.controlType === "radio"
+      ? [attr("role", "radiogroup"), attr("aria-labelledby", labelId)]
+      : [attr("aria-labelledby", labelId)];
+
   return jsxFlowEl(
     "section",
     [
-      attr("data-pedagogy-role", spec.parent.toLowerCase()),
+      attr("data-pedagogy-role", spec.pedagogyRole),
       attr("data-formative-anchor", id),
       attr("aria-labelledby", labelId),
     ],
@@ -141,14 +186,10 @@ function expandIsland(
       jsxFlowEl(
         "h3",
         [attr("id", labelId)],
-        [{ type: "text", value: "Multiple choice" } as RootContent]
+        [{ type: "text", value: spec.heading } as RootContent]
       ),
       ...promptNodes,
-      jsxFlowEl(
-        "fieldset",
-        [attr("role", "radiogroup"), attr("aria-labelledby", labelId)],
-        labels
-      ),
+      jsxFlowEl("fieldset", fieldsetAttrs, labels),
       jsxFlowEl(
         spec.controllerName,
         [

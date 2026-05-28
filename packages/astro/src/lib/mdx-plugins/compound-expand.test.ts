@@ -59,6 +59,25 @@ const sampleMcqTree = (): Root =>
     ),
   ]);
 
+/** A MultiSelect with three choices, TWO of which are correct. */
+const sampleMultiSelectTree = (): Root =>
+  root([
+    el(
+      "MultiSelect",
+      [a("course", "astr201"), a("unit", "planets"), a("id", "ms1")],
+      [
+        el(
+          "MultiSelect.Prompt",
+          [],
+          [{ type: "paragraph", children: [text("Which are terrestrial?")] }]
+        ),
+        el("MultiSelect.Choice", [a("correct")], [text("Mercury")]),
+        el("MultiSelect.Choice", [], [text("Jupiter")]),
+        el("MultiSelect.Choice", [a("correct")], [text("Mars")]),
+      ]
+    ),
+  ]);
+
 function findFlow(node: unknown, name: string): MdxJsxFlowElement | undefined {
   let found: MdxJsxFlowElement | undefined;
   const walk = (n: unknown): void => {
@@ -139,14 +158,28 @@ function importedNames(tree: Root): Set<string> {
 }
 
 describe("COMPOUND_ISLANDS registry", () => {
-  it("is MCQ-only for Task 2 (no MultiSelect/FillBlank/Tabs rows yet)", () => {
-    expect(COMPOUND_ISLANDS.map((r) => r.parent)).toEqual(["MCQ"]);
+  it("holds the MCQ + MultiSelect rows (no FillBlank/Tabs rows yet)", () => {
+    expect(COMPOUND_ISLANDS.map((r) => r.parent)).toEqual([
+      "MCQ",
+      "MultiSelect",
+    ]);
     expect(COMPOUND_ISLANDS[0]).toMatchObject({
       parent: "MCQ",
       promptName: "MCQ.Prompt",
       choiceName: "MCQ.Choice",
       controllerName: "MCQController",
       controlType: "radio",
+      pedagogyRole: "mcq",
+      heading: "Multiple choice",
+    });
+    expect(COMPOUND_ISLANDS[1]).toMatchObject({
+      parent: "MultiSelect",
+      promptName: "MultiSelect.Prompt",
+      choiceName: "MultiSelect.Choice",
+      controllerName: "MultiSelectController",
+      controlType: "checkbox",
+      pedagogyRole: "multi-select",
+      heading: "Select all that apply",
     });
   });
 });
@@ -219,6 +252,91 @@ describe("expandCompoundIslands — MCQ expansion", () => {
     const tree = sampleMcqTree();
     expandCompoundIslands(tree);
     expect(importedNames(tree).has("MCQController")).toBe(true);
+  });
+});
+
+describe("expandCompoundIslands — MultiSelect expansion", () => {
+  it("replaces <MultiSelect> with a <section data-pedagogy-role='multi-select'>", () => {
+    const tree = sampleMultiSelectTree();
+    expandCompoundIslands(tree);
+    expect(findFlow(tree, "MultiSelect")).toBeUndefined();
+    const section = findFlow(tree, "section");
+    expect(section).toBeDefined();
+    expect(attrValue(section as MdxJsxFlowElement, "data-pedagogy-role")).toBe(
+      "multi-select"
+    );
+    expect(
+      attrValue(section as MdxJsxFlowElement, "data-formative-anchor")
+    ).toBe("ms1");
+    expect(attrValue(section as MdxJsxFlowElement, "aria-labelledby")).toBe(
+      "ms1-label"
+    );
+  });
+
+  it("emits the 'Select all that apply' heading", () => {
+    const tree = sampleMultiSelectTree();
+    expandCompoundIslands(tree);
+    const h3 = findFlow(tree, "h3");
+    expect(h3).toBeDefined();
+    const child = (h3 as MdxJsxFlowElement).children[0] as { value?: string };
+    expect(child?.value).toBe("Select all that apply");
+  });
+
+  it("emits a plain <fieldset> (NO role=radiogroup) with three checkbox inputs", () => {
+    const tree = sampleMultiSelectTree();
+    expandCompoundIslands(tree);
+    const fieldset = findFlow(tree, "fieldset");
+    expect(fieldset).toBeDefined();
+    // Checkbox group must NOT be a radiogroup — multi-select is not
+    // mutually exclusive; a plain <fieldset> is an implicit group.
+    expect(attrValue(fieldset as MdxJsxFlowElement, "role")).toBeUndefined();
+    expect(attrValue(fieldset as MdxJsxFlowElement, "aria-labelledby")).toBe(
+      "ms1-label"
+    );
+    const inputs = findAllFlow(fieldset, "input");
+    expect(inputs).toHaveLength(3);
+    for (const input of inputs) {
+      expect(attrValue(input, "type")).toBe("checkbox");
+    }
+  });
+
+  it("stamps the multiselect-<id> name scheme the controller queries", () => {
+    const tree = sampleMultiSelectTree();
+    expandCompoundIslands(tree);
+    const inputs = findAllFlow(tree, "input");
+    for (const input of inputs) {
+      expect(attrValue(input, "name")).toBe("multiselect-ms1");
+    }
+  });
+
+  it("marks EVERY correct choice's input with data-correct (multi-correct)", () => {
+    const tree = sampleMultiSelectTree();
+    expandCompoundIslands(tree);
+    const inputs = findAllFlow(tree, "input");
+    const correctInputs = inputs.filter((i) => hasAttr(i, "data-correct"));
+    expect(correctInputs.map((i) => attrValue(i, "value"))).toEqual([
+      "mercury",
+      "mars",
+    ]);
+  });
+
+  it("emits a childless <MultiSelectController> with client:load + course/unit/id", () => {
+    const tree = sampleMultiSelectTree();
+    expandCompoundIslands(tree);
+    const controller = findFlow(tree, "MultiSelectController");
+    expect(controller).toBeDefined();
+    const ctrl = controller as MdxJsxFlowElement;
+    expect(ctrl.children).toHaveLength(0);
+    expect(hasAttr(ctrl, "client:load")).toBe(true);
+    expect(attrValue(ctrl, "course")).toBe("astr201");
+    expect(attrValue(ctrl, "unit")).toBe("planets");
+    expect(attrValue(ctrl, "id")).toBe("ms1");
+  });
+
+  it("self-injects MultiSelectController into the @sophie/components import", () => {
+    const tree = sampleMultiSelectTree();
+    expandCompoundIslands(tree);
+    expect(importedNames(tree).has("MultiSelectController")).toBe(true);
   });
 });
 

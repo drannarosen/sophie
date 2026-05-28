@@ -1,10 +1,6 @@
-export { multiSelectContract } from "./MultiSelect.contract.ts";
+export { multiSelectControllerContract } from "./MultiSelectController.contract.ts";
 export {
-  type MultiSelectChoiceProps,
-  MultiSelectChoicePropsSchema,
-  type MultiSelectPromptProps,
-  MultiSelectPromptPropsSchema,
-  type MultiSelectProps,
-  MultiSelectPropsSchema,
-} from "./MultiSelect.schema.ts";
-export { MultiSelect } from "./MultiSelect.tsx";
+  type MultiSelectControllerProps,
+  MultiSelectControllerPropsSchema,
+} from "./MultiSelectController.schema.ts";
+export { MultiSelectController } from "./MultiSelectController.tsx";

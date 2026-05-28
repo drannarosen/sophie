@@ -1,8 +1,10 @@
-/* Formative-family global styles — transform-emitted MCQ markup.
+/* Formative-family global styles — transform-emitted MCQ + MultiSelect
+ * markup.
  *
- * `sophieCompoundExpandRemarkPlugin` lowers an authored `<MCQ>` into
- * plain native form markup (`<section data-pedagogy-role="mcq">` →
- * `<fieldset role="radiogroup">` → `<label><input type="radio">`) with
+ * `sophieCompoundExpandRemarkPlugin` lowers authored `<MCQ>` /
+ * `<MultiSelect>` into plain native form markup
+ * (`<section data-pedagogy-role="mcq|multi-select">` → `<fieldset>` →
+ * `<label><input type="radio|checkbox">`) with
  * NO CSS-Module class names — the structure exists only at MDX-compile
  * time, never in React, so per-component CSS-Module hashes cannot
  * attach. These rules therefore target the SEMANTIC structure + data
@@ -87,6 +89,86 @@
 
 @media (prefers-reduced-motion: reduce) {
   :global([data-pedagogy-role="mcq"] label) {
+    transition: none;
+  }
+}
+
+/* MultiSelect — same soft-surface + left-accent treatment as MCQ, but
+ * the choices are native `<input type="checkbox">` inside a plain
+ * `<fieldset>` group (no `role="radiogroup"` — multi-select is not
+ * mutually exclusive). data-correct lives on each correct `<input>`
+ * (multiple may be correct); the reveal checkmark decorates every
+ * correct label. */
+:global([data-pedagogy-role="multi-select"]) {
+  border-inline-start: 4px solid var(--sophie-brand-teal);
+  border-radius: var(--sophie-radius-md);
+  background: var(--sophie-surface-1);
+  padding: var(--sophie-space-4) var(--sophie-space-4) var(--sophie-space-3);
+  margin-block: var(--sophie-space-4);
+  box-shadow: var(--sophie-shadow-card);
+}
+
+:global([data-pedagogy-role="multi-select"] > h3) {
+  margin: 0 0 var(--sophie-space-3);
+  font-size: var(--sophie-text-sm);
+  font-weight: var(--sophie-weight-semibold);
+  color: var(--sophie-brand-teal);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+:global([data-pedagogy-role="multi-select"] fieldset) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sophie-space-2);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+:global([data-pedagogy-role="multi-select"] label) {
+  display: flex;
+  align-items: center;
+  gap: var(--sophie-space-2);
+  padding: var(--sophie-space-2) var(--sophie-space-3);
+  border-radius: var(--sophie-radius-sm);
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+:global([data-pedagogy-role="multi-select"] label:hover) {
+  background: color-mix(in oklch, var(--sophie-brand-teal) 6%, transparent);
+}
+
+:global([data-pedagogy-role="multi-select"] input[type="checkbox"]) {
+  flex-shrink: 0;
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: var(--sophie-brand-teal);
+}
+
+:global(
+  [data-pedagogy-role="multi-select"]
+  input[type="checkbox"]:focus-visible
+) {
+  outline: 2px solid var(--sophie-brand-teal);
+  outline-offset: 2px;
+}
+
+/* Reveal-only correctness affordance (v1 does not auto-grade). Each
+ * correct choice's `<input>` carries `data-correct`; the trailing
+ * checkmark is decorative. */
+:global(
+  [data-pedagogy-role="multi-select"]
+  label:has(input[data-correct])::after
+) {
+  content: " ✓";
+  color: var(--sophie-brand-teal);
+  font-weight: var(--sophie-weight-semibold);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :global([data-pedagogy-role="multi-select"] label) {
     transition: none;
   }
 }

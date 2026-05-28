@@ -63,6 +63,13 @@
  *                               gives keyboard + roving focus for free).
  *                               Mirrors the ParameterCursor carve-out
  *                               (Task 3, compound-island transform).
+ *   - `components/MultiSelect/MultiSelectController.test.tsx`
+ *                               null-render side-effect controller over the
+ *                               transform-emitted static MultiSelect DOM (a
+ *                               `<fieldset>` of native checkboxes produced by
+ *                               sophieCompoundExpandRemarkPlugin, not by
+ *                               React). Same carve-out as MCQController
+ *                               (Task 4, compound-island transform).
  *
  * Exit codes:
  *
@@ -125,6 +132,13 @@ function isExcluded(path: string): boolean {
   // emitted markup is verified at the build level. Mirrors
   // ParameterCursor. See packages/components/src/components/MCQ/MCQController.tsx.
   if (path.endsWith("/components/MCQ/MCQController.test.tsx")) return true;
+  // MultiSelectController — same carve-out as MCQController: a null-render
+  // side-effect island over the transform-emitted static MultiSelect DOM
+  // (native checkboxes, not React). The test asserts useInteractive
+  // persistence on a hand-written fixture; no component-owned a11y surface.
+  // See packages/components/src/components/MultiSelect/MultiSelectController.tsx.
+  if (path.endsWith("/components/MultiSelect/MultiSelectController.test.tsx"))
+    return true;
   return false;
 }
 
