@@ -1,0 +1,133 @@
+# Course Spec for examples/packed-smoke — REGRESSION GUARD.
+#
+# Its only job: make the packed/dist consumer build the `info_pages` +
+# `landing` projection so CI exercises that path. astr201 was the first
+# real consumer to use these clusters and surfaced 5 packaging/render
+# bugs (fixed in PR #212) precisely because no in-repo consumer built
+# the projection — examples/smoke has no info_pages and packed-smoke
+# (the tarball/dist consumer where the dist-resolution bugs manifest)
+# had none either. Minimal-but-valid v0.2 shape; field shapes mirror
+# the canonical fixture (packages/core/.../course-spec-astr-201.yaml).
+
+identity:
+  id: packed-smoke
+  title: Packed Smoke Course
+  code: SMOKE 100
+  term: Spring 2026
+  institution: Sophie Platform
+  instructor: Test Harness
+  voice: anna-rosen
+  voice_register: sophomore-quantitative
+  subtitle: Distributability regression-guard consumer.
+  description: >
+    A synthetic course spec whose sole purpose is to make the packed
+    (tarball/dist) consumer build the info_pages + landing projection so
+    CI guards the dist-resolution + render path going forward.
+
+audience:
+  level: undergraduate-sophomore
+  majors_minors: [test-major]
+  enrollment_motivation: Synthetic regression-guard consumer.
+  prerequisites:
+    courses: []
+    assumed_skills: []
+    scaffolded_skills: []
+  affective_profile: Not applicable — synthetic fixture.
+
+pedagogy:
+  pattern: observable_model_inference
+  required_moves:
+    observable: What we measure.
+    model: What we believe.
+    inference: What we can claim.
+  named_tools: []
+  callouts: []
+
+terminal_goals:
+  - id: TG1
+    tag: guard-projection
+    statement: >
+      Exercise the info_pages + landing projection end to end in the
+      packed (dist) consumer so CI catches packaging/render regressions.
+    contributing_modules: [m1]
+
+principles: []
+
+assessment:
+  philosophy: Synthetic fixture; no real assessment surface.
+  category_refs: [homework]
+
+grading:
+  categories:
+    - id: homework
+      name: Homework
+      weight: 1.0
+  letter_scale:
+    - { grade: "A", min: 90 }
+    - { grade: "B", min: 80 }
+    - { grade: "C", min: 70 }
+    - { grade: "D", min: 60 }
+    - { grade: "F", min: 0 }
+
+quality_bars:
+  required: []
+  recommended: []
+
+objectives:
+  - id: lo-1
+    verb: Exercise
+    body: the course-info projection end to end in the packed build.
+    assessed_by: [homework]
+
+office_hours:
+  - day: Monday
+    start_time: "10:00"
+    end_time: "11:00"
+    location: Online
+    modality: online
+    by_appointment: false
+
+contact:
+  email: "test@example.edu"
+  response_window_hours: 48
+
+accessibility:
+  drc_link: "https://example.edu/drc"
+  contact_email: "drc@example.edu"
+  request_deadline_weeks: 2
+  prose_ref: "prose/accommodations"
+
+info_pages:
+  syllabus:
+    layout: SyllabusPage
+    compose:
+      - objectives
+      - grading
+      - office_hours
+      - accessibility
+      - "prose/policies"
+  instructor:
+    layout: InstructorPage
+    prose: "prose/instructor-bio"
+  policies:
+    layout: PoliciesPage
+    prose: "prose/policies"
+  accommodations:
+    layout: AccommodationsPage
+    prose: "prose/accommodations"
+
+landing:
+  layout: hero-with-modules
+  hero:
+    tagline: Distributability regression-guard landing.
+
+discovery:
+  sections: "src/content/sections/*.json"
+  units: "src/content/units/**/*.json"
+  artifacts: "src/content/sections/**/*.mdx"
+  registries:
+    equations: "src/content/equations/**/*.mdx"
+    figures: "src/content/figures.ts"
+
+spec_version: "0.1"
+schema: "@sophie/schemas/course-spec@0.1"
