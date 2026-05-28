@@ -4,6 +4,17 @@ export default defineConfig({
   entry: {
     index: "src/index.ts",
     "client/SophieChapter": "src/client/SophieChapter.tsx",
+    // `components` is the chrome-component factory (makeChromeComponents /
+    // makeStaticComponents). Imported by the copied-verbatim info-page
+    // layout .astro files (SyllabusPage, InstructorPage, PoliciesPage,
+    // AccommodationsPage) via `../components`; must exist at
+    // dist/components.js to resolve from dist/components/*.astro.
+    components: "src/components.tsx",
+    // `lib/compose-evaluator` evaluates the syllabus `compose:` list into
+    // ordered data + prose items. Imported by the copied-verbatim
+    // routes/info-page.astro; must exist at dist/lib/compose-evaluator.js
+    // to resolve from the copied-verbatim .astro route file.
+    "lib/compose-evaluator": "src/lib/compose-evaluator.ts",
     // `preferences/` is consumed by .astro components in TWO ways:
     //   1. Astro frontmatter import (SSR, calls bootScript()).
     //   2. <script> tags in components (client bundle, calls bindToggle()).
