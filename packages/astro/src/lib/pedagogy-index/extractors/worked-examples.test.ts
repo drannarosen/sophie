@@ -47,7 +47,7 @@ const wePara = (text: string) => ({
 describe("extractWorkedExamples", () => {
   test("returns empty entries when no <WorkedExample> is present", () => {
     const tree = root([wePara("just prose")]);
-    const result = extractWorkedExamples(tree as never, "unit", "reading");
+    const result = extractWorkedExamples(tree as never, "unit");
     expect(result.entries).toEqual([]);
     expect(result.findings).toEqual([]);
   });
@@ -63,8 +63,7 @@ describe("extractWorkedExamples", () => {
     ]);
     const { entries, findings } = extractWorkedExamples(
       tree as never,
-      "hydrostatic-equilibrium",
-      "reading"
+      "hydrostatic-equilibrium"
     );
     expect(entries).toHaveLength(1);
     expect(entries[0]).toMatchObject({
@@ -88,11 +87,8 @@ describe("extractWorkedExamples", () => {
         mdx("WorkedExample.Result"),
       ]),
     ]);
-    const { entries } = extractWorkedExamples(tree as never, "ch", "reading");
-    expect(entries.map((e) => e.anchor)).toEqual([
-      "reading-we-1",
-      "reading-we-2",
-    ]);
+    const { entries } = extractWorkedExamples(tree as never, "ch");
+    expect(entries.map((e) => e.anchor)).toEqual(["we-1", "we-2"]);
     expect(entries.map((e) => e.number)).toEqual([1, 2]);
   });
 
@@ -104,7 +100,7 @@ describe("extractWorkedExamples", () => {
         [mdx("WorkedExample.Problem"), mdx("WorkedExample.Result")]
       ),
     ]);
-    const { entries } = extractWorkedExamples(tree as never, "ch", "reading");
+    const { entries } = extractWorkedExamples(tree as never, "ch");
     expect(entries[0]?.anchor).toBe("central-pressure-warmup");
   });
 
@@ -120,7 +116,7 @@ describe("extractWorkedExamples", () => {
         mdx("WorkedExample.Result"),
       ]),
     ]);
-    const { entries } = extractWorkedExamples(tree as never, "ch", "reading");
+    const { entries } = extractWorkedExamples(tree as never, "ch");
     expect(entries[0]?.slots).toEqual({
       problem: true,
       steps: 3,
@@ -136,11 +132,7 @@ describe("extractWorkedExamples", () => {
         mdx("WorkedExample.Result"),
       ]),
     ]);
-    const { entries, findings } = extractWorkedExamples(
-      tree as never,
-      "ch",
-      "reading"
-    );
+    const { entries, findings } = extractWorkedExamples(tree as never, "ch");
     expect(entries[0]?.slots).toMatchObject({ problem: false, result: true });
     // Extract doesn't emit WE-2 — that's the invariant's job (defense-
     // in-depth + better grouping in the audit report).
@@ -155,7 +147,7 @@ describe("extractWorkedExamples", () => {
         mdx("WorkedExample.Result"),
       ]),
     ]);
-    expect(() => extractWorkedExamples(tree as never, "ch", "reading")).toThrow(
+    expect(() => extractWorkedExamples(tree as never, "ch")).toThrow(
       /WorkedExample.Problem.*appears 2 times/
     );
   });
@@ -168,11 +160,7 @@ describe("extractWorkedExamples", () => {
         mdx("WorkedExample.Result"),
       ]),
     ]);
-    const { entries, findings } = extractWorkedExamples(
-      tree as never,
-      "ch",
-      "reading"
-    );
+    const { entries, findings } = extractWorkedExamples(tree as never, "ch");
     expect(entries).toHaveLength(1);
     const we3 = findings.filter((f) => f.code === "WE-3");
     expect(we3).toHaveLength(1);
@@ -191,7 +179,7 @@ describe("extractWorkedExamples", () => {
         mdx("WorkedExample.Result"),
       ]),
     ]);
-    expect(() => extractWorkedExamples(tree as never, "ch", "reading")).toThrow(
+    expect(() => extractWorkedExamples(tree as never, "ch")).toThrow(
       /anchor collision/
     );
   });

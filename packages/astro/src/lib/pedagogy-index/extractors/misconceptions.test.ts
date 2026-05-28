@@ -21,11 +21,7 @@ describe("extractMisconceptions (pure)", () => {
       ]),
     ]);
 
-    const entries = extractMisconceptions(
-      tree as never,
-      "spoiler-alerts",
-      "reading"
-    );
+    const entries = extractMisconceptions(tree as never, "spoiler-alerts");
 
     expect(entries).toHaveLength(1);
     expect(entries[0]).toMatchObject({
@@ -49,11 +45,7 @@ describe("extractMisconceptions (pure)", () => {
       ]),
     ]);
 
-    const entries = extractMisconceptions(
-      tree as never,
-      "spoiler-alerts",
-      "reading"
-    );
+    const entries = extractMisconceptions(tree as never, "spoiler-alerts");
 
     expect(entries).toHaveLength(1);
     expect(entries[0]).toMatchObject({
@@ -76,7 +68,7 @@ describe("extractMisconceptions (pure)", () => {
       ]),
     ]);
 
-    const entries = extractMisconceptions(tree as never, "ch", "reading");
+    const entries = extractMisconceptions(tree as never, "ch");
     expect(entries).toHaveLength(2);
     expect(entries[0]).toMatchObject({
       anchor: "short-one",
@@ -93,9 +85,9 @@ describe("extractMisconceptions (pure)", () => {
       mdxAside({ kind: "misconception" }, [para("anonymous misconception")]),
     ]);
 
-    const entries = extractMisconceptions(tree as never, "ch", "reading");
+    const entries = extractMisconceptions(tree as never, "ch");
     expect(entries).toHaveLength(1);
-    expect(entries[0]?.anchor).toBe("reading-misc-1");
+    expect(entries[0]?.anchor).toBe("misc-1");
     expect(entries[0]?.label).toBeUndefined();
     expect(entries[0]?.length).toBe("short");
   });
@@ -107,12 +99,12 @@ describe("extractMisconceptions (pure)", () => {
       mdxAside({ kind: "misconception" }, [para("third")]),
     ]);
 
-    const entries = extractMisconceptions(tree as never, "ch", "reading");
+    const entries = extractMisconceptions(tree as never, "ch");
     expect(entries).toHaveLength(3);
     expect(entries.map((e) => e.anchor)).toEqual([
-      "reading-misc-1",
-      "reading-misc-2",
-      "reading-misc-3",
+      "misc-1",
+      "misc-2",
+      "misc-3",
     ]);
     expect(entries.map((e) => e.length)).toEqual(["short", "long", "short"]);
   });
@@ -125,7 +117,7 @@ describe("extractMisconceptions (pure)", () => {
       ),
     ]);
 
-    const entries = extractMisconceptions(tree as never, "ch", "reading");
+    const entries = extractMisconceptions(tree as never, "ch");
     expect(entries[0]?.anchor).toBe("custom-id");
     expect(entries[0]?.label).toBe("Some title");
   });
@@ -149,7 +141,7 @@ describe("extractMisconceptions (pure)", () => {
       ),
     ]);
 
-    const entries = extractMisconceptions(tree as never, "ch", "reading");
+    const entries = extractMisconceptions(tree as never, "ch");
     expect(entries[0]?.anchor).toBe("universe-with-a-center");
     // Label still resolves from title (label and anchor are separate concerns).
     expect(entries[0]?.label).toMatch(/A title that should be IGNORED/);
@@ -168,7 +160,7 @@ describe("extractMisconceptions (pure)", () => {
       ),
     ]);
 
-    const entries = extractMisconceptions(tree as never, "ch", "reading");
+    const entries = extractMisconceptions(tree as never, "ch");
     expect(entries[0]?.anchor).toBe("explicit-id-wins");
   });
 
@@ -179,7 +171,7 @@ describe("extractMisconceptions (pure)", () => {
       ]),
     ]);
 
-    const entries = extractMisconceptions(tree as never, "ch", "reading");
+    const entries = extractMisconceptions(tree as never, "ch");
     expect(entries[0]?.anchor).toBe("brighter-equals-closer");
   });
 
@@ -189,7 +181,7 @@ describe("extractMisconceptions (pure)", () => {
       mdxAside({ kind: "misconception", id: "shared" }, [para("second")]),
     ]);
 
-    expect(() => extractMisconceptions(tree as never, "ch", "reading")).toThrow(
+    expect(() => extractMisconceptions(tree as never, "ch")).toThrow(
       /M1 invariant|anchor collision/i
     );
   });
@@ -202,7 +194,7 @@ describe("extractMisconceptions (pure)", () => {
       ]),
     ]);
 
-    expect(() => extractMisconceptions(tree as never, "ch", "reading")).toThrow(
+    expect(() => extractMisconceptions(tree as never, "ch")).toThrow(
       /M1 invariant|anchor collision/i
     );
   });
@@ -213,7 +205,7 @@ describe("extractMisconceptions (pure)", () => {
       const tree = root([
         mdxAside({ kind: "misconception", title: "Empty one" }, []),
       ]);
-      const entries = extractMisconceptions(tree as never, "ch", "reading");
+      const entries = extractMisconceptions(tree as never, "ch");
       expect(entries).toHaveLength(1);
       expect(spy).toHaveBeenCalled();
       const msg = spy.mock.calls.map((c) => String(c[0])).join("\n");
@@ -233,8 +225,7 @@ describe("extractMisconceptions (pure)", () => {
 
     const entries = extractMisconceptions(
       tree as never,
-      "spectra-and-composition",
-      "reading"
+      "spectra-and-composition"
     );
     expect(entries[0]?.slug).toBe("heavier-falls-faster");
   });
@@ -246,11 +237,10 @@ describe("extractMisconceptions (pure)", () => {
 
     const entries = extractMisconceptions(
       tree as never,
-      "spectra-and-composition",
-      "reading"
+      "spectra-and-composition"
     );
-    expect(entries[0]?.anchor).toBe("reading-misc-1");
-    expect(entries[0]?.slug).toBe("spectra-and-composition-reading-misc-1");
+    expect(entries[0]?.anchor).toBe("misc-1");
+    expect(entries[0]?.slug).toBe("spectra-and-composition-misc-1");
   });
 
   test("skips Aside blocks with non-misconception kinds and Callouts with non-misconception variants", () => {
@@ -262,7 +252,7 @@ describe("extractMisconceptions (pure)", () => {
       mdxAside({ kind: "misconception", title: "Real" }, [para("real body")]),
     ]);
 
-    const entries = extractMisconceptions(tree as never, "ch", "reading");
+    const entries = extractMisconceptions(tree as never, "ch");
     expect(entries).toHaveLength(1);
     expect(entries[0]?.label).toBe("Real");
   });
@@ -284,7 +274,7 @@ describe("extractMisconceptions — ADR 0044 graph fields", () => {
       ),
     ]);
 
-    const entries = extractMisconceptions(tree as never, "ch", "reading");
+    const entries = extractMisconceptions(tree as never, "ch");
     expect(entries).toHaveLength(1);
     expect(entries[0]).toMatchObject({
       anchor: "redshift-as-ordinary-doppler",
@@ -313,7 +303,7 @@ describe("extractMisconceptions — ADR 0044 graph fields", () => {
       ),
     ]);
 
-    const entries = extractMisconceptions(tree as never, "ch", "reading");
+    const entries = extractMisconceptions(tree as never, "ch");
     expect(entries).toHaveLength(1);
     expect(entries[0]).toMatchObject({
       anchor: "brightness-is-intrinsic",
@@ -336,7 +326,7 @@ describe("extractMisconceptions — ADR 0044 graph fields", () => {
       ]),
     ]);
 
-    const entries = extractMisconceptions(tree as never, "ch", "reading");
+    const entries = extractMisconceptions(tree as never, "ch");
     expect(entries).toHaveLength(1);
     expect(entries[0]?.prerequisite_misconceptions).toBeUndefined();
     expect(entries[0]?.related_misconceptions).toBeUndefined();
@@ -354,7 +344,7 @@ describe("extractMisconceptions — ADR 0044 graph fields", () => {
       ),
     ]);
 
-    const entries = extractMisconceptions(tree as never, "ch", "reading");
+    const entries = extractMisconceptions(tree as never, "ch");
     expect(entries[0]?.prerequisite_misconceptions).toEqual([]);
   });
 
@@ -368,7 +358,7 @@ describe("extractMisconceptions — ADR 0044 graph fields", () => {
       ),
     ]);
 
-    const entries = extractMisconceptions(tree as never, "ch", "reading");
+    const entries = extractMisconceptions(tree as never, "ch");
     expect(entries[0]?.concept_refs).toEqual(["redshift", "flux"]);
   });
 
@@ -389,7 +379,7 @@ describe("extractMisconceptions — ADR 0044 graph fields", () => {
       mdxAside({ kind: "misconception", title: "Plain" }, [para("body")]),
     ]);
 
-    const entries = extractMisconceptions(tree as never, "ch", "reading");
+    const entries = extractMisconceptions(tree as never, "ch");
     for (const e of entries) {
       expect(MisconceptionEntrySchema.safeParse(e).success).toBe(true);
     }

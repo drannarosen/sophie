@@ -130,7 +130,7 @@ describe("transformOMIFlow", () => {
       }
     );
     const tree = root([omiNode]);
-    transformOMIFlow(tree as never, "ch", "reading");
+    transformOMIFlow(tree as never, "ch");
 
     expect(omiNode.children).toEqual([]);
     expect(findAttr(omiNode, "observable")).toBeDefined();
@@ -147,7 +147,7 @@ describe("transformOMIFlow", () => {
         inference: { title: "Inf title" },
       }
     );
-    transformOMIFlow(root([omiNode]) as never, "ch", "reading");
+    transformOMIFlow(root([omiNode]) as never, "ch");
 
     const observable = findAttr(omiNode, "observable");
     expect(observable?.value).toMatchObject({
@@ -170,7 +170,7 @@ describe("transformOMIFlow", () => {
 
   test("post-transform attribute value carries data.estree for MDX lowering", () => {
     const omiNode = buildOMIFlow({ id: "x" });
-    transformOMIFlow(root([omiNode]) as never, "ch", "reading");
+    transformOMIFlow(root([omiNode]) as never, "ch");
     const observable = findAttr(omiNode, "observable");
     expect(
       (observable?.value as TestMdxAttributeValueExpression).data?.estree
@@ -182,25 +182,23 @@ describe("transformOMIFlow", () => {
       { id: "x" },
       { inference: false } // observable+model defaulted; inference omitted
     );
-    expect(() =>
-      transformOMIFlow(root([omiNode]) as never, "ch", "reading")
-    ).toThrow(/missing.*inference/i);
+    expect(() => transformOMIFlow(root([omiNode]) as never, "ch")).toThrow(
+      /missing.*inference/i
+    );
   });
 
   test("throws on intra-chapter anchor collision (mirrors extractor)", () => {
     const a = buildOMIFlow({ id: "dup" });
     const b = buildOMIFlow({ id: "dup" });
-    expect(() =>
-      transformOMIFlow(root([a, b]) as never, "ch", "reading")
-    ).toThrow(/anchor.*collision/i);
+    expect(() => transformOMIFlow(root([a, b]) as never, "ch")).toThrow(
+      /anchor.*collision/i
+    );
   });
 
   test("ignores non-OMIFlow mdxJsxFlowElement nodes", () => {
     const callout = mdxFlow("Callout", { variant: "info" }, [para("x")]);
     const tree = root([callout]);
-    expect(() =>
-      transformOMIFlow(tree as never, "ch", "reading")
-    ).not.toThrow();
+    expect(() => transformOMIFlow(tree as never, "ch")).not.toThrow();
     // Callout untouched.
     expect(callout.children).toHaveLength(1);
     expect(findAttr(callout, "variant")?.value).toBe("info");

@@ -8,20 +8,16 @@ describe("extractRetrievalPrompts (pure)", () => {
       mdxNamedFlow("RetrievalPrompt", { target: "eq:stefan-boltzmann" }),
       mdxNamedFlow("RetrievalPrompt", { target: "ki:luminosity" }),
     ]);
-    const entries = extractRetrievalPrompts(
-      tree as never,
-      "spoiler-alerts",
-      "reading"
-    );
+    const entries = extractRetrievalPrompts(tree as never, "spoiler-alerts");
     expect(entries).toHaveLength(2);
     expect(entries[0]).toEqual({
       unit: "spoiler-alerts",
-      anchor: "reading-rp-1",
+      anchor: "rp-1",
       target_id: "eq:stefan-boltzmann",
     });
     expect(entries[1]).toEqual({
       unit: "spoiler-alerts",
-      anchor: "reading-rp-2",
+      anchor: "rp-2",
       target_id: "ki:luminosity",
     });
   });
@@ -31,10 +27,10 @@ describe("extractRetrievalPrompts (pure)", () => {
       mdxNamedFlow("RetrievalPrompt", {}),
       mdxNamedFlow("RetrievalPrompt", { target: "ki:x" }),
     ]);
-    const entries = extractRetrievalPrompts(tree as never, "ch", "reading");
+    const entries = extractRetrievalPrompts(tree as never, "ch");
     expect(entries).toHaveLength(1);
     expect(entries[0]?.target_id).toBe("ki:x");
-    expect(entries[0]?.anchor).toBe("reading-rp-1");
+    expect(entries[0]?.anchor).toBe("rp-1");
   });
 
   test("ignores elements with other JSX names", () => {
@@ -43,13 +39,13 @@ describe("extractRetrievalPrompts (pure)", () => {
       mdxNamedFlow("Predict", { id: "p1" }),
       mdxNamedFlow("RetrievalPrompt", { target: "ki:y" }),
     ]);
-    const entries = extractRetrievalPrompts(tree as never, "ch", "reading");
+    const entries = extractRetrievalPrompts(tree as never, "ch");
     expect(entries).toHaveLength(1);
     expect(entries[0]?.target_id).toBe("ki:y");
   });
 
   test("returns empty array when tree contains no RetrievalPrompt", () => {
     const tree = root([mdxNamedFlow("SpacedReview", { target: "ki:x" })]);
-    expect(extractRetrievalPrompts(tree as never, "ch", "reading")).toEqual([]);
+    expect(extractRetrievalPrompts(tree as never, "ch")).toEqual([]);
   });
 });

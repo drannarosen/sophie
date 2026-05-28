@@ -59,14 +59,13 @@ describe("extractFormative — common shape", () => {
       root([
         { type: "paragraph", children: [{ type: "text", value: "x" }] },
       ]) as never,
-      "unit",
-      "reading"
+      "unit"
     );
     expect(result.entries).toEqual([]);
     expect(result.findings).toEqual([]);
   });
 
-  it("auto-numbers artifact-namespaced anchors in source order (Task 7)", () => {
+  it("auto-numbers anchors form-1, form-2 in source order", () => {
     const result = extractFormative(
       root([
         mdx("QuickCheck", { course: "c", unit: "u" }, [
@@ -76,13 +75,9 @@ describe("extractFormative — common shape", () => {
           prompt("QuickCheck", "b"),
         ]),
       ]) as never,
-      "unit",
-      "practice"
+      "unit"
     );
-    expect(result.entries.map((e) => e.anchor)).toEqual([
-      "practice-form-1",
-      "practice-form-2",
-    ]);
+    expect(result.entries.map((e) => e.anchor)).toEqual(["form-1", "form-2"]);
   });
 
   it("an explicit id slug overrides the auto-counter", () => {
@@ -92,8 +87,7 @@ describe("extractFormative — common shape", () => {
           prompt("QuickCheck", "a"),
         ]),
       ]) as never,
-      "unit",
-      "reading"
+      "unit"
     );
     expect(result.entries[0]?.anchor).toBe("photon-budget");
   });
@@ -105,8 +99,7 @@ describe("extractFormative — common shape", () => {
           mdx("QuickCheck", { id: "dup" }, [prompt("QuickCheck", "a")]),
           mdx("QuickCheck", { id: "dup" }, [prompt("QuickCheck", "b")]),
         ]) as never,
-        "unit",
-        "reading"
+        "unit"
       )
     ).toThrow(/collision/i);
   });
@@ -127,8 +120,7 @@ describe("extractFormative — common shape", () => {
           hint(),
         ]),
       ]) as never,
-      "unit",
-      "reading"
+      "unit"
     );
     expect(result.entries[0]).toMatchObject({
       hasSolution: false,
@@ -151,8 +143,7 @@ describe("extractFormative — QuickCheck + PracticeProblem (solution-only)", ()
       root([
         mdx("QuickCheck", {}, [prompt("QuickCheck", "Why?"), solution()]),
       ]) as never,
-      "u",
-      "reading"
+      "u"
     );
     expect(result.entries[0]).toMatchObject({
       kind: "quickcheck",
@@ -170,8 +161,7 @@ describe("extractFormative — QuickCheck + PracticeProblem (solution-only)", ()
           solution(),
         ]),
       ]) as never,
-      "u",
-      "reading"
+      "u"
     );
     expect(result.entries[0]).toMatchObject({
       kind: "practice-problem",
@@ -192,8 +182,7 @@ describe("extractFormative — MCQ (single-choice)", () => {
           ]),
         ]),
       ]) as never,
-      "u",
-      "reading"
+      "u"
     );
     expect(result.entries[0]).toMatchObject({
       kind: "mcq",
@@ -213,8 +202,7 @@ describe("extractFormative — MCQ (single-choice)", () => {
           mdx("MCQ.Choice", {}, [{ type: "text", value: "Gravity" }]),
         ]),
       ]) as never,
-      "u",
-      "reading"
+      "u"
     );
     expect(result.entries[0]?.answer).toMatchObject({
       type: "single-choice",
@@ -231,8 +219,7 @@ describe("extractFormative — MCQ (single-choice)", () => {
           mdx("MCQ.Choice", { correct: null }, [{ type: "text", value: "B" }]),
         ]),
       ]) as never,
-      "u",
-      "reading"
+      "u"
     );
     const as1 = result.findings.filter((f) => f.code === "AS-1");
     expect(as1).toHaveLength(1);
@@ -250,8 +237,7 @@ describe("extractFormative — MCQ (single-choice)", () => {
           mdx("MCQ.Choice", {}, [{ type: "text", value: "A" }]),
         ]),
       ]) as never,
-      "u",
-      "reading"
+      "u"
     );
     expect(result.findings.filter((f) => f.code === "AS-1")).toHaveLength(1);
   });
@@ -268,8 +254,7 @@ describe("extractFormative — MCQ (single-choice)", () => {
             mdx("MCQ.Choice", {}, [{ type: "text", value: "Same" }]),
           ]),
         ]) as never,
-        "u",
-        "reading"
+        "u"
       )
     ).toThrow(/choice/i);
   });
@@ -290,8 +275,7 @@ describe("extractFormative — MultiSelect (multi-choice)", () => {
           ]),
         ]),
       ]) as never,
-      "u",
-      "reading"
+      "u"
     );
     expect(result.entries[0]).toMatchObject({
       kind: "multi-select",
@@ -308,8 +292,7 @@ describe("extractFormative — MultiSelect (multi-choice)", () => {
           mdx("MultiSelect.Choice", {}, [{ type: "text", value: "Alpha" }]),
         ]),
       ]) as never,
-      "u",
-      "reading"
+      "u"
     );
     const as5 = result.findings.filter((f) => f.code === "AS-5");
     expect(as5).toHaveLength(1);
@@ -335,8 +318,7 @@ describe("extractFormative — FillBlank (fill-blank)", () => {
           ]),
         ]),
       ]) as never,
-      "u",
-      "reading"
+      "u"
     );
     expect(result.entries[0]).toMatchObject({
       kind: "fill-blank",
@@ -394,8 +376,7 @@ describe("extractFormative — FillBlank (fill-blank)", () => {
           ]),
         ]),
       ]) as never,
-      "u",
-      "reading"
+      "u"
     );
     expect(result.entries[0]?.answer).toEqual({
       type: "fill-blank",
@@ -416,8 +397,7 @@ describe("extractFormative — FillBlank (fill-blank)", () => {
           ]),
         ]),
       ]) as never,
-      "u",
-      "reading"
+      "u"
     );
     expect(result.entries[0]?.answer).toEqual({
       type: "fill-blank",
@@ -441,8 +421,7 @@ describe("extractFormative — NumericQuestion (numeric)", () => {
           }),
         ]),
       ]) as never,
-      "u",
-      "reading"
+      "u"
     );
     expect(result.entries[0]).toMatchObject({
       kind: "numeric-question",
@@ -464,8 +443,7 @@ describe("extractFormative — NumericQuestion (numeric)", () => {
           prompt("NumericQuestion", "q"),
         ]),
       ]) as never,
-      "u",
-      "reading"
+      "u"
     );
     const as4 = result.findings.filter((f) => f.code === "AS-4");
     expect(as4).toHaveLength(1);
@@ -493,8 +471,7 @@ describe("extractFormative — NumericQuestion (numeric)", () => {
           }),
         ]),
       ]) as never,
-      "u",
-      "reading"
+      "u"
     );
     expect(result.findings.filter((f) => f.code === "AS-4")).toHaveLength(1);
   });

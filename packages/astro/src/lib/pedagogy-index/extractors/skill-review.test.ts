@@ -10,15 +10,11 @@ describe("extractSkillReviews (pure)", () => {
         mdxNamedFlow("SkillReview.Answer", {}),
       ]),
     ]);
-    const entries = extractSkillReviews(
-      tree as never,
-      "spoiler-alerts",
-      "reading"
-    );
+    const entries = extractSkillReviews(tree as never, "spoiler-alerts");
     expect(entries).toHaveLength(1);
     expect(entries[0]).toEqual({
       unit: "spoiler-alerts",
-      anchor: "reading-sk-1",
+      anchor: "sk-1",
       target_id: "topic:logs",
       has_explicit_content: true,
     });
@@ -28,7 +24,7 @@ describe("extractSkillReviews (pure)", () => {
     const tree = root([
       mdxNamedFlow("SkillReview", { target: "topic:exponents" }),
     ]);
-    const entries = extractSkillReviews(tree as never, "ch", "reading");
+    const entries = extractSkillReviews(tree as never, "ch");
     expect(entries).toHaveLength(1);
     expect(entries[0]?.has_explicit_content).toBe(false);
   });
@@ -42,7 +38,7 @@ describe("extractSkillReviews (pure)", () => {
         mdxNamedFlow("SkillReview.Answer", {}),
       ]),
     ]);
-    const entries = extractSkillReviews(tree as never, "ch", "reading");
+    const entries = extractSkillReviews(tree as never, "ch");
     expect(entries).toHaveLength(2);
     expect(entries[0]?.has_explicit_content).toBe(false);
     expect(entries[1]?.has_explicit_content).toBe(false);
@@ -54,7 +50,7 @@ describe("extractSkillReviews (pure)", () => {
         mdxNamedFlow("SkillReview.ReviewMore", {}),
       ]),
     ]);
-    const entries = extractSkillReviews(tree as never, "ch", "reading");
+    const entries = extractSkillReviews(tree as never, "ch");
     expect(entries[0]?.has_explicit_content).toBe(false);
   });
 
@@ -64,12 +60,8 @@ describe("extractSkillReviews (pure)", () => {
       mdxNamedFlow("SkillReview", { target: "topic:b" }),
       mdxNamedFlow("SkillReview", { target: "topic:c" }),
     ]);
-    const entries = extractSkillReviews(tree as never, "ch", "reading");
-    expect(entries.map((e) => e.anchor)).toEqual([
-      "reading-sk-1",
-      "reading-sk-2",
-      "reading-sk-3",
-    ]);
+    const entries = extractSkillReviews(tree as never, "ch");
+    expect(entries.map((e) => e.anchor)).toEqual(["sk-1", "sk-2", "sk-3"]);
   });
 
   test("skips elements with no target attribute", () => {
@@ -77,7 +69,7 @@ describe("extractSkillReviews (pure)", () => {
       mdxNamedFlow("SkillReview", {}),
       mdxNamedFlow("SkillReview", { target: "topic:x" }),
     ]);
-    const entries = extractSkillReviews(tree as never, "ch", "reading");
+    const entries = extractSkillReviews(tree as never, "ch");
     expect(entries).toHaveLength(1);
     expect(entries[0]?.target_id).toBe("topic:x");
   });
