@@ -17,7 +17,7 @@ describe("indexAccumulator key-insights (cross-chapter)", () => {
   });
 
   test("addKeyInsights populates keyInsights collection accessible via asPedagogyIndex", () => {
-    indexAccumulator.addKeyInsights([
+    indexAccumulator.addKeyInsights("u", "reading", [
       ki({ title: "Alpha", unit: "ki-ch-a", anchor: "alpha" }),
       ki({ title: "Beta", unit: "ki-ch-b", anchor: "beta" }),
     ]);
@@ -30,13 +30,13 @@ describe("indexAccumulator key-insights (cross-chapter)", () => {
     expect(titles).toEqual(["Alpha", "Beta"]);
   });
 
-  test("clearUnit removes key-insights for the target chapter; other chapters survive", () => {
-    indexAccumulator.addKeyInsights([
+  test("clearUnitArtifact removes key-insights for the target chapter; other chapters survive", () => {
+    indexAccumulator.addKeyInsights("u", "reading", [
       ki({ title: "Insight A", unit: "ki-clear-a", anchor: "insight-a" }),
       ki({ title: "Insight B", unit: "ki-clear-b", anchor: "insight-b" }),
     ]);
 
-    indexAccumulator.clearUnit("ki-clear-a");
+    indexAccumulator.clearUnitArtifact("ki-clear-a", "reading");
 
     const index = indexAccumulator.asPedagogyIndex();
     expect(
@@ -48,10 +48,10 @@ describe("indexAccumulator key-insights (cross-chapter)", () => {
   });
 
   test("two chapters can share an auto-anchor (e.g. 'ki-1') without collision", () => {
-    indexAccumulator.addKeyInsights([
+    indexAccumulator.addKeyInsights("u", "reading", [
       ki({ unit: "ki-share-a", anchor: "ki-1" }),
     ]);
-    indexAccumulator.addKeyInsights([
+    indexAccumulator.addKeyInsights("u", "reading", [
       ki({ unit: "ki-share-b", anchor: "ki-1" }),
     ]);
 

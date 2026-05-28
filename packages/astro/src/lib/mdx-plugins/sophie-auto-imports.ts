@@ -1,38 +1,16 @@
 import type { Root, RootContent } from "mdast";
-import { fromMarkdown } from "mdast-util-from-markdown";
-import { mdxFromMarkdown } from "mdast-util-mdx";
 import type {
   MdxJsxAttribute,
   MdxJsxFlowElement,
   MdxJsxTextElement,
 } from "mdast-util-mdx-jsx";
-import { mdxjs } from "micromark-extension-mdxjs";
 import type { Plugin } from "unified";
 import { visit } from "unist-util-visit";
-
-/**
- * Structural mdast-util-mdxjs-esm node type — declared locally so the
- * plugin only depends on `mdast-util-mdx-jsx` + `mdast-util-from-markdown`
- * (already in @sophie/astro's package.json). The full `MdxjsEsm` type
- * from `mdast-util-mdxjs-esm` would add a transitive type-only import
- * dependency that's worth avoiding for one struct with two fields.
- */
-interface MdxjsEsmNode {
-  type: "mdxjsEsm";
-  value: string;
-  data?: {
-    estree?: {
-      body: ReadonlyArray<{
-        type: string;
-        source?: { value?: unknown };
-        specifiers?: ReadonlyArray<{
-          type: string;
-          imported?: { type: string; name?: string };
-        }>;
-      }>;
-    } | null;
-  };
-}
+import {
+  buildImportEsmNode,
+  buildImportSpecifier,
+  findExistingSophieImport,
+} from "./_shared/jsx-attrs.ts";
 
 /**
  * Sophie auto-imports + parent-prop-threading remark plugin
@@ -117,13 +95,24 @@ interface MdxjsEsmNode {
  *     These are imported by `.astro` layouts directly, never by
  *     chapter MDX. They're outside this plugin's surface.
  *
- * Pre-emptive entries: `MCQ`, `MultiSelect`, `FillBlank`,
- * `NumericQuestion`, `QuickCheck` ship as components in PRs 5–9 of
- * the formative-assessment plan. They're listed here so the
- * registry remains the single source of truth and the
- * formative-parent threading job below has a stable contract — the
- * `injectClientLoadDirectives` job is a no-op until the component
- * is actually authored.
+ * `NumericQuestion` and `QuickCheck` ship as React components (PRs 6–9
+ * of the formative-assessment plan) — they auto-import + `client:load`
+ * here.
+ *
+ * `MCQ`, `MultiSelect`, `FillBlank`, AND `Tabs` / `Tab` are deliberately
+ * ABSENT from this set: all are virtual authoring tags, expanded at
+ * MDX-compile time by `sophieCompoundExpandRemarkPlugin` into static
+ * markup + a childless controller island (`<MCQController>` /
+ * `<MultiSelectController>` / `<FillBlankController>` /
+ * `<TabsController>`; Tasks 3–6 of the compound-island transform). That
+ * transform self-injects each controller's `import` + `client:load`
+ * because it runs LAST in the chain (after this plugin); the auto-
+ * import path is never used for the controllers. `MCQ` / `MultiSelect`
+ * / `FillBlank` stay in `SOPHIE_FORMATIVE_PARENTS` below so the
+ * threading job still wires `course`/`unit`/`parentId` onto nested
+ * `<Solution>` / `<Hint>` children before the expansion runs; `Tabs` /
+ * `Tab` are chrome (NOT formative parents — no namespace, no
+ * threading), so they don't appear in any registry here.
  */
 export const SOPHIE_INTERACTIVE_COMPONENTS: ReadonlySet<string> = new Set([
   "BlackbodyExplorer",
@@ -134,14 +123,11 @@ export const SOPHIE_INTERACTIVE_COMPONENTS: ReadonlySet<string> = new Set([
   "EffortLog",
   "EquationRef",
   "FigureRef",
-  "FillBlank",
   "GlossaryTerm",
   "Hint",
   "InteractiveCallout",
   "InteractiveCheckbox",
   "LearningObjectives",
-  "MCQ",
-  "MultiSelect",
   "NumericQuestion",
   "Objective",
   "ParameterCursor",
@@ -154,8 +140,6 @@ export const SOPHIE_INTERACTIVE_COMPONENTS: ReadonlySet<string> = new Set([
   "SkillReview",
   "Solution",
   "SpacedReview",
-  "Tab",
-  "Tabs",
 ]);
 
 /**
@@ -214,12 +198,17 @@ export const SOPHIE_AUTO_IMPORTED_COMPONENTS: ReadonlySet<string> = new Set([
  * Components that own a `(course, unit, id)` namespace and thread it
  * to formative-child descendants at compile time.
  *
- * The v1 formative family per ADR 0073 Amendment 1. PRs 5–9 will add
- * `<MCQ>` / `<MultiSelect>` / `<FillBlank>` / `<NumericQuestion>` /
- * `<QuickCheck>` as components; they're listed here pre-emptively so
- * the threading job has a stable contract when those PRs land —
- * the plugin is the source of truth for "parent" status, not the
- * component implementations.
+ * The v1 formative family per ADR 0073 Amendment 1. "Parent" status is
+ * orthogonal to how a parent renders: `<MCQ>` / `<MultiSelect>` /
+ * `<FillBlank>` are virtual authoring tags (expanded to static markup +
+ * a controller island by `sophieCompoundExpandRemarkPlugin`), while
+ * `<NumericQuestion>` / `<QuickCheck>` / `<PracticeProblem>` ship as
+ * React components. All six are listed here so the threading job has a
+ * stable contract regardless of render strategy — the plugin is the
+ * source of truth for "parent" status, not the implementations. The
+ * threading runs BEFORE compound-island expansion, so nested
+ * `<Solution>` / `<Hint>` children get `course`/`unit`/`parentId`
+ * whether or not the parent is later expanded away.
  */
 export const SOPHIE_FORMATIVE_PARENTS: ReadonlySet<string> = new Set([
   "FillBlank",
@@ -247,8 +236,6 @@ const CLIENT_DIRECTIVE_NAMES: ReadonlySet<string> = new Set([
   "client:only",
   "client:media",
 ]);
-
-const SOPHIE_COMPONENTS_PACKAGE = "@sophie/components";
 
 interface JsxElementLike {
   type: "mdxJsxFlowElement" | "mdxJsxTextElement";
@@ -323,36 +310,6 @@ function hasAnyClientDirective(el: {
   return false;
 }
 
-/**
- * Build an `mdxjsEsm` node carrying a fully-parsed estree program for
- * `import { Name1, Name2 } from "@sophie/components";`. The estree
- * payload is what MDX's recma pass actually compiles — providing both
- * `value` (source text) and `data.estree` (parsed AST) matches the
- * shape `remark-mdx-frontmatter` produces for hoisted frontmatter
- * exports and the shape `mdxFromMarkdown` emits when MDX itself parses
- * an `import` line. We parse via `fromMarkdown(..., { extensions:
- * [mdxjs()] })` to reuse MDX's own grammar rather than depending on
- * acorn directly — fewer moving parts, identical output.
- */
-function buildImportEsmNode(componentNames: readonly string[]): MdxjsEsmNode {
-  const sorted = [...componentNames].sort();
-  const source = `import { ${sorted.join(", ")} } from "${SOPHIE_COMPONENTS_PACKAGE}";\n`;
-  const ast = fromMarkdown(source, {
-    extensions: [mdxjs()],
-    mdastExtensions: [mdxFromMarkdown()],
-  });
-  const esmNode = ast.children.find((c) => c.type === "mdxjsEsm");
-  if (!esmNode) {
-    // Defensive — `mdxjs()` is documented to emit `mdxjsEsm` for any
-    // top-level import statement. If this ever throws it means the
-    // MDX grammar shifted under us; surface the failure loudly.
-    throw new Error(
-      `sophie-auto-imports: failed to parse generated import statement into an mdxjsEsm node. Source was: ${source}`
-    );
-  }
-  return esmNode as unknown as MdxjsEsmNode;
-}
-
 /** Walk every JSX element in the tree (flow + text variants). */
 function visitJsxElements(
   tree: Root,
@@ -377,74 +334,6 @@ function collectUsedAutoImportComponents(tree: Root): string[] {
     if (SOPHIE_AUTO_IMPORTED_COMPONENTS.has(el.name)) used.add(el.name);
   });
   return [...used].sort();
-}
-
-/**
- * Locate an `import … from "@sophie/components"` ImportDeclaration
- * inside any existing top-level `mdxjsEsm` node. Returns the node,
- * the specific declaration inside its estree, plus the names it
- * already imports — or `null` when no Sophie-components import
- * exists yet.
- *
- * A single `mdxjsEsm` node may carry MULTIPLE author-written import
- * statements (MDX parses consecutive `import` lines without blank
- * separators into one `mdxjsEsm` block). We must surgically merge
- * specifiers into the matching `@sophie/components` ImportDeclaration
- * inside that block rather than replacing the whole node — replacing
- * would drop sibling imports (e.g. an `.astro` component imported
- * alongside Sophie components) and break the chapter MDX at compile.
- */
-function findExistingSophieImport(tree: Root): {
-  node: MdxjsEsmNode;
-  decl: {
-    specifiers?: ReadonlyArray<{
-      type: string;
-      imported?: { type: string; name?: string };
-    }>;
-  };
-  names: Set<string>;
-} | null {
-  for (const child of tree.children) {
-    if (child.type !== "mdxjsEsm") continue;
-    const esm = child as MdxjsEsmNode;
-    const program = esm.data?.estree;
-    if (!program) continue;
-    for (const stmt of program.body) {
-      if (stmt.type !== "ImportDeclaration") continue;
-      if (typeof stmt.source?.value !== "string") continue;
-      if (stmt.source.value !== SOPHIE_COMPONENTS_PACKAGE) continue;
-      const names = new Set<string>();
-      for (const spec of stmt.specifiers ?? []) {
-        if (spec.type !== "ImportSpecifier") continue;
-        if (
-          spec.imported?.type === "Identifier" &&
-          typeof spec.imported.name === "string"
-        ) {
-          names.add(spec.imported.name);
-        }
-      }
-      return { node: esm, decl: stmt, names };
-    }
-  }
-  return null;
-}
-
-/**
- * Build an estree `ImportSpecifier` node for a single name, matching
- * the shape `acorn` (via mdxjs micromark) produces for parsed import
- * lines. MDX's recma pass only needs the structural shape; whitespace
- * positions are unused.
- */
-function buildImportSpecifier(name: string): {
-  type: string;
-  imported: { type: string; name: string };
-  local: { type: string; name: string };
-} {
-  return {
-    type: "ImportSpecifier",
-    imported: { type: "Identifier", name },
-    local: { type: "Identifier", name },
-  };
 }
 
 /**
@@ -668,9 +557,14 @@ export const sophieAutoImportsRemarkPlugin: Plugin<[], Root> =
       typeof (file as { path?: unknown }).path === "string"
         ? (file as { path: string }).path
         : "<unknown>";
-    // Order matters: thread first (so child JSX attribute additions
-    // are seen by the client-load + auto-import passes), then add
-    // client directives, then collect imports.
+    // Order matters: thread first (so child JSX attribute additions are
+    // seen by the client-load + auto-import passes), then add client
+    // directives, then collect imports. Compound-island expansion
+    // (MCQ → static structure + <MCQController>) is NOT done here — it
+    // runs in `sophieCompoundExpandRemarkPlugin`, registered LAST in the
+    // chain (after the pedagogy extractor) so the extractor sees the
+    // authored `<MCQ><MCQ.Choice>` shape; that plugin self-injects its
+    // own controller import + `client:load`.
     threadFormativeParentProps(tree, filePath);
     injectClientLoadDirectives(tree);
     injectAutoImports(tree);

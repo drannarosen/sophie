@@ -23,7 +23,7 @@ describe("indexAccumulator misconceptions (cross-chapter)", () => {
   };
 
   test("addMisconceptions populates misconceptions collection accessible via asPedagogyIndex", () => {
-    indexAccumulator.addMisconceptions([
+    indexAccumulator.addMisconceptions("u", "reading", [
       mc({
         unit: "mc-pop-a",
         anchor: "alpha",
@@ -47,23 +47,23 @@ describe("indexAccumulator misconceptions (cross-chapter)", () => {
   });
 
   test("M2 — throws on cross-chapter explicit-id anchor collision", () => {
-    indexAccumulator.addMisconceptions([
+    indexAccumulator.addMisconceptions("u", "reading", [
       mc({ unit: "mc-m2-a", anchor: "shared-explicit-id" }),
     ]);
 
     expect(() =>
-      indexAccumulator.addMisconceptions([
+      indexAccumulator.addMisconceptions("u", "reading", [
         mc({ unit: "mc-m2-b", anchor: "shared-explicit-id" }),
       ])
     ).toThrow(/M2 invariant/);
     // Error names BOTH chapter slugs.
     expect(() =>
-      indexAccumulator.addMisconceptions([
+      indexAccumulator.addMisconceptions("u", "reading", [
         mc({ unit: "mc-m2-b", anchor: "shared-explicit-id" }),
       ])
     ).toThrow(/mc-m2-a/);
     expect(() =>
-      indexAccumulator.addMisconceptions([
+      indexAccumulator.addMisconceptions("u", "reading", [
         mc({ unit: "mc-m2-b", anchor: "shared-explicit-id" }),
       ])
     ).toThrow(/mc-m2-b/);
@@ -74,22 +74,22 @@ describe("indexAccumulator misconceptions (cross-chapter)", () => {
     // silently let an author-supplied `id="misc-orbital"` bypass M2.
     // The tightened `/^misc-\d+$/` matches only the literal auto-anchor
     // shape, so explicit ids like `misc-orbital` still validate.
-    indexAccumulator.addMisconceptions([
+    indexAccumulator.addMisconceptions("u", "reading", [
       mc({ unit: "mc-misc-a", anchor: "misc-orbital" }),
     ]);
     expect(() =>
-      indexAccumulator.addMisconceptions([
+      indexAccumulator.addMisconceptions("u", "reading", [
         mc({ unit: "mc-misc-b", anchor: "misc-orbital" }),
       ])
     ).toThrow(/M2 invariant/);
   });
 
   test("M2 — auto-anchors ('misc-N') do NOT trigger cross-chapter collision", () => {
-    indexAccumulator.addMisconceptions([
+    indexAccumulator.addMisconceptions("u", "reading", [
       mc({ unit: "mc-auto-a", anchor: "misc-1" }),
     ]);
     expect(() =>
-      indexAccumulator.addMisconceptions([
+      indexAccumulator.addMisconceptions("u", "reading", [
         mc({ unit: "mc-auto-b", anchor: "misc-1" }),
       ])
     ).not.toThrow();
@@ -103,13 +103,13 @@ describe("indexAccumulator misconceptions (cross-chapter)", () => {
 
   test("addMisconceptions validates the whole batch BEFORE mutating", () => {
     // Seed.
-    indexAccumulator.addMisconceptions([
+    indexAccumulator.addMisconceptions("u", "reading", [
       mc({ unit: "mc-pre-a", anchor: "seeded-id" }),
     ]);
 
     // Batch: entry 1 is a fresh non-colliding misconception; entry 2 collides.
     expect(() =>
-      indexAccumulator.addMisconceptions([
+      indexAccumulator.addMisconceptions("u", "reading", [
         mc({ unit: "mc-pre-b", anchor: "fresh-id" }),
         mc({ unit: "mc-pre-b", anchor: "seeded-id" }),
       ])
@@ -123,13 +123,13 @@ describe("indexAccumulator misconceptions (cross-chapter)", () => {
     ).toBeUndefined();
   });
 
-  test("clearUnit removes misconceptions for the target chapter; other chapters survive", () => {
-    indexAccumulator.addMisconceptions([
+  test("clearUnitArtifact removes misconceptions for the target chapter; other chapters survive", () => {
+    indexAccumulator.addMisconceptions("u", "reading", [
       mc({ unit: "mc-clr-a", anchor: "mc-a-1", label: "A" }),
       mc({ unit: "mc-clr-b", anchor: "mc-b-1", label: "B" }),
     ]);
 
-    indexAccumulator.clearUnit("mc-clr-a");
+    indexAccumulator.clearUnitArtifact("mc-clr-a", "reading");
 
     const index = indexAccumulator.asPedagogyIndex();
     expect(
@@ -141,7 +141,7 @@ describe("indexAccumulator misconceptions (cross-chapter)", () => {
   });
 
   test("asPedagogyIndex returns populated misconceptions (was empty `[]` before Task 7)", () => {
-    indexAccumulator.addMisconceptions([
+    indexAccumulator.addMisconceptions("u", "reading", [
       mc({
         unit: "mc-ap-a",
         anchor: "ap-1",

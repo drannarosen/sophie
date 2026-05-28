@@ -76,7 +76,7 @@ describe("indexAccumulator setSections / setUnits (W1)", () => {
     expect(indexAccumulator.asPedagogyIndex().units).toEqual([u1, u2]);
   });
 
-  test("clearUnit does NOT touch sections / units (consumer-global)", () => {
+  test("clearUnitArtifact does NOT touch sections / units (consumer-global)", () => {
     const intro: SectionEntry = {
       type: "module",
       slug: "intro",
@@ -96,7 +96,7 @@ describe("indexAccumulator setSections / setUnits (W1)", () => {
 
     indexAccumulator.setSections([intro]);
     indexAccumulator.setUnits([u1]);
-    indexAccumulator.clearUnit("ch-x");
+    indexAccumulator.clearUnitArtifact("ch-x", "reading");
 
     const index = indexAccumulator.asPedagogyIndex();
     expect(index.sections).toEqual([intro]);
@@ -169,9 +169,9 @@ describe("indexAccumulator setArtifacts (W2)", () => {
     ]);
   });
 
-  test("clearUnit does NOT touch artifacts (consumer-global)", () => {
+  test("clearUnitArtifact does NOT touch artifacts (consumer-global)", () => {
     indexAccumulator.setArtifacts([unitReading]);
-    indexAccumulator.clearUnit("spectra-and-composition");
+    indexAccumulator.clearUnitArtifact("spectra-and-composition", "reading");
     expect(indexAccumulator.asPedagogyIndex().artifacts).toEqual([unitReading]);
   });
 

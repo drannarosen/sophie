@@ -21,7 +21,7 @@ describe("indexAccumulator figures (cross-chapter)", () => {
 
   // T31
   test("addFigureUsages throws on F3 (multiple canonical for same name across chapters)", () => {
-    indexAccumulator.addFigureUsages([
+    indexAccumulator.addFigureUsages("u", "reading", [
       fu({
         name: "decoder-ring",
         unit: "fig-a",
@@ -31,7 +31,7 @@ describe("indexAccumulator figures (cross-chapter)", () => {
     ]);
 
     expect(() =>
-      indexAccumulator.addFigureUsages([
+      indexAccumulator.addFigureUsages("u", "reading", [
         fu({
           name: "decoder-ring",
           unit: "fig-b",
@@ -42,7 +42,7 @@ describe("indexAccumulator figures (cross-chapter)", () => {
     ).toThrow(/F3 invariant/);
     // Error message names BOTH chapter slugs.
     expect(() =>
-      indexAccumulator.addFigureUsages([
+      indexAccumulator.addFigureUsages("u", "reading", [
         fu({
           name: "decoder-ring",
           unit: "fig-b",
@@ -52,7 +52,7 @@ describe("indexAccumulator figures (cross-chapter)", () => {
       ])
     ).toThrow(/fig-a/);
     expect(() =>
-      indexAccumulator.addFigureUsages([
+      indexAccumulator.addFigureUsages("u", "reading", [
         fu({
           name: "decoder-ring",
           unit: "fig-b",
@@ -66,7 +66,7 @@ describe("indexAccumulator figures (cross-chapter)", () => {
   test("addFigureUsages detects multiple canonical within a SINGLE batch", () => {
     // Both entries in the same call, both canonical, different chapters.
     expect(() =>
-      indexAccumulator.addFigureUsages([
+      indexAccumulator.addFigureUsages("u", "reading", [
         fu({
           name: "spectrum",
           unit: "fig-batch-a",
@@ -84,7 +84,7 @@ describe("indexAccumulator figures (cross-chapter)", () => {
   });
 
   test("addFigureUsages allows multi-chapter usages when only ONE is canonical", () => {
-    indexAccumulator.addFigureUsages([
+    indexAccumulator.addFigureUsages("u", "reading", [
       fu({
         name: "hr-diagram",
         unit: "fig-ok-a",
@@ -93,7 +93,7 @@ describe("indexAccumulator figures (cross-chapter)", () => {
       }),
     ]);
     expect(() =>
-      indexAccumulator.addFigureUsages([
+      indexAccumulator.addFigureUsages("u", "reading", [
         fu({
           name: "hr-diagram",
           unit: "fig-ok-b",
@@ -111,7 +111,7 @@ describe("indexAccumulator figures (cross-chapter)", () => {
 
   test("addFigureUsages validates the whole batch BEFORE mutating (canonical-collision in entry 2 leaves entry 1 unwritten)", () => {
     // Seed: chapter "fig-pre-a" has a canonical usage of "x".
-    indexAccumulator.addFigureUsages([
+    indexAccumulator.addFigureUsages("u", "reading", [
       fu({
         name: "x",
         unit: "fig-pre-a",
@@ -123,7 +123,7 @@ describe("indexAccumulator figures (cross-chapter)", () => {
     // Batch: entry 1 is a fresh non-colliding usage; entry 2 collides
     // canonically. The whole batch must throw with entry 1 unwritten.
     expect(() =>
-      indexAccumulator.addFigureUsages([
+      indexAccumulator.addFigureUsages("u", "reading", [
         fu({
           name: "fresh-fig",
           unit: "fig-pre-b",
@@ -146,7 +146,7 @@ describe("indexAccumulator figures (cross-chapter)", () => {
   });
 
   test('two <Figure name="X"> in one chapter produce two distinct usages (no clobber)', () => {
-    indexAccumulator.addFigureUsages([
+    indexAccumulator.addFigureUsages("u", "reading", [
       fu({
         name: "hr-diagram",
         unit: "ch-fig-dupe",
@@ -174,8 +174,8 @@ describe("indexAccumulator figures (cross-chapter)", () => {
   });
 
   // T32
-  test("clearUnit removes figureUsages for that chapter; other chapters survive", () => {
-    indexAccumulator.addFigureUsages([
+  test("clearUnitArtifact removes figureUsages for that chapter; other chapters survive", () => {
+    indexAccumulator.addFigureUsages("u", "reading", [
       fu({
         name: "fig-a",
         unit: "fig-clr-a",
@@ -190,7 +190,7 @@ describe("indexAccumulator figures (cross-chapter)", () => {
       }),
     ]);
 
-    indexAccumulator.clearUnit("fig-clr-a");
+    indexAccumulator.clearUnitArtifact("fig-clr-a", "reading");
 
     const index = indexAccumulator.asPedagogyIndex();
     expect(
@@ -202,7 +202,7 @@ describe("indexAccumulator figures (cross-chapter)", () => {
   });
 
   test("asPedagogyIndex returns populated figureUsages (was empty `[]` in earlier PRs)", () => {
-    indexAccumulator.addFigureUsages([
+    indexAccumulator.addFigureUsages("u", "reading", [
       fu({
         name: "fig-1",
         unit: "fig-ap-a",
@@ -225,7 +225,7 @@ describe("indexAccumulator figures (cross-chapter)", () => {
   });
 
   test("asPedagogyIndex leaves figureRegistry as [] (extractor never populates it; SSR merge does)", () => {
-    indexAccumulator.addFigureUsages([
+    indexAccumulator.addFigureUsages("u", "reading", [
       fu({
         name: "anything",
         unit: "fig-reg-a",
@@ -272,7 +272,7 @@ describe("indexAccumulator setFigureRegistry / figureRegistry", () => {
     expect(indexAccumulator.asPedagogyIndex().figureRegistry).toEqual([entryC]);
   });
 
-  test("clearUnit does NOT touch figureRegistry (consumer-global, not per-chapter)", () => {
+  test("clearUnitArtifact does NOT touch figureRegistry (consumer-global, not per-chapter)", () => {
     const entry: FigureRegistryEntry = {
       name: "clr-fr-x",
       src: "/x.png",
@@ -280,7 +280,7 @@ describe("indexAccumulator setFigureRegistry / figureRegistry", () => {
     };
     indexAccumulator.setFigureRegistry([entry]);
 
-    indexAccumulator.clearUnit("some-chapter");
+    indexAccumulator.clearUnitArtifact("some-chapter", "reading");
     expect(indexAccumulator.asPedagogyIndex().figureRegistry).toEqual([entry]);
   });
 });

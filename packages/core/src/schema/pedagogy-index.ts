@@ -12,6 +12,7 @@ import {
   EquationEntrySchema,
   FigureRegistryEntrySchema,
   FigureUsageEntrySchema,
+  FormativeEntrySchema,
   InlineRefUsageEntrySchema,
   KeyInsightEntrySchema,
   MisconceptionEntrySchema,
@@ -49,6 +50,7 @@ import {
  * | OMI flow         | `omi-`  | id > `omi-${slug(concept)}` > auto: `omi-${counter}`      |
  * | Chapter          | `ch-`   | passthrough chapter slug                                  |
  * | Objective        | `lo-`   | passthrough author id                                     |
+ * | Formative        | `form-` | id (slugified) > auto: `form-${counter}` (ADR 0073 A1)    |
  * | Retrieval prompt | `rp-`   | auto: `rp-${counter}` (Wedge B1)                          |
  * | Spaced review    | `sp-`   | auto: `sp-${counter}` (Wedge B1)                          |
  * | Skill review     | `sk-`   | auto: `sk-${counter}` (Wedge B1)                          |
@@ -107,6 +109,15 @@ export const PedagogyIndexSchema = z.object({
    * authored before the WS B+D extractor shipped keep working.
    */
   workedExamples: z.array(WorkedExampleEntrySchema).readonly().default([]),
+  /**
+   * Per-unit formative-assessment callsites (ADR 0073 Amendment 1).
+   * One entry per `<QuickCheck>` / `<MCQ>` / `<MultiSelect>` /
+   * `<FillBlank>` / `<NumericQuestion>` / `<PracticeProblem>`. Populated
+   * by `extractFormative`; consumed by audit invariants AS-1..AS-5.
+   * Defaults to `[]` so consumer apps authored before the formative
+   * extractor shipped keep working.
+   */
+  formatives: z.array(FormativeEntrySchema).readonly().default([]),
   /** Per-unit learning objectives, populated by the extractor. */
   objectives: z.array(ObjectiveEntrySchema).readonly(),
   /** Per-unit inline-ref callsites — populated by the extractor for the audit pass. */

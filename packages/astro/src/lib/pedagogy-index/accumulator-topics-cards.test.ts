@@ -78,10 +78,10 @@ describe("indexAccumulator topics + cards (registry-sourced per ADR 0079)", () =
     expect(index.cards.map((c) => c.id)).toEqual(["power-laws"]);
   });
 
-  test("clearUnit does NOT touch topics or cards (registry-sourced)", () => {
+  test("clearUnitArtifact does NOT touch topics or cards (registry-sourced)", () => {
     indexAccumulator.addTopic(topic());
     indexAccumulator.addCards([card()]);
-    indexAccumulator.clearUnit("any-unit");
+    indexAccumulator.clearUnitArtifact("any-unit", "reading");
     const index = indexAccumulator.asPedagogyIndex();
     expect(index.topics).toHaveLength(1);
     expect(index.cards).toHaveLength(1);

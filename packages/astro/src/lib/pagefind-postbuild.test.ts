@@ -63,7 +63,7 @@ describe("buildPagefindIndex (Layer 1.6)", () => {
         status: "stable",
       },
     ]);
-    indexAccumulator.addDefinitions([
+    indexAccumulator.addDefinitions("u", "reading", [
       {
         term: "luminosity",
         slug: "luminosity",
@@ -80,7 +80,7 @@ describe("buildPagefindIndex (Layer 1.6)", () => {
         symbols: ["L", "R", "T"],
       },
     ]);
-    indexAccumulator.addEquationCitations([
+    indexAccumulator.addEquationCitations("u", "reading", [
       {
         unit: "ch",
         refId: "stefan-boltzmann",
@@ -88,7 +88,7 @@ describe("buildPagefindIndex (Layer 1.6)", () => {
         number: 1,
       },
     ]);
-    indexAccumulator.addKeyInsights([
+    indexAccumulator.addKeyInsights("u", "reading", [
       {
         body: "Distance hides itself.",
         unit: "ch",
@@ -96,7 +96,7 @@ describe("buildPagefindIndex (Layer 1.6)", () => {
         slug: "ch-ki-1",
       },
     ]);
-    indexAccumulator.addMisconceptions([
+    indexAccumulator.addMisconceptions("u", "reading", [
       {
         body: "A common confusion: brighter is hotter.",
         unit: "ch",
@@ -106,7 +106,7 @@ describe("buildPagefindIndex (Layer 1.6)", () => {
         slug: "brighter-hotter",
       },
     ]);
-    indexAccumulator.addObjectives([
+    indexAccumulator.addObjectives("u", "reading", [
       {
         id: "obj-1",
         anchor: "lo-obj-1",
@@ -185,7 +185,7 @@ describe("pedagogy-index.json artifact (ADR 0045)", () => {
         status: "stable",
       },
     ]);
-    indexAccumulator.addDefinitions([
+    indexAccumulator.addDefinitions("u", "reading", [
       {
         term: "luminosity",
         slug: "luminosity",

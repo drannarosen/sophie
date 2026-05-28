@@ -51,7 +51,7 @@ afterEach(() => {
 
 describe("CourseInferences — axe-core a11y", () => {
   test("renders with OMIFlow inferences — zero violations", async () => {
-    indexAccumulator.addOMIFlows([
+    indexAccumulator.addOMIFlows("u", "reading", [
       {
         unit: "ch-spectra",
         anchor: "spectrum-of-the-sun",
@@ -103,7 +103,7 @@ describe("CourseInferences — axe-core a11y", () => {
     // confirm that wrapping the consumer in the production `<main>` parent
     // does NOT produce a duplicate-main violation. The shell now emits
     // `<section aria-labelledby>`, so this composition is clean.
-    indexAccumulator.addOMIFlows([
+    indexAccumulator.addOMIFlows("u", "reading", [
       {
         unit: "ch-spectra",
         anchor: "spectrum-of-the-sun",

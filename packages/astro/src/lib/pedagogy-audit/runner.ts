@@ -6,6 +6,7 @@ import { checkChapterStatus } from "./invariants/chapter-status.ts";
 import { checkChapterTitleCollisions } from "./invariants/chapter-title-collisions.ts";
 import { checkEquationRegistry } from "./invariants/equation-registry.ts";
 import { passthroughExtractorFindings } from "./invariants/extractor-findings.ts";
+import { checkFormative } from "./invariants/formative.ts";
 import { checkInlineRefs } from "./invariants/inline-refs.ts";
 import { checkInterventions } from "./invariants/interventions.ts";
 import {
@@ -123,6 +124,12 @@ export function runPedagogyAudit(
   // emits WE-3 WARNINGs for unknown JSX children via
   // `passthroughExtractorFindings`.
   checkWorkedExamples(index, sink);
+
+  // ADR 0073 Amendment 1 — AS-2 (no Solution WARN) + AS-3 (fill-blank
+  // zero-blank WARN). AS-1 / AS-4 / AS-5 ERRORs are pushed by the
+  // formative extractor at extract-time and surface via
+  // `passthroughExtractorFindings` above.
+  checkFormative(index, sink);
 
   // Wedge B1 retrieval-family invariants (PRA-1 prereq activation,
   // RET-1 retrieval coverage, SR-1 SpacedReview ref validity).

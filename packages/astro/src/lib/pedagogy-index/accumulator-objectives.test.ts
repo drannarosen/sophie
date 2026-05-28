@@ -19,10 +19,10 @@ describe("indexAccumulator objectives (cross-chapter)", () => {
   });
 
   test("addObjectives keyed by chapter+anchor; two chapters can each declare 'lo-1'", () => {
-    indexAccumulator.addObjectives([
+    indexAccumulator.addObjectives("u", "reading", [
       objective({ id: "lo-1", unit: "obj-share-a", anchor: "lo-lo-1" }),
     ]);
-    indexAccumulator.addObjectives([
+    indexAccumulator.addObjectives("u", "reading", [
       objective({ id: "lo-1", unit: "obj-share-b", anchor: "lo-lo-1" }),
     ]);
 
@@ -34,7 +34,7 @@ describe("indexAccumulator objectives (cross-chapter)", () => {
   });
 
   test("addObjectives — multiple objectives within one chapter coexist", () => {
-    indexAccumulator.addObjectives([
+    indexAccumulator.addObjectives("u", "reading", [
       objective({ id: "lo-1", unit: "obj-multi", anchor: "lo-lo-1" }),
       objective({ id: "lo-2", unit: "obj-multi", anchor: "lo-lo-2" }),
     ]);
@@ -45,15 +45,15 @@ describe("indexAccumulator objectives (cross-chapter)", () => {
     expect(inCh.map((o) => o.id).sort()).toEqual(["lo-1", "lo-2"]);
   });
 
-  test("clearUnit removes objectives for the target chapter; other chapters survive", () => {
-    indexAccumulator.addObjectives([
+  test("clearUnitArtifact removes objectives for the target chapter; other chapters survive", () => {
+    indexAccumulator.addObjectives("u", "reading", [
       objective({ id: "lo-a", unit: "obj-clr-a", anchor: "lo-lo-a" }),
     ]);
-    indexAccumulator.addObjectives([
+    indexAccumulator.addObjectives("u", "reading", [
       objective({ id: "lo-b", unit: "obj-clr-b", anchor: "lo-lo-b" }),
     ]);
 
-    indexAccumulator.clearUnit("obj-clr-a");
+    indexAccumulator.clearUnitArtifact("obj-clr-a", "reading");
 
     const index = indexAccumulator.asPedagogyIndex();
     expect(index.objectives.filter((o) => o.unit === "obj-clr-a")).toHaveLength(

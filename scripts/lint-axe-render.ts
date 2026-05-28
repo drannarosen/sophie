@@ -49,6 +49,45 @@
  *                               check. See `ParameterCursor.tsx` for the
  *                               component shape. Audit § "Judgment calls"
  *                               #2 (defensible-probe carve-out, R11 wave).
+ *   - `components/MCQ/MCQController.test.tsx`
+ *                               null-render side-effect controller over the
+ *                               transform-emitted static MCQ DOM (a
+ *                               `<fieldset>` of native radios produced by
+ *                               sophieCompoundExpandRemarkPlugin, not by
+ *                               React). The controller renders `null`; the
+ *                               test asserts useInteractive persistence on a
+ *                               hand-written DOM fixture, so there is no
+ *                               component-owned a11y surface to scan. a11y of
+ *                               the emitted markup is verified at the build
+ *                               level (native `<input type="radio" name>`
+ *                               gives keyboard + roving focus for free).
+ *                               Mirrors the ParameterCursor carve-out
+ *                               (Task 3, compound-island transform).
+ *   - `components/MultiSelect/MultiSelectController.test.tsx`
+ *                               null-render side-effect controller over the
+ *                               transform-emitted static MultiSelect DOM (a
+ *                               `<fieldset>` of native checkboxes produced by
+ *                               sophieCompoundExpandRemarkPlugin, not by
+ *                               React). Same carve-out as MCQController
+ *                               (Task 4, compound-island transform).
+ *   - `components/FillBlank/FillBlankController.test.tsx`
+ *                               null-render side-effect controller over the
+ *                               transform-emitted static FillBlank DOM (prompt
+ *                               prose with inline `<input data-fb-slot>` fields
+ *                               produced by sophieCompoundExpandRemarkPlugin,
+ *                               not by React). Same carve-out as MCQController
+ *                               (Task 5, compound-island transform).
+ *   - `components/Tabs/TabsController.test.tsx`
+ *                               null-render side-effect controller over the
+ *                               transform-emitted static ARIA-tabs DOM (a
+ *                               <div data-sophie-tabs> of <button role="tab">
+ *                               triggers + sibling <div role="tabpanel">
+ *                               bodies produced by
+ *                               sophieCompoundExpandRemarkPlugin, not by
+ *                               React). Same carve-out as MCQController
+ *                               (Task 6, compound-island transform). a11y of
+ *                               the emitted ARIA-tabs markup is verified at
+ *                               the build level (axe on the rendered page).
  *
  * Exit codes:
  *
@@ -104,6 +143,35 @@ function isExcluded(path: string): boolean {
   // state, not rendered DOM. No DOM a11y surface to check.
   // See packages/components/src/interactive/ParameterCursor.tsx.
   if (path.endsWith("/interactive/ParameterCursor.test.tsx")) return true;
+  // MCQController is a null-render side-effect island over the
+  // transform-emitted static MCQ DOM (native radios, not React); the
+  // test asserts useInteractive persistence on a hand-written fixture,
+  // so there's no component-owned a11y surface to scan. a11y of the
+  // emitted markup is verified at the build level. Mirrors
+  // ParameterCursor. See packages/components/src/components/MCQ/MCQController.tsx.
+  if (path.endsWith("/components/MCQ/MCQController.test.tsx")) return true;
+  // MultiSelectController — same carve-out as MCQController: a null-render
+  // side-effect island over the transform-emitted static MultiSelect DOM
+  // (native checkboxes, not React). The test asserts useInteractive
+  // persistence on a hand-written fixture; no component-owned a11y surface.
+  // See packages/components/src/components/MultiSelect/MultiSelectController.tsx.
+  if (path.endsWith("/components/MultiSelect/MultiSelectController.test.tsx"))
+    return true;
+  // FillBlankController — same carve-out: a null-render side-effect island
+  // over the transform-emitted static FillBlank DOM (prompt prose with
+  // inline `<input data-fb-slot>` fields, not React). The test asserts
+  // useInteractive persistence on a hand-written fixture; no
+  // component-owned a11y surface. See
+  // packages/components/src/components/FillBlank/FillBlankController.tsx.
+  if (path.endsWith("/components/FillBlank/FillBlankController.test.tsx"))
+    return true;
+  // TabsController — same carve-out: a null-render side-effect island over
+  // the transform-emitted static ARIA-tabs DOM (<div data-sophie-tabs> of
+  // native <button role="tab"> triggers + sibling <div role="tabpanel">
+  // bodies, not React). The test asserts click + keyboard activation on a
+  // hand-written fixture; no component-owned a11y surface. See
+  // packages/components/src/components/Tabs/TabsController.tsx.
+  if (path.endsWith("/components/Tabs/TabsController.test.tsx")) return true;
   return false;
 }
 

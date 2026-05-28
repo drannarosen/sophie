@@ -19,6 +19,7 @@ function emptyIndex(): PedagogyIndex {
     deepDives: [],
     omiFlows: [],
     workedExamples: [],
+    formatives: [],
     objectives: [],
     inlineRefUsages: [],
     multiReps: [],

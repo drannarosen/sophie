@@ -94,7 +94,7 @@ describe("CourseObjectives — axe-core a11y", () => {
         status: "stable",
       },
     ]);
-    indexAccumulator.addObjectives([
+    indexAccumulator.addObjectives("u", "reading", [
       {
         id: "lum-temp",
         verb: "Recognize",
@@ -168,7 +168,7 @@ describe("CourseObjectives — axe-core a11y", () => {
         status: "stable",
       },
     ]);
-    indexAccumulator.addObjectives([
+    indexAccumulator.addObjectives("u", "reading", [
       {
         id: "lum-temp",
         verb: "Recognize",

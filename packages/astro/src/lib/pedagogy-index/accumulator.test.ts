@@ -31,7 +31,7 @@ describe("asPedagogyIndex (W2/D3 collections)", () => {
         status: "stable",
       },
     ]);
-    indexAccumulator.addObjectives([
+    indexAccumulator.addObjectives("u", "reading", [
       {
         id: "lo-1",
         verb: "Recognize",
@@ -40,7 +40,7 @@ describe("asPedagogyIndex (W2/D3 collections)", () => {
         anchor: "lo-lo-1",
       },
     ]);
-    indexAccumulator.addInlineRefUsages([
+    indexAccumulator.addInlineRefUsages("u", "reading", [
       { kind: "chapter-ref", refKey: "ch-x", unit: "ch-y" },
     ]);
 

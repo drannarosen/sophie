@@ -43,11 +43,11 @@ describe("indexAccumulator equations (registry-sourced per ADR 0060)", () => {
     expect(index.equations).toEqual([]);
   });
 
-  test("clearUnit does NOT touch the registry equations slot", () => {
+  test("clearUnitArtifact does NOT touch the registry equations slot", () => {
     // Post-ADR-0060: equations are registry-global; chapter clears only
     // touch chapter-keyed collections + equationCitations.
     indexAccumulator.addEquations([makeEq({ id: "wiens-law" })]);
-    indexAccumulator.clearUnit("any-chapter");
+    indexAccumulator.clearUnitArtifact("any-chapter", "reading");
     const index = indexAccumulator.asPedagogyIndex();
     expect(index.equations).toHaveLength(1);
   });
@@ -65,18 +65,18 @@ describe("indexAccumulator equationCitations (per-chapter)", () => {
   });
 
   test("addEquationCitations appends citations from any chapter", () => {
-    indexAccumulator.addEquationCitations([
+    indexAccumulator.addEquationCitations("u", "reading", [
       makeCitation({ unit: "ch-a", refId: "wiens-law" }),
     ]);
-    indexAccumulator.addEquationCitations([
+    indexAccumulator.addEquationCitations("u", "reading", [
       makeCitation({ unit: "ch-b", refId: "stefan-boltzmann", number: 1 }),
     ]);
     const index = indexAccumulator.asPedagogyIndex();
     expect(index.equationCitations).toHaveLength(2);
   });
 
-  test("clearUnitCitations removes only that chapter's citations", () => {
-    indexAccumulator.addEquationCitations([
+  test("clearUnitArtifact removes only that (unit, artifact)'s citations", () => {
+    indexAccumulator.addEquationCitations("u", "reading", [
       makeCitation({ unit: "ch-a", refId: "alpha" }),
       makeCitation({
         unit: "ch-a",
@@ -85,7 +85,7 @@ describe("indexAccumulator equationCitations (per-chapter)", () => {
         anchor: "beta-citation-2",
       }),
     ]);
-    indexAccumulator.addEquationCitations([
+    indexAccumulator.addEquationCitations("u", "reading", [
       makeCitation({
         unit: "ch-b",
         refId: "gamma",
@@ -93,14 +93,14 @@ describe("indexAccumulator equationCitations (per-chapter)", () => {
       }),
     ]);
 
-    indexAccumulator.clearUnitCitations("ch-a");
+    indexAccumulator.clearUnitArtifact("ch-a", "reading");
     const index = indexAccumulator.asPedagogyIndex();
     expect(index.equationCitations).toHaveLength(1);
     expect(index.equationCitations[0]?.unit).toBe("ch-b");
   });
 
-  test("clearUnit also clears that chapter's citations", () => {
-    indexAccumulator.addEquationCitations([
+  test("clearUnitArtifact also clears that artifact's citations", () => {
+    indexAccumulator.addEquationCitations("u", "reading", [
       makeCitation({ unit: "ch-a", refId: "alpha" }),
       makeCitation({
         unit: "ch-b",
@@ -108,7 +108,7 @@ describe("indexAccumulator equationCitations (per-chapter)", () => {
         anchor: "beta-citation-1",
       }),
     ]);
-    indexAccumulator.clearUnit("ch-a");
+    indexAccumulator.clearUnitArtifact("ch-a", "reading");
     const index = indexAccumulator.asPedagogyIndex();
     expect(
       index.equationCitations.filter((c) => c.unit === "ch-a")

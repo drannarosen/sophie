@@ -1,8 +1,6 @@
-export { tabsContract } from "./Tabs.contract.ts";
+export { tabsControllerContract } from "./TabsController.contract.ts";
 export {
-  type TabProps,
-  TabPropsSchema,
-  type TabsProps,
-  TabsPropsSchema,
-} from "./Tabs.schema.ts";
-export { Tab, Tabs } from "./Tabs.tsx";
+  type TabsControllerProps,
+  TabsControllerPropsSchema,
+} from "./TabsController.schema.ts";
+export { TabsController } from "./TabsController.tsx";

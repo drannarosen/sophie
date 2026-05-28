@@ -1,3 +1,4 @@
+import { slugify } from "@sophie/core/schema";
 import { toHtml } from "hast-util-to-html";
 import { toHast } from "mdast-util-to-hast";
 import rehypeKatex from "rehype-katex";
@@ -271,6 +272,133 @@ export function renderChildrenToHtml(children: ReadonlyArray<unknown>): string {
   // every downstream consumer.
   (rehypeKatex() as (tree: typeof hast) => void)(hast);
   return toHtml(hast);
+}
+
+/**
+ * Concatenate the plain-text content of an mdast subtree (the
+ * `<X.Prompt>` body for the formative extractor, ADR 0073 A1). Walks
+ * `text` + `inlineCode` descendants — the two leaf node types that
+ * carry author-visible characters — and joins their `.value`, then
+ * trims. Math, JSX, and other structural nodes contribute nothing
+ * (the index stores a searchable text summary, not rendered HTML, per
+ * ADR 0038's "data, not HTML" principle).
+ */
+export function extractPlainText(node: unknown): string {
+  const parts: string[] = [];
+  const walk = (n: unknown): void => {
+    if (!n || typeof n !== "object") return;
+    const m = n as { type?: string; value?: unknown; children?: unknown };
+    if (
+      (m.type === "text" || m.type === "inlineCode") &&
+      typeof m.value === "string"
+    ) {
+      parts.push(m.value);
+    }
+    if (Array.isArray(m.children)) {
+      for (const child of m.children) walk(child);
+    }
+  };
+  walk(node);
+  return parts.join("").trim();
+}
+
+/**
+ * Like `extractPlainText`, but ALSO concatenates the LaTeX `.value` of
+ * `math` (display) and `inlineMath` nodes. Used for slug derivation,
+ * where a math-only choice (`$n=2\to n=1$`) must produce a non-empty,
+ * distinct slug — `extractPlainText` is deliberately math-blind (it
+ * builds the index's searchable prompt summary per ADR 0038, where raw
+ * LaTeX is noise), so a separate walker is the correct shape here.
+ *
+ * Walks the four author-character-bearing leaf types: `text`,
+ * `inlineCode`, `math`, `inlineMath`. Other structural nodes
+ * contribute nothing.
+ */
+export function extractSlugText(node: unknown): string {
+  const parts: string[] = [];
+  const walk = (n: unknown): void => {
+    if (!n || typeof n !== "object") return;
+    const m = n as { type?: string; value?: unknown; children?: unknown };
+    if (
+      (m.type === "text" ||
+        m.type === "inlineCode" ||
+        m.type === "math" ||
+        m.type === "inlineMath") &&
+      typeof m.value === "string"
+    ) {
+      parts.push(m.value);
+    }
+    if (Array.isArray(m.children)) {
+      for (const child of m.children) walk(child);
+    }
+  };
+  walk(node);
+  return parts.join("").trim();
+}
+
+/**
+ * Slug for a choice element (MCQ / MultiSelect): an explicit `id` attr
+ * wins; otherwise the slug of the choice's math-aware text. Shared by
+ * the formative extractor (`collectChoices`) and the compound-island
+ * transform (`compound-expand.ts`) so both derive identical slugs —
+ * the extractor's index anchor and the transform's `<input value>` /
+ * `data-correct` attribution must agree. Math-only choices slug via
+ * `extractSlugText` (not `extractPlainText`, which would return `""`
+ * and collide).
+ */
+export function choiceSlug(node: {
+  attributes?: ReadonlyArray<{ type: string; name?: string; value?: unknown }>;
+}): string {
+  const explicit = readStringAttr(
+    node as {
+      attributes?: ReadonlyArray<{
+        type: string;
+        name: string;
+        value: unknown;
+      }>;
+    },
+    "id"
+  );
+  return explicit ?? slugify(extractSlugText(node));
+}
+
+/**
+ * Recursively collect every `<FillBlank.Slot>` node within a
+ * `<FillBlank.Prompt>` subtree, in document order.
+ *
+ * Slots are authored INLINE inside prose, so MDX nests them as
+ * `mdxJsxTextElement` (phrasing content) under a `paragraph` child of
+ * the prompt — they are grandchildren of the prompt, not direct
+ * children, and they are text nodes, not flow nodes. A direct-children
+ * scan (the pre-recursion shape) silently missed them, mis-firing AS-3
+ * on real authored fills. This walker descends the whole subtree and
+ * matches `FillBlank.Slot` regardless of flow-vs-text node type.
+ *
+ * Shared by the formative extractor (`materializeAnswer`'s FillBlank
+ * case) and the compound-island transform (`expandFillBlank`) so both
+ * derive the SAME slot list from the SAME authored shape (R9). Returns
+ * the raw nodes; callers read `id` / `correct` via `readStringAttr`.
+ */
+export function findFillBlankSlots(promptNode: unknown): MdxJsxFlowElement[] {
+  const out: MdxJsxFlowElement[] = [];
+  const walk = (n: unknown): void => {
+    if (!n || typeof n !== "object") return;
+    const m = n as { type?: string; name?: string; children?: unknown };
+    if (
+      (m.type === "mdxJsxFlowElement" || m.type === "mdxJsxTextElement") &&
+      m.name === "FillBlank.Slot"
+    ) {
+      out.push(m as unknown as MdxJsxFlowElement);
+      // A slot is a leaf marker (`<FillBlank.Slot id correct />`); no
+      // need to descend into it.
+      return;
+    }
+    if (Array.isArray(m.children)) {
+      for (const child of m.children) walk(child);
+    }
+  };
+  walk(promptNode);
+  return out;
 }
 
 export function isWhitespaceTextNode(node: unknown): boolean {

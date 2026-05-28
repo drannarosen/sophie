@@ -61,7 +61,7 @@ afterEach(() => {
 
 describe("CourseMisconceptions — axe-core a11y", () => {
   test("renders with misconceptions — zero violations", async () => {
-    indexAccumulator.addMisconceptions([
+    indexAccumulator.addMisconceptions("u", "reading", [
       {
         body: "<p>Hotter stars are not necessarily more luminous.</p>",
         unit: "ch-stellar-properties",
@@ -93,7 +93,7 @@ describe("CourseMisconceptions — axe-core a11y", () => {
     // confirm that wrapping the consumer in the production `<main>` parent
     // does NOT produce a duplicate-main violation. The shell now emits
     // `<section aria-labelledby>`, so this composition is clean.
-    indexAccumulator.addMisconceptions([
+    indexAccumulator.addMisconceptions("u", "reading", [
       {
         body: "<p>Hotter stars are not necessarily more luminous.</p>",
         unit: "ch-stellar-properties",

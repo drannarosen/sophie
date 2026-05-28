@@ -1,0 +1,221 @@
+/* Formative-family global styles — transform-emitted MCQ + MultiSelect
+ * + FillBlank markup.
+ *
+ * `sophieCompoundExpandRemarkPlugin` lowers authored `<MCQ>` /
+ * `<MultiSelect>` into plain native form markup
+ * (`<section data-pedagogy-role="mcq|multi-select">` → `<fieldset>` →
+ * `<label><input type="radio|checkbox">`), and `<FillBlank>` into
+ * `<section data-pedagogy-role="fill-blank">` → prompt prose with inline
+ * `<input data-fb-slot>` fields — all with
+ * NO CSS-Module class names — the structure exists only at MDX-compile
+ * time, never in React, so per-component CSS-Module hashes cannot
+ * attach. These rules therefore target the SEMANTIC structure + data
+ * hooks and must ship UNMANGLED.
+ *
+ * CSS-pipeline note (this is why the file is `.module.css`, not a raw
+ * global `.css`): `@sophie/components` ships styles through ONE bundle,
+ * `dist/styles.css`, built by `scripts/build-css-modules.ts`, which
+ * globs only `*.module.css` files and concatenates them; that bundle is
+ * the single stylesheet `@sophie/astro/<SophieChapter>` side-effect-
+ * imports. A raw `.css` side-effect import breaks Astro's Node ESM
+ * config-loader (documented in build-css-modules.ts §"Why no per-
+ * component side-effect"), and tsup's `external` only passes through
+ * `.module.css(.js)` companions. Wrapping every rule in `:global(...)`
+ * makes postcss-modules emit the selectors verbatim (the same pattern
+ * `KeyEquation.module.css` uses for `:global(.katex-display)`), so the
+ * rules reach the page through the existing pipeline with no new build
+ * step. The vitest config aliases `.module.css.js` → `.module.css`, so
+ * the bundling side-effect import works in unit tests too. ADR 0005. */
+
+:global([data-pedagogy-role="mcq"]) {
+  border-inline-start: 4px solid var(--sophie-brand-teal);
+  border-radius: var(--sophie-radius-md);
+  background: var(--sophie-surface-1);
+  padding: var(--sophie-space-4) var(--sophie-space-4) var(--sophie-space-3);
+  margin-block: var(--sophie-space-4);
+  box-shadow: var(--sophie-shadow-card);
+}
+
+:global([data-pedagogy-role="mcq"] > h3) {
+  margin: 0 0 var(--sophie-space-3);
+  font-size: var(--sophie-text-sm);
+  font-weight: var(--sophie-weight-semibold);
+  color: var(--sophie-brand-teal-text);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+:global([data-pedagogy-role="mcq"] fieldset[role="radiogroup"]) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sophie-space-2);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+:global([data-pedagogy-role="mcq"] label) {
+  display: flex;
+  align-items: center;
+  gap: var(--sophie-space-2);
+  padding: var(--sophie-space-2) var(--sophie-space-3);
+  border-radius: var(--sophie-radius-sm);
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+:global([data-pedagogy-role="mcq"] label:hover) {
+  background: color-mix(in oklch, var(--sophie-brand-teal) 6%, transparent);
+}
+
+:global([data-pedagogy-role="mcq"] input[type="radio"]) {
+  flex-shrink: 0;
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: var(--sophie-brand-teal);
+}
+
+:global([data-pedagogy-role="mcq"] input[type="radio"]:focus-visible) {
+  outline: 2px solid var(--sophie-brand-teal);
+  outline-offset: 2px;
+}
+
+/* NO unconditional correct-answer marker in v1. The `data-correct`
+ * attribute stays on the correct `<input>` (the extractor's source of
+ * truth + a v2 auto-grading/reveal hook), but it is NOT decorated here:
+ * a CSS `::after` checkmark would show the answer to BOTH sighted and
+ * screen-reader users before they answer (it surfaces in the control's
+ * accessible name), and ADR 0073 v1 has no cross-island reveal state to
+ * gate it on. The answer is disclosed by the student opening <Solution>.
+ * Reveal-gated correctness marking is deferred to v2. */
+
+@media (prefers-reduced-motion: reduce) {
+  :global([data-pedagogy-role="mcq"] label) {
+    transition: none;
+  }
+}
+
+/* MultiSelect — same soft-surface + left-accent treatment as MCQ, but
+ * the choices are native `<input type="checkbox">` inside a plain
+ * `<fieldset>` group (no `role="radiogroup"` — multi-select is not
+ * mutually exclusive). data-correct lives on each correct `<input>`
+ * (multiple may be correct); the reveal checkmark decorates every
+ * correct label. */
+:global([data-pedagogy-role="multi-select"]) {
+  border-inline-start: 4px solid var(--sophie-brand-teal);
+  border-radius: var(--sophie-radius-md);
+  background: var(--sophie-surface-1);
+  padding: var(--sophie-space-4) var(--sophie-space-4) var(--sophie-space-3);
+  margin-block: var(--sophie-space-4);
+  box-shadow: var(--sophie-shadow-card);
+}
+
+:global([data-pedagogy-role="multi-select"] > h3) {
+  margin: 0 0 var(--sophie-space-3);
+  font-size: var(--sophie-text-sm);
+  font-weight: var(--sophie-weight-semibold);
+  color: var(--sophie-brand-teal-text);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+:global([data-pedagogy-role="multi-select"] fieldset) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sophie-space-2);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+:global([data-pedagogy-role="multi-select"] label) {
+  display: flex;
+  align-items: center;
+  gap: var(--sophie-space-2);
+  padding: var(--sophie-space-2) var(--sophie-space-3);
+  border-radius: var(--sophie-radius-sm);
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+:global([data-pedagogy-role="multi-select"] label:hover) {
+  background: color-mix(in oklch, var(--sophie-brand-teal) 6%, transparent);
+}
+
+:global([data-pedagogy-role="multi-select"] input[type="checkbox"]) {
+  flex-shrink: 0;
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: var(--sophie-brand-teal);
+}
+
+:global(
+  [data-pedagogy-role="multi-select"]
+  input[type="checkbox"]:focus-visible
+) {
+  outline: 2px solid var(--sophie-brand-teal);
+  outline-offset: 2px;
+}
+
+/* NO unconditional correct-answer marker in v1 (see the MCQ note above):
+ * each correct `<input>` keeps `data-correct` for the extractor + v2, but
+ * no `::after` checkmark — it would leak the answer (visually and in the
+ * accessible name) before the student answers, and v1 has no cross-island
+ * reveal state to gate it on. Reveal-gated marking is deferred to v2. */
+
+@media (prefers-reduced-motion: reduce) {
+  :global([data-pedagogy-role="multi-select"] label) {
+    transition: none;
+  }
+}
+
+/* FillBlank — same soft-surface + left-accent treatment as MCQ /
+ * MultiSelect, but slot-based: the prompt prose is emitted directly into
+ * the section (no fieldset / choices), with each inline
+ * `<input data-fb-slot>` flowing inline as an underlined text field
+ * (ported from the old FillBlank.module.css `.slot` styling). v1 does
+ * not auto-grade and the correct answer is never in the DOM, so there is
+ * no `data-correct` reveal affordance here. */
+:global([data-pedagogy-role="fill-blank"]) {
+  border-inline-start: 4px solid var(--sophie-brand-teal);
+  border-radius: var(--sophie-radius-md);
+  background: var(--sophie-surface-1);
+  padding: var(--sophie-space-4) var(--sophie-space-4) var(--sophie-space-3);
+  margin-block: var(--sophie-space-4);
+  box-shadow: var(--sophie-shadow-card);
+  line-height: var(--sophie-leading-prose);
+}
+
+:global([data-pedagogy-role="fill-blank"] > h3) {
+  margin: 0 0 var(--sophie-space-3);
+  font-size: var(--sophie-text-sm);
+  font-weight: var(--sophie-weight-semibold);
+  color: var(--sophie-brand-teal-text);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+:global([data-pedagogy-role="fill-blank"] input[data-fb-slot]) {
+  display: inline-block;
+  width: 8ch;
+  margin-inline: 0.15em;
+  padding: 0 var(--sophie-space-1);
+  font: inherit;
+  color: var(--sophie-text);
+  background: var(--sophie-surface-2);
+  border: 0;
+  border-block-end: 2px solid var(--sophie-text-muted);
+  border-radius: var(--sophie-radius-sm) var(--sophie-radius-sm) 0 0;
+  text-align: center;
+}
+
+:global([data-pedagogy-role="fill-blank"] input[data-fb-slot]:focus-visible) {
+  outline: none;
+  border-block-end-color: var(--sophie-brand-teal);
+  background: color-mix(in oklch, var(--sophie-brand-teal) 8%, transparent);
+}
+
+:global([data-pedagogy-role="fill-blank"] input[data-fb-slot]:disabled) {
+  cursor: progress;
+  opacity: 0.6;
+}

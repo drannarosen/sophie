@@ -19,7 +19,7 @@ describe("indexAccumulator omiFlows (cross-chapter)", () => {
   });
 
   test("addOMIFlows populates collection accessible via asPedagogyIndex", () => {
-    indexAccumulator.addOMIFlows([
+    indexAccumulator.addOMIFlows("u", "reading", [
       omi({ unit: "omi-pop-a", anchor: "alpha" }),
       omi({ unit: "omi-pop-b", anchor: "beta" }),
     ]);
@@ -32,25 +32,33 @@ describe("indexAccumulator omiFlows (cross-chapter)", () => {
   });
 
   test("OF — throws on cross-chapter explicit-id anchor collision", () => {
-    indexAccumulator.addOMIFlows([omi({ unit: "ch-a", anchor: "shared" })]);
+    indexAccumulator.addOMIFlows("u", "reading", [
+      omi({ unit: "ch-a", anchor: "shared" }),
+    ]);
     expect(() =>
-      indexAccumulator.addOMIFlows([omi({ unit: "ch-b", anchor: "shared" })])
+      indexAccumulator.addOMIFlows("u", "reading", [
+        omi({ unit: "ch-b", anchor: "shared" }),
+      ])
     ).toThrow(/cross-chapter.*OMIFlow/i);
   });
 
   test("OF — auto-anchors (omi-N) do NOT trigger cross-chapter collision", () => {
-    indexAccumulator.addOMIFlows([omi({ unit: "auto-a", anchor: "omi-1" })]);
+    indexAccumulator.addOMIFlows("u", "reading", [
+      omi({ unit: "auto-a", anchor: "omi-1" }),
+    ]);
     expect(() =>
-      indexAccumulator.addOMIFlows([omi({ unit: "auto-b", anchor: "omi-1" })])
+      indexAccumulator.addOMIFlows("u", "reading", [
+        omi({ unit: "auto-b", anchor: "omi-1" }),
+      ])
     ).not.toThrow();
   });
 
-  test("clearUnit drops OMIFlow entries for the chapter", () => {
-    indexAccumulator.addOMIFlows([
+  test("clearUnitArtifact drops OMIFlow entries for the chapter", () => {
+    indexAccumulator.addOMIFlows("u", "reading", [
       omi({ unit: "clr-a", anchor: "a-entry" }),
       omi({ unit: "clr-b", anchor: "b-entry" }),
     ]);
-    indexAccumulator.clearUnit("clr-a");
+    indexAccumulator.clearUnitArtifact("clr-a", "reading");
     const index = indexAccumulator.asPedagogyIndex();
     expect(index.omiFlows.filter((e) => e.unit === "clr-a")).toHaveLength(0);
     expect(index.omiFlows.filter((e) => e.unit === "clr-b")).toHaveLength(1);

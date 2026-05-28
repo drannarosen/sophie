@@ -149,6 +149,12 @@ export {
   FigureRefPropsSchema,
   figureRefContract,
 } from "./components/FigureRef/index.ts";
+export type { FillBlankControllerProps } from "./components/FillBlank/index.ts";
+export {
+  FillBlankController,
+  FillBlankControllerPropsSchema,
+  fillBlankControllerContract,
+} from "./components/FillBlank/index.ts";
 export type { GlossaryTermProps } from "./components/GlossaryTerm/index.ts";
 export {
   GlossaryTerm,
@@ -198,12 +204,36 @@ export {
   LearningObjectivesPropsSchema,
   learningObjectivesContract,
 } from "./components/LearningObjectives/index.ts";
+export type { MCQControllerProps } from "./components/MCQ/index.ts";
+export {
+  MCQController,
+  MCQControllerPropsSchema,
+  mcqControllerContract,
+} from "./components/MCQ/index.ts";
 export type { MultiRepProps } from "./components/MultiRep/index.ts";
 export {
   MultiRep,
   MultiRepPropsSchema,
   multiRepContract,
 } from "./components/MultiRep/index.ts";
+export type { MultiSelectControllerProps } from "./components/MultiSelect/index.ts";
+export {
+  MultiSelectController,
+  MultiSelectControllerPropsSchema,
+  multiSelectControllerContract,
+} from "./components/MultiSelect/index.ts";
+export type {
+  NumericQuestionAnswerProps,
+  NumericQuestionPromptProps,
+  NumericQuestionProps,
+} from "./components/NumericQuestion/index.ts";
+export {
+  NumericQuestion,
+  NumericQuestionAnswerPropsSchema,
+  NumericQuestionPromptPropsSchema,
+  NumericQuestionPropsSchema,
+  numericQuestionContract,
+} from "./components/NumericQuestion/index.ts";
 export type { ObjectiveProps } from "./components/Objective/index.ts";
 export {
   Objective,
@@ -261,6 +291,16 @@ export {
   PrereqsList,
   type PrereqsListProps,
 } from "./components/PrereqsList/index.ts";
+export type {
+  QuickCheckPromptProps,
+  QuickCheckProps,
+} from "./components/QuickCheck/index.ts";
+export {
+  QuickCheck,
+  QuickCheckPromptPropsSchema,
+  QuickCheckPropsSchema,
+  quickCheckContract,
+} from "./components/QuickCheck/index.ts";
 export { Reading, type ReadingProps } from "./components/Reading/index.ts";
 export type { ReflectionProps } from "./components/Reflection/index.ts";
 export {
@@ -316,17 +356,12 @@ export {
   SpacedReviewPropsSchema,
   spacedReviewContract,
 } from "./components/SpacedReview/index.ts";
+export type { TabsControllerProps } from "./components/Tabs/index.ts";
 export {
-  Tab,
-  TabPropsSchema,
-  Tabs,
-  TabsPropsSchema,
-  tabsContract,
+  TabsController,
+  TabsControllerPropsSchema,
+  tabsControllerContract,
 } from "./components/Tabs/index.ts";
-export type {
-  TabProps,
-  TabsProps,
-} from "./components/Tabs/Tabs.schema.ts";
 export type { UnitsProps } from "./components/Units/index.ts";
 export {
   Units,

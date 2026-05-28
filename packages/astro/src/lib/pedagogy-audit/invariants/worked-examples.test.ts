@@ -24,6 +24,7 @@ function indexWith(workedExamples: WorkedExampleEntry[]): PedagogyIndex {
     deepDives: [],
     omiFlows: [],
     workedExamples,
+    formatives: [],
     objectives: [],
     inlineRefUsages: [],
     multiReps: [],
