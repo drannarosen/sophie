@@ -32,6 +32,29 @@ describe("EquationConstantSchema", () => {
     ).toBe(true);
   });
 
+  it("accepts optional build-time prerendered html fields (ADR 0090)", () => {
+    expect(
+      EquationConstantSchema.safeParse({
+        symbol: "b",
+        value: "0.29",
+        unit: "cm·K",
+        symbol_html: '<span class="katex">b</span>',
+        value_html: '<span class="katex">0.29</span>',
+        unit_html: '<span class="katex">cm·K</span>',
+      }).success
+    ).toBe(true);
+  });
+
+  it("rejects empty prerendered html fields", () => {
+    expect(
+      EquationConstantSchema.safeParse({
+        symbol: "b",
+        value: "0.29",
+        symbol_html: "",
+      }).success
+    ).toBe(false);
+  });
+
   it("rejects missing symbol or value", () => {
     expect(EquationConstantSchema.safeParse({ symbol: "b" }).success).toBe(
       false
@@ -79,6 +102,26 @@ describe("RearrangedFormSchema", () => {
         label: "Temperature from peak wavelength",
       }).success
     ).toBe(true);
+  });
+
+  it("accepts optional build-time prerendered html (ADR 0090)", () => {
+    expect(
+      RearrangedFormSchema.safeParse({
+        tex: "T = b\\,\\lambda_{peak}^{-1}",
+        solves_for: "T",
+        html: '<span class="katex">…</span>',
+      }).success
+    ).toBe(true);
+  });
+
+  it("rejects empty prerendered html", () => {
+    expect(
+      RearrangedFormSchema.safeParse({
+        tex: "T = b\\,\\lambda_{peak}^{-1}",
+        solves_for: "T",
+        html: "",
+      }).success
+    ).toBe(false);
   });
 
   it("rejects missing tex or solves_for", () => {
@@ -168,6 +211,21 @@ describe("EquationRegistryEntrySchema", () => {
         ...minValid,
         symbols: ["T", ""],
       }).success
+    ).toBe(false);
+  });
+
+  it("accepts optional build-time prerendered html (ADR 0090)", () => {
+    expect(
+      EquationRegistryEntrySchema.safeParse({
+        ...minValid,
+        html: '<span class="katex katex-display">…</span>',
+      }).success
+    ).toBe(true);
+  });
+
+  it("rejects empty prerendered html", () => {
+    expect(
+      EquationRegistryEntrySchema.safeParse({ ...minValid, html: "" }).success
     ).toBe(false);
   });
 
