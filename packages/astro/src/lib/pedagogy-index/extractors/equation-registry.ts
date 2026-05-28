@@ -1,6 +1,6 @@
+import { formatUnitTex } from "@sophie/core/runtime";
 import type { EquationEntry, EquationRegistryEntry } from "@sophie/core/schema";
 import type { Root } from "mdast";
-import { formatUnitTex } from "../../math-render/format-unit-tex.ts";
 import { renderMath } from "../../math-render/render-math.ts";
 import { buildBiographyFromChildren } from "./biography.ts";
 

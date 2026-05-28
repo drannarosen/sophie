@@ -1,6 +1,6 @@
+import { formatUnitTex } from "@sophie/core/runtime";
 import type { EquationRegistryEntry } from "@sophie/core/schema";
 import { beforeEach, describe, expect, test } from "vitest";
-import { formatUnitTex } from "../../math-render/format-unit-tex.ts";
 import { renderMath } from "../../math-render/render-math.ts";
 import { para, root } from "../_test-helpers.ts";
 import {
