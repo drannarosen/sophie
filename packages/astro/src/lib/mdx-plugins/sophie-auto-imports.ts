@@ -95,21 +95,19 @@ import {
  *     These are imported by `.astro` layouts directly, never by
  *     chapter MDX. They're outside this plugin's surface.
  *
- * Pre-emptive entries: `FillBlank`, `NumericQuestion`, `QuickCheck`
- * ship as components in PRs 5–9 of the formative-assessment plan.
- * They're listed here so the registry remains the single source of
- * truth and the formative-parent threading job below has a stable
- * contract — the `injectClientLoadDirectives` job is a no-op until the
- * component is actually authored.
+ * `NumericQuestion` and `QuickCheck` ship as React components (PRs 6–9
+ * of the formative-assessment plan) — they auto-import + `client:load`
+ * here.
  *
- * `MCQ` and `MultiSelect` are deliberately ABSENT from this set: both
- * are virtual authoring tags, expanded at MDX-compile time by
- * `sophieCompoundExpandRemarkPlugin` into static `<fieldset>` markup + a
- * childless controller island (`<MCQController>` / `<MultiSelectController>`;
- * Tasks 3–4 of the compound-island transform). That transform
- * self-injects each controller's `import` + `client:load` because it
- * runs LAST in the chain (after this plugin); the auto-import path is
- * never used for the controllers. `MCQ` and `MultiSelect` stay in
+ * `MCQ`, `MultiSelect`, and `FillBlank` are deliberately ABSENT from
+ * this set: all three are virtual authoring tags, expanded at
+ * MDX-compile time by `sophieCompoundExpandRemarkPlugin` into static
+ * markup + a childless controller island (`<MCQController>` /
+ * `<MultiSelectController>` / `<FillBlankController>`; Tasks 3–5 of the
+ * compound-island transform). That transform self-injects each
+ * controller's `import` + `client:load` because it runs LAST in the
+ * chain (after this plugin); the auto-import path is never used for the
+ * controllers. `MCQ` / `MultiSelect` / `FillBlank` stay in
  * `SOPHIE_FORMATIVE_PARENTS` below so the threading job still wires
  * `course`/`unit`/`parentId` onto nested `<Solution>` / `<Hint>`
  * children before the expansion runs.
@@ -123,7 +121,6 @@ export const SOPHIE_INTERACTIVE_COMPONENTS: ReadonlySet<string> = new Set([
   "EffortLog",
   "EquationRef",
   "FigureRef",
-  "FillBlank",
   "GlossaryTerm",
   "Hint",
   "InteractiveCallout",
@@ -202,16 +199,16 @@ export const SOPHIE_AUTO_IMPORTED_COMPONENTS: ReadonlySet<string> = new Set([
  * to formative-child descendants at compile time.
  *
  * The v1 formative family per ADR 0073 Amendment 1. "Parent" status is
- * orthogonal to how a parent renders: `<MCQ>` and `<MultiSelect>` are
- * virtual authoring tags (expanded to static markup + a controller
- * island by `sophieCompoundExpandRemarkPlugin`), while `<FillBlank>` /
- * `<NumericQuestion>` / `<QuickCheck>` ship as React components in
- * PRs 5–9. All six are listed here so the threading job has a stable
- * contract regardless of render strategy — the plugin is the source of
- * truth for "parent" status, not the implementations. The threading
- * runs BEFORE compound-island expansion, so nested `<Solution>` /
- * `<Hint>` children get `course`/`unit`/`parentId` whether or not the
- * parent is later expanded away.
+ * orthogonal to how a parent renders: `<MCQ>` / `<MultiSelect>` /
+ * `<FillBlank>` are virtual authoring tags (expanded to static markup +
+ * a controller island by `sophieCompoundExpandRemarkPlugin`), while
+ * `<NumericQuestion>` / `<QuickCheck>` / `<PracticeProblem>` ship as
+ * React components. All six are listed here so the threading job has a
+ * stable contract regardless of render strategy — the plugin is the
+ * source of truth for "parent" status, not the implementations. The
+ * threading runs BEFORE compound-island expansion, so nested
+ * `<Solution>` / `<Hint>` children get `course`/`unit`/`parentId`
+ * whether or not the parent is later expanded away.
  */
 export const SOPHIE_FORMATIVE_PARENTS: ReadonlySet<string> = new Set([
   "FillBlank",

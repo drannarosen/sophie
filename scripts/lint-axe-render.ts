@@ -70,6 +70,13 @@
  *                               sophieCompoundExpandRemarkPlugin, not by
  *                               React). Same carve-out as MCQController
  *                               (Task 4, compound-island transform).
+ *   - `components/FillBlank/FillBlankController.test.tsx`
+ *                               null-render side-effect controller over the
+ *                               transform-emitted static FillBlank DOM (prompt
+ *                               prose with inline `<input data-fb-slot>` fields
+ *                               produced by sophieCompoundExpandRemarkPlugin,
+ *                               not by React). Same carve-out as MCQController
+ *                               (Task 5, compound-island transform).
  *
  * Exit codes:
  *
@@ -138,6 +145,14 @@ function isExcluded(path: string): boolean {
   // persistence on a hand-written fixture; no component-owned a11y surface.
   // See packages/components/src/components/MultiSelect/MultiSelectController.tsx.
   if (path.endsWith("/components/MultiSelect/MultiSelectController.test.tsx"))
+    return true;
+  // FillBlankController — same carve-out: a null-render side-effect island
+  // over the transform-emitted static FillBlank DOM (prompt prose with
+  // inline `<input data-fb-slot>` fields, not React). The test asserts
+  // useInteractive persistence on a hand-written fixture; no
+  // component-owned a11y surface. See
+  // packages/components/src/components/FillBlank/FillBlankController.tsx.
+  if (path.endsWith("/components/FillBlank/FillBlankController.test.tsx"))
     return true;
   return false;
 }

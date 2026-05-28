@@ -149,17 +149,11 @@ export {
   FigureRefPropsSchema,
   figureRefContract,
 } from "./components/FigureRef/index.ts";
-export type {
-  FillBlankPromptProps,
-  FillBlankProps,
-  FillBlankSlotProps,
-} from "./components/FillBlank/index.ts";
+export type { FillBlankControllerProps } from "./components/FillBlank/index.ts";
 export {
-  FillBlank,
-  FillBlankPromptPropsSchema,
-  FillBlankPropsSchema,
-  FillBlankSlotPropsSchema,
-  fillBlankContract,
+  FillBlankController,
+  FillBlankControllerPropsSchema,
+  fillBlankControllerContract,
 } from "./components/FillBlank/index.ts";
 export type { GlossaryTermProps } from "./components/GlossaryTerm/index.ts";
 export {

@@ -1,10 +1,12 @@
 /* Formative-family global styles — transform-emitted MCQ + MultiSelect
- * markup.
+ * + FillBlank markup.
  *
  * `sophieCompoundExpandRemarkPlugin` lowers authored `<MCQ>` /
  * `<MultiSelect>` into plain native form markup
  * (`<section data-pedagogy-role="mcq|multi-select">` → `<fieldset>` →
- * `<label><input type="radio|checkbox">`) with
+ * `<label><input type="radio|checkbox">`), and `<FillBlank>` into
+ * `<section data-pedagogy-role="fill-blank">` → prompt prose with inline
+ * `<input data-fb-slot>` fields — all with
  * NO CSS-Module class names — the structure exists only at MDX-compile
  * time, never in React, so per-component CSS-Module hashes cannot
  * attach. These rules therefore target the SEMANTIC structure + data
@@ -171,4 +173,55 @@
   :global([data-pedagogy-role="multi-select"] label) {
     transition: none;
   }
+}
+
+/* FillBlank — same soft-surface + left-accent treatment as MCQ /
+ * MultiSelect, but slot-based: the prompt prose is emitted directly into
+ * the section (no fieldset / choices), with each inline
+ * `<input data-fb-slot>` flowing inline as an underlined text field
+ * (ported from the old FillBlank.module.css `.slot` styling). v1 does
+ * not auto-grade and the correct answer is never in the DOM, so there is
+ * no `data-correct` reveal affordance here. */
+:global([data-pedagogy-role="fill-blank"]) {
+  border-inline-start: 4px solid var(--sophie-brand-teal);
+  border-radius: var(--sophie-radius-md);
+  background: var(--sophie-surface-1);
+  padding: var(--sophie-space-4) var(--sophie-space-4) var(--sophie-space-3);
+  margin-block: var(--sophie-space-4);
+  box-shadow: var(--sophie-shadow-card);
+  line-height: var(--sophie-leading-prose);
+}
+
+:global([data-pedagogy-role="fill-blank"] > h3) {
+  margin: 0 0 var(--sophie-space-3);
+  font-size: var(--sophie-text-sm);
+  font-weight: var(--sophie-weight-semibold);
+  color: var(--sophie-brand-teal);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+:global([data-pedagogy-role="fill-blank"] input[data-fb-slot]) {
+  display: inline-block;
+  width: 8ch;
+  margin-inline: 0.15em;
+  padding: 0 var(--sophie-space-1);
+  font: inherit;
+  color: var(--sophie-text);
+  background: var(--sophie-surface-2);
+  border: 0;
+  border-block-end: 2px solid var(--sophie-text-muted);
+  border-radius: var(--sophie-radius-sm) var(--sophie-radius-sm) 0 0;
+  text-align: center;
+}
+
+:global([data-pedagogy-role="fill-blank"] input[data-fb-slot]:focus-visible) {
+  outline: none;
+  border-block-end-color: var(--sophie-brand-teal);
+  background: color-mix(in oklch, var(--sophie-brand-teal) 8%, transparent);
+}
+
+:global([data-pedagogy-role="fill-blank"] input[data-fb-slot]:disabled) {
+  cursor: progress;
+  opacity: 0.6;
 }

@@ -10,6 +10,7 @@ import { visit } from "unist-util-visit";
 import {
   choiceSlug,
   extractPlainText,
+  findFillBlankSlots,
   type MdxJsxFlowElement,
   readStringAttr,
 } from "../jsx-utils.ts";
@@ -253,10 +254,12 @@ function materializeAnswer(
       const promptEl = (el.children ?? []).find(
         (c) => isJsxFlowChild(c) && c.name === "FillBlank.Prompt"
       ) as MdxJsxFlowElement | undefined;
-      for (const child of promptEl?.children ?? []) {
-        if (!isJsxFlowChild(child) || child.name !== "FillBlank.Slot") continue;
-        const id = readStringAttr(child, "id");
-        const correct = readStringAttr(child, "correct");
+      // Slots are inline (`mdxJsxTextElement`) nested inside a paragraph
+      // child of the prompt — not direct children — so recurse the
+      // prompt subtree (shared with the transform via `findFillBlankSlots`).
+      for (const slot of findFillBlankSlots(promptEl)) {
+        const id = readStringAttr(slot, "id");
+        const correct = readStringAttr(slot, "correct");
         if (id && correct) blanks.push({ id, correct });
       }
       // AS-3 (zero blanks) is recoverable from `blanks.length` — derived

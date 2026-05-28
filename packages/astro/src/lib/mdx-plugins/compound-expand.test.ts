@@ -340,6 +340,249 @@ describe("expandCompoundIslands — MultiSelect expansion", () => {
   });
 });
 
+/**
+ * FillBlank uses the slot-based `expandFillBlank` path, not the
+ * choice-based `expandIsland`. Slots are authored INLINE inside prose,
+ * so the test builds the real shape: a `<FillBlank.Prompt>` whose only
+ * child is a `paragraph` containing text + inline `<FillBlank.Slot>`
+ * (`mdxJsxTextElement`) markers.
+ */
+const textEl = (
+  name: string,
+  attributes: Attr[] = [],
+  children: ReadonlyArray<Child> = []
+): MdxJsxFlowElement =>
+  ({
+    type: "mdxJsxTextElement",
+    name,
+    attributes,
+    children,
+  }) as unknown as MdxJsxFlowElement;
+
+/** A FillBlank with two inline slots inside a paragraph + a Solution. */
+const sampleFillBlankTree = (): Root =>
+  root([
+    el(
+      "FillBlank",
+      [a("course", "smoke"), a("unit", "fb-unit"), a("id", "fb1")],
+      [
+        el(
+          "FillBlank.Prompt",
+          [],
+          [
+            {
+              type: "paragraph",
+              children: [
+                text("The H-alpha line has wavelength "),
+                textEl("FillBlank.Slot", [
+                  a("id", "lambda"),
+                  a("correct", "656.3"),
+                ]),
+                text(" nm and ends at "),
+                textEl("FillBlank.Slot", [
+                  a("id", "nlower"),
+                  a("correct", "2"),
+                ]),
+              ],
+            } as unknown as Child,
+          ]
+        ),
+        el("Solution", [], [text("656.3 nm; n=2")]),
+      ]
+    ),
+  ]);
+
+function findAllText(node: unknown, name: string): MdxJsxFlowElement[] {
+  const out: MdxJsxFlowElement[] = [];
+  const walk = (n: unknown): void => {
+    if (!n || typeof n !== "object") return;
+    const m = n as { type?: string; name?: string; children?: unknown };
+    if (m.type === "mdxJsxTextElement" && m.name === name) {
+      out.push(m as unknown as MdxJsxFlowElement);
+    }
+    if (Array.isArray(m.children)) for (const c of m.children) walk(c);
+  };
+  walk(node);
+  return out;
+}
+
+describe("expandCompoundIslands — FillBlank expansion", () => {
+  it("replaces <FillBlank> with a <section data-pedagogy-role='fill-blank'>", () => {
+    const tree = sampleFillBlankTree();
+    expandCompoundIslands(tree);
+    expect(findFlow(tree, "FillBlank")).toBeUndefined();
+    const section = findFlow(tree, "section");
+    expect(section).toBeDefined();
+    expect(attrValue(section as MdxJsxFlowElement, "data-pedagogy-role")).toBe(
+      "fill-blank"
+    );
+    expect(
+      attrValue(section as MdxJsxFlowElement, "data-formative-anchor")
+    ).toBe("fb1");
+    expect(attrValue(section as MdxJsxFlowElement, "aria-labelledby")).toBe(
+      "fb1-label"
+    );
+  });
+
+  it("emits the 'Fill in the blank' heading", () => {
+    const tree = sampleFillBlankTree();
+    expandCompoundIslands(tree);
+    const h3 = findFlow(tree, "h3");
+    const child = (h3 as MdxJsxFlowElement).children[0] as { value?: string };
+    expect(child?.value).toBe("Fill in the blank");
+  });
+
+  it("replaces each inline slot with an inline <input data-fb-slot data-slot-id>", () => {
+    const tree = sampleFillBlankTree();
+    expandCompoundIslands(tree);
+    // Slots gone; inline inputs present (text elements, not flow).
+    expect(findAllText(tree, "FillBlank.Slot")).toHaveLength(0);
+    const inputs = findAllText(tree, "input");
+    expect(inputs).toHaveLength(2);
+    expect(inputs.map((i) => attrValue(i, "data-slot-id"))).toEqual([
+      "lambda",
+      "nlower",
+    ]);
+    for (const input of inputs) {
+      expect(attrValue(input, "type")).toBe("text");
+      expect(hasAttr(input, "data-fb-slot")).toBe(true);
+    }
+    expect(attrValue(inputs[0] as MdxJsxFlowElement, "aria-label")).toBe(
+      "blank lambda"
+    );
+  });
+
+  it("NEVER emits the `correct` answer into the DOM (no answer leak)", () => {
+    const tree = sampleFillBlankTree();
+    expandCompoundIslands(tree);
+    const inputs = findAllText(tree, "input");
+    for (const input of inputs) {
+      expect(hasAttr(input, "correct")).toBe(false);
+    }
+    // Belt-and-suspenders: the correct values never appear anywhere in
+    // the serialized post-transform tree (the Solution still legitimately
+    // names them, so we check only the input attributes above — but the
+    // input `value` attr must also be absent).
+    for (const input of inputs) {
+      expect(attrValue(input, "value")).toBeUndefined();
+    }
+  });
+
+  it("keeps surrounding prose live (text nodes survive the rewrite)", () => {
+    const tree = sampleFillBlankTree();
+    expandCompoundIslands(tree);
+    const section = findFlow(tree, "section") as MdxJsxFlowElement;
+    const serialized = JSON.stringify(section);
+    expect(serialized).toContain("The H-alpha line has wavelength");
+    expect(serialized).toContain(" nm and ends at ");
+  });
+
+  it("emits a childless <FillBlankController> with client:load + course/unit/id", () => {
+    const tree = sampleFillBlankTree();
+    expandCompoundIslands(tree);
+    const controller = findFlow(tree, "FillBlankController");
+    expect(controller).toBeDefined();
+    const ctrl = controller as MdxJsxFlowElement;
+    expect(ctrl.children).toHaveLength(0);
+    expect(hasAttr(ctrl, "client:load")).toBe(true);
+    expect(attrValue(ctrl, "course")).toBe("smoke");
+    expect(attrValue(ctrl, "unit")).toBe("fb-unit");
+    expect(attrValue(ctrl, "id")).toBe("fb1");
+  });
+
+  it("self-injects FillBlankController into the @sophie/components import", () => {
+    const tree = sampleFillBlankTree();
+    expandCompoundIslands(tree);
+    expect(importedNames(tree).has("FillBlankController")).toBe(true);
+  });
+
+  it("preserves the <Solution> reveal after the controller", () => {
+    const tree = sampleFillBlankTree();
+    expandCompoundIslands(tree);
+    expect(findFlow(tree, "Solution")).toBeDefined();
+  });
+
+  it("a zero-slot prompt is valid — emits prose, no inputs, no throw", () => {
+    const tree = root([
+      el(
+        "FillBlank",
+        [a("course", "smoke"), a("unit", "u"), a("id", "fb-no-slots")],
+        [
+          el(
+            "FillBlank.Prompt",
+            [],
+            [
+              {
+                type: "paragraph",
+                children: [text("A prompt with no inline slots.")],
+              } as unknown as Child,
+            ]
+          ),
+        ]
+      ),
+    ]);
+    expandCompoundIslands(tree);
+    expect(findFlow(tree, "section")).toBeDefined();
+    expect(findAllText(tree, "input")).toHaveLength(0);
+  });
+
+  it("throws on a duplicate slot id, naming the parent id", () => {
+    const tree = root([
+      el(
+        "FillBlank",
+        [a("id", "fbdup")],
+        [
+          el(
+            "FillBlank.Prompt",
+            [],
+            [
+              {
+                type: "paragraph",
+                children: [
+                  textEl("FillBlank.Slot", [a("id", "x"), a("correct", "a")]),
+                  textEl("FillBlank.Slot", [a("id", "x"), a("correct", "b")]),
+                ],
+              } as unknown as Child,
+            ]
+          ),
+        ]
+      ),
+    ]);
+    expect(() => expandCompoundIslands(tree)).toThrow(/fbdup/);
+    expect(() =>
+      expandCompoundIslands(
+        root([
+          el(
+            "FillBlank",
+            [a("id", "fbdup")],
+            [
+              el(
+                "FillBlank.Prompt",
+                [],
+                [
+                  {
+                    type: "paragraph",
+                    children: [
+                      textEl("FillBlank.Slot", [
+                        a("id", "x"),
+                        a("correct", "a"),
+                      ]),
+                      textEl("FillBlank.Slot", [
+                        a("id", "x"),
+                        a("correct", "b"),
+                      ]),
+                    ],
+                  } as unknown as Child,
+                ]
+              ),
+            ]
+          ),
+        ])
+      )
+    ).toThrow(/duplicate slot id/i);
+  });
+});
+
 describe("expandCompoundIslands — robustness", () => {
   it("is idempotent: a second run produces a stable tree", () => {
     const tree = sampleMcqTree();

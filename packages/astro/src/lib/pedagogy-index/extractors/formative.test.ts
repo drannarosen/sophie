@@ -333,6 +333,61 @@ describe("extractFormative — FillBlank (fill-blank)", () => {
     expect(result.findings.filter((f) => f.code === "AS-3")).toHaveLength(0);
   });
 
+  it("recurses into a paragraph for inline `mdxJsxTextElement` slots (real authored shape)", () => {
+    // Real MDX wraps prose-embedded slots in a `paragraph` and emits each
+    // slot as `mdxJsxTextElement` (phrasing content) — slots are
+    // GRANDCHILDREN of the prompt, of the text-node type. This is the
+    // shape the `fb-halpha-values` fixture produces; a direct-children
+    // scan counted it as ZERO blanks and mis-fired AS-3. The recursive
+    // `findFillBlankSlots` walk fixes it.
+    const result = extractFormative(
+      root([
+        mdx("FillBlank", { id: "fb-halpha-values" }, [
+          mdx("FillBlank.Prompt", {}, [
+            {
+              type: "paragraph",
+              children: [
+                { type: "text", value: "The H-alpha line has wavelength " },
+                {
+                  type: "mdxJsxTextElement",
+                  name: "FillBlank.Slot",
+                  attributes: [
+                    { type: "mdxJsxAttribute", name: "id", value: "lambda" },
+                    {
+                      type: "mdxJsxAttribute",
+                      name: "correct",
+                      value: "656.3",
+                    },
+                  ],
+                  children: [],
+                },
+                { type: "text", value: " nm and ends at " },
+                {
+                  type: "mdxJsxTextElement",
+                  name: "FillBlank.Slot",
+                  attributes: [
+                    { type: "mdxJsxAttribute", name: "id", value: "nlower" },
+                    { type: "mdxJsxAttribute", name: "correct", value: "2" },
+                  ],
+                  children: [],
+                },
+              ],
+            },
+          ]),
+        ]),
+      ]) as never,
+      "u"
+    );
+    expect(result.entries[0]?.answer).toEqual({
+      type: "fill-blank",
+      blanks: [
+        { id: "lambda", correct: "656.3" },
+        { id: "nlower", correct: "2" },
+      ],
+    });
+    expect(result.findings.filter((f) => f.code === "AS-3")).toHaveLength(0);
+  });
+
   it("emits a zero-blank entry (AS-3 fires in the audit, not the extractor)", () => {
     const result = extractFormative(
       root([

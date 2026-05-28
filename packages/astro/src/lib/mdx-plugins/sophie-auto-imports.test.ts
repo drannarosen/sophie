@@ -370,21 +370,25 @@ describe("sophieAutoImportsRemarkPlugin — component registries", () => {
       "PracticeProblem",
       "Hint",
       "Solution",
-      "FillBlank",
       "NumericQuestion",
       "QuickCheck",
     ]) {
       expect(SOPHIE_INTERACTIVE_COMPONENTS.has(name)).toBe(true);
     }
-    // `MCQ` (Task 3) and `MultiSelect` (Task 4) are VIRTUAL authoring
-    // tags: expanded to static markup + a self-injected controller by
-    // sophieCompoundExpandRemarkPlugin, so neither the tag nor the
-    // controller is auto-imported here. Asserting their ABSENCE is an
-    // invariant that stays true throughout the multi-task conversion.
+    // `MCQ` (Task 3), `MultiSelect` (Task 4), and `FillBlank` (Task 5)
+    // are VIRTUAL authoring tags: expanded to static markup + a
+    // self-injected controller by sophieCompoundExpandRemarkPlugin, so
+    // neither the tag nor the controller is auto-imported here. Asserting
+    // their ABSENCE is an invariant that stays true throughout the
+    // multi-task conversion.
     expect(SOPHIE_INTERACTIVE_COMPONENTS.has("MCQ")).toBe(false);
     expect(SOPHIE_INTERACTIVE_COMPONENTS.has("MCQController")).toBe(false);
     expect(SOPHIE_INTERACTIVE_COMPONENTS.has("MultiSelect")).toBe(false);
     expect(SOPHIE_INTERACTIVE_COMPONENTS.has("MultiSelectController")).toBe(
+      false
+    );
+    expect(SOPHIE_INTERACTIVE_COMPONENTS.has("FillBlank")).toBe(false);
+    expect(SOPHIE_INTERACTIVE_COMPONENTS.has("FillBlankController")).toBe(
       false
     );
   });
@@ -428,14 +432,15 @@ describe("sophieAutoImportsRemarkPlugin — component registries", () => {
       expect(SOPHIE_INTERACTIVE_COMPONENTS.has(name)).toBe(true);
     }
     // A formative parent is EITHER auto-imported here (React-rendered:
-    // `<PracticeProblem>`, `<FillBlank>`, …) OR a virtual authoring tag
-    // expanded by the compound-island transform (`<MCQ>`,
-    // `<MultiSelect>`), which self-injects its controller instead. This
-    // disjunction is the invariant that survives the whole
-    // compound-island conversion.
+    // `<PracticeProblem>`, `<QuickCheck>`, `<NumericQuestion>`) OR a
+    // virtual authoring tag expanded by the compound-island transform
+    // (`<MCQ>`, `<MultiSelect>`, `<FillBlank>`), which self-injects its
+    // controller instead. This disjunction is the invariant that
+    // survives the whole compound-island conversion.
     const VIRTUAL_PARENTS: ReadonlySet<string> = new Set([
       "MCQ",
       "MultiSelect",
+      "FillBlank",
     ]);
     for (const name of SOPHIE_FORMATIVE_PARENTS) {
       const autoImported = SOPHIE_INTERACTIVE_COMPONENTS.has(name);

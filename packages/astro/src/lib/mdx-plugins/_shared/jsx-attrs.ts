@@ -1,7 +1,11 @@
 import type { RootContent } from "mdast";
 import { fromMarkdown } from "mdast-util-from-markdown";
 import { mdxFromMarkdown } from "mdast-util-mdx";
-import type { MdxJsxAttribute, MdxJsxFlowElement } from "mdast-util-mdx-jsx";
+import type {
+  MdxJsxAttribute,
+  MdxJsxFlowElement,
+  MdxJsxTextElement,
+} from "mdast-util-mdx-jsx";
 import { mdxjs } from "micromark-extension-mdxjs";
 
 /**
@@ -160,8 +164,38 @@ export function jsxFlowEl(
   };
 }
 
-/** True when `el` carries an `mdxJsxAttribute` named `name` (any value, incl. boolean-presence). */
-export function hasAttr(el: MdxJsxFlowElement, name: string): boolean {
+/**
+ * Build an `mdxJsxTextElement` — an INLINE (phrasing-content) JSX
+ * element. Required for the FillBlank transform: a `<FillBlank.Slot>`
+ * lives inside a paragraph, so its replacement `<input>` must be a text
+ * element, not a flow element. Emitting a flow element where phrasing
+ * content is expected breaks MDX's hast nesting (a block `<input>` would
+ * split the surrounding `<p>`). The slot's `<input type="text">` has no
+ * meaningful children — it's a void element — so callers pass `[]`.
+ */
+export function jsxTextEl(
+  name: string,
+  attributes: MdxJsxAttribute[],
+  children: RootContent[]
+): MdxJsxTextElement {
+  return {
+    type: "mdxJsxTextElement",
+    name,
+    attributes,
+    children: children as MdxJsxTextElement["children"],
+  };
+}
+
+/**
+ * True when `el` carries an `mdxJsxAttribute` named `name` (any value,
+ * incl. boolean-presence). Accepts flow OR text elements — both share
+ * the `attributes` shape, and the FillBlank slot-rewrite reads attrs off
+ * inline (`mdxJsxTextElement`) slot nodes.
+ */
+export function hasAttr(
+  el: MdxJsxFlowElement | MdxJsxTextElement,
+  name: string
+): boolean {
   return el.attributes.some(
     (a) => a.type === "mdxJsxAttribute" && a.name === name
   );
@@ -169,7 +203,7 @@ export function hasAttr(el: MdxJsxFlowElement, name: string): boolean {
 
 /** Read a string-valued JSX attribute; `undefined` when absent / non-string. */
 export function readAttr(
-  el: MdxJsxFlowElement,
+  el: MdxJsxFlowElement | MdxJsxTextElement,
   name: string
 ): string | undefined {
   for (const a of el.attributes) {

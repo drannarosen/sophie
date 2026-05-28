@@ -362,6 +362,45 @@ export function choiceSlug(node: {
   return explicit ?? slugify(extractSlugText(node));
 }
 
+/**
+ * Recursively collect every `<FillBlank.Slot>` node within a
+ * `<FillBlank.Prompt>` subtree, in document order.
+ *
+ * Slots are authored INLINE inside prose, so MDX nests them as
+ * `mdxJsxTextElement` (phrasing content) under a `paragraph` child of
+ * the prompt — they are grandchildren of the prompt, not direct
+ * children, and they are text nodes, not flow nodes. A direct-children
+ * scan (the pre-recursion shape) silently missed them, mis-firing AS-3
+ * on real authored fills. This walker descends the whole subtree and
+ * matches `FillBlank.Slot` regardless of flow-vs-text node type.
+ *
+ * Shared by the formative extractor (`materializeAnswer`'s FillBlank
+ * case) and the compound-island transform (`expandFillBlank`) so both
+ * derive the SAME slot list from the SAME authored shape (R9). Returns
+ * the raw nodes; callers read `id` / `correct` via `readStringAttr`.
+ */
+export function findFillBlankSlots(promptNode: unknown): MdxJsxFlowElement[] {
+  const out: MdxJsxFlowElement[] = [];
+  const walk = (n: unknown): void => {
+    if (!n || typeof n !== "object") return;
+    const m = n as { type?: string; name?: string; children?: unknown };
+    if (
+      (m.type === "mdxJsxFlowElement" || m.type === "mdxJsxTextElement") &&
+      m.name === "FillBlank.Slot"
+    ) {
+      out.push(m as unknown as MdxJsxFlowElement);
+      // A slot is a leaf marker (`<FillBlank.Slot id correct />`); no
+      // need to descend into it.
+      return;
+    }
+    if (Array.isArray(m.children)) {
+      for (const child of m.children) walk(child);
+    }
+  };
+  walk(promptNode);
+  return out;
+}
+
 export function isWhitespaceTextNode(node: unknown): boolean {
   if (!node || typeof node !== "object") return false;
   const n = node as { type?: string; value?: string };
