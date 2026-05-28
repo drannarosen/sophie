@@ -297,8 +297,11 @@ export function pedagogyIndexRemarkPlugin(
     // Task 7 — derive the artifact id (filename stem) once per chapter
     // pass and thread it to every accumulator add* call so two
     // artifacts of the same unit (`reading.mdx`, `practice.mdx`) don't
-    // clobber each other. Auto-anchor-emitting extractors also receive
-    // it to namespace their positional anchors (e.g. `practice-form-1`).
+    // clobber each other. The artifact id lives ONLY in the
+    // accumulator's internal storage key (`${unit}#${artifactId}#
+    // ${anchor}`), never in the serialized `entry.anchor` — page URLs
+    // are already artifact-scoped (`/units/X/reading#ki-1` vs
+    // `/units/X/practice#ki-1`), so positional auto-anchors stay clean.
     const artifactId = getArtifactId(filePath);
 
     // Sprint F — read the chapter's display `chapter` number from
@@ -334,7 +337,7 @@ export function pedagogyIndexRemarkPlugin(
     indexAccumulator.addKeyInsights(
       unitId,
       artifactId,
-      extractKeyInsights(tree, unitId, artifactId)
+      extractKeyInsights(tree, unitId)
     );
     indexAccumulator.addFigureUsages(
       unitId,
@@ -344,7 +347,7 @@ export function pedagogyIndexRemarkPlugin(
     indexAccumulator.addMisconceptions(
       unitId,
       artifactId,
-      extractMisconceptions(tree, unitId, artifactId)
+      extractMisconceptions(tree, unitId)
     );
     // ADR 0058 §R-deep-dive — <Callout variant="deep-dive"> tracking
     // (PR-B follow-up to PR-A's renderer surface). The-more-you-know
@@ -352,19 +355,19 @@ export function pedagogyIndexRemarkPlugin(
     indexAccumulator.addDeepDives(
       unitId,
       artifactId,
-      extractDeepDives(tree, unitId, artifactId)
+      extractDeepDives(tree, unitId)
     );
     // ADR 0063 — A8 <OMIFlow> composite primitive. Extractor walks
     // <OMIFlow> JSX and emits OMIFlowEntry rows plus OF-3 WARNING
     // findings for any unknown JSX children (post-W4c R7 doctrine).
-    const omiResult = extractOMIFlows(tree, unitId, artifactId);
+    const omiResult = extractOMIFlows(tree, unitId);
     indexAccumulator.addOMIFlows(unitId, artifactId, omiResult.entries);
     indexAccumulator.addExtractorFindings(artifactId, omiResult.findings);
     // ADR 0081 + WS B+D — <WorkedExample> extractor. Counts slot
     // children + emits WE-3 WARNING findings for any unknown JSX
     // children (R7 doctrine, mirrors OMIFlow's OF-3). Audit-time
     // invariants WE-1 / WE-2 consume the per-entry `slots` summary.
-    const workedExampleResult = extractWorkedExamples(tree, unitId, artifactId);
+    const workedExampleResult = extractWorkedExamples(tree, unitId);
     indexAccumulator.addWorkedExamples(
       unitId,
       artifactId,
@@ -379,7 +382,7 @@ export function pedagogyIndexRemarkPlugin(
     // are pushed at extract-time (count-bearing detection the
     // materialized answer can't carry); AS-2 / AS-3 are derived in the
     // audit phase by `checkFormative`.
-    const formativeResult = extractFormative(tree, unitId, artifactId);
+    const formativeResult = extractFormative(tree, unitId);
     indexAccumulator.addFormatives(unitId, artifactId, formativeResult.entries);
     indexAccumulator.addExtractorFindings(artifactId, formativeResult.findings);
     // Wedge B1 retrieval-family extractors. Each emits one entry per
@@ -389,17 +392,17 @@ export function pedagogyIndexRemarkPlugin(
     indexAccumulator.addRetrievalPrompts(
       unitId,
       artifactId,
-      extractRetrievalPrompts(tree, unitId, artifactId)
+      extractRetrievalPrompts(tree, unitId)
     );
     indexAccumulator.addSpacedReviews(
       unitId,
       artifactId,
-      extractSpacedReviews(tree, unitId, artifactId)
+      extractSpacedReviews(tree, unitId)
     );
     indexAccumulator.addSkillReviews(
       unitId,
       artifactId,
-      extractSkillReviews(tree, unitId, artifactId)
+      extractSkillReviews(tree, unitId)
     );
     indexAccumulator.addObjectives(
       unitId,
@@ -473,9 +476,7 @@ export function pedagogyIndexRemarkPlugin(
     // inference props (ADR 0063). The slot marker components return
     // null at runtime; without this transform Astro's MDX integration
     // discards the slot bodies before the outer <OMIFlow> runs. Same
-    // shape + same shared parser as extractOMIFlows (above). Threads
-    // `artifactId` so the injected DOM `id` matches the extractor's
-    // artifact-namespaced auto-anchor (`${artifactId}-omi-${n}`, Task 7).
-    transformOMIFlow(tree, unitId, artifactId);
+    // shape + same shared parser as extractOMIFlows (above).
+    transformOMIFlow(tree, unitId);
   };
 }

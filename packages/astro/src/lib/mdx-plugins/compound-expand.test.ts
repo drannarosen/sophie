@@ -928,7 +928,7 @@ describe("ordering invariant — expand runs after the pedagogy extractor", () =
         ]
       ),
     ]) as unknown as Parameters<typeof extractFormative>[0];
-    const result = extractFormative(tree, "atoms", "reading");
+    const result = extractFormative(tree, "atoms");
     expect(result.entries).toHaveLength(1);
     expect(result.entries[0]).toMatchObject({
       kind: "mcq",

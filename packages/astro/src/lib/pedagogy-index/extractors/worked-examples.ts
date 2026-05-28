@@ -33,9 +33,7 @@ import { type MdxJsxFlowElement, readStringAttr } from "../jsx-utils.ts";
  * Anchor precedence (mirrors OMIFlow's design):
  *   1. explicit `id=` attr (slugified) wins
  *   2. else `we-${slug(title)}` when `title=` is present
- *   3. else positional fallback `${artifactId}-we-${counter}`
- *      (chapter-scoped + Task 7 artifact-namespaced so `reading-we-1`
- *      stays distinct from `practice-we-1`)
+ *   3. else positional fallback `we-${counter}` (chapter-scoped)
  *
  * Throws on intra-chapter anchor collision. The audit invariants
  * (WE-1, WE-2, WE-3) live in
@@ -61,20 +59,18 @@ export interface WorkedExampleExtractionResult {
 
 function deriveAnchor(
   el: MdxJsxFlowElement,
-  counter: number,
-  artifactId: string
+  counter: number
 ): { anchor: string; title: string | undefined } {
   const explicitId = readStringAttr(el, "id");
   const title = readStringAttr(el, "title");
   if (explicitId) return { anchor: slugify(explicitId), title };
   if (title) return { anchor: `we-${slugify(title)}`, title };
-  return { anchor: `${artifactId}-we-${counter}`, title };
+  return { anchor: `we-${counter}`, title };
 }
 
 export function extractWorkedExamples(
   tree: Root,
-  unitId: string,
-  artifactId: string
+  unitId: string
 ): WorkedExampleExtractionResult {
   const entries: WorkedExampleEntry[] = [];
   const findings: AuditFinding[] = [];
@@ -86,7 +82,7 @@ export function extractWorkedExamples(
     if (el.name !== "WorkedExample") return;
 
     counter += 1;
-    const { anchor, title } = deriveAnchor(el, counter, artifactId);
+    const { anchor, title } = deriveAnchor(el, counter);
 
     if (seenAnchors.has(anchor)) {
       throw new Error(

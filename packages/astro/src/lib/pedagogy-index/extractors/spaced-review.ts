@@ -42,9 +42,8 @@ function readIntegerAttr(
  *
  * Walks an mdast tree, finds JSX elements named "SpacedReview",
  * emits one SpacedReviewEntry per match. Anchor is auto-generated as
- * `${artifactId}-sp-${counter}` per chapter (Task 7 artifact-
- * namespaced). `max` defaults to the component's DEFAULT_MAX (3) when
- * the attribute is absent.
+ * `sp-${counter}` per chapter. `max` defaults to the component's
+ * DEFAULT_MAX (3) when the attribute is absent.
  *
  * Skips elements that satisfy neither `target` nor `section`
  * (Zod refine in SpacedReviewPropsSchema catches that at the runtime
@@ -54,8 +53,7 @@ function readIntegerAttr(
  */
 export function extractSpacedReviews(
   tree: Root,
-  unitId: string,
-  artifactId: string
+  unitId: string
 ): SpacedReviewEntry[] {
   const out: SpacedReviewEntry[] = [];
   const seenAnchors = new Set<string>();
@@ -77,7 +75,7 @@ export function extractSpacedReviews(
     const max = readIntegerAttr(el, "max") ?? DEFAULT_MAX;
 
     counter += 1;
-    const anchor = `${artifactId}-sp-${counter}`;
+    const anchor = `sp-${counter}`;
     if (seenAnchors.has(anchor)) {
       throw new Error(
         `Intra-chapter anchor collision in chapter "${unitId}": SpacedReview anchor "${anchor}" generated twice.`

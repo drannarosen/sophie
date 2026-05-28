@@ -56,10 +56,13 @@ import type {
  * stripped before serialization so consumer-visible
  * `PedagogyIndex` entry shapes (ADR 0003 / 0073 / 0058) are unchanged.
  *
- * Auto-anchor namespacing: extractors prefix positional auto-anchors
- * with the artifact id (e.g. `practice-form-1`, `reading-omi-1`), so a
- * consumer reading `entry.anchor === "form-1"` can tell which artifact
- * authored it. Explicit author-supplied ids are not prefixed.
+ * Positional auto-anchors stay in their clean chapter-scoped form
+ * (`form-1`, `omi-1`, …): the artifact id lives ONLY in the internal
+ * storage key, never in the serialized `entry.anchor`. Page URLs are
+ * already artifact-scoped (`/units/X/reading#form-1` and
+ * `/units/X/practice#form-1` are different pages), so two artifacts'
+ * same-numbered auto-anchors coexist via distinct internal keys while
+ * sharing the same `entry.anchor`.
  */
 const GLOBAL_KEY = "__sophiePedagogyIndex";
 
@@ -566,12 +569,12 @@ class IndexAccumulator {
   /**
    * Add an artifact's extracted misconceptions. M2 invariant:
    * explicit-id-derived anchors must be unique across chapters.
-   * Auto-anchors of the shape `misc-${N}` are now artifact-namespaced
-   * (e.g. `practice-misc-1`) at extract time, so the legacy auto-
-   * anchor literal-shape allowance is no longer load-bearing for
-   * cross-artifact disambiguation; the M2 cross-chapter check still
-   * applies to explicit ids. Task 7: intra-unit cross-artifact same-
-   * explicit-anchor authoring is rejected.
+   * Auto-anchors of the shape `misc-${N}` are positional (chapter-
+   * scoped); the accumulator's `${unit}#${artifactId}#${anchor}` key
+   * keeps two artifacts' same-numbered auto-anchors apart, so the M2
+   * cross-chapter check skips them and applies only to explicit ids.
+   * Task 7: intra-unit cross-artifact same-explicit-anchor authoring
+   * is rejected.
    */
   addMisconceptions(
     _unitId: string,
@@ -580,11 +583,10 @@ class IndexAccumulator {
   ): void {
     const state = getGlobalState();
     // M2 cross-chapter check: only for explicit (non-auto) anchors.
-    // After Task 7, auto-anchors are artifact-prefixed at extract time
-    // (`${artifact}-misc-${N}`), so the literal `/^misc-\d+$/` shape
-    // matches only legacy auto-anchors that wouldn't reach here — but
-    // the test still serves as a safety net for any future extractor
-    // that emits the bare shape.
+    // Auto-anchors carry the bare `misc-${N}` shape (positional, not
+    // artifact-prefixed); the accumulator's `${unit}#${artifactId}#`
+    // key keeps two artifacts' same-numbered auto-anchors from
+    // clobbering, so they never need the explicit-collision check.
     for (const entry of entries) {
       if (/^misc-\d+$/.test(entry.anchor)) continue;
       // Cross-chapter (different unit) — original M2 invariant.
@@ -600,8 +602,6 @@ class IndexAccumulator {
     // Mirrors §4 of the task: same authored explicit id in two
     // artifacts of one unit is an authoring error.
     for (const entry of entries) {
-      // Skip the artifact-namespaced auto-anchor shapes.
-      if (/^(reading|practice)-misc-\d+$/.test(entry.anchor)) continue;
       if (/^misc-\d+$/.test(entry.anchor)) continue;
       for (const otherKey of state.misconceptions.keys()) {
         const parts = otherKey.split("#");
@@ -808,11 +808,11 @@ class IndexAccumulator {
     entries: ReadonlyArray<DeepDiveEntry>
   ): void {
     const state = getGlobalState();
-    // D2 (cross-chapter, explicit anchors only). Auto-anchors after
-    // Task 7 are artifact-prefixed at extract time.
+    // D2 (cross-chapter, explicit anchors only). Auto-anchors carry the
+    // bare positional `dd-${N}` shape; the artifact-scoped storage key
+    // keeps two artifacts' same-numbered auto-anchors from clobbering.
     for (const entry of entries) {
       if (/^dd-\d+$/.test(entry.anchor)) continue;
-      if (/^(reading|practice)-dd-\d+$/.test(entry.anchor)) continue;
       for (const existing of state.deepDives.values()) {
         if (existing.unit !== entry.unit && existing.anchor === entry.anchor) {
           throw new Error(
@@ -824,7 +824,6 @@ class IndexAccumulator {
     // Task 7 — intra-unit cross-artifact explicit-anchor collision.
     for (const entry of entries) {
       if (/^dd-\d+$/.test(entry.anchor)) continue;
-      if (/^(reading|practice)-dd-\d+$/.test(entry.anchor)) continue;
       for (const otherKey of state.deepDives.keys()) {
         const parts = otherKey.split("#");
         if (parts.length < 3) continue;
@@ -860,7 +859,6 @@ class IndexAccumulator {
     const state = getGlobalState();
     for (const entry of entries) {
       if (/^omi-\d+$/.test(entry.anchor)) continue;
-      if (/^(reading|practice)-omi-\d+$/.test(entry.anchor)) continue;
       for (const existing of state.omiFlows.values()) {
         if (existing.unit !== entry.unit && existing.anchor === entry.anchor) {
           throw new Error(
@@ -871,7 +869,6 @@ class IndexAccumulator {
     }
     for (const entry of entries) {
       if (/^omi-\d+$/.test(entry.anchor)) continue;
-      if (/^(reading|practice)-omi-\d+$/.test(entry.anchor)) continue;
       for (const otherKey of state.omiFlows.keys()) {
         const parts = otherKey.split("#");
         if (parts.length < 3) continue;
@@ -907,7 +904,6 @@ class IndexAccumulator {
     const state = getGlobalState();
     for (const entry of entries) {
       if (/^we-\d+$/.test(entry.anchor)) continue;
-      if (/^(reading|practice)-we-\d+$/.test(entry.anchor)) continue;
       for (const existing of state.workedExamples.values()) {
         if (existing.unit !== entry.unit && existing.anchor === entry.anchor) {
           throw new Error(
@@ -918,7 +914,6 @@ class IndexAccumulator {
     }
     for (const entry of entries) {
       if (/^we-\d+$/.test(entry.anchor)) continue;
-      if (/^(reading|practice)-we-\d+$/.test(entry.anchor)) continue;
       for (const otherKey of state.workedExamples.keys()) {
         const parts = otherKey.split("#");
         if (parts.length < 3) continue;
@@ -959,7 +954,6 @@ class IndexAccumulator {
     const state = getGlobalState();
     for (const entry of entries) {
       if (/^form-\d+$/.test(entry.anchor)) continue;
-      if (/^(reading|practice)-form-\d+$/.test(entry.anchor)) continue;
       for (const existing of state.formatives.values()) {
         if (existing.unit !== entry.unit && existing.anchor === entry.anchor) {
           throw new Error(
@@ -970,7 +964,6 @@ class IndexAccumulator {
     }
     for (const entry of entries) {
       if (/^form-\d+$/.test(entry.anchor)) continue;
-      if (/^(reading|practice)-form-\d+$/.test(entry.anchor)) continue;
       for (const otherKey of state.formatives.keys()) {
         const parts = otherKey.split("#");
         if (parts.length < 3) continue;
@@ -998,9 +991,9 @@ class IndexAccumulator {
 
   /**
    * Add an artifact's extracted `<RetrievalPrompt>` entries (Wedge B1).
-   * Anchors are auto-generated (`${artifact}-rp-${counter}` post Task
-   * 7); the artifact-prefix makes cross-artifact collisions
-   * structurally impossible.
+   * Anchors are auto-generated (`rp-${counter}`, chapter-scoped); the
+   * `${unit}#${artifactId}#${anchor}` storage key makes cross-artifact
+   * collisions structurally impossible.
    */
   addRetrievalPrompts(
     _unitId: string,
@@ -1018,7 +1011,8 @@ class IndexAccumulator {
 
   /**
    * Add an artifact's extracted `<SpacedReview>` entries (Wedge B1).
-   * Auto-generated anchors (`${artifact}-sp-${counter}` post Task 7).
+   * Auto-generated anchors (`sp-${counter}`, chapter-scoped); the
+   * artifact-scoped storage key disambiguates across artifacts.
    */
   addSpacedReviews(
     _unitId: string,
@@ -1036,7 +1030,8 @@ class IndexAccumulator {
 
   /**
    * Add an artifact's extracted `<SkillReview>` entries (Wedge B1).
-   * Auto-generated anchors (`${artifact}-sk-${counter}` post Task 7).
+   * Auto-generated anchors (`sk-${counter}`, chapter-scoped); the
+   * artifact-scoped storage key disambiguates across artifacts.
    */
   addSkillReviews(
     _unitId: string,

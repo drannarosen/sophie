@@ -246,12 +246,14 @@ describe("pedagogyIndexRemarkPlugin (Task 7 — artifact-scoped chapter pass)", 
       .asPedagogyIndex()
       .formatives.filter((f) => f.unit === "chrome-primitives-demo");
     // Under the old `clearUnit`, practice.mdx's pass would have wiped
-    // reading.mdx's entry. Artifact-scoped keys keep all three.
+    // reading.mdx's entry. Artifact-scoped keys keep all three —
+    // reading's `form-1` and practice's `form-1` coexist via distinct
+    // internal keys while sharing the clean serialized anchor.
     expect(inUnit).toHaveLength(3);
     expect(inUnit.map((f) => f.anchor).sort()).toEqual([
-      "practice-form-1",
-      "practice-form-2",
-      "reading-form-1",
+      "form-1",
+      "form-1",
+      "form-2",
     ]);
   });
 
@@ -270,10 +272,7 @@ describe("pedagogyIndexRemarkPlugin (Task 7 — artifact-scoped chapter pass)", 
       .asPedagogyIndex()
       .formatives.filter((f) => f.unit === "chrome-primitives-demo");
     expect(inUnit).toHaveLength(2);
-    expect(inUnit.map((f) => f.anchor).sort()).toEqual([
-      "practice-form-1",
-      "reading-form-1",
-    ]);
+    expect(inUnit.map((f) => f.anchor).sort()).toEqual(["form-1", "form-1"]);
   });
 
   test("an explicit formative id authored in BOTH artifacts of one unit throws", () => {

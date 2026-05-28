@@ -46,11 +46,8 @@ import {
  * index stays well-formed.
  *
  * Anchor precedence: explicit `id=` attr (slugified) wins; else
- * positional `${artifactId}-form-${counter}` (chapter-scoped + Task 7
- * artifact-namespaced — so `reading.mdx` produces `reading-form-1` and
- * `practice.mdx` produces `practice-form-1`, letting `entry.anchor`
- * disambiguate the authoring artifact). Intra-chapter anchor collision
- * throws. The AS-1..AS-5 audit invariants live in
+ * positional `form-${counter}` (chapter-scoped). Intra-chapter anchor
+ * collision throws. The AS-1..AS-5 audit invariants live in
  * `packages/astro/src/lib/pedagogy-audit/invariants/formative.ts`.
  */
 
@@ -149,8 +146,7 @@ function collectChoices(
 
 export function extractFormative(
   tree: Root,
-  unitId: string,
-  artifactId: string
+  unitId: string
 ): FormativeExtractionResult {
   const entries: FormativeEntry[] = [];
   const findings: AuditFinding[] = [];
@@ -172,9 +168,7 @@ export function extractFormative(
 
     counter += 1;
     const explicitId = readStringAttr(el, "id");
-    const anchor = explicitId
-      ? slugify(explicitId)
-      : `${artifactId}-form-${counter}`;
+    const anchor = explicitId ? slugify(explicitId) : `form-${counter}`;
     if (seenAnchors.has(anchor)) {
       throw new Error(
         `Intra-chapter anchor collision in chapter "${unitId}": formative anchor "${anchor}" generated more than once. Resolution: supply distinct \`id\` props on the affected formative items.`

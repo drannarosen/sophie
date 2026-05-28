@@ -151,16 +151,13 @@ export function parseOMIFlowElement(
  */
 export function deriveOMIFlowAnchor(
   el: MdxJsxFlowElement,
-  counter: number,
-  artifactId: string
+  counter: number
 ): string {
   const explicitId = readStringAttr(el, "id");
   const concept = readStringAttr(el, "concept");
   if (explicitId) return slugify(explicitId);
   if (concept) return `omi-${slugify(concept)}`;
-  // Positional fallback — artifact-namespaced (Task 7) so
-  // `reading-omi-1` stays distinct from `practice-omi-1`.
-  return `${artifactId}-omi-${counter}`;
+  return `omi-${counter}`;
 }
 
 /**
@@ -186,7 +183,7 @@ export interface OMIFlowExtractionResult {
  *   - Slot-name binds role: <OMIFlow.Observable> → observable.
  *   - Source-order tolerance: any source order accepted; entry
  *     records the as-authored order in `sourceOrder` for OF-1.
- *   - Anchor precedence: id > slug(concept) > ${artifactId}-omi-${counter}.
+ *   - Anchor precedence: id > slug(concept) > omi-${counter}.
  *   - Intra-chapter anchor collision throw.
  *   - **OF-3 (W4c-extension, R7 doctrine):** unknown JSX children
  *     inside `<OMIFlow>` (anything other than the three slot
@@ -197,8 +194,7 @@ export interface OMIFlowExtractionResult {
  */
 export function extractOMIFlows(
   tree: Root,
-  unitId: string,
-  artifactId: string
+  unitId: string
 ): OMIFlowExtractionResult {
   const entries: OMIFlowEntry[] = [];
   const findings: AuditFinding[] = [];
@@ -210,7 +206,7 @@ export function extractOMIFlows(
     if (el.name !== "OMIFlow") return;
 
     counter += 1;
-    const anchor = deriveOMIFlowAnchor(el, counter, artifactId);
+    const anchor = deriveOMIFlowAnchor(el, counter);
 
     if (seenAnchors.has(anchor)) {
       throw new Error(

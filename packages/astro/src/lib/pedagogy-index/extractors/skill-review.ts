@@ -36,8 +36,7 @@ function hasExplicitSlots(el: MdxJsxFlowElement): boolean {
  *
  * Walks an mdast tree, finds JSX elements named "SkillReview",
  * emits one SkillReviewEntry per match. Anchor is auto-generated as
- * `${artifactId}-sk-${counter}` per chapter (Task 7 artifact-
- * namespaced). `has_explicit_content` is true iff
+ * `sk-${counter}` per chapter. `has_explicit_content` is true iff
  * the SkillReview has both `<SkillReview.Prompt>` and
  * `<SkillReview.Answer>` children (B1 explicit path); false otherwise
  * (placeholder fallback path until Wedge C registry-resolution ships).
@@ -52,8 +51,7 @@ function hasExplicitSlots(el: MdxJsxFlowElement): boolean {
  */
 export function extractSkillReviews(
   tree: Root,
-  unitId: string,
-  artifactId: string
+  unitId: string
 ): SkillReviewEntry[] {
   const out: SkillReviewEntry[] = [];
   const seenAnchors = new Set<string>();
@@ -73,7 +71,7 @@ export function extractSkillReviews(
     if (target === undefined) return;
 
     counter += 1;
-    const anchor = `${artifactId}-sk-${counter}`;
+    const anchor = `sk-${counter}`;
     if (seenAnchors.has(anchor)) {
       throw new Error(
         `Intra-chapter anchor collision in chapter "${unitId}": SkillReview anchor "${anchor}" generated twice.`

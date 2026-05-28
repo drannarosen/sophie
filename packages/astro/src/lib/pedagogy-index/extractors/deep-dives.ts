@@ -20,9 +20,8 @@ import {
  * Anchor precedence (D-derive):
  *   1. explicit `id` (slugified)
  *   2. `slug(title)` when title is present
- *   3. positional fallback `${artifactId}-dd-${counter}` (counter is
- *      per-chapter sequential; the artifact prefix — Task 7 — keeps
- *      `reading-dd-1` distinct from `practice-dd-1`)
+ *   3. positional fallback `dd-${counter}` (counter is per-chapter
+ *      sequential, incremented once per matched deep-dive callout)
  *
  * Unlike misconceptions (which use the shared `deriveAsideAnchor`
  * helper via the shared `kind: "misconception"` branch with `name`
@@ -38,11 +37,7 @@ import {
  * misconceptions' M1).
  * Warns (non-production) on empty body (D3 invariant — soft check).
  */
-export function extractDeepDives(
-  tree: Root,
-  unitId: string,
-  artifactId: string
-): DeepDiveEntry[] {
+export function extractDeepDives(tree: Root, unitId: string): DeepDiveEntry[] {
   const out: DeepDiveEntry[] = [];
   const seenAnchors = new Set<string>();
   let counter = 0;
@@ -61,7 +56,7 @@ export function extractDeepDives(
       ? slugify(explicitId)
       : trimmedTitle
         ? slugify(trimmedTitle)
-        : `${artifactId}-dd-${counter}`;
+        : `dd-${counter}`;
 
     if (seenAnchors.has(anchor)) {
       throw new Error(
