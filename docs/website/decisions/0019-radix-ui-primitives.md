@@ -8,16 +8,12 @@ tags:
 status: shipped
 validation:
   status: validated
-  last_validated_date: "2026-05-25"
+  last_validated_date: "2026-05-28"
   evidence:
     - kind: deployment
       ref: packages/components/package.json
-      date: "2026-05-25"
-      notes: "Six Radix subpackages are declared as runtime dependencies in `@sophie/components`: `@radix-ui/react-accordion`, `@radix-ui/react-collapsible`, `@radix-ui/react-dialog`, `@radix-ui/react-hover-card`, `@radix-ui/react-slider`, `@radix-ui/react-tabs`. The v1 primitives this ADR scoped (Slider, Tabs, Collapsible, Tooltip→HoverCard, Dialog) are all in active use."
-    - kind: deployment
-      ref: packages/components/src/components/Tabs/Tabs.tsx
-      date: "2026-05-25"
-      notes: "Radix Tabs primitive composes the `<Example>` worked/anti/applied tabs pattern this ADR named in scope. Pairs with axe-core a11y tests per ADR 0004."
+      date: "2026-05-28"
+      notes: "Five Radix subpackages are declared as runtime dependencies in `@sophie/components`: `@radix-ui/react-accordion`, `@radix-ui/react-collapsible`, `@radix-ui/react-dialog`, `@radix-ui/react-hover-card`, `@radix-ui/react-slider`. The v1 primitives this ADR scoped (Slider, Collapsible, Tooltip→HoverCard, Dialog) are in active use; `@radix-ui/react-tabs` was dropped when `<Tabs>` became a hand-rolled ARIA-tabs controller (Amendment 1 / ADR 0087)."
     - kind: deployment
       ref: packages/components/src/components/Search/SearchModal.tsx
       date: "2026-05-25"
@@ -35,11 +31,13 @@ validation:
       date: "2026-05-25"
       notes: "AGENTS.md 'Locked decisions' table cites ADR 0019 as the routine-reasoning ADR governing a11y primitives. Radix is the de-facto headless primitives substrate in the codebase."
   notes: |
-    Nine files across `@sophie/components` import from `@radix-ui/*` and six
+    Files across `@sophie/components` import from `@radix-ui/*` and five
     Radix subpackages ship as declared deps. The v1 primitives this ADR scoped
-    (Slider, Tabs, Collapsible, Tooltip, Dialog) are all in active use, with
+    (Slider, Collapsible, Tooltip, Dialog) are in active use, with
     `react-hover-card` substituting for `react-tooltip` for richer popover
     content. Phase-2 Dialog has landed via the search modal, consumer-facing.
+    `@radix-ui/react-tabs` was removed when `<Tabs>` moved to a hand-rolled
+    ARIA-tabs controller (Amendment 1 / ADR 0087).
 ---
 
 # ADR 0019: Radix UI primitives for accessible interactive components
@@ -77,7 +75,10 @@ referencing
 Specific primitives in scope for v1:
 
 - `@radix-ui/react-slider` — confidence slider in `<Prediction>`.
-- `@radix-ui/react-tabs` — `<Example>` worked/anti/applied tabs.
+- `@radix-ui/react-tabs` — *(superseded — see Amendment 1 below)* —
+  originally scoped for `<Example>` worked/anti/applied tabs. `<Tabs>` is now
+  a hand-rolled ARIA-tabs controller per
+  [ADR 0087](../decisions/0087-compound-island-transform.md), not a Radix consumer.
 - `@radix-ui/react-collapsible` — `<MoreYouKnow>`.
 - `@radix-ui/react-tooltip` — glossary term hovers, audit
   warnings.
@@ -170,6 +171,29 @@ Phase 2+:
 - `shadcn/ui` is **referenced as a learning source** in the
   `<Name>.stories.tsx` and component-design conventions, **not**
   adopted as a dependency.
+
+## Amendments
+
+### Amendment 1 — `@radix-ui/react-tabs` dropped; `<Tabs>` is hand-rolled (2026-05-28)
+
+PR #209 ([ADR 0087](../decisions/0087-compound-island-transform.md))
+converted `<Tabs>` from a Radix `react-tabs` island into a **hand-rolled
+ARIA-tabs controller** lowered at MDX-compile time by the compound-island
+transform (static `role="tablist"/"tab"/"tabpanel"` markup + a childless
+controller island). `@radix-ui/react-tabs` was removed from
+`@sophie/components` — alongside `@radix-ui/react-radio-group` and
+`@radix-ui/react-checkbox`, which the formative family under
+[ADR 0073](../decisions/0073-unified-assessment-schema.md) also replaced
+with native form controls.
+
+**Net effect on this ADR:** the "`react-tabs` for `<Example>` tabs" v1
+scope item is superseded; **five** Radix subpackages remain in scope and
+active use (`react-accordion`, `react-collapsible`, `react-dialog`,
+`react-hover-card`, `react-slider`). The core decision — Radix as the
+headless-primitive substrate for the components that still need it —
+stands. Native controls were preferred for Tabs (and the formative MCQ /
+MultiSelect) because the compile-time transform yields correct ARIA for
+free and drops three runtime dependencies.
 
 ## References
 

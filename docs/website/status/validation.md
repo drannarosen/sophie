@@ -48,7 +48,7 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 | test | 102 |
 | chapter | 9 |
 | review | 31 |
-| deployment | 74 |
+| deployment | 73 |
 | audit | 9 |
 | manual | 40 |
 
@@ -80,7 +80,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0016-react-flow-for-concept-maps.md](/react-flow-for-concept-maps/) | unvalidated | future package split | — | — |  |
 | [docs/website/decisions/0017-rename-sophia-to-sophie.md](/rename-sophia-to-sophie/) | unvalidated | shipped | — | — |  |
 | [docs/website/decisions/0018-codemirror-6-for-codecell.md](/codemirror-6-for-codecell/) | unvalidated | accepted design | — | — |  |
-| [docs/website/decisions/0019-radix-ui-primitives.md](/radix-ui-primitives/) | validated | shipped | 2026-05-25 | deployment, manual | Nine files across `@sophie/components` import from `@radix-ui/*` and six Radix subpackages ship as declared deps. The v1 primitives this ADR scoped (Slider, Tabs, Collapsible, Tooltip, Dialog) are all in active use, with `react-hover-card` substituting for `react-tooltip` for richer popover content. Phase-2 Dialog has landed via the search modal, consumer-facing.  |
+| [docs/website/decisions/0019-radix-ui-primitives.md](/radix-ui-primitives/) | validated | shipped | 2026-05-28 | deployment, manual | Files across `@sophie/components` import from `@radix-ui/*` and five Radix subpackages ship as declared deps. The v1 primitives this ADR scoped (Slider, Collapsible, Tooltip, Dialog) are in active use, with `react-hover-card` substituting for `react-tooltip` for richer popover content. Phase-2 Dialog has landed via the search modal, consumer-facing. `@radix-ui/react-tabs` was removed when `<Tabs>` moved to a hand-rolled ARIA-tabs controller (Amendment 1 / ADR 0087).  |
 | [docs/website/decisions/0020-shiki-syntax-highlighting.md](/shiki-syntax-highlighting/) | unvalidated | accepted design | — | — |  |
 | [docs/website/decisions/0021-observable-plot-data-viz.md](/observable-plot-data-viz/) | validated | shipped | 2026-05-25 | deployment, test | Observable Plot is the data-viz substrate for `@sophie/components`. The BlackbodyExplorer figure is the canonical first consumer — it pairs Plot's grammar with a React-island parameter slider. Future v2 dashboards + `<CalibrationCurve>` (v3) inherit the same `@observablehq/plot` dep declaration without re-litigating the choice.  |
 | [docs/website/decisions/0022-tsup-library-builds.md](/tsup-library-builds/) | validated | shipped | 2026-05-25 | deployment | All five published `@sophie/*` packages ship a `tsup.config.ts` and build via tsup. The bundler choice this ADR locks is uniform across the package graph; no package has migrated to webpack/rollup/Vite-library mode. The "~8 publishable packages" projection in the ADR Context now rolls up to 5 shipped packages — schema collapsed into `@sophie/core`; other planned packages remain pre-vertical-slice per ADR 0023.  |
