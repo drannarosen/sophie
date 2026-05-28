@@ -1,6 +1,7 @@
 import { defineCollection } from "astro:content";
 import {
   ArtifactReferencesSchema,
+  CourseInfoFragmentSchema,
   EquationRegistryEntrySchema,
   NonEmptyString,
   SectionSchema,
@@ -46,4 +47,22 @@ const topics = defineCollection({
   schema: TopicEntrySchema,
 });
 
-export const collections = { sections, units, artifacts, equations, topics };
+// Course-info prose fragments (ADR 0080 course-info projection). The
+// filename slug is the id; `prose/<slug>` refs in course.sophie.yaml's
+// info_pages resolve to src/content/course-info/<slug>.mdx. @sophie/astro's
+// info-page route calls getCollection("course-info"), so the consumer
+// must declare it. This collection is the regression guard for the
+// course-info/landing projection in the packed (dist) consumer.
+const courseInfo = defineCollection({
+  loader: glob({ pattern: "*.mdx", base: "./src/content/course-info" }),
+  schema: CourseInfoFragmentSchema,
+});
+
+export const collections = {
+  sections,
+  units,
+  artifacts,
+  equations,
+  topics,
+  "course-info": courseInfo,
+};
