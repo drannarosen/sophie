@@ -5,6 +5,7 @@ import {
   mdxInlineJsx,
   mdxKeyEquationCitation,
   mdxLearningObjectives,
+  mdxNamedFlow,
   mdxObjective,
   para,
   root,
@@ -216,5 +217,76 @@ describe("pedagogyIndexRemarkPlugin (objectives + inline-ref usages)", () => {
       "eq-ref",
       "glossary-term",
     ]);
+  });
+});
+
+describe("pedagogyIndexRemarkPlugin (Task 7 — artifact-scoped chapter pass)", () => {
+  /** A synthetic `<QuickCheck>` formative with a single prompt child. */
+  const quickCheck = (id?: string) =>
+    mdxNamedFlow("QuickCheck", id ? { id } : {}, [
+      mdxNamedFlow("QuickCheck.Prompt", {}, [para("Why does the Sun shine?")]),
+      mdxNamedFlow("Solution", {}, [para("Fusion.")]),
+    ]);
+
+  test("both reading.mdx and practice.mdx contribute formatives to the SAME unit (no clobber)", () => {
+    const plugin = pedagogyIndexRemarkPlugin();
+    const unitDir =
+      "/repo/src/content/sections/sec-a/units/chrome-primitives-demo";
+
+    // reading.mdx authors one formative…
+    plugin(root([quickCheck()]) as never, {
+      path: `${unitDir}/reading.mdx`,
+    });
+    // …then practice.mdx authors two more for the SAME unit.
+    plugin(root([quickCheck(), quickCheck()]) as never, {
+      path: `${unitDir}/practice.mdx`,
+    });
+
+    const inUnit = indexAccumulator
+      .asPedagogyIndex()
+      .formatives.filter((f) => f.unit === "chrome-primitives-demo");
+    // Under the old `clearUnit`, practice.mdx's pass would have wiped
+    // reading.mdx's entry. Artifact-scoped keys keep all three.
+    expect(inUnit).toHaveLength(3);
+    expect(inUnit.map((f) => f.anchor).sort()).toEqual([
+      "practice-form-1",
+      "practice-form-2",
+      "reading-form-1",
+    ]);
+  });
+
+  test("re-parsing practice.mdx (HMR) leaves reading.mdx's formative intact", () => {
+    const plugin = pedagogyIndexRemarkPlugin();
+    const unitDir =
+      "/repo/src/content/sections/sec-a/units/chrome-primitives-demo";
+
+    plugin(root([quickCheck()]) as never, { path: `${unitDir}/reading.mdx` });
+    plugin(root([quickCheck()]) as never, { path: `${unitDir}/practice.mdx` });
+    // Re-parse practice.mdx only (simulated HMR) — clearUnitArtifact
+    // drops practice's entries then re-adds them; reading's survive.
+    plugin(root([quickCheck()]) as never, { path: `${unitDir}/practice.mdx` });
+
+    const inUnit = indexAccumulator
+      .asPedagogyIndex()
+      .formatives.filter((f) => f.unit === "chrome-primitives-demo");
+    expect(inUnit).toHaveLength(2);
+    expect(inUnit.map((f) => f.anchor).sort()).toEqual([
+      "practice-form-1",
+      "reading-form-1",
+    ]);
+  });
+
+  test("an explicit formative id authored in BOTH artifacts of one unit throws", () => {
+    const plugin = pedagogyIndexRemarkPlugin();
+    const unitDir = "/repo/src/content/sections/sec-a/units/collide-demo";
+
+    plugin(root([quickCheck("photon-budget")]) as never, {
+      path: `${unitDir}/reading.mdx`,
+    });
+    expect(() =>
+      plugin(root([quickCheck("photon-budget")]) as never, {
+        path: `${unitDir}/practice.mdx`,
+      })
+    ).toThrow(/two artifacts of unit/i);
   });
 });

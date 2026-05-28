@@ -15,7 +15,11 @@ describe("extractKeyInsights (pure)", () => {
       ]),
     ]);
 
-    const entries = extractKeyInsights(tree as never, "spoiler-alerts");
+    const entries = extractKeyInsights(
+      tree as never,
+      "spoiler-alerts",
+      "reading"
+    );
 
     expect(entries).toHaveLength(1);
     expect(entries[0]).toMatchObject({
@@ -34,9 +38,9 @@ describe("extractKeyInsights (pure)", () => {
       mdxAside({ kind: "key-insight" }, [para("An untitled insight body.")]),
     ]);
 
-    const entries = extractKeyInsights(tree as never, "ch");
+    const entries = extractKeyInsights(tree as never, "ch", "reading");
     expect(entries).toHaveLength(1);
-    expect(entries[0]?.anchor).toBe("ki-1");
+    expect(entries[0]?.anchor).toBe("reading-ki-1");
     expect(entries[0]?.title).toBeUndefined();
   });
 
@@ -48,7 +52,7 @@ describe("extractKeyInsights (pure)", () => {
       mdxAside({ kind: "key-insight", id: "shared-anchor" }, [para("second")]),
     ]);
 
-    expect(() => extractKeyInsights(tree as never, "ch")).toThrow(
+    expect(() => extractKeyInsights(tree as never, "ch", "reading")).toThrow(
       /anchor collision|duplicate/i
     );
   });
@@ -60,7 +64,7 @@ describe("extractKeyInsights (pure)", () => {
       mdxAside({ kind: "key-insight", title: "Real insight" }, [para("body")]),
     ]);
 
-    const entries = extractKeyInsights(tree as never, "ch");
+    const entries = extractKeyInsights(tree as never, "ch", "reading");
     expect(entries).toHaveLength(1);
     expect(entries[0]?.title).toBe("Real insight");
   });
@@ -73,7 +77,7 @@ describe("extractKeyInsights (pure)", () => {
       ),
     ]);
 
-    const entries = extractKeyInsights(tree as never, "ch");
+    const entries = extractKeyInsights(tree as never, "ch", "reading");
     expect(entries[0]?.anchor).toBe("custom-anchor");
     expect(entries[0]?.title).toBe("Some Title");
   });
@@ -84,9 +88,12 @@ describe("extractKeyInsights (pure)", () => {
       mdxAside({ kind: "key-insight" }, [para("second")]),
     ]);
 
-    const entries = extractKeyInsights(tree as never, "ch");
+    const entries = extractKeyInsights(tree as never, "ch", "reading");
     expect(entries).toHaveLength(2);
-    expect(entries.map((e) => e.anchor)).toEqual(["ki-1", "ki-2"]);
+    expect(entries.map((e) => e.anchor)).toEqual([
+      "reading-ki-1",
+      "reading-ki-2",
+    ]);
   });
 
   // W4c D4: slug is derived at extraction time.
@@ -99,7 +106,8 @@ describe("extractKeyInsights (pure)", () => {
 
     const entries = extractKeyInsights(
       tree as never,
-      "spectra-and-composition"
+      "spectra-and-composition",
+      "reading"
     );
     expect(entries[0]?.slug).toBe("light-is-information");
   });
@@ -111,10 +119,11 @@ describe("extractKeyInsights (pure)", () => {
 
     const entries = extractKeyInsights(
       tree as never,
-      "spectra-and-composition"
+      "spectra-and-composition",
+      "reading"
     );
-    expect(entries[0]?.anchor).toBe("ki-1");
-    expect(entries[0]?.slug).toBe("spectra-and-composition-ki-1");
+    expect(entries[0]?.anchor).toBe("reading-ki-1");
+    expect(entries[0]?.slug).toBe("spectra-and-composition-reading-ki-1");
   });
 
   // W4c Task 2.2 reviewer Minor #1: whitespace-only title trims to
@@ -125,8 +134,8 @@ describe("extractKeyInsights (pure)", () => {
       mdxAside({ kind: "key-insight", title: "   " }, [para("body")]),
     ]);
 
-    const entries = extractKeyInsights(tree as never, "x");
+    const entries = extractKeyInsights(tree as never, "x", "reading");
     expect(entries[0]?.title).toBeUndefined();
-    expect(entries[0]?.slug).toBe("x-ki-1");
+    expect(entries[0]?.slug).toBe("x-reading-ki-1");
   });
 });

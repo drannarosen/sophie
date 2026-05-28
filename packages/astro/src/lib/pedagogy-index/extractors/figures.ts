@@ -16,7 +16,14 @@ import { type MdxJsxFlowElement, readFigureAttributes } from "../jsx-utils.ts";
  *   - `number`: per-chapter sequential, starting at 1, source order
  *   - `anchor`: `fig-${slugify(name)}-${counter}` (counter-suffixed so
  *     repeated uses of the same registry name in one chapter get
- *     unique anchors; F5 invariant defense-in-depth, see below)
+ *     unique anchors; F5 invariant defense-in-depth, see below).
+ *     NOT artifact-prefixed (Task 7): figure anchors are name-derived
+ *     and double as the rendered DOM `id` for hash navigation /
+ *     figure numbering, so prefixing would change the public anchor.
+ *     The accumulator's `${unit}#${artifactId}#${anchor}` key already
+ *     keeps same-name figures from two artifacts of one unit from
+ *     clobbering each other; the name component disambiguates the
+ *     authoring source for consumers.
  *   - `canonical`: true when the author opts in via the boolean-
  *     presence `canonical` JSX prop; false by default
  *   - `captionOverride`: trimmed `caption` JSX prop value if present
@@ -35,6 +42,10 @@ export function extractFigures(
   unitId: string,
   chapterNumber?: number
 ): FigureUsageEntry[] {
+  // `artifactId` is NOT a parameter here: figure anchors are name-
+  // derived (not positional) and the accumulator threads the artifact
+  // id separately into the storage key. See the anchor JSDoc above for
+  // why figures opt out of the auto-anchor artifact prefix.
   const out: FigureUsageEntry[] = [];
   const seenAnchors = new Set<string>();
   let counter = 0;

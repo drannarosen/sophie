@@ -81,7 +81,7 @@ describe("CourseFigures — axe-core a11y", () => {
         caption: "Solar absorption spectrum across visible wavelengths.",
       },
     ]);
-    indexAccumulator.addFigureUsages([
+    indexAccumulator.addFigureUsages("u", "reading", [
       {
         name: "hr-diagram",
         unit: "ch-stellar-properties",
@@ -122,7 +122,7 @@ describe("CourseFigures — axe-core a11y", () => {
           "Hertzsprung-Russell diagram of stellar luminosity vs temperature.",
       },
     ]);
-    indexAccumulator.addFigureUsages([
+    indexAccumulator.addFigureUsages("u", "reading", [
       {
         name: "hr-diagram",
         unit: "ch-stellar-properties",

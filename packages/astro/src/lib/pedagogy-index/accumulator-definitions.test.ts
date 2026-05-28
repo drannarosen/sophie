@@ -9,7 +9,7 @@ describe("indexAccumulator (cross-chapter)", () => {
   // Top-level beforeEach wipes accumulator state before each test.
 
   test("aggregates definitions from multiple chapters", () => {
-    indexAccumulator.addDefinitions([
+    indexAccumulator.addDefinitions("u", "reading", [
       {
         term: "Parallax",
         slug: "parallax",
@@ -19,7 +19,7 @@ describe("indexAccumulator (cross-chapter)", () => {
         canonical: false,
       },
     ]);
-    indexAccumulator.addDefinitions([
+    indexAccumulator.addDefinitions("u", "reading", [
       {
         term: "Flux",
         slug: "flux",
@@ -37,7 +37,7 @@ describe("indexAccumulator (cross-chapter)", () => {
   });
 
   test("ADR 0086: same slug in multiple chapters is allowed; both entries retained", () => {
-    indexAccumulator.addDefinitions([
+    indexAccumulator.addDefinitions("u", "reading", [
       {
         term: "Kirchhoff's laws",
         slug: "kirchhoffs-laws",
@@ -49,7 +49,7 @@ describe("indexAccumulator (cross-chapter)", () => {
     ]);
 
     expect(() =>
-      indexAccumulator.addDefinitions([
+      indexAccumulator.addDefinitions("u", "reading", [
         {
           term: "Kirchhoff's laws",
           slug: "kirchhoffs-laws",
@@ -68,7 +68,7 @@ describe("indexAccumulator (cross-chapter)", () => {
   });
 
   test("ADR 0086: two chapters marking one slug canonical throws", () => {
-    indexAccumulator.addDefinitions([
+    indexAccumulator.addDefinitions("u", "reading", [
       {
         term: "Blackbody",
         slug: "blackbody",
@@ -80,7 +80,7 @@ describe("indexAccumulator (cross-chapter)", () => {
     ]);
 
     expect(() =>
-      indexAccumulator.addDefinitions([
+      indexAccumulator.addDefinitions("u", "reading", [
         {
           term: "Blackbody",
           slug: "blackbody",
@@ -95,7 +95,7 @@ describe("indexAccumulator (cross-chapter)", () => {
 
   test("ADR 0086: one canonical + one non-canonical for a slug is fine", () => {
     expect(() =>
-      indexAccumulator.addDefinitions([
+      indexAccumulator.addDefinitions("u", "reading", [
         {
           term: "Spectroscopy",
           slug: "spectroscopy",
@@ -116,8 +116,8 @@ describe("indexAccumulator (cross-chapter)", () => {
     ).not.toThrow();
   });
 
-  test("clearUnit removes only that chapter's entries", () => {
-    indexAccumulator.addDefinitions([
+  test("clearUnitArtifact removes only that chapter's entries", () => {
+    indexAccumulator.addDefinitions("u", "reading", [
       {
         term: "Alpha",
         slug: "alpha",
@@ -136,7 +136,7 @@ describe("indexAccumulator (cross-chapter)", () => {
       },
     ]);
 
-    indexAccumulator.clearUnit("ch-a");
+    indexAccumulator.clearUnitArtifact("ch-a", "reading");
     const index = indexAccumulator.asPedagogyIndex();
     const inA = index.definitions.filter((d) => d.unit === "ch-a");
     const inB = index.definitions.filter((d) => d.unit === "ch-b");
@@ -145,7 +145,7 @@ describe("indexAccumulator (cross-chapter)", () => {
   });
 
   test("re-adding a chapter's entries after clearUnit does not throw", () => {
-    indexAccumulator.addDefinitions([
+    indexAccumulator.addDefinitions("u", "reading", [
       {
         term: "Gamma",
         slug: "gamma",
@@ -155,10 +155,10 @@ describe("indexAccumulator (cross-chapter)", () => {
         canonical: true,
       },
     ]);
-    indexAccumulator.clearUnit("ch-a");
+    indexAccumulator.clearUnitArtifact("ch-a", "reading");
 
     expect(() =>
-      indexAccumulator.addDefinitions([
+      indexAccumulator.addDefinitions("u", "reading", [
         {
           term: "Gamma",
           slug: "gamma",

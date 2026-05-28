@@ -34,27 +34,58 @@ import { transformMultiRep } from "./transforms/multirep.ts";
 import { transformOMIFlow } from "./transforms/omi-flow.ts";
 
 /**
- * Default chapter-slug deriver. W2/D4 (Path A) graduation: the
- * chapter slug per-callsite extractors carry is the Unit id, which
- * equals the parent-directory name of the `reading.mdx` artifact. For
- * `examples/smoke/src/content/sections/foundations/units/measuring-the-sky/reading.mdx`
- * this yields `"measuring-the-sky"` (matching the URL at
- * `/units/measuring-the-sky/reading`).
+ * Per-unit artifact filenames that route to the chapter pass. Task 7
+ * artifact-scoped pedagogy-index refactor: a single Unit now composes
+ * multiple MDX artifacts (`reading.mdx`, `practice.mdx`, future
+ * `slides.mdx`) that each contribute pedagogy entries to the same
+ * `unitId`. The accumulator keys by `${unit}#${artifactId}#${anchor}`
+ * so artifacts within a unit don't clobber each other via
+ * `clearUnitArtifact`.
  *
- * The W3 rename of per-callsite `chapter: string` → `unit: string` is
- * out of W2 scope; this function keeps its name + return shape (the
- * value is now a Unit id by interpretation).
+ * Forward-compat: adding a new artifact (e.g. `slides.mdx`) is a one-
+ * line extension to `CHAPTER_ARTIFACT_LEAF_RE` below +
+ * `defaultGetChapterSlug`'s regex + an audit pass to make sure no
+ * extractor needs artifact-specific routing.
+ */
+const CHAPTER_ARTIFACT_LEAF_RE = /[/\\](reading|practice)\.mdx$/;
+
+/**
+ * Default chapter-slug deriver. W2/D4 (Path A) graduation + Task 7
+ * artifact-scoped extension: the chapter slug per-callsite extractors
+ * carry is the Unit id, which equals the parent-directory name of any
+ * chapter-pass artifact under the unit. For
+ * `examples/smoke/src/content/sections/foundations/units/measuring-the-sky/practice.mdx`
+ * this yields `"measuring-the-sky"` (same as `reading.mdx` under the
+ * same unit dir; both files contribute to the same `unitId`).
  *
  * Consumer apps with non-default content layouts pass their own
  * `getChapterSlug` to `pedagogyIndexRemarkPlugin()`.
  */
 function defaultGetChapterSlug(filePath: string): string | undefined {
-  // W2 expected shape: `…/content/sections/<sec>/units/<unit>/reading.mdx` →
-  // capture `<unit>`. Future shapes (alternative artifact filenames per
-  // ADR 0067) widen the capture group.
-  const match = filePath.match(/[/\\]([^/\\]+)[/\\]reading\.mdx$/);
+  const match = filePath.match(/[/\\]([^/\\]+)[/\\](?:reading|practice)\.mdx$/);
   if (!match) return undefined;
   return match[1];
+}
+
+/**
+ * Derive a stable artifact id from a chapter-pass file path (Task 7).
+ * The artifact id is the filename stem (`reading.mdx` → `"reading"`,
+ * `practice.mdx` → `"practice"`); the accumulator concatenates it into
+ * the internal storage key so two artifacts of the same unit don't
+ * clobber each other.
+ *
+ * The stem is read from the last path segment with its extension
+ * stripped. This handles both the standard chapter-pass artifacts AND
+ * the custom-`getChapterSlug` path (consumer apps / tests passing
+ * arbitrary `.mdx` paths) — those still get a deterministic,
+ * human-readable artifact id from their filename. Falls back to
+ * `"artifact"` only for the degenerate empty-stem case (structurally
+ * unreachable for any real file path).
+ */
+function getArtifactId(filePath: string): string {
+  const leaf = filePath.split(/[/\\]/).pop() ?? "";
+  const stem = leaf.replace(/\.[^.]+$/, "");
+  return stem.length > 0 ? stem : "artifact";
 }
 
 /**
@@ -69,12 +100,16 @@ const EQUATION_REGISTRY_PATH_RE = /[/\\]content[/\\]equations[/\\]/;
 const TOPIC_REGISTRY_PATH_RE = /[/\\]content[/\\]topics[/\\]/;
 
 function isChapterFilePath(filePath: string): boolean {
-  // W2/D1 (Path A): only `reading.mdx` artifacts under sections/<sec>/units/<unit>/
-  // route to the chapter pass. Section-level artifacts (intro.mdx,
-  // synthesis.mdx, etc.) and other unit-level artifacts (slides.mdx,
-  // spec.mdx, etc.) are NOT chapter-pass content — they get their own
-  // extractor surfaces in future wedges.
-  return CHAPTER_PATH_RE.test(filePath) && /[/\\]reading\.mdx$/.test(filePath);
+  // Task 7 artifact-scoped routing: both `reading.mdx` AND `practice.mdx`
+  // under sections/<sec>/units/<unit>/ route to the chapter pass; the
+  // accumulator's artifact-scoped keys (and `clearUnitArtifact`) prevent
+  // the two artifacts from clobbering each other's entries. Adding a
+  // third chapter-pass artifact (e.g. `slides.mdx`) is a one-line change
+  // to `CHAPTER_ARTIFACT_LEAF_RE` + `defaultGetChapterSlug`'s regex
+  // (`getArtifactId` derives the stem generically, no change needed).
+  return (
+    CHAPTER_PATH_RE.test(filePath) && CHAPTER_ARTIFACT_LEAF_RE.test(filePath)
+  );
 }
 
 function isEquationRegistryFilePath(filePath: string): boolean {
@@ -236,7 +271,11 @@ export function pedagogyIndexRemarkPlugin(
       indexAccumulator.clearTopic(topic.id);
       indexAccumulator.addTopic(topic);
       indexAccumulator.addCards(cards);
-      if (findings.length > 0) indexAccumulator.addExtractorFindings(findings);
+      // Topic findings are registry-sourced (not chapter-pass), so they
+      // carry the sentinel empty artifact id; `clearTopic` filters them
+      // by `location.unit === topicId`, not by artifact (Task 7).
+      if (findings.length > 0)
+        indexAccumulator.addExtractorFindings("", findings);
       return;
     }
 
@@ -255,14 +294,25 @@ export function pedagogyIndexRemarkPlugin(
     }
     if (!unitId) return;
 
+    // Task 7 — derive the artifact id (filename stem) once per chapter
+    // pass and thread it to every accumulator add* call so two
+    // artifacts of the same unit (`reading.mdx`, `practice.mdx`) don't
+    // clobber each other. Auto-anchor-emitting extractors also receive
+    // it to namespace their positional anchors (e.g. `practice-form-1`).
+    const artifactId = getArtifactId(filePath);
+
     // Sprint F — read the chapter's display `chapter` number from
     // frontmatter once per chapter pass and thread it to extractors
     // that need it (figures today; key-equations in Sprint E). When
     // absent, extractors fall back to within-chapter-only numbering.
     const chapterNumber = readChapterNumberFromFrontmatter(filePath);
 
-    indexAccumulator.clearUnit(unitId);
-    indexAccumulator.addDefinitions(extractDefinitions(tree, unitId));
+    indexAccumulator.clearUnitArtifact(unitId, artifactId);
+    indexAccumulator.addDefinitions(
+      unitId,
+      artifactId,
+      extractDefinitions(tree, unitId)
+    );
     // ADR 0038 § A2.6 — CL1 emits ERROR findings for <KeyEquation>
     // callsites missing a `client:*` hydration directive. Same wrapper-
     // shape return convention as `extractOMIFlows` /
@@ -272,65 +322,121 @@ export function pedagogyIndexRemarkPlugin(
       unitId,
       chapterNumber
     );
-    indexAccumulator.addEquationCitations(equationCitationResult.entries);
-    indexAccumulator.addExtractorFindings(equationCitationResult.findings);
-    indexAccumulator.addKeyInsights(extractKeyInsights(tree, unitId));
+    indexAccumulator.addEquationCitations(
+      unitId,
+      artifactId,
+      equationCitationResult.entries
+    );
+    indexAccumulator.addExtractorFindings(
+      artifactId,
+      equationCitationResult.findings
+    );
+    indexAccumulator.addKeyInsights(
+      unitId,
+      artifactId,
+      extractKeyInsights(tree, unitId, artifactId)
+    );
     indexAccumulator.addFigureUsages(
+      unitId,
+      artifactId,
       extractFigures(tree, unitId, chapterNumber)
     );
-    indexAccumulator.addMisconceptions(extractMisconceptions(tree, unitId));
+    indexAccumulator.addMisconceptions(
+      unitId,
+      artifactId,
+      extractMisconceptions(tree, unitId, artifactId)
+    );
     // ADR 0058 §R-deep-dive — <Callout variant="deep-dive"> tracking
     // (PR-B follow-up to PR-A's renderer surface). The-more-you-know
     // callouts are intentionally NOT walked.
-    indexAccumulator.addDeepDives(extractDeepDives(tree, unitId));
+    indexAccumulator.addDeepDives(
+      unitId,
+      artifactId,
+      extractDeepDives(tree, unitId, artifactId)
+    );
     // ADR 0063 — A8 <OMIFlow> composite primitive. Extractor walks
     // <OMIFlow> JSX and emits OMIFlowEntry rows plus OF-3 WARNING
     // findings for any unknown JSX children (post-W4c R7 doctrine).
-    const omiResult = extractOMIFlows(tree, unitId);
-    indexAccumulator.addOMIFlows(omiResult.entries);
-    indexAccumulator.addExtractorFindings(omiResult.findings);
+    const omiResult = extractOMIFlows(tree, unitId, artifactId);
+    indexAccumulator.addOMIFlows(unitId, artifactId, omiResult.entries);
+    indexAccumulator.addExtractorFindings(artifactId, omiResult.findings);
     // ADR 0081 + WS B+D — <WorkedExample> extractor. Counts slot
     // children + emits WE-3 WARNING findings for any unknown JSX
     // children (R7 doctrine, mirrors OMIFlow's OF-3). Audit-time
     // invariants WE-1 / WE-2 consume the per-entry `slots` summary.
-    const workedExampleResult = extractWorkedExamples(tree, unitId);
-    indexAccumulator.addWorkedExamples(workedExampleResult.entries);
-    indexAccumulator.addExtractorFindings(workedExampleResult.findings);
+    const workedExampleResult = extractWorkedExamples(tree, unitId, artifactId);
+    indexAccumulator.addWorkedExamples(
+      unitId,
+      artifactId,
+      workedExampleResult.entries
+    );
+    indexAccumulator.addExtractorFindings(
+      artifactId,
+      workedExampleResult.findings
+    );
     // ADR 0073 Amendment 1 — formative-assessment extractor. One entry
     // per formative-parent callsite; AS-1 / AS-4 / AS-5 ERROR findings
     // are pushed at extract-time (count-bearing detection the
     // materialized answer can't carry); AS-2 / AS-3 are derived in the
     // audit phase by `checkFormative`.
-    const formativeResult = extractFormative(tree, unitId);
-    indexAccumulator.addFormatives(formativeResult.entries);
-    indexAccumulator.addExtractorFindings(formativeResult.findings);
+    const formativeResult = extractFormative(tree, unitId, artifactId);
+    indexAccumulator.addFormatives(unitId, artifactId, formativeResult.entries);
+    indexAccumulator.addExtractorFindings(artifactId, formativeResult.findings);
     // Wedge B1 retrieval-family extractors. Each emits one entry per
     // matching JSX flow element; pure read pass (no mutation). PRA-1
     // (prereq activation), RET-1 (retrieval coverage), and SR-1
     // (SpacedReview ref validity) consume these in the audit phase.
-    indexAccumulator.addRetrievalPrompts(extractRetrievalPrompts(tree, unitId));
-    indexAccumulator.addSpacedReviews(extractSpacedReviews(tree, unitId));
-    indexAccumulator.addSkillReviews(extractSkillReviews(tree, unitId));
-    indexAccumulator.addObjectives(extractObjectives(tree, unitId));
+    indexAccumulator.addRetrievalPrompts(
+      unitId,
+      artifactId,
+      extractRetrievalPrompts(tree, unitId, artifactId)
+    );
+    indexAccumulator.addSpacedReviews(
+      unitId,
+      artifactId,
+      extractSpacedReviews(tree, unitId, artifactId)
+    );
+    indexAccumulator.addSkillReviews(
+      unitId,
+      artifactId,
+      extractSkillReviews(tree, unitId, artifactId)
+    );
+    indexAccumulator.addObjectives(
+      unitId,
+      artifactId,
+      extractObjectives(tree, unitId)
+    );
     // ADR 0038 § A2.6 — CL1 audit invariant emits ERROR findings for
     // store-backed inline-refs missing a `client:*` hydration directive.
     // Findings ride PedagogyIndex.extractorFindings and surface as
     // build errors via passthroughExtractorFindings.
     const inlineRefResult = extractInlineRefUsages(tree, unitId);
-    indexAccumulator.addInlineRefUsages(inlineRefResult.usages);
-    indexAccumulator.addExtractorFindings(inlineRefResult.findings);
+    indexAccumulator.addInlineRefUsages(
+      unitId,
+      artifactId,
+      inlineRefResult.usages
+    );
+    indexAccumulator.addExtractorFindings(artifactId, inlineRefResult.findings);
     // #191 — `extractMultiReps` now also returns inline-ref usages for
     // each `<RepFigure>` / `<RepEquation>` child so MultiRep references
     // count toward F4 (orphan figure) + R-series equation invariants.
     const multiRepResult = extractMultiReps(tree, unitId);
-    indexAccumulator.addMultiReps(multiRepResult.entries);
-    indexAccumulator.addInlineRefUsages(multiRepResult.inlineRefUsages);
+    indexAccumulator.addMultiReps(unitId, artifactId, multiRepResult.entries);
+    indexAccumulator.addInlineRefUsages(
+      unitId,
+      artifactId,
+      multiRepResult.inlineRefUsages
+    );
     // Intervention PR-γ — pair the misconception graph with cognitive-
     // science-grounded remediation moves (ADR 0044). Read-only harvest
     // BEFORE the LO/MultiRep transform passes that mutate the tree;
     // `<Intervention>` is rendered by React via its children, so the
     // extract pass reads body prose from `el.children` un-rewritten.
-    indexAccumulator.addInterventions(extractInterventions(tree, unitId));
+    indexAccumulator.addInterventions(
+      unitId,
+      artifactId,
+      extractInterventions(tree, unitId)
+    );
 
     // PR 10 print-polish: mark the first <GlossaryTerm> per slug per
     // chapter with `data-first-use="true"`. Downstream GlossaryTerm.tsx
@@ -367,7 +473,9 @@ export function pedagogyIndexRemarkPlugin(
     // inference props (ADR 0063). The slot marker components return
     // null at runtime; without this transform Astro's MDX integration
     // discards the slot bodies before the outer <OMIFlow> runs. Same
-    // shape + same shared parser as extractOMIFlows (above).
-    transformOMIFlow(tree, unitId);
+    // shape + same shared parser as extractOMIFlows (above). Threads
+    // `artifactId` so the injected DOM `id` matches the extractor's
+    // artifact-namespaced auto-anchor (`${artifactId}-omi-${n}`, Task 7).
+    transformOMIFlow(tree, unitId, artifactId);
   };
 }

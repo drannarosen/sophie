@@ -46,7 +46,7 @@ afterEach(() => {
 
 describe("CourseKeyInsights — axe-core a11y", () => {
   test("renders with key insights — zero violations", async () => {
-    indexAccumulator.addKeyInsights([
+    indexAccumulator.addKeyInsights("u", "reading", [
       {
         title: "Distance is the hardest measurement in astronomy",
         slug: "distance-is-the-hardest-measurement-in-astronomy",
@@ -77,7 +77,7 @@ describe("CourseKeyInsights — axe-core a11y", () => {
     // confirm that wrapping the consumer in the production `<main>` parent
     // does NOT produce a duplicate-main violation. The shell now emits
     // `<section aria-labelledby>`, so this composition is clean.
-    indexAccumulator.addKeyInsights([
+    indexAccumulator.addKeyInsights("u", "reading", [
       {
         title: "Distance is the hardest measurement in astronomy",
         slug: "distance-is-the-hardest-measurement-in-astronomy",

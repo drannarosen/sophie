@@ -19,8 +19,8 @@ const RESOLVED_ID = `\0${PEDAGOGY_INDEX_VIRTUAL_ID}`;
 
 beforeEach(() => {
   // Reset the accumulator between tests (it's a module singleton).
-  indexAccumulator.clearUnit("test-ch-a");
-  indexAccumulator.clearUnit("test-ch-b");
+  indexAccumulator.clearUnitArtifact("test-ch-a", "reading");
+  indexAccumulator.clearUnitArtifact("test-ch-b", "reading");
 });
 
 describe("pedagogyIndexVirtualModule — resolveId", () => {
@@ -54,7 +54,7 @@ describe("pedagogyIndexVirtualModule — load", () => {
   });
 
   test("emitted source serializes a populated definitions array", () => {
-    indexAccumulator.addDefinitions([
+    indexAccumulator.addDefinitions("u", "reading", [
       {
         term: "Parallax",
         slug: "parallax",

@@ -37,7 +37,11 @@ import type { MdxJsxFlowElement } from "../jsx-utils.ts";
  * `observable={}` (JSXEmptyExpression → undefined) and SSR renders
  * the slot as empty.
  */
-export function transformOMIFlow(tree: Root, unitId: string): void {
+export function transformOMIFlow(
+  tree: Root,
+  unitId: string,
+  artifactId: string
+): void {
   let counter = 0;
   const seenAnchors = new Set<string>();
 
@@ -61,7 +65,7 @@ export function transformOMIFlow(tree: Root, unitId: string): void {
     if (parent.name !== "OMIFlow") return;
 
     counter += 1;
-    const anchor = deriveOMIFlowAnchor(parent, counter);
+    const anchor = deriveOMIFlowAnchor(parent, counter, artifactId);
     if (seenAnchors.has(anchor)) {
       // Mirror the extractor's intra-chapter collision throw so the
       // transform doesn't silently accept input the extractor would

@@ -17,7 +17,7 @@ describe("indexAccumulator inlineRefUsages (cross-chapter)", () => {
   });
 
   test("addInlineRefUsages appends entries; same (kind, refKey) duplicates coexist", () => {
-    indexAccumulator.addInlineRefUsages([
+    indexAccumulator.addInlineRefUsages("u", "reading", [
       usage({ unit: "iru-multi" }),
       usage({ unit: "iru-multi" }),
       usage({ kind: "eq-ref", refKey: "wiens-law", unit: "iru-multi" }),
@@ -30,13 +30,13 @@ describe("indexAccumulator inlineRefUsages (cross-chapter)", () => {
     expect(glossary).toHaveLength(2);
   });
 
-  test("clearUnit removes inlineRefUsages for that chapter; others survive", () => {
-    indexAccumulator.addInlineRefUsages([
+  test("clearUnitArtifact removes inlineRefUsages for that chapter; others survive", () => {
+    indexAccumulator.addInlineRefUsages("u", "reading", [
       usage({ unit: "iru-clr-a", refKey: "term-a" }),
       usage({ unit: "iru-clr-b", refKey: "term-b" }),
     ]);
 
-    indexAccumulator.clearUnit("iru-clr-a");
+    indexAccumulator.clearUnitArtifact("iru-clr-a", "reading");
 
     const index = indexAccumulator.asPedagogyIndex();
     expect(
@@ -45,5 +45,23 @@ describe("indexAccumulator inlineRefUsages (cross-chapter)", () => {
     expect(
       index.inlineRefUsages.find((u) => u.unit === "iru-clr-b")?.refKey
     ).toBe("term-b");
+  });
+
+  test("clearUnitArtifact is artifact-scoped within one unit: clearing 'practice' keeps the same unit's 'reading' usages (append-only over-clear shield)", () => {
+    indexAccumulator.addInlineRefUsages("iru-multi-art", "reading", [
+      usage({ unit: "iru-multi-art", refKey: "from-reading" }),
+    ]);
+    indexAccumulator.addInlineRefUsages("iru-multi-art", "practice", [
+      usage({ unit: "iru-multi-art", refKey: "from-practice" }),
+    ]);
+
+    indexAccumulator.clearUnitArtifact("iru-multi-art", "practice");
+
+    const index = indexAccumulator.asPedagogyIndex();
+    const refs = index.inlineRefUsages.filter(
+      (u) => u.unit === "iru-multi-art"
+    );
+    expect(refs).toHaveLength(1);
+    expect(refs[0]?.refKey).toBe("from-reading");
   });
 });

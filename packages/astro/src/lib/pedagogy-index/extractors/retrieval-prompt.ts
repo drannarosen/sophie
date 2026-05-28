@@ -8,8 +8,9 @@ import { type MdxJsxFlowElement, readStringAttr } from "../jsx-utils.ts";
  *
  * Walks an mdast tree, finds JSX elements named "RetrievalPrompt",
  * emits one RetrievalPromptEntry per match. Anchor is auto-generated
- * as `rp-${counter}` (per-chapter sequential); the canonical prefix
- * table lives at `@sophie/core/schema/pedagogy-index.ts`.
+ * as `${artifactId}-rp-${counter}` (per-chapter sequential + Task 7
+ * artifact-namespaced); the canonical prefix table lives at
+ * `@sophie/core/schema/pedagogy-index.ts`.
  *
  * Missing required props (e.g., a bare `<RetrievalPrompt>` with no
  * `target=`) are silently skipped at the visit site; see the R7
@@ -22,7 +23,8 @@ import { type MdxJsxFlowElement, readStringAttr } from "../jsx-utils.ts";
  */
 export function extractRetrievalPrompts(
   tree: Root,
-  unitId: string
+  unitId: string,
+  artifactId: string
 ): RetrievalPromptEntry[] {
   const out: RetrievalPromptEntry[] = [];
   const seenAnchors = new Set<string>();
@@ -43,7 +45,7 @@ export function extractRetrievalPrompts(
     if (target === undefined) return;
 
     counter += 1;
-    const anchor = `rp-${counter}`;
+    const anchor = `${artifactId}-rp-${counter}`;
     if (seenAnchors.has(anchor)) {
       throw new Error(
         `Intra-chapter anchor collision in chapter "${unitId}": RetrievalPrompt anchor "${anchor}" generated twice.`

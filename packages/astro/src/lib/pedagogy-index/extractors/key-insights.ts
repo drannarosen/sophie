@@ -25,7 +25,8 @@ import {
  */
 export function extractKeyInsights(
   tree: Root,
-  unitId: string
+  unitId: string,
+  artifactId: string
 ): KeyInsightEntry[] {
   const out: KeyInsightEntry[] = [];
   const seenAnchors = new Set<string>();
@@ -44,13 +45,14 @@ export function extractKeyInsights(
     // The positional `ki-${counter}` fallback stays here (extractor
     // knows the position; renderer doesn't and emits no id when no
     // other source is available).
+    const fallbackAnchor = `${artifactId}-ki-${counter}`;
     const anchor =
       deriveAsideAnchor({
         kind: "key-insight",
         id: attrs.id,
         title: attrs.title,
-        fallback: `ki-${counter}`,
-      }) ?? `ki-${counter}`;
+        fallback: fallbackAnchor,
+      }) ?? fallbackAnchor;
 
     if (seenAnchors.has(anchor)) {
       throw new Error(

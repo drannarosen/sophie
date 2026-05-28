@@ -13,7 +13,7 @@ describe("extractDeepDives (pure)", () => {
         para("Just a regular info callout."),
       ]),
     ]);
-    expect(extractDeepDives(tree as never, "ch")).toEqual([]);
+    expect(extractDeepDives(tree as never, "ch", "reading")).toEqual([]);
   });
 
   test("emits one entry per <Callout variant='deep-dive'>", () => {
@@ -28,7 +28,11 @@ describe("extractDeepDives (pure)", () => {
       ),
     ]);
 
-    const entries = extractDeepDives(tree as never, "spoiler-alerts");
+    const entries = extractDeepDives(
+      tree as never,
+      "spoiler-alerts",
+      "reading"
+    );
 
     expect(entries).toHaveLength(1);
     expect(entries[0]).toMatchObject({
@@ -46,7 +50,9 @@ describe("extractDeepDives (pure)", () => {
         [para("body")]
       ),
     ]);
-    expect(extractDeepDives(tree as never, "ch")[0]?.anchor).toBe("explicit");
+    expect(extractDeepDives(tree as never, "ch", "reading")[0]?.anchor).toBe(
+      "explicit"
+    );
   });
 
   test("anchor precedence — slug(title) when no id", () => {
@@ -55,7 +61,7 @@ describe("extractDeepDives (pure)", () => {
         para("body"),
       ]),
     ]);
-    expect(extractDeepDives(tree as never, "ch")[0]?.anchor).toBe(
+    expect(extractDeepDives(tree as never, "ch", "reading")[0]?.anchor).toBe(
       "how-it-works"
     );
   });
@@ -65,9 +71,9 @@ describe("extractDeepDives (pure)", () => {
       mdxCallout({ variant: "deep-dive" }, [para("body 1")]),
       mdxCallout({ variant: "deep-dive" }, [para("body 2")]),
     ]);
-    const entries = extractDeepDives(tree as never, "ch");
-    expect(entries[0]?.anchor).toBe("dd-1");
-    expect(entries[1]?.anchor).toBe("dd-2");
+    const entries = extractDeepDives(tree as never, "ch", "reading");
+    expect(entries[0]?.anchor).toBe("reading-dd-1");
+    expect(entries[1]?.anchor).toBe("reading-dd-2");
   });
 
   test("throws on intra-chapter anchor collisions (D1 invariant)", () => {
@@ -75,7 +81,7 @@ describe("extractDeepDives (pure)", () => {
       mdxCallout({ variant: "deep-dive", id: "dup" }, [para("A")]),
       mdxCallout({ variant: "deep-dive", id: "dup" }, [para("B")]),
     ]);
-    expect(() => extractDeepDives(tree as never, "ch")).toThrow(
+    expect(() => extractDeepDives(tree as never, "ch", "reading")).toThrow(
       /anchor.*collision/i
     );
   });
@@ -86,7 +92,7 @@ describe("extractDeepDives (pure)", () => {
         para("History anecdote."),
       ]),
     ]);
-    expect(extractDeepDives(tree as never, "ch")).toEqual([]);
+    expect(extractDeepDives(tree as never, "ch", "reading")).toEqual([]);
   });
 
   test("does NOT walk other Callout variants (info, tip, warning, etc.)", () => {
@@ -96,14 +102,14 @@ describe("extractDeepDives (pure)", () => {
       mdxCallout({ variant: "warning", title: "w" }, [para("warning body")]),
       mdxCallout({ variant: "key-insight", title: "k" }, [para("ki body")]),
     ]);
-    expect(extractDeepDives(tree as never, "ch")).toEqual([]);
+    expect(extractDeepDives(tree as never, "ch", "reading")).toEqual([]);
   });
 
   test("does NOT walk <Aside> elements (deep-dive is Callout-only)", () => {
     const tree = root([
       mdxAside({ kind: "definition", title: "x" }, [para("body")]),
     ]);
-    expect(extractDeepDives(tree as never, "ch")).toEqual([]);
+    expect(extractDeepDives(tree as never, "ch", "reading")).toEqual([]);
   });
 
   test("preserves source-order numbering across mixed callouts", () => {
@@ -113,10 +119,10 @@ describe("extractDeepDives (pure)", () => {
       mdxCallout({ variant: "tip" }, [para("tip")]),
       mdxCallout({ variant: "deep-dive" }, [para("dd two")]),
     ]);
-    const entries = extractDeepDives(tree as never, "ch");
+    const entries = extractDeepDives(tree as never, "ch", "reading");
     expect(entries).toHaveLength(2);
-    expect(entries[0]?.anchor).toBe("dd-1");
-    expect(entries[1]?.anchor).toBe("dd-2");
+    expect(entries[0]?.anchor).toBe("reading-dd-1");
+    expect(entries[1]?.anchor).toBe("reading-dd-2");
   });
 
   // 2026-05-19 architecture audit C1/P2 #10 — counter increments BEFORE
@@ -131,12 +137,12 @@ describe("extractDeepDives (pure)", () => {
       mdxCallout({ variant: "deep-dive", id: "explicit-c" }, [para("c")]),
       mdxCallout({ variant: "deep-dive" }, [para("anon at position 4")]),
     ]);
-    const entries = extractDeepDives(tree as never, "ch");
+    const entries = extractDeepDives(tree as never, "ch", "reading");
     expect(entries.map((e) => e.anchor)).toEqual([
       "explicit-a",
-      "dd-2",
+      "reading-dd-2",
       "explicit-c",
-      "dd-4",
+      "reading-dd-4",
     ]);
   });
 });

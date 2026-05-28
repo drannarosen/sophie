@@ -29,10 +29,11 @@ import {
  * treatment downstream (decisions row 12).
  *
  * Anchor derivation matches `extractKeyInsights`: explicit `id` >
- * slug(title) > `misc-${counter}` (counter is per-chapter
- * sequential, incremented once per matched element across BOTH
- * source primitives in source order). The short `misc-` prefix is
- * the canonical auto-anchor shape; see the anchor prefix table in
+ * slug(title) > `${artifactId}-misc-${counter}` (counter is per-
+ * chapter sequential, incremented once per matched element across
+ * BOTH source primitives in source order; the artifact prefix —
+ * Task 7 — keeps `reading-misc-1` distinct from `practice-misc-1`).
+ * See the anchor prefix table in
  * `@sophie/core/schema/pedagogy-index.ts`.
  *
  * Throws on intra-chapter anchor collisions (M1 invariant).
@@ -40,7 +41,8 @@ import {
  */
 export function extractMisconceptions(
   tree: Root,
-  unitId: string
+  unitId: string,
+  artifactId: string
 ): MisconceptionEntry[] {
   const out: MisconceptionEntry[] = [];
   const seenAnchors = new Set<string>();
@@ -98,14 +100,15 @@ export function extractMisconceptions(
     // position; renderer doesn't and emits no id when no other source
     // is available). Closes the PR-γ → PR-δ coupling gap originally
     // surfaced during PR-δ scoping.
+    const fallbackAnchor = `${artifactId}-misc-${counter}`;
     const anchor =
       deriveAsideAnchor({
         kind: "misconception",
         id: attrs.id,
         name: attrs.name,
         title: attrs.title,
-        fallback: `misc-${counter}`,
-      }) ?? `misc-${counter}`;
+        fallback: fallbackAnchor,
+      }) ?? fallbackAnchor;
 
     if (seenAnchors.has(anchor)) {
       throw new Error(

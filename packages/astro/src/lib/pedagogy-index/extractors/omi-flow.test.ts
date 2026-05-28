@@ -54,7 +54,7 @@ describe("extractOMIFlows (pure)", () => {
     const tree = root([
       mdxCallout({ variant: "info" }, [para("not an omiflow")]),
     ]);
-    expect(extractOMIFlows(tree as never, "ch").entries).toEqual([]);
+    expect(extractOMIFlows(tree as never, "ch", "reading").entries).toEqual([]);
   });
 
   test("emits one entry per <OMIFlow> callsite with all 3 slots populated", () => {
@@ -68,7 +68,11 @@ describe("extractOMIFlows (pure)", () => {
         }
       ),
     ]);
-    const { entries } = extractOMIFlows(tree as never, "spoiler-alerts");
+    const { entries } = extractOMIFlows(
+      tree as never,
+      "spoiler-alerts",
+      "reading"
+    );
     expect(entries).toHaveLength(1);
     expect(entries[0]).toMatchObject({
       unit: "spoiler-alerts",
@@ -85,28 +89,28 @@ describe("extractOMIFlows (pure)", () => {
     const tree = root([
       omiFlow({ id: "explicit-id", concept: "stellar-temperature" }),
     ]);
-    expect(extractOMIFlows(tree as never, "ch").entries[0]?.anchor).toBe(
-      "explicit-id"
-    );
+    expect(
+      extractOMIFlows(tree as never, "ch", "reading").entries[0]?.anchor
+    ).toBe("explicit-id");
   });
 
   test("anchor precedence — slug(concept) when no id", () => {
     const tree = root([omiFlow({ concept: "stellar Temperature" })]);
-    expect(extractOMIFlows(tree as never, "ch").entries[0]?.anchor).toBe(
-      "omi-stellar-temperature"
-    );
+    expect(
+      extractOMIFlows(tree as never, "ch", "reading").entries[0]?.anchor
+    ).toBe("omi-stellar-temperature");
   });
 
   test("anchor fallback — omi-{counter} when neither id nor concept", () => {
     const tree = root([omiFlow({}), omiFlow({})]);
-    const { entries } = extractOMIFlows(tree as never, "ch");
-    expect(entries[0]?.anchor).toBe("omi-1");
-    expect(entries[1]?.anchor).toBe("omi-2");
+    const { entries } = extractOMIFlows(tree as never, "ch", "reading");
+    expect(entries[0]?.anchor).toBe("reading-omi-1");
+    expect(entries[1]?.anchor).toBe("reading-omi-2");
   });
 
   test("throws on intra-chapter anchor collisions (OF anchor invariant)", () => {
     const tree = root([omiFlow({ id: "dup" }), omiFlow({ id: "dup" })]);
-    expect(() => extractOMIFlows(tree as never, "ch")).toThrow(
+    expect(() => extractOMIFlows(tree as never, "ch", "reading")).toThrow(
       /anchor.*collision/i
     );
   });
@@ -115,7 +119,7 @@ describe("extractOMIFlows (pure)", () => {
     const tree = root([
       omiFlow({ id: "x" }, { order: ["observable", "model"] }), // missing inference
     ]);
-    expect(() => extractOMIFlows(tree as never, "ch")).toThrow(
+    expect(() => extractOMIFlows(tree as never, "ch", "reading")).toThrow(
       /OMIFlow.*missing.*inference/i
     );
   });
@@ -129,7 +133,7 @@ describe("extractOMIFlows (pure)", () => {
         mdxFlowEl("OMIFlow.Inference", {}, {}, [para("i")]),
       ]),
     ]);
-    expect(() => extractOMIFlows(tree as never, "ch")).toThrow(
+    expect(() => extractOMIFlows(tree as never, "ch", "reading")).toThrow(
       /OMIFlow.*observable.*more than once/i
     );
   });
@@ -138,7 +142,7 @@ describe("extractOMIFlows (pure)", () => {
     const tree = root([
       omiFlow({ id: "x" }, { order: ["model", "observable", "inference"] }),
     ]);
-    const { entries } = extractOMIFlows(tree as never, "ch");
+    const { entries } = extractOMIFlows(tree as never, "ch", "reading");
     expect(entries).toHaveLength(1);
     // Body still extracted correctly per slot kind, regardless of source order.
     expect(entries[0]?.observable.body).toContain("observable");
@@ -153,7 +157,7 @@ describe("extractOMIFlows (pure)", () => {
         { order: ["inference", "observable", "model"] }
       ),
     ]);
-    const { entries } = extractOMIFlows(tree as never, "ch");
+    const { entries } = extractOMIFlows(tree as never, "ch", "reading");
     expect(entries).toHaveLength(1);
     // The extractor stashes the source order on the entry for the OF-1
     // invariant to consume. (Per design doc #4 + the OF-1 invariant
@@ -167,7 +171,7 @@ describe("extractOMIFlows (pure)", () => {
 
   test("emits canonical sourceOrder field when slots are in O→M→I source order", () => {
     const tree = root([omiFlow({ id: "x" })]);
-    const { entries } = extractOMIFlows(tree as never, "ch");
+    const { entries } = extractOMIFlows(tree as never, "ch", "reading");
     expect(entries[0]?.sourceOrder).toEqual([
       "observable",
       "model",
@@ -190,7 +194,11 @@ describe("extractOMIFlows (pure)", () => {
         mdxFlowEl("OMIFlow.Inference", {}, {}, [para("i")]),
       ]),
     ]);
-    const { entries, findings } = extractOMIFlows(tree as never, "ch");
+    const { entries, findings } = extractOMIFlows(
+      tree as never,
+      "ch",
+      "reading"
+    );
     // OMIFlow still extracts (strict-3 satisfied)
     expect(entries).toHaveLength(1);
     expect(entries[0]?.anchor).toBe("with-rogue");
@@ -206,7 +214,11 @@ describe("extractOMIFlows (pure)", () => {
 
   test("emits no OF-3 finding when <OMIFlow> contains only the 3 valid slot children", () => {
     const tree = root([omiFlow({ id: "clean" })]);
-    const { entries, findings } = extractOMIFlows(tree as never, "ch");
+    const { entries, findings } = extractOMIFlows(
+      tree as never,
+      "ch",
+      "reading"
+    );
     expect(entries).toHaveLength(1);
     expect(findings).toEqual([]);
   });

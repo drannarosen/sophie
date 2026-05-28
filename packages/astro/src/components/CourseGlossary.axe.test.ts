@@ -46,7 +46,7 @@ afterEach(() => {
 
 describe("CourseGlossary — axe-core a11y", () => {
   test("renders with definitions — zero violations", async () => {
-    indexAccumulator.addDefinitions([
+    indexAccumulator.addDefinitions("u", "reading", [
       {
         term: "Parallax",
         slug: "parallax",
@@ -78,7 +78,7 @@ describe("CourseGlossary — axe-core a11y", () => {
     // confirm that wrapping the consumer in the production `<main>` parent
     // does NOT produce a duplicate-main violation. The shell now emits
     // `<section aria-labelledby>`, so this composition is clean.
-    indexAccumulator.addDefinitions([
+    indexAccumulator.addDefinitions("u", "reading", [
       {
         term: "Parallax",
         slug: "parallax",
