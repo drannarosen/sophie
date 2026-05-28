@@ -30,7 +30,9 @@ const PRACTICE = "/units/chrome-primitives-demo/practice";
 const READING = "/units/chrome-primitives-demo/reading";
 const A11Y_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"];
 
-test.describe("compound-island transform — formative parents render in the build", () => {
+test.describe("compound-island transform — formative parents render in the build", {
+  tag: "@axe",
+}, () => {
   test("MCQ renders 3 native radios with a hydrated nested island in a choice", async ({
     page,
   }) => {
@@ -124,7 +126,9 @@ test.describe("compound-island transform — formative parents render in the bui
   });
 });
 
-test.describe("compound-island transform — Tabs render + are operable", () => {
+test.describe("compound-island transform — Tabs render + are operable", {
+  tag: "@axe",
+}, () => {
   test("Tabs renders 3 tab triggers (latent empty-tablist bug fixed)", async ({
     page,
   }) => {

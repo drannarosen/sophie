@@ -24,7 +24,9 @@ import { expect, test } from "@playwright/test";
 const READING = "/units/measuring-the-sky/reading";
 const A11Y_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"];
 
-test.describe("MultiRep — binding card renders in the build", () => {
+test.describe("MultiRep — binding card renders in the build", {
+  tag: "@axe",
+}, () => {
   test("renders the concept header + its serialized representations", async ({
     page,
   }) => {

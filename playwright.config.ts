@@ -31,8 +31,25 @@ export default defineConfig({
   },
   projects: [
     {
+      // Fast specs at full parallelism. The axe-analyzing specs carry
+      // the @axe tag and are routed to the `axe` project below, so they
+      // are excluded here to avoid running twice.
       name: "chromium",
       use: devices["Desktop Chrome"],
+      grepInvert: /@axe/,
+    },
+    {
+      // axe-core `.analyze()` is CPU-heavy. `dependencies: ["chromium"]`
+      // defers this project until the fast specs finish, so heavy axe
+      // runs never compete with the rest of the suite for CPU (the
+      // contention that produced the flake tax). `fullyParallel: false`
+      // serializes tests within each axe file on top of that isolation.
+      // New axe specs opt in by tagging their describe `{ tag: "@axe" }`.
+      name: "axe",
+      use: devices["Desktop Chrome"],
+      grep: /@axe/,
+      fullyParallel: false,
+      dependencies: ["chromium"],
     },
   ],
   webServer: {

@@ -50,7 +50,9 @@ import { expect, test } from "@playwright/test";
  *    doesn't lose coverage on contrast, ARIA, keyboard, etc.
  */
 
-test.describe("W4c: Library room pages — composition-level axe gating", () => {
+test.describe("W4c: Library room pages — composition-level axe gating", {
+  tag: "@axe",
+}, () => {
   test("/library/ (hub) is axe-clean", async ({ page }) => {
     await page.goto("/library/");
     const results = await new AxeBuilder({ page })
