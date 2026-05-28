@@ -27,8 +27,6 @@ import { formatUnitTex } from "@sophie/core/runtime";
 import type { EquationEntry } from "@sophie/core/schema";
 import katex from "katex";
 
-import type { SearchResult } from "../Search/types.ts";
-
 function renderHtml(tex: string, displayMode: boolean): string {
   return katex.renderToString(tex, {
     displayMode,
@@ -75,19 +73,4 @@ export function prerenderEquationFixtures(
   entries: EquationEntry[]
 ): EquationEntry[] {
   return entries.map(prerenderEquationFixture);
-}
-
-/**
- * Search-result sibling: populate `meta.html` for an equation result
- * from `meta.tex` (display math), matching the build's search-index
- * prerender so ResultCard renders byte-identically to baseline.
- */
-export function prerenderSearchResult(result: SearchResult): SearchResult {
-  if (result.meta.tex === undefined) {
-    return result;
-  }
-  return {
-    ...result,
-    meta: { ...result.meta, html: renderHtml(result.meta.tex, true) },
-  };
 }
