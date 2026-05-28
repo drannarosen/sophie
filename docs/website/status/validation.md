@@ -23,8 +23,8 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 
 | Status | Count |
 |---|---|
-| Validated | 33 |
-| In progress | 22 |
+| Validated | 34 |
+| In progress | 21 |
 | Unvalidated | 61 |
 | Re-validation needed | 0 |
 | Missing block | 0 |
@@ -34,8 +34,8 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 
 | Lifecycle | Count |
 |---|---|
-| Shipped | 66 |
-| Accepted design | 40 |
+| Shipped | 67 |
+| Accepted design | 39 |
 | Mixed | 1 |
 | Future package split | 9 |
 | No status | 0 |
@@ -45,10 +45,10 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 
 | Kind | Count |
 |---|---|
-| test | 103 |
+| test | 105 |
 | chapter | 9 |
-| review | 32 |
-| deployment | 74 |
+| review | 31 |
+| deployment | 76 |
 | audit | 9 |
 | manual | 40 |
 
@@ -148,7 +148,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0085-component-template-skeleton.md](/component-template-skeleton/) | validated | accepted design | 2026-05-25 | deployment, manual, test | Shipped in PR #177 as the authoring-affordance layer of the React #418 hydration-class defense family. Pairs with ADR 0038 Amendment 2 (runtime `useHydrated` gate) + ADR 0083 (build-time CL1 invariant) + ADR 0084 (CI-runtime packed-smoke gate). The four ADRs collectively close the regression class: runtime structural defense, build-time static analysis, CI-runtime consumer-shape coverage, and authoring affordance.  |
 | [docs/website/decisions/0086-multi-chapter-glossary-definitions.md](/multi-chapter-glossary-definitions/) | validated | accepted design | 2026-05-26 | test |  |
 | [docs/website/decisions/0087-compound-island-transform.md](/compound-island-transform/) | in progress | shipped | 2026-05-28 | review, test |  |
-| [docs/website/decisions/0088-pedagogy-audit-build-artifact.md](/pedagogy-audit-build-artifact/) | in progress | accepted design | 2026-05-28 | review | Accepted-design: the trigger / artifact / gating decision is locked; no code shipped at ADR-creation time. The integration build-done implementation + `dist/.sophie/pedagogy-audit.json` emit land in a follow-up PR that flips this block to validated with deployment + test evidence. Originating audit item: P2.4 (docs/reviews/2026-05-28-platform-hardening-audit.md).  |
+| [docs/website/decisions/0088-pedagogy-audit-build-artifact.md](/pedagogy-audit-build-artifact/) | validated | shipped | 2026-05-28 | deployment, test | Shipped: build-done trigger + artifact + dev-only layout guard. Implemented via the accumulator-reading approach (the integration reads the already-populated index pagefind-style, extracts contract validations once at build-done). Originating audit item: P2.4 (docs/reviews/2026-05-28-platform-hardening-audit.md).  |
 
 ### Reference docs
 

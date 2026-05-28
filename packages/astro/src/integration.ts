@@ -10,8 +10,18 @@ import { courseSpecVirtualModule } from "./lib/course-spec-virtual-module.ts";
 import { figuresVirtualModule } from "./lib/figures-virtual-module.ts";
 import { mdxAuthorTrapsVitePlugin } from "./lib/mdx-plugins/mdx-author-traps.ts";
 import { skillReviewResolverVitePlugin } from "./lib/mdx-plugins/skill-review-resolver-vite.ts";
+import { loadConsumerRegistry } from "./lib/notation-registry-loader.ts";
 import { buildPagefindIndex } from "./lib/pagefind-postbuild.ts";
+import { writePedagogyAuditJson } from "./lib/pedagogy-audit/emit.ts";
+import {
+  auditExitCode,
+  formatAuditReport,
+  formatAuditThrowMessage,
+} from "./lib/pedagogy-audit/format.ts";
+import { runPedagogyAudit } from "./lib/pedagogy-audit/runner.ts";
+import { indexAccumulator } from "./lib/pedagogy-index/accumulator.ts";
 import { pedagogyIndexVirtualModule } from "./lib/pedagogy-index-virtual-module.ts";
+import { extractContractValidations } from "./lib/validation/extractor.ts";
 import { sophieMdxOptions } from "./mdx-config.ts";
 
 export interface SophieIntegrationOptions {
@@ -274,6 +284,39 @@ export function defineSophieIntegration(
         logger.info(`Building Pagefind index in ${distPath}/pagefind/`);
         await buildPagefindIndex(distPath);
         logger.info("Pagefind index complete");
+
+        // ADR 0088 — corpus-wide pedagogy audit at build-done (the prod
+        // authoritative trigger; dev keeps TextbookLayout's per-render
+        // console audit for HMR feedback). By build-done every route has
+        // pre-rendered, so TextbookLayout's accumulator setters
+        // (sections/units/artifacts/figures + the remark-plugin-populated
+        // definitions/equations/figureUsages) have all run. The contract
+        // validations are extracted HERE (once) rather than per-page in the
+        // layout — repoRoot = process.cwd() matches the layout's V5
+        // evidence-resolution base. The artifact is written BEFORE the gate
+        // throw so CI can inspect it even on a failing build.
+        const repoRoot = process.cwd();
+        const { entries: contractValidations, findings: extractorFindings } =
+          await extractContractValidations(repoRoot);
+        indexAccumulator.setContractValidations(
+          contractValidations,
+          extractorFindings
+        );
+        const index = indexAccumulator.asPedagogyIndex();
+        const draftUnitIds = index.units
+          .filter((u) => u.status === "draft")
+          .map((u) => u.id);
+        const { registry: notationRegistry } = loadConsumerRegistry(repoRoot);
+        const auditReport = runPedagogyAudit(index, {
+          draftUnitIds,
+          repoRoot,
+          notationRegistry,
+        });
+        await writePedagogyAuditJson(distPath, auditReport);
+        logger.info(formatAuditReport(auditReport));
+        if (auditExitCode(auditReport) !== 0) {
+          throw new Error(formatAuditThrowMessage(auditReport));
+        }
       },
     },
   };
