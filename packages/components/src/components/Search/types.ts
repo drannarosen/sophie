@@ -6,6 +6,8 @@ export type SearchResult = {
     title: string;
     locator: string;
     tex?: string;
+    /** Build-time prerendered KaTeX html for equation results (ADR 0090). */
+    html?: string;
     slug?: string;
     number?: string;
     length?: "short" | "long";
