@@ -327,8 +327,8 @@ onto a `FormativeEntry` in the pedagogy index (see §4 + §5 below).
 
 | Component | Role | Audit invariant |
 |---|---|---|
-| `<MCQ>` | single-best-answer; built on `@radix-ui/react-radio-group` per ADR 0019 | AS-1 (ERROR): exactly one `<MCQ.Choice correct>` |
-| `<MultiSelect>` | select-all-that-apply; built on `@radix-ui/react-checkbox` per ADR 0019 | AS-5 (ERROR): at least one `correct` choice |
+| `<MCQ>` | single-best-answer; native `<input type=radio>` radiogroup ([ADR 0087](../decisions/0087-compound-island-transform.md); was `@radix-ui/react-radio-group`) | AS-1 (ERROR): exactly one `<MCQ.Choice correct>` |
+| `<MultiSelect>` | select-all-that-apply; native `<input type=checkbox>` ([ADR 0087](../decisions/0087-compound-island-transform.md); was `@radix-ui/react-checkbox`) | AS-5 (ERROR): at least one `correct` choice |
 | `<FillBlank>` | text-fill with inline `<FillBlank.Slot>` children | AS-3 (WARN): at least one `<FillBlank.Slot>` |
 | `<NumericQuestion>` | numeric answer + tolerance + optional unit | AS-4 (ERROR): exactly one `<NumericQuestion.Answer>` |
 | `<QuickCheck>` | free-response, solution-only | AS-2 (WARN) applies via §5 |
