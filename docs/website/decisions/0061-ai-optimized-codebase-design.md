@@ -310,7 +310,9 @@ correct; splitting is *not* wanted. Reclassifying a currently-grandfathered
 file to `cohesive` is a deliberate per-file judgment, never automatic (e.g.
 `accumulator.ts` is reviewed on its merits, not reclassified by default).
 
-**Status.** Accepted-design. The `cohesive` reason string + allowlist
-support ship in a follow-up code PR (the `scripts/loc-budget.ts` change),
-which is where this amendment's deployment evidence lands. This amendment is
-the design citation for that PR.
+**Status.** Implemented in `scripts/loc-budget.ts` (this amendment is the
+design citation). The `COHESIVE` allowlist ships **empty** — reclassifying a
+currently-grandfathered file to `cohesive` is a deliberate per-file
+judgment, made separately. Verified end-to-end via `pnpm lint:loc
+--include-existing` (a `cohesive` allowlist entry reports `(exempt:
+cohesive)`).

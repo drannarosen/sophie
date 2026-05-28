@@ -26,10 +26,13 @@
  *
  * Run from repo root: `pnpm lint:loc` or `npx tsx scripts/loc-budget.ts`.
  *
- * Pass `--include-existing` to include the grandfathered allowlist
- * (currently-oversized files) in the count. By default the
- * allowlisted files are reported but don't fail CI — they're tech
- * debt; new offenders are what the rule enforces.
+ * Pass `--include-existing` to include the exempt allowlists
+ * (grandfathered + cohesive oversized files) in the count. By default
+ * exempt files are reported but don't fail CI. The exemption reasons:
+ * `schema-registry` + `barrel` (scannable end-to-end), `grandfathered`
+ * (tech debt to split later), and `cohesive` (deliberately large +
+ * correct — splitting would scatter one responsibility; ADR 0061
+ * Amendment 1).
  */
 
 import { readdirSync, readFileSync, statSync } from "node:fs";
@@ -73,6 +76,27 @@ const GRANDFATHERED: ReadonlyArray<string> = [
   // would shadow the figure shape without removing complexity.
   "packages/components/src/figures/BlackbodyExplorer/BlackbodyExplorer.tsx",
 ];
+
+/**
+ * Files exempt as deliberately COHESIVE (ADR 0061 Amendment 1): a single
+ * cohesive responsibility — a state machine, an exhaustive dispatcher,
+ * generated code — where splitting would scatter that responsibility across
+ * files and *increase* navigation cost, the opposite of Rule 1's intent.
+ *
+ * Distinct from GRANDFATHERED: `grandfathered` means "tech debt, split
+ * later"; `cohesive` means "deliberately large and correct, splitting is NOT
+ * wanted." Each entry MUST carry a one-line rationale. The bar is "splitting
+ * adds indirection without reducing complexity" — NOT merely "it's large."
+ * The numeric tiers (300/500/800) are unchanged; this is a per-file,
+ * justified escape hatch, not a global loosening.
+ *
+ * Empty by default: reclassifying a currently-grandfathered file to
+ * `cohesive` is a deliberate per-file judgment (e.g. accumulator.ts +
+ * BlackbodyExplorer.tsx already carry cohesion rationale in their
+ * GRANDFATHERED notes above — the natural first candidates), made
+ * separately, not by introducing this mechanism.
+ */
+const COHESIVE: ReadonlyArray<string> = [];
 
 interface Finding {
   path: string;
@@ -198,6 +222,9 @@ function categorize(path: string, loc: number): Finding {
   } else if (GRANDFATHERED.includes(path)) {
     isExempt = true;
     exemptReason = "grandfathered";
+  } else if (COHESIVE.includes(path)) {
+    isExempt = true;
+    exemptReason = "cohesive";
   }
 
   return { path, loc, severity, isTest: isTestFile, isExempt, exemptReason };
