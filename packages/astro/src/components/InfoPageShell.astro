@@ -3,13 +3,23 @@
  * Minimal page-chrome shell for course-info info pages. Wraps each
  * info-page layout (SyllabusPage / SchedulePage / InstructorPage /
  * PoliciesPage / AccommodationsPage) with consistent `<html>` /
- * `<head>` / `<body>` + Sophie stylesheet.
+ * `<head>` / `<body>` + the Sophie theme.
  *
  * Distinct from ChapterLayout (which carries the heavyweight chapter
  * machinery — TocSidebar, ChapterPagination, ScrollProgress, etc.).
  * Info pages are simpler course-website chrome; reusing chapter
  * shells would pull in irrelevant scaffolding.
+ *
+ * Theme CSS is imported (not hard-linked) so Astro bundles + injects
+ * a fingerprinted stylesheet into <head>. The previous hard-coded
+ * `/_astro/sophie-styles.css` link pointed at a path Astro never
+ * emits, leaving every info page + the course landing unstyled.
+ * Mirrors SophieChapter.tsx's `@sophie/theme/{fonts,css,math}` imports.
  */
+import "@sophie/theme/fonts";
+import "@sophie/theme/css";
+import "@sophie/theme/math";
+
 interface Props {
   title: string;
   description?: string;
@@ -24,7 +34,6 @@ const { title, description } = Astro.props;
     <meta name='viewport' content='width=device-width, initial-scale=1' />
     <title>{title}</title>
     {description && <meta name='description' content={description} />}
-    <link rel='stylesheet' href='/_astro/sophie-styles.css' />
   </head>
   <body>
     <slot />
