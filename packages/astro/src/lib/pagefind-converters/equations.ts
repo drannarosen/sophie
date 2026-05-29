@@ -42,6 +42,11 @@ export const toEquationRecord: EntityToPagefindRecord<EquationEntry> = (
       // renders the equation without owning KaTeX. Populated by the
       // equation-registry extractor on the same accumulated entity.
       ...(entity.html ? { html: entity.html } : {}),
+      // Build-time SRE ClearSpeak speech (ADR 0089) so ResultCard can
+      // set an aria-label on the equation html (the .katex glyphs are
+      // aria-hidden). Populated by `enrichEquationsWithSpeech` at
+      // build:done before this converter runs.
+      ...(entity.speech ? { speech: entity.speech } : {}),
     },
     filters: {
       type: ["equation"],

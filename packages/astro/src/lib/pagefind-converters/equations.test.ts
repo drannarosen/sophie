@@ -61,6 +61,20 @@ describe("toEquationRecord", () => {
     expect(toEquationRecord(fixture, ctx).meta.html).toBeUndefined();
   });
 
+  test("meta.speech carries the build-time SRE speech (ADR 0089)", () => {
+    const fixtureWithSpeech: EquationEntry = {
+      ...fixture,
+      speech: "L equals 4 pi R squared sigma T to the fourth power",
+    };
+    expect(toEquationRecord(fixtureWithSpeech, ctx).meta.speech).toBe(
+      "L equals 4 pi R squared sigma T to the fourth power"
+    );
+  });
+
+  test("omits meta.speech when the entry carries no speech", () => {
+    expect(toEquationRecord(fixture, ctx).meta.speech).toBeUndefined();
+  });
+
   test("content includes the equation title (so prose-text search hits)", () => {
     expect(toEquationRecord(fixture, ctx).content).toContain(
       "Stefan-Boltzmann luminosity"
