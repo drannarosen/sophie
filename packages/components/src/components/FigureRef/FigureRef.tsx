@@ -1,6 +1,7 @@
 import * as HoverCard from "@radix-ui/react-hover-card";
 import { ImageIcon } from "lucide-react";
 import { useHydrated } from "../../runtime/useHydrated.ts";
+import { withBase } from "../../utils/with-base.ts";
 import styles from "./FigureRef.module.css.js";
 import type { FigureRefProps } from "./FigureRef.schema.ts";
 import { lookupFigureRegistry } from "./figure-registry-store.ts";
@@ -60,7 +61,7 @@ export function FigureRef({ name, children }: FigureRefProps) {
   // W2/D5 route shape: /units/<unit-id>/reading#<anchor>.
   // canonical.unit holds the parent Unit id (W3 rename; under W2/D4
   // 1:1 the unit id equals the reading-artifact slug).
-  const href = `/units/${canonical.unit}/reading#${canonical.anchor}`;
+  const href = withBase(`/units/${canonical.unit}/reading#${canonical.anchor}`);
   // Sprint F — prefer "Fig. C.N" when the chapter declares a display
   // chapter number; fall back to within-chapter "Fig. N" otherwise.
   const figLabel =
@@ -95,7 +96,7 @@ export function FigureRef({ name, children }: FigureRefProps) {
             alt={registry.alt}
             className={styles.thumb}
             loading='lazy'
-            src={registry.src}
+            src={withBase(registry.src)}
           />
           <figcaption className={styles.caption}>{caption}</figcaption>
           <HoverCard.Arrow className={styles.arrow} />

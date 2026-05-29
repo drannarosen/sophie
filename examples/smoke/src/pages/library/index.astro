@@ -1,5 +1,9 @@
 ---
-import { buildModuleNavInputs, indexAccumulator } from "@sophie/astro";
+import {
+  buildModuleNavInputs,
+  indexAccumulator,
+  withBase,
+} from "@sophie/astro";
 import ModuleNav from "@sophie/astro/components/ModuleNav.astro";
 import TextbookHead from "@sophie/astro/components/TextbookHead.astro";
 import TextbookLayout from "@sophie/astro/components/TextbookLayout.astro";
@@ -141,7 +145,7 @@ const rooms = [
           {
             rooms.map((room) => (
               <li>
-                <a href={room.href}>{room.title}</a>{" "}
+                <a href={withBase(room.href)}>{room.title}</a>{" "}
                 <span aria-label={`${room.count} entries`}>
                   ({room.count})
                 </span>{" "}

@@ -1,5 +1,6 @@
 import type { FigureRegistry } from "../../runtime/index.ts";
 import { MathText } from "../../runtime/MathText.tsx";
+import { withBase } from "../../utils/with-base.ts";
 import { lookupCanonicalUsageByName } from "../FigureRef/figure-usages-store.ts";
 import styles from "./Figure.module.css.js";
 import type { FigureProps } from "./Figure.schema.ts";
@@ -90,7 +91,12 @@ function FigureBody({
   const label = formatFigureLabel(number, chapterNumber);
   return (
     <figure className={styles.figure}>
-      <img className={styles.image} src={src} alt={alt} loading='lazy' />
+      <img
+        className={styles.image}
+        src={withBase(src)}
+        alt={alt}
+        loading='lazy'
+      />
       {(caption !== undefined || credit !== undefined || label !== null) && (
         <figcaption className={styles.caption}>
           {label !== null && <span className={styles.label}>{label}</span>}

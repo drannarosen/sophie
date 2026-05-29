@@ -2,6 +2,7 @@ import * as HoverCard from "@radix-ui/react-hover-card";
 import { slugify } from "@sophie/core/schema";
 import { BookOpen } from "lucide-react";
 import { useHydrated } from "../../runtime/useHydrated.ts";
+import { withBase } from "../../utils/with-base.ts";
 import { lookupDefinition } from "./definitions-store.ts";
 import styles from "./GlossaryTerm.module.css.js";
 import type { GlossaryTermProps } from "./GlossaryTerm.schema.ts";
@@ -74,7 +75,7 @@ export function GlossaryTerm({
   // W2/D5 route shape: /units/<unit-id>/reading#<anchor>.
   // entry.unit holds the parent Unit id (W3 rename; under W2/D4
   // 1:1 the unit id equals the reading-artifact slug).
-  const href = `/units/${entry.unit}/reading#${entry.anchor}`;
+  const href = withBase(`/units/${entry.unit}/reading#${entry.anchor}`);
 
   return (
     <>

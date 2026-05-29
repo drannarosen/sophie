@@ -1,4 +1,6 @@
 ---
+import { withBase } from "../lib/with-base";
+
 /**
  * <ChapterPagination> — Sprint I-C
  *
@@ -48,13 +50,13 @@ const hasAny = previous != null || next != null;
       {previous ? (
         <a
           class="sophie-chapter-pagination__pill sophie-chapter-pagination__pill--prev"
-          href={`/units/${previous.slug}/reading`}
+          href={withBase(`/units/${previous.slug}/reading`)}
           rel="prev"
         >
           {previous.thumbnail && (
             <img
               class="sophie-chapter-pagination__thumb"
-              src={previous.thumbnail.src}
+              src={withBase(previous.thumbnail.src)}
               alt={previous.thumbnail.alt}
               loading="lazy"
               aria-hidden="true"
@@ -84,7 +86,7 @@ const hasAny = previous != null || next != null;
       {next ? (
         <a
           class="sophie-chapter-pagination__pill sophie-chapter-pagination__pill--next"
-          href={`/units/${next.slug}/reading`}
+          href={withBase(`/units/${next.slug}/reading`)}
           rel="next"
         >
           <span class="sophie-chapter-pagination__body">
@@ -105,7 +107,7 @@ const hasAny = previous != null || next != null;
           {next.thumbnail && (
             <img
               class="sophie-chapter-pagination__thumb"
-              src={next.thumbnail.src}
+              src={withBase(next.thumbnail.src)}
               alt={next.thumbnail.alt}
               loading="lazy"
               aria-hidden="true"

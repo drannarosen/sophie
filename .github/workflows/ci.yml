@@ -429,3 +429,41 @@ jobs:
             examples/packed-smoke/playwright-report/
             examples/packed-smoke/test-results/
           if-no-files-found: ignore
+
+  base-path:
+    name: base-path
+    needs: build
+    runs-on: ubuntu-latest
+    # Structural defense against the base-path leak class (cf.
+    # packed-smoke for the #418 hydration class). Astro does NOT
+    # auto-prefix author-written <a href>/<img src> with the consumer's
+    # `base`, so every internal link must pass through withBase or it
+    # 404s under a non-root deploy (e.g. GitHub Pages base: "/astr201").
+    # The script builds examples/smoke under SOPHIE_SMOKE_BASE=/base-probe
+    # (asserts build exit 0 — guards the info-page slug build-breaker)
+    # and greps dist HTML for any unprefixed internal link in Sophie's
+    # route + asset namespaces.
+    steps:
+      - uses: actions/checkout@v4
+      - name: Enable corepack
+        run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Restore Turborepo cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .turbo
+            **/.turbo
+          key: ${{ runner.os }}-turbo-base-path-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-base-path-
+            ${{ runner.os }}-turbo-build-${{ github.sha }}
+            ${{ runner.os }}-turbo-build-
+            ${{ runner.os }}-turbo-
+      - name: Base-path guard (non-root build + zero-leak dist scan)
+        run: bash examples/smoke/scripts/check-base-path.sh

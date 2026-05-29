@@ -18,6 +18,11 @@ import { figures } from "./src/content/figures.ts";
 //      so e2e specs can derive function-of-content assertions
 //      instead of hardcoded structural counts.
 export default defineConfig({
+  // Base-path spike harness: read `base` from env so the non-root
+  // consumer-deploy case (GitHub Pages `base: "/astr201"`) can be
+  // exercised by a smoke build without a config edit. Unset → undefined
+  // → Astro's default root base, so existing root behavior is unchanged.
+  base: process.env.SOPHIE_SMOKE_BASE || undefined,
   integrations: [
     defineSophieIntegration({ figures }),
     pedagogyIndexDumpIntegration(),

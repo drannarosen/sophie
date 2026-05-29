@@ -6,6 +6,7 @@ import {
   useEffect,
   useState,
 } from "react";
+import { withBase } from "../../utils/with-base.ts";
 import { type ChipFilter, ChipStrip } from "./ChipStrip.tsx";
 import { ResultList } from "./ResultList.tsx";
 import styles from "./SearchModal.module.css.js";
@@ -69,9 +70,13 @@ export function SearchModal(): ReactNode {
       // indirection, Vite errors at transform time (`Failed to resolve
       // import "/pagefind/pagefind.js"`) before the .catch handler can
       // fire. Production behavior is unchanged: the Astro client island
-      // dynamically fetches /pagefind/pagefind.js from the served origin
-      // after Task 7's postbuild emits dist/pagefind/.
-      const pagefindUrl = "/pagefind/pagefind.js";
+      // dynamically fetches the index from the served origin after Task
+      // 7's postbuild emits dist/pagefind/. `withBase` prefixes the
+      // consumer's Astro `base` so the fetch resolves under a non-root
+      // deploy (e.g. /astr201/pagefind/...) — the `withBase` return is
+      // already a variable, so the @vite-ignore indirection above still
+      // holds (the import argument was never a string literal).
+      const pagefindUrl = withBase("/pagefind/pagefind.js");
       import(/* @vite-ignore */ pagefindUrl)
         .then((mod) => setPagefind(mod as PagefindAPI))
         .catch((err) => {

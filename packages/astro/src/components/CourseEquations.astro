@@ -1,6 +1,7 @@
 ---
 import type { EquationEntry } from "@sophie/core/schema";
 import { indexAccumulator } from "../lib/pedagogy-index/accumulator";
+import { withBase } from "../lib/with-base";
 import BiographyRender from "./BiographyRender.astro";
 import LibraryCollectionShell from "./LibraryCollectionShell.astro";
 
@@ -79,7 +80,7 @@ void order;
             <BiographyRender biography={entry.biography} />
             <p class='sophie-course-equations__backlink'>
               registry entry at{" "}
-              <a href={`/equations/${entry.id}`}>
+              <a href={withBase(`/equations/${entry.id}`)}>
                 <code>/equations/{entry.id}</code>
               </a>
             </p>

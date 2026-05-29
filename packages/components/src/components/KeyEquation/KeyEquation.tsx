@@ -1,6 +1,7 @@
 import { Sigma } from "lucide-react";
 import { type ReactNode, useId } from "react";
 import { useHydrated } from "../../runtime/useHydrated.ts";
+import { withBase } from "../../utils/with-base.ts";
 import { lookupCanonicalCitationByRefId } from "../EquationRef/equation-citations-store.ts";
 import { lookupEquation } from "../EquationRef/equations-store.ts";
 import styles from "./KeyEquation.module.css.js";
@@ -302,7 +303,10 @@ export function KeyEquation({
             <ul className={styles.relatedList}>
               {entry.related.map((r) => (
                 <li key={r.refId} className={styles.relatedItem}>
-                  <a href={`/equations/${r.refId}`} data-kind={r.kind}>
+                  <a
+                    href={withBase(`/equations/${r.refId}`)}
+                    data-kind={r.kind}
+                  >
                     {r.refId}
                   </a>
                   {r.description ? (

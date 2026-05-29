@@ -6,6 +6,21 @@
  * glossary store).
  */
 
+/**
+ * Minimal augmentation of Vite's `import.meta.env` so `lib/with-base.ts`
+ * can read `import.meta.env.BASE_URL` (the consumer's Astro `base`,
+ * replaced at the consumer's Vite build time) without pulling in
+ * `vite/client`'s DOM/HMR ambient types. Structurally compatible with
+ * Vite's own `ImportMetaEnv` (which also declares `BASE_URL: string`),
+ * so no conflict when the consumer's build merges the two.
+ */
+interface ImportMetaEnv {
+  readonly BASE_URL: string;
+}
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
+
 declare module "virtual:sophie/pedagogy-index" {
   import type {
     DefinitionEntry,

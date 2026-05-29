@@ -23,6 +23,7 @@
  * nothing.
  */
 import type { AIContribution } from "@sophie/core/schema";
+import { withBase } from "../lib/with-base";
 
 interface Props {
   authors?: string[];
@@ -113,7 +114,7 @@ function formatReviewDepth(depth: string | undefined): string {
               {" "}
               <a
                 class="sophie-chapter-footer__adr-link"
-                href="/decisions/0042-pedagogy-contract-ai-ledger"
+                href={withBase("/decisions/0042-pedagogy-contract-ai-ledger")}
               >
                 <abbr title="Architecture Decision Record 0042 — Pedagogy Contract + AI Ledger">
                   ADR 0042

@@ -4,6 +4,7 @@ import type {
   FigureUsageEntry,
 } from "@sophie/core/schema";
 import { indexAccumulator } from "../lib/pedagogy-index/accumulator";
+import { withBase } from "../lib/with-base";
 import LibraryCollectionShell from "./LibraryCollectionShell.astro";
 
 const { figureRegistry, figureUsages } = indexAccumulator.asPedagogyIndex();
@@ -126,7 +127,7 @@ const sorted =
             {registry && (
               <figure class='sophie-course-figures__figure'>
                 <img
-                  src={registry.src}
+                  src={withBase(registry.src)}
                   alt={registry.alt}
                   class='sophie-course-figures__image'
                   loading='lazy'
@@ -143,7 +144,7 @@ const sorted =
             )}
             <p class='sophie-course-figures__backlink'>
               in{" "}
-              <a href={`/units/${usage.unit}/reading#${usage.anchor}`}>
+              <a href={withBase(`/units/${usage.unit}/reading#${usage.anchor}`)}>
                 <code>{usage.unit}</code>
               </a>
             </p>
