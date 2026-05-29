@@ -1,6 +1,7 @@
 import type { AuditFinding } from "@sophie/core/schema";
-import { describe, expect, test } from "vitest";
+import { beforeEach, describe, expect, test } from "vitest";
 import { PEDAGOGY_AUDIT_ARTIFACT_VERSION, toAuditArtifact } from "./emit.ts";
+import { resetMathSpeechCoverage } from "./math-speech-coverage.ts";
 import type { AuditReport } from "./types.ts";
 
 const err: AuditFinding = {
@@ -22,6 +23,10 @@ const info: AuditFinding = {
 };
 
 describe("toAuditArtifact", () => {
+  beforeEach(() => {
+    resetMathSpeechCoverage();
+  });
+
   test("maps report → versioned envelope with summary counts + arrays", () => {
     const report: AuditReport = {
       errors: [err],
@@ -34,6 +39,7 @@ describe("toAuditArtifact", () => {
       errors: [err],
       warnings: [warn, warn],
       infos: [info, info, info],
+      mathA11y: { total: 0, labeled: 0, failures: [] },
     });
   });
 
@@ -42,6 +48,27 @@ describe("toAuditArtifact", () => {
     expect(artifact.summary).toEqual({ errors: 0, warnings: 0, infos: 0 });
     expect(artifact.errors).toEqual([]);
     expect(artifact.infos).toEqual([]);
+  });
+
+  test("populates mathA11y from the supplied coverage snapshot", () => {
+    const artifact = toAuditArtifact(
+      { errors: [], warnings: [], info: [] },
+      {
+        total: 5,
+        labeled: 4,
+        failures: [{ kind: "registry", detail: "wiens-law" }],
+      }
+    );
+    expect(artifact.mathA11y).toEqual({
+      total: 5,
+      labeled: 4,
+      failures: [{ kind: "registry", detail: "wiens-law" }],
+    });
+  });
+
+  test("mathA11y defaults to an empty snapshot when none supplied", () => {
+    const artifact = toAuditArtifact({ errors: [], warnings: [], info: [] });
+    expect(artifact.mathA11y).toEqual({ total: 0, labeled: 0, failures: [] });
   });
 
   test("is deterministic — no timestamp / non-content fields (reproducible artifact)", () => {
@@ -56,6 +83,7 @@ describe("toAuditArtifact", () => {
       "errors",
       "warnings",
       "infos",
+      "mathA11y",
     ]);
   });
 });

@@ -13,6 +13,7 @@ import {
   checkKeyInsights,
   checkKISlugUnique,
 } from "./invariants/key-insights.ts";
+import { checkMathSpeech } from "./invariants/math-speech.ts";
 import { checkMisconceptionGraph } from "./invariants/misconception-graph.ts";
 import { checkMisconceptionPairing } from "./invariants/misconception-pairing.ts";
 import { checkMisconceptionSlugUnique } from "./invariants/misconceptions.ts";
@@ -167,6 +168,16 @@ export function runPedagogyAudit(
   // Spec-page URLs are `/library/misconceptions/<slug>/` (W4c Batch 7
   // Task 7.2), so collisions would silently shadow.
   checkMisconceptionSlugUnique(index, sink);
+
+  // ADR 0089 (B5) — MA-1..4: build-time LaTeX→speech coverage. The
+  // snapshot is threaded via extras from the `astro:build:done` hook
+  // (which reads `getMathSpeechCoverage()` after all routes prerendered);
+  // callers that don't process math (dev per-render audit, most unit
+  // tests) pass none and get the INFO tail with zero coverage.
+  checkMathSpeech(
+    extras.mathSpeechCoverage ?? { total: 0, labeled: 0, failures: [] },
+    sink
+  );
 
   return {
     errors: sink.errors,

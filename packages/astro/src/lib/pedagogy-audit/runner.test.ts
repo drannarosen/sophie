@@ -57,11 +57,15 @@ const unitSpoiler: UnitEntry = {
 };
 
 describe("runPedagogyAudit — clean index", () => {
-  it("returns zero findings for an empty index", () => {
+  it("returns zero errors/warnings for an empty index (only the MA-* math-speech coverage tail INFOs)", () => {
     const report = runPedagogyAudit(emptyIndex());
     expect(report.errors).toEqual([]);
     expect(report.warnings).toEqual([]);
-    expect(report.info).toEqual([]);
+    // ADR 0089 B5 — the math-speech invariant always reports its coverage
+    // summary + runtime/deferred tails as INFO (a static gap-visibility
+    // note), so an empty corpus is "no defects + the MA tail", not "no
+    // findings at all".
+    expect(report.info.map((f) => f.code)).toEqual(["MA-2", "MA-3", "MA-4"]);
   });
 
   it("returns zero findings for a fully consistent index", () => {

@@ -2,6 +2,7 @@ import type { Element, Root } from "hast";
 import { toHtml } from "hast-util-to-html";
 import { visit } from "unist-util-visit";
 import { speechFromMathml } from "../../math-render/speech-engine.ts";
+import { recordMathSurface } from "../../pedagogy-audit/math-speech-coverage.ts";
 
 /**
  * Rehype plugin — stamp SRE ClearSpeak `aria-label`s onto KaTeX-rendered
@@ -80,12 +81,17 @@ export function rehypeKatexSpeech() {
     await Promise.all(
       targets.map(async (node) => {
         const mathml = findMathmlChild(node);
-        if (mathml === undefined) return;
-        const math = findMathElement(mathml);
-        if (math === undefined) return;
+        const math = mathml === undefined ? undefined : findMathElement(mathml);
+        const serialized = math === undefined ? "" : toHtml(math);
+        const speech =
+          serialized === "" ? "" : await speechFromMathml(serialized);
 
-        const speech = await speechFromMathml(toHtml(math));
-        if (speech.length === 0) return;
+        recordMathSurface({
+          kind: "mdx",
+          labeled: speech.length > 0,
+          detail: speech.length > 0 ? undefined : serialized || "(no mathml)",
+        });
+        if (mathml === undefined || speech.length === 0) return;
 
         const properties = node.properties ?? {};
         properties.ariaLabel = speech;

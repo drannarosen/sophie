@@ -1,4 +1,5 @@
 import type { AuditFinding, NotationRegistry } from "@sophie/core/schema";
+import type { MathSpeechCoverage } from "./math-speech-coverage.ts";
 
 /**
  * Shared types for the pedagogy-audit cluster.
@@ -57,6 +58,16 @@ export interface AuditExtras {
    * accumulator round-trip required).
    */
   notationRegistry?: NotationRegistry | null;
+  /**
+   * Build-scoped math-speech coverage snapshot (ADR 0089 B5). Threaded
+   * from the `astro:build:done` hook, which calls
+   * `getMathSpeechCoverage()` after every route has prerendered (so the
+   * three build-time math surfaces have all recorded). Absent => the
+   * MA-* invariant reports an empty snapshot (zero coverage, no MA-1
+   * warning) — correct for callers that don't process math (e.g. the
+   * per-render TextbookLayout dev audit + most invariant unit tests).
+   */
+  mathSpeechCoverage?: MathSpeechCoverage;
 }
 
 /**

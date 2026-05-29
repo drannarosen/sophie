@@ -1,6 +1,7 @@
 import type { Root } from "hast";
 import type { MdxJsxAttribute } from "mdast-util-mdx-jsx";
 import { visit } from "unist-util-visit";
+import { recordMathSurface } from "../../pedagogy-audit/math-speech-coverage.ts";
 
 /**
  * Rehype plugin — stamp an explicit `aria-label` on math-bearing
@@ -168,6 +169,11 @@ export function rehypeChoiceSpeech() {
       if (!state.hasMath) return;
 
       const name = parts.join("").replace(/\s+/g, " ").trim();
+      recordMathSurface({
+        kind: "choice",
+        labeled: name.length > 0,
+        detail: name.length > 0 ? undefined : "(empty choice name)",
+      });
       if (name.length === 0) return;
 
       input.attributes = input.attributes ?? [];

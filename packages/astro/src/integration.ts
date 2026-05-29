@@ -19,6 +19,7 @@ import {
   formatAuditReport,
   formatAuditThrowMessage,
 } from "./lib/pedagogy-audit/format.ts";
+import { getMathSpeechCoverage } from "./lib/pedagogy-audit/math-speech-coverage.ts";
 import { runPedagogyAudit } from "./lib/pedagogy-audit/runner.ts";
 import { indexAccumulator } from "./lib/pedagogy-index/accumulator.ts";
 import { pedagogyIndexVirtualModule } from "./lib/pedagogy-index-virtual-module.ts";
@@ -323,6 +324,7 @@ export function defineSophieIntegration(
           draftUnitIds,
           repoRoot,
           notationRegistry,
+          mathSpeechCoverage: getMathSpeechCoverage(),
         });
         await writePedagogyAuditJson(distPath, auditReport);
         logger.info(formatAuditReport(auditReport));

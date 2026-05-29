@@ -1,4 +1,5 @@
 import type { EquationEntry } from "@sophie/core/schema";
+import { recordMathSurface } from "../pedagogy-audit/math-speech-coverage.ts";
 import { renderMath } from "./render-math.ts";
 import { speechFromMathml } from "./speech-engine.ts";
 
@@ -37,9 +38,18 @@ export async function enrichEquationsWithSpeech(
 ): Promise<void> {
   await Promise.all(
     entries.map(async (entry) => {
+      // Idempotent + double-count guard: an entry that already carries
+      // speech (already enriched at the earlier build seam) is skipped
+      // here, so the per-page + build:done double-run records each entry
+      // into the coverage collector exactly once.
       if (entry.speech) return;
       const { mathml } = renderMath(entry.tex, { displayMode: true });
       const speech = await speechFromMathml(mathml);
+      recordMathSurface({
+        kind: "registry",
+        labeled: speech.length > 0,
+        detail: speech.length > 0 ? undefined : entry.id,
+      });
       if (speech) entry.speech = speech;
     })
   );
