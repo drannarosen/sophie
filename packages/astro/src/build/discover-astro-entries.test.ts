@@ -1,7 +1,12 @@
-import { dirname, resolve } from "node:path";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { describe, expect, it } from "vitest";
-import { discoverAstroEntries } from "./discover-astro-entries";
+import { afterEach, describe, expect, it } from "vitest";
+import {
+  discoverAstroEntries,
+  findMissingEntries,
+} from "./discover-astro-entries";
 
 // `src/build/` → `src/`. Matches the sibling-test path pattern (Vite
 // rewrites `import.meta.url`, so `new URL("../", ...)` yields a
@@ -61,11 +66,12 @@ describe("discoverAstroEntries", () => {
     expect(discovered).not.toHaveProperty("lib/module-nav-helpers");
   });
 
-  it("normalizes a specifier carrying a .ts extension", () => {
-    // UnitViewLinkBar.astro imports `../lib/unit-views.ts` WITH the
-    // extension (a type-only import there) — but ChapterLayout.astro
-    // value-imports the same module without extension. The keyed entry
-    // must collapse to the extensionless `lib/unit-views` either way.
+  it("normalizes an extensionless specifier to its .ts source", () => {
+    // ChapterLayout.astro value-imports `../lib/unit-views` WITHOUT an
+    // extension; the resolved entry must point at the real `.ts` file
+    // while the key collapses to the extensionless `lib/unit-views`.
+    // (UnitViewLinkBar.astro's `../lib/unit-views.ts` is an `import type`
+    // — excluded — so it does NOT exercise the .ts-extension value path.)
     expect(discovered["lib/unit-views"]).toMatch(/lib\/unit-views\.ts$/);
   });
 
@@ -87,5 +93,83 @@ describe("discoverAstroEntries", () => {
     const all = [...INTRINSIC_KEYS, ...Object.keys(discovered)].sort();
     expect(all).toEqual(EXPECTED_ALL);
     expect(all).toHaveLength(20);
+  });
+});
+
+describe("findMissingEntries (self-validation guard)", () => {
+  // Fixture sandboxes — temp `.astro` + lib `.ts` files in an OS temp
+  // dir. NOT real repo files: keeps the red-path test non-brittle and
+  // independent of how the real .astro tree evolves.
+  const tmpDirs: string[] = [];
+
+  function fixtureDir(): string {
+    const dir = mkdtempSync(join(tmpdir(), "tsup-entry-validator-"));
+    tmpDirs.push(dir);
+    return dir;
+  }
+
+  afterEach(() => {
+    for (const dir of tmpDirs.splice(0)) {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("FIRES when a value-imported module is absent from the entry set", () => {
+    const dir = fixtureDir();
+    writeFileSync(join(dir, "helper.ts"), "export const x = 1;\n");
+    writeFileSync(
+      join(dir, "Widget.astro"),
+      '---\nimport { x } from "./helper";\n---\n<p>{x}</p>\n'
+    );
+
+    // Entry set deliberately OMITS the `helper` key — simulates the
+    // silent-miss the guard must catch. This is the live-not-dead proof.
+    const missing = findMissingEntries(dir, []);
+
+    expect(missing).toHaveLength(1);
+    expect(missing[0]).toMatchObject({
+      specifier: "./helper",
+      expectedKey: "helper",
+    });
+    expect(missing[0]?.file).toMatch(/Widget\.astro$/);
+  });
+
+  it("does NOT fire when the value-import IS present as an entry key", () => {
+    const dir = fixtureDir();
+    writeFileSync(join(dir, "helper.ts"), "export const x = 1;\n");
+    writeFileSync(
+      join(dir, "Widget.astro"),
+      '---\nimport { x } from "./helper";\n---\n<p>{x}</p>\n'
+    );
+
+    expect(findMissingEntries(dir, ["helper"])).toEqual([]);
+  });
+
+  it("does NOT fire on a type-only import (no false positive)", () => {
+    const dir = fixtureDir();
+    writeFileSync(join(dir, "types.ts"), "export type T = number;\n");
+    writeFileSync(
+      join(dir, "Widget.astro"),
+      '---\nimport type { T } from "./types";\nconst n: T = 1;\n---\n<p>{n}</p>\n'
+    );
+
+    // Type-only import erases at build → must NOT be flagged even though
+    // `types` is absent from the (empty) entry set.
+    expect(findMissingEntries(dir, [])).toEqual([]);
+  });
+
+  it("catches a CRLF frontmatter import the chunk parser could miss", () => {
+    const dir = fixtureDir();
+    writeFileSync(join(dir, "helper.ts"), "export const x = 1;\n");
+    // CRLF line endings throughout — the independent raw scan still sees
+    // the import; this is the parser-blind-spot backstop in action.
+    writeFileSync(
+      join(dir, "Widget.astro"),
+      '---\r\nimport { x } from "./helper";\r\n---\r\n<p>{x}</p>\r\n'
+    );
+
+    expect(findMissingEntries(dir, [])).toEqual([
+      expect.objectContaining({ specifier: "./helper", expectedKey: "helper" }),
+    ]);
   });
 });

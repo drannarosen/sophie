@@ -1,6 +1,9 @@
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "tsup";
-import { discoverAstroEntries } from "./src/build/discover-astro-entries";
+import {
+  discoverAstroEntries,
+  findMissingEntries,
+} from "./src/build/discover-astro-entries";
 
 const SRC_DIR = fileURLToPath(new URL("./src/", import.meta.url));
 
@@ -32,28 +35,35 @@ const INTRINSIC: Record<string, string> = {
 
 const discovered = discoverAstroEntries(SRC_DIR);
 
-/**
- * Self-validation safety net (the approved guard): if an INTRINSIC key
- * collides with a discovered key BUT points at a different source path,
- * the spread below would silently let one shadow the other — exactly the
- * class of stale-mapping bug this refactor exists to kill. Fail loudly at
- * config-eval, naming the key, rather than producing a dist tree that
- * resolves wrong at the consumer Astro build. A clean run proves the
- * INTRINSIC list and the `.astro`-derived set are disjoint-or-consistent;
- * a future dev adding an `.astro`→lib import gets an automatic entry, and
- * a regression in either source-of-truth surfaces here.
- */
-for (const [key, source] of Object.entries(discovered)) {
-  if (key in INTRINSIC && INTRINSIC[key] !== source) {
-    throw new Error(
-      `tsup entry self-validation: key "${key}" is declared INTRINSIC as ` +
-        `"${INTRINSIC[key]}" but discovered from an .astro value-import as ` +
-        `"${source}". Reconcile the source path or drop the INTRINSIC entry.`
-    );
-  }
-}
-
 const entry = { ...INTRINSIC, ...discovered };
+
+/**
+ * Self-validation guard (the approved deliverable). Threat model: a
+ * SILENT MISS — discovery's structured parser fails to *see* a value
+ * import, so no entry is created, `pnpm build` + unit tests stay green,
+ * and only the consumer/smoke Astro build breaks (this bug class bit 3×).
+ *
+ * `findMissingEntries` re-scans each `.astro` file's RAW text with an
+ * INDEPENDENT regex (not discovery's TS-compiler chunk extraction) and
+ * asserts every relative value-import that resolves to a buildable src
+ * module is present in the FINAL `entry` set. A miss → throw here, at
+ * config-eval (build time), failing the build LOUDLY rather than
+ * shipping a dist tree that resolves wrong at the consumer build.
+ */
+const missing = findMissingEntries(SRC_DIR, Object.keys(entry));
+if (missing.length > 0) {
+  const lines = missing
+    .map(
+      (m) =>
+        `  - ${m.file} imports "${m.specifier}" ` +
+        `(expected entry key "${m.expectedKey}") — discovery parser did ` +
+        "not produce it"
+    )
+    .join("\n");
+  throw new Error(
+    `tsup entry discovery missed ${missing.length} value-import(s):\n${lines}`
+  );
+}
 
 export default defineConfig({
   entry,

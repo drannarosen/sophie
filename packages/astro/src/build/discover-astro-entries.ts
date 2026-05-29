@@ -17,6 +17,19 @@ import ts from "typescript";
  * Value-vs-type discrimination uses the TypeScript compiler API (not
  * regex) so `import type { X }` and inline `import { type X }` — which
  * erase at build and must NOT produce an entry — are excluded robustly.
+ *
+ * Known parsing boundaries (intentionally not defended *here*): the
+ * frontmatter fence regex assumes the file opens with a leading `---`
+ * fence, and a literal `---` or `</script>` appearing inside a string
+ * literal could truncate chunk extraction early. These are silent-miss
+ * vectors — a missed import produces no entry and breaks only at the
+ * consumer Astro build. The backstop is the independent raw-text
+ * validator below (`findMissingEntries`): it re-scans each `.astro`
+ * file's RAW text with a deliberately different parse mechanism (regex,
+ * not the TS compiler), so a blind spot in *this* structured extraction
+ * is converted into a LOUD build-time failure rather than a silent miss.
+ * The one known-reachable vector (CRLF line endings) is fixed directly
+ * in the fence + `<script>` regexes below.
  */
 export function discoverAstroEntries(srcDir: string): Record<string, string> {
   const entries: Record<string, string> = {};
@@ -35,14 +48,135 @@ export function discoverAstroEntries(srcDir: string): Record<string, string> {
       );
       if (!resolved) continue;
 
-      // Entry key = src-relative path minus extension; `preferences/`
-      // index resolves to `preferences/index`, matching tsup's keys.
-      const key = relative(srcDir, resolved).replace(/\.(ts|tsx)$/, "");
-      entries[key] = resolved;
+      entries[entryKeyFor(srcDir, resolved)] = resolved;
     }
   }
 
   return entries;
+}
+
+/** A value-import the validator found that no tsup entry covers. */
+export interface MissingEntry {
+  /** Absolute path of the `.astro` file containing the import. */
+  file: string;
+  /** The raw module specifier as written in the `.astro` source. */
+  specifier: string;
+  /** The entry key the import resolves to but which is absent. */
+  expectedKey: string;
+}
+
+/**
+ * Independent second-pass validator (the approved self-validation
+ * guard). Re-scans each `.astro` file's RAW text with a regex — a
+ * DELIBERATELY DIFFERENT parse mechanism than `discoverAstroEntries`
+ * (which uses the TS compiler API on extracted chunks). The independence
+ * is the point: a blind spot in the structured extraction (CRLF, a
+ * string literal that truncates chunk parsing, a `<script>` shape the
+ * splitter misses) is caught here and turned into a LOUD build failure
+ * instead of a silent missing dist entry.
+ *
+ * For each relative specifier that resolves to a buildable
+ * `src/**\/*.{ts,tsx}` target, the expected entry key is asserted present
+ * in `entryKeys` (the FINAL INTRINSIC ∪ discovered set). A value-import
+ * whose target is missing → reported. Type-only imports are skipped via
+ * a lightweight check on the matched statement text — deliberately
+ * INDEPENDENT of discovery's TS-compiler classification.
+ *
+ * Asymmetry by design: discovery erring silent = broken consumer build
+ * (BAD); this validator erring = a loud build error a human resolves
+ * (acceptable). It is allowed to be slightly conservative; it must never
+ * be silent. Returns [] when clean.
+ */
+export function findMissingEntries(
+  srcDir: string,
+  entryKeys: ReadonlySet<string> | readonly string[]
+): MissingEntry[] {
+  const keys = entryKeys instanceof Set ? entryKeys : new Set(entryKeys);
+  const missing: MissingEntry[] = [];
+
+  for (const astroFile of findAstroFiles(srcDir)) {
+    const astroDir = dirname(astroFile);
+    const source = readFileSync(astroFile, "utf8");
+
+    for (const { specifier, statement } of rawImportStatements(source)) {
+      if (!specifier.startsWith(".")) continue;
+      if (isTypeOnlyStatement(statement)) continue;
+
+      const resolved = resolveToBuildableSource(
+        resolve(astroDir, specifier),
+        srcDir
+      );
+      if (!resolved) continue;
+
+      const expectedKey = entryKeyFor(srcDir, resolved);
+      if (!keys.has(expectedKey)) {
+        missing.push({ file: astroFile, specifier, expectedKey });
+      }
+    }
+  }
+
+  return missing;
+}
+
+/**
+ * Raw-text scan for import statements: matches both
+ * `import ... from "<spec>"` (single/double quotes) and side-effect
+ * `import "<spec>"`. Returns the specifier plus the full matched
+ * statement text so the type-only check can inspect it. This sees
+ * imports the structured chunk extraction can miss.
+ */
+function rawImportStatements(
+  astroSource: string
+): { specifier: string; statement: string }[] {
+  const results: { specifier: string; statement: string }[] = [];
+
+  // `import <clause> from "<spec>"` / `'<spec>'`.
+  const fromRe = /import\b([\s\S]*?)\bfrom\s*["']([^"']+)["']/g;
+  let m: RegExpExecArray | null = fromRe.exec(astroSource);
+  while (m !== null) {
+    results.push({ specifier: m[2] ?? "", statement: m[0] });
+    m = fromRe.exec(astroSource);
+  }
+
+  // Side-effect `import "<spec>"` (no `from`).
+  const sideRe = /import\s*["']([^"']+)["']/g;
+  m = sideRe.exec(astroSource);
+  while (m !== null) {
+    results.push({ specifier: m[1] ?? "", statement: m[0] });
+    m = sideRe.exec(astroSource);
+  }
+
+  return results;
+}
+
+/**
+ * Lightweight type-only detection on raw statement text (independent of
+ * discovery's TS-compiler classification). Skips `import type ...` and
+ * `import { ... }` blocks where EVERY named binding is `type X`. A
+ * default/namespace import, or any named block retaining one value
+ * binding, is treated as a value import.
+ */
+function isTypeOnlyStatement(statement: string): boolean {
+  if (/^import\s+type\b/.test(statement)) return true;
+
+  const braces = statement.match(/\{([\s\S]*?)\}/);
+  if (!braces?.[1]) return false; // default/namespace/side-effect: value import
+
+  const names = braces[1]
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+  if (names.length === 0) return false;
+  return names.every((name) => /^type\s/.test(name));
+}
+
+/**
+ * Entry key = src-relative path minus extension; `preferences/index.ts`
+ * → `preferences/index`, matching tsup's keys. Single source of the key
+ * formula shared by discovery and the validator.
+ */
+function entryKeyFor(srcDir: string, resolved: string): string {
+  return relative(srcDir, resolved).replace(/\.(ts|tsx)$/, "");
 }
 
 /** Recursively collect every `.astro` file under `srcDir` (Node 20+). */
@@ -117,7 +251,9 @@ function hasValueBinding(clause: ts.ImportClause): boolean {
 function tsChunks(astroSource: string): string[] {
   const chunks: string[] = [];
 
-  const fence = astroSource.match(/^---\n([\s\S]*?)\n---/);
+  // `\r?\n` tolerates CRLF line endings; the `<script>` body uses
+  // `[\s\S]*?` which already matches `\r`, so it is CRLF-safe as-is.
+  const fence = astroSource.match(/^---\r?\n([\s\S]*?)\r?\n---/);
   if (fence?.[1] !== undefined) chunks.push(fence[1]);
 
   const scriptRe = /<script\b[^>]*>([\s\S]*?)<\/script>/g;
