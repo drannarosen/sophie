@@ -23,32 +23,32 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 
 | Status | Count |
 |---|---|
-| Validated | 36 |
+| Validated | 37 |
 | In progress | 21 |
 | Unvalidated | 61 |
 | Re-validation needed | 0 |
 | Missing block | 0 |
-| Total | 118 |
+| Total | 119 |
 
 ## Lifecycle summary
 
 | Lifecycle | Count |
 |---|---|
-| Shipped | 69 |
+| Shipped | 70 |
 | Accepted design | 39 |
 | Mixed | 1 |
 | Future package split | 9 |
 | No status | 0 |
-| Total | 118 |
+| Total | 119 |
 
 ## Evidence kinds
 
 | Kind | Count |
 |---|---|
-| test | 124 |
+| test | 125 |
 | chapter | 9 |
-| review | 31 |
-| deployment | 76 |
+| review | 32 |
+| deployment | 78 |
 | audit | 9 |
 | manual | 40 |
 
@@ -151,6 +151,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0088-pedagogy-audit-build-artifact.md](/pedagogy-audit-build-artifact/) | validated | shipped | 2026-05-28 | deployment, test | Shipped: build-done trigger + artifact + dev-only layout guard. Implemented via the accumulator-reading approach (the integration reads the already-populated index pagefind-style, extracts contract validations once at build-done). Originating audit item: P2.4 (docs/reviews/2026-05-28-platform-hardening-audit.md).  |
 | [docs/website/decisions/0089-latex-speech-accessibility.md](/latex-speech-accessibility/) | validated | shipped | 2026-05-28 | test | Shipped in PR-B of the unified-math-rendering / LaTeX-speech sprint (plan: docs/plans/2026-05-28-latex-speech-a11y-implementation.md), built on ADR 0090's `renderMath`. The `math-speech` invariant (MA-1) is WARNING (non-fatal) for v1 per resolved-decision 1 — the deferred runtime/registry tail (MathText children-math, BlackbodyExplorer dynamic math, registry `rearranged_forms`/`constants`) means a zero-failure build is not yet guaranteed corpus-wide. ADR 0089 graduates MA-1 to ERROR once coverage of the build-time surfaces is stable; the validation status is `validated` for the WARNING contract that ships here.  |
 | [docs/website/decisions/0090-unified-build-time-math-rendering.md](/unified-build-time-math-rendering/) | validated | shipped | 2026-05-28 | test | Shipped in PR-A of the unified-math-rendering / LaTeX-speech sprint (plan: docs/plans/2026-05-28-latex-speech-a11y-implementation.md). Enforceable invariant — the only build-time KaTeX site is `renderMath`; `grep -rn katex packages/components/src --include='*.tsx' --include='*.ts' \| grep -v test \| grep -v stories` resolves to ONLY the two runtime-tail files (render-text-with-math.ts, BlackbodyExplorer/InlineMath.tsx) plus the `katex/dist/katex.min.css` type declaration in css-modules.d.ts. PR-B (ADR 0089) extends `renderMath` with an SRE `speech` field and the coverage invariant; in-progress at time of this ADR.  |
+| [docs/website/decisions/0091-tsup-entry-discovery.md](/tsup-entry-discovery/) | validated | shipped | 2026-05-29 | deployment, review, test | Shipped in PR #226. The dynamic discovery eliminates the forget-an-entry bug class at the source (a new `.astro`→lib value-import now gets its entry automatically); the independent self-validation guard is the build-time backstop that converts any residual discovery silent-miss into a loud build failure rather than a green-locally / broken-at-consumer-build regression. Pairs with ADR 0084 (packed-smoke gate) as the build-config layer of the same consumer-shape defense family; ADR 0061-aligned (focused, testable build tooling).  |
 
 ### Reference docs
 
