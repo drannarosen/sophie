@@ -66,8 +66,9 @@ validation:
 - **Related**: [0001](./0001-platform-not-monorepo.md) (framework purity —
   `@sophie/components` owns no build tooling), [0038](./0038-pedagogy-index-pattern.md)
   + [0043](./0043-notation-registry-multirep-alignment-audit.md) (the index /
-  registry now carry prerendered html). ADR 0089 (PR-B, not yet authored)
-  will build the SRE speech layer on top of `renderMath`.
+  registry now carry prerendered html).
+  [ADR 0089](./0089-latex-speech-accessibility.md) builds the SRE speech
+  layer on top of `renderMath`.
 :::
 
 ## Context
@@ -208,5 +209,5 @@ baselines by font rasterization — CI Linux VR is authoritative.
 - [ADR 0043](./0043-notation-registry-multirep-alignment-audit.md) +
   [ADR 0038](./0038-pedagogy-index-pattern.md) — the registry / index that
   now carry prerendered html.
-- ADR 0089 (PR-B, not yet authored) — the speech layer built on
-  `renderMath`.
+- [ADR 0089](./0089-latex-speech-accessibility.md) — the speech layer
+  built on `renderMath`.
