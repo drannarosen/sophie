@@ -155,6 +155,13 @@ function rawImportStatements(
  * `import { ... }` blocks where EVERY named binding is `type X`. A
  * default/namespace import, or any named block retaining one value
  * binding, is treated as a value import.
+ *
+ * Scope note: this inspects ONLY the `{...}` brace block, so a
+ * default-binding import with an all-`type` brace
+ * (`import defaultThing, { type T } from "./x"`) reads as type-only.
+ * Harmless: discovery's own classifier handles that shape correctly,
+ * so the entry is present regardless — the validator's skip never
+ * causes a silent miss for any input discovery sees correctly.
  */
 function isTypeOnlyStatement(statement: string): boolean {
   if (/^import\s+type\b/.test(statement)) return true;
