@@ -19,7 +19,11 @@ validation:
     - kind: deployment
       ref: packages/astro/src/lib/with-base.ts
       date: "2026-05-29"
-      notes: "`withBase(path) = joinBase(import.meta.env.BASE_URL, path)` for `@sophie/astro` chrome `.astro` files; exported from the package barrel for consumer-authored `.astro` pages. Mirror wrapper at `packages/components/src/utils/with-base.ts` for the framework-pure React package (`import.meta.env.BASE_URL` is a Vite primitive, not an `astro:*` import — ADR 0001 holds)."
+      notes: "`withBase(path) = joinBase(getSophieBaseUrl() ?? import.meta.env?.BASE_URL ?? \"/\", path)` for `@sophie/astro` chrome `.astro` files; exported from the package barrel for consumer-authored `.astro` pages. Mirror wrapper at `packages/components/src/utils/with-base.ts` for the framework-pure React package. Per **Amendment 1**, the base is read from a globalThis SSR-setter first (set by the route `.astro` layer) and only falls back to the Vite primitive `import.meta.env?.BASE_URL` on the client — because `import.meta.env` is undefined when the tsup dist runs externalized in Astro's Node prerender. `import.meta.env` is a Vite primitive, not an `astro:*` import — ADR 0001 holds."
+    - kind: deployment
+      ref: packages/core/src/runtime/base-url.ts
+      date: "2026-05-29"
+      notes: "Amendment 1 — `setSophieBaseUrl`/`getSophieBaseUrl` (globalThis-backed, pure, Node-safe). The route `.astro` layer sets the base; the externalized-in-Node SSR `withBase` reads it via the getter. Resolves the `packed-smoke` prerender crash (`import.meta.env` undefined in externalized dist)."
     - kind: deployment
       ref: packages/astro/src/lib/derive-info-slug.ts
       date: "2026-05-29"
@@ -101,13 +105,16 @@ that builds a consumer under a non-root base.**
    untouched**. Zero-dep and Node-safe (no `import.meta.env`), so it is
    unit-testable and usable from any package.
 
-2. **`withBase(path)` — a wrapper in each consuming package.**
-   `joinBase(import.meta.env.BASE_URL, path)`. Lives in `@sophie/astro`
+2. **`withBase(path)` — a wrapper in each consuming package.** Resolves
+   the base as `getSophieBaseUrl() ?? import.meta.env?.BASE_URL ?? "/"`,
+   then `joinBase(base, path)` (see **Amendment 1** — the original shape
+   read `import.meta.env.BASE_URL` directly, which throws in Astro's
+   externalized-Node prerender). Lives in `@sophie/astro`
    (`lib/with-base.ts`, exported from the package barrel so consumers
    authoring their own `.astro` pages can emit base-correct links) and in
-   `@sophie/components` (`utils/with-base.ts`). `import.meta.env.BASE_URL`
-   is a Vite primitive (not an `astro:*` import), so the components wrapper
-   does not violate ADR 0001's framework-purity rule.
+   `@sophie/components` (`utils/with-base.ts`). `import.meta.env` is a
+   Vite primitive (not an `astro:*` import), so the components wrapper does
+   not violate ADR 0001's framework-purity rule.
 
 3. **`deriveInfoSlug(pathname)` — last non-empty path segment.** Replaces
    the base-fragile slash-strip in `info-page.astro`. Base-agnostic by
@@ -133,15 +140,20 @@ that builds a consumer under a non-root base.**
    defends the whole class: a new internal link is correct if it goes
    through `withBase`, and the gate fails loudly if one doesn't.
 
-2. **`import.meta.env.BASE_URL` over prop-threading — proven, and
-   hydration-safe.** The alternative (thread `base` as a prop/context into
-   every linking React component) is more invasive and reintroduces the
-   leak class as "forgot the prop." A pre-merge spike proved Vite replaces
-   `import.meta.env.BASE_URL` in the **tsup-built dist** for both the SSR
-   render and the **client-island bundle** (verified by disassembling the
-   built client chunk: the wrapper compiled to `joinBase("/base-probe",
-   path)` with no residual env token). Because SSR and client receive the
-   same build-time replacement, the five `client:load` ref components stay
+2. **A shared base helper over prop-threading — and the SSR-setter that
+   makes it correct.** The alternative (thread `base` as a prop/context
+   into every linking React component) is more invasive and reintroduces
+   the leak class as "forgot the prop." A pre-merge spike confirmed Vite
+   replaces `import.meta.env.BASE_URL` in the tsup-built dist for the
+   **client-island bundle** and for **workspace-bundled SSR**. It did
+   **not** cover Astro's static **prerender** environment, which
+   externalizes the dist and runs it in Node — where `import.meta.env` is
+   undefined. **Amendment 1** closes that gap with a globalThis SSR-setter
+   (the definitions/figures store doctrine): the route `.astro` layer,
+   which has reliably Vite-replaced `import.meta.env.BASE_URL`, calls
+   `setSophieBaseUrl`; the externalized-in-Node wrapper reads it via
+   `getSophieBaseUrl()`. SSR (setter) and client (Vite-inlined env) resolve
+   to the same consumer base, so the five `client:load` ref components stay
    hydration-consistent — no React #418, the class ADR 0084 defends.
 
 3. **Last-segment slug eliminates an entire dependency.** Deriving the
@@ -222,11 +234,47 @@ consumer-authored half of the class.
 
 Validated by the artifacts in the frontmatter `validation.evidence` block:
 `joinBase` (core, pure, tested) + the two `withBase` wrappers +
-`deriveInfoSlug` + the `base-path` CI gate. A spike proved the env-
-replacement mechanism on SSR + client bundles before the full sweep; an
-independent code review disassembled the built client bundle to confirm
-hydration consistency and re-ran the gate (132 pages under base, zero
-leaks). PR #227 shipped the change to `main`.
+`deriveInfoSlug` + the `base-path` CI gate, plus the **Amendment 1**
+SSR-setter (`getSophieBaseUrl`/`setSophieBaseUrl`). An independent code
+review disassembled the built client bundle to confirm hydration
+consistency and re-ran both the `base-path` gate (zero leaks) and the
+`packed-smoke` gate (build complete + #418 spec green) under the
+externalized-prerender path. PR #227 shipped the change to `main`.
+
+## Amendment 1 — SSR base via globalThis setter (packed-prerender externalization, 2026-05-29)
+
+The Decision's original `withBase(path) = joinBase(import.meta.env.BASE_URL,
+path)` shape passed the `base-path` gate (workspace-bundled SSR) but **failed
+`packed-smoke`**: in Astro's static **prerender** environment, `@sophie/components`
+runs as the **externalized tsup dist in Node**, where `import.meta.env` is
+`undefined` — so `import.meta.env.BASE_URL` threw `Cannot read properties of
+undefined (reading 'BASE_URL')` while server-rendering non-`useHydrated`-gated
+components (`SectionLanding`, `CourseLanding/SimpleList`, `Figure`). The
+`useHydrated`-gated island refs were unaffected (their `withBase` runs only on
+the client, where Vite replaces `import.meta.env.BASE_URL`).
+
+A bare `?? "/"` guard would stop the throw but emit **unprefixed** SSR links
+under a non-root base — a silent reintroduction of the leak class. The fix
+adopts the **globalThis SSR-setter doctrine** (same pattern as the
+definitions/figures cross-chapter stores):
+
+- `@sophie/core/runtime` exports `setSophieBaseUrl(base)` / `getSophieBaseUrl()`
+  — pure, Node-safe, globalThis-backed (no `import.meta.env`).
+- Each injected route `.astro` calls `setSophieBaseUrl(import.meta.env.BASE_URL)`
+  at frontmatter entry, where the value is reliably Vite-replaced (the `.astro`
+  layer is consumer-Vite-processed).
+- Both `withBase` wrappers resolve the base as
+  `getSophieBaseUrl() ?? import.meta.env?.BASE_URL ?? "/"` — globalThis (SSR) →
+  Vite-inlined env (client) → root default. The optional chain on
+  `import.meta.env?.BASE_URL` never throws in externalized Node and is still
+  statically replaced by Vite in the client bundle (verified by disassembly).
+
+This refines, not reverses, the "shared base helper over prop-threading"
+decision: the helper stays; the env read is split into an SSR seam (setter) and
+a client fallback. The originating finding is the PR #227 `packed-smoke`
+failure; the lesson — run `packed-smoke` locally before pushing changes to
+`@sophie/components` SSR behavior — is recorded in the
+`project_smoke_gate_catches_packaging_class` memory.
 
 ## References
 

@@ -48,7 +48,7 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 | test | 127 |
 | chapter | 9 |
 | review | 32 |
-| deployment | 81 |
+| deployment | 82 |
 | audit | 9 |
 | manual | 40 |
 
