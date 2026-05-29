@@ -43,13 +43,12 @@ const SELF_CLOSING_TRIGGER =
  *     (when present) per PR-C4 brainstorm Q2;
  *   - on click, navigates to `/units/{slug}/reading`.
  *
- * Tests **deliberately skipped** in this file (with rationale):
- *
- *   Children-mode hover/click — same `astro-island await-children`
- *   quirk that PR-C3's figure-ref.spec.ts skips for its children
- *   variant. The self-closing path exercises the full happy-path
- *   interaction; the children-mode render branch has unit coverage
- *   in `ChapterRef.test.tsx`.
+ * Children-mode coverage (E6): the children-mode cite is verified
+ * end-to-end with the scoped `data-react-hydrated` wait. The original
+ * skip's "await-children traversal" rationale was stale — in-browser
+ * inspection (2026-05-29) confirmed the hydrated anchor resolves by
+ * both attribute and role; the failure was timing at the unscoped load
+ * checkpoints, not the slot boundary. No tests are skipped in this file.
  */
 
 test.describe("PR-C4: <ChapterRef> on the smoke chapter", () => {
@@ -137,16 +136,32 @@ test.describe("PR-C4: <ChapterRef> on the smoke chapter", () => {
     await expectChapterA11y(page);
   });
 
-  test.skip("children-mode ChapterRef cite — anchor + slotted text", () => {
-    // The children-mode ChapterRef cite (`<ChapterRef
-    // slug="stellar-evolution">how stars live and die</ChapterRef>`)
-    // ships its anchor inside `<astro-island await-children>`. The
-    // anchor + slotted text DO ship in built HTML, but Playwright's
-    // selector engine fails to traverse through the `await-children`
-    // boundary at the load-state checkpoints we have today — same
-    // skip rationale as PR-C3's figure-ref.spec.ts T43 dual-mode
-    // skip. Unit-level coverage in `ChapterRef.test.tsx` U2
-    // exercises the children-rendering branch directly. Skipping
-    // pending the shared astro-island workaround.
+  test("E6 children-mode ChapterRef cite — anchor + slotted text (stellar-evolution)", async ({
+    page,
+  }) => {
+    await page.goto(CHAPTER_URL);
+    // Children-mode ChapterRef (`<ChapterRef slug="stellar-evolution">
+    // how stars live and die</ChapterRef>`). The bare anchor href
+    // collides with the sidebar ModuleNav link (2 matches), so scope to
+    // the ChapterRef island — same shape as SELF_CLOSING_TRIGGER — then
+    // apply the scoped hydration wait. The original skip blamed an
+    // "await-children traversal" limit; in-browser inspection
+    // (2026-05-29) showed the hydrated anchor resolves by both
+    // attribute and role — the failure was timing at the unscoped load
+    // checkpoints, not the slot boundary.
+    const trigger = page
+      .locator(
+        'astro-island[component-export="ChapterRef"] a[href="/units/stellar-evolution/reading"]'
+      )
+      .first();
+    await trigger.waitFor({ state: "attached" });
+    await trigger.scrollIntoViewIfNeeded();
+    await expect(trigger).toHaveAttribute("data-react-hydrated", "true");
+    // Children-mode renders the slotted prose, not the chapter title.
+    await expect(trigger).toContainText("how stars live and die");
+    await expect(trigger).toHaveAttribute(
+      "href",
+      "/units/stellar-evolution/reading"
+    );
   });
 });
