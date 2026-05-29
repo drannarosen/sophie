@@ -122,4 +122,29 @@ describe("<ResultCard>", () => {
     const results = await axe(container);
     expect(results).toHaveNoViolations();
   });
+
+  it("axe-core: zero a11y violations on a speech-labeled equation result", async () => {
+    // R11: axe-verify the role="math" + aria-label path on this component
+    // directly (not only by proxy via KeyEquation). A role="math" element
+    // must carry an accessible name — the build speech supplies it.
+    const equation: SearchResult = {
+      ...baseFixture,
+      meta: {
+        ...baseFixture.meta,
+        title: "Stefan-Boltzmann luminosity",
+        tex: "L = 4\\pi R^2 \\sigma T^4",
+        html: '<span class="katex">PRERENDERED_RESULT_MARKER</span>',
+        speech: "L equals 4 pi R squared sigma T to the fourth power",
+        slug: "stefan-boltzmann-luminosity",
+      },
+      filters: { type: ["equation"] },
+    };
+    const { container } = render(
+      <div role='listbox' aria-label='Search results' tabIndex={0}>
+        <ResultCard result={equation} />
+      </div>
+    );
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
 });
