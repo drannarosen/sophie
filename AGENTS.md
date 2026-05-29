@@ -320,7 +320,7 @@ to every PR, every design decision, every refactor.
   Integration test I3 catches this on the unit job; catching it
   locally first is faster.
 
-- **Standing PR-review rules (R6–R11).** Apply on every PR; cite by
+- **Standing PR-review rules (R6–R13).** Apply on every PR; cite by
   number in review comments.
   - **R6 — MyST anchor verification.** Cited ADR sections use
     MyST heading-slug, not `#L\d+` GitHub line-anchors. Catch:
@@ -437,6 +437,27 @@ to every PR, every design decision, every refactor.
     `course-landing.astro`, `section-landing.astro`,
     `info-page.astro`. See
     [ADR 0080 Amendment 2](docs/website/decisions/0080-course-spec-format-v0-1.md#amendment-2-assessment-grade-weights-clean-break-course-info-projection-2026-05-26).
+
+  - **R13 — epistemic-role declaration.** Every new pedagogy
+    component dir under `packages/components/src/components/` must
+    either declare an `epistemicRole` (the canonical `export const
+    <NAME>_EPISTEMIC_ROLE = "<role>" as const satisfies EpistemicRole`
+    pattern, one of the eight roles), bind role per-slot (OMI
+    composites, e.g. `OMIFlow`), OR be added to the `CHROME`
+    (role-less by design) / `GRANDFATHERED` (contestable, pending the
+    Anna-adjudicated domain pass) allowlist in
+    `scripts/lint-epistemic-role.ts` with a per-entry one-line
+    rationale. A new component that silently ships role-less and
+    un-allowlisted → CI red. Enforced by
+    `scripts/lint-epistemic-role.ts` (`pnpm lint:epistemic-role`,
+    wired into the CI `lint` job after R11's `lint:axe-render`).
+    Comment-stripping makes prose mentions of `epistemicRole` in
+    headers/docblocks NOT count as declarations. The `GRANDFATHERED`
+    list is designed to **shrink toward empty** as the domain pass
+    resolves each entry. Apply during component design AND review.
+    Originating finding: ITEM 5 / ADR 0058 graduation
+    ([R-graduation revision](docs/website/decisions/0058-epistemic-component-contract.md#r-graduation-epistemicrole-enforced-for-new-components-2026-05-28),
+    2026-05-28).
 
   See `feedback_review_rules_r6_r10.md` (under
   `~/.claude/projects/-Users-anna-Teaching-sophie/memory/`) for origin
