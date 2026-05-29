@@ -309,6 +309,27 @@ to v2 along with grading.
   [`scripts/build-css-modules.ts`](../../../scripts/build-css-modules.ts)).
 - Regression guard: [`examples/smoke/e2e/formative-render.spec.ts`](../../../examples/smoke/e2e/formative-render.spec.ts).
 
+## Amendments
+
+### Amendment 1 — math-only choice `label` disable CLOSED (2026-05-28)
+
+§"Two accessibility decisions" **(a)** disabled axe's `label` rule on the
+practice spec's one call site because axe does not compute an accessible
+name over presentation MathML, so it reported math-only choice radios as
+nameless (a tooling blind-spot, not a real a11y bug). That disable is now
+**CLOSED**: [ADR 0089](./0089-latex-speech-accessibility.md) bakes an
+explicit SRE ClearSpeak `aria-label` onto each math-only choice `<input>`
+at build time (rehype `rehypeChoiceSpeech`, reading the speech
+`rehypeKatexSpeech` already computed for the choice's `.katex` subtree).
+The `label` rule now runs **strict platform-wide** — the
+`.disableRules(["label"])` call is removed from
+[`examples/smoke/e2e/formative-render.spec.ts`](../../../examples/smoke/e2e/formative-render.spec.ts),
+which stays axe-clean with the rule on. The label is sourced from SRE
+speech, not raw LaTeX, so it *improves* the real screen-reader output
+rather than degrading it to satisfy the linter (resolving the concern
+(a) explicitly flagged). `data-choice-input` — the marker
+`rehypeChoiceSpeech` selects on — is the same hook the controllers use.
+
 ## References
 
 - [ADR 0073 Amendment 1](./0073-unified-assessment-schema.md#amendment-1-formative-with-reveal-v1-2026-05-27)

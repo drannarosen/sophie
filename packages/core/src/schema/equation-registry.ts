@@ -96,6 +96,14 @@ export const EquationRegistryEntrySchema = RegistryBaseSchema.extend({
   related: z.array(RelatedEquationSchema).optional(),
   /** Build-time prerendered KaTeX HTML for the primary `tex` (ADR 0090). */
   html: NonEmptyString.optional(),
+  /**
+   * Build-time SRE ClearSpeak speech for the primary `tex` (ADR 0089).
+   * Consumed as a plain `aria-label` string by `@sophie/components`
+   * (which never imports SRE — framework purity, ADR 0001). PRIMARY
+   * equation only; `rearranged_forms` / `constants` speech is the
+   * deferred tail the math-speech audit reports.
+   */
+  speech: NonEmptyString.optional(),
 }).strict();
 
 export type EquationRegistryEntry = z.infer<typeof EquationRegistryEntrySchema>;

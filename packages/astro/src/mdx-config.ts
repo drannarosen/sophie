@@ -8,7 +8,9 @@ import { sophieCompoundExpandRemarkPlugin } from "./lib/mdx-plugins/compound-exp
 import { skillReviewResolverRemarkPlugin } from "./lib/mdx-plugins/skill-review-resolver.ts";
 import { sophieAutoImportsRemarkPlugin } from "./lib/mdx-plugins/sophie-auto-imports.ts";
 import { pedagogyIndexRemarkPlugin } from "./lib/pedagogy-index/orchestrator.ts";
+import { rehypeChoiceSpeech } from "./lib/pedagogy-index/transforms/choice-speech-a11y.ts";
 import { rehypeKatexDisplayA11y } from "./lib/pedagogy-index/transforms/katex-display-a11y.ts";
+import { rehypeKatexSpeech } from "./lib/pedagogy-index/transforms/katex-speech-a11y.ts";
 
 /**
  * Default `topicsDir` for the SkillReview self-closing resolver (ADR
@@ -61,6 +63,20 @@ const DEFAULT_TOPICS_DIR = resolve(process.cwd(), "src/content/topics");
  *                            index anchor and the rendered `<input>`
  *                            value in agreement.
  * - `rehype-katex`         — render the math AST nodes via KaTeX
+ * - `rehypeKatexSpeech`    — stamp SRE ClearSpeak `aria-label` +
+ *                            `role="math"` onto each `.katex` container
+ *                            (inline + display) and `aria-hidden` onto
+ *                            its `.katex-mathml` child, so screen readers
+ *                            read the expression ("R squared") once
+ *                            instead of the raw MathML (ADR 0089). Async
+ *                            transformer (SRE is async). Must run AFTER
+ *                            `rehype-katex` (the `.katex` elements must
+ *                            exist) and BEFORE `rehypeKatexDisplayA11y`;
+ *                            the two touch different elements (this one
+ *                            the inner `.katex` container, the next the
+ *                            outer `.katex-display` scroll region) so
+ *                            their labels coexist (plan resolved-decision
+ *                            #2; e2e validates no double-speak).
  * - `rehypeKatexDisplayA11y` — stamp `tabindex="0"` + `role="group"`
  *                            + `aria-label` onto `.katex-display`
  *                            scroll containers so keyboard users can
@@ -70,6 +86,17 @@ const DEFAULT_TOPICS_DIR = resolve(process.cwd(), "src/content/topics");
  *                            mandate). Must run AFTER `rehype-katex`
  *                            so the `.katex-display` elements exist
  *                            in the hast tree.
+ * - `rehypeChoiceSpeech`   — stamp an explicit `aria-label` on math-
+ *                            bearing formative choice `<input>`s
+ *                            (`<MCQ.Choice>` / `<MultiSelect.Choice>`),
+ *                            sourced from the `.katex` `aria-label`s
+ *                            `rehypeKatexSpeech` already computed (no SRE
+ *                            recompute). Closes axe's `label` blind-spot
+ *                            on MathML-named radios (ADR 0089). Must run
+ *                            AFTER `rehypeKatexSpeech` so those `.katex`
+ *                            labels exist; pure-text choices are left
+ *                            alone (the wrapping `<label>` already names
+ *                            them).
  *
  * The components map is consumer-supplied per-page via
  * `<Content components={makeStaticComponents({figures})}>`. See
@@ -88,5 +115,10 @@ export const sophieMdxOptions = {
     pedagogyIndexRemarkPlugin,
     sophieCompoundExpandRemarkPlugin,
   ] as Pluggable[],
-  rehypePlugins: [rehypeKatex, rehypeKatexDisplayA11y],
+  rehypePlugins: [
+    rehypeKatex,
+    rehypeKatexSpeech,
+    rehypeKatexDisplayA11y,
+    rehypeChoiceSpeech,
+  ],
 };

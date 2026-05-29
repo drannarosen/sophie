@@ -95,6 +95,14 @@ export function EquationRef({ refId, children }: EquationRefProps) {
           <strong className={styles.title}>{entry.title}</strong>
           <div
             className={styles.tex}
+            // ADR 0089: the prerendered html uses KaTeX `output: "html"` (no
+            // `<math>` element; the `.katex-html` glyphs are aria-hidden by
+            // KaTeX). role="math" + the build-computed SRE speech give a
+            // screen reader the expression to read. Speech is a plain string
+            // prop — @sophie/components never imports SRE (ADR 0001).
+            {...(entry.speech
+              ? { role: "math", "aria-label": entry.speech }
+              : {})}
             // biome-ignore lint/security/noDangerouslySetInnerHtml: build-time prerendered KaTeX html from the registry (ADR 0090) — not user input.
             dangerouslySetInnerHTML={{ __html: entry.html ?? "" }}
           />

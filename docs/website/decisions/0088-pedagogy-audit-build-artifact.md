@@ -134,6 +134,21 @@ architecturally correct).
 not a "silent skip" bug — a no-chapter build has nothing to audit, and the
 accumulator-reading approach doesn't independently re-derive the corpus.
 
+## Amendments
+
+### Amendment 1 — `mathA11y` artifact section (2026-05-28)
+
+[ADR 0089](./0089-latex-speech-accessibility.md) (LaTeX→speech
+accessibility) adds a build-scoped LaTeX→speech coverage section to the
+artifact. `dist/.sophie/pedagogy-audit.json` gains a top-level
+`mathA11y` key carrying the math-speech coverage snapshot
+(`{ total, labeled, failures[] }`) the `math-speech` invariant reads.
+`artifact_version` is bumped **0.1 → 0.2**; the 0.1 envelope had no
+`mathA11y` key. The envelope stays deterministic (no timestamp) per the
+original Decision 3. See
+[`packages/astro/src/lib/pedagogy-audit/emit.ts`](../../../packages/astro/src/lib/pedagogy-audit/emit.ts)
+and its `emit.test.ts`.
+
 ## References
 
 - [Proposal + resolved decisions](../../plans/2026-05-28-pedagogy-audit-artifact-proposal.md).

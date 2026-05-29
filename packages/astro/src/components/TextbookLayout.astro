@@ -24,6 +24,7 @@ import {
   formatAuditThrowMessage,
   runAuditOncePerProcess,
 } from "../lib/audit-cache";
+import { enrichEquationsWithSpeech } from "../lib/math-render/enrich-equations-speech";
 import { loadConsumerRegistry } from "../lib/notation-registry-loader";
 import { indexAccumulator } from "../lib/pedagogy-index/accumulator";
 import { extractContractValidations } from "../lib/validation/extractor";
@@ -162,6 +163,14 @@ indexAccumulator.setSections(sections.map((s) => s.data));
 indexAccumulator.setUnits(units.map((u) => u.data));
 indexAccumulator.setArtifacts(artifactsFromCollection(allArtifacts));
 const pedagogy = indexAccumulator.asPedagogyIndex();
+// ADR 0089: compute SRE ClearSpeak speech for each registry equation and
+// mutate the accumulated entries in place BEFORE `__setEquations` serializes
+// them into the client store, so the store payload (and thus KeyEquation /
+// EquationRef aria-labels) carries `speech`. Idempotent + memoized — the
+// build:done hook awaits the same helper again before Pagefind; double-running
+// is a no-op. Astro frontmatter is async, so the await is free here even
+// though the registry prerender (sync remark) could not compute speech.
+await enrichEquationsWithSpeech(pedagogy.equations);
 // Pedagogy audit (ADR 0073 PR-C4 + ADR 0088). DEV ONLY: run the audit
 // per-render so authors get live HMR feedback as they edit. In a PROD
 // build the corpus-wide audit runs ONCE at the integration's

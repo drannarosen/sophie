@@ -87,6 +87,13 @@ export function ResultCard({
       {isEquation ? (
         <span
           className={styles.richTail}
+          // ADR 0089: the prerendered html uses KaTeX `output: "html"` (no
+          // `<math>`; glyphs aria-hidden by KaTeX). role="math" + the
+          // build-computed SRE speech (carried in meta.speech from the
+          // Pagefind record) name the equation for a screen reader.
+          {...(result.meta.speech
+            ? { role: "math", "aria-label": result.meta.speech }
+            : {})}
           // biome-ignore lint/security/noDangerouslySetInnerHtml: build-time prerendered KaTeX html from the search index (ADR 0090) — not user input.
           dangerouslySetInnerHTML={{ __html: result.meta.html ?? "" }}
         />

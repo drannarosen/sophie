@@ -229,6 +229,21 @@ describe("EquationRegistryEntrySchema", () => {
     ).toBe(false);
   });
 
+  it("accepts optional build-time SRE speech (ADR 0089)", () => {
+    expect(
+      EquationRegistryEntrySchema.safeParse({
+        ...minValid,
+        speech: "lambda sub peak equals b times T to the negative 1 power",
+      }).success
+    ).toBe(true);
+  });
+
+  it("rejects empty speech", () => {
+    expect(
+      EquationRegistryEntrySchema.safeParse({ ...minValid, speech: "" }).success
+    ).toBe(false);
+  });
+
   it("inherits id/title/tags/version from RegistryBaseSchema", () => {
     expect(
       EquationRegistryEntrySchema.safeParse({

@@ -8,6 +8,7 @@ import type { AstroIntegration } from "astro";
 import { loadCourseSpec } from "./lib/course-spec-loader.ts";
 import { courseSpecVirtualModule } from "./lib/course-spec-virtual-module.ts";
 import { figuresVirtualModule } from "./lib/figures-virtual-module.ts";
+import { enrichEquationsWithSpeech } from "./lib/math-render/enrich-equations-speech.ts";
 import { mdxAuthorTrapsVitePlugin } from "./lib/mdx-plugins/mdx-author-traps.ts";
 import { skillReviewResolverVitePlugin } from "./lib/mdx-plugins/skill-review-resolver-vite.ts";
 import { loadConsumerRegistry } from "./lib/notation-registry-loader.ts";
@@ -18,6 +19,7 @@ import {
   formatAuditReport,
   formatAuditThrowMessage,
 } from "./lib/pedagogy-audit/format.ts";
+import { getMathSpeechCoverage } from "./lib/pedagogy-audit/math-speech-coverage.ts";
 import { runPedagogyAudit } from "./lib/pedagogy-audit/runner.ts";
 import { indexAccumulator } from "./lib/pedagogy-index/accumulator.ts";
 import { pedagogyIndexVirtualModule } from "./lib/pedagogy-index-virtual-module.ts";
@@ -281,6 +283,17 @@ export function defineSophieIntegration(
       },
       "astro:build:done": async ({ dir, logger }) => {
         const distPath = fileURLToPath(dir);
+        // ADR 0089: enrich accumulated registry equations with SRE speech
+        // BEFORE Pagefind reads the accumulator, so equation search records
+        // carry `meta.speech`. Mutates the shared accumulator entries in
+        // place; idempotent + memoized, so entries already enriched by
+        // TextbookLayout's per-page await are skipped (and pages that never
+        // mounted the layout — e.g. a registry-only build — get enriched
+        // here). By build:done every route has pre-rendered, so the
+        // accumulator holds the complete equation set.
+        await enrichEquationsWithSpeech(
+          indexAccumulator.asPedagogyIndex().equations
+        );
         logger.info(`Building Pagefind index in ${distPath}/pagefind/`);
         await buildPagefindIndex(distPath);
         logger.info("Pagefind index complete");
@@ -311,6 +324,7 @@ export function defineSophieIntegration(
           draftUnitIds,
           repoRoot,
           notationRegistry,
+          mathSpeechCoverage: getMathSpeechCoverage(),
         });
         await writePedagogyAuditJson(distPath, auditReport);
         logger.info(formatAuditReport(auditReport));

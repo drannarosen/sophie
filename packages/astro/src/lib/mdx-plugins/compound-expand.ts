@@ -197,11 +197,18 @@ function expandIsland(
       // `multiselect-${id}`. CRITICAL coupling: the controller queries
       // the inputs by this exact `name`, so the scheme must match the
       // one each controller derives (`MCQController`, `MultiSelectController`).
+      // `data-choice-input` marks this as a formative choice control for
+      // the `rehypeChoiceSpeech` rehype plugin (math-only choices get an
+      // explicit SRE `aria-label` there). An explicit marker is robust:
+      // it's decoupled from the `name`-prefix scheme and distinguishes
+      // choices from FillBlank's `data-fb-slot` text inputs. Adding it
+      // here is a sync attribute emission — the transform stays sync.
       const inputAttrs = [
         attr("type", spec.controlType),
         attr("name", `${spec.parent.toLowerCase()}-${id}`),
         attr("value", slug),
         attr("id", `${id}-${slug}`),
+        attr("data-choice-input", null),
       ];
       if (hasAttr(child, "correct")) {
         inputAttrs.push(attr("data-correct", "true"));

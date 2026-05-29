@@ -14,6 +14,7 @@ vi.mock("../EquationRef/equations-store.ts", () => ({
         title: "Wien's Law",
         tex: "\\lambda_{peak} = b T^{-1}",
         html: '<span class="katex">PRIMARY_HTML_MARKER</span>',
+        speech: "lambda sub peak equals b times T to the negative 1 power",
         symbols: ["T", "\\lambda_{peak}"],
         biography: {
           observable: {
@@ -150,6 +151,25 @@ describe("<KeyEquation> (ADR 0060 registry-shaped)", () => {
     // renderMath) verbatim — it does not re-render from `entry.tex`
     // at runtime. The unique marker proves the html prop is the source.
     expect(container.innerHTML).toContain("PRIMARY_HTML_MARKER");
+  });
+
+  it("labels the primary equation with build-time SRE speech (ADR 0089)", () => {
+    render(<KeyEquation refId='wiens-law' />);
+    // The container holding the prerendered html (output:"html", no inner
+    // <math>) gets role="math" + the build-computed speech as its
+    // accessible name — a screen reader reads the expression instead of
+    // the aria-hidden .katex-html glyphs.
+    const mathEl = screen.getByRole("math", {
+      name: "lambda sub peak equals b times T to the negative 1 power",
+    });
+    expect(mathEl).toBeInTheDocument();
+    expect(mathEl.innerHTML).toContain("PRIMARY_HTML_MARKER");
+  });
+
+  it("omits role=math/aria-label when the entry carries no speech", () => {
+    // `with-related` mock has html but no speech.
+    render(<KeyEquation refId='with-related' />);
+    expect(screen.queryByRole("math")).not.toBeInTheDocument();
   });
 
   it("renders rearranged forms from each form's prerendered html (ADR 0090)", () => {

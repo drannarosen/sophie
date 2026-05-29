@@ -163,7 +163,7 @@ in issue #152.
 
 | SC | Level | Sophie implementation | Status |
 | --- | --- | --- | --- |
-| 1.1.1 Non-text Content | A | `<Figure>` schema requires `alt: z.string().min(1)`; `<FigureRef>` pulls `alt` from registered figure metadata; KaTeX-rendered math is real text; long-description and pedagogical-role slots on `<Figure>` are planned | PARTIAL |
+| 1.1.1 Non-text Content | A | `<Figure>` schema requires `alt: z.string().min(1)`; `<FigureRef>` pulls `alt` from registered figure metadata; build-time-rendered math carries an SRE ClearSpeak `aria-label` with the raw MathML `aria-hidden` ([ADR 0089](../decisions/0089-latex-speech-accessibility.md)); long-description and pedagogical-role slots on `<Figure>` are planned | PARTIAL |
 | 1.2.1–1.2.5 Time-based Media | A/AA | No video or audio components ship yet; captions/transcripts/audio-description deferred to Phase 2+ | DEFERRED |
 | 1.3.1 Info and Relationships | A | Semantic HTML throughout: `<ChapterTitle>` emits a single `<h1>`; sections use `<section aria-labelledby>`; TocSidebar derives an outline from chapter h2/h3 headings | SHIPPED |
 | 1.3.2 Meaningful Sequence | A | DOM order matches reading order; the Pedagogy Index audit enforces section structure invariants | SHIPPED |
@@ -281,7 +281,7 @@ across every chapter forever.
 | `<ChapterTitle>` + section structure | Single `<h1>`; sentence case; `aria-labelledby` for sections |
 | In-page TocSidebar | `aria-current="location"` on the active link; scroll-spy observes only chapter headings |
 | `<Callout>` / `<Aside>` | Icon + text label + token color (never color-alone); `role` and labeling conventions |
-| `<KeyEquation>` / `<EquationRef>` | KaTeX text-mode rendering (real text, not images); MathML emission planned for screen-reader semantic math |
+| `<KeyEquation>` / `<EquationRef>` | KaTeX text-mode rendering (real text, not images); build-time SRE ClearSpeak `aria-label` from the registry `speech` field, raw MathML `aria-hidden` ([ADR 0089](../decisions/0089-latex-speech-accessibility.md)) |
 | `<CodeCell>` (planned) | Real text via CodeMirror 6 ([ADR 0018](../decisions/0018-codemirror-6-for-codecell.md)); keyboard support inherited from CodeMirror |
 | `<Reflection>` / `<Prediction>` | `useInteractive` gates input with `aria-busy` until hydration completes; per-field error ARIA planned |
 | `<GlossaryTerm>` | Radix HoverCard for definition popover; persistent on hover and focus; keyboard-dismissable |
@@ -315,8 +315,16 @@ narrative a screen-reader user can navigate.
 text mode — real Unicode and HTML, not images. Symbols are bound to
 the [notation registry](notation-registry-schema.md) and surface
 through `<GlossaryTerm>` for assistive technologies that benefit from
-explicit definitions. MathML emission is on the roadmap for
-screen-readers that consume semantic math.
+explicit definitions. Every build-time-rendered expression — MDX
+`$…$`, formative choices, and registry equations — carries a
+screen-reader name generated at build by the speech-rule-engine's
+ClearSpeak ruleset ("R squared", not "R superscript 2 baseline"),
+exposed as an `aria-label` with the raw MathML `aria-hidden`
+([ADR 0089](../decisions/0089-latex-speech-accessibility.md)). The
+runtime tail (`MathText` component-children math, `BlackbodyExplorer`
+dynamic values) and registry `rearranged_forms`/`constants` are the
+documented deferred surfaces, reported by the `math-speech` audit
+invariant.
 
 **Variable and unit definitions.** Every equation in a Sophie chapter
 goes through the [`<EquationRef>`](equation-registry-schema.md) and
@@ -443,7 +451,7 @@ gap exists, it is documented, and the closure plan is named.
 | 59 color-contrast violations across 10 components | 1.4.3, 1.4.11 | [issue #152](https://github.com/drannarosen/sophie/issues/152) | Token-audit + per-component remediation sprint (1–2 days) |
 | No skip-link primitive | 2.4.1 | Hardening backlog | Skip-link Astro component + Tailwind utility |
 | No captions / transcripts / audio description | 1.2.1–1.2.5 | Phase 2+ | When media components ship; today no video/audio components exist |
-| Math alt text / MathML emission | 1.1.1 | Roadmap | KaTeX → MathML pipeline when ready |
+| Math speech for the runtime tail | 1.1.1 | [ADR 0089](../decisions/0089-latex-speech-accessibility.md) | Build-time math is SHIPPED (SRE ClearSpeak `aria-label`); the runtime tail (`MathText` children-math, `BlackbodyExplorer` dynamic values) + registry `rearranged_forms`/`constants` remain deferred, reported by the `math-speech` invariant |
 | Per-field error ARIA (`role="alert"` / `aria-describedby`) | 3.3.1, 3.3.3 | Roadmap | Standardize when response-component family expands beyond `<Reflection>` and `<Prediction>` |
 | Heading-level-sequence lint | 1.3.1, 2.4.6 | Roadmap | Add to pedagogy-audit Tier-1 invariants |
 | `Chapter.lang` → `<html lang>` emission | 3.1.1, 3.1.2 | [ADR 0009](../decisions/0009-i18n-deferred.md) | v2+ i18n work |

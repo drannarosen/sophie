@@ -1,6 +1,10 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { AuditFinding } from "@sophie/core/schema";
+import {
+  getMathSpeechCoverage,
+  type MathSpeechCoverage,
+} from "./math-speech-coverage.ts";
 import type { AuditReport } from "./types.ts";
 
 /**
@@ -13,7 +17,9 @@ import type { AuditReport } from "./types.ts";
  * byte-identical for a given corpus (reproducible builds, diff-clean). "When"
  * is the build system's concern (CI time / file mtime), not the artifact's.
  */
-export const PEDAGOGY_AUDIT_ARTIFACT_VERSION = "0.1";
+// 0.2 — added the `mathA11y` build-time LaTeX→speech coverage section
+// (ADR 0089 B5; amends ADR 0088). 0.1 had no `mathA11y` key.
+export const PEDAGOGY_AUDIT_ARTIFACT_VERSION = "0.2";
 
 export interface PedagogyAuditArtifact {
   artifact_version: string;
@@ -22,10 +28,27 @@ export interface PedagogyAuditArtifact {
   warnings: AuditFinding[];
   /** `AuditReport.info` is exposed as `infos` here for symmetry with the summary. */
   infos: AuditFinding[];
+  /**
+   * Build-time LaTeX→speech coverage (ADR 0089 B5): `total`/`labeled`
+   * counts across the mdx + choice + registry surfaces, plus the
+   * empty-speech `failures` the MA-1 WARNING aggregates. The runtime tail
+   * (MathText / BlackbodyExplorer) and the deferred registry tail
+   * (rearranged_forms / constants) are NOT counted here — they're
+   * reported as MA-3 / MA-4 INFO findings in `infos`.
+   */
+  mathA11y: MathSpeechCoverage;
 }
 
-/** Map an in-memory `AuditReport` to the on-disk artifact envelope. Pure. */
-export function toAuditArtifact(report: AuditReport): PedagogyAuditArtifact {
+/**
+ * Map an in-memory `AuditReport` to the on-disk artifact envelope. Pure.
+ * `coverage` defaults to the build-scoped collector snapshot
+ * (`getMathSpeechCoverage()`) so the production `build:done` caller needs
+ * no extra wiring; tests pass an explicit snapshot for isolation.
+ */
+export function toAuditArtifact(
+  report: AuditReport,
+  coverage: MathSpeechCoverage = getMathSpeechCoverage()
+): PedagogyAuditArtifact {
   return {
     artifact_version: PEDAGOGY_AUDIT_ARTIFACT_VERSION,
     summary: {
@@ -36,6 +59,7 @@ export function toAuditArtifact(report: AuditReport): PedagogyAuditArtifact {
     errors: report.errors,
     warnings: report.warnings,
     infos: report.info,
+    mathA11y: coverage,
   };
 }
 
