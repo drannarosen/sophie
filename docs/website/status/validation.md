@@ -45,7 +45,7 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 
 | Kind | Count |
 |---|---|
-| test | 123 |
+| test | 124 |
 | chapter | 9 |
 | review | 31 |
 | deployment | 76 |
@@ -118,7 +118,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0055-squash-merge-for-code-prs.md](/squash-merge-for-code-prs/) | validated | shipped | 2026-05-16 | deployment, manual | Status promoted from in-progress → validated on 2026-05-16 after the squash-merge-guard CI workflow + repo-settings change both landed. Two layers are required: settings prevent UI accidents (the `Create a merge commit` and `Rebase and merge` buttons are gone); the CI workflow catches API-level bypass of the merge-commit shape. Together they cover all three GitHub merge strategies. |
 | [docs/website/decisions/0056-validation-tracker.md](/validation-tracker/) | validated | shipped | 2026-05-16 | audit, deployment, manual, review, test | All six PRs (#43 schema, #44 bulk migration, #50 admonition, #51 audit, #52 index, this PR curated-pass + reference doc + V1/V2 promotion) shipped. Self-referential validation complete; tracker is the source of truth for every ADR + reference doc's validation state as of 2026-05-16. |
 | [docs/website/decisions/0057-visual-regression-baseline.md](/visual-regression-baseline/) | unvalidated | shipped | — | — |  |
-| [docs/website/decisions/0058-epistemic-component-contract.md](/epistemic-component-contract/) | in progress | shipped | 2026-05-23 | deployment, test |  |
+| [docs/website/decisions/0058-epistemic-component-contract.md](/epistemic-component-contract/) | in progress | shipped | 2026-05-28 | deployment, test |  |
 | [docs/website/decisions/0059-linked-representation-state-primitive.md](/linked-representation-state-primitive/) | unvalidated | accepted design | — | — |  |
 | [docs/website/decisions/0060-registry-ecosystem.md](/registry-ecosystem/) | unvalidated | accepted design | — | — |  |
 | [docs/website/decisions/0061-ai-optimized-codebase-design.md](/ai-optimized-codebase-design/) | validated | shipped | 2026-05-25 | deployment, manual, review, test | Rule 3's CI enforcement via `scripts/loc-budget.ts` + the `_template/` skeleton embodying Rules 1 + 6 (shipped in PR #177, formalized in just-landed ADR 0085) + the SoTA audit's verification of LOC-budget compliance constitute the concrete operating evidence. Rules 2 (Write-over-Edit), 4 (filename-as-routing), and 5 (atomic docs) are author-discipline rules — their enforcement is at the review-rules R6-R10 layer (AGENTS.md) rather than CI, and the post-#168 PR arc shows them in operating use (focused-files ADRs 0083/0084/0085; atomic doc updates landing in the same PRs as code under AGENTS.md's 'Docs don't drift from code' discipline rule). The validation-tracker pattern (ADR 0056) is the atomic-docs rule enacted at the contract layer.  |
