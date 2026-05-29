@@ -41,6 +41,7 @@
  *
  *   0  every component dir is compliant; CI green
  *   1  one or more component dirs missing a role + not allowlisted
+ *   2  internal IO failure (SCOPE unreadable — moved/renamed)
  *
  * Run from repo root: `pnpm lint:epistemic-role` or
  * `npx tsx scripts/lint-epistemic-role.ts`.
@@ -385,7 +386,19 @@ function declaresRole(absDir: string): boolean {
 
 /** Immediate child dirs of SCOPE that are components (not infra). */
 function listComponentDirs(absScope: string): string[] {
-  return readdirSync(absScope)
+  let entries: string[];
+  try {
+    entries = readdirSync(absScope);
+  } catch (err) {
+    // A moved/renamed SCOPE should fail with a one-line diagnostic, not
+    // an uncaught ENOENT stack trace. Exit code 2 distinguishes an
+    // internal IO failure from a real role-coverage violation (exit 1).
+    // Mirrors scripts/lint-axe-render.ts:118.
+    console.error(`lint-epistemic-role: cannot read ${SCOPE} (SCOPE moved?)`);
+    console.error(err);
+    process.exit(2);
+  }
+  return entries
     .filter((name) => statSync(join(absScope, name)).isDirectory())
     .filter((name) => !SKIP_DIRS.has(name))
     .sort();
