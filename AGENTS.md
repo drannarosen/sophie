@@ -442,22 +442,32 @@ to every PR, every design decision, every refactor.
     component dir under `packages/components/src/components/` must
     either declare an `epistemicRole` (the canonical `export const
     <NAME>_EPISTEMIC_ROLE = "<role>" as const satisfies EpistemicRole`
-    pattern, one of the eight roles), bind role per-slot (OMI
-    composites, e.g. `OMIFlow`), OR be added to the `CHROME`
-    (role-less by design) / `GRANDFATHERED` (contestable, pending the
-    Anna-adjudicated domain pass) allowlist in
-    `scripts/lint-epistemic-role.ts` with a per-entry one-line
-    rationale. A new component that silently ships role-less and
-    un-allowlisted → CI red. Enforced by
+    pattern, one of the eight roles), bind role via composition
+    (`ROLE_VIA_SLOT`: a container whose named parts carry roles —
+    either anonymous slots like `OMIFlow` or self-declaring children
+    like `KeyEquation`), OR be added to the `CHROME` (role-less by
+    design) / `GRANDFATHERED` (genuinely contestable, pending
+    adjudication) allowlist in `scripts/lint-epistemic-role.ts` with
+    a per-entry one-line rationale. A new component that silently
+    ships role-less and un-allowlisted → CI red. Enforced by
     `scripts/lint-epistemic-role.ts` (`pnpm lint:epistemic-role`,
     wired into the CI `lint` job after R11's `lint:axe-render`).
     Comment-stripping makes prose mentions of `epistemicRole` in
-    headers/docblocks NOT count as declarations. The `GRANDFATHERED`
-    list is designed to **shrink toward empty** as the domain pass
-    resolves each entry. Apply during component design AND review.
-    Originating finding: ITEM 5 / ADR 0058 graduation
-    ([R-graduation revision](docs/website/decisions/0058-epistemic-component-contract.md#r-graduation-epistemicrole-enforced-for-new-components-2026-05-28),
-    2026-05-28).
+    headers/docblocks NOT count as declarations. **The domain pass
+    completed 2026-05-29**: all 14 grandfathered entries resolved
+    (12 → chrome, `CommonMisuse` → declare, `KeyEquation` →
+    role-via-slot), so `GRANDFATHERED` is now empty (gate: 6 declare ·
+    2 role-via-slot · 51 chrome · 0 grandfathered). The bucket is
+    retained empty for future genuinely-contestable components — a
+    contestable role lands there pending its own adjudication rather
+    than being forced into a wrong role. Apply the four-way
+    pointer/teaching-move/composition-root/leaf test during component
+    design AND review. Originating finding: ITEM 5 / ADR 0058
+    graduation
+    ([R-graduation](docs/website/decisions/0058-epistemic-component-contract.md#r-graduation-epistemicrole-enforced-for-new-components-2026-05-28),
+    2026-05-28) + the
+    [R-domain-pass revision](docs/website/decisions/0058-epistemic-component-contract.md#r-domain-pass-the-14-grandfathered-entries-adjudicated-2026-05-29)
+    (2026-05-29).
 
   See `feedback_review_rules_r6_r10.md` (under
   `~/.claude/projects/-Users-anna-Teaching-sophie/memory/`) for origin

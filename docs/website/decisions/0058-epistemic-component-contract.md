@@ -10,12 +10,12 @@ tags:
 status: shipped
 validation:
   status: in-progress
-  last_validated_date: "2026-05-28"
+  last_validated_date: "2026-05-29"
   evidence:
     - kind: test
       ref: scripts/lint-epistemic-role.ts
-      date: "2026-05-28"
-      notes: "R-graduation: epistemic-role enforced-for-new via CI lint gate (lint job, after R11 lint:axe-render). 59/59 component dirs accounted for: 5 declare, 1 role-via-slot, 39 chrome, 14 grandfathered (tracked-not-blocking, pending the Anna-adjudicated domain pass)."
+      date: "2026-05-29"
+      notes: "Enforced-for-new via CI lint gate (lint job, after R11 lint:axe-render); graduated 2026-05-28 (§R-graduation). Domain pass 2026-05-29 (§R-domain-pass) resolved all 14 contestable entries. 59/59 component dirs accounted for: 6 declare, 2 role-via-slot, 51 chrome, 0 grandfathered."
     - kind: test
       ref: packages/astro/src/components/CourseObservables.axe.test.ts
       date: "2026-05-23"
@@ -711,6 +711,64 @@ This revision adds no fields, changes no taxonomy, and migrates no
 existing component; it makes the *new-component* obligation a CI
 invariant rather than a convention. The optional/additive guarantee of
 §2 stands for everything already shipped.
+
+### R-domain-pass — the 14 grandfathered entries adjudicated (2026-05-29)
+
+**Trigger.** The R-graduation revision deferred 14 `GRANDFATHERED`
+entries — genuinely contestable roles — to "its own follow-up PR,
+Anna-adjudicated." This is that pass. It changes no taxonomy, adds no
+schema field beyond one declarer, and migrates no component's behavior;
+it resolves each contestable dir to a role, to chrome, or to
+role-via-slot, and empties `GRANDFATHERED`.
+
+**The adjudication principle.** The eight roles classify the epistemic
+status of *content/claims*, not *pedagogical activities*. From that, a
+four-way test sorts every container/reference cleanly:
+
+| Shape | Disposition | Test |
+|---|---|---|
+| pointer / view of a role-bearing target | **chrome** | role lives on the target, not the pointer (cf. `<Figure>`, `<EquationRef>`) |
+| teaching move (assess / retrieve / remediate / reflect) | **chrome** | the move is orthogonal to role — it wraps any role (cf. `<Intervention>`, [ADR 0041](./0041-teaching-move-library.md)) |
+| composition root owning role-bearing parts | **role-via-slot** | the parts carry roles; the container is role-*rich*, not role-less |
+| leaf that itself states a claim | **declares** | the component *is* a reasoning primitive (cf. `<Observable>`) |
+
+**Resolution (14 → 0):**
+
+| Family | Entries | Disposition | Why |
+|---|---|---|---|
+| Formative | `<MCQ>` `<MultiSelect>` `<FillBlank>` `<NumericQuestion>` `<QuickCheck>` `<PracticeProblem>` `<Solution>` `<Hint>` | **chrome** | assessment / reveal = teaching moves; role lives on the wrapped question/solution content, not the widget |
+| Representation | `<RepEquation>` `<RepFigure>` `<RepVerbal>` `<MultiRep>` | **chrome** | views of a bound notation-registry concept; representation *mode* is orthogonal to role — the role lives on the concept |
+| Biography leaf | `<CommonMisuse>` | **declares `misconception`** | a role-bearing leaf that *states* a misuse; the `misconception=` cross-ref is optional (PR-δ E9 is INFO), so the prior "inherit-via-link" design lost role data when unwired and conflated CATEGORY (the component's role) with INSTANCE (which misconception) |
+| Composition root | `<KeyEquation>` | **role-via-slot** | composition root of the equation biography; its children self-declare roles. Chrome would mislabel a role-*rich* object as role-less |
+
+**Two design notes.**
+
+1. **`KeyEquation` → role-via-slot, not chrome.** `<Figure>` is a genuine
+   pointer (arbitrary content) → chrome; `<KeyEquation>` is the composition
+   root of a multi-role decomposition (Observable / Assumption /
+   approximation via `<BreaksWhen>` / model via `<DerivationStep>` /
+   misconception via `<CommonMisuse>`) → role-bearing. Declaring a single
+   role (e.g. `model`) on it would *undersell* the decomposition and be
+   sometimes-wrong (not every key equation is a model). The
+   `ROLE_VIA_SLOT` bucket's concept is **broadened** from §4's
+   anonymous-slot binding to "role-bearing-via-composition" — covering both
+   OMIFlow (container binds anonymous slots) and KeyEquation (self-declaring
+   children, §3 child-component pattern). A dedicated `ROLE_VIA_CHILDREN`
+   bucket is **deferred** until a 2nd self-declaring-children container
+   exists ([ADR 0023](./0023-vertical-slice-build-order.md) refactor-outward
+   — KeyEquation is today the sole member, so a broadened one-line rationale
+   beats a singleton bucket).
+
+2. **`CommonMisuse` → declare, overriding its prior inherit comment.** The
+   schema's previous "NO own `epistemicRole` const" rationale was the only
+   classification reversed by this pass; the schema comment is rewritten to
+   record why (category-vs-instance + the optional-cross-ref data-loss gap).
+
+**Result.** `GRANDFATHERED` is empty; the gate reports **6 declare · 2
+role-via-slot · 51 chrome · 0 grandfathered** (59/59, 4 infra skipped). The
+bucket is retained empty by design: a future genuinely-contestable
+component lands there pending its own adjudication rather than being forced
+into a wrong role. AGENTS.md R13 is updated to reflect the completed pass.
 
 ## References
 

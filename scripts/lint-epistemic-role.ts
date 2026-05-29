@@ -82,11 +82,32 @@ const SKIP_DIRS: ReadonlySet<string> = new Set([
 ]);
 
 /**
- * OMI composites that bind role PER SLOT rather than declaring one role
- * for the whole component (ADR 0058 §4). Compliant by construction.
+ * Role-bearing-via-composition: a component is compliant here not because
+ * it is role-less, but because its named PARTS carry roles. Two sub-shapes:
+ *
+ *   - the container binds a role to each anonymous slot (OMI composites,
+ *     ADR 0058 §4) — e.g. OMIFlow's observable/model/inference slots;
+ *   - the parts are first-class, self-declaring role components and the
+ *     container is their composition root (ADR 0058 §3 child-component
+ *     pattern) — e.g. KeyEquation's biography children
+ *     (Observable/Assumption/BreaksWhen/DerivationStep/CommonMisuse).
+ *
+ * Distinct from CHROME: these are role-RICH, not role-less. The domain
+ * pass (2026-05-29; ADR 0058 §R-domain-pass) folded KeyEquation here
+ * rather than mislabel a role-decomposing container as chrome. A dedicated
+ * ROLE_VIA_CHILDREN bucket is deferred until a 2nd self-declaring-children
+ * container exists (ADR 0023 refactor-outward; today KeyEquation is the
+ * sole member, so a one-line broadened rationale beats a singleton bucket).
  */
 const ROLE_VIA_SLOT: ReadonlyArray<readonly [string, string]> = [
-  ["OMIFlow", "binds observable/model/inference per slot (ADR 0058 §4)"],
+  [
+    "OMIFlow",
+    "binds observable/model/inference per anonymous slot (ADR 0058 §4)",
+  ],
+  [
+    "KeyEquation",
+    "composition root of the equation biography; its children self-declare roles (Observable/Assumption/BreaksWhen/DerivationStep + CommonMisuse) per ADR 0058 §3 — role-rich, not chrome (domain pass 2026-05-29)",
+  ],
 ];
 
 /**
@@ -150,6 +171,10 @@ const CHROME: ReadonlyArray<readonly [string, string]> = [
   ],
   ["FigureRef", "inline cross-reference to a Figure; navigation chrome"],
   [
+    "FillBlank",
+    "formative family: assessment is a teaching move (ADR 0041), not one of the 8 roles; the role lives on the wrapped question content (domain pass 2026-05-29)",
+  ],
+  [
     "GlossaryTerm",
     "inline reference to a definition in the pedagogy index; navigation chrome",
   ],
@@ -162,6 +187,10 @@ const CHROME: ReadonlyArray<readonly [string, string]> = [
     "pure SSR layout container (CSS Grid 1–4 cols); strict chrome per its header",
   ],
   [
+    "Hint",
+    "formative reveal: disclosure container; the role lives on the wrapped reasoning, not the reveal (domain pass 2026-05-29)",
+  ],
+  [
     "InteractiveCheckbox",
     "persistence-bearing checkbox primitive; chrome control",
   ],
@@ -172,6 +201,22 @@ const CHROME: ReadonlyArray<readonly [string, string]> = [
   [
     "LearningObjectives",
     "persistence-bearing objectives container; harvests <Objective> children; chrome",
+  ],
+  [
+    "MCQ",
+    "formative family: assessment is a teaching move (ADR 0041), not a role; the role lives on the wrapped question content (domain pass 2026-05-29)",
+  ],
+  [
+    "MultiRep",
+    "representation aggregator: binds one concept across modes; representation mode is orthogonal to role — the role lives on the bound notation-registry concept (domain pass 2026-05-29)",
+  ],
+  [
+    "MultiSelect",
+    "formative family: assessment is a teaching move (ADR 0041), not a role; the role lives on the wrapped question content (domain pass 2026-05-29)",
+  ],
+  [
+    "NumericQuestion",
+    "formative family: assessment teaching-move, not a role; the numerical reasoning lives on the wrapped problem, not the prompt (domain pass 2026-05-29)",
   ],
   ["Objective", "pure-display primitive for one learning objective; chrome"],
   [
@@ -191,6 +236,10 @@ const CHROME: ReadonlyArray<readonly [string, string]> = [
     "inline points + grading-category surface; course-management chrome",
   ],
   [
+    "PracticeProblem",
+    "formative family: practice/assessment teaching-move; numerical reasoning lives on the wrapped problem + <Solution>, not the container (domain pass 2026-05-29)",
+  ],
+  [
     "Predict",
     "predict-then-discuss reflection primitive; persistence widget, no role on the container",
   ],
@@ -199,12 +248,28 @@ const CHROME: ReadonlyArray<readonly [string, string]> = [
     "course-level prerequisite list grouped by kind; course-info chrome",
   ],
   [
+    "QuickCheck",
+    "formative family: lightweight assessment teaching-move; the role lives on the wrapped content (domain pass 2026-05-29)",
+  ],
+  [
     "Reading",
     "inline reading-assignment citation; chrome (header: no epistemic role declared)",
   ],
   [
     "Reflection",
     "free-text reflection prompt with persistence; metacognitive chrome",
+  ],
+  [
+    "RepEquation",
+    "representation view: the role lives on the bound notation-registry concept (registry-link), not the representation mode (domain pass 2026-05-29)",
+  ],
+  [
+    "RepFigure",
+    "representation view: the role lives on the bound notation-registry concept (registry-link), not the representation mode (domain pass 2026-05-29)",
+  ],
+  [
+    "RepVerbal",
+    "representation view: the role lives on the bound notation-registry concept (registry-link), not the representation mode (domain pass 2026-05-29)",
   ],
   [
     "RetrievalPrompt",
@@ -218,6 +283,10 @@ const CHROME: ReadonlyArray<readonly [string, string]> = [
   [
     "SkillReview",
     "inline prereq-bridge recall prompt; retrieval-practice chrome",
+  ],
+  [
+    "Solution",
+    "formative reveal: disclosure container; the role lives on the wrapped reasoning, not the reveal (domain pass 2026-05-29)",
   ],
   [
     "SpacedReview",
@@ -239,72 +308,27 @@ const CHROME: ReadonlyArray<readonly [string, string]> = [
 ];
 
 /**
- * Contestable pedagogy whose role is genuinely ambiguous — deferred to
- * a later domain pass Anna adjudicates (ADR 0058 graduation plan, B2).
- * Tracked-not-blocking. This list should SHRINK over time toward empty.
+ * Contestable pedagogy whose role was genuinely ambiguous, pending an
+ * Anna-adjudicated domain pass (ADR 0058 graduation plan, B2). That pass
+ * COMPLETED 2026-05-29 (ADR 0058 §R-domain-pass): all 14 original entries
+ * resolved by the pointer/teaching-move/composition-root/leaf principle —
+ *   - formative family (MCQ/MultiSelect/FillBlank/NumericQuestion/
+ *     QuickCheck/PracticeProblem/Solution/Hint) → CHROME (assessment is a
+ *     teaching move per ADR 0041, not one of the 8 roles);
+ *   - representation family (RepEquation/RepFigure/RepVerbal/MultiRep) →
+ *     CHROME (views of a bound concept; the role lives on the concept);
+ *   - CommonMisuse → declarer (`misconception`; a role-bearing leaf, not a
+ *     pointer — it states a misuse whether or not the optional cross-ref
+ *     is supplied);
+ *   - KeyEquation → ROLE_VIA_SLOT (composition root of role-bearing
+ *     biography children).
+ *
+ * The bucket is RETAINED EMPTY by design: a future component whose role is
+ * genuinely contestable lands here pending its own adjudication, rather
+ * than being forced into a wrong role to satisfy the gate (which would
+ * corrupt the very vocabulary the contract protects, ADR 0058 §R-graduation).
  */
-const GRANDFATHERED: ReadonlyArray<readonly [string, string]> = [
-  // Formative family — is assessment chrome-wrapping-reasoning, or is it
-  // itself an inference act? Deferred to the domain pass.
-  [
-    "MCQ",
-    "formative family: assessment-as-chrome vs. inference-act is contestable; deferred",
-  ],
-  [
-    "MultiSelect",
-    "formative family: assessment-as-chrome vs. inference-act is contestable; deferred",
-  ],
-  [
-    "FillBlank",
-    "formative family: assessment-as-chrome vs. inference-act is contestable; deferred",
-  ],
-  [
-    "NumericQuestion",
-    "formative family: assessment-as-chrome vs. inference-act is contestable; deferred",
-  ],
-  [
-    "QuickCheck",
-    "formative family: assessment-as-chrome vs. inference-act is contestable; deferred",
-  ],
-  [
-    "PracticeProblem",
-    "formative family: assessment-as-chrome vs. inference-act is contestable; deferred",
-  ],
-  [
-    "Solution",
-    "formative reveal: role (inference / numerical?) depends on the wrapped reasoning; deferred",
-  ],
-  ["Hint", "formative reveal: role depends on the wrapped reasoning; deferred"],
-  // Representation family — role lives on the bound Notation-Registry
-  // concept (registry-link pattern), not on the rep component. Deferred.
-  [
-    "RepEquation",
-    "role lives on the bound notation-registry concept (registry-link pattern); deferred",
-  ],
-  [
-    "RepFigure",
-    "role lives on the bound notation-registry concept (registry-link pattern); deferred",
-  ],
-  [
-    "RepVerbal",
-    "role lives on the bound notation-registry concept (registry-link pattern); deferred",
-  ],
-  [
-    "MultiRep",
-    "role lives on the bound notation-registry concept (registry-link pattern); deferred",
-  ],
-  // Multi-part containers — role is per-part, not per-component. Deferred.
-  [
-    "KeyEquation",
-    "multi-part container: role per part not per component; deferred",
-  ],
-  // Biography child that inherits `misconception` via link — declare-vs-
-  // inherit is contestable. Deferred.
-  [
-    "CommonMisuse",
-    "biography child inherits `misconception` via link; declare-vs-inherit is contestable; deferred",
-  ],
-];
+const GRANDFATHERED: ReadonlyArray<readonly [string, string]> = [];
 
 /**
  * Strip `//` line comments and block comments from `src` so that prose
@@ -472,7 +496,8 @@ function main(): void {
   console.log("");
   console.log(
     `Grandfathered (${viaGrandfather.length}, tracked-not-blocking — ` +
-      "should shrink toward empty via the ADR 0058 domain pass):"
+      "domain pass complete 2026-05-29; bucket retained empty for future " +
+      "contestable components, ADR 0058 §R-domain-pass):"
   );
   for (const dir of viaGrandfather) {
     console.log(`  ${dir} — ${grandfathered.get(dir)}`);
