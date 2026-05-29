@@ -40,18 +40,19 @@ test.describe("compound-island transform — formative parents render in the bui
     const mcq = page.locator('[data-pedagogy-role="mcq"]');
     await expect(mcq).toHaveCount(1);
     await expect(mcq.getByRole("radio")).toHaveCount(3);
-    // Each radio has a correct COMPUTED accessible name — including the
-    // math-only choices, whose name the browser derives from KaTeX
-    // presentation MathML ("n = 2 → n = 1"). getByRole({ name }) uses the
-    // browser's real name algorithm (MathML-aware), unlike axe's `label`
-    // rule (which can't read MathML — see the practice axe-clean test).
-    // No "✓" on the correct choice: v1 must not leak the answer.
-    await expect(mcq.getByRole("radio", { name: "n = 2 → n = 1" })).toHaveCount(
-      1
-    );
-    await expect(mcq.getByRole("radio", { name: "n = 3 → n = 2" })).toHaveCount(
-      1
-    );
+    // Each radio has a correct accessible name. The math-only choices now
+    // carry an explicit SRE ClearSpeak `aria-label` (rehypeChoiceSpeech,
+    // ADR 0089) — "n equals 2 right arrow n equals 1" — which IS the
+    // accessible name (it overrides the browser's raw-MathML computation,
+    // and is the screen-reader-friendly phrasing axe's `label` rule can
+    // read). The pure-text choice keeps its label-computed name. No "✓"
+    // on the correct choice: v1 must not leak the answer.
+    await expect(
+      mcq.getByRole("radio", { name: "n equals 2 right arrow n equals 1" })
+    ).toHaveCount(1);
+    await expect(
+      mcq.getByRole("radio", { name: "n equals 3 right arrow n equals 2" })
+    ).toHaveCount(1);
     await expect(mcq.getByRole("radio", { name: /A line in the/ })).toHaveCount(
       1
     );
@@ -111,16 +112,14 @@ test.describe("compound-island transform — formative parents render in the bui
         .locator('[data-pedagogy-role="mcq"] [data-react-hydrated="true"]')
         .first()
     ).toBeVisible();
+    // `label` runs STRICT here — no disable. The math-only choice radios
+    // used to trip it (axe can't compute an accessible name from MathML),
+    // so the rule was disabled. The `rehypeChoiceSpeech` build transform
+    // (ADR 0089) now stamps an explicit SRE `aria-label` on every math-
+    // bearing choice input, so axe names them without reading MathML and
+    // the rule passes platform-wide. This closes the lone axe disable.
     const results = await new AxeBuilder({ page })
       .withTags(A11Y_TAGS)
-      // `label` is disabled ONLY here, and ONLY because axe does not
-      // implement accessible-name computation for MathML: it reports the
-      // KaTeX math-choice radios as nameless even though the browser (and
-      // real AT) name them correctly ("n = 2 → n = 1"). That real name is
-      // positively asserted in the MCQ test above via getByRole({ name }),
-      // which is a STRONGER check than axe's heuristic — so no label
-      // coverage is lost. Every other axe rule stays strict on this page.
-      .disableRules(["label"])
       .analyze();
     expect(results.violations).toEqual([]);
   });
