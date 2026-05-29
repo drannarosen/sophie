@@ -18,7 +18,7 @@ test("prod build emits dist/.sophie/pedagogy-audit.json with the versioned envel
   );
   const artifact = JSON.parse(readFileSync(artifactPath, "utf-8"));
 
-  expect(artifact.artifact_version).toBe("0.1");
+  expect(artifact.artifact_version).toBe("0.2");
   expect(artifact.summary).toMatchObject({
     errors: expect.any(Number),
     warnings: expect.any(Number),
@@ -36,4 +36,19 @@ test("prod build emits dist/.sophie/pedagogy-audit.json with the versioned envel
   // The packed-smoke fixture is clean — a non-zero error count would have
   // failed the build (the gate throws), so this build's artifact is 0 errors.
   expect(artifact.summary.errors).toBe(0);
+
+  // 0.2 adds the math-speech coverage section (ADR 0089 / ADR 0088 Amdt 1).
+  // The packed build renders math (≥1 registry equation), so coverage is
+  // non-zero; assert the envelope integrity (total = labeled + failures)
+  // rather than a fixture-dependent "0 failures" — the latter is guarded by
+  // the math-speech invariant + the regular smoke e2e.
+  expect(artifact.mathA11y).toMatchObject({
+    total: expect.any(Number),
+    labeled: expect.any(Number),
+    failures: expect.any(Array),
+  });
+  expect(artifact.mathA11y.total).toBeGreaterThan(0);
+  expect(artifact.mathA11y.failures.length).toBe(
+    artifact.mathA11y.total - artifact.mathA11y.labeled
+  );
 });
