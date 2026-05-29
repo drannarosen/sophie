@@ -5,6 +5,7 @@
 // rehype-katex output rather than hand-mocked markup.
 import "katex/dist/katex.min.css";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { prerenderEquationFixtures } from "../EquationRef/equation-stories-prerender.ts";
 import { __setEquations } from "../EquationRef/equations-store.ts";
 import { KeyEquation } from "./KeyEquation.tsx";
 
@@ -83,7 +84,7 @@ const meta = {
   parameters: { layout: "padded" },
   decorators: [
     (Story) => {
-      __setEquations(fixture);
+      __setEquations(prerenderEquationFixtures(fixture));
       return <Story />;
     },
   ],

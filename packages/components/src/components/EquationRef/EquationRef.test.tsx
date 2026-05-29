@@ -1,4 +1,10 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { axe } from "jest-axe";
 import { renderToString } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
@@ -14,6 +20,7 @@ vi.mock("./equations-store.ts", () => ({
         id: "inverse-square-law",
         title: "Inverse-Square Law",
         tex: "F = \\frac{L}{4\\pi d^2}",
+        html: '<span class="katex">PRERENDERED_EQREF_MARKER</span>',
         symbols: ["F", "L", "d"],
       };
     }
@@ -64,6 +71,26 @@ describe("<EquationRef>", () => {
       const link = screen.getByRole("link", { name: /wien's law/i });
       expect(link).toHaveTextContent("Wien's law");
     });
+  });
+
+  it("renders the build-time prerendered html in the popover (ADR 0090)", async () => {
+    // The popover (Radix HoverCard.Content) only mounts when open.
+    // Fake timers + pointerEnter drive the open-delay deterministically
+    // in JSDOM so we can assert the prerendered html — `entry.html`
+    // (baked by renderMath at build), not a runtime katex call — is the
+    // source rendered into the popover.
+    vi.useFakeTimers();
+    try {
+      render(<EquationRef refId='inverse-square-law' />);
+      const link = screen.getByRole("link");
+      fireEvent.pointerEnter(link, { pointerType: "mouse" });
+      await act(async () => {
+        vi.advanceTimersByTime(500);
+      });
+      expect(document.body.innerHTML).toContain("PRERENDERED_EQREF_MARKER");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   describe("miss fallback (no matching entry)", () => {

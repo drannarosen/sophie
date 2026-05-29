@@ -3,7 +3,7 @@ import type {
   EquationCitationEntry,
   EquationEntry,
 } from "@sophie/core/schema";
-import katex from "katex";
+import { renderMath } from "../lib/math-render/render-math";
 import BiographyRender from "./BiographyRender.astro";
 import LibraryCollectionShell from "./LibraryCollectionShell.astro";
 
@@ -34,9 +34,10 @@ import LibraryCollectionShell from "./LibraryCollectionShell.astro";
  * primitives-and-slots split fits per-entry as cleanly as per-room).
  * The shell owns the `<section aria-labelledby>` landmark + the H1.
  *
- * Pure Astro; no client JS. KaTeX renders server-side via
- * `katex.renderToString` (the same approach `<KeyEquation>`'s
- * `InlineTex` helper uses inside `@sophie/components`).
+ * Pure Astro; no client JS. Math renders server-side via the shared
+ * build-time `renderMath` helper (ADR 0090) — the single KaTeX site —
+ * the same source `<KeyEquation>`/`<EquationRef>` consume as
+ * prerendered html inside `@sophie/components`.
  *
  * Why this component is split from the route:
  * Container API (Batch 3b infra) cannot drive full-page Astro routes
@@ -53,11 +54,7 @@ export interface Props {
 
 const { equation, citations } = Astro.props;
 
-const texHtml = katex.renderToString(equation.tex, {
-  displayMode: true,
-  throwOnError: false,
-  output: "html",
-});
+const texHtml = renderMath(equation.tex, { displayMode: true }).html;
 
 const citingUnits = Array.from(new Set(citations.map((c) => c.unit)));
 const crossrefsHeadingId = `sophie-equation-spec-${equation.id}-crossrefs`;
@@ -79,7 +76,7 @@ const crossrefsHeadingId = `sophie-equation-spec-${equation.id}-crossrefs`;
     </p>
 
     <div class='sophie-equation-spec__tex'>
-      {/* biome-ignore lint/security/noDangerouslySetInnerHtml: tex rendered by katex from registry-validated source; KaTeX includes hidden MathML for AT. */}
+      {/* biome-ignore lint/security/noDangerouslySetInnerHtml: build-time prerendered KaTeX html via the shared renderMath helper (ADR 0090) from registry-validated source. */}
       <Fragment set:html={texHtml} />
     </div>
 

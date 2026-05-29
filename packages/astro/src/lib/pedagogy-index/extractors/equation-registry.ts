@@ -1,5 +1,7 @@
+import { formatUnitTex } from "@sophie/core/runtime";
 import type { EquationEntry, EquationRegistryEntry } from "@sophie/core/schema";
 import type { Root } from "mdast";
+import { renderMath } from "../../math-render/render-math.ts";
 import { buildBiographyFromChildren } from "./biography.ts";
 
 /**
@@ -27,5 +29,33 @@ export function extractEquationRegistryDeclaration(
   return {
     ...frontmatter,
     ...(biography ? { biography } : {}),
+    // Build-time prerendered KaTeX html (ADR 0090). The components
+    // (KeyEquation/EquationRef/ResultCard) consume these strings and
+    // drop their own KaTeX import; there is no runtime fallback.
+    html: renderMath(frontmatter.tex, { displayMode: true }).html,
+    ...(frontmatter.rearranged_forms
+      ? {
+          rearranged_forms: frontmatter.rearranged_forms.map((form) => ({
+            ...form,
+            html: renderMath(form.tex, { displayMode: true }).html,
+          })),
+        }
+      : {}),
+    ...(frontmatter.constants
+      ? {
+          constants: frontmatter.constants.map((c) => ({
+            ...c,
+            symbol_html: renderMath(c.symbol, { displayMode: false }).html,
+            value_html: renderMath(c.value, { displayMode: false }).html,
+            ...(c.unit
+              ? {
+                  unit_html: renderMath(formatUnitTex(c.unit), {
+                    displayMode: false,
+                  }).html,
+                }
+              : {}),
+          })),
+        }
+      : {}),
   };
 }

@@ -7,6 +7,7 @@ import "katex/dist/katex.min.css";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { EquationRef } from "./EquationRef.tsx";
+import { prerenderEquationFixtures } from "./equation-stories-prerender.ts";
 import { __setEquations } from "./equations-store.ts";
 
 // Story-level fixture. Mirrors the smoke-target equations so the
@@ -42,7 +43,7 @@ const meta = {
   // outside that pipeline, so we wire the same setter directly.
   decorators: [
     (Story) => {
-      __setEquations(fixture);
+      __setEquations(prerenderEquationFixtures(fixture));
       return <Story />;
     },
   ],

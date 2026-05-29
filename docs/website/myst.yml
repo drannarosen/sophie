@@ -243,6 +243,7 @@ project:
         - file: decisions/0086-multi-chapter-glossary-definitions.md
         - file: decisions/0087-compound-island-transform.md
         - file: decisions/0088-pedagogy-audit-build-artifact.md
+        - file: decisions/0090-unified-build-time-math-rendering.md
     - title: Pilots
       children:
         - file: pilots/_template.md

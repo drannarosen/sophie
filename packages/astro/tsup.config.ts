@@ -108,6 +108,13 @@ export default defineConfig({
     // kept as a portable read-only surface for future consumers.
     "lib/pedagogy-index-virtual-module":
       "src/lib/pedagogy-index-virtual-module.ts",
+    // `lib/math-render/render-math` is the single shared build-time
+    // KaTeX renderer (ADR 0090). Imported (SSR side) by
+    // EquationSpecContent.astro to prerender per-entry equation html.
+    // Must exist at dist/lib/math-render/render-math.js to resolve from
+    // the copied-verbatim .astro files in dist/components/. `splitting:
+    // false` bundles its only local dep (katex-options) into this entry.
+    "lib/math-render/render-math": "src/lib/math-render/render-math.ts",
   },
   format: ["esm"],
   target: "es2022",

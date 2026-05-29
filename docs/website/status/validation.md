@@ -23,29 +23,29 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 
 | Status | Count |
 |---|---|
-| Validated | 34 |
+| Validated | 35 |
 | In progress | 21 |
 | Unvalidated | 61 |
 | Re-validation needed | 0 |
 | Missing block | 0 |
-| Total | 116 |
+| Total | 117 |
 
 ## Lifecycle summary
 
 | Lifecycle | Count |
 |---|---|
-| Shipped | 67 |
+| Shipped | 68 |
 | Accepted design | 39 |
 | Mixed | 1 |
 | Future package split | 9 |
 | No status | 0 |
-| Total | 116 |
+| Total | 117 |
 
 ## Evidence kinds
 
 | Kind | Count |
 |---|---|
-| test | 105 |
+| test | 114 |
 | chapter | 9 |
 | review | 31 |
 | deployment | 76 |
@@ -65,7 +65,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0001-platform-not-monorepo.md](/platform-not-monorepo/) | validated | shipped | 2026-05-16 | manual, review | Repo-shape contract is structurally enforced: any course importing `@sophie/*` is by definition a separate consumer. The smoke example exercises that consumer relationship in-repo. |
 | [docs/website/decisions/0002-renderer-astro-mdx.md](/renderer-astro-mdx/) | validated | shipped | 2026-05-16 | chapter, review, test | Astro 6 + MDX confirmed across the bucket B+C smoke build; the renderer-choice contract held under the smoke chapters and the components matrix. |
 | [docs/website/decisions/0003-zod-as-source-of-truth.md](/zod-as-source-of-truth/) | validated | shipped | 2026-05-16 | review, test | Every load-bearing data shape in `@sophie/core` is a Zod schema; downstream packages type-infer via z.infer. No drift detected in the audit. |
-| [docs/website/decisions/0004-component-contract-revisions.md](/component-contract-revisions/) | validated | shipped | 2026-05-16 | chapter, review, test | Component contract (serialize separate from render, axe-core mandatory, useInteractive for persistence, composition rules) confirmed across every shipped component as of the bucket B+C audit. |
+| [docs/website/decisions/0004-component-contract-revisions.md](/component-contract-revisions/) | validated | shipped | 2026-05-28 | chapter, review, test | Component contract (serialize separate from render, axe-core mandatory, useInteractive for persistence, composition rules) confirmed across every shipped component as of the bucket B+C audit. R-0090 (2026-05-28): math-bearing components consume prerendered html for build-time-knowable math; runtime KaTeX reserved for the runtime tail. |
 | [docs/website/decisions/0005-theming-three-layers.md](/theming-three-layers/) | validated | shipped | 2026-05-25 | deployment, manual, test | The three-layer model is in active force across the codebase. Layer 1 (`packages/theme/src/tokens.ts`) is the single TS source; Layer 2 is emitted at build time by the `generate-css.ts` + `generate-tailwind.ts` scripts; Layer 3 is realized in the 45 `*.module.css` files under `@sophie/components`. ADR 0026 amends Layer 2's delivery mechanism (CSS-first `@theme` rather than JS preset) without changing the three-layer concept.  |
 | [docs/website/decisions/0006-slides-revealjs.md](/slides-revealjs/) | unvalidated | accepted design | — | — |  |
 | [docs/website/decisions/0007-persistence-indexeddb.md](/persistence-indexeddb/) | validated | shipped | 2026-05-22 | chapter, deployment, review, test | Build-time + smoke-environment validation complete; multi-cohort outcomes deferred to ASTR 201 fa26. |
@@ -149,6 +149,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0086-multi-chapter-glossary-definitions.md](/multi-chapter-glossary-definitions/) | validated | accepted design | 2026-05-26 | test |  |
 | [docs/website/decisions/0087-compound-island-transform.md](/compound-island-transform/) | in progress | shipped | 2026-05-28 | review, test |  |
 | [docs/website/decisions/0088-pedagogy-audit-build-artifact.md](/pedagogy-audit-build-artifact/) | validated | shipped | 2026-05-28 | deployment, test | Shipped: build-done trigger + artifact + dev-only layout guard. Implemented via the accumulator-reading approach (the integration reads the already-populated index pagefind-style, extracts contract validations once at build-done). Originating audit item: P2.4 (docs/reviews/2026-05-28-platform-hardening-audit.md).  |
+| [docs/website/decisions/0090-unified-build-time-math-rendering.md](/unified-build-time-math-rendering/) | validated | shipped | 2026-05-28 | test | Shipped in PR-A of the unified-math-rendering / LaTeX-speech sprint (plan: docs/plans/2026-05-28-latex-speech-a11y-implementation.md). Enforceable invariant — the only build-time KaTeX site is `renderMath`; `grep -rn katex packages/components/src --include='*.tsx' --include='*.ts' \| grep -v test \| grep -v stories` resolves to ONLY the two runtime-tail files (render-text-with-math.ts, BlackbodyExplorer/InlineMath.tsx) plus the `katex/dist/katex.min.css` type declaration in css-modules.d.ts. PR-B (ADR 0089) extends `renderMath` with an SRE `speech` field and the coverage invariant; in-progress at time of this ADR.  |
 
 ### Reference docs
 

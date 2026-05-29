@@ -42,6 +42,12 @@ export const EquationConstantSchema = z
     value: NonEmptyString,
     unit: NonEmptyString.optional(),
     name: NonEmptyString.optional(),
+    /** Build-time prerendered KaTeX HTML for `symbol` (ADR 0090). */
+    symbol_html: NonEmptyString.optional(),
+    /** Build-time prerendered KaTeX HTML for `value` (ADR 0090). */
+    value_html: NonEmptyString.optional(),
+    /** Build-time prerendered KaTeX HTML for `unit` (ADR 0090). */
+    unit_html: NonEmptyString.optional(),
   })
   .strict();
 
@@ -52,6 +58,8 @@ export const RearrangedFormSchema = z
     tex: NonEmptyString,
     solves_for: NonEmptyString,
     label: NonEmptyString.optional(),
+    /** Build-time prerendered KaTeX HTML for `tex` (ADR 0090). */
+    html: NonEmptyString.optional(),
   })
   .strict();
 
@@ -86,6 +94,8 @@ export const EquationRegistryEntrySchema = RegistryBaseSchema.extend({
   rearranged_forms: z.array(RearrangedFormSchema).optional(),
   /** Structured cross-refs to related equations. */
   related: z.array(RelatedEquationSchema).optional(),
+  /** Build-time prerendered KaTeX HTML for the primary `tex` (ADR 0090). */
+  html: NonEmptyString.optional(),
 }).strict();
 
 export type EquationRegistryEntry = z.infer<typeof EquationRegistryEntrySchema>;

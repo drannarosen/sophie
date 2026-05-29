@@ -21,20 +21,24 @@ describe("<ResultCard>", () => {
     expect(screen.getByText(/term/i)).toBeInTheDocument();
   });
 
-  it("renders KaTeX rich tail for equation results", () => {
+  it("renders the build-time prerendered html rich tail for equation results (ADR 0090)", () => {
     const equation: SearchResult = {
       ...baseFixture,
       meta: {
         ...baseFixture.meta,
         title: "Stefan-Boltzmann luminosity",
         tex: "L = 4\\pi R^2 \\sigma T^4",
+        html: '<span class="katex">PRERENDERED_RESULT_MARKER</span>',
         slug: "stefan-boltzmann-luminosity",
         number: "12",
       },
       filters: { type: ["equation"] },
     };
     const { container } = render(<ResultCard result={equation} />);
-    expect(container.querySelector(".katex")).toBeInTheDocument();
+    // The card renders `result.meta.html` (prerendered by renderMath at
+    // build), not a runtime katex call. The unique marker proves the
+    // html field is the source.
+    expect(container.innerHTML).toContain("PRERENDERED_RESULT_MARKER");
   });
 
   it("renders length indicator for misconception results", () => {

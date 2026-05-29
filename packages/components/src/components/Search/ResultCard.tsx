@@ -1,4 +1,3 @@
-import katex from "katex";
 import type { ReactNode } from "react";
 import styles from "./ResultCard.module.css.js";
 import type { SearchResult } from "./types.ts";
@@ -88,13 +87,8 @@ export function ResultCard({
       {isEquation ? (
         <span
           className={styles.richTail}
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: tex is rendered by katex.renderToString from extractor-captured TeX source (not user-supplied content). ADR 0038 + EquationRef precedent.
-          dangerouslySetInnerHTML={{
-            __html: katex.renderToString(result.meta.tex ?? "", {
-              displayMode: true,
-              throwOnError: false,
-            }),
-          }}
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: build-time prerendered KaTeX html from the search index (ADR 0090) — not user input.
+          dangerouslySetInnerHTML={{ __html: result.meta.html ?? "" }}
         />
       ) : (
         <p className={styles.excerpt}>{result.excerpt}</p>
