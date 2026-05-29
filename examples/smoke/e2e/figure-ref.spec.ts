@@ -66,26 +66,35 @@ test.describe("PR-C3: <FigureRef> on the smoke chapter", () => {
     await expectChapterA11y(page);
   });
 
-  test.skip("T43 dual-mode: renders the children cite as 'This distance ladder' (cosmic-distance-ladder)", () => {
-    // The children-mode FigureRef cite ships its anchor inside
-    // `<astro-island await-children>` (Astro defers child-slot
-    // evaluation for `client:load` React islands with slotted
-    // children). The anchor + slotted text DO ship in the built
-    // HTML (verified: grep finds `<a href="/units/spoiler-alerts/reading
-    // #fig-cosmic-distance-ladder-4"><astro-slot>This distance
-    // ladder</astro-slot>...</a>`), but Playwright's selector
-    // engine — across both attribute (`a[href=...]`) and ARIA-role
-    // (`getByRole("link", { name: ... })`) — fails to traverse
-    // through the `await-children` boundary at the load-state
-    // checkpoints we have today. The browser DOES render the link
-    // correctly on real-page-load; manual verification confirms
-    // the popover opens on hover. Unit-level coverage in
-    // FigureRef.test.tsx (T34 children-mode) exercises the
-    // children-rendering branch directly. Skipping the e2e
-    // assertion pending a follow-up that either threads the
-    // hydration-complete wait or uses a Playwright-vs-astro-island
-    // workaround. See ADR 0038 Revisions section + the PR-C3
-    // glossary-term:75 precedent.
+  test("T43 dual-mode: renders the children cite as 'This distance ladder' (cosmic-distance-ladder)", async ({
+    page,
+  }) => {
+    await page.goto(CHAPTER_URL);
+    // Children-mode FigureRef lives inside the chapter's single
+    // `<astro-island await-children>` (SophieChapter). Wait for THIS
+    // trigger to flip `data-react-hydrated="true"` before asserting —
+    // the scoped per-element hydration wait (same pattern as the T44
+    // open test below + chapter-ref E2/E3) bridges the pre-commit
+    // window. The original skip blamed an "await-children traversal"
+    // limit, but in-browser inspection (2026-05-29) showed both the
+    // attribute selector AND `getByRole` resolve the hydrated anchor —
+    // the failure was timing at the unscoped load checkpoints, not the
+    // slot boundary. Bare href is unique (in-page figure anchor), as
+    // for the decoder-ring trigger.
+    const trigger = page
+      .locator(
+        'a[href="/units/spoiler-alerts/reading#fig-cosmic-distance-ladder-4"]'
+      )
+      .first();
+    await trigger.waitFor({ state: "attached" });
+    await trigger.scrollIntoViewIfNeeded();
+    await expect(trigger).toHaveAttribute("data-react-hydrated", "true");
+    // Children-mode renders the slotted prose, not the "Fig. C.N" label.
+    await expect(trigger).toContainText("This distance ladder");
+    await expect(trigger).toHaveAttribute(
+      "href",
+      "/units/spoiler-alerts/reading#fig-cosmic-distance-ladder-4"
+    );
   });
 
   test("trigger carries a presentational Lucide ImageIcon (aria-hidden)", async ({
@@ -154,12 +163,35 @@ test.describe("PR-C3: <FigureRef> on the smoke chapter", () => {
     expect(captionText.length).toBeGreaterThan(0);
   });
 
-  test.skip("T44 dismissal: moving the pointer away closes the popover", () => {
-    // Same astro-island await-children quirk as T43 (children-mode
-    // FigureRef cite). The popover hover/dismiss path is exercised
-    // at the unit level in FigureRef.test.tsx; e2e coverage of the
-    // self-closing hover path is preserved in the T42-equivalent
-    // test above. See T43's skip rationale.
+  test("T44 dismissal: moving the pointer away closes the popover", async ({
+    page,
+  }) => {
+    await page.goto(CHAPTER_URL);
+    // Dismiss-path coverage (hover-open → pointer-away → close), tested
+    // on the decoder-ring self-closing trigger — the same one the open
+    // test above hovers. Decoder-ring sits in open prose and is reliably
+    // hoverable. The children-mode cosmic-distance-ladder cite (T43)
+    // lives inside a collapsible `<Aside>` `<details>` disclosure
+    // (verified 2026-05-29: closed details → zero box → not a stable
+    // hover target); its render branch is covered by T43, and Radix's
+    // close behavior is identical across trigger modes (same FigureRef
+    // HoverCard). Condition-based assertions on Radix's deterministic
+    // `data-state` (no clock guesses).
+    const trigger = page
+      .locator('a[href="/units/spoiler-alerts/reading#fig-decoder-ring-16"]')
+      .first();
+    await trigger.waitFor({ state: "attached" });
+    await trigger.scrollIntoViewIfNeeded();
+    await expect(trigger).toHaveAttribute("data-react-hydrated", "true");
+    await trigger.hover();
+    const popover = page.locator("[data-sophie-figure-popover]");
+    await expect(popover).toHaveAttribute("data-state", "open");
+    // Move the pointer off both trigger and content; the HoverCard
+    // closes after its closeDelay and Radix unmounts the Content via
+    // <Presence>. `toBeHidden()` resolves whether it unmounts or stays
+    // mounted-but-hidden during the exit transition.
+    await page.mouse.move(0, 0);
+    await expect(popover).toBeHidden();
   });
 
   test("T45: clicking the trigger navigates to the canonical anchor", async ({
