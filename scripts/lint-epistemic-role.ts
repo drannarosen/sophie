@@ -84,21 +84,226 @@ const SKIP_DIRS: ReadonlySet<string> = new Set([
  * OMI composites that bind role PER SLOT rather than declaring one role
  * for the whole component (ADR 0058 §4). Compliant by construction.
  */
-const ROLE_VIA_SLOT: ReadonlyArray<readonly [string, string]> = [];
+const ROLE_VIA_SLOT: ReadonlyArray<readonly [string, string]> = [
+  ["OMIFlow", "binds observable/model/inference per slot (ADR 0058 §4)"],
+];
 
 /**
  * Role-less by design — structural / layout / navigation / course-info
  * chrome (ADR 0058: components that fit none of the 8 roles are chrome,
  * not pedagogy). Rationales drawn from each component's header comment.
  */
-const CHROME: ReadonlyArray<readonly [string, string]> = [];
+const CHROME: ReadonlyArray<readonly [string, string]> = [
+  [
+    "AccessibilitySection",
+    "course accessibility surface (DRC link/contact/deadline); purely structural",
+  ],
+  [
+    "Aside",
+    "digressive note container; visual/pedagogical category is chrome, not an epistemic role",
+  ],
+  [
+    "Callout",
+    "admonition container (info/warning/tip/roadmap/summary/…); chrome variant set",
+  ],
+  [
+    "Card",
+    "static card container with Header/Footer slots; strict chrome per its header",
+  ],
+  [
+    "ChapterRef",
+    "inline cross-reference to a reading-shape chapter; navigation chrome",
+  ],
+  [
+    "ComprehensionGate",
+    "self-report gate (got-it/revisit/stuck); persistence widget, no role",
+  ],
+  [
+    "ConfidenceCheck",
+    "Likert self-assessment widget; metacognitive chrome, not a reasoning role",
+  ],
+  [
+    "ContactCard",
+    "instructor contact card (name/email/response window); course-info chrome",
+  ],
+  [
+    "CourseLanding",
+    "course landing layout (hero-with-modules / simple-list); page chrome",
+  ],
+  [
+    "Dropdown",
+    "Radix-accordion disclosure widget with persistence; chrome primitive",
+  ],
+  ["Due", "inline due-date label; course-management chrome"],
+  [
+    "EffortLog",
+    "self-report effort widget (skimmed/read/studied); metacognitive chrome",
+  ],
+  [
+    "EquationRef",
+    "inline cross-reference to a KeyEquation in the registry; navigation chrome",
+  ],
+  [
+    "Figure",
+    "figure container (inline or registry-backed); the figure's role lives on its content, not the container",
+  ],
+  ["FigureRef", "inline cross-reference to a Figure; navigation chrome"],
+  [
+    "GlossaryTerm",
+    "inline reference to a definition in the pedagogy index; navigation chrome",
+  ],
+  [
+    "GradingTable",
+    "renders grading scheme (category weights + letter scale); course-info chrome",
+  ],
+  [
+    "Grid",
+    "pure SSR layout container (CSS Grid 1–4 cols); strict chrome per its header",
+  ],
+  [
+    "InteractiveCheckbox",
+    "persistence-bearing checkbox primitive; chrome control",
+  ],
+  [
+    "Intervention",
+    "misconception-remediation is a teaching move, not one of the 8 roles — deliberate non-decision per its design doc (§D6)",
+  ],
+  [
+    "LearningObjectives",
+    "persistence-bearing objectives container; harvests <Objective> children; chrome",
+  ],
+  ["Objective", "pure-display primitive for one learning objective; chrome"],
+  [
+    "ObjectivesSection",
+    "course-level objectives section (named-region landmark); course-info chrome",
+  ],
+  [
+    "OfficeHoursChrome",
+    "inline office-hours surface from spec.office_hours; course-management chrome",
+  ],
+  [
+    "OfficeHoursTable",
+    "renders office-hours schedule as a table; course-info chrome",
+  ],
+  [
+    "Points",
+    "inline points + grading-category surface; course-management chrome",
+  ],
+  [
+    "Predict",
+    "predict-then-discuss reflection primitive; persistence widget, no role on the container",
+  ],
+  [
+    "PrereqsList",
+    "course-level prerequisite list grouped by kind; course-info chrome",
+  ],
+  [
+    "Reading",
+    "inline reading-assignment citation; chrome (header: no epistemic role declared)",
+  ],
+  [
+    "Reflection",
+    "free-text reflection prompt with persistence; metacognitive chrome",
+  ],
+  [
+    "RetrievalPrompt",
+    "in-flow recall prompt (target ref + Prompt/Answer slots); retrieval-practice chrome",
+  ],
+  ["Search", "site search UI (chip filters + results); navigation chrome"],
+  [
+    "SectionLanding",
+    "per-section landing page listing units as cards; page chrome",
+  ],
+  [
+    "SkillReview",
+    "inline prereq-bridge recall prompt; retrieval-practice chrome",
+  ],
+  [
+    "SpacedReview",
+    "queued spaced-review surface from the practice queue; retrieval-practice chrome",
+  ],
+  [
+    "Tabs",
+    "ARIA-tabs disclosure container (static markup + controller island); chrome",
+  ],
+  [
+    "Units",
+    "descriptive symbol/unit metadata for an equation registry entry; chrome per its header",
+  ],
+  ["Video", "static embed primitive (youtube/vimeo/raw); media chrome"],
+  [
+    "Week",
+    "inline week-of-term label; chrome (header: no epistemic role declared)",
+  ],
+];
 
 /**
  * Contestable pedagogy whose role is genuinely ambiguous — deferred to
  * a later domain pass Anna adjudicates (ADR 0058 graduation plan, B2).
  * Tracked-not-blocking. This list should SHRINK over time toward empty.
  */
-const GRANDFATHERED: ReadonlyArray<readonly [string, string]> = [];
+const GRANDFATHERED: ReadonlyArray<readonly [string, string]> = [
+  // Formative family — is assessment chrome-wrapping-reasoning, or is it
+  // itself an inference act? Deferred to the domain pass.
+  [
+    "MCQ",
+    "formative family: assessment-as-chrome vs. inference-act is contestable; deferred",
+  ],
+  [
+    "MultiSelect",
+    "formative family: assessment-as-chrome vs. inference-act is contestable; deferred",
+  ],
+  [
+    "FillBlank",
+    "formative family: assessment-as-chrome vs. inference-act is contestable; deferred",
+  ],
+  [
+    "NumericQuestion",
+    "formative family: assessment-as-chrome vs. inference-act is contestable; deferred",
+  ],
+  [
+    "QuickCheck",
+    "formative family: assessment-as-chrome vs. inference-act is contestable; deferred",
+  ],
+  [
+    "PracticeProblem",
+    "formative family: assessment-as-chrome vs. inference-act is contestable; deferred",
+  ],
+  [
+    "Solution",
+    "formative reveal: role (inference / numerical?) depends on the wrapped reasoning; deferred",
+  ],
+  ["Hint", "formative reveal: role depends on the wrapped reasoning; deferred"],
+  // Representation family — role lives on the bound Notation-Registry
+  // concept (registry-link pattern), not on the rep component. Deferred.
+  [
+    "RepEquation",
+    "role lives on the bound notation-registry concept (registry-link pattern); deferred",
+  ],
+  [
+    "RepFigure",
+    "role lives on the bound notation-registry concept (registry-link pattern); deferred",
+  ],
+  [
+    "RepVerbal",
+    "role lives on the bound notation-registry concept (registry-link pattern); deferred",
+  ],
+  [
+    "MultiRep",
+    "role lives on the bound notation-registry concept (registry-link pattern); deferred",
+  ],
+  // Multi-part containers — role is per-part, not per-component. Deferred.
+  [
+    "KeyEquation",
+    "multi-part container: role per part not per component; deferred",
+  ],
+  // Biography child that inherits `misconception` via link — declare-vs-
+  // inherit is contestable. Deferred.
+  [
+    "CommonMisuse",
+    "biography child inherits `misconception` via link; declare-vs-inherit is contestable; deferred",
+  ],
+];
 
 /**
  * Strip `//` line comments and block comments from `src` so that prose
