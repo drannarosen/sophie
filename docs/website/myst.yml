@@ -245,6 +245,7 @@ project:
         - file: decisions/0088-pedagogy-audit-build-artifact.md
         - file: decisions/0089-latex-speech-accessibility.md
         - file: decisions/0090-unified-build-time-math-rendering.md
+        - file: decisions/0091-tsup-entry-discovery.md
     - title: Pilots
       children:
         - file: pilots/_template.md
