@@ -1,4 +1,4 @@
-import { joinBase } from "@sophie/core/runtime";
+import { getSophieBaseUrl, joinBase } from "@sophie/core/runtime";
 
 /**
  * Prefix an author-written absolute path with the consumer's Astro
@@ -11,5 +11,11 @@ import { joinBase } from "@sophie/core/runtime";
  * here. See `@sophie/core/runtime`'s `joinBase` for join semantics.
  */
 export function withBase(path: string): string {
-  return joinBase(import.meta.env.BASE_URL, path);
+  // SSR (externalized dist in Node): base comes from the .astro layer via
+  // setSophieBaseUrl → getSophieBaseUrl. Client: globalThis is unset, so
+  // fall back to import.meta.env.BASE_URL (Vite-replaced in the client
+  // bundle). import.meta.env is undefined in externalized Node SSR, hence
+  // the optional chain — never throws.
+  const base = getSophieBaseUrl() ?? import.meta.env?.BASE_URL ?? "/";
+  return joinBase(base, path);
 }

@@ -11,6 +11,7 @@ import {
   type ProseFragmentRef,
 } from "../lib/compose-evaluator";
 import { deriveInfoSlug } from "../lib/derive-info-slug";
+import { setSophieBaseUrl } from "@sophie/core/runtime";
 import { courseSpec } from "virtual:sophie/course-spec";
 
 /**
@@ -32,6 +33,11 @@ import { courseSpec } from "virtual:sophie/course-spec";
  * structural data renders via React sub-components from
  * @sophie/components, prose via Astro <Content components={...}>.
  */
+
+// Feed the consumer's Vite-replaced base to the externalized-in-Node
+// SSR/prerender dist of @sophie/* (where import.meta.env is undefined).
+// See withBase + @sophie/core/runtime base-url store. ADR 0092.
+setSophieBaseUrl(import.meta.env.BASE_URL);
 
 // Defensive null guard — runtime-unreachable today (integration
 // only injects /<slug>/ when courseSpec is non-null), but documents
