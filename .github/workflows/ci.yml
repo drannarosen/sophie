@@ -98,6 +98,23 @@ jobs:
         # ParameterCursor) live in the script header. Fails CI on any
         # render() without paired axe().
         run: pnpm lint:axe-render
+      - name: epistemic-role declaration coverage (R13, 2026-05-28)
+        # AGENTS.md R13 + ADR 0058's graduation of the eight-role
+        # epistemic contract from optional/additive to enforced-for-new.
+        # Every component dir under packages/components/src/components/
+        # must declare an epistemicRole (the canonical
+        # X_EPISTEMIC_ROLE = "<role>" as const satisfies EpistemicRole
+        # pattern), bind role per-slot (OMI composites), or be on the
+        # CHROME / GRANDFATHERED allowlist with a per-entry rationale.
+        # A new pedagogy component that silently ships without a role is
+        # the class-of-issue this gate defends: it makes "Sophie is a
+        # Scientific Reasoning OS" a CI invariant rather than a
+        # convention. GRANDFATHERED entries (contestable pedagogy
+        # pending an Anna-adjudicated domain pass) are tracked, not
+        # blocking; CHROME is exempt-silent. Allowlists + rationales
+        # live in the script header. Fails CI on any non-exempt
+        # role-less component dir.
+        run: pnpm lint:epistemic-role
 
   typecheck:
     name: typecheck

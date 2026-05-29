@@ -10,8 +10,12 @@ tags:
 status: shipped
 validation:
   status: in-progress
-  last_validated_date: "2026-05-23"
+  last_validated_date: "2026-05-28"
   evidence:
+    - kind: test
+      ref: scripts/lint-epistemic-role.ts
+      date: "2026-05-28"
+      notes: "R-graduation: epistemic-role enforced-for-new via CI lint gate (lint job, after R11 lint:axe-render). 59/59 component dirs accounted for: 5 declare, 1 role-via-slot, 39 chrome, 14 grandfathered (tracked-not-blocking, pending the Anna-adjudicated domain pass)."
     - kind: test
       ref: packages/astro/src/components/CourseObservables.axe.test.ts
       date: "2026-05-23"
@@ -642,6 +646,71 @@ boundary at which the set is sliced.
 
 See [ADR 0080 Amendment 2](./0080-course-spec-format-v0-1.md#amendment-2-assessment-grade-weights-clean-break-course-info-projection-2026-05-26)
 for the projection-pattern decision trail.
+
+### R-graduation — `epistemicRole` enforced for new components (2026-05-28)
+
+**Trigger.** ITEM 5 of the post-ITEM-2 hardening arc. The eight-role
+contract shipped optional + additive (§2): self-evident components
+declared a role, but nothing stopped a *new* pedagogy component from
+silently shipping role-less. That left "Sophie is a Scientific
+Reasoning OS" conventional rather than structural — true by author
+discipline, not by construction. This revision graduates the contract
+from **optional/additive → enforced-for-new** via a repo-level lint
+gate, without changing the taxonomy itself (still the locked eight
+roles) or requiring a migration of existing components.
+
+**The gate.** [`scripts/lint-epistemic-role.ts`](https://github.com/drannarosen/sophie/blob/main/scripts/lint-epistemic-role.ts)
+(mirrors `scripts/lint-axe-render.ts` / R11 structurally) scans every
+immediate child dir of `packages/components/src/components/`. A dir is
+**compliant** iff ANY of:
+
+1. it declares a role via the canonical §Decision "pattern 3" shape
+   (`export const X_EPISTEMIC_ROLE = "<role>" as const satisfies
+   EpistemicRole`; the field form `epistemicRole: "<role>"` also
+   matches defensively) — detected **after comment-stripping**, so
+   prose mentions of `epistemicRole` in headers/docblocks do not
+   register as declarations;
+2. it is in `ROLE_VIA_SLOT` — OMI composites that bind role per-slot
+   (§4), currently `OMIFlow` (1);
+3. it is in `CHROME` — role-less by design (structural / layout /
+   navigation / course-info chrome), each entry with a one-line
+   rationale (39);
+4. it is in `GRANDFATHERED` — contestable pedagogy pending the domain
+   pass, **tracked-not-blocking** (14).
+
+Non-compliant → `process.exit(1)` (CI red); a moved/unreadable SCOPE →
+`process.exit(2)` with a one-line diagnostic. Wired into the CI `lint`
+job (after the R11 `lint:axe-render` step) as `pnpm
+lint:epistemic-role`.
+
+**Conservative scope (B2 — no new annotations).** The five
+**auto-detected declarers** — `<Observable>`, `<Assumption>`,
+`<BreaksWhen>` (R-greenfield), `<DerivationStep>`, `<WorkedExample>` —
+already carry the canonical const; this revision adds **no new role
+annotations**. Self-evident components had already declared; the rest
+split cleanly into chrome (role-less by design) or grandfathered
+(contestable). Forcing a role onto an ambiguous component to satisfy
+the gate would corrupt the very vocabulary the contract protects.
+
+**Deferred: the ambiguous role-adjudication domain pass.** The 14
+`GRANDFATHERED` entries (the formative family — `<MCQ>` /
+`<MultiSelect>` / `<FillBlank>` / `<NumericQuestion>` / `<QuickCheck>`
+/ `<PracticeProblem>` / `<Solution>` / `<Hint>`; the representation
+family — `<RepEquation>` / `<RepFigure>` / `<RepVerbal>` /
+`<MultiRep>`; `<KeyEquation>`; `<CommonMisuse>`) have genuinely
+contestable roles — assessment-as-chrome vs. inference-act,
+role-lives-on-the-bound-concept, role-per-part-not-per-component,
+declare-vs-inherit. Adjudicating them is **its own follow-up PR,
+Anna-adjudicated** (the chrome-vs-pedagogy and obvious-vs-ambiguous
+lines are the epistemics the whole contract is about; miscategorizing
+undermines the thesis). The `GRANDFATHERED` list is designed to
+**shrink toward empty** as that pass resolves each entry to a role or
+to chrome.
+
+This revision adds no fields, changes no taxonomy, and migrates no
+existing component; it makes the *new-component* obligation a CI
+invariant rather than a convention. The optional/additive guarantee of
+§2 stands for everything already shipped.
 
 ## References
 
