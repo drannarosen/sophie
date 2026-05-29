@@ -115,6 +115,15 @@ export default defineConfig({
     // the copied-verbatim .astro files in dist/components/. `splitting:
     // false` bundles its only local dep (katex-options) into this entry.
     "lib/math-render/render-math": "src/lib/math-render/render-math.ts",
+    // `lib/math-render/enrich-equations-speech` populates `entry.speech`
+    // (SRE ClearSpeak) on registry equations (ADR 0089). Imported (SSR
+    // side) by TextbookLayout.astro at the per-page seam, so it must exist
+    // at dist/lib/math-render/enrich-equations-speech.js to resolve from
+    // the copied-verbatim .astro file in dist/components/. `splitting:
+    // false` bundles its local deps (render-math, speech-engine,
+    // math-speech-coverage) into this entry; SRE stays a runtime require.
+    "lib/math-render/enrich-equations-speech":
+      "src/lib/math-render/enrich-equations-speech.ts",
   },
   format: ["esm"],
   target: "es2022",
