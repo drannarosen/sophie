@@ -41,6 +41,44 @@ describe("<ResultCard>", () => {
     expect(container.innerHTML).toContain("PRERENDERED_RESULT_MARKER");
   });
 
+  it("labels the equation rich tail with build-time SRE speech (ADR 0089)", () => {
+    const equation: SearchResult = {
+      ...baseFixture,
+      meta: {
+        ...baseFixture.meta,
+        title: "Stefan-Boltzmann luminosity",
+        tex: "L = 4\\pi R^2 \\sigma T^4",
+        html: '<span class="katex">PRERENDERED_RESULT_MARKER</span>',
+        speech: "L equals 4 pi R squared sigma T to the fourth power",
+        slug: "stefan-boltzmann-luminosity",
+      },
+      filters: { type: ["equation"] },
+    };
+    render(<ResultCard result={equation} />);
+    // The prerendered-html container (output:"html", no inner <math>) gets
+    // role="math" + the build-computed speech from meta.speech.
+    const mathEl = screen.getByRole("math", {
+      name: "L equals 4 pi R squared sigma T to the fourth power",
+    });
+    expect(mathEl).toBeInTheDocument();
+    expect(mathEl.innerHTML).toContain("PRERENDERED_RESULT_MARKER");
+  });
+
+  it("omits role=math on an equation result without speech", () => {
+    const equation: SearchResult = {
+      ...baseFixture,
+      meta: {
+        ...baseFixture.meta,
+        title: "no-speech equation",
+        tex: "x = 1",
+        html: '<span class="katex">NO_SPEECH</span>',
+      },
+      filters: { type: ["equation"] },
+    };
+    render(<ResultCard result={equation} />);
+    expect(screen.queryByRole("math")).not.toBeInTheDocument();
+  });
+
   it("renders length indicator for misconception results", () => {
     const misc: SearchResult = {
       ...baseFixture,

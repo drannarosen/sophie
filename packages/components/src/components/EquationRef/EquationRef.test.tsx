@@ -21,6 +21,8 @@ vi.mock("./equations-store.ts", () => ({
         title: "Inverse-Square Law",
         tex: "F = \\frac{L}{4\\pi d^2}",
         html: '<span class="katex">PRERENDERED_EQREF_MARKER</span>',
+        speech:
+          "F equals the fraction with numerator L and denominator 4 pi d squared",
         symbols: ["F", "L", "d"],
       };
     }
@@ -88,6 +90,29 @@ describe("<EquationRef>", () => {
         vi.advanceTimersByTime(500);
       });
       expect(document.body.innerHTML).toContain("PRERENDERED_EQREF_MARKER");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("labels the popover equation with build-time SRE speech (ADR 0089)", async () => {
+    vi.useFakeTimers();
+    try {
+      render(<EquationRef refId='inverse-square-law' />);
+      const link = screen.getByRole("link");
+      fireEvent.pointerEnter(link, { pointerType: "mouse" });
+      await act(async () => {
+        vi.advanceTimersByTime(500);
+      });
+      // The prerendered-html container (output:"html", no inner <math>)
+      // gets role="math" + the build-computed speech as its accessible
+      // name so a screen reader reads the expression.
+      const mathEl = document.querySelector('[role="math"]');
+      expect(mathEl).not.toBeNull();
+      expect(mathEl?.getAttribute("aria-label")).toBe(
+        "F equals the fraction with numerator L and denominator 4 pi d squared"
+      );
+      expect(mathEl?.innerHTML).toContain("PRERENDERED_EQREF_MARKER");
     } finally {
       vi.useRealTimers();
     }
