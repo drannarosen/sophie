@@ -14,6 +14,25 @@ import SRE from "speech-rule-engine";
  * returns.
  */
 
+const nodeRequire = createRequire(import.meta.url);
+
+/**
+ * SRE ships `lib/sre.js` as a UMD/webpack bundle whose `SystemExternal`
+ * calls bare `require()` at runtime to lazy-load its locale JSON. When the
+ * `@sophie/astro` integration bundles `@sophie/astro` into Astro's ESM
+ * prerender chunk (it's in `noExternal`), that `require` is undefined in
+ * ES-module scope and static-route generation throws "require is not
+ * defined in ES module scope". SRE's own ESM consumers are expected to
+ * load its `lib/require.mjs` shim, which does exactly this: install a
+ * CommonJS `require` on the global so the UMD bundle resolves. We mirror
+ * that shim here (idempotent: only assign when absent) so SRE works under
+ * Astro's prerender, Vitest, and a bare Node build alike. The cast keeps
+ * the assignment off the typed `globalThis` surface.
+ */
+if (typeof (globalThis as { require?: unknown }).require !== "function") {
+  (globalThis as { require?: unknown }).require = nodeRequire;
+}
+
 /**
  * SRE's locale/ruleset JSON lives at `<pkg>/lib/mathmaps`. Its automatic
  * Node resolution (`nodeRequire().resolve`) works in a bare process but
@@ -23,7 +42,7 @@ import SRE from "speech-rule-engine";
  * `json` makes ClearSpeak load deterministically in tests *and* in builds.
  */
 const MATHMAPS_PATH = join(
-  dirname(createRequire(import.meta.url).resolve("speech-rule-engine")),
+  dirname(nodeRequire.resolve("speech-rule-engine")),
   "mathmaps"
 );
 
