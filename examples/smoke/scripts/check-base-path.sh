@@ -32,6 +32,11 @@
 #                                                  astro:assets, so not
 #                                                  auto-prefixed)
 # Astro's own `/_astro/` IS auto-prefixed, so it is deliberately absent.
+#
+# Scope boundary: this scan covers emitted HTML internal links only. The
+# Pagefind loader URL (SearchModal) lives in a JS island bundle — it is
+# covered by withBase + the Vite BASE_URL replacement baked into that
+# bundle (verified) + the unit/typecheck layer, NOT by this HTML grep.
 
 set -euo pipefail
 

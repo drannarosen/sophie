@@ -25,4 +25,24 @@ describe("joinBase", () => {
   it("treats an empty-string base as root", () => {
     expect(joinBase("", "/units/x")).toBe("/units/x");
   });
+
+  it("passes through an absolute http(s) URL untouched", () => {
+    expect(joinBase("/astr201", "https://cdn/x.png")).toBe("https://cdn/x.png");
+  });
+
+  it("passes through a data: URI untouched", () => {
+    expect(joinBase("/astr201", "data:image/png;base64,AAAA")).toBe(
+      "data:image/png;base64,AAAA"
+    );
+  });
+
+  it("passes through a protocol-relative URL untouched", () => {
+    expect(joinBase("/astr201", "//cdn/x.png")).toBe("//cdn/x.png");
+  });
+
+  it("still prefixes a normal internal path (regression)", () => {
+    expect(joinBase("/astr201", "/figures/a.png")).toBe(
+      "/astr201/figures/a.png"
+    );
+  });
 });
