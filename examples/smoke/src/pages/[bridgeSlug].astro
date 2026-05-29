@@ -1,5 +1,5 @@
 ---
-import { buildModuleNavInputs } from "@sophie/astro";
+import { buildModuleNavInputs, withBase } from "@sophie/astro";
 import ModuleNav from "@sophie/astro/components/ModuleNav.astro";
 import TextbookHead from "@sophie/astro/components/TextbookHead.astro";
 import TextbookLayout from "@sophie/astro/components/TextbookLayout.astro";
@@ -78,7 +78,7 @@ const displayTitle = section.display_label ?? section.title;
             <ul>
               {sectionUnits.map((u) => (
                 <li>
-                  <a href={`/units/${u.id}/reading`}>{u.title}</a>
+                  <a href={withBase(`/units/${u.id}/reading`)}>{u.title}</a>
                   {u.description && <p>{u.description}</p>}
                 </li>
               ))}

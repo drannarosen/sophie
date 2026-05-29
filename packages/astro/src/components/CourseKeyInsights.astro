@@ -1,6 +1,7 @@
 ---
 import type { KeyInsightEntry } from "@sophie/core/schema";
 import { indexAccumulator } from "../lib/pedagogy-index/accumulator";
+import { withBase } from "../lib/with-base";
 import LibraryCollectionShell from "./LibraryCollectionShell.astro";
 
 const { keyInsights } = indexAccumulator.asPedagogyIndex();
@@ -76,7 +77,7 @@ const sorted: KeyInsightEntry[] = [...keyInsights].sort((a, b) => {
             <div set:html={entry.body} />
             <p class='sophie-course-key-insights__backlink'>
               defined in{" "}
-              <a href={`/units/${entry.unit}/reading#${entry.anchor}`}>
+              <a href={withBase(`/units/${entry.unit}/reading#${entry.anchor}`)}>
                 <code>{entry.unit}</code>
               </a>
             </p>

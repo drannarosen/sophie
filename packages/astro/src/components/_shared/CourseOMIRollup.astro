@@ -1,6 +1,7 @@
 ---
 import type { OMIFlowEntry } from "@sophie/core/schema";
 import { indexAccumulator } from "../../lib/pedagogy-index/accumulator";
+import { withBase } from "../../lib/with-base";
 import LibraryCollectionShell from "../LibraryCollectionShell.astro";
 
 /**
@@ -133,7 +134,7 @@ const sorted: OMIFlowEntry[] = [...omiFlows].sort((a, b) => {
             <div set:html={entry[role].body} />
             <p class={`${classRoot}__backlink`}>
               in{" "}
-              <a href={`/units/${entry.unit}/reading#${entry.anchor}`}>
+              <a href={withBase(`/units/${entry.unit}/reading#${entry.anchor}`)}>
                 <code>{entry.unit}</code>
               </a>
             </p>

@@ -10,6 +10,7 @@ import {
   evaluateCompose,
   type ProseFragmentRef,
 } from "../lib/compose-evaluator";
+import { deriveInfoSlug } from "../lib/derive-info-slug";
 import { courseSpec } from "virtual:sophie/course-spec";
 
 /**
@@ -44,7 +45,7 @@ if (!courseSpec) {
   );
 }
 
-const slug = Astro.url.pathname.replace(/^\/|\/$/g, "");
+const slug = deriveInfoSlug(Astro.url.pathname);
 const decl = courseSpec.info_pages?.[slug];
 if (!decl) {
   throw new Error(

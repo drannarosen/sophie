@@ -1,6 +1,7 @@
 ---
 import { chaptersForModule } from "@sophie/core/schema";
 import type { NavChapter, NavModule } from "../lib/module-nav-helpers";
+import { withBase } from "../lib/with-base";
 
 /**
  * <ModuleNav> — sidebar module/chapter tree.
@@ -53,7 +54,7 @@ const sortedModules = [...modules].sort((a, b) => a.order - b.order);
                 {moduleChapters.map((c) => (
                   <li>
                     <a
-                      href={`/units/${c.slug}/reading`}
+                      href={withBase(`/units/${c.slug}/reading`)}
                       aria-current={
                         c.slug === currentChapterSlug ? "page" : undefined
                       }

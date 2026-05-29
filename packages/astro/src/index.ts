@@ -34,3 +34,9 @@ export {
   parseValidationFrontmatter,
   renderValidationAdmonition,
 } from "./lib/validation/admonition-plugin.ts";
+// Exported for consumers authoring custom .astro pages (course landing,
+// bridge pages): Astro does not auto-prefix author-written links with
+// the configured `base`, so any internal href/src in consumer pages must
+// pass through withBase or it 404s under a non-root deploy — the same
+// rule the @sophie/astro chrome follows internally.
+export { withBase } from "./lib/with-base.ts";

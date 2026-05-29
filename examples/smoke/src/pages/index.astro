@@ -1,8 +1,11 @@
 ---
+import { withBase } from "@sophie/astro";
 import { getCollection } from "astro:content";
 
 // W2/D1 (Path A) per ADR 0067: list units (was chapters) and link to
-// their /units/<unit-id>/reading routes.
+// their /units/<unit-id>/reading routes. Consumer-authored links must
+// pass through withBase so they resolve under a non-root base (the smoke
+// target doubles as the reference consumer the base-path guard scans).
 const units = await getCollection("units");
 units.sort((a, b) => a.data.title.localeCompare(b.data.title));
 ---
@@ -25,7 +28,7 @@ units.sort((a, b) => a.data.title.localeCompare(b.data.title));
         {
           units.map((u) => (
             <li>
-              <a href={`/units/${u.data.id}/reading`}>{u.data.title}</a>
+              <a href={withBase(`/units/${u.data.id}/reading`)}>{u.data.title}</a>
               {u.data.description && <p>{u.data.description}</p>}
             </li>
           ))
@@ -33,7 +36,7 @@ units.sort((a, b) => a.data.title.localeCompare(b.data.title));
       </ul>
       <h2>Library</h2>
       <p>
-        <a href='/library/'>Library</a> — course-wide reference rooms
+        <a href={withBase("/library/")}>Library</a> — course-wide reference rooms
         (glossary, equations, figures, key insights, misconceptions,
         objectives).
       </p>

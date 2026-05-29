@@ -5,6 +5,23 @@
  * that import them.
  */
 
+/**
+ * Minimal augmentation of Vite's `import.meta.env` so `utils/with-base.ts`
+ * can read `import.meta.env.BASE_URL` (the consumer's Astro `base`,
+ * replaced at the consumer's Vite build time for both the SSR render and
+ * the client-island bundle) without pulling in `vite/client`'s DOM/HMR
+ * ambient types — and without an `astro:*` import (ADR 0001 framework
+ * purity). `import.meta.env` is a Vite primitive, not an Astro one.
+ * Structurally compatible with Vite's own `ImportMetaEnv` (which also
+ * declares `BASE_URL: string`), so no conflict when the consumer merges.
+ */
+interface ImportMetaEnv {
+  readonly BASE_URL: string;
+}
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
+
 declare module "virtual:sophie/pedagogy-index" {
   import type {
     DefinitionEntry,

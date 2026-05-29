@@ -1,6 +1,7 @@
 ---
 import type { MisconceptionEntry } from "@sophie/core/schema";
 import { indexAccumulator } from "../lib/pedagogy-index/accumulator";
+import { withBase } from "../lib/with-base";
 import LibraryCollectionShell from "./LibraryCollectionShell.astro";
 
 const { misconceptions } = indexAccumulator.asPedagogyIndex();
@@ -97,7 +98,7 @@ const sorted: MisconceptionEntry[] =
             <div set:html={entry.body} />
             <p class='sophie-course-misconceptions__backlink'>
               from{" "}
-              <a href={`/units/${entry.unit}/reading#${entry.anchor}`}>
+              <a href={withBase(`/units/${entry.unit}/reading#${entry.anchor}`)}>
                 <code>{entry.unit}</code>
               </a>
             </p>

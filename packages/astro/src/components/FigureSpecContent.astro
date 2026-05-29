@@ -3,6 +3,7 @@ import type {
   FigureRegistryEntry,
   FigureUsageEntry,
 } from "@sophie/core/schema";
+import { withBase } from "../lib/with-base";
 import LibraryCollectionShell from "./LibraryCollectionShell.astro";
 
 /**
@@ -118,7 +119,7 @@ const formatFigNumber = (u: FigureUsageEntry): string =>
     <figure class='sophie-figure-spec__figure'>
       <img
         class='sophie-figure-spec__image'
-        src={entry.src}
+        src={withBase(entry.src)}
         alt={entry.alt}
         width={entry.width}
         height={entry.height}

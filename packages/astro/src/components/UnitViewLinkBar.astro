@@ -1,5 +1,6 @@
 ---
 import type { UnitViewKind } from "../lib/unit-views.ts";
+import { withBase } from "../lib/with-base";
 
 interface Props {
   unit: string;
@@ -30,7 +31,7 @@ const tabs = orderedViews.filter((v) => availableViews.includes(v));
   {
     tabs.map((v) => (
       <a
-        href={`/units/${unit}/${v}`}
+        href={withBase(`/units/${unit}/${v}`)}
         aria-current={v === current ? "page" : undefined}
         class:list={[
           "sophie-unit-view-link-bar__tab",

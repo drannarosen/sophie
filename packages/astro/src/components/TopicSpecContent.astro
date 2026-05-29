@@ -1,5 +1,6 @@
 ---
 import type { TopicEntry } from "@sophie/core/schema";
+import { withBase } from "../lib/with-base";
 
 /**
  * `<TopicSpecContent>` — per-topic Spec content for the route at
@@ -141,7 +142,7 @@ const hasCrossrefs =
           {topic.prereq_topic_ids.map((id, i) => (
             <span>
               {i > 0 && ", "}
-              <a href={`/library/topics/${id}/`}>{id}</a>
+              <a href={withBase(`/library/topics/${id}/`)}>{id}</a>
             </span>
           ))}
         </p>
@@ -152,7 +153,7 @@ const hasCrossrefs =
           {topic.linked_equation_ids.map((id, i) => (
             <span>
               {i > 0 && ", "}
-              <a href={`/library/equations/${id}/`}>{id}</a>
+              <a href={withBase(`/library/equations/${id}/`)}>{id}</a>
             </span>
           ))}
         </p>

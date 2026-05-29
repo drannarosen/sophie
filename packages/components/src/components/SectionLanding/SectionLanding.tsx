@@ -1,4 +1,5 @@
 import type { CourseSpec, SectionEntry, UnitEntry } from "@sophie/core/schema";
+import { withBase } from "../../utils/with-base.ts";
 import styles from "./SectionLanding.module.css.js";
 
 export interface SectionLandingProps {
@@ -45,7 +46,10 @@ export function SectionLanding({ spec, section, units }: SectionLandingProps) {
       <ul className={styles.unitList}>
         {sectionUnits.map((unit) => (
           <li key={unit.id} className={styles.unitCard}>
-            <a className={styles.unitLink} href={`/units/${unit.id}/reading/`}>
+            <a
+              className={styles.unitLink}
+              href={withBase(`/units/${unit.id}/reading/`)}
+            >
               <h2 className={styles.unitTitle}>
                 {unit.status === "review" && (
                   <span className={styles.statusBadge}>Review</span>

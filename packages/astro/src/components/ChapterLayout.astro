@@ -19,6 +19,7 @@ import {
   getAvailableUnitViews,
   type UnitViewKind,
 } from "../lib/unit-views";
+import { withBase } from "../lib/with-base";
 
 // Convert the consumer-owned figures registry (a named-keyed map; see
 // `src/content/figures.ts`) into the array shape `<TextbookLayout>`
@@ -241,7 +242,7 @@ const next = nextRaw
           viewKind === "reading" && availableViews.includes("practice") && (
             <aside class='sophie-reading-end-cta'>
               <a
-                href={`/units/${unitIdForViews}/practice`}
+                href={withBase(`/units/${unitIdForViews}/practice`)}
                 class='sophie-reading-end-cta__link'
               >
                 → Practice this lecture

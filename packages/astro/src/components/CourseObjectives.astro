@@ -5,6 +5,7 @@ import type {
   UnitEntry,
 } from "@sophie/core/schema";
 import { indexAccumulator } from "../lib/pedagogy-index/accumulator";
+import { withBase } from "../lib/with-base";
 
 // W2/D3 graduation: PedagogyIndex.modules/chapters deleted; iterate
 // index.sections + index.units instead. UnitEntry.section_id replaces
@@ -141,7 +142,7 @@ const grouped: GroupedModule[] = [...sections]
                   id={chapterHeadingId(chapter.id)}
                   class='sophie-course-objectives__chapter-title'
                 >
-                  <a href={`/units/${chapter.id}/reading`}>{chapter.title}</a>
+                  <a href={withBase(`/units/${chapter.id}/reading`)}>{chapter.title}</a>
                 </h3>
                 {chObjectives.length === 0 ? (
                   <p class='sophie-course-objectives__empty'>

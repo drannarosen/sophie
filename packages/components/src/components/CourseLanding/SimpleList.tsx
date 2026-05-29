@@ -1,4 +1,5 @@
 import type { CourseSpec, SectionEntry, UnitEntry } from "@sophie/core/schema";
+import { withBase } from "../../utils/with-base.ts";
 import styles from "./SimpleList.module.css.js";
 
 export interface SimpleListProps {
@@ -49,7 +50,7 @@ export function SimpleList({ spec, sections, units }: SimpleListProps) {
                 <li key={unit.id}>
                   <a
                     className={styles.unitLink}
-                    href={`/units/${unit.id}/reading/`}
+                    href={withBase(`/units/${unit.id}/reading/`)}
                   >
                     {unit.title}
                   </a>

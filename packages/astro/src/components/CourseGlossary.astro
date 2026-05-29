@@ -1,6 +1,7 @@
 ---
 import { indexAccumulator } from "../lib/pedagogy-index/accumulator";
 import { canonicalDefinitions } from "../lib/pedagogy-index/canonical-definitions";
+import { withBase } from "../lib/with-base";
 import LibraryCollectionShell from "./LibraryCollectionShell.astro";
 
 const { definitions } = indexAccumulator.asPedagogyIndex();
@@ -65,7 +66,7 @@ const sorted = canonicalDefinitions(definitions).sort((a, b) =>
             <div set:html={entry.body} />
             <p class='sophie-course-glossary__backlink'>
               defined in{" "}
-              <a href={`/units/${entry.unit}/reading#${entry.anchor}`}>
+              <a href={withBase(`/units/${entry.unit}/reading#${entry.anchor}`)}>
                 <code>{entry.unit}</code>
               </a>
             </p>

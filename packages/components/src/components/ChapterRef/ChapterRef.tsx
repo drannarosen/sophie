@@ -4,6 +4,7 @@ import { artifactStore } from "../../runtime/artifacts-store.ts";
 import { sectionStore } from "../../runtime/sections-store.ts";
 import { unitStore } from "../../runtime/units-store.ts";
 import { useHydrated } from "../../runtime/useHydrated.ts";
+import { withBase } from "../../utils/with-base.ts";
 import styles from "./ChapterRef.module.css.js";
 import type { ChapterRefProps } from "./ChapterRef.schema.ts";
 
@@ -64,7 +65,7 @@ export function ChapterRef({ chapter, children }: ChapterRefProps) {
     return <>{children ?? chapter}</>;
   }
 
-  const href = `/units/${chapter}/reading`;
+  const href = withBase(`/units/${chapter}/reading`);
   const linkText = children ?? unit.title;
 
   return (

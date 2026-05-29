@@ -1,6 +1,7 @@
 import * as HoverCard from "@radix-ui/react-hover-card";
 import { Sigma } from "lucide-react";
 import { useHydrated } from "../../runtime/useHydrated.ts";
+import { withBase } from "../../utils/with-base.ts";
 import { BiographySummary } from "./EquationRef.biography-summary.tsx";
 import styles from "./EquationRef.module.css.js";
 import type { EquationRefProps } from "./EquationRef.schema.ts";
@@ -56,7 +57,7 @@ export function EquationRef({ refId, children }: EquationRefProps) {
   // not `/chapters/X#anchor`. The registry is global; chapter-specific
   // citations live in `equationCitations` but the in-prose ref still
   // points at the canonical declaration page.
-  const href = `/equations/${entry.id}`;
+  const href = withBase(`/equations/${entry.id}`);
   // Sprint E — prefer "Eq. C.N" when a citation exists, else fall
   // back to the equation title (pre-Sprint-E behavior). Citation
   // lookup returns the canonical citation (lowest chapter number).
