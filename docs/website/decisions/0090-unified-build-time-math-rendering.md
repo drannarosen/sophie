@@ -210,5 +210,3 @@ baselines by font rasterization — CI Linux VR is authoritative.
   now carry prerendered html.
 - ADR 0089 (PR-B, not yet authored) — the speech layer built on
   `renderMath`.
-</content>
-</invoke>
