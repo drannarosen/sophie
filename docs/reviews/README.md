@@ -18,6 +18,7 @@ themselves.
 
 | Date | Topic | Grade | Trigger | Status |
 |---|---|---|---|---|
+| 2026-05-29 | [Post-ITEM-5 quality audit](2026-05-29-post-item5-quality-audit.md) | A− (87) | ITEM 5 merged (#225, epistemic-role enforcement); `/reviewing-project-quality` | Open — engineering A− (+1, contract now enforced); binding constraint still *shipping* (ASTR 201) + the 14-grandfathered domain pass |
 | 2026-05-28 | [Post-ITEM-2 audit + leverage review](2026-05-28-post-item2-audit-and-leverage.md) | A− (86) | ITEM 2 merged (#223/#224); "comprehensive audit + next high-leverage steps" | Open — engineering A−; binding constraint shifted to *shipping* (retrofit formative + deploy ASTR 201) |
 | 2026-05-10 | [Phase 1 hardening audit](2026-05-10-phase-1-hardening-audit.md) | B− (73) | Trio 3 closed (PR #15 merged); pre-Trio-4 hardening | Closed — every P1 item shipped in PRs #17–#23 |
 | 2026-05-10 | [Post-hardening audit](2026-05-10-post-hardening-audit.md) | B+ (84) | Phase 1 hardening sprint closed (PRs #17–#23 merged); refreshed grade | Closed — every P2 sprint-to-A item shipped in PRs #24–#27 |
