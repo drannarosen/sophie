@@ -24,6 +24,18 @@
  * `resetMathSpeechCoverage()` exists solely for test isolation
  * (`beforeEach`). No companion plugin invalidates it; the process boundary
  * is the invalidation boundary.
+ *
+ * State lives on `globalThis`, NOT a module-level binding (mirrors the
+ * pedagogy-index accumulator's rationale): with tsup `splitting: false`
+ * this module is inlined into multiple entry chunks — `dist/index.js`
+ * (the integration, where the mdx/choice rehype transforms record and
+ * where `getMathSpeechCoverage()` reads at build:done) AND
+ * `dist/lib/math-render/enrich-equations-speech.js` (imported by
+ * TextbookLayout, where the registry seam records per page). A module-
+ * level `state` would give each chunk its OWN collector, so registry
+ * records would land in an orphan instance the audit never reads. The
+ * `globalThis` singleton is genuinely per-process and bridges the chunks
+ * so all three surfaces feed the one snapshot build:done reads.
  */
 
 export type MathSurfaceKind = "mdx" | "choice" | "registry";
@@ -46,7 +58,15 @@ interface RecordInput {
   detail?: string;
 }
 
-const state: MathSpeechCoverage = { total: 0, labeled: 0, failures: [] };
+const GLOBAL_KEY = "__sophieMathSpeechCoverage";
+
+function getState(): MathSpeechCoverage {
+  const g = globalThis as { [GLOBAL_KEY]?: MathSpeechCoverage };
+  if (!g[GLOBAL_KEY]) {
+    g[GLOBAL_KEY] = { total: 0, labeled: 0, failures: [] };
+  }
+  return g[GLOBAL_KEY];
+}
 
 /**
  * Record one build-time math surface. Increments `total` always,
@@ -58,6 +78,7 @@ export function recordMathSurface({
   labeled,
   detail,
 }: RecordInput): void {
+  const state = getState();
   state.total += 1;
   if (labeled) {
     state.labeled += 1;
@@ -68,6 +89,7 @@ export function recordMathSurface({
 
 /** Return a defensive copy of the current coverage snapshot. */
 export function getMathSpeechCoverage(): MathSpeechCoverage {
+  const state = getState();
   return {
     total: state.total,
     labeled: state.labeled,
@@ -77,6 +99,7 @@ export function getMathSpeechCoverage(): MathSpeechCoverage {
 
 /** Reset all coverage state. For test isolation only. */
 export function resetMathSpeechCoverage(): void {
+  const state = getState();
   state.total = 0;
   state.labeled = 0;
   state.failures = [];
