@@ -1,5 +1,6 @@
 ---
 import type { CourseSpec } from "@sophie/core/schema";
+import { withBase } from "../lib/with-base";
 import InfoPageShell from "./InfoPageShell.astro";
 
 /**
@@ -29,7 +30,7 @@ const { spec } = Astro.props;
     <p>
       The full course schedule ships with the iCal + schedule.yaml
       sprint (deferred from v0.2). Until then, see the
-      <a href='/'>course landing</a> for unit ordering and each unit's reading
+      <a href={withBase("/")}>course landing</a> for unit ordering and each unit's reading
       for its place in the term.
     </p>
   </main>

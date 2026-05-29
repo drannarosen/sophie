@@ -16,12 +16,14 @@
 #      `pathname` is `/base-probe/<slug>/`, so the slug lookup must use
 #      the LAST path segment (deriveInfoSlug), not strip-leading-slash —
 #      otherwise the dispatcher invariant throws and the build dies.
-#   2. The emitted dist HTML carries ZERO unprefixed internal links in
-#      Sophie's route + asset namespaces. A correct link under
-#      `/base-probe` reads `href="/base-probe/units/..."`; a leak reads
-#      `href="/units/..."`. The grep below matches the leak shape and
-#      NOT the prefixed shape (the char after `="/` is the namespace
-#      letter for a leak, `b` (base-probe) for a correct link).
+#   2. The emitted dist HTML carries ZERO unprefixed internal links —
+#      both in Sophie's route + asset namespaces AND the bare-root
+#      (`href="/"`) breadcrumb-home shape. A correct link under
+#      `/base-probe` reads `href="/base-probe/units/..."` or
+#      `href="/base-probe/"`; a leak reads `href="/units/..."` or
+#      `href="/"`. The greps below match the leak shapes and NOT the
+#      prefixed shapes (the char after `="/` is the namespace letter or
+#      closing quote for a leak, `b` (base-probe) for a correct link).
 #
 # Namespace list — WHY each is here (every Sophie-owned absolute path
 # that is NOT auto-prefixed by Astro's own pipeline):
@@ -66,11 +68,22 @@ echo "→ Scanning dist HTML for unprefixed internal links..."
 # character class after `="/` is the namespace's first letter only.
 LEAKS="$(grep -rnoE "(href|src)=\"/(${NAMESPACES})/" "$SMOKE/dist" --include="*.html" || true)"
 
-if [ -n "$LEAKS" ]; then
+# Bare-root links (e.g. a course-home breadcrumb written as `href="/"`
+# instead of `withBase("/")`) ALSO leak under a non-root base — they
+# resolve to the deploy ORIGIN, not `/base-probe/`. The namespaced grep
+# above cannot catch these (no namespace segment), so match the exact
+# `="/"` shape. The correct form under base is `="/base-probe/"`, whose
+# char after `="/` is `b`, so it does not match. Originating finding:
+# the breadcrumb-home leak in SectionLanding/SchedulePage that the
+# namespace-only scan let through (PR #227 follow-up).
+BARE_ROOT="$(grep -rnoE "(href|src)=\"/\"" "$SMOKE/dist" --include="*.html" || true)"
+
+if [ -n "$LEAKS" ] || [ -n "$BARE_ROOT" ]; then
   echo "✗ BASE-PATH LEAK: unprefixed internal links found in dist HTML."
   echo "  Every internal link/asset must pass through withBase so it"
   echo "  resolves under a non-root consumer deploy. Offending lines:"
-  echo "$LEAKS"
+  [ -n "$LEAKS" ] && echo "$LEAKS"
+  [ -n "$BARE_ROOT" ] && echo "$BARE_ROOT"
   exit 1
 fi
 

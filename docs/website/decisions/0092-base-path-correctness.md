@@ -31,7 +31,7 @@ validation:
     - kind: test
       ref: examples/smoke/scripts/check-base-path.sh
       date: "2026-05-29"
-      notes: "The `base-path` CI job builds the smoke target under a non-root base (`SOPHIE_SMOKE_BASE=/base-probe`) and fails on either a non-zero build (the info-page build-breaker regression) OR any emitted-HTML internal link in Sophie's route namespaces lacking the base prefix. Structural defense, cf. ADR 0084's packed-smoke gate."
+      notes: "The `base-path` CI job builds the smoke target under a non-root base (`SOPHIE_SMOKE_BASE=/base-probe`) and fails on either a non-zero build (the info-page build-breaker regression) OR any emitted-HTML internal link lacking the base prefix — both Sophie's route namespaces and the bare-root `href=\"/\"` breadcrumb-home shape (Amendment 2). Structural defense, cf. ADR 0084's packed-smoke gate."
     - kind: test
       ref: packages/core/src/runtime/join-base.test.ts
       date: "2026-05-29"
@@ -126,11 +126,12 @@ that builds a consumer under a non-root base.**
 4. **The `base-path` CI gate.** A script
    (`examples/smoke/scripts/check-base-path.sh`) builds the smoke target
    under `SOPHIE_SMOKE_BASE=/base-probe` and fails on a non-zero build
-   (the info-page regression) or any emitted-HTML internal link in
-   Sophie's route namespaces lacking the base prefix. The smoke `base` is
-   env-parametrized (`base: process.env.SOPHIE_SMOKE_BASE || undefined`),
-   so the gate is additive — the existing root-base smoke build is a
-   no-op when the var is unset.
+   (the info-page regression) or any emitted-HTML internal link lacking
+   the base prefix — both in Sophie's route namespaces and the bare-root
+   `href="/"` shape (the course-home breadcrumb class; see **Amendment
+   2**). The smoke `base` is env-parametrized (`base:
+   process.env.SOPHIE_SMOKE_BASE || undefined`), so the gate is additive —
+   the existing root-base smoke build is a no-op when the var is unset.
 
 ## Rationale
 
@@ -275,6 +276,25 @@ a client fallback. The originating finding is the PR #227 `packed-smoke`
 failure; the lesson — run `packed-smoke` locally before pushing changes to
 `@sophie/components` SSR behavior — is recorded in the
 `project_smoke_gate_catches_packaging_class` memory.
+
+## Amendment 2 — bare-root breadcrumb leak + guard coverage (2026-05-29)
+
+The original sweep wrapped namespaced internal links (`/units/…`,
+`/equations/…`, etc.) but missed two **bare-root** course-home links —
+`SectionLanding.tsx:33` and `SchedulePage.astro:32`, both `<a href="/">`.
+Under a non-root base these resolve to the deploy **origin**, not
+`/<base>/`, so the course-title breadcrumb pointed off-site. The
+`base-path` guard did not catch them: its leak grep required a namespace
+segment (`="/<namespace>/"`), and a bare `="/"` has none.
+
+Fix: both sites now use `withBase("/")` (→ `/<base>/`), and the guard
+gained a second assertion that flags the bare-root `(href|src)="/"` shape
+(the prefixed `="/<base>/"` form does not match). This closes the
+namespace-only blind spot for the whole course-home class. The deeper
+**MDX-content link** class (author-written markdown links like
+`[x](/chapters/…)` rendered by the default `<a>`, which Sophie does not
+yet base-prefix) remains a separate, larger gap — out of scope here,
+flagged for a future rehype-level pass.
 
 ## References
 

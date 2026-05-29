@@ -30,7 +30,7 @@ export function SectionLanding({ spec, section, units }: SectionLandingProps) {
   return (
     <main className={styles.main} aria-labelledby='section-landing-title'>
       <nav aria-label='Course breadcrumbs' className={styles.crumbs}>
-        <a href='/'>{spec.identity.title}</a>
+        <a href={withBase("/")}>{spec.identity.title}</a>
         {" / "}
         <span aria-current='page'>{section.title}</span>
       </nav>
