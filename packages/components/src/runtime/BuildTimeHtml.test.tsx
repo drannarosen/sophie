@@ -7,6 +7,7 @@ const TRUST_VALUES: BuildTimeHtmlTrust[] = [
   "katex",
   "mdx-serialized",
   "extractor-body",
+  "pagefind-excerpt",
 ];
 
 describe("<BuildTimeHtml>", () => {
