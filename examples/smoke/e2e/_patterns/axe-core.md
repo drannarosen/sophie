@@ -30,13 +30,15 @@ last transitively includes the R10 landmark rules).
 
 **Disabled rules** — Phase-0 known-acceptable suppressions:
 
-- `color-contrast` — Sprint-K P1 token-level remediation
-- `list` / `listitem` — Astro-slot inside MDX `client:load` island
-  trips WCAG 1.3.1 on a render-layer artifact (PR-C4
-  `<LearningObjectives>` shape, commit 4737e03)
+- `color-contrast` — token-level remediation tracked separately
+  (GitHub issue #152)
 
-When those follow-ups land, drop the corresponding entry from the
-helper and the suite tightens uniformly across all 35 specs.
+The former `list` / `listitem` suppression was dropped 2026-05-30
+(H5a): the `<ul><astro-slot><li>` render-layer artifact it guarded
+against no longer exists — commit 4737e03 / ADR 0027 made
+`<LearningObjectives>` render from props, not slotted children. When
+the `color-contrast` follow-up (#152) lands, drop that entry too and
+the suite tightens uniformly across all 35 specs.
 
 ## Two helpers, two contexts
 
@@ -50,7 +52,7 @@ recur across the smoke e2e suite.
 | `expectCourseA11y` | Library / course-listing routes (`/library/*`) — multiple `<astro-island>` elements each emitting `<main>` | `.exclude("astro-island")` — keeps `landmark-no-duplicate-main` from firing on the multi-island layout |
 
 The two helpers share every other configuration value (tag set,
-margin-note/task-list excludes, color-contrast/list/listitem disables).
+margin-note/task-list excludes, color-contrast disable).
 The astro-island exclude is the **only** difference and it tracks a
 real structural distinction in how Astro hydrates the two route
 families. Per W2 + DRY in `AGENTS.md`: a single helper with a boolean
