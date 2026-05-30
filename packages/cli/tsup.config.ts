@@ -9,6 +9,7 @@ export default defineConfig({
     "src/commands/audit.ts",
     "src/commands/dev.ts",
     "src/commands/validate.ts",
+    "src/commands/figures.ts",
     "src/lib/resolve-consumer-root.ts",
     "src/lib/detect-monorepo.ts",
     "src/lib/spawn-orchestrator.ts",

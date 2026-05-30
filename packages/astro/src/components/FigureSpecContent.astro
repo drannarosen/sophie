@@ -3,7 +3,7 @@ import type {
   FigureRegistryEntry,
   FigureUsageEntry,
 } from "@sophie/core/schema";
-import { withBase } from "../lib/with-base";
+import FigureAsset from "./FigureAsset.astro";
 import LibraryCollectionShell from "./LibraryCollectionShell.astro";
 
 /**
@@ -117,13 +117,13 @@ const formatFigNumber = (u: FigureUsageEntry): string =>
     </p>
 
     <figure class='sophie-figure-spec__figure'>
-      <img
-        class='sophie-figure-spec__image'
-        src={withBase(entry.src)}
+      <FigureAsset
+        name={entry.name}
+        src={entry.src}
         alt={entry.alt}
         width={entry.width}
         height={entry.height}
-        loading='lazy'
+        class='sophie-figure-spec__image'
       />
       {entry.caption && (
         <figcaption class='sophie-figure-spec__caption'>

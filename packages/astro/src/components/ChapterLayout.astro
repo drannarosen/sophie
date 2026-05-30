@@ -179,7 +179,10 @@ function firstFigureThumbnailFor(
     .sort((a, b) => a.number - b.number)[0];
   if (!usage) return undefined;
   const entry = figureRegistry[usage.name];
-  if (!entry) return undefined;
+  // ADR 0094: `src` is optional on the entry type. The resolved registry
+  // fills it (optimized → _astro/ URL; legacy → public URL), so this
+  // guard degrades gracefully for the rare entry carrying neither.
+  if (!entry || entry.src === undefined) return undefined;
   return { src: entry.src, alt: entry.alt };
 }
 const previous = previousRaw

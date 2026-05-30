@@ -144,6 +144,12 @@ export {
   figureRegistryContract,
 } from "./components/Figure/index.ts";
 export type { FigureRefProps } from "./components/FigureRef/FigureRef.schema.ts";
+// Canonical figure-usage lookup. Exported (unlike the sibling
+// lookupDefinition/lookupEquation, which stay internal) because the
+// server-side `FigureImage.astro` wrapper in @sophie/astro (ADR 0094)
+// must resolve a figure's "Figure N.M" number at SSR for parity with
+// the React <Figure>, reading the same store TextbookLayout populates.
+export { lookupCanonicalUsageByName } from "./components/FigureRef/figure-usages-store.ts";
 export {
   FigureRef,
   FigureRefPropsSchema,

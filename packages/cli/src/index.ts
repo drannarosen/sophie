@@ -1,5 +1,6 @@
 import { defineCommand } from "citty";
 import { auditCommand } from "./commands/audit.ts";
+import { figuresCommand } from "./commands/figures.ts";
 import { previewCommand } from "./commands/preview.ts";
 import { startCommand } from "./commands/start.ts";
 import { validateCommand } from "./commands/validate.ts";
@@ -17,5 +18,6 @@ export const main = defineCommand({
     preview: previewCommand,
     audit: auditCommand,
     validate: validateCommand,
+    figures: figuresCommand,
   },
 });

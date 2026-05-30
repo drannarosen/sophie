@@ -22,8 +22,21 @@ import { NonEmptyString, Slug } from "../primitives.ts";
 export const FigureRegistryEntrySchema = z.object({
   /** Canonical figure name (registry key; flat namespace). */
   name: NonEmptyString,
-  /** Image asset URL or local path. */
-  src: NonEmptyString,
+  /**
+   * Legacy/inline public-URL escape hatch (ADR 0094). Optional: an
+   * optimized registry figure resolves its master from
+   * `src/figures/<name>.<ext>` by convention (or `file` below) and the
+   * platform fills `src` with the build-resolved `_astro/` URL. A
+   * literal `src` here is only for `public/`-served images that bypass
+   * `astro:assets` optimization.
+   */
+  src: NonEmptyString.optional(),
+  /**
+   * Optional explicit source filename under `src/figures/` (ADR 0094),
+   * overriding the `<name>.<ext>` convention. Filename only (no path);
+   * e.g. `"m51-optical-radio.png"` for a registry key `"m51"`.
+   */
+  file: NonEmptyString.optional(),
   /** Alt text for accessibility. */
   alt: NonEmptyString,
   /** Default caption (used when no per-usage override). */

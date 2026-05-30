@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import mdx from "@astrojs/mdx";
 import react from "@astrojs/react";
 import type { FigureRegistryEntry } from "@sophie/core/schema";
+import { isFigureFile } from "@sophie/core/schema";
 import type { AstroIntegration } from "astro";
 import { loadCourseSpec } from "./lib/course-spec-loader.ts";
 import { courseSpecVirtualModule } from "./lib/course-spec-virtual-module.ts";
@@ -120,6 +121,24 @@ export function defineSophieIntegration(
         const consumerRoot = fileURLToPath(config.root);
         const courseSpec = loadCourseSpec(consumerRoot);
 
+        // ADR 0094 — discover figure masters under <root>/src/figures so
+        // the figures virtual module can emit generated astro:assets
+        // imports (convention: src/figures/<name>.<ext>). Captured once
+        // at config-parse (no HMR; mirrors the registry capture). Absent
+        // dir → no optimized entries (all figures fall back to legacy
+        // `src`). Image extensions only, so stray files (.DS_Store) and
+        // subdirectories are ignored.
+        const figuresDir = resolve(consumerRoot, "src/figures");
+        let availableFigureFiles: string[] = [];
+        try {
+          availableFigureFiles = fs
+            .readdirSync(figuresDir, { withFileTypes: true })
+            .filter((e) => e.isFile() && isFigureFile(e.name))
+            .map((e) => e.name);
+        } catch {
+          // src/figures/ absent — legacy-only registry. Not an error.
+        }
+
         updateConfig({
           integrations: [mdx(sophieMdxOptions), react()],
           vite: {
@@ -141,7 +160,10 @@ export function defineSophieIntegration(
               // ChapterLayout + reading route. Captured by closure at
               // config-parse time; figures changes require a dev-
               // server restart (no HMR by design).
-              figuresVirtualModule(options.figures) as never,
+              figuresVirtualModule(options.figures, {
+                figuresDir,
+                availableFiles: availableFigureFiles,
+              }) as never,
               // Course-info projection (2026-05-26) — consumer's
               // parsed course.sophie.yaml exposed as
               // `virtual:sophie/course-spec` for chrome components +

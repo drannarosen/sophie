@@ -1,0 +1,73 @@
+---
+import { Picture } from "astro:assets";
+import { figureAssets } from "virtual:sophie/figures";
+import { withBase } from "../lib/with-base";
+
+/**
+ * `<FigureAsset>` — the single decision point for rendering a registry
+ * figure's image (ADR 0094). Given a registry `name`, it looks up the
+ * live `astro:assets` `ImageMetadata` in `figureAssets` and renders a
+ * responsive `<Picture formats={['avif','webp']} layout="constrained">`.
+ * When no optimized master exists (a legacy/inline `public/` entry, or a
+ * raw consumer registry that bypassed the virtual module), it falls back
+ * to a plain `<img src>`.
+ *
+ * Every server-side figure surface routes its image through here —
+ * `FigureImage` (reading/practice), `FigureSpecContent` (library page),
+ * `CourseFigures`/`ChapterFigures` (galleries) — so the optimized-vs-
+ * legacy branch + the `<Picture>` config live in exactly one place. The
+ * caller owns the surrounding `<figure>`/caption/numbering; this owns
+ * only the image element. `class` is forwarded to the rendered `<img>`.
+ */
+interface Props {
+  /** Registry key → optimized `figureAssets` lookup. */
+  name?: string;
+  /** Legacy/inline public URL (fallback when no optimized master). */
+  src?: string;
+  alt: string;
+  /** Legacy-only intrinsic dims (the optimized path derives its own). */
+  width?: number;
+  height?: number;
+  class?: string;
+  /** Responsive `sizes` hint for the optimized `<Picture>`. */
+  sizes?: string;
+  loading?: "lazy" | "eager";
+}
+
+const {
+  name,
+  src,
+  alt,
+  width,
+  height,
+  class: className,
+  sizes,
+  loading = "lazy",
+} = Astro.props;
+
+const asset = name !== undefined ? figureAssets[name] : undefined;
+---
+
+{
+  asset ? (
+    <Picture
+      src={asset}
+      formats={["avif", "webp"]}
+      layout="constrained"
+      alt={alt}
+      class={className}
+      sizes={sizes}
+      loading={loading}
+    />
+  ) : src !== undefined ? (
+    <img
+      src={withBase(src)}
+      alt={alt}
+      width={width}
+      height={height}
+      class={className}
+      loading={loading}
+      decoding="async"
+    />
+  ) : null
+}
