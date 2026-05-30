@@ -1,5 +1,6 @@
 import * as HoverCard from "@radix-ui/react-hover-card";
 import { Sigma } from "lucide-react";
+import { BuildTimeHtml } from "../../runtime/BuildTimeHtml.tsx";
 import { useHydrated } from "../../runtime/useHydrated.ts";
 import { withBase } from "../../utils/with-base.ts";
 import { BiographySummary } from "./EquationRef.biography-summary.tsx";
@@ -94,18 +95,21 @@ export function EquationRef({ refId, children }: EquationRefProps) {
           sideOffset={6}
         >
           <strong className={styles.title}>{entry.title}</strong>
-          <div
+          {/* ADR 0089: the prerendered html uses KaTeX `output: "html"`
+              (no `<math>` element; the `.katex-html` glyphs are
+              aria-hidden by KaTeX). role="math" + the build-computed SRE
+              speech give a screen reader the expression to read. Speech
+              is a plain string prop — @sophie/components never imports
+              SRE (ADR 0001). Build-time KaTeX from the registry (ADR
+              0090) — not user input. */}
+          <BuildTimeHtml
+            as='div'
             className={styles.tex}
-            // ADR 0089: the prerendered html uses KaTeX `output: "html"` (no
-            // `<math>` element; the `.katex-html` glyphs are aria-hidden by
-            // KaTeX). role="math" + the build-computed SRE speech give a
-            // screen reader the expression to read. Speech is a plain string
-            // prop — @sophie/components never imports SRE (ADR 0001).
             {...(entry.speech
               ? { role: "math", "aria-label": entry.speech }
               : {})}
-            // biome-ignore lint/security/noDangerouslySetInnerHtml: build-time prerendered KaTeX html from the registry (ADR 0090) — not user input.
-            dangerouslySetInnerHTML={{ __html: entry.html ?? "" }}
+            html={entry.html ?? ""}
+            trust='katex'
           />
           <BiographySummary biography={entry.biography} />
           <HoverCard.Arrow className={styles.arrow} />

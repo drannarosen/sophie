@@ -21,7 +21,7 @@ import { z } from "zod";
 export const ObjectivePropsSchema = z.object({
   id: NonEmptyString,
   verb: NonEmptyString,
-  /** HTML string. Rendered via dangerouslySetInnerHTML. */
+  /** HTML string. Rendered via the `<BuildTimeHtml>` chokepoint (ADR 0093). */
   body: NonEmptyString,
   /** Injected by `<LearningObjectives>` parent. Omit for pure-display. */
   checked: z.boolean().optional(),

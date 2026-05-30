@@ -33,6 +33,7 @@
     "lint:docs-drift": "tsx scripts/lint-docs-drift.ts",
     "lint:axe-render": "tsx scripts/lint-axe-render.ts",
     "lint:epistemic-role": "tsx scripts/lint-epistemic-role.ts",
+    "lint:no-raw-inner-html": "tsx scripts/lint-no-raw-inner-html.ts",
     "format": "biome format --write .",
     "typecheck": "turbo run typecheck"
   },

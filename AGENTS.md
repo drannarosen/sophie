@@ -469,6 +469,23 @@ to every PR, every design decision, every refactor.
     [R-domain-pass revision](docs/website/decisions/0058-epistemic-component-contract.md#r-domain-pass-the-14-grandfathered-entries-adjudicated-2026-05-29)
     (2026-05-29).
 
+  - **R14 — no raw `dangerouslySetInnerHTML`.** Every HTML injection in
+    `@sophie/*` shipped code routes through the one sanctioned chokepoint
+    `<BuildTimeHtml html={…} trust={…} />`
+    (`packages/components/src/runtime/BuildTimeHtml.tsx`) with a `trust`
+    discriminator (`katex` / `mdx-serialized` / `extractor-body`) naming
+    why the HTML is safe (author/build-authored, never runtime user
+    input). Raw `dangerouslySetInnerHTML=` anywhere else under
+    `packages/<pkg>/src` (tests excluded) → CI red. Enforced by
+    `scripts/lint-no-raw-inner-html.ts` (`pnpm lint:no-raw-inner-html`,
+    wired into the CI `lint` job after R13's `lint:epistemic-role`). The
+    matcher keys on the attribute-assignment form, so prose mentions and
+    the type-level `Omit<…, "dangerouslySetInnerHTML">` exclusion stay
+    legal. A new trusted pipeline extends the `BuildTimeHtmlTrust` union +
+    [ADR 0093](docs/website/decisions/0093-build-time-html-trust-primitive.md)
+    rather than re-introducing a raw site. Originating finding: A+
+    hardening sprint H2 (28 sites across 11 files → one chokepoint).
+
   See `feedback_review_rules_r6_r10.md` (under
   `~/.claude/projects/-Users-anna-Teaching-sophie/memory/`) for origin
   story + class-of-issue patterns each rule formalizes.

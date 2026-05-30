@@ -1,5 +1,6 @@
 import { Sigma } from "lucide-react";
 import { type ReactNode, useId } from "react";
+import { BuildTimeHtml } from "../../runtime/BuildTimeHtml.tsx";
 import { useHydrated } from "../../runtime/useHydrated.ts";
 import { withBase } from "../../utils/with-base.ts";
 import { lookupCanonicalCitationByRefId } from "../EquationRef/equation-citations-store.ts";
@@ -15,10 +16,8 @@ import type { KeyEquationProps } from "./KeyEquation.schema.ts";
  * html renders nothing.
  */
 function PrerenderedMath({ html }: { html: string | undefined }): ReactNode {
-  return (
-    // biome-ignore lint/security/noDangerouslySetInnerHtml: build-time prerendered KaTeX html from the registry (ADR 0090) — not user input.
-    <span dangerouslySetInnerHTML={{ __html: html ?? "" }} />
-  );
+  // Build-time prerendered KaTeX html from the registry (ADR 0090).
+  return <BuildTimeHtml html={html} trust='katex' />;
 }
 
 /**
@@ -114,19 +113,22 @@ export function KeyEquation({
       </header>
       <div className={styles.body}>
         <div className={styles.texRow}>
-          <div
+          {/* ADR 0089: the prerendered html uses KaTeX `output: "html"`,
+              so it contains NO `<math>` element — the `.katex-html`
+              glyphs are already aria-hidden by KaTeX. role="math" + the
+              build-computed SRE speech give a screen reader the
+              expression to read instead of silent glyphs. Speech arrives
+              as a plain string prop; @sophie/components never imports
+              SRE (ADR 0001). Build-time KaTeX from the registry (ADR
+              0090) — not user input. */}
+          <BuildTimeHtml
+            as='div'
             className={styles.tex}
-            // ADR 0089: the prerendered html uses KaTeX `output: "html"`, so
-            // it contains NO `<math>` element — the `.katex-html` glyphs are
-            // already aria-hidden by KaTeX. role="math" + the build-computed
-            // SRE speech give a screen reader the expression to read instead
-            // of silent glyphs. Speech arrives as a plain string prop;
-            // @sophie/components never imports SRE (ADR 0001).
             {...(entry.speech
               ? { role: "math", "aria-label": entry.speech }
               : {})}
-            // biome-ignore lint/security/noDangerouslySetInnerHtml: build-time prerendered KaTeX html from the registry (ADR 0090) — not user input.
-            dangerouslySetInnerHTML={{ __html: entry.html ?? "" }}
+            html={entry.html ?? ""}
+            trust='katex'
           />
           {eqLabel !== null && (
             <span className={styles.eqLabel} aria-hidden>
@@ -163,27 +165,27 @@ export function KeyEquation({
         )}
 
         {biography?.observable ? (
-          <div
+          // body is pre-rendered HTML from the extractor (registry MDX
+          // body) — not user input.
+          <BuildTimeHtml
+            as='div'
             className={styles.bioCard}
             data-epistemic-role='observable'
-            // biome-ignore lint/security/noDangerouslySetInnerHtml: body is pre-rendered HTML from the extractor (registry MDX body) — not user input.
-            dangerouslySetInnerHTML={{
-              __html: `<strong>Observable.</strong> ${biography.observable.body}`,
-            }}
+            html={`<strong>Observable.</strong> ${biography.observable.body}`}
+            trust='extractor-body'
           />
         ) : null}
 
         {biography?.assumptions &&
           biography.assumptions.length > 0 &&
           (biography.assumptions.length === 1 && biography.assumptions[0] ? (
-            <div
+            <BuildTimeHtml
+              as='div'
               className={styles.bioCard}
               data-epistemic-role='assumption'
               data-assumption-type={biography.assumptions[0].type}
-              // biome-ignore lint/security/noDangerouslySetInnerHtml: body is pre-rendered HTML from the registry MDX body.
-              dangerouslySetInnerHTML={{
-                __html: `<strong>Assumption${biography.assumptions[0].type ? ` (${biography.assumptions[0].type})` : ""}.</strong> ${biography.assumptions[0].body}`,
-              }}
+              html={`<strong>Assumption${biography.assumptions[0].type ? ` (${biography.assumptions[0].type})` : ""}.</strong> ${biography.assumptions[0].body}`}
+              trust='extractor-body'
             />
           ) : (
             <section
@@ -210,10 +212,11 @@ export function KeyEquation({
                     <dt className={styles.bioGroupTerm}>
                       {humanizeTermSlug(a.type ?? "general")}
                     </dt>
-                    <dd
+                    <BuildTimeHtml
+                      as='dd'
                       className={styles.bioGroupBody}
-                      // biome-ignore lint/security/noDangerouslySetInnerHtml: body is pre-rendered HTML from the registry MDX body.
-                      dangerouslySetInnerHTML={{ __html: a.body }}
+                      html={a.body}
+                      trust='extractor-body'
                     />
                   </div>
                 ))}
@@ -222,13 +225,12 @@ export function KeyEquation({
           ))}
 
         {biography?.breaks_when ? (
-          <div
+          <BuildTimeHtml
+            as='div'
             className={styles.bioCard}
             data-epistemic-role='approximation'
-            // biome-ignore lint/security/noDangerouslySetInnerHtml: body is pre-rendered HTML from the registry MDX body.
-            dangerouslySetInnerHTML={{
-              __html: `<strong>Breaks when.</strong> ${biography.breaks_when.body}`,
-            }}
+            html={`<strong>Breaks when.</strong> ${biography.breaks_when.body}`}
+            trust='extractor-body'
           />
         ) : null}
 
@@ -236,14 +238,13 @@ export function KeyEquation({
           biography.common_misuses.length > 0 &&
           (biography.common_misuses.length === 1 &&
           biography.common_misuses[0] ? (
-            <div
+            <BuildTimeHtml
+              as='div'
               className={styles.bioCard}
               data-epistemic-role='misconception'
               data-misconception-ref={biography.common_misuses[0].misconception}
-              // biome-ignore lint/security/noDangerouslySetInnerHtml: body is pre-rendered HTML from the registry MDX body.
-              dangerouslySetInnerHTML={{
-                __html: `<strong>Common misuse.</strong> ${biography.common_misuses[0].body}`,
-              }}
+              html={`<strong>Common misuse.</strong> ${biography.common_misuses[0].body}`}
+              trust='extractor-body'
             />
           ) : (
             <section
@@ -265,10 +266,11 @@ export function KeyEquation({
                     <dt className={styles.bioGroupTerm}>
                       {humanizeTermSlug(m.misconception ?? "general")}
                     </dt>
-                    <dd
+                    <BuildTimeHtml
+                      as='dd'
                       className={styles.bioGroupBody}
-                      // biome-ignore lint/security/noDangerouslySetInnerHtml: body is pre-rendered HTML from the registry MDX body.
-                      dangerouslySetInnerHTML={{ __html: m.body }}
+                      html={m.body}
+                      trust='extractor-body'
                     />
                   </div>
                 ))}
@@ -284,10 +286,11 @@ export function KeyEquation({
                 <span className={styles.rearrangedLabel}>
                   {form.label ?? `Solves for ${form.solves_for}`}
                 </span>
-                <div
+                <BuildTimeHtml
+                  as='div'
                   className={styles.rearrangedTex}
-                  // biome-ignore lint/security/noDangerouslySetInnerHtml: build-time prerendered KaTeX html from the registry (ADR 0090) — not user input.
-                  dangerouslySetInnerHTML={{ __html: form.html ?? "" }}
+                  html={form.html ?? ""}
+                  trust='katex'
                 />
               </div>
             ))}
@@ -343,10 +346,7 @@ export function KeyEquation({
                         {step.label}.
                       </strong>
                     ) : null}{" "}
-                    <span
-                      // biome-ignore lint/security/noDangerouslySetInnerHtml: body is pre-rendered HTML from the registry MDX body.
-                      dangerouslySetInnerHTML={{ __html: step.body }}
-                    />
+                    <BuildTimeHtml html={step.body} trust='extractor-body' />
                   </li>
                 ))}
               </ol>

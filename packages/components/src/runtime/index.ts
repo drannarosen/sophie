@@ -6,6 +6,10 @@ export type {
   BroadcastMessage,
 } from "./BroadcastChannel.ts";
 export { createBroadcastChannel } from "./BroadcastChannel.ts";
+export {
+  BuildTimeHtml,
+  type BuildTimeHtmlTrust,
+} from "./BuildTimeHtml.tsx";
 // Course-info projection (2026-05-26) — singleton store backing the
 // useCourseSpec() hook per H3. Public `useCourseSpec` is the
 // consumer-facing read; SSR-side `__setCourseSpec` is internal
