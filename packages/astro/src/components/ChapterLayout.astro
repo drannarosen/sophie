@@ -5,7 +5,7 @@ import ChapterPagination from "@sophie/astro/components/ChapterPagination.astro"
 import ChapterTitle from "@sophie/astro/components/ChapterTitle.astro";
 import ModuleNav from "@sophie/astro/components/ModuleNav.astro";
 import ScrollProgress from "@sophie/astro/components/ScrollProgress.astro";
-import TextbookHead from "@sophie/astro/components/TextbookHead.astro";
+import SophieHead from "@sophie/astro/components/SophieHead.astro";
 import TextbookLayout from "@sophie/astro/components/TextbookLayout.astro";
 import TocDrawer from "@sophie/astro/components/TocDrawer.astro";
 import TocSidebar from "@sophie/astro/components/TocSidebar.astro";
@@ -192,15 +192,10 @@ const next = nextRaw
 
 <html lang={frontmatter.lang ?? "en"}>
   <head>
-    <meta charset='utf-8' />
-    <meta name='viewport' content='width=device-width, initial-scale=1' />
-    <title>{frontmatter.title}</title>
-    {
-      frontmatter.description && (
-        <meta name='description' content={frontmatter.description} />
-      )
-    }
-    <TextbookHead />
+    <SophieHead
+      title={frontmatter.title}
+      description={frontmatter.description}
+    />
   </head>
   <body>
     <SophieChapter client:load>

@@ -1,0 +1,56 @@
+---
+/**
+ * <SophieHead /> — the shared `<head>` contents for EVERY Sophie route
+ * (chapter shell AND course spine: landing / section / info pages).
+ *
+ * Owns global CSS delivery. Previously the element/component stylesheet
+ * + base KaTeX were side-effect-imported only by <SophieChapter> (the
+ * React root mounted by ChapterLayout), so only reading/practice routes
+ * were styled and the entire spine shipped in browser-default Times
+ * (astr201 review F1/B1). Centralizing the imports here decouples
+ * styling from the React root — a new route is styled by using this
+ * head, not by remembering an import list. Per ADR 0095.
+ *
+ * Emits head CHILDREN (not the <head> element) so each shell keeps its
+ * `<html>/<head>/<body>` skeleton — the same placement contract as
+ * <TextbookHead> (ADR 0033: `is:inline` boot scripts must live in the
+ * real <head>, never a React island).
+ *
+ * Cascade order is load-bearing: tokens → base elements → components,
+ * then KaTeX base, then the inline-math size override (must follow
+ * katex.min.css so it wins). See ADR 0090 + the prior SophieChapter
+ * import block.
+ *
+ *   <html lang={…}>
+ *     <head>
+ *       <SophieHead title=… description=… />
+ *     </head>
+ *     <body>…</body>
+ *   </html>
+ */
+import "@sophie/theme/fonts";
+import "@sophie/theme/css";
+import "@sophie/theme/base";
+import "@sophie/components/styles.css";
+import "katex/dist/katex.min.css";
+import "@sophie/theme/math";
+
+import { withBase } from "../lib/with-base";
+import TextbookHead from "./TextbookHead.astro";
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description } = Astro.props;
+---
+
+<meta charset='utf-8' />
+<meta name='viewport' content='width=device-width, initial-scale=1' />
+<title>{title}</title>
+{description && <meta name='description' content={description} />}
+{/* Base-aware so it resolves under a non-root consumer base (ADR 0092);
+    the consumer supplies the asset. */}
+<link rel='icon' href={withBase('/favicon.ico')} />
+<TextbookHead />

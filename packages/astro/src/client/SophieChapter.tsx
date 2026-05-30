@@ -1,13 +1,3 @@
-import "@sophie/theme/fonts";
-import "@sophie/theme/css";
-import "@sophie/components/styles.css";
-import "katex/dist/katex.min.css";
-// PR-3: KaTeX inline-math sizing override (1.05× vs default 1.21×).
-// Must load AFTER katex.min.css so the override cascades over KaTeX's
-// own `.katex { font-size: 1.21em }` baseline. Display math is reset
-// back to 1.21em inside `.katex-display`.
-import "@sophie/theme/math";
-
 import type { ReactNode } from "react";
 
 export interface SophieChapterProps {
@@ -15,8 +5,14 @@ export interface SophieChapterProps {
 }
 
 /**
- * Chapter wrapper. Side-effect-loads the global CSS (theme, component
- * bundle, KaTeX) on the first import in the page, then renders children.
+ * Chapter wrapper. Renders children inside the chapter React root.
+ *
+ * Global CSS (theme tokens + base element layer + component bundle +
+ * KaTeX) is NO LONGER loaded here — it is delivered to every route via
+ * the shared <SophieHead> in the document `<head>` (ADR 0095). Coupling
+ * CSS to this React root left the non-reading "course spine" unstyled
+ * (astr201 review F1/B1); the import list now lives at the head level so
+ * styling is route-shell-scoped, never React-root-scoped.
  *
  * **Architectural note (per ADR 0027):**
  * Astro 6 + @astrojs/mdx 5 renders MDX content as Astro server-side;

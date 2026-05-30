@@ -15,6 +15,7 @@
       "import": "./dist/tokens.js"
     },
     "./css": "./dist/theme.css",
+    "./base": "./dist/base.css",
     "./fonts": "./dist/fonts.css",
     "./math": "./dist/math.css",
     "./tailwind": "./dist/tailwind.css"
