@@ -27,6 +27,7 @@ import {
 import { enrichEquationsWithSpeech } from "../lib/math-render/enrich-equations-speech";
 import { loadConsumerRegistry } from "../lib/notation-registry-loader";
 import { indexAccumulator } from "../lib/pedagogy-index/accumulator";
+import { serializePedagogyForHydration } from "../lib/serialize-pedagogy-hydration";
 import { extractContractValidations } from "../lib/validation/extractor";
 import ChapterBreadcrumb from "./ChapterBreadcrumb.astro";
 import ChapterStatusChip from "./ChapterStatusChip.astro";
@@ -270,61 +271,20 @@ if (courseSpec) {
 // client-side store can hydrate after React mount. Server-side module
 // state doesn't survive to the wire, so without these script tags
 // <GlossaryTerm> / <EquationRef> / <FigureRef> rerender as bare prose on
-// hydration (empty client store wins). See
-// packages/components/.../definitions-store.ts,
-// packages/components/.../equations-store.ts,
-// packages/components/.../figure-registry-store.ts,
-// packages/components/.../figure-usages-store.ts.
-//
-// Escape `<` as `<` after JSON.stringify to prevent the
-// HTML parser from terminating the <script> tag early on any
-// `</script>` substring inside a payload body (realistic for
-// AI-authored CS/web content per ADR 0030). The escape survives
-// JSON.parse on the consumer side (< → <).
-const pedagogyDefinitionsJson = JSON.stringify(pedagogy.definitions).replace(
-  /</g,
-  "\\u003c"
-);
-const pedagogyEquationsJson = JSON.stringify(pedagogy.equations).replace(
-  /</g,
-  "\\u003c"
-);
-const pedagogyEquationCitationsJson = JSON.stringify(
-  pedagogy.equationCitations
-).replace(/</g, "\\u003c");
-const pedagogyFigureRegistryJson = JSON.stringify(figureRegistry).replace(
-  /</g,
-  "\\u003c"
-);
-const pedagogyFigureUsagesJson = JSON.stringify(pedagogy.figureUsages).replace(
-  /</g,
-  "\\u003c"
-);
-// Objectives payload — same escape treatment as the payloads above.
-const pedagogyObjectivesJson = JSON.stringify(pedagogy.objectives).replace(
-  /</g,
-  "\\u003c"
-);
-// W1 + W2/D1 — payloads for the new sectionStore + unitStore + artifactStore.
-const pedagogySectionsJson = JSON.stringify(pedagogy.sections).replace(
-  /</g,
-  "\\u003c"
-);
-const pedagogyUnitsJson = JSON.stringify(pedagogy.units).replace(
-  /</g,
-  "\\u003c"
-);
-const pedagogyArtifactsJson = JSON.stringify(pedagogy.artifacts).replace(
-  /</g,
-  "\\u003c"
-);
-// Course-info projection (2026-05-26) — courseSpec payload for
-// client-side hydration of the courseSpecStore (used by
-// useCourseSpec() in chrome components: <Points>, <OfficeHours>,
-// etc.). Null spec → empty string → script tag emits `null`.
-const courseSpecJson = courseSpec
-  ? JSON.stringify(courseSpec).replace(/</g, "\\u003c")
-  : "null";
+// hydration (empty client store wins). The helper owns the
+// `</script>`-escape rationale (ADR 0030) and is unit-tested.
+const {
+  definitions: pedagogyDefinitionsJson,
+  equations: pedagogyEquationsJson,
+  equationCitations: pedagogyEquationCitationsJson,
+  figureRegistry: pedagogyFigureRegistryJson,
+  figureUsages: pedagogyFigureUsagesJson,
+  objectives: pedagogyObjectivesJson,
+  sections: pedagogySectionsJson,
+  units: pedagogyUnitsJson,
+  artifacts: pedagogyArtifactsJson,
+  courseSpec: courseSpecJson,
+} = serializePedagogyForHydration(pedagogy, figureRegistry, courseSpec);
 
 // Detect empty named slots so the corresponding grid columns can
 // collapse to 0 width — avoids wasted chrome in PR 1 where the sidebar
