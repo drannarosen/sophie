@@ -57,15 +57,20 @@ const unitSpoiler: UnitEntry = {
 };
 
 describe("runPedagogyAudit — clean index", () => {
-  it("returns zero errors/warnings for an empty index (only the MA-* math-speech coverage tail INFOs)", () => {
+  it("returns zero errors/warnings for an empty index (only the always-on RC2 + MA-* coverage INFOs)", () => {
     const report = runPedagogyAudit(emptyIndex());
     expect(report.errors).toEqual([]);
     expect(report.warnings).toEqual([]);
-    // ADR 0089 B5 — the math-speech invariant always reports its coverage
-    // summary + runtime/deferred tails as INFO (a static gap-visibility
-    // note), so an empty corpus is "no defects + the MA tail", not "no
-    // findings at all".
-    expect(report.info.map((f) => f.code)).toEqual(["MA-2", "MA-3", "MA-4"]);
+    // Two invariants always emit an INFO tail on any corpus:
+    //   RC2 (ADR 0058) — the role-coverage scope note (emitted once).
+    //   MA-2..4 (ADR 0089 B5) — math-speech coverage summary + tails.
+    // An empty index has no units, so RC1 (per-chapter) emits nothing.
+    expect(report.info.map((f) => f.code)).toEqual([
+      "RC2",
+      "MA-2",
+      "MA-3",
+      "MA-4",
+    ]);
   });
 
   it("returns zero findings for a fully consistent index", () => {

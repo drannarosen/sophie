@@ -26,6 +26,7 @@ import { checkObjectives } from "./invariants/objectives.ts";
 import { checkOMIFlow } from "./invariants/omi-flow.ts";
 import { checkOrphans } from "./invariants/orphans.ts";
 import { checkRetrievalFamily } from "./invariants/retrieval-family.ts";
+import { checkRoleCoverage } from "./invariants/role-coverage.ts";
 import { checkPRA2 } from "./invariants/topic-consistency.ts";
 import { checkValidation } from "./invariants/validation.ts";
 import { checkWorkedExamples } from "./invariants/worked-examples.ts";
@@ -88,6 +89,9 @@ export function runPedagogyAudit(
   checkOrphans(index, ctx, sink);
   checkKeyInsights(index, sink);
   checkMisconceptionGraph(index, sink);
+  // RC1 / RC2 — epistemic-role coverage; consumes the declared role
+  // registry (ADR 0058 R-audit-consumes-role).
+  checkRoleCoverage(index, sink);
 
   // External-signal invariants (require `extras`).
   checkChapterStatus(extras, sink);

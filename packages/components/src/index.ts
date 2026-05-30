@@ -407,6 +407,13 @@ export {
   listRegistered,
   registerComponent,
 } from "./contract/index.ts";
+// Component → epistemic-role registry (ADR 0058 R-audit-consumes-role).
+// Aggregates the per-component *_EPISTEMIC_ROLE consts for consumption by
+// the build-time pedagogy audit's role-coverage invariant.
+export {
+  COMPONENT_EPISTEMIC_ROLES,
+  ROLE_VIA_SLOT_ROLES,
+} from "./epistemic-role-registry.ts";
 // Figures — domain-specific interactive figures (Plot-using) live behind
 // the `@sophie/components/figures` subpath entry, NOT this main barrel, so
 // @observablehq/plot + d3 stay out of the main module graph. Import via
