@@ -312,3 +312,6 @@ flagged for a future rehype-level pass.
   shipped the base-path fix.
 - `packages/core/src/runtime/join-base.ts` — the pure primitive.
 - `examples/smoke/scripts/check-base-path.sh` — the CI gate.
+- [Prerender runtime doctrine](../reference/prerender-runtime-doctrine.md) —
+  why `joinBase` is Node-safe (no `import.meta.env`) and how the SSR base-URL
+  setter fits the globalThis-singleton doctrine.

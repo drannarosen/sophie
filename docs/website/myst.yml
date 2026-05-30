@@ -117,6 +117,7 @@ project:
         - file: reference/validation-tracker.md
         - file: reference/audit-baseline.md
         - file: reference/visual-regression.md
+        - file: reference/prerender-runtime-doctrine.md
     - title: Explanation
       children:
         - file: explanation/architecture.md

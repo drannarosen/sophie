@@ -231,3 +231,6 @@ instance safeguard, ADR 0019-adjacent).
   caches tsup outputs.
 - [Roadmap → Phase 0](../status/roadmap.md) — package skeletons
   ship with tsup configured.
+- [Prerender runtime doctrine](../reference/prerender-runtime-doctrine.md) —
+  the externalized-prerender boundary, `splitting: false` + globalThis
+  singletons, and virtual-module routing this build config underwrites.

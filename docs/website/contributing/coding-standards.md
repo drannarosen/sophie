@@ -322,3 +322,7 @@ for the full debugging trail and architectural rationale.
 - [Plugin API stability tiers](../reference/plugin-api.md).
 - [Component contract](../reference/component-contract.md) — every
   component fills in this contract.
+- [Prerender runtime doctrine](../reference/prerender-runtime-doctrine.md) —
+  the internal companion to § Consumer-side requirements: externalized
+  prerender, globalThis singletons, virtual-module routing, and the
+  packaging-bug-class they defend against.
