@@ -17,6 +17,10 @@ validation:
       date: "2026-05-29"
       notes: "Enforced-for-new via CI lint gate (lint job, after R11 lint:axe-render); graduated 2026-05-28 (§R-graduation). Domain pass 2026-05-29 (§R-domain-pass) resolved all 14 contestable entries. 59/59 component dirs accounted for: 6 declare, 2 role-via-slot, 51 chrome, 0 grandfathered."
     - kind: test
+      ref: packages/astro/src/lib/pedagogy-audit/invariants/role-coverage.test.ts
+      date: "2026-05-29"
+      notes: "§R-audit-consumes-role: the build-time audit now CONSUMES the declared role registry. `checkRoleCoverage` emits RC1 (per-chapter evidenced roles) + RC2 (scope note) by joining chapter-keyed index collections to `COMPONENT_EPISTEMIC_ROLES`/`ROLE_VIA_SLOT_ROLES`. Cross-component graduation; OF-2 (ADR 0063) remains the narrower framing-presence ERROR."
+    - kind: test
       ref: packages/astro/src/components/CourseObservables.axe.test.ts
       date: "2026-05-23"
       notes: "W4c Observable rollup chrome (per §4 slot-name-binds-role) — derived from OMIFlowEntry.observable; axe-clean."
@@ -769,6 +773,44 @@ role-via-slot · 51 chrome · 0 grandfathered** (59/59, 4 infra skipped). The
 bucket is retained empty by design: a future genuinely-contestable
 component lands there pending its own adjudication rather than being forced
 into a wrong role. AGENTS.md R13 is updated to reflect the completed pass.
+
+### R-audit-consumes-role — the role-coverage invariant lands (RC1/RC2, 2026-05-29)
+
+**Trigger.** Decision #5 deferred *an* audit invariant binding to the
+contract; [ADR 0063](./0063-omiflow-composite-primitive.md) OF-2 landed the
+narrow OMI-framing presence check, but no invariant yet *read the declared
+`*_EPISTEMIC_ROLE` registry across components* — the standing Schema −1 in
+the platform-quality audits ("no audit invariant yet consumes declared
+roles; cross-component coverage"). The A+ hardening sprint (Path B)
+graduates it.
+
+**Decision.** A new epistemic-role registry
+(`packages/components/src/epistemic-role-registry.ts`) aggregates the six
+single-role `*_EPISTEMIC_ROLE` consts (`COMPONENT_EPISTEMIC_ROLES`) + the
+two role-via-slot sets (`ROLE_VIA_SLOT_ROLES`), each re-exported from the
+component's own const so the consts stay the single source — a renamed or
+removed const fails the registry import rather than drifting silently. The
+pedagogy audit's new `checkRoleCoverage`
+(`packages/astro/src/lib/pedagogy-audit/invariants/role-coverage.ts`)
+consumes that registry:
+
+- **RC1 (INFO, per chapter)** — joins the chapter-keyed index collections
+  (`omiFlows`, `workedExamples`, `misconceptions`) to the registry and
+  reports which of the five audit-attributable roles each chapter
+  evidences (observable / model / inference / numerical / misconception).
+- **RC2 (INFO, once)** — the scope note: five of eight roles are
+  per-chapter attributable; `assumption` / `approximation` are
+  registry-global (`<KeyEquation>` biography), `uncertainty` has no
+  authoring primitive, and standalone inline role components register only
+  inside extracted containers (OMIFlow slot / KeyEquation biography).
+  Closing either gap is a future extractor change — surfaced, not silently
+  capped.
+
+Both are INFO: role coverage is descriptive (a chapter need not exercise
+every role), not a gate. This is the **cross-component** graduation the
+contract's audit binding called for; OF-2 remains the narrower
+framing-presence ERROR. Together they move the contract from
+"declared + lint-gated" (R13) to "read by the build-time audit."
 
 ## References
 
