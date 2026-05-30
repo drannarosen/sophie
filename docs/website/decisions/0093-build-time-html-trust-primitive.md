@@ -13,7 +13,7 @@ validation:
     - kind: deployment
       ref: packages/components/src/runtime/BuildTimeHtml.tsx
       date: "2026-05-30"
-      notes: "The single sanctioned `dangerouslySetInnerHTML` chokepoint. Polymorphic `as` host element; required `trust` discriminator (`katex` / `mdx-serialized` / `extractor-body`) that documents WHY the HTML is safe and makes the whole trust surface enumerable via the type. `trust` is destructured out so it never reaches the DOM. One `biome-ignore` carries the trust-boundary rationale for the entire platform."
+      notes: "The single sanctioned `dangerouslySetInnerHTML` chokepoint. Polymorphic `as` host element; required `trust` discriminator (`katex` / `mdx-serialized` / `extractor-body` / `pagefind-excerpt`) that documents WHY the HTML is safe and makes the whole trust surface enumerable via the type. `trust` is destructured out so it never reaches the DOM. One `biome-ignore` carries the trust-boundary rationale for the entire platform."
     - kind: test
       ref: packages/components/src/runtime/BuildTimeHtml.test.tsx
       date: "2026-05-30"
@@ -68,13 +68,14 @@ comments are deleted.
 **A required `trust` discriminator** names *why* the HTML is safe. The
 trust property is **"the source content is author/build-authored, never
 runtime user/student input"** — a timing-agnostic safety argument, which
-is why the three values are by *pipeline*, not by *when* it runs:
+is why the values are by *pipeline*, not by *when* it runs:
 
 | `trust` | Safety argument | Example sites |
 |---|---|---|
 | `katex` | KaTeX markup from non-user LaTeX — registry html, `renderTextWithMath`, or `katex.renderToString` on author-internal figure constants. KaTeX output is structurally safe; the LaTeX is never user-supplied. | `EquationRef`, `Search`, `KeyEquation` math, `MathText`, `InlineMath` |
 | `mdx-serialized` | `renderChildrenToHtml` — authored MDX children serialized to HTML at build time. | `OMIFlow`, `RepVerbal`, `Objective` bodies |
 | `extractor-body` | pre-rendered HTML from a build-time extractor / remark plugin (mdast → hast → html). | `KeyEquation` biography (×7), `GlossaryTerm` (×2) |
+| `pagefind-excerpt` | a Pagefind search-result excerpt: built from build-indexed (author) page text, HTML-escaped, with only structural `<mark>` highlight tags injected around matched terms. Match positions track the runtime query, but the markup is escape-safe by construction (the canonical Pagefind-UI rendering). | `Search` `ResultCard` excerpt (astr201 review B7) |
 
 The discriminator is **required**, so every author declares provenance,
 and the `BuildTimeHtmlTrust` type enumerates the entire trust surface.
@@ -88,16 +89,20 @@ exclusion stay legal). This is the difference between "centralized by
 convention" and "centralized, enforced" — the same structural-defense
 shape as R11 (axe) and R13 (epistemic-role).
 
-### Why three values and not more
+### One value per pipeline, not per implementation detail
 
 An earlier sketch split KaTeX into registry-vs-text. Routing the one
 *runtime*-rendered site (`<InlineMath>`, `katex.renderToString` in a
 figure) through the chokepoint showed the unifying property is **input
-trust, not render timing** — all KaTeX flavors share one safety class.
-Three values by pipeline is the honest minimum; adding a fourth would
-encode implementation detail, not a distinct safety argument. A genuinely
-new trusted pipeline extends the union here rather than re-introducing a
-raw site.
+trust, not render timing** — all KaTeX flavors share one safety class, so
+they stay one value. A new value is justified only by a **distinct
+trusted pipeline with its own safety argument**, not by implementation
+detail. `pagefind-excerpt` (astr201 review B7, 2026-05-30) is exactly
+that: Pagefind excerpt HTML is a different transform with a different
+safety story (escape-safe library output over build-indexed text, with
+query-driven `<mark>` positions) than KaTeX, MDX serialization, or
+extractor bodies. It extended the union here — the predicted path — rather
+than re-introducing a raw injection site.
 
 ## Rationale
 

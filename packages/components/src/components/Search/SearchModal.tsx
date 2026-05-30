@@ -134,6 +134,9 @@ export function SearchModal(): ReactNode {
           <Dialog.Title id='sophie-search-title' className={styles.srOnly}>
             Search
           </Dialog.Title>
+          <Dialog.Description className={styles.srOnly}>
+            Search this course's readings, equations, figures, and terms.
+          </Dialog.Description>
           <input
             type='text'
             value={query}
