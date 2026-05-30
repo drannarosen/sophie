@@ -25,21 +25,21 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 |---|---|
 | Validated | 38 |
 | In progress | 21 |
-| Unvalidated | 61 |
+| Unvalidated | 62 |
 | Re-validation needed | 0 |
 | Missing block | 0 |
-| Total | 120 |
+| Total | 121 |
 
 ## Lifecycle summary
 
 | Lifecycle | Count |
 |---|---|
-| Shipped | 71 |
+| Shipped | 72 |
 | Accepted design | 39 |
 | Mixed | 1 |
 | Future package split | 9 |
 | No status | 0 |
-| Total | 120 |
+| Total | 121 |
 
 ## Evidence kinds
 
@@ -177,6 +177,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/reference/pedagogical-change-taxonomy.md](/pedagogical-change-taxonomy/) | unvalidated | accepted design | — | — |  |
 | [docs/website/reference/pedagogy-contract-schema.md](/pedagogy-contract-schema/) | unvalidated | shipped | — | — |  |
 | [docs/website/reference/plugin-api.md](/plugin-api/) | unvalidated | future package split | — | — |  |
+| [docs/website/reference/prerender-runtime-doctrine.md](/prerender-runtime-doctrine/) | unvalidated | shipped | — | — |  |
 | [docs/website/reference/sophie-diff-cli.md](/sophie-diff-cli/) | unvalidated | future package split | — | — |  |
 | [docs/website/reference/sophie-metrics-cli.md](/sophie-metrics-cli/) | unvalidated | future package split | — | — |  |
 | [docs/website/reference/sophie-plugin-system.md](/sophie-plugin-system/) | unvalidated | future package split | — | — |  |

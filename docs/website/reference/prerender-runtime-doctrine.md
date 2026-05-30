@@ -8,6 +8,11 @@ tags:
   - prerender
   - regression-class
   - reference
+validation:
+  status: unvalidated
+  last_validated_date: null
+  evidence: []
+status: shipped
 ---
 
 # Prerender / globalThis runtime doctrine
