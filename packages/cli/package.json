@@ -21,6 +21,10 @@
     "./commands/validate": {
       "types": "./dist/commands/validate.d.ts",
       "import": "./dist/commands/validate.js"
+    },
+    "./commands/figures": {
+      "types": "./dist/commands/figures.d.ts",
+      "import": "./dist/commands/figures.js"
     }
   },
   "bin": {
@@ -42,7 +46,9 @@
     "@sophie/core": "workspace:*",
     "citty": "^0.2.2",
     "execa": "^9.6.1",
+    "jiti": "^2.7.0",
     "picocolors": "^1.1.0",
+    "sharp": "^0.34.5",
     "yaml": "^2.8.4"
   },
   "devDependencies": {

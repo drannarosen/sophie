@@ -27,19 +27,19 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 | In progress | 21 |
 | Unvalidated | 62 |
 | Re-validation needed | 0 |
-| Missing block | 0 |
-| Total | 122 |
+| Missing block | 1 |
+| Total | 123 |
 
 ## Lifecycle summary
 
 | Lifecycle | Count |
 |---|---|
 | Shipped | 73 |
-| Accepted design | 39 |
+| Accepted design | 40 |
 | Mixed | 1 |
 | Future package split | 9 |
 | No status | 0 |
-| Total | 122 |
+| Total | 123 |
 
 ## Evidence kinds
 
@@ -154,6 +154,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0091-tsup-entry-discovery.md](/tsup-entry-discovery/) | validated | shipped | 2026-05-29 | deployment, review, test | Shipped in PR #226. The dynamic discovery eliminates the forget-an-entry bug class at the source (a new `.astro`→lib value-import now gets its entry automatically); the independent self-validation guard is the build-time backstop that converts any residual discovery silent-miss into a loud build failure rather than a green-locally / broken-at-consumer-build regression. Pairs with ADR 0084 (packed-smoke gate) as the build-config layer of the same consumer-shape defense family; ADR 0061-aligned (focused, testable build tooling).  |
 | [docs/website/decisions/0092-base-path-correctness.md](/base-path-correctness/) | validated | shipped | 2026-05-29 | deployment, test | Shipped in PR #227. Closes the consumer-base regression class: a build-breaker (info-page slug) plus a leak class (~34 author-written internal links + the Pagefind loader + figure `<img src>` paths that Astro does not auto-prefix). The smoke base-path CI job is the durable structural defense. Pairs with ADR 0084 (packed-smoke) as a consumer-shape gate; the new helpers auto-registered as tsup entries via the ADR 0091 discovery mechanism.  |
 | [docs/website/decisions/0093-build-time-html-trust-primitive.md](/build-time-html-trust-primitive/) | validated | shipped | 2026-05-30 | deployment, test | Shipped in the A+ hardening sprint (Path B, H2). Collapses the 28 `dangerouslySetInnerHTML` sites across 11 component files into one documented chokepoint with a required, typed trust discriminator, closing the standing Architecture −2 ("un-centralized trust surface"). R14 is the structural defense that keeps it collapsed — a 29th raw site fails CI. Pairs with ADR 0004 (component contract) and 0030 (author-trust boundary).  |
+| [docs/website/decisions/0094-build-time-figure-optimization.md](/build-time-figure-optimization/) | _missing_ | accepted design | — | — | no validation block |
 
 ### Reference docs
 

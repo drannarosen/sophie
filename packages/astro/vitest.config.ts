@@ -28,7 +28,31 @@ type ViteUserConfigWithTest = VitestViteUserConfig & {
  * `.astro` files as 0%-uncovered (they're exercised at smoke e2e, not
  * unit). See the original commentary below for the rolldown stderr quirk.
  */
+/**
+ * Test-only stub for `virtual:sophie/figures` (ADR 0094). The fabricated
+ * Astro project that drives Container-API renders has no Sophie
+ * integration, so components that import the figures virtual module
+ * (via `FigureAsset`) can't resolve it under vitest. The integration
+ * supplies the real module at consumer build; here an empty stub lets
+ * `FigureAsset` fall back to its legacy `<img src>` path so axe tests
+ * render. Mirrors the always-register shape: both named exports present.
+ */
+const sophieFiguresStub = {
+  name: "test:sophie-figures-stub",
+  resolveId(id: string) {
+    if (id === "virtual:sophie/figures") return `\0${id}`;
+    return undefined;
+  },
+  load(id: string) {
+    if (id === "\0virtual:sophie/figures") {
+      return "export const figures = {};\nexport const figureAssets = {};\n";
+    }
+    return undefined;
+  },
+};
+
 const config: ViteUserConfigWithTest = {
+  plugins: [sophieFiguresStub],
   test: {
     // `root` here overrides the Astro project root (test-fixtures/...)
     // for the test runner's file resolution — keeps test discovery,

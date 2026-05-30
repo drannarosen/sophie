@@ -41,13 +41,29 @@ declare module "virtual:sophie/pedagogy-index" {
 
 declare module "virtual:sophie/figures" {
   import type { FigureRegistryEntry } from "@sophie/core/schema";
+  import type { ImageMetadata } from "astro";
 
   /**
    * Consumer-supplied figure registry (a name-indexed map). Populated
    * by `defineSophieIntegration({ figures })` per ADR 0082; backed by
    * `figuresVirtualModule()` in `packages/astro/src/lib/`.
+   *
+   * Per ADR 0094 (Approach A): for an **optimized** entry (master in
+   * `src/figures/`), `src`/`width`/`height` are the build-resolved
+   * `astro:assets` values (hashed `_astro/` URL + intrinsic dims). This
+   * is the map the SSR-setter → FigureRef store + accumulator → pagefind
+   * paths read, so the optimized URL reaches every string consumer.
    */
   export const figures: Record<string, FigureRegistryEntry>;
+
+  /**
+   * Live `astro:assets` `ImageMetadata` for each optimized entry, keyed
+   * by registry name (ADR 0094). Server-only; consumed by
+   * `FigureImage.astro`'s `<Picture>` for full responsive `srcset`.
+   * Non-nullable, possibly-empty (matches `figures`); legacy/inline
+   * entries are absent. R12 (dispatcher null-narrowing) does not apply.
+   */
+  export const figureAssets: Record<string, ImageMetadata>;
 }
 
 declare module "virtual:sophie/course-spec" {

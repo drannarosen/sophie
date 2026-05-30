@@ -4,6 +4,7 @@ import { setSophieBaseUrl } from "@sophie/core/runtime";
 import { getCollection, render } from "astro:content";
 import { figures } from "virtual:sophie/figures";
 import ChapterLayout from "../components/ChapterLayout.astro";
+import FigureImage from "../components/FigureImage.astro";
 
 // Feed the consumer's Vite-replaced base to the externalized-in-Node
 // SSR/prerender dist of @sophie/* (where import.meta.env is undefined).
@@ -12,8 +13,9 @@ setSophieBaseUrl(import.meta.env.BASE_URL);
 
 // Module-level singleton: every chapter in this smoke target shares the
 // same figure registry, so the components map is built once instead of
-// per-render.
-const components = makeStaticComponents({ figures });
+// per-render. ADR 0094 — override the React <Figure> with <FigureImage>
+// (mirrors reading.astro).
+const components = { ...makeStaticComponents({ figures }), Figure: FigureImage };
 
 export async function getStaticPaths() {
   // ADR 0073 Amendment 1 §7 — practice route mirrors reading. Routes

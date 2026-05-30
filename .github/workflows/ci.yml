@@ -219,6 +219,18 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-turbo-build-
             ${{ runner.os }}-turbo-
+      # ADR 0094 §8 — persist Astro's optimized-image cache so cold
+      # builds don't re-run sharp over every master each run (bounds time
+      # + memory at consumer scale). Keyed on the source masters so it
+      # invalidates when a figure changes; falls back to the latest cache
+      # otherwise.
+      - name: Restore Astro image cache (smoke)
+        uses: actions/cache@v4
+        with:
+          path: examples/smoke/node_modules/.astro
+          key: ${{ runner.os }}-astro-img-${{ hashFiles('examples/smoke/src/figures/**') }}
+          restore-keys: |
+            ${{ runner.os }}-astro-img-
       - name: Turborepo build (packages + smoke)
         run: pnpm exec turbo run build
 
@@ -247,6 +259,16 @@ jobs:
             ${{ runner.os }}-turbo-build-${{ github.sha }}
             ${{ runner.os }}-turbo-build-
             ${{ runner.os }}-turbo-
+      # ADR 0094 §8 — share the optimized-image cache the build job
+      # populated (same key), so the e2e smoke build is a cache hit on
+      # figure derivatives rather than a fresh sharp pass.
+      - name: Restore Astro image cache (smoke)
+        uses: actions/cache@v4
+        with:
+          path: examples/smoke/node_modules/.astro
+          key: ${{ runner.os }}-astro-img-${{ hashFiles('examples/smoke/src/figures/**') }}
+          restore-keys: |
+            ${{ runner.os }}-astro-img-
       - name: Build smoke target (and workspace deps)
         # Use `turbo run build --filter=smoke` (not `pnpm --filter`) so
         # Turborepo follows the workspace dependency graph and builds

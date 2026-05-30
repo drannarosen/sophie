@@ -1,0 +1,153 @@
+---
+import { lookupCanonicalUsageByName } from "@sophie/components";
+import { renderTextWithMath } from "@sophie/components/runtime";
+import { figures } from "virtual:sophie/figures";
+import FigureAsset from "./FigureAsset.astro";
+
+/**
+ * `<FigureImage>` — the server-side, `astro:assets`-optimized render of
+ * a registry `<Figure name="…">`, swapped in for the React `<Figure>`
+ * via the reading/practice route's `<Content components>` map (ADR 0094).
+ *
+ * Registry-mode (optimized): looks up the live `ImageMetadata` in
+ * `figureAssets` and renders `<Picture formats={['avif','webp']}
+ * layout="constrained">` → responsive `srcset` + `<source>` + intrinsic
+ * `width`/`height` (kills CLS) + `decoding="async"` (closes review F10).
+ *
+ * Registry-mode (legacy/inline): a `public/`-served entry with no master
+ * in `src/figures/` falls back to a plain `<img src>` (the un-optimized
+ * escape hatch), as does inline-mode `<Figure src alt>`.
+ *
+ * Parity with the React `<Figure>` (`@sophie/components`): same figure /
+ * picture / figcaption structure, the same "Figure N.M" numbering
+ * (`lookupCanonicalUsageByName`, reading the store TextbookLayout
+ * populates), the same caption math rendering (`renderTextWithMath`),
+ * and the same caption/credit override precedence. The visual rules
+ * below mirror `Figure.module.css`; the two render paths coexist by
+ * design (this one for routes, the React one for inline + Storybook), so
+ * keep the rules in sync until a shared figure-render contract is
+ * extracted (ADR 0023 "refactor outward as patterns emerge").
+ */
+
+interface Props {
+  /** Registry-mode key (resolves against `figures`/`figureAssets`). */
+  name?: string;
+  /** Inline-mode source (un-optimized passthrough). */
+  src?: string;
+  /** Inline-mode alt; ignored in registry mode (registry `alt` wins). */
+  alt?: string;
+  /** Per-callsite caption override (wins over the registry caption). */
+  caption?: string;
+  /** Per-callsite credit override (wins over the registry credit). */
+  credit?: string;
+}
+
+const { name, src, alt, caption, credit } = Astro.props;
+
+function formatFigureLabel(
+  num: number | undefined,
+  chapterNumber: number | undefined
+): string | null {
+  if (num === undefined) return null;
+  const stem = chapterNumber !== undefined ? `${chapterNumber}.${num}` : `${num}`;
+  return `Figure ${stem}`;
+}
+
+const isRegistryMode = name !== undefined;
+const entry = isRegistryMode ? figures[name] : undefined;
+
+// Registry-mode resolution. Inline-mode uses the raw src/alt props.
+const usage = isRegistryMode ? lookupCanonicalUsageByName(name) : undefined;
+const label = formatFigureLabel(usage?.number, usage?.chapterNumber);
+
+const resolvedAlt = isRegistryMode ? entry?.alt : alt;
+const resolvedCaption = caption ?? entry?.caption;
+const resolvedCredit = credit ?? entry?.credit;
+const legacySrc = isRegistryMode ? entry?.src : src;
+const captionHtml =
+  resolvedCaption !== undefined ? renderTextWithMath(resolvedCaption) : undefined;
+
+const missing = isRegistryMode && entry === undefined;
+---
+
+{
+  missing ? (
+    <figure class="sophie-figimg">
+      <div class="sophie-figimg__missing" role="img" aria-label="Missing figure">
+        Missing figure: <code>{name}</code>
+      </div>
+    </figure>
+  ) : (
+    <figure class="sophie-figimg">
+      <FigureAsset
+        name={isRegistryMode ? name : undefined}
+        src={legacySrc}
+        alt={resolvedAlt ?? ""}
+        class="sophie-figimg__image"
+      />
+      {(resolvedCaption !== undefined ||
+        resolvedCredit !== undefined ||
+        label !== null) && (
+        <figcaption class="sophie-figimg__caption">
+          {label !== null && <span class="sophie-figimg__label">{label}</span>}
+          {/* biome-ignore lint/security/noDangerouslySetInnerHtml: build-time KaTeX html from renderTextWithMath (ADR 0093 katex trust); author-controlled caption, non-math text HTML-escaped. Mirrors EquationSpecContent.astro. */}
+          {captionHtml !== undefined && <span set:html={captionHtml} />}
+          {resolvedCredit !== undefined && (
+            <span class="sophie-figimg__credit">{resolvedCredit}</span>
+          )}
+        </figcaption>
+      )}
+    </figure>
+  )
+}
+
+<style>
+  /* Mirrors @sophie/components Figure.module.css — keep in sync until a
+     shared figure-render contract is extracted (ADR 0094 / 0023). */
+  .sophie-figimg {
+    display: grid;
+    gap: var(--sophie-space-2);
+    margin-block: var(--sophie-space-5);
+    font-family: var(--sophie-font-sans);
+  }
+  /* :global reaches the <img> rendered inside astro:assets <Picture>. */
+  .sophie-figimg :global(.sophie-figimg__image) {
+    display: block;
+    width: 100%;
+    height: auto;
+    background: var(--sophie-surface-2);
+    border-radius: var(--sophie-radius-md);
+  }
+  .sophie-figimg__caption {
+    margin: 0;
+    font-size: var(--sophie-text-sm);
+    line-height: var(--sophie-leading-prose);
+    color: var(--sophie-text-2);
+  }
+  .sophie-figimg__label {
+    font-size: 0.78em;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--sophie-brand-teal-text);
+    margin-inline-end: 0.55em;
+    font-feature-settings:
+      "tnum" 1,
+      "lnum" 1;
+  }
+  .sophie-figimg__credit {
+    display: block;
+    font-size: var(--sophie-text-xs);
+    color: var(--sophie-text-muted);
+    margin-block-start: var(--sophie-space-1);
+  }
+  .sophie-figimg__missing {
+    padding: var(--sophie-space-4);
+    border: 1px dashed var(--sophie-status-warning);
+    border-radius: var(--sophie-radius-md);
+    font-family: var(--sophie-font-mono);
+    font-size: var(--sophie-text-sm);
+    color: var(--sophie-text-muted);
+    background: var(--sophie-surface-1);
+  }
+</style>

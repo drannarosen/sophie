@@ -1,5 +1,5 @@
 import { copyFile, mkdir, readFile, rm, writeFile } from "node:fs/promises";
-import { basename, dirname, join, resolve } from "node:path";
+import { basename, dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse as parseYaml } from "yaml";
 
@@ -41,7 +41,18 @@ const chapterQmds = [
 ];
 const figuresYaml = join(astr201Root, "assets/figures.yml");
 const publicFigures = join(smokeRoot, "public/figures");
+const figuresSrcDir = join(smokeRoot, "src/figures");
 const figuresTs = join(smokeRoot, "src/content/figures.ts");
+
+// ADR 0094 regression guard: this representative subset is routed through
+// the build-time optimization path instead of the legacy `public/`
+// passthrough. Each named master is copied to `src/figures/<name>.<ext>`
+// (convention-resolved) and its registry entry is emitted **metadata-only**
+// (no `src`), so the integration's `astro:assets` codegen produces a
+// responsive `<picture>`. The figures e2e asserts the srcset; the rest of
+// the registry stays legacy so both paths are exercised. Smoke is a
+// throwaway Phase-0 target (ADR 0023), so one figure is enough.
+const OPTIMIZED_FIGURES = new Set(["cosmic-distance-ladder"]);
 
 console.log(`Reading figure registry:  ${figuresYaml}`);
 for (const qmd of chapterQmds) {
@@ -83,7 +94,7 @@ for (const name of usedNames) {
     );
     process.exit(1);
   }
-  entries.push([name, resolveEntry(yamlEntry)]);
+  entries.push([name, resolveEntry(name, yamlEntry)]);
 }
 
 if (missing.length > 0) {
@@ -95,12 +106,22 @@ if (missing.length > 0) {
 
 await rm(publicFigures, { recursive: true, force: true });
 await mkdir(publicFigures, { recursive: true });
+await rm(figuresSrcDir, { recursive: true, force: true });
+await mkdir(figuresSrcDir, { recursive: true });
 
 for (const [name, entry] of entries) {
   const sourceFile = join(astr201Root, entry.sourceRelPath);
-  const destFile = join(publicFigures, entry.fileName);
-  await copyFile(sourceFile, destFile);
-  console.log(`  copied  ${name.padEnd(32)} ← ${entry.sourceRelPath}`);
+  if (entry.optimized) {
+    const destFile = join(figuresSrcDir, entry.figureFileName);
+    await copyFile(sourceFile, destFile);
+    console.log(
+      `  optimized ${name.padEnd(30)} → src/figures/${entry.figureFileName}`
+    );
+  } else {
+    const destFile = join(publicFigures, entry.fileName);
+    await copyFile(sourceFile, destFile);
+    console.log(`  copied    ${name.padEnd(30)} ← ${entry.sourceRelPath}`);
+  }
 }
 
 await mkdir(dirname(figuresTs), { recursive: true });
@@ -114,6 +135,10 @@ interface ResolvedEntry {
   credit?: string;
   sourceRelPath: string;
   fileName: string;
+  /** Routed through the ADR 0094 optimization path (metadata-only entry). */
+  optimized: boolean;
+  /** Destination basename under `src/figures/` when optimized: `<name>.<ext>`. */
+  figureFileName: string;
 }
 
 function extractFigureRefs(qmd: string): string[] {
@@ -125,7 +150,7 @@ function extractFigureRefs(qmd: string): string[] {
   return [...seen].sort();
 }
 
-function resolveEntry(raw: YamlFigureEntry): ResolvedEntry {
+function resolveEntry(name: string, raw: YamlFigureEntry): ResolvedEntry {
   // YAML paths are project-rooted ("/assets/images/..."). Strip the
   // leading slash so join() resolves relative to astr201Root.
   const rel = raw.path.replace(/^\/+/, "");
@@ -137,6 +162,9 @@ function resolveEntry(raw: YamlFigureEntry): ResolvedEntry {
     credit: raw.credit,
     sourceRelPath: rel,
     fileName,
+    optimized: OPTIMIZED_FIGURES.has(name),
+    // Convention key: src/figures/<registry-name>.<ext> (resolveFigureFile).
+    figureFileName: `${name}${extname(fileName)}`,
   };
 }
 
@@ -145,7 +173,9 @@ function renderFiguresTs(rows: Array<[string, ResolvedEntry]>): string {
 // Re-run with \`pnpm --filter smoke figures\`.
 //
 // Source: /Users/anna/Teaching/astr201-sp26/assets/figures.yml
-// Image files copied into public/figures/ alongside this file.
+// Legacy entries: image copied into public/figures/ (entry carries \`src\`).
+// Optimized entries (ADR 0094 guard): master copied into src/figures/<name>.<ext>
+// and emitted metadata-only (no \`src\`) so astro:assets builds a <picture>.
 
 import type { FigureRegistry } from "@sophie/components/runtime";
 
@@ -156,9 +186,13 @@ export const figures: FigureRegistry = {
       const lines = [
         `  ${JSON.stringify(name)}: {`,
         `    name: ${JSON.stringify(name)},`,
-        `    src: ${JSON.stringify(e.src)},`,
-        `    alt: ${JSON.stringify(e.alt)},`,
       ];
+      // Optimized entries are metadata-only — the master resolves by
+      // convention from src/figures/ (ADR 0094); a `src` would shadow it.
+      if (!e.optimized) {
+        lines.push(`    src: ${JSON.stringify(e.src)},`);
+      }
+      lines.push(`    alt: ${JSON.stringify(e.alt)},`);
       if (e.caption !== undefined) {
         lines.push(`    caption: ${JSON.stringify(e.caption)},`);
       }

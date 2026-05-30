@@ -4,7 +4,7 @@ import type {
   FigureUsageEntry,
 } from "@sophie/core/schema";
 import { indexAccumulator } from "../lib/pedagogy-index/accumulator";
-import { withBase } from "../lib/with-base";
+import FigureAsset from "./FigureAsset.astro";
 
 const { figureRegistry, figureUsages } = indexAccumulator.asPedagogyIndex();
 
@@ -97,11 +97,13 @@ const sorted =
             </span>
             {registry && (
               <figure class='sophie-chapter-figures__figure'>
-                <img
-                  src={withBase(registry.src)}
+                <FigureAsset
+                  name={registry.name}
+                  src={registry.src}
                   alt={registry.alt}
+                  width={registry.width}
+                  height={registry.height}
                   class='sophie-chapter-figures__image'
-                  loading='lazy'
                 />
                 <figcaption class='sophie-chapter-figures__caption'>
                   {usage.captionOverride ?? registry.caption ?? registry.name}
