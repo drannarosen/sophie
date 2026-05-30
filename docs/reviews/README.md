@@ -18,6 +18,7 @@ themselves.
 
 | Date | Topic | Grade | Trigger | Status |
 |---|---|---|---|---|
+| 2026-05-30 | [Hardening sprint #2 closeout](2026-05-30-hardening-sprint-2-closeout.md) | **A+ (98)** | Ship the two deferred items (H3 coverage ratchet + H5a axe); HITL, time-boxed; `/reviewing-project-quality` | Closed — PRs #234/#235; coverage gate 1/5→5/5 packages (Test 17→19); `list`/`listitem` suppression dropped (A11y 18→19); remaining ~2pts (H5b color-contrast, H3-full) yield to *shipping* ASTR 201 |
 | 2026-05-30 | [A+ hardening sprint closeout](2026-05-30-a-plus-sprint-closeout.md) | **A+ (95)** | Push A→A+ via a time-boxed, HITL-scoped sprint (Path B); `/reviewing-project-quality` | Closed — both Architecture caps cleared (innerHTML→1 chokepoint+R14 / LOC→0); Schema + Build → 20; binding constraint still *shipping* (ASTR 201); 95→~99 path is the deferred H3 (coverage ratchet) + H5 (a11y) |
 | 2026-05-29 | [Post-domain-pass hardening audit](2026-05-29-post-domain-pass-hardening-audit.md) | A (90) | "what hardening next?" + `/reviewing-project-quality`; post #226–#229 | Closed — superseded by the A+ closeout above; its H2–H5 backlog shipped (H2/B1/S1/H4) or deferred (H3/H5) | 
 | 2026-05-29 | [Post-ITEM-5 quality audit](2026-05-29-post-item5-quality-audit.md) | A− (87) | ITEM 5 merged (#225, epistemic-role enforcement); `/reviewing-project-quality` | Closed — domain pass shipped (#229, grandfathered → 0); binding constraint still *shipping* (ASTR 201); superseded by the post-domain-pass hardening audit above |
