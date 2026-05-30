@@ -1369,6 +1369,41 @@ html {
   background: var(--sophie-surface-1);
 }
 
+/* B5 (astr201 frontend review, 2026-05-30): at narrow widths the full
+   search input (~247px) plus the view-mode / columns / theme toggles
+   overflow the topbar — `overflow-x: clip` then silently hid the
+   right-side controls, making the theme toggle unreachable on mobile.
+   Collapse the search trigger to an icon-only button: the icon stays as
+   the visual cue and the real <input> overlays the wrap invisibly, so
+   the focus-to-open behavior (and Cmd/Ctrl+K) is unchanged while ~200px
+   is freed for the toggles. Full search returns above 600px. */
+@media (max-width: 600px) {
+  .sophie-search-trigger-wrap {
+    position: relative;
+    gap: 0;
+    /* ≥44px touch target (WCAG 2.5.5) around the icon. */
+    min-inline-size: 2.75rem;
+    justify-content: center;
+    padding: var(--sophie-space-2);
+  }
+  .sophie-search-trigger {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    min-inline-size: 0;
+    padding: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .sophie-search-trigger::placeholder {
+    color: transparent;
+  }
+  .sophie-search-trigger__kbd {
+    display: none;
+  }
+}
+
 /* ===== Topbar breadcrumb + status chip =====
    Position cue ("MOD N · LECTURE M") and editorial-status chip
    ("UNDER REVIEW" / "DRAFT") rendered in the topbar leading and
