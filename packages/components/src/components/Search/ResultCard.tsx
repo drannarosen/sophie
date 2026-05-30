@@ -101,7 +101,17 @@ export function ResultCard({
           trust='katex'
         />
       ) : (
-        <p className={styles.excerpt}>{result.excerpt}</p>
+        // Pagefind wraps matched terms in `<mark>`; rendering the excerpt
+        // as escaped text showed literal tags (astr201 review B7). The
+        // excerpt is escape-safe Pagefind output over build-indexed
+        // content (ADR 0093 `pagefind-excerpt` trust), so route it through
+        // the sanctioned BuildTimeHtml chokepoint (R14).
+        <BuildTimeHtml
+          as='p'
+          className={styles.excerpt}
+          html={result.excerpt}
+          trust='pagefind-excerpt'
+        />
       )}
       <div className={styles.locator}>{result.meta.locator}</div>
     </div>

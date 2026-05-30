@@ -52,7 +52,12 @@
 }
 
 .trigger:focus-visible {
-  outline: 2px solid var(--sophie-accent);
+  /* Canonical focus indicator (matches FigureRef / EquationRef / Callout
+   * / Objective / …). The bespoke `--sophie-accent` ring read as weak
+   * against the surface (astr201 review B6 / WCAG 2.4.7); `--sophie-focus-
+   * color` is the high-contrast platform focus token. Inset offset keeps
+   * the ring inside the item's `overflow: hidden`. */
+  outline: var(--sophie-focus-width) solid var(--sophie-focus-color);
   outline-offset: -2px;
 }
 

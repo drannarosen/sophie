@@ -43,4 +43,17 @@ describe("<SearchModal>", () => {
     fireEvent.keyDown(document, { key: "k", metaKey: true });
     expect(await axe(container)).toHaveNoViolations();
   });
+
+  // B3 (astr201 frontend review, 2026-05-30): the Radix Dialog logged
+  // "Missing Description or aria-describedby" — screen-reader users got
+  // no described context. The title (accessible name) was already
+  // present; this asserts the missing description so the warning can't
+  // regress silently.
+  it("dialog exposes an accessible name and description (B3)", () => {
+    render(<SearchModal />);
+    fireEvent.keyDown(document, { key: "k", metaKey: true });
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toHaveAccessibleName("Search");
+    expect(dialog).toHaveAccessibleDescription(/search/i);
+  });
 });

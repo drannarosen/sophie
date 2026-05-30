@@ -99,6 +99,24 @@ describe("<ResultCard>", () => {
     );
   });
 
+  // B7 (astr201 frontend review, 2026-05-30): non-equation excerpts
+  // carry Pagefind's `<mark>` highlight markup. Rendering it as escaped
+  // text showed literal `<mark>` tags in figure/term snippets. The
+  // excerpt must render as real highlight elements.
+  it("renders Pagefind <mark> highlights as real elements, not escaped text (B7)", () => {
+    const withMark: SearchResult = {
+      ...baseFixture,
+      excerpt: "Side-by-side optical and radio views of a <mark>galaxy</mark>.",
+      filters: { type: ["figure"] },
+    };
+    const { container } = render(<ResultCard result={withMark} />);
+    const mark = container.querySelector("mark");
+    expect(mark).toBeInTheDocument();
+    expect(mark?.textContent).toBe("galaxy");
+    // The literal tag must NOT appear as text.
+    expect(container.textContent).not.toContain("<mark>");
+  });
+
   it("renders locator (chapter · module)", () => {
     render(<ResultCard result={baseFixture as SearchResult} />);
     expect(
