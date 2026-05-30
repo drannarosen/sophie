@@ -6,6 +6,7 @@ import {
   type ReactNode,
   useId,
 } from "react";
+import { BuildTimeHtml } from "../../runtime/BuildTimeHtml.tsx";
 import { MathText } from "../../runtime/MathText.tsx";
 import styles from "./OMIFlow.module.css.js";
 import type {
@@ -29,7 +30,8 @@ import type {
  *
  *   - **Extractor-fed mode**: when `observable` / `model` /
  *     `inference` props are set (post-`transformOMIFlow`), bodies are
- *     pre-rendered HTML strings injected via `dangerouslySetInnerHTML`.
+ *     pre-rendered HTML strings injected via the `<BuildTimeHtml>`
+ *     chokepoint (ADR 0093).
  *     This is the production MDX path — `transformOMIFlow` harvests
  *     authored slot children at build time and replaces the parent's
  *     `children` with these explicit props. Without the transform,
@@ -122,10 +124,14 @@ function OMIFlowSlotImpl({
           </MathText>
         ) : null}
         {bodyHtml !== undefined ? (
-          <div
+          // bodyHtml is build-time-serialized author MDX from
+          // renderChildrenToHtml (same trust boundary as <RepVerbal> /
+          // <Objective> bodies) — never runtime input.
+          <BuildTimeHtml
+            as='div'
             className={styles.body}
-            // biome-ignore lint/security/noDangerouslySetInnerHtml: bodyHtml is build-time-serialized author MDX from renderChildrenToHtml (same trust boundary as <RepVerbal>'s body / <Objective>'s body) — never runtime input
-            dangerouslySetInnerHTML={{ __html: bodyHtml }}
+            html={bodyHtml}
+            trust='mdx-serialized'
           />
         ) : (
           <div className={styles.body}>{children}</div>
@@ -185,7 +191,7 @@ function identifySlot(child: ReactNode): SlotKind | undefined {
 
 interface ResolvedSlot {
   title?: string;
-  /** When set: post-transform HTML string injected via dangerouslySetInnerHTML. */
+  /** When set: post-transform HTML string injected via `<BuildTimeHtml>`. */
   bodyHtml?: string;
   /** When set: author-mode React children passed through directly. */
   children?: ReactNode;

@@ -1,3 +1,4 @@
+import { BuildTimeHtml } from "../../runtime/BuildTimeHtml.tsx";
 import styles from "./RepVerbal.module.css.js";
 import type { RepVerbalProps } from "./RepVerbal.schema.ts";
 
@@ -12,7 +13,8 @@ import type { RepVerbalProps } from "./RepVerbal.schema.ts";
  * - **Extractor-fed mode** (used at runtime after `transformMultiRep`
  *   mutates the AST): `body` is the HTML string `renderChildrenToHtml`
  *   produced from the authored MDX children — inline emphasis, links,
- *   code spans already serialized. Injected via `dangerouslySetInnerHTML`
+ *   code spans already serialized. Injected via the `<BuildTimeHtml>`
+ *   chokepoint (ADR 0093)
  *   so the markup survives the round-trip; matches the `<Objective>`
  *   precedent (`Objective.tsx`'s body rendering). Without this, React
  *   escapes the HTML string and the reader sees literal `<em>m</em>`
@@ -29,10 +31,14 @@ export function RepVerbal({ children, body }: RepVerbalProps) {
       {children !== undefined ? (
         <div className={styles.body}>{children}</div>
       ) : body !== undefined ? (
-        <div
+        // body is build-time-serialized author MDX from
+        // renderChildrenToHtml (same trust boundary as <Objective>'s
+        // body) — never runtime input.
+        <BuildTimeHtml
+          as='div'
           className={styles.body}
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: body is build-time-serialized author MDX from renderChildrenToHtml (same trust boundary as <Objective>'s body) — never runtime input
-          dangerouslySetInnerHTML={{ __html: body }}
+          html={body}
+          trust='mdx-serialized'
         />
       ) : (
         <div className={styles.body} />

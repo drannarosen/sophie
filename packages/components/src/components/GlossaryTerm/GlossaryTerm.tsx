@@ -1,6 +1,7 @@
 import * as HoverCard from "@radix-ui/react-hover-card";
 import { slugify } from "@sophie/core/schema";
 import { BookOpen } from "lucide-react";
+import { BuildTimeHtml } from "../../runtime/BuildTimeHtml.tsx";
 import { useHydrated } from "../../runtime/useHydrated.ts";
 import { withBase } from "../../utils/with-base.ts";
 import { lookupDefinition } from "./definitions-store.ts";
@@ -99,10 +100,14 @@ export function GlossaryTerm({
             sideOffset={6}
           >
             <strong className={styles.term}>{entry.term}</strong>
-            <div
+            {/* body is pre-rendered HTML from our remark plugin
+                (mdast → hast → html), not user-supplied content.
+                ADR 0038 decision #11. */}
+            <BuildTimeHtml
+              as='div'
               className={styles.body}
-              // biome-ignore lint/security/noDangerouslySetInnerHtml: body is pre-rendered HTML produced by our remark plugin (mdast → hast → html), not user-supplied content. ADR 0038 decision #11.
-              dangerouslySetInnerHTML={{ __html: entry.body }}
+              html={entry.body}
+              trust='extractor-body'
             />
             <HoverCard.Arrow className={styles.arrow} />
           </HoverCard.Content>
@@ -120,13 +125,14 @@ export function GlossaryTerm({
         // as inline-safe HTML so the span stays in flow. The popover
         // above keeps the wrapping `<p>` because its container is a
         // `<div>` (block).
-        <span
+        <BuildTimeHtml
+          as='span'
           className={`${styles.glossaryFootnote} sophie-glossary-footnote`}
           data-testid='glossary-footnote'
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: body is pre-rendered HTML produced by our remark plugin (mdast → hast → html), not user-supplied content. ADR 0038 decision #11.
-          dangerouslySetInnerHTML={{
-            __html: stripWrappingParagraph(entry.body),
-          }}
+          // body is pre-rendered HTML from our remark plugin (mdast →
+          // hast → html), not user-supplied content. ADR 0038 decision #11.
+          html={stripWrappingParagraph(entry.body)}
+          trust='extractor-body'
         />
       ) : null}
     </>

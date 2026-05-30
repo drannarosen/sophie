@@ -115,6 +115,17 @@ jobs:
         # live in the script header. Fails CI on any non-exempt
         # role-less component dir.
         run: pnpm lint:epistemic-role
+      - name: no raw dangerouslySetInnerHTML (R14, 2026-05-30)
+        # AGENTS.md R14 + ADR 0093 (build-time HTML trust primitive).
+        # ADR 0093 collapsed 28 per-site dangerouslySetInnerHTML trust
+        # arguments into the one sanctioned <BuildTimeHtml> chokepoint;
+        # this gate keeps the surface collapsed. A 29th raw injection
+        # anywhere else under packages/<pkg>/src (excluding tests, and
+        # excluding the allowlisted chokepoint) fails CI. The matcher
+        # keys on the attribute-assignment form, so prose mentions + the
+        # type-level Omit exclusion stay legal. Route new injections
+        # through <BuildTimeHtml html={…} trust={…} />.
+        run: pnpm lint:no-raw-inner-html
 
   typecheck:
     name: typecheck

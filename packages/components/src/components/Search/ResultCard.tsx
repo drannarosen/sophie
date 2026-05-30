@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { BuildTimeHtml } from "../../runtime/BuildTimeHtml.tsx";
 import styles from "./ResultCard.module.css.js";
 import type { SearchResult } from "./types.ts";
 
@@ -85,17 +86,19 @@ export function ResultCard({
         ) : null}
       </div>
       {isEquation ? (
-        <span
+        // ADR 0089: the prerendered html uses KaTeX `output: "html"` (no
+        // `<math>`; glyphs aria-hidden by KaTeX). role="math" + the
+        // build-computed SRE speech (carried in meta.speech from the
+        // Pagefind record) name the equation for a screen reader.
+        // Build-time KaTeX from the search index (ADR 0090) — not user input.
+        <BuildTimeHtml
+          as='span'
           className={styles.richTail}
-          // ADR 0089: the prerendered html uses KaTeX `output: "html"` (no
-          // `<math>`; glyphs aria-hidden by KaTeX). role="math" + the
-          // build-computed SRE speech (carried in meta.speech from the
-          // Pagefind record) name the equation for a screen reader.
           {...(result.meta.speech
             ? { role: "math", "aria-label": result.meta.speech }
             : {})}
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: build-time prerendered KaTeX html from the search index (ADR 0090) — not user input.
-          dangerouslySetInnerHTML={{ __html: result.meta.html ?? "" }}
+          html={result.meta.html ?? ""}
+          trust='katex'
         />
       ) : (
         <p className={styles.excerpt}>{result.excerpt}</p>

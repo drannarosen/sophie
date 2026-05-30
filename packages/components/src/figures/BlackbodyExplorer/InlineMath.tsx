@@ -1,11 +1,12 @@
 import katex from "katex";
 import { useMemo } from "react";
+import { BuildTimeHtml } from "../../runtime/BuildTimeHtml.tsx";
 
 export interface InlineMathProps {
   /**
    * LaTeX source. Author-controlled (component-internal call sites), not
    * end-user input — see ADR 0030 + design decision #10. Author content is
-   * the trust boundary for the `dangerouslySetInnerHTML` below.
+   * the trust boundary for the `<BuildTimeHtml>` injection below (ADR 0093).
    */
   children: string;
 }
@@ -38,10 +39,10 @@ export function InlineMath({ children }: InlineMathProps) {
     [children]
   );
 
-  return (
-    <span
-      // biome-ignore lint/security/noDangerouslySetInnerHtml: tex is rendered by katex.renderToString from author-controlled component-internal LaTeX source (not user-supplied content). See EquationRef/Search precedent + ADR 0030.
-      dangerouslySetInnerHTML={{ __html: html }}
-    />
-  );
+  // tex is rendered by katex.renderToString from author-controlled
+  // component-internal LaTeX (not user-supplied) — routed through the one
+  // sanctioned injection chokepoint (ADR 0093) as `katex`. The render
+  // happens client-side, but the trust property is the build-authored
+  // (non-user) LaTeX input, not the timing.
+  return <BuildTimeHtml html={html} trust='katex' />;
 }

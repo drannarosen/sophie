@@ -6,8 +6,9 @@ import { z } from "zod";
  * (MDX build-time pass) from the slot's authored children — title
  * comes from the `title=` attribute, body is pre-rendered HTML from
  * `renderChildrenToHtml`. Mirrors the `RepVerbal.body` / `Objective.body`
- * pattern: HTML strings round-trip through Astro's SSR via
- * `dangerouslySetInnerHTML` without being escaped to literal text.
+ * pattern: HTML strings round-trip through Astro's SSR via the
+ * `<BuildTimeHtml>` chokepoint (ADR 0093) without being escaped to
+ * literal text.
  */
 const OMIFlowSlotPayloadSchema = z.object({
   title: z.string().optional(),

@@ -1,4 +1,5 @@
 import { useId } from "react";
+import { BuildTimeHtml } from "../../runtime/BuildTimeHtml.tsx";
 import styles from "./Objective.module.css.js";
 import type { ObjectiveProps } from "./Objective.schema.ts";
 
@@ -16,8 +17,8 @@ import type { ObjectiveProps } from "./Objective.schema.ts";
  * `body` is an HTML string produced by `renderChildrenToHtml` at build
  * time from the authored MDX children. It originates from author-trusted
  * source (same trust boundary as MDX prose generally) and is injected
- * via `dangerouslySetInnerHTML` so inline emphasis, links, and other
- * markdown nodes survive the round-trip.
+ * via the `<BuildTimeHtml>` chokepoint (ADR 0093) so inline emphasis,
+ * links, and other markdown nodes survive the round-trip.
  */
 export function Objective({
   id,
@@ -60,10 +61,13 @@ export function Objective({
             `<span>` is structurally invalid; we avoid that even
             though it's not Bug 1's reproduction shape here (the
             parent is `<li>`, not chapter prose `<p>`). */}
-        <div
+        {/* body is build-time-serialized author MDX, never runtime
+            input — same trust as MDX prose. */}
+        <BuildTimeHtml
+          as='div'
           className={styles.body}
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: body is build-time-serialized author MDX, never runtime input — same trust as MDX prose
-          dangerouslySetInnerHTML={{ __html: body }}
+          html={body}
+          trust='mdx-serialized'
         />
       </label>
     </li>
