@@ -23,32 +23,32 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 
 | Status | Count |
 |---|---|
-| Validated | 39 |
+| Validated | 40 |
 | In progress | 21 |
 | Unvalidated | 62 |
 | Re-validation needed | 0 |
 | Missing block | 1 |
-| Total | 123 |
+| Total | 124 |
 
 ## Lifecycle summary
 
 | Lifecycle | Count |
 |---|---|
-| Shipped | 73 |
+| Shipped | 74 |
 | Accepted design | 40 |
 | Mixed | 1 |
 | Future package split | 9 |
 | No status | 0 |
-| Total | 123 |
+| Total | 124 |
 
 ## Evidence kinds
 
 | Kind | Count |
 |---|---|
-| test | 130 |
+| test | 131 |
 | chapter | 9 |
 | review | 32 |
-| deployment | 83 |
+| deployment | 85 |
 | audit | 9 |
 | manual | 40 |
 
@@ -155,6 +155,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0092-base-path-correctness.md](/base-path-correctness/) | validated | shipped | 2026-05-29 | deployment, test | Shipped in PR #227. Closes the consumer-base regression class: a build-breaker (info-page slug) plus a leak class (~34 author-written internal links + the Pagefind loader + figure `<img src>` paths that Astro does not auto-prefix). The smoke base-path CI job is the durable structural defense. Pairs with ADR 0084 (packed-smoke) as a consumer-shape gate; the new helpers auto-registered as tsup entries via the ADR 0091 discovery mechanism.  |
 | [docs/website/decisions/0093-build-time-html-trust-primitive.md](/build-time-html-trust-primitive/) | validated | shipped | 2026-05-30 | deployment, test | Shipped in the A+ hardening sprint (Path B, H2). Collapses the 28 `dangerouslySetInnerHTML` sites across 11 component files into one documented chokepoint with a required, typed trust discriminator, closing the standing Architecture −2 ("un-centralized trust surface"). R14 is the structural defense that keeps it collapsed — a 29th raw site fails CI. Pairs with ADR 0004 (component contract) and 0030 (author-trust boundary).  |
 | [docs/website/decisions/0094-build-time-figure-optimization.md](/build-time-figure-optimization/) | _missing_ | accepted design | — | — | no validation block |
+| [docs/website/decisions/0095-global-css-delivery-shared-document-head.md](/global-css-delivery-shared-document-head/) | validated | shipped | 2026-05-30 | deployment, test |  |
 
 ### Reference docs
 

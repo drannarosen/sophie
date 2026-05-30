@@ -3,6 +3,7 @@ import { SectionLanding } from "@sophie/components";
 import { setSophieBaseUrl } from "@sophie/core/runtime";
 import { getCollection } from "astro:content";
 import { courseSpec } from "virtual:sophie/course-spec";
+import InfoPageShell from "../components/InfoPageShell.astro";
 
 // Feed the consumer's Vite-replaced base to the externalized-in-Node
 // SSR/prerender dist of @sophie/* (where import.meta.env is undefined).
@@ -17,6 +18,11 @@ setSophieBaseUrl(import.meta.env.BASE_URL);
  * content collection. Filters units by `section_id === section.slug`
  * and passes them to the layout, which handles draft-status
  * filtering + order sorting + the visual shell.
+ *
+ * Renders inside <InfoPageShell> (same shell as course-landing) so the
+ * section spine gets the shared <SophieHead> — global CSS + a real
+ * `<title>` — instead of the bare unstyled, empty-titled component it
+ * was before (astr201 review F1/F2 / B1/B2; ADR 0095).
  */
 export async function getStaticPaths() {
   const sections = (await getCollection("sections")).map((s) => s.data);
@@ -42,9 +48,11 @@ if (!courseSpec) {
 const { section, units } = Astro.props;
 ---
 
-<SectionLanding
-  client:load
-  spec={courseSpec}
-  section={section}
-  units={units}
-/>
+<InfoPageShell title={`${section.title} — ${courseSpec.identity.title}`}>
+  <SectionLanding
+    client:load
+    spec={courseSpec}
+    section={section}
+    units={units}
+  />
+</InfoPageShell>

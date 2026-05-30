@@ -17,6 +17,7 @@
     "./components/TextbookLayout.astro": "./dist/components/TextbookLayout.astro",
     "./components/ChapterLayout.astro": "./dist/components/ChapterLayout.astro",
     "./components/TextbookHead.astro": "./dist/components/TextbookHead.astro",
+    "./components/SophieHead.astro": "./dist/components/SophieHead.astro",
     "./components/TopBar.astro": "./dist/components/TopBar.astro",
     "./components/Sidebar.astro": "./dist/components/Sidebar.astro",
     "./components/ContentColumn.astro": "./dist/components/ContentColumn.astro",

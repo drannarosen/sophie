@@ -1,4 +1,5 @@
 declare module "@sophie/theme/css";
+declare module "@sophie/theme/base";
 declare module "@sophie/theme/fonts";
 declare module "@sophie/theme/math";
 declare module "@sophie/components/styles.css";
