@@ -16,8 +16,8 @@ import {
   SOPHIE_FORMATIVE_CHILDREN,
   SOPHIE_FORMATIVE_PARENTS,
   SOPHIE_INTERACTIVE_COMPONENTS,
-  sophieAutoImportsRemarkPlugin,
-} from "./sophie-auto-imports.ts";
+} from "./sophie-auto-imports.registry.ts";
+import { sophieAutoImportsRemarkPlugin } from "./sophie-auto-imports.ts";
 
 /**
  * Local structural type matching `mdast-util-mdxjs-esm`'s `MdxjsEsm`
