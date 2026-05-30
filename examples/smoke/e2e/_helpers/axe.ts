@@ -21,19 +21,19 @@
  *
  * **Disabled rules** — Phase-0 known-acceptable rule suppressions:
  *   - `color-contrast`: theme-level concern; @sophie/theme runs its
- *     own WCAG-AA contrast check at build time. Sprint-K P1 token-
- *     level remediation tracked separately.
- *   - `list` / `listitem`: the PR-C4 <LearningObjectives> children-
- *     mode refactor (commit 4737e03) renders `<ul><astro-slot><li>…`
- *     because Astro slots nested React children inside MDX
- *     `client:load` islands. axe-core's list+listitem rules
- *     (WCAG 1.3.1) flag the slot as a non-`<li>` direct child. The
- *     DOM is semantically a list; the slot is an Astro render-layer
- *     artifact. Component emit-shape cleanup tracked separately.
+ *     own WCAG-AA contrast check at build time. Token-level
+ *     remediation tracked separately (GitHub issue #152).
  *
- * When any of the above follow-ups land, drop the corresponding
- * exclude / rule from this file and the suite tightens uniformly
- * across all chapter specs.
+ * The former `list` / `listitem` suppression was DROPPED 2026-05-30
+ * (H5a): the `<ul><astro-slot><li>` shape it guarded against no
+ * longer exists. Commit 4737e03 / ADR 0027 made <LearningObjectives>
+ * render its list from props, not slotted children, so the `<ul>` is
+ * followed directly by `<li>` (data crosses the MDX boundary as
+ * props, not children). axe `list`/`listitem` now run live across all
+ * chapter + course specs.
+ *
+ * When the color-contrast follow-up (#152) lands, drop that rule too
+ * and the suite tightens uniformly across all chapter specs.
  *
  * Single point of maintenance for the tag set + include selector +
  * exclude list + disable list.
@@ -49,7 +49,7 @@ export async function expectChapterA11y(page: Page): Promise<void> {
     .exclude(".task-list-item input[type='checkbox']")
     .exclude("li > input[type='checkbox'][disabled]")
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"])
-    .disableRules(["color-contrast", "list", "listitem"])
+    .disableRules(["color-contrast"])
     .analyze();
   expect(results.violations, "axe violations").toEqual([]);
 }
@@ -81,7 +81,7 @@ export async function expectCourseA11y(page: Page): Promise<void> {
     .exclude(".task-list-item input[type='checkbox']")
     .exclude("li > input[type='checkbox'][disabled]")
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"])
-    .disableRules(["color-contrast", "list", "listitem"])
+    .disableRules(["color-contrast"])
     .analyze();
   expect(results.violations, "axe violations").toEqual([]);
 }
