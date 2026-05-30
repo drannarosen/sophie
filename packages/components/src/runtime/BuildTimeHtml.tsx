@@ -22,8 +22,18 @@ import type {
  *  - extractor-body: pre-rendered HTML from a build-time extractor /
  *    remark plugin (mdast then hast then html); e.g. glossary + equation
  *    biography bodies.
+ *  - pagefind-excerpt: a Pagefind search-result excerpt. Pagefind builds
+ *    it from the build-indexed (author-authored) page text, HTML-escaping
+ *    the content and injecting only structural `<mark>` highlight tags
+ *    around matched terms. The match positions track the runtime query,
+ *    but the markup is escape-safe by construction (the canonical
+ *    Pagefind-UI rendering), so the injected HTML is never user-authored.
  */
-export type BuildTimeHtmlTrust = "katex" | "mdx-serialized" | "extractor-body";
+export type BuildTimeHtmlTrust =
+  | "katex"
+  | "mdx-serialized"
+  | "extractor-body"
+  | "pagefind-excerpt";
 
 export type BuildTimeHtmlProps<E extends ElementType> = {
   /** Build/author-authored HTML. undefined renders an empty element. */
@@ -58,7 +68,7 @@ export function BuildTimeHtml<E extends ElementType = "span">({
   return (
     <Tag
       {...rest}
-      // biome-ignore lint/security/noDangerouslySetInnerHtml: SINGLE sanctioned chokepoint (ADR 0093). html is always rendered from author/build-authored content via a trusted pipeline (katex / mdx-serialized / extractor-body per the required trust prop), never runtime/student input. R14 forbids raw use elsewhere.
+      // biome-ignore lint/security/noDangerouslySetInnerHtml: SINGLE sanctioned chokepoint (ADR 0093). html is always rendered from author/build-authored content via a trusted pipeline (katex / mdx-serialized / extractor-body / pagefind-excerpt per the required trust prop), never runtime/student input. R14 forbids raw use elsewhere.
       dangerouslySetInnerHTML={{ __html: html ?? "" }}
     />
   );
