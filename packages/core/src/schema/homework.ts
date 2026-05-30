@@ -1,0 +1,60 @@
+import { z } from "zod";
+import { NonEmptyString, Slug } from "./primitives.js";
+
+// Per-term homework registry: source of truth for assignedDate / dueDate /
+// cross-chapter problem membership (ADR 0096). Framework-pure — this schema
+// enforces shape + intra-registry invariants only. "Unit exists on disk" and
+// "id exists in that unit's practice file" cross-refines run in the loader
+// (no filesystem access here, ADR 0001).
+
+const DateOrTbd = z.union([z.iso.date(), z.literal("tbd")]);
+
+const ProblemGroupSchema = z
+  .object({ unit: Slug, ids: z.array(NonEmptyString).min(1) })
+  .strict();
+
+const HomeworkSchema = z
+  .object({
+    id: Slug,
+    title: NonEmptyString,
+    assignedDate: DateOrTbd,
+    dueDate: DateOrTbd,
+    problems: z.array(ProblemGroupSchema).min(1),
+  })
+  .strict()
+  .refine(
+    (hw) =>
+      hw.assignedDate === "tbd" ||
+      hw.dueDate === "tbd" ||
+      new Date(hw.assignedDate) <= new Date(hw.dueDate),
+    {
+      message: "assignedDate must be on or before dueDate",
+      path: ["assignedDate"],
+    }
+  );
+
+export const HomeworkRegistrySchema = z
+  .object({ homework: z.array(HomeworkSchema) })
+  .strict()
+  .refine(
+    (reg) => {
+      const seen = new Set<string>();
+      for (const hw of reg.homework) {
+        for (const g of hw.problems) {
+          for (const id of g.ids) {
+            const key = `${g.unit}/${id}`;
+            if (seen.has(key)) return false;
+            seen.add(key);
+          }
+        }
+      }
+      return true;
+    },
+    {
+      message: "each problem may be claimed by at most one homework",
+      path: ["homework"],
+    }
+  );
+
+export type HomeworkRegistry = z.infer<typeof HomeworkRegistrySchema>;
+export type Homework = z.infer<typeof HomeworkSchema>;
