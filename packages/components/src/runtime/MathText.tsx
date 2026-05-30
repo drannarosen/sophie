@@ -36,8 +36,9 @@ export function MathText<E extends ElementType = "span">({
   // construction, so this object IS `BuildTimeHtmlProps<E>`. TS cannot
   // reduce the generic `Omit` over an unresolved `E` to prove it — the
   // well-known limitation of forwarding through nested `as`-polymorphic
-  // components — so the boundary needs one assertion (not `as any`; the
-  // shape is provably correct).
+  // components — so the boundary needs one assertion. It is a precise
+  // typed conversion, not an unsafe `any`-cast; the shape is provably
+  // correct.
   const props = {
     html: renderTextWithMath(children),
     trust: "katex" as const,
