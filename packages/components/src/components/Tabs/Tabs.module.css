@@ -65,7 +65,7 @@
 }
 
 :global([data-sophie-tabs] [role="tab"]:focus-visible) {
-  outline: 2px solid var(--sophie-accent);
+  outline: var(--sophie-focus-width) solid var(--sophie-focus-color);
   outline-offset: 2px;
   border-radius: var(--sophie-radius-xs);
 }
@@ -84,7 +84,7 @@
  * user-agent's `[hidden] { display: none }` rule applies unopposed. */
 
 :global([data-sophie-tabs] > [role="tabpanel"]:focus-visible) {
-  outline: 2px solid var(--sophie-accent);
+  outline: var(--sophie-focus-width) solid var(--sophie-focus-color);
   outline-offset: 2px;
   border-radius: var(--sophie-radius-sm);
 }

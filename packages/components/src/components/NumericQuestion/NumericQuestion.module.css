@@ -55,7 +55,7 @@
 }
 
 .input:focus-visible {
-  outline: 2px solid var(--sophie-brand-teal);
+  outline: var(--sophie-focus-width) solid var(--sophie-focus-color);
   outline-offset: 1px;
 }
 

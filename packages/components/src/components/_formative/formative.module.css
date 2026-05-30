@@ -76,7 +76,7 @@
 }
 
 :global([data-pedagogy-role="mcq"] input[type="radio"]:focus-visible) {
-  outline: 2px solid var(--sophie-brand-teal);
+  outline: var(--sophie-focus-width) solid var(--sophie-focus-color);
   outline-offset: 2px;
 }
 
@@ -153,7 +153,7 @@
   [data-pedagogy-role="multi-select"]
   input[type="checkbox"]:focus-visible
 ) {
-  outline: 2px solid var(--sophie-brand-teal);
+  outline: var(--sophie-focus-width) solid var(--sophie-focus-color);
   outline-offset: 2px;
 }
 
