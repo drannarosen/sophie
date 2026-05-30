@@ -16,7 +16,11 @@ export const toFigureUsageRecord: EntityWithLookupToPagefindRecord<
   meta: {
     title: usage.name,
     locator: `${ctx.chapterTitle} · ${ctx.moduleTitle}`,
-    thumbnail: registry.src,
+    // ADR 0094: `src` is optional on the entry type but the resolved
+    // registry always fills it (optimized → _astro/ URL; legacy → public
+    // URL; an entry with neither fails the build), so `?? ""` is a
+    // defensive fallback that does not trigger in practice.
+    thumbnail: registry.src ?? "",
     alt: registry.alt,
     number: String(usage.number),
     canonical: usage.canonical ? "true" : "false",

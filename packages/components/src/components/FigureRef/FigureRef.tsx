@@ -92,12 +92,18 @@ export function FigureRef({ name, children }: FigureRefProps) {
           data-sophie-figure-popover=''
           sideOffset={6}
         >
-          <img
-            alt={registry.alt}
-            className={styles.thumb}
-            loading='lazy'
-            src={withBase(registry.src)}
-          />
+          {/* ADR 0094: `src` is optional on the entry type. The
+              serialized registry resolves it to the optimized _astro/
+              URL for optimized figures; guard for the rare entry that
+              carries neither a master nor a public src. */}
+          {registry.src !== undefined && (
+            <img
+              alt={registry.alt}
+              className={styles.thumb}
+              loading='lazy'
+              src={withBase(registry.src)}
+            />
+          )}
           <figcaption className={styles.caption}>{caption}</figcaption>
           <HoverCard.Arrow className={styles.arrow} />
         </HoverCard.Content>

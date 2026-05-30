@@ -61,6 +61,30 @@ function FigureFromRegistry({
       </figure>
     );
   }
+  // ADR 0094: a registry entry's `src` is optional — an optimized entry
+  // (master in src/figures/) carries no public URL and renders through
+  // the route's server-side <FigureImage>. The React path can't optimize,
+  // so an optimized-only entry has no image to draw here (this branch is
+  // reached only in non-route contexts such as Storybook, where fixtures
+  // should supply a `src`).
+  if (entry.src === undefined) {
+    if (process.env.NODE_ENV !== "production") {
+      console.error(
+        `[@sophie/components] <Figure name="${name}"> is optimized-only (no public src). Render it via a route that maps Figure→FigureImage, or supply a src for non-route contexts.`
+      );
+    }
+    return (
+      <figure className={styles.figure}>
+        <div
+          className={styles.missing}
+          role='img'
+          aria-label='Figure has no inline source'
+        >
+          Figure <code>{name}</code> has no inline source
+        </div>
+      </figure>
+    );
+  }
   return (
     <FigureBody
       src={entry.src}

@@ -229,6 +229,7 @@ export {
 } from "./practice-attempt.js";
 export { LangTag, NonEmptyString, Slug } from "./primitives.js";
 export { type RegistryBase, RegistryBaseSchema } from "./registry-base.js";
+export { isFigureFile, resolveFigureFile } from "./resolve-figure-file.js";
 export {
   type Rubric,
   type RubricCriterion,
