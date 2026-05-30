@@ -320,6 +320,19 @@ to every PR, every design decision, every refactor.
   Integration test I3 catches this on the unit job; catching it
   locally first is faster.
 
+- **Coverage thresholds are a ratchet, not a target.** Every
+  package's `vitest.config.ts` carries a `coverage.thresholds`
+  block set just below measured coverage (H3, 2026-05-30). These
+  are floors: a deleted test or new-untested file trips the gate
+  (`vitest run --coverage` exits non-zero, failing CI's unit job —
+  no separate gate step). When a PR raises real coverage, **bump
+  the floor upward in the same PR; never lower it** to make a drop
+  pass. Lowering a floor requires an explicit, justified note in
+  the PR (the only legitimate case is a deliberate code deletion
+  that removes well-covered lines). `@sophie/theme` omits the
+  `functions` floor by design — it is token data with a single
+  function.
+
 - **Standing PR-review rules (R6–R13).** Apply on every PR; cite by
   number in review comments.
   - **R6 — MyST anchor verification.** Cited ADR sections use

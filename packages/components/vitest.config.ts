@@ -37,6 +37,17 @@ export default defineConfig({
         "**/*.d.ts",
         "src/css-modules.d.ts",
       ],
+      // Coverage ratchet (H3, 2026-05-30): floors, not targets. Set ~1pt
+      // below measured (83/78/74/85) so a deleted test or new-untested
+      // file trips the gate; the buffer absorbs v8 attribution jitter.
+      // Bump UPWARD as coverage rises, never down. Self-enforcing — the
+      // `vitest run --coverage` in CI's unit job exits non-zero below floor.
+      thresholds: {
+        statements: 82,
+        branches: 76,
+        functions: 73,
+        lines: 83,
+      },
     },
   },
 });
