@@ -26,8 +26,9 @@ validation:
     runtime check (Sophie has no server — ADR 0001). The
     security-acceptance test in PR 2 (grep `dist/` for a sentinel) is
     the proof obligation that flips `validation.status` to `validated`.
-    Amends astr201 decision 0001 §6 (assessments deferred; lecture
-    solutions not migrated): solutions are now migrated, gated.
+    Amends astr201 decision 0001 §4 + §6 (lecture solutions fold into
+    readings; homework/exam solutions deferred as an assessment
+    concern): solutions are now migrated, gated.
 ---
 
 # ADR 0096: Deploy-time gated content + homework registry
@@ -57,10 +58,11 @@ the deployed artifact"** — not a CSS class, not a JS gate. A correct
 design must therefore decide *visibility at build time* and exclude
 withheld content from `dist/` entirely.
 
-This amends astr201 decision 0001 §6 ("Assessments deferred"), which
-declared lecture/homework solutions out of scope and not migrated
-pending the ADR 0073 assessment surface. Solutions are now migrated —
-**gated** — via the mechanism this ADR locks.
+This amends astr201 decision 0001 §4 ("Solutions fold into readings",
+lecture-level) and §6 ("Assessments deferred", homework/exam-level),
+which together declared lecture and homework solutions out of scope and
+not migrated pending the ADR 0073 assessment surface. Solutions are now
+migrated — **gated** — via the mechanism this ADR locks.
 
 ## Decision
 
@@ -153,7 +155,7 @@ reveal*. They share dates by default but are independently editable.
   implementation plan's out-of-scope list) becomes the date source,
   superseding hand-entered registry dates; the registry is shaped to
   accept that substitution without a migration.
-- **Amends astr201 decision 0001 §6.** Lecture/homework solutions move
+- **Amends astr201 decision 0001 §4 + §6.** Lecture/homework solutions move
   from "not migrated (assessment concern, deferred)" to "migrated,
   gated." This ADR is the Sophie-platform capability that unblocks that
   consumer change.
@@ -190,4 +192,4 @@ reveal*. They share dates by default but are independently editable.
 - `docs/reviews/2026-05-30-security-audit.md` — confirms `dist/` is the only exposure surface.
 - `docs/plans/2026-05-30-deploy-time-gated-solutions-design.md` — full design (§10 is this ADR's source).
 - `docs/plans/2026-05-30-gated-solutions-implementation.md` — three-PR implementation plan.
-- astr201 decision 0001 §6 ("Assessments deferred") — amended by this ADR.
+- astr201 decision 0001 §4 ("Solutions fold into readings") + §6 ("Assessments deferred") — amended by this ADR.
