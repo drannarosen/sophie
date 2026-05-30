@@ -417,7 +417,9 @@ to every PR, every design decision, every refactor.
 
     **Scope clarification.** R12 applies *only* to nullable
     virtual-module exports. Currently nullable:
-    `virtual:sophie/course-spec` (`CourseSpec | null`). Non-nullable
+    `virtual:sophie/course-spec` (`CourseSpec | null`) and
+    `virtual:sophie/homework` (`HomeworkRegistry | null`, ADR 0096).
+    Non-nullable
     (R12 does not apply): `virtual:sophie/figures` (always an object,
     possibly empty); `virtual:sophie/pedagogy-index`. Check shapes
     at [`packages/astro/src/virtual-modules.d.ts`](packages/astro/src/virtual-modules.d.ts).

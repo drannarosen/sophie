@@ -24,22 +24,22 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 | Status | Count |
 |---|---|
 | Validated | 40 |
-| In progress | 21 |
+| In progress | 22 |
 | Unvalidated | 62 |
 | Re-validation needed | 0 |
 | Missing block | 1 |
-| Total | 124 |
+| Total | 125 |
 
 ## Lifecycle summary
 
 | Lifecycle | Count |
 |---|---|
 | Shipped | 74 |
-| Accepted design | 40 |
+| Accepted design | 41 |
 | Mixed | 1 |
 | Future package split | 9 |
 | No status | 0 |
-| Total | 124 |
+| Total | 125 |
 
 ## Evidence kinds
 
@@ -47,7 +47,7 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 |---|---|
 | test | 131 |
 | chapter | 9 |
-| review | 32 |
+| review | 34 |
 | deployment | 85 |
 | audit | 9 |
 | manual | 40 |
@@ -156,6 +156,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0093-build-time-html-trust-primitive.md](/build-time-html-trust-primitive/) | validated | shipped | 2026-05-30 | deployment, test | Shipped in the A+ hardening sprint (Path B, H2). Collapses the 28 `dangerouslySetInnerHTML` sites across 11 component files into one documented chokepoint with a required, typed trust discriminator, closing the standing Architecture −2 ("un-centralized trust surface"). R14 is the structural defense that keeps it collapsed — a 29th raw site fails CI. Pairs with ADR 0004 (component contract) and 0030 (author-trust boundary).  |
 | [docs/website/decisions/0094-build-time-figure-optimization.md](/build-time-figure-optimization/) | _missing_ | accepted design | — | — | no validation block |
 | [docs/website/decisions/0095-global-css-delivery-shared-document-head.md](/global-css-delivery-shared-document-head/) | validated | shipped | 2026-05-30 | deployment, test |  |
+| [docs/website/decisions/0096-deploy-time-gated-content.md](/deploy-time-gated-content/) | in progress | accepted design | 2026-05-30 | review | Approved design, not yet shipped. Real protection depends on a private source repo (`astrobytes-edu/astr201`) plus a daily rebuild cadence; the gate is build-time exclusion from `dist/`, not a runtime check (Sophie has no server — ADR 0001). The security-acceptance test in PR 2 (grep `dist/` for a sentinel) is the proof obligation that flips `validation.status` to `validated`. Amends astr201 decision 0001 §6 (assessments deferred; lecture solutions not migrated): solutions are now migrated, gated.  |
 
 ### Reference docs
 
