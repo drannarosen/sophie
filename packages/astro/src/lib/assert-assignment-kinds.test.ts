@@ -92,4 +92,21 @@ describe("assertAssignmentKindsDeclared", () => {
     expect(thrown?.message).toContain("lab");
     expect(thrown?.message).toContain("lab1");
   });
+
+  test("treats a prototype-named kind (e.g. 'constructor') as undeclared", () => {
+    // `Slug` permits `constructor` as a valid kind, and `declared` is a plain
+    // object with a live prototype, so membership MUST use `Object.hasOwn` —
+    // a `kind in declared` / truthy `declared[kind]` check would falsely treat
+    // an undeclared `constructor` kind as declared (the exact false-negative
+    // the cross-refine exists to prevent). This test goes RED under those
+    // shapes and GREEN under `Object.hasOwn`.
+    expect(() =>
+      assertAssignmentKindsDeclared(
+        registry({ id: "x1", kind: "constructor" }),
+        {
+          homework: "Homework",
+        }
+      )
+    ).toThrow(/constructor/);
+  });
 });
