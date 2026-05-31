@@ -112,3 +112,22 @@ and "This Week" + the announcement banner light up when B/C land.
 - Landmarks per R10; nullable virtual-module consumers narrow per R12; no raw
   `dangerouslySetInnerHTML` (R14); new components declare epistemic role or are
   allowlisted as chrome (R13).
+
+## 6. Follow-ups (tracked, not in PR 1 scope)
+
+- **R13 gate scope vs `@sophie/astro` chrome.** The epistemic-role gate
+  (`scripts/lint-epistemic-role.ts`, R13) scans only
+  `packages/components/src/components`. The course-home chrome added in this PR
+  lives in `@sophie/astro` (`Starfield`, `HomeBackground`, `CourseHomeShell` and
+  its sub-pieces, `CourseMenu`, the descriptive bands). Their `CHROME`-allowlist
+  entries in the lint script are therefore **documentary only** — they record
+  the chrome classification for reviewers but are not actually enforced by the
+  gate, because the scanned directory does not include `@sophie/astro`. Two
+  resolutions, to adjudicate in a future hardening pass: (a) **extend the R13
+  scan** to `@sophie/astro`'s chrome `.astro` components so the allowlist
+  becomes load-bearing, or (b) **declare astro-layer components out of R13 scope
+  by design** (R13 governs `@sophie/components` pedagogy primitives; astro-layer
+  chrome is structurally never pedagogy and is reviewed by inspection). Either is
+  acceptable; the point is to make the choice explicit rather than leave the
+  allowlist entries silently inert. Not fixed in PR 1 — recorded here as the
+  tracked follow-up.

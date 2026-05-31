@@ -123,10 +123,10 @@ const config: ViteUserConfigWithTest = {
       // Bump UPWARD as coverage rises, never down. Self-enforcing — the
       // `vitest run --coverage` in CI's unit job exits non-zero below floor.
       thresholds: {
-        statements: 89,
-        branches: 79,
-        functions: 92,
-        lines: 91,
+        statements: 90,
+        branches: 80,
+        functions: 94,
+        lines: 92,
       },
     },
   },

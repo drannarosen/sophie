@@ -248,11 +248,24 @@ landing:
 | Layout enum value | Meaning |
 | --- | --- |
 | `"simple-list"` | default; renders title + sections + units list |
-| `"hero-with-modules"` | hero block above the modules grid |
+| `"dashboard"` | **course-home dashboard** (ADR 0097): hero · orientation cards (Due Soon, Start Reading) · module list · descriptive "why/how" bands · dropdown nav, over a pluggable background. The realized form of the modules-grid landing. |
+| `"hero-with-modules"` | **alias of `"dashboard"`** — resolves to the same dashboard layout downstream. New courses should write `"dashboard"`; existing `hero-with-modules` specs auto-upgrade with no change. |
 | `"prose-with-toc"` | landing-as-narrative + table of contents |
 | `"custom"` | **explicit** declaration that `defineSophieIntegration({ landings: { course, section } })` provides the override component; schema enum guards against typos in the override declaration |
 
 Default is `"simple-list"` when `landing.layout` is omitted.
+
+#### Home-background theme slot
+
+The `dashboard` layout paints over a **pluggable background theme** (ADR 0097
+#4). It ships with one theme, **`starfield`** (the dark-first "Deep Field"
+photometric Canvas field), used as the default. The theme is resolved through a
+single registry, so a future palette/multi-theme ADR (extending ADR 0005) can
+add a second background and expose an author-facing selector without touching
+the shell. **Multi-theme selection and the per-course palette field are deferred
+to that ADR;** today every dashboard renders the `starfield` default. The
+background is scoped to the course home and section landings only — reading and
+practice pages stay light.
 
 ## Prose fragments at `src/content/course-info/`
 
@@ -350,10 +363,10 @@ Each `.astro` layout composes six React sub-components from
 `OfficeHoursTable`, `ContactCard`, `AccessibilitySection`,
 `PrereqsList`. Authors don't touch these directly.
 
-Landing layouts: 3 built-ins (`hero-with-modules`, `simple-list`,
-`prose-with-toc`) + the `"custom"` integration-override path. The
-override component receives the spec, the section list, and the unit
-list as props — same contract as the built-ins.
+Landing layouts: 3 built-ins (`dashboard` — alias `hero-with-modules`,
+`simple-list`, `prose-with-toc`) + the `"custom"` integration-override
+path. The override component receives the spec, the section list, and the
+unit list as props — same contract as the built-ins.
 
 ## Deferred (out of v0.2 scope)
 

@@ -15,6 +15,28 @@ degrading to nothing until ADRs 0098/0099 land.
 pluggable `HomeBackground` theme slot (one entry: vendored `starfield`).
 Calendar-aware, student-agnostic (LDS). Reading pages untouched.
 
+## Status (PR 1)
+
+| Task | Status | Commit |
+|---|---|---|
+| 1 — `dashboard` landing-layout enum | done | `4128d9a` |
+| 2 — vendored starfield + `HomeBackground` seam | done | `7e46555` |
+| 3 — `CourseHomeShell` + dashboard assembly | done | `4ca9461` |
+| 4 — global dropdown nav (`CourseMenu`) | done | `9bfffdc` |
+| 5 — descriptive bands (course-spec projection) | done | `0288f9d` |
+| 6 — Due-Soon + graceful degradation | done | `377a54f` |
+| 7 — dispatcher wiring + section-landing background | done | `0efeee0` |
+| 8 — astr201 consumer adoption | **post-merge** | separate astr201 PR (after this PR squash-merges) |
+| 9 — docs + full verification | done | this commit |
+
+Task 8 is the consumer step in the **astr201** repo (`landing.layout:
+"dashboard"`, sophie SHA re-pin, `pnpm install --frozen-lockfile`, smoke green) —
+coordinated after this platform PR merges, same discipline as the gravity pilot.
+All Sophie-side gates verified in Task 9 (biome 0/0 · typecheck clean · unit
+green with coverage floors bumped on `@sophie/core` + `@sophie/astro` · R11/R12/
+R13/R14 clean · MyST 0 ⚠ · smoke build renders `sophie-home` + `id="starfield"` ·
+smoke e2e 191 passed / 2 pre-existing skips).
+
 **Tech stack:** `@sophie/core` (Zod schema) · `@sophie/astro` (routes, shell,
 chrome `.astro`) · `@sophie/components` (if a React island is needed) · vanilla
 canvas JS for the starfield · astr201 consumer.
