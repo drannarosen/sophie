@@ -157,6 +157,10 @@ const CHROME: ReadonlyArray<readonly [string, string]> = [
     "course-home dashboard page shell (ADR 0097); assembles hero/cards/modules/footer over HomeBackground; page chrome (lives in @sophie/astro, outside this gate's scope — documentary)",
   ],
   [
+    "CourseMenu",
+    "course-home global dropdown nav (grouped all-pages menu; ADR 0097 #6); navigation chrome (lives in @sophie/astro, outside this gate's scope — documentary)",
+  ],
+  [
     "CourseLanding",
     "course landing layout (hero-with-modules / simple-list); page chrome",
   ],

@@ -27,8 +27,8 @@
  * with accessible names.
  *
  * SEAMS for downstream tasks (filled WITHOUT editing this shell's shape):
- *   - slot `nav`        → Task 4 (CourseMenu dropdown). A structural
- *                         placeholder renders today inside the nav landmark.
+ *   - slot `nav`        → <CourseMenu> dropdown (Task 4) is the default
+ *                         slot fill; consumers may override the nav slot.
  *   - slot `why-band`   → Task 5 ("Why this course is different").
  *   - slot `how-band`   → Task 5 ("How each lecture works").
  *   - <OrientationCards>' `this-week`/`due-soon`/`start-reading` slots
@@ -37,6 +37,7 @@
  */
 import HomeBackground from "../backgrounds/HomeBackground.astro";
 import CourseHero from "./CourseHero.astro";
+import CourseMenu from "./CourseMenu.astro";
 import HomeQuickLinks from "./HomeQuickLinks.astro";
 import ModuleList from "./ModuleList.astro";
 import OrientationCards from "./OrientationCards.astro";
@@ -92,12 +93,12 @@ const { moduleCount, lectureCount } = courseCounts(sections, units);
           <span class='sophie-home-topnav__brand'>
             <b aria-hidden='true'>◆</b> {code}
           </span>
-          {/* Task 4 inserts <CourseMenu> here; a structural placeholder
-              keeps the nav landmark + top-right alignment reviewable. */}
           <slot name='nav'>
-            <nav class='sophie-home-topnav__nav' aria-label='Course menu'>
-              <span class='sophie-home-topnav__menu-stub'>Menu ▾</span>
-            </nav>
+            <CourseMenu
+              sections={sections}
+              units={units}
+              infoPages={infoPages}
+            />
           </slot>
         </header>
 
@@ -195,9 +196,6 @@ const { moduleCount, lectureCount } = courseCounts(sections, units);
   .sophie-home-topnav__brand b {
     color: var(--sophie-home-teal);
     font-weight: 500;
-  }
-  .sophie-home-topnav__menu-stub {
-    color: var(--sophie-home-ink-muted);
   }
 
   .sophie-home__main {

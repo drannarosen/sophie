@@ -1,0 +1,307 @@
+---
+/**
+ * <CourseMenu /> — the global dropdown nav for the course home (ADR 0097
+ * #6). A top-right "Menu" trigger opens a glass panel listing every page,
+ * grouped Course / The Course / Reference & Help. The structure + aesthetic
+ * are ported from the Deep Field design reference; type comes from the
+ * local `@sophie/theme` font vars (no CDN fonts), and colors from the
+ * shell's scoped `--sophie-home-*` palette (this component renders inside
+ * `.sophie-home`).
+ *
+ * Chrome (role-less, ADR 0058): a navigation projection, not pedagogy —
+ * documented in the R13 CHROME allowlist.
+ *
+ * DATA: groups are projected by `navGroups` (home-projections.ts) from the
+ * same sections/units + `info_pages` the shell already holds — no duplicate
+ * projection logic (DRY). "Course"/"Reference & Help" derive from
+ * `info_pages` by layout; "The Course" from sections. Placeholder entries
+ * (Math & Physics Review · Optional; Practice Problems) carry no path and
+ * render as non-interactive spans, never a dead `href="#"` (honest to AT).
+ *
+ * LANDMARK (R10): the menu lives inside the shell's nav `<slot>`, which the
+ * shell wraps in `<header>`. This component owns the `<nav aria-label>`
+ * landmark (named, no `<main>` collision). The panel is the WAI-ARIA
+ * disclosure-navigation pattern — a labeled region of grouped link LISTS,
+ * NOT an ARIA `menu` (the APG reserves `role="menu"` for application
+ * menus with roving-tabindex arrow-key nav, not site navigation; the panel
+ * is `aria-labelledby` → the trigger, so it has an accessible name).
+ *
+ * A11Y WIRING (ADR 0097 #6, mandatory):
+ *   - trigger: `aria-haspopup="true"`, `aria-controls` → panel id,
+ *     `aria-expanded` synced to panel open state (starts `false`).
+ *   - panel: `data-open` drives the open/closed CSS; closed → `pointer-
+ *     events:none` + `opacity:0` (visually + interaction hidden).
+ *   - Escape closes AND returns focus to the trigger; click-outside closes.
+ *
+ * INTERACTION is a BUNDLED script element (ADR 0032 vanilla-JS chrome
+ * state — ephemeral open/closed UI, not a persisted preference, so no
+ * `definePreference`). The Container-API axe harness does NOT run bundled
+ * scripts, so the open-state axe test renders the panel's open markup
+ * directly; the Escape / click-outside / focus-return BEHAVIOR is covered
+ * by the Task 7 smoke e2e. (This docblock avoids the literal script
+ * open/close tag pair: the tsup entry-discovery walk regex-scans `.astro`
+ * script bodies and a stray tag pair in prose would corrupt its chunking —
+ * see build/discover-astro-entries.ts.)
+ */
+import type { SectionEntry, UnitEntry } from "@sophie/core/schema";
+import { withBase } from "../../lib/with-base";
+import { type NavGroup, navGroups } from "./home-projections.ts";
+
+interface Props {
+  sections: ReadonlyArray<SectionEntry>;
+  units: ReadonlyArray<UnitEntry>;
+  /** The course-spec `info_pages` record (slug → declaration), if any. */
+  infoPages?: Readonly<Record<string, unknown>>;
+}
+
+const { sections, units, infoPages } = Astro.props;
+const groups: NavGroup[] = navGroups(sections, units, infoPages);
+
+const triggerId = "sophie-home-menu-trigger";
+const panelId = "sophie-home-menu-panel";
+
+/** Stable, group-heading id for each group's `aria-labelledby`. */
+const groupHeadingId = (heading: string): string =>
+  `sophie-home-menu-group-${heading
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")}`;
+---
+
+<nav class='sophie-home-menu' aria-label='All pages'>
+  <button
+    type='button'
+    class='sophie-home-menu__trigger'
+    id={triggerId}
+    aria-haspopup='true'
+    aria-expanded='false'
+    aria-controls={panelId}
+  >
+    Menu <span class='sophie-home-menu__chev' aria-hidden='true'>▾</span>
+  </button>
+
+  <div
+    class='sophie-home-menu__panel'
+    id={panelId}
+    data-open='false'
+    aria-labelledby={triggerId}
+  >
+    {
+      groups.map((group) => (
+        <div class='sophie-home-menu__group'>
+          <h3
+            id={groupHeadingId(group.heading)}
+            class='sophie-home-menu__group-heading'
+          >
+            {group.heading}
+          </h3>
+          <ul
+            class='sophie-home-menu__list'
+            aria-labelledby={groupHeadingId(group.heading)}
+          >
+            {group.links.map((link) => (
+              <li class='sophie-home-menu__item'>
+                {link.path ? (
+                  <a
+                    class='sophie-home-menu__link'
+                    href={withBase(link.path)}
+                    aria-current={link.current ? "page" : undefined}
+                  >
+                    {link.label}
+                    {typeof link.count === "number" && (
+                      <span class='sophie-home-menu__count'>{link.count}</span>
+                    )}
+                  </a>
+                ) : (
+                  <span
+                    class='sophie-home-menu__link sophie-home-menu__link--placeholder'
+                    aria-disabled='true'
+                  >
+                    {link.label}
+                    {link.optional && (
+                      <span class='sophie-home-menu__opt'>Optional</span>
+                    )}
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))
+    }
+  </div>
+</nav>
+
+<script>
+  /* Top-right dropdown nav — accessible toggle (Escape + click-outside
+     close, focus returns to trigger on Escape). Ephemeral UI state, so it
+     drives DOM attributes directly rather than a persisted preference
+     (ADR 0032). */
+  const trigger = document.getElementById("sophie-home-menu-trigger");
+  const panel = document.getElementById("sophie-home-menu-panel");
+
+  if (trigger && panel) {
+    const setOpen = (open: boolean): void => {
+      trigger.setAttribute("aria-expanded", String(open));
+      panel.setAttribute("data-open", String(open));
+    };
+
+    trigger.addEventListener("click", (event) => {
+      event.stopPropagation();
+      setOpen(panel.getAttribute("data-open") !== "true");
+    });
+
+    document.addEventListener("click", (event) => {
+      const target = event.target as Node | null;
+      if (target && !panel.contains(target) && target !== trigger) {
+        setOpen(false);
+      }
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && panel.getAttribute("data-open") === "true") {
+        setOpen(false);
+        trigger.focus();
+      }
+    });
+  }
+</script>
+
+<style>
+  /* ── Top-right dropdown nav (Deep Field glass panel; ADR 0097 #6) ───── */
+  .sophie-home-menu {
+    position: relative;
+  }
+  .sophie-home-menu__trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--sophie-home-glass);
+    border: 1px solid var(--sophie-home-glass-brd);
+    color: var(--sophie-home-ink-soft);
+    cursor: pointer;
+    border-radius: 999px;
+    padding: 0.4rem 0.85rem;
+    font-family: var(--sophie-font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    transition:
+      border-color 0.25s,
+      color 0.25s;
+  }
+  .sophie-home-menu__trigger:hover,
+  .sophie-home-menu__trigger[aria-expanded="true"] {
+    color: var(--sophie-home-ink);
+    border-color: var(--sophie-home-glass-brd-lit);
+  }
+  .sophie-home-menu__chev {
+    font-size: 0.8rem;
+    transition: transform 0.25s var(--sophie-home-ease);
+  }
+  .sophie-home-menu__trigger[aria-expanded="true"] .sophie-home-menu__chev {
+    transform: rotate(180deg);
+  }
+
+  .sophie-home-menu__panel {
+    position: absolute;
+    top: calc(100% + 0.6rem);
+    right: 0;
+    z-index: 40;
+    min-width: 270px;
+    padding: 0.9rem;
+    border-radius: 14px;
+    background: rgba(12, 12, 28, 0.86);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--sophie-home-glass-brd);
+    box-shadow:
+      0 24px 60px rgba(0, 0, 0, 0.55),
+      0 0 30px rgba(79, 214, 196, 0.06);
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+    transform-origin: top right;
+    pointer-events: none;
+    transition:
+      opacity 0.2s var(--sophie-home-ease),
+      transform 0.2s var(--sophie-home-ease);
+  }
+  .sophie-home-menu__panel[data-open="true"] {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+
+  .sophie-home-menu__group + .sophie-home-menu__group {
+    margin-top: 0.7rem;
+    padding-top: 0.7rem;
+    border-top: 1px solid rgba(160, 170, 230, 0.1);
+  }
+  .sophie-home-menu__group-heading {
+    margin: 0 0 0.3rem;
+    padding: 0 0.6rem;
+    font-family: var(--sophie-font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--sophie-home-ink-muted);
+  }
+  .sophie-home-menu__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .sophie-home-menu__link {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.46rem 0.6rem;
+    border-radius: 8px;
+    color: var(--sophie-home-ink-soft);
+    font-family: var(--sophie-font-sans);
+    font-size: 0.95rem;
+    letter-spacing: normal;
+    text-transform: none;
+    text-decoration: none;
+    transition:
+      background 0.18s,
+      color 0.18s;
+  }
+  a.sophie-home-menu__link:hover,
+  a.sophie-home-menu__link:focus-visible {
+    background: rgba(79, 214, 196, 0.1);
+    color: var(--sophie-home-ink);
+    outline: none;
+  }
+  .sophie-home-menu__link--placeholder {
+    color: var(--sophie-home-ink-muted);
+    cursor: default;
+  }
+  .sophie-home-menu__link[aria-current="page"] {
+    color: var(--sophie-home-teal);
+  }
+  .sophie-home-menu__count {
+    font-family: var(--sophie-font-mono);
+    font-size: 0.72rem;
+    color: var(--sophie-home-ink-muted);
+  }
+  .sophie-home-menu__opt {
+    font-size: 0.62rem;
+    color: var(--sophie-home-violet);
+    border: 1px solid rgba(160, 139, 255, 0.4);
+    border-radius: 999px;
+    padding: 0.05rem 0.4rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sophie-home-menu__trigger,
+    .sophie-home-menu__chev,
+    .sophie-home-menu__panel,
+    .sophie-home-menu__link {
+      transition: none;
+    }
+  }
+</style>

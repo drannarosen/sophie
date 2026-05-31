@@ -6,6 +6,7 @@ import {
   infoPageLabel,
   lectureCountForSection,
   moduleRows,
+  navGroups,
   quickLinks,
 } from "./home-projections.ts";
 
@@ -143,5 +144,106 @@ describe("quickLinks", () => {
 
   test("absent info_pages → no links", () => {
     expect(quickLinks(undefined)).toEqual([]);
+  });
+});
+
+describe("navGroups", () => {
+  const SECTIONS = [
+    section("foundations", 0, "Foundations"),
+    section("hr", 1, "HR Diagram"),
+  ];
+  const UNITS = [
+    unit("u1", "foundations", 0),
+    unit("u2", "foundations", 1),
+    unit("u3", "foundations", 2, "draft"),
+    unit("u4", "hr", 0),
+  ];
+  const INFO_PAGES = {
+    syllabus: { layout: "SyllabusPage" },
+    instructor: { layout: "InstructorPage" },
+    policies: { layout: "PoliciesPage" },
+    accommodations: { layout: "AccommodationsPage" },
+  };
+
+  test("emits exactly the three ADR 0097 #6 groups in order", () => {
+    const groups = navGroups(SECTIONS, UNITS, INFO_PAGES);
+    expect(groups.map((g) => g.heading)).toEqual([
+      "Course",
+      "The Course",
+      "Reference & Help",
+    ]);
+  });
+
+  test("Course group: Home (current) + Syllabus/Instructor info-pages by layout", () => {
+    const [course] = navGroups(SECTIONS, UNITS, INFO_PAGES);
+    expect(course?.links).toEqual([
+      { label: "Home", path: "/", key: "home", current: true },
+      { label: "Syllabus", path: "/syllabus/", key: "syllabus" },
+      { label: "Instructor", path: "/instructor/", key: "instructor" },
+    ]);
+  });
+
+  test("The Course group: one link per section with non-draft lecture count", () => {
+    const modules = navGroups(SECTIONS, UNITS, INFO_PAGES)[1];
+    expect(modules?.links).toEqual([
+      {
+        label: "Foundations",
+        path: "/sections/foundations/",
+        key: "foundations",
+        count: 2,
+      },
+      { label: "HR Diagram", path: "/sections/hr/", key: "hr", count: 1 },
+    ]);
+  });
+
+  test("Reference group: Optional placeholder + Practice placeholder + Policies/Accommodations", () => {
+    const reference = navGroups(SECTIONS, UNITS, INFO_PAGES)[2];
+    expect(reference?.links).toEqual([
+      {
+        label: "Math & Physics Review",
+        key: "math-physics-review",
+        optional: true,
+      },
+      { label: "Practice Problems", key: "practice-problems" },
+      { label: "Policies", path: "/policies/", key: "policies" },
+      {
+        label: "Accommodations",
+        path: "/accommodations/",
+        key: "accommodations",
+      },
+    ]);
+  });
+
+  test("placeholders carry no path (rendered as non-link spans)", () => {
+    const reference = navGroups(SECTIONS, UNITS, INFO_PAGES)[2];
+    const placeholders = reference?.links.filter((l) => l.path === undefined);
+    expect(placeholders?.map((l) => l.key)).toEqual([
+      "math-physics-review",
+      "practice-problems",
+    ]);
+  });
+
+  test("absent info_pages → Course has only Home; Reference has only placeholders", () => {
+    const groups = navGroups(SECTIONS, UNITS, undefined);
+    expect(groups[0]?.links).toEqual([
+      { label: "Home", path: "/", key: "home", current: true },
+    ]);
+    expect(groups[2]?.links.map((l) => l.key)).toEqual([
+      "math-physics-review",
+      "practice-problems",
+    ]);
+  });
+
+  test("ignores info-pages with an unknown/missing layout", () => {
+    const groups = navGroups(SECTIONS, [], {
+      mystery: { layout: "FutureLayout" },
+      broken: {},
+    });
+    // Only Home survives in Course; no extra Reference links.
+    expect(groups[0]?.links.map((l) => l.key)).toEqual(["home"]);
+    expect(groups[2]?.links.map((l) => l.key)).toEqual([
+      "math-physics-review",
+      "practice-problems",
+    ]);
   });
 });
