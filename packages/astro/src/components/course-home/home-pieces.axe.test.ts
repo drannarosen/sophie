@@ -69,12 +69,60 @@ describe("CourseHero — axe", () => {
   });
 });
 
-describe("OrientationCards — axe", () => {
-  test("static layout (slot fallbacks) — zero violations under <main>", async () => {
-    await renderAstroToBody(OrientationCards, {
-      props: {},
+const DUE_SOON_ITEMS = [
+  {
+    id: "hw1",
+    title: "Homework 1",
+    due: "2027-02-20",
+    tbd: false,
+    problemCount: 4,
+  },
+  { id: "hw2", title: "Homework 2", due: "tbd", tbd: true, problemCount: 3 },
+];
+const START_READING = {
+  label: "Stellar Foundations",
+  href: "/units/u1/reading",
+};
+
+describe("OrientationCards — axe + graceful degradation", () => {
+  test("fail-closed: no dueSoon + no thisWeek + no announcement → only Start-Reading, no empty card, axe-clean", async () => {
+    const html = await renderAstroToBody(OrientationCards, {
+      props: { dueSoon: [], startReading: START_READING },
       wrap: (inner) => `<main>${inner}</main>`,
     });
+    // Exactly one card (Start Reading); Due-Soon + This-Week dropped.
+    expect(html.match(/sophie-home-card"/g) ?? []).toHaveLength(1);
+    expect(html).not.toContain("Due Soon");
+    expect(html).not.toContain("This Week");
+    expect(html).toContain('data-card-count="1"');
+    expect(html).toContain("Stellar Foundations");
+    expect(await axe(document.body)).toHaveNoViolations();
+  });
+
+  test("absent startReading → Start-Reading card still renders a static prompt, axe-clean", async () => {
+    const html = await renderAstroToBody(OrientationCards, {
+      props: { dueSoon: [] },
+      wrap: (inner) => `<main>${inner}</main>`,
+    });
+    expect(html).toContain("Readings open as the course begins.");
+    expect(html).toContain('data-card-count="1"');
+    expect(await axe(document.body)).toHaveNoViolations();
+  });
+
+  test("two cards (dueSoon + start-reading) — intentional 2-up layout, axe-clean", async () => {
+    const html = await renderAstroToBody(OrientationCards, {
+      props: { dueSoon: DUE_SOON_ITEMS, startReading: START_READING },
+      wrap: (inner) => `<main>${inner}</main>`,
+    });
+    expect(html.match(/sophie-home-card"/g) ?? []).toHaveLength(2);
+    expect(html).toContain('data-card-count="2"');
+    expect(html).toContain("Due Soon");
+    expect(html).toContain("Homework 1");
+    expect(html).toContain("2027-02-20");
+    // Problem count surfaced (prototype's "N problems" sub-line).
+    expect(html).toContain("4 problems");
+    // tbd row is dimmed.
+    expect(html).toContain("is-tbd");
     expect(await axe(document.body)).toHaveNoViolations();
   });
 });

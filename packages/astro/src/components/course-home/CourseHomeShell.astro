@@ -31,9 +31,11 @@
  *                         slot fill; consumers may override the nav slot.
  *   - slot `why-band`   → Task 5 ("Why this course is different").
  *   - slot `how-band`   → Task 5 ("How each lecture works").
- *   - <OrientationCards>' `this-week`/`due-soon`/`start-reading` slots
- *                         → Task 6 (homework registry + graceful
- *                         degradation). Static fallbacks render now.
+ *   - <OrientationCards>' `due-soon`/`start-reading` are now DATA-DRIVEN
+ *                         (Task 6): `dueSoon` (homework registry, ADR 0096)
+ *                         + `startReading` (first non-draft unit) flow in
+ *                         as props and degrade gracefully (#7). The
+ *                         `this-week` card awaits ScheduleSchema (ADR 0098).
  */
 import HomeBackground from "../backgrounds/HomeBackground.astro";
 import CourseHero from "./CourseHero.astro";
@@ -44,6 +46,10 @@ import ModuleList from "./ModuleList.astro";
 import OrientationCards from "./OrientationCards.astro";
 import SophieHead from "../SophieHead.astro";
 import WhyBand from "./WhyBand.astro";
+import type {
+  DueSoonItem,
+  StartReadingLink,
+} from "./home-card-projections.ts";
 import {
   courseCounts,
   type HowBandData,
@@ -77,6 +83,18 @@ interface Props {
    * so the band degrades to nothing (ADR 0097 #3/#7).
    */
   how?: HowBandData;
+  /**
+   * "Due Soon" card rows, projected from the homework registry (ADR 0096,
+   * `dueSoon()`). Empty → the card is dropped (graceful degradation, #7).
+   * The dispatcher (Task 7) narrows `virtual:sophie/homework` per R12 and
+   * injects the build wall-clock into the projection.
+   */
+  dueSoon?: ReadonlyArray<DueSoonItem>;
+  /**
+   * "Start Reading" link — first non-draft unit (`startReading()`). Absent
+   * (e.g. an all-draft course) → the card shows its static prompt.
+   */
+  startReading?: StartReadingLink;
   /** Home-background theme id; absent → default (`starfield`). */
   theme?: string;
 }
@@ -93,6 +111,8 @@ const {
   infoPages,
   why,
   how,
+  dueSoon,
+  startReading,
   theme,
 } = Astro.props;
 
@@ -134,7 +154,7 @@ const { moduleCount, lectureCount } = courseCounts(sections, units);
             lectureCount={lectureCount}
           />
 
-          <OrientationCards />
+          <OrientationCards dueSoon={dueSoon} startReading={startReading} />
 
           {/* "Why this course is different" projection band (ADR 0097 #3).
               Default slot content; consumers may override the slot. */}
