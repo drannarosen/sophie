@@ -471,7 +471,14 @@ separate, date-gated `solutions.mdx`. The audit receives an
 **existence-only** signal (the set of unit ids that own a
 `solutions.mdx`, derived from filenames alone — never the solution
 body, preserving the gate's security property) and suppresses AS-2
-for any formative whose unit is in that set.
+for any formative whose unit is in that set. Suppression is
+deliberately **per-unit, not per-problem**: one `solutions.mdx`
+silences AS-2 for *every* answerless formative in that unit
+(including, e.g., a reading-tab `<QuickCheck>` that genuinely
+should carry an inline `<Solution>`) — per-problem precision would
+require reading the solution body to learn which problems it
+covers, which the existence-only security constraint forbids, so
+the unit granularity is the correct ceiling.
 
 #### 6. Practice route
 
