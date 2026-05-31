@@ -78,3 +78,16 @@ declare module "virtual:sophie/course-spec" {
    */
   export const courseSpec: CourseSpec | null;
 }
+
+declare module "virtual:sophie/homework" {
+  import type { HomeworkRegistry } from "@sophie/core/schema";
+
+  /**
+   * Consumer's parsed `homework.sophie.yaml`. Populated by
+   * `defineSophieIntegration` via `homeworkVirtualModule()`. Always
+   * registered — `null` when the consumer hasn't authored a registry
+   * yet (the Solutions reveal gate stays fail-closed for every
+   * chapter). Gated-solutions design (ADR 0096).
+   */
+  export const homework: HomeworkRegistry | null;
+}
