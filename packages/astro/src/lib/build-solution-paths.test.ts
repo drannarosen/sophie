@@ -1,4 +1,4 @@
-import type { HomeworkRegistry } from "@sophie/core/schema";
+import type { AssignmentRegistry } from "@sophie/core/schema";
 import { describe, expect, it } from "vitest";
 import {
   buildSolutionPaths,
@@ -23,11 +23,12 @@ const unit = (
   data: { id, status: "stable", ...overrides },
 });
 
-const reg = (unitId: string, dueDate: string): HomeworkRegistry => ({
-  homework: [
+const reg = (unitId: string, dueDate: string): AssignmentRegistry => ({
+  assignments: [
     {
       id: "hw-1",
       title: "x",
+      kind: "homework",
       assignedDate: "2027-01-01",
       dueDate,
       problems: [{ unit: unitId, ids: ["p1"] }],

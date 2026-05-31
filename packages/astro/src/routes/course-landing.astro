@@ -2,8 +2,8 @@
 import { ProseWithToc, SimpleList } from "@sophie/components";
 import { setSophieBaseUrl } from "@sophie/core/runtime";
 import { getCollection } from "astro:content";
+import { assignments } from "virtual:sophie/assignments";
 import { courseSpec } from "virtual:sophie/course-spec";
-import { homework } from "virtual:sophie/homework";
 import CourseHomeShell from "../components/course-home/CourseHomeShell.astro";
 import {
   dueSoon,
@@ -78,13 +78,13 @@ const units = (await getCollection("units")).map((u) => u.data);
 // solutions.astro's one wall-clock read) → injected into the pure
 // `dueSoon` projection so the date logic stays testable.
 //
-// `homework` (virtual:sophie/homework, HomeworkRegistry | null) is
+// `assignments` (virtual:sophie/assignments, AssignmentRegistry | null) is
 // OPTIONAL — NOT R12-narrowed: the Due-Soon card degrades to nothing
 // when null (ADR 0097 #7). `dueSoon` null-guards it internally, and no
 // direct property access happens here, so no narrowing throw is needed
 // (R12 scopes to course-spec, which IS narrowed above).
 const now = new Date();
-const dueSoonItems = isDashboard ? dueSoon(homework, now) : [];
+const dueSoonItems = isDashboard ? dueSoon(assignments, now) : [];
 const startReadingLink = isDashboard ? startReading(units) : undefined;
 const why = isDashboard
   ? whyBand(courseSpec.identity.description, courseSpec.pedagogy.named_tools)

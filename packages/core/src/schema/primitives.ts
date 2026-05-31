@@ -16,7 +16,7 @@ export const NonEmptyString = z.string().min(1);
  * resolver (ADR 0096): `new Date(explicit)` is permissive (e.g.
  * `new Date("0")` is a valid Date), so this union — not the resolver — is
  * what rejects malformed dates before they reach build-time gating logic.
- * Shared by `homework.ts` (assignedDate / dueDate) and `unit.ts`
+ * Shared by `assignments.ts` (assignedDate / dueDate) and `unit.ts`
  * (solutionsRevealDate override).
  */
 export const DateOrTbd = z.union([z.iso.date(), z.literal("tbd")]);

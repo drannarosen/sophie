@@ -32,7 +32,7 @@
  *   - slot `why-band`   → Task 5 ("Why this course is different").
  *   - slot `how-band`   → Task 5 ("How each lecture works").
  *   - <OrientationCards>' `due-soon`/`start-reading` are now DATA-DRIVEN
- *                         (Task 6): `dueSoon` (homework registry, ADR 0096)
+ *                         (Task 6): `dueSoon` (assignments registry, ADR 0096)
  *                         + `startReading` (first non-draft unit) flow in
  *                         as props and degrade gracefully (#7). The
  *                         `this-week` card awaits ScheduleSchema (ADR 0098).
@@ -84,10 +84,10 @@ interface Props {
    */
   how?: HowBandData;
   /**
-   * "Due Soon" card rows, projected from the homework registry (ADR 0096,
+   * "Due Soon" card rows, projected from the assignments registry (ADR 0096,
    * `dueSoon()`). Empty → the card is dropped (graceful degradation, #7).
-   * The dispatcher (Task 7) narrows `virtual:sophie/homework` per R12 and
-   * injects the build wall-clock into the projection.
+   * The dispatcher reads `virtual:sophie/assignments` (null-safe, no R12
+   * throw) and injects the build wall-clock into the projection.
    */
   dueSoon?: ReadonlyArray<DueSoonItem>;
   /**

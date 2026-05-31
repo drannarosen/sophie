@@ -1,0 +1,28 @@
+assignments:
+  - id: hw-3
+    title: "Homework 3 — Gravity"
+    kind: homework
+    assignedDate: "2027-02-06"
+    dueDate: "2027-02-20"
+    problems:
+      - unit: lecture-03-gravity-and-orbits
+        ids:
+          - grav-pr-04
+          - grav-pr-09
+      - unit: lecture-01-ages-lifetimes
+        ids:
+          - ages-pr-03
+  - id: hw-4
+    title: "Homework 4 — Stellar Lifetimes"
+    kind: homework
+    assignedDate: "2027-02-27"
+    dueDate: tbd
+    problems:
+      - unit: lecture-01-ages-lifetimes
+        ids:
+          - ages-pr-07
+  - id: project-1
+    title: "Final Project — Observing Proposal"
+    kind: project
+    assignedDate: "2027-03-06"
+    dueDate: "2027-05-08"

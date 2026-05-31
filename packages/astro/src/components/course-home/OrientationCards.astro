@@ -13,7 +13,7 @@
  *                      schedule → no card, no crash).
  *   - announcement   — needs Announcements (ADR 0099, PR 3). Absent in
  *                      PR 1 → no banner.
- *   - "Due Soon"     — LIVE from the homework registry (ADR 0096) via the
+ *   - "Due Soon"     — LIVE from the assignments registry (ADR 0096) via the
  *                      `dueSoon` projection. Empty list → the card is
  *                      DROPPED (no "No assignments" empty chrome — the
  *                      honest non-empty-chrome option per ADR 0097 #7).
@@ -29,7 +29,7 @@ import { withBase } from "../../lib/with-base";
 import type { DueSoonItem, StartReadingLink } from "./home-card-projections";
 
 interface Props {
-  /** Live homework due-soon rows (ADR 0096). Empty → the card is dropped. */
+  /** Live assignment due-soon rows (ADR 0096). Empty → the card is dropped. */
   dueSoon?: ReadonlyArray<DueSoonItem>;
   /** First non-draft unit link. Absent → the card shows a static prompt. */
   startReading?: StartReadingLink;

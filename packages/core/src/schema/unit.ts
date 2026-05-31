@@ -53,8 +53,8 @@ export type UnitType = z.infer<typeof UnitTypeSchema>;
  *
  * `solutionsRevealDate` (ADR 0096) — optional per-Unit override for the
  * build-time gated-solutions reveal date. A zero-padded ISO date or the
- * literal `"tbd"` (shared `DateOrTbd` union with the homework registry).
- * When absent, the reveal date derives from the homework registry; when
+ * literal `"tbd"` (shared `DateOrTbd` union with the assignments registry).
+ * When absent, the reveal date derives from the assignments registry; when
  * `"tbd"`, solutions stay hidden (fail-closed). This schema — not the
  * permissive `new Date()` in the resolver — is the real guard against
  * malformed dates reaching the gate.

@@ -24,6 +24,11 @@ export {
   AssessmentTypeSchema,
 } from "./assessment.js";
 export {
+  type Assignment,
+  type AssignmentRegistry,
+  AssignmentRegistrySchema,
+} from "./assignments.js";
+export {
   type AuditFinding,
   AuditFindingSchema,
   type AuditSeverity,
@@ -138,11 +143,6 @@ export {
   type FSRSTargetType,
   FSRSTargetTypeSchema,
 } from "./fsrs-record.js";
-export {
-  type Homework,
-  type HomeworkRegistry,
-  HomeworkRegistrySchema,
-} from "./homework.js";
 export {
   type InterventionDepth,
   InterventionDepthSchema,
