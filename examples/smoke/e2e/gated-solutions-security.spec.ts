@@ -27,9 +27,18 @@ import { expect, test } from "@playwright/test";
  * the filesystem directly (mirrors `proving-chapter.spec.ts`'s
  * `readFileSync` of `dist/.sophie-pedagogy-index.json`).
  *
- * Two permanent fixtures back the gate (set up via explicit per-unit
+ * Two permanent fixtures back the gate, each set up via an explicit per-unit
  * `solutionsRevealDate` so the build wall-clock makes them deterministic
- * forever — no `homework.sophie.yaml` needed in the smoke fixture):
+ * forever. The explicit per-unit override is the ANCHOR: it WINS over the
+ * assignments registry in the reveal resolver (`if (explicit) return …` in
+ * resolve-solution-reveal.ts), so this gate stays deterministic regardless of
+ * what `assignments.sophie.yaml` contains. The smoke fixture DOES ship an
+ * `assignments.sophie.yaml` (ADR 0096 Amendment 1 — generalized from the old
+ * `homework.sophie.yaml`) whose `ps-1` assignment carries `problems` touching
+ * `measuring-the-sky` with a FUTURE `dueDate`, so the generalized registry
+ * reveal branch is exercised on the real build too — but the GATED unit's
+ * explicit `2999-01-01` override keeps its withheld state independent of the
+ * registry:
  *
  *  - GATED   — `foundations/units/measuring-the-sky/solutions.mdx`,
  *              unit `solutionsRevealDate: "2999-01-01"` (always future).

@@ -1,0 +1,50 @@
+# Assignments registry for examples/smoke — exercises the generalized
+# assignments registry (ADR 0096 Amendment 1) on a real build so CI guards
+# the Due-Soon card + the fail-closed Solutions reveal resolver end to end
+# through @sophie/* (Task 11, W4).
+#
+# Two assignments, each proving a distinct seam:
+#
+#   1. ps-1 — kind `homework`, WITH `problems` touching the REAL gated unit
+#      `measuring-the-sky` (src/content/units/measuring-the-sky.json). Its
+#      presence-of-`problems` is what the generalized reveal resolver keys
+#      off (ADR 0096 Am1): the registry is non-null and its problem-group is
+#      iterated by `resolveRevealDate` on the real build, so the generalized
+#      registry branch is exercised — not just the per-unit override path.
+#      `dueDate: 2026-06-05` is FUTURE relative to the authoring wall-clock
+#      (2026-05-31) so any registry-driven reveal stays withheld; it also
+#      lands inside the This-Week window [today, today+7] so it populates the
+#      This-Week + Due-Soon cards on a build today.
+#
+#      DETERMINISM NOTE (W1): `measuring-the-sky` ALSO carries an explicit
+#      per-unit `solutionsRevealDate: "2999-01-01"`, which WINS over the
+#      registry in the resolver (`if (explicit) return …`). That explicit
+#      override is the security spec's permanent deterministic anchor; this
+#      registry entry additionally proves the registry branch is loaded +
+#      iterated on the real build without weakening that gate.
+#
+#   2. proj-1 — kind `project`, WITHOUT `problems`. A problemless assignment
+#      NEVER contributes a reveal date (ADR 0096 Am1), so it can't gate any
+#      unit; it still surfaces in Due-Soon with a humanized kind badge.
+#      `dueDate: 2026-06-19` is future + past the This-Week horizon, so it
+#      shows in Due-Soon (concrete, on/after today) but not This-Week.
+#
+# Both `kind`s (homework / project) are declared in course.sophie.yaml's
+# `assignment_kinds` map (ADR 0080 Am3) — the integration cross-refine
+# (assertAssignmentKindsDeclared) throws the build if any used kind is
+# undeclared, so the two files MUST stay consistent.
+
+assignments:
+  - id: ps-1
+    title: "Problem Set 1 — Measuring the Sky"
+    kind: homework
+    assignedDate: "2026-05-26"
+    dueDate: "2026-06-05"
+    problems:
+      - unit: measuring-the-sky
+        ids: ["1", "2", "3"]
+  - id: proj-1
+    title: "Term Project — Observe and Infer"
+    kind: project
+    assignedDate: "2026-05-26"
+    dueDate: "2026-06-19"
