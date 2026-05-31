@@ -18,12 +18,14 @@ import { NonEmptyString, Slug } from "./primitives.js";
 // platform's scoped `--sophie-home-*` banner palette, not to course-owned
 // vocabulary, so unlike assignment `kind` they are not free slugs.
 
+export const AnnouncementSeverity = z.enum(["info", "notice", "urgent"]);
+
 const AnnouncementSchema = z
   .object({
     id: Slug,
     title: NonEmptyString,
     body: NonEmptyString.optional(),
-    severity: z.enum(["info", "notice", "urgent"]),
+    severity: AnnouncementSeverity,
     publish_date: z.iso.date(),
     expire_date: z.iso.date().optional(),
     href: NonEmptyString.optional(),
