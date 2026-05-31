@@ -87,7 +87,10 @@ const cardCount = (hasThisWeek ? 1 : 0) + (hasDueSoon ? 1 : 0) + 1;
                 ]}
               />
               <span class='sophie-home-due__title'>
-                {item.title}
+                <span class='sophie-home-due__head'>
+                  {item.title}
+                  <span class='sophie-home-due__kind'>{item.kindLabel}</span>
+                </span>
                 {item.problemCount > 0 && (
                   <span class='sophie-home-due__count'>
                     {`${item.problemCount} ${item.problemCount === 1 ? "problem" : "problems"}`}
@@ -239,6 +242,27 @@ const cardCount = (hasThisWeek ? 1 : 0) + (hasDueSoon ? 1 : 0) + 1;
   .sophie-home-due__title {
     flex: 1 1 auto;
     min-width: 0;
+  }
+  .sophie-home-due__head {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.55rem;
+  }
+  /* Small text badge naming the assignment kind (ADR 0096 Am1 / ADR 0080
+     Am3). A bordered mono pill, distinct from the title text — a TEXT
+     label (the kindLabel), never color-only, so it carries meaning on its
+     own. Muted palette keeps it subordinate to the title. */
+  .sophie-home-due__kind {
+    font-family: var(--sophie-font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--sophie-home-ink-muted);
+    border: 1px solid var(--sophie-home-glass-brd);
+    border-radius: 999px;
+    padding: 0.1rem 0.5rem;
+    white-space: nowrap;
   }
   .sophie-home-due__count {
     display: block;

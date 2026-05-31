@@ -1,5 +1,6 @@
 import type { AssignmentRegistry, UnitEntry } from "@sophie/core/schema";
 import { withBase } from "../../lib/with-base";
+import { titleCaseSlug } from "./home-projections";
 
 /**
  * Pure projections for the two orientation cards that are LIVE in PR 1:
@@ -41,8 +42,21 @@ const DUE_SOON_CAP = 3;
 export interface DueSoonItem {
   /** Assignment id — stable key. */
   readonly id: string;
-  /** Assignment title (e.g. "Homework 1"). */
+  /** Assignment title (e.g. "Problem Set 3", "Final Project"). */
   readonly title: string;
+  /**
+   * The assignment's free-slug `kind` (ADR 0096 Am1) — the raw vocabulary
+   * value (`growth-memo`, `homework`), kept for keying/styling alongside
+   * the humanized `kindLabel`.
+   */
+  readonly kind: string;
+  /**
+   * Display label for `kind`: the consumer-declared `assignment_kinds`
+   * label when present, else the title-cased humanization of the slug
+   * (`growth-memo` → `Growth Memo`, ADR 0080 Am3). The renderer shows this
+   * as a small text badge on the row.
+   */
+  readonly kindLabel: string;
   /**
    * Concrete ISO `YYYY-MM-DD` due date, or `"tbd"` when the instructor
    * hasn't dated it yet. The renderer shows the date verbatim (or "tbd").
@@ -68,6 +82,21 @@ function problemCount(problems: Problems): number {
 }
 
 /**
+ * Resolve an assignment `kind` to its display label: the consumer-declared
+ * `assignment_kinds` label when present, else the title-cased humanization
+ * of the slug (ADR 0080 Am3 — zero-config fallback, `growth-memo` →
+ * `Growth Memo`). The shape-only `@sophie/core` field carries the custom
+ * labels; the integration's cross-refine (Task 7) is what guarantees every
+ * `kind` is a declared key when the map is present.
+ */
+function kindLabel(
+  kind: string,
+  kindLabels: Readonly<Record<string, string>>
+): string {
+  return kindLabels[kind] ?? titleCaseSlug(kind);
+}
+
+/**
  * Project the assignments registry into the "Due Soon" card's ordered rows.
  *
  * Concrete-dated assignments whose `dueDate` is on or after `now` (string
@@ -78,12 +107,19 @@ function problemCount(problems: Problems): number {
  * upcoming work, yields `[]` (the renderer then drops the whole card —
  * no empty chrome, ADR 0097 #7).
  *
+ * Each row carries the assignment's `kind` plus a humanized `kindLabel`
+ * (ADR 0080 Am3): `kindLabels` (the consumer's `assignment_kinds` map,
+ * defaulting to `{}`) supplies custom labels, falling back to a title-cased
+ * slug. Optional + defaulted so the existing `dueSoon(registry, now)` and
+ * `dueSoon(registry, now, cap)` call shapes stay valid.
+ *
  * `now` is INJECTED (never `new Date()` here) so the projection is pure.
  */
 export function dueSoon(
   registry: AssignmentRegistry | null,
   now: Date,
-  cap: number = DUE_SOON_CAP
+  cap: number = DUE_SOON_CAP,
+  kindLabels: Readonly<Record<string, string>> = {}
 ): DueSoonItem[] {
   if (!registry) return [];
   const today = now.toISOString().slice(0, 10);
@@ -96,6 +132,8 @@ export function dueSoon(
     .map((a) => ({
       id: a.id,
       title: a.title,
+      kind: a.kind,
+      kindLabel: kindLabel(a.kind, kindLabels),
       due: a.dueDate,
       tbd: false,
       problemCount: problemCount(a.problems),
@@ -106,6 +144,8 @@ export function dueSoon(
     .map((a) => ({
       id: a.id,
       title: a.title,
+      kind: a.kind,
+      kindLabel: kindLabel(a.kind, kindLabels),
       due: "tbd",
       tbd: true,
       problemCount: problemCount(a.problems),

@@ -102,12 +102,15 @@ export interface QuickLink {
 }
 
 /**
- * Title-case a kebab info-page slug for display: `office-hours` →
- * `Office Hours`. Acronym-blind by design — the slug is the author's
- * lowercase key, and v0.2 `info_pages` carries no per-page display
- * label, so this is the honest projection until one is added.
+ * Title-case a kebab slug for display: `office-hours` → `Office Hours`,
+ * `growth-memo` → `Growth Memo`. Acronym-blind by design — the slug is the
+ * author's lowercase key. Shared by the footer quick-links (info-page
+ * slugs) and the Due-Soon kind badge (assignment-kind slugs, ADR 0096
+ * Am1) — the second caller paid for the DRY extraction from the original
+ * `infoPageLabel`. Distinct from the private `humanizeSlug` below, which
+ * is sentence-case (only the first word capitalized) for OMI-flow labels.
  */
-export function infoPageLabel(slug: string): string {
+export function titleCaseSlug(slug: string): string {
   return slug
     .split("-")
     .filter((word) => word.length > 0)
@@ -127,7 +130,7 @@ export function quickLinks(
   if (!infoPages) return [];
   return Object.keys(infoPages).map((slug) => ({
     slug,
-    label: infoPageLabel(slug),
+    label: titleCaseSlug(slug),
   }));
 }
 

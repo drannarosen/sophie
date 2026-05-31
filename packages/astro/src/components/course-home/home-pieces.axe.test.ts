@@ -73,11 +73,21 @@ const DUE_SOON_ITEMS = [
   {
     id: "hw1",
     title: "Homework 1",
+    kind: "homework",
+    kindLabel: "Homework",
     due: "2027-02-20",
     tbd: false,
     problemCount: 4,
   },
-  { id: "hw2", title: "Homework 2", due: "tbd", tbd: true, problemCount: 3 },
+  {
+    id: "gm2",
+    title: "Growth Memo 2",
+    kind: "growth-memo",
+    kindLabel: "Growth Memo",
+    due: "tbd",
+    tbd: true,
+    problemCount: 3,
+  },
 ];
 const START_READING = {
   label: "Stellar Foundations",
@@ -121,6 +131,9 @@ describe("OrientationCards — axe + graceful degradation", () => {
     expect(html).toContain("2027-02-20");
     // Problem count surfaced (prototype's "N problems" sub-line).
     expect(html).toContain("4 problems");
+    // Kind label rendered as a text badge (ADR 0096 Am1 / ADR 0080 Am3).
+    expect(html).toContain("sophie-home-due__kind");
+    expect(html).toContain("Growth Memo");
     // tbd row is dimmed.
     expect(html).toContain("is-tbd");
     expect(await axe(document.body)).toHaveNoViolations();
