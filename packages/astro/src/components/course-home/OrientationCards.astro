@@ -8,9 +8,11 @@
  * Chrome (role-less, ADR 0058): calendar-aware orientation, not pedagogy.
  *
  * GRACEFUL DEGRADATION (ADR 0097 #7, fail-closed):
- *   - "This Week"    — needs ScheduleSchema (`thisWeek`, ADR 0098, PR 2).
- *                      Always absent in PR 1 → the card is DROPPED (no
- *                      schedule → no card, no crash).
+ *   - "This Week"    — LIVE from the schedule (ADR 0098) + assignments
+ *                      registry (ADR 0096) via the `thisWeek` projection
+ *                      (rolling next-7-days class events + due deadlines).
+ *                      Empty window → the card is DROPPED (no schedule data
+ *                      → no card, no crash).
  *   - announcement   — needs Announcements (ADR 0099, PR 3). Absent in
  *                      PR 1 → no banner.
  *   - "Due Soon"     — LIVE from the assignments registry (ADR 0096) via the
@@ -26,22 +28,32 @@
  * fills from the (R12-narrowed) virtual modules + the build wall-clock.
  */
 import { withBase } from "../../lib/with-base";
+import { titleCaseSlug } from "./home-projections";
 import type { DueSoonItem, StartReadingLink } from "./home-card-projections";
+// TYPE-ONLY by design (mirrors ModuleList.astro): a value reference to
+// `home-schedule-projections` would add it to the tsup `.astro`-derived
+// entry surface (discover-astro-entries). The dispatcher (course-landing.astro)
+// owns the impure virtual-module read + the `thisWeek` projection; this
+// component only consumes the shape.
+import type { ThisWeekItem } from "./home-schedule-projections";
 
 interface Props {
   /** Live assignment due-soon rows (ADR 0096). Empty → the card is dropped. */
   dueSoon?: ReadonlyArray<DueSoonItem>;
+  /**
+   * Rolling next-7-days items (ADR 0098): class events + due deadlines,
+   * date-sorted. Empty → the card is dropped (fail-closed, ADR 0097 #7).
+   */
+  thisWeek?: ReadonlyArray<ThisWeekItem>;
   /** First non-draft unit link. Absent → the card shows a static prompt. */
   startReading?: StartReadingLink;
 }
 
-const { dueSoon = [], startReading } = Astro.props;
+const { dueSoon = [], thisWeek = [], startReading } = Astro.props;
 
 const labelId = "sophie-home-cards-heading";
 const hasDueSoon = dueSoon.length > 0;
-// PR 1: "This Week" has no data source yet (ScheduleSchema, ADR 0098), so
-// the card is never rendered. The slot stays a consumer override seam.
-const hasThisWeek = false;
+const hasThisWeek = thisWeek.length > 0;
 const cardCount = (hasThisWeek ? 1 : 0) + (hasDueSoon ? 1 : 0) + 1;
 ---
 
@@ -61,7 +73,22 @@ const cardCount = (hasThisWeek ? 1 : 0) + (hasDueSoon ? 1 : 0) + 1;
           </span>{" "}
           This Week
         </p>
-        <slot name='this-week' />
+        <slot name='this-week'>
+          {thisWeek.map((item) => (
+            <div
+              class:list={[
+                "sophie-home-week",
+                { "is-due": item.kind === "due" },
+              ]}
+            >
+              <span class='sophie-home-week__when'>{item.date}</span>
+              <span class='sophie-home-week__title'>{item.label}</span>
+              <span class='sophie-home-week__kind'>
+                {item.kind === "due" ? "Due" : titleCaseSlug(item.kind)}
+              </span>
+            </div>
+          ))}
+        </slot>
       </div>
     )
   }
@@ -275,6 +302,51 @@ const cardCount = (hasThisWeek ? 1 : 0) + (hasDueSoon ? 1 : 0) + 1;
     color: var(--sophie-home-ink-soft);
     margin-left: auto;
     font-size: 0.86rem;
+  }
+  /* "This Week" rows mirror the Due-Soon row idiom (date · title · text
+     marker) but lead with the date (the rolling 7-day window reads
+     chronologically). No cap on the list — the window is naturally short
+     (ADR 0098), so the rows just stack; `flex-wrap` keeps a long title
+     from shoving the marker out of the card. */
+  .sophie-home-week {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.6rem;
+    margin-top: 0.55rem;
+    font-size: 0.98rem;
+  }
+  .sophie-home-week__when {
+    font-family: var(--sophie-font-mono);
+    color: var(--sophie-home-ink-soft);
+    font-size: 0.86rem;
+    flex: none;
+  }
+  .sophie-home-week__title {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  /* Small TEXT marker naming the row's kind ("Lecture"/"Exam"/"Due"); a
+     bordered mono pill like the Due-Soon kind badge, carrying meaning on
+     its own (never color-only). */
+  .sophie-home-week__kind {
+    font-family: var(--sophie-font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--sophie-home-ink-muted);
+    border: 1px solid var(--sophie-home-glass-brd);
+    border-radius: 999px;
+    padding: 0.1rem 0.5rem;
+    white-space: nowrap;
+    flex: none;
+  }
+  /* A deadline ("due") row gets a subtle rose accent matching the
+     Due-Soon dot — but the "Due" TEXT still carries the meaning, so the
+     accent is purely supplementary (not the only signal). */
+  .sophie-home-week.is-due .sophie-home-week__kind {
+    color: var(--sophie-home-rose);
+    border-color: var(--sophie-home-rose);
   }
   .sophie-home-cta {
     display: inline-flex;

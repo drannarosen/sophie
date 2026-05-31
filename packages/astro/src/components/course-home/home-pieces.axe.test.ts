@@ -94,10 +94,23 @@ const START_READING = {
   href: "/units/u1/reading",
 };
 
+// A rolling-7-day window mixing class events (schedule kinds) with a
+// `kind:"due"` deadline pulled from the assignments registry. Six items
+// total to exercise the no-cap stacking (the window is naturally short,
+// but the card must render a longer list cleanly — ADR 0098 / ADR 0097 #4).
+const THIS_WEEK_ITEMS = [
+  { date: "2027-02-15", label: "Stellar Spectra", kind: "lecture" },
+  { date: "2027-02-16", label: "Spectroscopy Lab", kind: "activity" },
+  { date: "2027-02-17", label: "Problem Set 3", kind: "due" },
+  { date: "2027-02-18", label: "Stellar Classification", kind: "lecture" },
+  { date: "2027-02-19", label: "Midterm 1", kind: "exam" },
+  { date: "2027-02-20", label: "Reading Reflection", kind: "due" },
+];
+
 describe("OrientationCards — axe + graceful degradation", () => {
   test("fail-closed: no dueSoon + no thisWeek + no announcement → only Start-Reading, no empty card, axe-clean", async () => {
     const html = await renderAstroToBody(OrientationCards, {
-      props: { dueSoon: [], startReading: START_READING },
+      props: { dueSoon: [], thisWeek: [], startReading: START_READING },
       wrap: (inner) => `<main>${inner}</main>`,
     });
     // Exactly one card (Start Reading); Due-Soon + This-Week dropped.
@@ -106,6 +119,33 @@ describe("OrientationCards — axe + graceful degradation", () => {
     expect(html).not.toContain("This Week");
     expect(html).toContain('data-card-count="1"');
     expect(html).toContain("Stellar Foundations");
+    expect(await axe(document.body)).toHaveNoViolations();
+  });
+
+  test("thisWeek populated → This-Week card renders labels + dates + kind markers, +1 card, axe-clean", async () => {
+    const html = await renderAstroToBody(OrientationCards, {
+      props: {
+        dueSoon: [],
+        thisWeek: THIS_WEEK_ITEMS,
+        startReading: START_READING,
+      },
+      wrap: (inner) => `<main>${inner}</main>`,
+    });
+    // Two cards: This Week + Start Reading (Due-Soon dropped).
+    expect(html.match(/sophie-home-card"/g) ?? []).toHaveLength(2);
+    expect(html).toContain('data-card-count="2"');
+    expect(html).toContain("This Week");
+    // Every item's label + date renders (no cap on the rolling window).
+    for (const item of THIS_WEEK_ITEMS) {
+      expect(html).toContain(item.label);
+      expect(html).toContain(item.date);
+    }
+    // Kind markers are TEXT (not color-only): humanized schedule kinds and
+    // the literal "Due" for deadlines.
+    expect(html).toContain("Lecture");
+    expect(html).toContain("Activity");
+    expect(html).toContain("Exam");
+    expect(html).toContain("Due");
     expect(await axe(document.body)).toHaveNoViolations();
   });
 
