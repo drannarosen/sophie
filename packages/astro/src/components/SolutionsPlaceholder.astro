@@ -2,11 +2,12 @@
 // Gated-solutions placeholder (ADR 0096). Shown when a chapter's solutions
 // have not yet been revealed; the gated solution artifact is NOT rendered
 // (it is absent from the route's props by construction — the build-time
-// security property). Task 7 polishes the copy + adds axe coverage; this is
-// the minimal labelled-region shell.
+// security property). Two states: a resolved reveal date → "available
+// after <date>"; no date / tbd → "not yet scheduled".
 //
 // R10 — this sits inside ChapterLayout's <main>, so it is a labelled
-// <section aria-labelledby> (NOT <main>/<article>/bare <div>).
+// <section aria-labelledby> (NOT <main>/<article>/bare <div>). The heading
+// supplies the region's accessible name.
 
 interface Props {
   /** Resolved reveal date (`YYYY-MM-DD`) or null when no date is scheduled. */
@@ -15,15 +16,37 @@ interface Props {
 
 const { date } = Astro.props;
 const headingId = "sophie-solutions-placeholder-heading";
+
+function formatRevealDate(iso: string): string {
+  // Render as "May 20, 2026" — long-form, locale-stable, UTC-anchored
+  // (mirrors ChapterFooter's `formatUpdated`). Falls back to the raw ISO
+  // string if it fails to parse so the page never shows "Invalid Date".
+  const d = new Date(`${iso}T00:00:00Z`);
+  if (Number.isNaN(d.valueOf())) return iso;
+  return d.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+}
 ---
 
 <section aria-labelledby={headingId} class="sophie-solutions-placeholder">
-  <h2 id={headingId}>Solutions not yet available</h2>
-  <p>
-    {
-      date
-        ? `Solutions become available after ${date}.`
-        : "Solutions are not yet scheduled."
-    }
-  </p>
+  <h2 id={headingId} class="sophie-solutions-placeholder__heading">
+    Solutions not yet available
+  </h2>
+  {
+    date ? (
+      <p class="sophie-solutions-placeholder__body">
+        Worked solutions for this chapter unlock on{" "}
+        <time datetime={date}>{formatRevealDate(date)}</time>.
+      </p>
+    ) : (
+      <p class="sophie-solutions-placeholder__body">
+        Worked solutions for this chapter are not yet scheduled. Check back
+        after the assignment is due.
+      </p>
+    )
+  }
 </section>

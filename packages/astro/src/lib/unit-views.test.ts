@@ -78,4 +78,73 @@ describe("getAvailableUnitViews — view-kind enumeration from artifact paths", 
       "practice",
     ]);
   });
+
+  // ADR 0096 — the Solutions tab appears IFF a `solutions` collection entry
+  // exists for the unit (passed via `unitIdsWithSolutions`, since solutions
+  // live in a separate collection, excluded from `artifacts`). Tab existence
+  // does NOT depend on reveal state — the route gates the content, not the tab.
+  test("solutions entry adds the solutions view, ordered last", () => {
+    const artifacts = [
+      mkEntry("foundations/units/intro/reading"),
+      mkEntry("foundations/units/intro/practice"),
+    ];
+    expect(
+      getAvailableUnitViews({
+        unit: "intro",
+        artifacts,
+        unitIdsWithSolutions: new Set(["intro"]),
+      })
+    ).toEqual(["reading", "practice", "solutions"]);
+  });
+
+  test("solutions absent when the unit has no solutions entry", () => {
+    const artifacts = [
+      mkEntry("foundations/units/intro/reading"),
+      mkEntry("foundations/units/intro/practice"),
+    ];
+    expect(
+      getAvailableUnitViews({
+        unit: "intro",
+        artifacts,
+        unitIdsWithSolutions: new Set(["other-unit"]),
+      })
+    ).toEqual(["reading", "practice"]);
+  });
+
+  test("solutions can be the only available view", () => {
+    expect(
+      getAvailableUnitViews({
+        unit: "intro",
+        artifacts: [],
+        unitIdsWithSolutions: new Set(["intro"]),
+      })
+    ).toEqual(["solutions"]);
+  });
+
+  test("draft unit excludes solutions even when a solutions entry exists", () => {
+    const artifacts = [mkEntry("foundations/units/intro/reading")];
+    expect(
+      getAvailableUnitViews({
+        unit: "intro",
+        artifacts,
+        draftUnitIds: new Set(["intro"]),
+        unitIdsWithSolutions: new Set(["intro"]),
+      })
+    ).toEqual([]);
+  });
+
+  test("full order reading → slides → practice → solutions (locked)", () => {
+    const artifacts = [
+      mkEntry("foundations/units/intro/practice"),
+      mkEntry("foundations/units/intro/reading"),
+      mkEntry("foundations/units/intro/slides"),
+    ];
+    expect(
+      getAvailableUnitViews({
+        unit: "intro",
+        artifacts,
+        unitIdsWithSolutions: new Set(["intro"]),
+      })
+    ).toEqual(["reading", "slides", "practice", "solutions"]);
+  });
 });
