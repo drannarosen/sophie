@@ -1,0 +1,215 @@
+---
+/**
+ * <CourseHomeShell /> — the course-home dashboard page shell (ADR 0097
+ * #2). The realized form of the `dashboard` / `hero-with-modules` landing
+ * layout. Owns the document skeleton (`<html>/<head>/<body>` via shared
+ * <SophieHead>, ADR 0095), the pluggable <HomeBackground> (default theme),
+ * and the assembled home: nav · hero · orientation cards · descriptive
+ * bands · module list · footer quick-links.
+ *
+ * Chrome (role-less, ADR 0058): a course-info projection surface, not
+ * pedagogy. All type comes from the local `@sophie/theme` font vars
+ * (Fraunces `--sophie-font-serif`, body `--sophie-font-sans`, mono
+ * `--sophie-font-mono`) — no CDN fonts.
+ *
+ * SCOPED PALETTE (ADR 0097 #4 — palette expansion DEFERRED): the Deep
+ * Field colors live as `--sophie-home-*` custom properties on the
+ * `.sophie-home` root below, NOT as new global theme tokens. The home is a
+ * dark-first designed surface; a future palette/multi-theme ADR promotes
+ * these to tokens. <HomeBackground> carries its own (Task 2) scoped
+ * styles and does not depend on these vars.
+ *
+ * LANDMARKS (R10): this shell OWNS the page (renders `<body>`), so the
+ * primary content is a single `<main>` (the SimpleList precedent — `<main>`
+ * is correct when not nested under another landmark). The nav `<header>`
+ * and the footer `<footer>` are SIBLINGS of `<main>` — no nested-`<main>`
+ * collision. Sub-regions inside `<main>` are `<section aria-labelledby>`
+ * with accessible names.
+ *
+ * SEAMS for downstream tasks (filled WITHOUT editing this shell's shape):
+ *   - slot `nav`        → Task 4 (CourseMenu dropdown). A structural
+ *                         placeholder renders today inside the nav landmark.
+ *   - slot `why-band`   → Task 5 ("Why this course is different").
+ *   - slot `how-band`   → Task 5 ("How each lecture works").
+ *   - <OrientationCards>' `this-week`/`due-soon`/`start-reading` slots
+ *                         → Task 6 (homework registry + graceful
+ *                         degradation). Static fallbacks render now.
+ */
+import HomeBackground from "../backgrounds/HomeBackground.astro";
+import CourseHero from "./CourseHero.astro";
+import HomeQuickLinks from "./HomeQuickLinks.astro";
+import ModuleList from "./ModuleList.astro";
+import OrientationCards from "./OrientationCards.astro";
+import SophieHead from "../SophieHead.astro";
+import { courseCounts } from "./home-projections.ts";
+import type { SectionEntry, UnitEntry } from "@sophie/core/schema";
+
+interface Props {
+  /** Course code, e.g. "ASTR 201" — brandmark + hero meta. */
+  code: string;
+  /** Display title (Fraunces hero). */
+  title: string;
+  /** One-line course tagline. */
+  tagline: string;
+  instructor: string;
+  institution: string;
+  term: string;
+  sections: ReadonlyArray<SectionEntry>;
+  units: ReadonlyArray<UnitEntry>;
+  /** The course-spec `info_pages` record (slug → declaration), if any. */
+  infoPages?: Readonly<Record<string, unknown>>;
+  /** Home-background theme id; absent → default (`starfield`). */
+  theme?: string;
+}
+
+const {
+  code,
+  title,
+  tagline,
+  instructor,
+  institution,
+  term,
+  sections,
+  units,
+  infoPages,
+  theme,
+} = Astro.props;
+
+const { moduleCount, lectureCount } = courseCounts(sections, units);
+---
+
+<!doctype html>
+<html lang='en'>
+  <head>
+    <SophieHead title={`${code} — ${title}`} description={tagline} />
+  </head>
+  <body>
+    <HomeBackground theme={theme} />
+    <div class='sophie-home'>
+      <div class='sophie-home__grain' aria-hidden='true'></div>
+      <div class='sophie-home__wrap'>
+        <header class='sophie-home-topnav'>
+          <span class='sophie-home-topnav__brand'>
+            <b aria-hidden='true'>◆</b> {code}
+          </span>
+          {/* Task 4 inserts <CourseMenu> here; a structural placeholder
+              keeps the nav landmark + top-right alignment reviewable. */}
+          <slot name='nav'>
+            <nav class='sophie-home-topnav__nav' aria-label='Course menu'>
+              <span class='sophie-home-topnav__menu-stub'>Menu ▾</span>
+            </nav>
+          </slot>
+        </header>
+
+        <main class='sophie-home__main'>
+          <CourseHero
+            instructor={instructor}
+            institution={institution}
+            term={term}
+            title={title}
+            tagline={tagline}
+            code={code}
+            moduleCount={moduleCount}
+            lectureCount={lectureCount}
+          />
+
+          <OrientationCards />
+
+          {/* Task 5: "Why this course is different" projection band. */}
+          <slot name='why-band' />
+
+          <ModuleList sections={sections} units={units} />
+
+          {/* Task 5: "How each lecture works" projection band. */}
+          <slot name='how-band' />
+        </main>
+
+        <HomeQuickLinks infoPages={infoPages} />
+      </div>
+    </div>
+  </body>
+</html>
+
+<style>
+  /* ── Scoped Deep Field palette (ADR 0097 #4; NOT global tokens) ─────
+     A dark-first designed surface. Promotion to theme tokens is a future
+     palette/multi-theme ADR. AA-clean on the near-black ground:
+     ink ~16:1, ink-soft ~10:1, ink-muted ~5.1:1. */
+  .sophie-home {
+    --sophie-home-ground: #060611;
+    --sophie-home-ink: #f3f4fb;
+    --sophie-home-ink-soft: #cdd0e3;
+    --sophie-home-ink-muted: #9498b6;
+    --sophie-home-teal: #4fd6c4;
+    --sophie-home-violet: #a08bff;
+    --sophie-home-rose: #ff8aa6;
+    --sophie-home-glass: rgba(255, 255, 255, 0.045);
+    --sophie-home-glass-brd: rgba(160, 170, 230, 0.18);
+    --sophie-home-glass-brd-lit: rgba(120, 225, 210, 0.45);
+    --sophie-home-radius: 16px;
+    --sophie-home-maxw: 1080px;
+    --sophie-home-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+    position: relative;
+    min-height: 100vh;
+    color: var(--sophie-home-ink);
+    font-family: var(--sophie-font-sans);
+    font-size: 17px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Film grain over the background, under the content. */
+  .sophie-home__grain {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .sophie-home__wrap {
+    position: relative;
+    max-width: var(--sophie-home-maxw);
+    margin: 0 auto;
+    padding: 0 clamp(1.2rem, 4vw, 2.5rem);
+  }
+
+  /* ── Top nav (brand left, menu seam right) ─────────────────────────── */
+  .sophie-home-topnav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.4rem 0 0.4rem;
+    font-family: var(--sophie-font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--sophie-home-ink-muted);
+  }
+  .sophie-home-topnav__brand {
+    color: var(--sophie-home-ink-soft);
+    font-weight: 500;
+  }
+  .sophie-home-topnav__brand b {
+    color: var(--sophie-home-teal);
+    font-weight: 500;
+  }
+  .sophie-home-topnav__menu-stub {
+    color: var(--sophie-home-ink-muted);
+  }
+
+  .sophie-home__main {
+    display: block;
+  }
+
+  /* Background painting belongs on <body> so the fixed HomeBackground
+     layers sit beneath the home content. The Deep Field ground is the
+     <HomeBackground> `.sky` fallback; this is the base fill behind it. */
+  :global(body:has(.sophie-home)) {
+    margin: 0;
+    background: var(--sophie-home-ground);
+    overflow-x: hidden;
+  }
+</style>

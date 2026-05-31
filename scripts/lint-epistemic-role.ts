@@ -149,6 +149,14 @@ const CHROME: ReadonlyArray<readonly [string, string]> = [
     "instructor contact card (name/email/response window); course-info chrome",
   ],
   [
+    "CourseHero",
+    "course-home masthead (eyebrow/title/tagline/meta); course-info chrome (lives in @sophie/astro, outside this gate's scope — documentary)",
+  ],
+  [
+    "CourseHomeShell",
+    "course-home dashboard page shell (ADR 0097); assembles hero/cards/modules/footer over HomeBackground; page chrome (lives in @sophie/astro, outside this gate's scope — documentary)",
+  ],
+  [
     "CourseLanding",
     "course landing layout (hero-with-modules / simple-list); page chrome",
   ],
@@ -191,6 +199,10 @@ const CHROME: ReadonlyArray<readonly [string, string]> = [
     "pluggable course-home background slot (ADR 0097); decorative atmosphere, role-less chrome (lives in @sophie/astro, outside this gate's scope — documentary)",
   ],
   [
+    "HomeQuickLinks",
+    "course-home footer quick-links projected from info_pages (ADR 0097); navigation chrome (lives in @sophie/astro, outside this gate's scope — documentary)",
+  ],
+  [
     "Hint",
     "formative reveal: disclosure container; the role lives on the wrapped reasoning, not the reveal (domain pass 2026-05-29)",
   ],
@@ -209,6 +221,10 @@ const CHROME: ReadonlyArray<readonly [string, string]> = [
   [
     "MCQ",
     "formative family: assessment is a teaching move (ADR 0041), not a role; the role lives on the wrapped question content (domain pass 2026-05-29)",
+  ],
+  [
+    "ModuleList",
+    "course-home module roll-up (named-region list of sections; ADR 0097); navigation chrome (lives in @sophie/astro, outside this gate's scope — documentary)",
   ],
   [
     "MultiRep",
@@ -230,6 +246,10 @@ const CHROME: ReadonlyArray<readonly [string, string]> = [
   [
     "OfficeHoursChrome",
     "inline office-hours surface from spec.office_hours; course-management chrome",
+  ],
+  [
+    "OrientationCards",
+    "course-home three-card orientation row (This Week/Due Soon/Start Reading; ADR 0097); named-region chrome (lives in @sophie/astro, outside this gate's scope — documentary)",
   ],
   [
     "OfficeHoursTable",

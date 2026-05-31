@@ -252,6 +252,7 @@ project:
         - file: decisions/0094-build-time-figure-optimization.md
         - file: decisions/0095-global-css-delivery-shared-document-head.md
         - file: decisions/0096-deploy-time-gated-content.md
+        - file: decisions/0097-course-home-dashboard.md
     - title: Pilots
       children:
         - file: pilots/_template.md

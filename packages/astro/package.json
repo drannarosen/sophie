@@ -71,7 +71,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsup && mkdir -p dist/components/_shared dist/styles dist/routes && cp src/components/*.astro dist/components/ && cp src/components/_shared/*.astro dist/components/_shared/ && cp src/styles/*.css dist/styles/ && cp src/routes/*.astro dist/routes/",
+    "build": "tsup && mkdir -p dist/components dist/styles dist/routes && find src/components -name '*.astro' -exec sh -c 'd=\"dist/${1#src/}\"; mkdir -p \"$(dirname \"$d\")\"; cp \"$1\" \"$d\"' _ {} \\; && cp src/styles/*.css dist/styles/ && cp src/routes/*.astro dist/routes/",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
     "test:unit": "vitest run --coverage",

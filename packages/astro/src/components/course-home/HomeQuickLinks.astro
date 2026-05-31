@@ -1,0 +1,82 @@
+---
+/**
+ * <HomeQuickLinks /> — the course-home footer (ADR 0097 #2): a row of
+ * quick-links projected from the course-spec `info_pages` record, plus a
+ * "Made with Sophie" mark.
+ *
+ * Chrome (role-less, ADR 0058): a navigation projection.
+ *
+ * Landmark (R10): renders its own `<footer>` (a complementary landmark)
+ * with a labeled `<nav>` inside — sibling to the shell's `<main>`, no
+ * collision. Absent `info_pages` → the nav renders empty (no crash); the
+ * "Made with Sophie" mark always shows.
+ */
+import { withBase } from "../../lib/with-base";
+import { type QuickLink, quickLinks } from "./home-projections.ts";
+
+interface Props {
+  /** The course-spec `info_pages` record (slug → declaration), if any. */
+  infoPages?: Readonly<Record<string, unknown>>;
+}
+
+const { infoPages } = Astro.props;
+const links: QuickLink[] = quickLinks(infoPages);
+---
+
+<footer class='sophie-home-footer'>
+  <nav class='sophie-home-footer__nav' aria-label='Course pages'>
+    {
+      links.map((link) => (
+        <a
+          class='sophie-home-footer__link'
+          href={withBase(`/${link.slug}/`)}
+        >
+          {link.label}
+        </a>
+      ))
+    }
+  </nav>
+  <span class='sophie-home-footer__made'>Made with <b>Sophie</b></span>
+</footer>
+
+<style>
+  .sophie-home-footer {
+    margin: clamp(3rem, 7vw, 5rem) 0 3rem;
+    padding-top: 1.6rem;
+    border-top: 1px solid rgba(160, 170, 230, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .sophie-home-footer__nav {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .sophie-home-footer__link {
+    color: var(--sophie-home-ink-soft);
+    text-decoration: none;
+    font-size: 0.95rem;
+    transition: color 0.2s;
+  }
+  .sophie-home-footer__link:hover {
+    color: var(--sophie-home-teal);
+  }
+  .sophie-home-footer__made {
+    font-family: var(--sophie-font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    color: var(--sophie-home-ink-muted);
+  }
+  .sophie-home-footer__made b {
+    color: var(--sophie-home-teal);
+    font-weight: 500;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sophie-home-footer__link {
+      transition: none;
+    }
+  }
+</style>

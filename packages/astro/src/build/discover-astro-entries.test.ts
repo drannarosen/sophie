@@ -19,7 +19,7 @@ const SRC_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..");
  * reachable only through `integration.ts`/`index.ts`/sibling `.ts` files
  * (the dist tree mirrors src). Discovery owns only the `.astro`-derived
  * set; this list is the explicit complement asserted against the full
- * 27-entry union below. Kept in sync with the INTRINSIC literal in
+ * 28-entry union below. Kept in sync with the INTRINSIC literal in
  * `tsup.config.ts`.
  */
 const INTRINSIC_KEYS = [
@@ -29,11 +29,12 @@ const INTRINSIC_KEYS = [
   "lib/pedagogy-audit/runner",
 ] as const;
 
-/** The 23 entries derivable from copied-verbatim `.astro` value-imports. */
+/** The 24 entries derivable from copied-verbatim `.astro` value-imports. */
 const EXPECTED_DISCOVERED = [
   "components",
   "components/backgrounds/starfield-engine",
   "components/backgrounds/themes",
+  "components/course-home/home-projections",
   "icons/index",
   "lib/artifacts-from-collection",
   "lib/aside-positioning/install-positioning",
@@ -62,7 +63,7 @@ const EXPECTED_ALL = [...INTRINSIC_KEYS, ...EXPECTED_DISCOVERED].sort();
 describe("discoverAstroEntries", () => {
   const discovered = discoverAstroEntries(SRC_DIR);
 
-  it("derives exactly the 23 .astro-imported entry keys", () => {
+  it("derives exactly the 24 .astro-imported entry keys", () => {
     expect(Object.keys(discovered).sort()).toEqual(EXPECTED_DISCOVERED);
   });
 
@@ -96,10 +97,10 @@ describe("discoverAstroEntries", () => {
     expect(discovered.components).toMatch(/components\.tsx$/);
   });
 
-  it("INTRINSIC ∪ DISCOVERED equals the full 27-entry set", () => {
+  it("INTRINSIC ∪ DISCOVERED equals the full 28-entry set", () => {
     const all = [...INTRINSIC_KEYS, ...Object.keys(discovered)].sort();
     expect(all).toEqual(EXPECTED_ALL);
-    expect(all).toHaveLength(27);
+    expect(all).toHaveLength(28);
   });
 });
 
