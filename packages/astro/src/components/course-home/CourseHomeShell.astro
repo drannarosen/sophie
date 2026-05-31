@@ -31,11 +31,17 @@
  *                         slot fill; consumers may override the nav slot.
  *   - slot `why-band`   → Task 5 ("Why this course is different").
  *   - slot `how-band`   → Task 5 ("How each lecture works").
- *   - <OrientationCards>' `due-soon`/`start-reading` are now DATA-DRIVEN
- *                         (Task 6): `dueSoon` (assignments registry, ADR 0096)
- *                         + `startReading` (first non-draft unit) flow in
- *                         as props and degrade gracefully (#7). The
- *                         `this-week` card awaits ScheduleSchema (ADR 0098).
+ *   - <OrientationCards>' three cards are now DATA-DRIVEN: `dueSoon`
+ *                         (assignments registry, ADR 0096), `thisWeek`
+ *                         (schedule + assignments, ADR 0098), and
+ *                         `startReading` (first non-draft unit) flow in as
+ *                         props and degrade gracefully (#7).
+ *   - <ModuleList>'s week-ranges + "Now" marker come from `scheduleRows`
+ *                         (schedule, ADR 0098); absent → lecture-count-only.
+ *
+ * The schedule-derived props (`scheduleRows`/`thisWeek`) are threaded down
+ * TYPE-ONLY here — the dispatcher (course-landing.astro) owns the single
+ * `home-schedule-projections` value import + the impure virtual-module read.
  */
 import HomeBackground from "../backgrounds/HomeBackground.astro";
 import CourseHero from "./CourseHero.astro";
@@ -55,6 +61,15 @@ import {
   type HowBandData,
   type WhyBandData,
 } from "./home-projections";
+// TYPE-ONLY by design (mirrors ModuleList/OrientationCards): a value import
+// of `home-schedule-projections` would make this shell a SECOND discovered
+// tsup `.astro` entry-importer (double-bump). The dispatcher
+// (course-landing.astro) owns the single value import + projection; the
+// shell only threads the projected shapes down to ModuleList/OrientationCards.
+import type {
+  ScheduleRow,
+  ThisWeekItem,
+} from "./home-schedule-projections";
 import type { SectionEntry, UnitEntry } from "@sophie/core/schema";
 
 interface Props {
@@ -91,6 +106,19 @@ interface Props {
    */
   dueSoon?: ReadonlyArray<DueSoonItem>;
   /**
+   * Per-section calendar status (week-ranges + Now/past flags), projected
+   * from the schedule (ADR 0098, `scheduleRows()`). Threaded to
+   * <ModuleList>; absent / empty → the module rows render their
+   * lecture-count-only state (graceful degradation, #7).
+   */
+  scheduleRows?: ReadonlyArray<ScheduleRow>;
+  /**
+   * Rolling next-7-days "This Week" items (ADR 0098, `thisWeek()`): class
+   * events + due deadlines, date-sorted. Threaded to <OrientationCards>;
+   * empty → the This-Week card is dropped (graceful degradation, #7).
+   */
+  thisWeek?: ReadonlyArray<ThisWeekItem>;
+  /**
    * "Start Reading" link — first non-draft unit (`startReading()`). Absent
    * (e.g. an all-draft course) → the card shows its static prompt.
    */
@@ -112,6 +140,8 @@ const {
   why,
   how,
   dueSoon,
+  scheduleRows = [],
+  thisWeek = [],
   startReading,
   theme,
 } = Astro.props;
@@ -154,7 +184,11 @@ const { moduleCount, lectureCount } = courseCounts(sections, units);
             lectureCount={lectureCount}
           />
 
-          <OrientationCards dueSoon={dueSoon} startReading={startReading} />
+          <OrientationCards
+            dueSoon={dueSoon}
+            thisWeek={thisWeek}
+            startReading={startReading}
+          />
 
           {/* "Why this course is different" projection band (ADR 0097 #3).
               Default slot content; consumers may override the slot. */}
@@ -162,7 +196,11 @@ const { moduleCount, lectureCount } = courseCounts(sections, units);
             {why && <WhyBand lead={why.lead} pillars={why.pillars} />}
           </slot>
 
-          <ModuleList sections={sections} units={units} />
+          <ModuleList
+            sections={sections}
+            units={units}
+            scheduleRows={scheduleRows}
+          />
 
           {/* "How each lecture works" projection band (ADR 0097 #3).
               Omitted when `flow` is empty (degrades to nothing, #7). */}
