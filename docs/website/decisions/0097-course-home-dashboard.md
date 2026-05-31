@@ -18,7 +18,7 @@ validation:
     - kind: review
       ref: docs/plans/2026-05-31-course-home-dashboard-implementation.md
       date: "2026-05-31"
-      notes: "Shell-first PR-1 plan: theme-slot seam + vendored starfield, CourseHomeShell + dashboard layout, global dropdown nav, descriptive-band projection, Due-Soon from the existing homework registry. ScheduleSchema (ADR 0098) and Announcements (ADR 0099) are fast-follow PRs. Not yet implemented — this ADR is accepted-design."
+      notes: "Shell-first PR-1 plan: theme-slot seam + vendored starfield, CourseHomeShell + dashboard layout, global dropdown nav, descriptive-band projection, Due-Soon from the existing assignments registry (homework registry generalized per ADR 0096 Amendment 1). ScheduleSchema (ADR 0098) and Announcements (ADR 0099) are fast-follow PRs. Not yet implemented — this ADR is accepted-design."
   notes: |
     Approved design, not yet shipped. The dashboard is the realized form
     of the course-spec `hero-with-modules` landing layout (astr201's spec
@@ -118,9 +118,13 @@ top-right — matching Quarto, MyST, and Sophie's own `TextbookLayout` topbar
 
 "This Week" + module week-ranges consume `virtual:sophie/schedule` (ADR 0098,
 `T | null`); the announcement banner consumes announcements (ADR 0099). Both are
-**nullable virtual modules** narrowed at the dispatcher per **R12**, and **render
-nothing when null** (fail-closed — no empty chrome, no crash). "Due Soon" reads
-the **existing** homework registry (ADR 0096), so it is live from PR 1.
+**nullable virtual modules** in the **R12** family that **render nothing when
+null** (fail-closed — no empty chrome, no crash). They are read null-safely at
+the dispatcher and passed whole into null-guarding projections (the documented
+R12 narrow-with-throw *exception* — no direct property access at the route
+boundary; see ADR 0098 decision 3). "Due Soon" reads the **existing** assignments
+registry (ADR 0096, generalized in Amendment 1 from the homework registry), so it
+is live from PR 1.
 
 ## Consequences
 

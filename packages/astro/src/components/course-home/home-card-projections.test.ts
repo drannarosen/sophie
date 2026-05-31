@@ -1,27 +1,30 @@
-import type { HomeworkRegistry, UnitEntry } from "@sophie/core/schema";
+import type { AssignmentRegistry, UnitEntry } from "@sophie/core/schema";
 import { describe, expect, test } from "vitest";
 import { dueSoon, startReading } from "./home-card-projections.ts";
 
-/** A homework fixture; `dueDate` is `"tbd"` or an ISO `YYYY-MM-DD`. */
+/** An assignment fixture; `dueDate` is `"tbd"` or an ISO `YYYY-MM-DD`. */
 function hw(
   id: string,
   dueDate: string,
-  problems: HomeworkRegistry["homework"][number]["problems"] = [
+  problems: AssignmentRegistry["assignments"][number]["problems"] = [
     { unit: "u1", ids: ["p1"] },
   ]
-): HomeworkRegistry["homework"][number] {
+): AssignmentRegistry["assignments"][number] {
   return {
     id,
     title: `Homework ${id}`,
+    kind: "homework",
     assignedDate: "2027-01-01",
     dueDate,
     problems,
   };
 }
 
-/** Build a registry from a list of homeworks. */
-function reg(...homework: HomeworkRegistry["homework"]): HomeworkRegistry {
-  return { homework };
+/** Build a registry from a list of assignments. */
+function reg(
+  ...assignments: AssignmentRegistry["assignments"]
+): AssignmentRegistry {
+  return { assignments };
 }
 
 /** A fixed injected `now` — 2027-02-15. */
@@ -90,6 +93,23 @@ describe("dueSoon", () => {
     expect(items[0]?.problemCount).toBe(5);
   });
 
+  test("problemless assignment (a project) surfaces with problemCount 0", () => {
+    // ADR 0096 Amendment 1: `problems` is optional; a project carries no
+    // gradable problems, so it still appears in Due-Soon but counts 0.
+    // Built inline (not via `hw`) because `hw`'s default param fills in
+    // problems — a problemless entry needs `problems` genuinely absent.
+    const project: AssignmentRegistry["assignments"][number] = {
+      id: "project-1",
+      title: "Final Project",
+      kind: "project",
+      assignedDate: "2027-01-01",
+      dueDate: "2027-02-20",
+    };
+    const items = dueSoon(reg(project), NOW);
+    expect(items.map((i) => i.id)).toEqual(["project-1"]);
+    expect(items[0]?.problemCount).toBe(0);
+  });
+
   test("surfaces tbd homeworks as dimmed entries AFTER concrete-dated ones", () => {
     const items = dueSoon(
       reg(hw("tbd-a", "tbd"), hw("dated", "2027-02-20")),
@@ -119,6 +139,45 @@ describe("dueSoon", () => {
   test("tbd-only registry → tbd entries (still upcoming, dimmed)", () => {
     const items = dueSoon(reg(hw("1", "tbd")), NOW);
     expect(items.map((i) => [i.id, i.tbd])).toEqual([["1", true]]);
+  });
+
+  test("humanizes a free-slug kind into a title-case label by default", () => {
+    // ADR 0096 Am1 / ADR 0080 Am3: with no consumer-declared
+    // `assignment_kinds`, the slug humanizes (title-case).
+    const memo: AssignmentRegistry["assignments"][number] = {
+      id: "gm1",
+      title: "Growth Memo 1",
+      kind: "growth-memo",
+      assignedDate: "2027-01-01",
+      dueDate: "2027-02-20",
+    };
+    const items = dueSoon(reg(memo), NOW);
+    expect(items[0]).toMatchObject({
+      kind: "growth-memo",
+      kindLabel: "Growth Memo",
+    });
+  });
+
+  test("a consumer-declared custom label wins over the humanized fallback", () => {
+    const memo: AssignmentRegistry["assignments"][number] = {
+      id: "gm1",
+      title: "Growth Memo 1",
+      kind: "growth-memo",
+      assignedDate: "2027-01-01",
+      dueDate: "2027-02-20",
+    };
+    const items = dueSoon(reg(memo), NOW, undefined, {
+      "growth-memo": "Growth Memo (P/F)",
+    });
+    expect(items[0]).toMatchObject({
+      kind: "growth-memo",
+      kindLabel: "Growth Memo (P/F)",
+    });
+  });
+
+  test("a single-word kind humanizes to a title-case word", () => {
+    const items = dueSoon(reg(hw("1", "2027-02-20")), NOW);
+    expect(items[0]).toMatchObject({ kind: "homework", kindLabel: "Homework" });
   });
 });
 

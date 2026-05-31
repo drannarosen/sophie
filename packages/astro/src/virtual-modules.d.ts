@@ -79,15 +79,29 @@ declare module "virtual:sophie/course-spec" {
   export const courseSpec: CourseSpec | null;
 }
 
-declare module "virtual:sophie/homework" {
-  import type { HomeworkRegistry } from "@sophie/core/schema";
+declare module "virtual:sophie/assignments" {
+  import type { AssignmentRegistry } from "@sophie/core/schema";
 
   /**
-   * Consumer's parsed `homework.sophie.yaml`. Populated by
-   * `defineSophieIntegration` via `homeworkVirtualModule()`. Always
+   * Consumer's parsed `assignments.sophie.yaml`. Populated by
+   * `defineSophieIntegration` via `assignmentsVirtualModule()`. Always
    * registered — `null` when the consumer hasn't authored a registry
    * yet (the Solutions reveal gate stays fail-closed for every
-   * chapter). Gated-solutions design (ADR 0096).
+   * chapter). Gated-solutions design (ADR 0096, generalized in
+   * Amendment 1).
    */
-  export const homework: HomeworkRegistry | null;
+  export const assignments: AssignmentRegistry | null;
+}
+
+declare module "virtual:sophie/schedule" {
+  import type { Schedule } from "@sophie/core/schema";
+
+  /**
+   * Consumer's parsed `schedule.sophie.yaml`. Populated by
+   * `defineSophieIntegration` via `scheduleVirtualModule()`. Always
+   * registered — `null` when the consumer hasn't authored a calendar
+   * yet (the course-home week-ranges / "Now" marker / This-Week card
+   * stay fail-closed). ScheduleSchema design (ADR 0098).
+   */
+  export const schedule: Schedule | null;
 }

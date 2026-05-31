@@ -1,0 +1,23 @@
+term_start: "2027-01-19"
+entries:
+  - date: "2027-01-20"
+    kind: lecture
+    title: "Lecture 1 — Ages and Lifetimes"
+    unit: lecture-01-ages-lifetimes
+  - date: "2027-01-22"
+    kind: activity
+    title: "In-class worksheet: stellar timescales"
+    unit: lecture-01-ages-lifetimes
+  - date: "2027-01-27"
+    kind: lecture
+    title: "Lecture 3 — Gravity and Orbits"
+    unit: lecture-03-gravity-and-orbits
+  - date: "2027-02-15"
+    kind: holiday
+    title: "Presidents' Day — no class"
+  - date: "2027-03-15"
+    kind: break
+    title: "Spring Break begins (no class through 03-19)"
+  - date: "2027-03-31"
+    kind: exam
+    title: "Midterm Exam"

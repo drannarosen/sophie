@@ -83,6 +83,14 @@ grading:
     - { grade: "D", min: 60 }
     - { grade: "F", min: 0 }
 
+# Consumer-declared assignment-kind vocabulary (ADR 0080 Am3): every `kind`
+# used in assignments.sophie.yaml MUST be a key here, or the integration
+# cross-refine (assertAssignmentKindsDeclared) throws the build. Exercises
+# the custom-label path of the Due-Soon kind badge on a real build.
+assignment_kinds:
+  homework: Homework
+  project: Term Project
+
 quality_bars:
   required: []
   recommended: []

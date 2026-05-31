@@ -9,16 +9,24 @@ tags:
 status: accepted-design
 validation:
   status: in-progress
-  last_validated_date: "2026-05-30"
+  last_validated_date: "2026-05-31"
   evidence:
     - kind: review
       ref: docs/plans/2026-05-30-deploy-time-gated-solutions-design.md
       date: "2026-05-30"
-      notes: "Brainstorming-session design doc (§10 is this ADR's source). Two-layer architecture: a homework registry (`virtual:sophie/homework`, `T | null`, always-register) for assignment logistics, and chapter-scoped fail-closed solution reveal resolved as `explicit solutionsRevealDate ?? max(dueDate of homeworks touching the chapter)`. Approved in-thread 2026-05-30 (HITL gate, design doc §9 step 1)."
+      notes: "Brainstorming-session design doc (§10 is this ADR's source). Two-layer architecture: a homework registry (`virtual:sophie/homework`, `T | null`, always-register) for assignment logistics, and chapter-scoped fail-closed solution reveal resolved as `explicit solutionsRevealDate ?? max(dueDate of homeworks touching the chapter)`. Approved in-thread 2026-05-30 (HITL gate, design doc §9 step 1). Superseded by Amendment 1 (registry generalized homework→assignments)."
     - kind: review
       ref: docs/plans/2026-05-30-gated-solutions-implementation.md
       date: "2026-05-30"
-      notes: "Three-PR implementation plan. PR 1: HomeworkRegistry schema + loader + `virtual:sophie/homework` module (platform core). PR 2: fail-closed chapter reveal resolver + gated `/units/[unit]/solutions` route + security acceptance test (the W4 gate: a future-dated chapter's `dist/` contains zero solution text, proven by grep). PR 3: astr201 consumer registry + pilot re-pedagogy. Not yet implemented — this ADR is `accepted-design`."
+      notes: "Three-PR implementation plan. PR 1: HomeworkRegistry schema + loader + `virtual:sophie/homework` module (platform core). PR 2: fail-closed chapter reveal resolver + gated `/units/[unit]/solutions` route + security acceptance test (the W4 gate: a future-dated chapter's `dist/` contains zero solution text, proven by grep). PR 3: astr201 consumer registry + pilot re-pedagogy. Module/type names superseded by Amendment 1's homework→assignments rename."
+    - kind: review
+      ref: docs/plans/2026-05-31-schedule-announcements-design.md
+      date: "2026-05-31"
+      notes: "Amendment 1 design source (§①). Generalizes the homework registry into a course-agnostic assignments registry: hard rename (homework.sophie.yaml→assignments.sophie.yaml, virtual:sophie/homework→virtual:sophie/assignments, HomeworkRegistry→AssignmentRegistry); `kind` becomes a free consumer-owned Slug (no closed enum); `problems` becomes optional and the gated-solution reveal keys off its PRESENCE, not the `kind` label — so an assignment without problems never gates (security invariant unchanged). Approved in-thread 2026-05-31 (HITL gate)."
+    - kind: review
+      ref: docs/plans/2026-05-31-schedule-announcements-implementation.md
+      date: "2026-05-31"
+      notes: "Amendment 1 implementation plan (Task 1 = atomic rename + generalization sweep). The reveal resolver generalizes to a one-line change: `registry.assignments.filter((a) => a.problems?.some((g) => g.unit === unit))`. PR 2 reuses the shipped `gated-solutions-security.spec.ts` to prove the gate survives the rename (a future-dated chapter's `dist/` still contains zero solution text)."
   notes: |
     Approved design, not yet shipped. Real protection depends on a
     private source repo (`astrobytes-edu/astr201`) plus a daily rebuild
@@ -31,7 +39,7 @@ validation:
     concern): solutions are now migrated, gated.
 ---
 
-# ADR 0096: Deploy-time gated content + homework registry
+# ADR 0096: Deploy-time gated content + assignments registry
 
 :::{admonition} ADR metadata
 - **Status**: accepted-design
@@ -208,12 +216,100 @@ reveal*. They share dates by default but are independently editable.
   date the chapter's solutions become in-context exam-study material on
   the public site.
 
+## Amendments
+
+### Amendment 1 — homework registry → assignments registry (generalization, 2026-05-31)
+
+**Trigger.** The course-home dashboard (ADR 0097) shipped three
+**fail-closed** seams; filling the "This Week" card requires a
+single-source-of-truth for deadlines. The homework registry already
+owns due-dates, so the schedule (ADR 0098) pulls them by date rather
+than duplicating them (a DRY violation). With deadlines centralized,
+Anna chose to **generalize the homework registry into a course-agnostic
+assignments registry now**, pre-launch, while the rename is cheap: per
+`feedback_no_backcompat_prelaunch` there is zero production content and
+no consumer to migrate (astr201 has no `homework.sophie.yaml` yet).
+Authoritative companions:
+[design doc § ①](../../plans/2026-05-31-schedule-announcements-design.md),
+[implementation plan Task 1](../../plans/2026-05-31-schedule-announcements-implementation.md).
+
+**Hard rename, no back-compat shim.** Every reference moves in one
+coherent change (Task 1's atomic sweep):
+
+| Before | After |
+|---|---|
+| `homework.sophie.yaml` | `assignments.sophie.yaml` |
+| `virtual:sophie/homework` | `virtual:sophie/assignments` |
+| `HomeworkRegistry` / `Homework` | `AssignmentRegistry` / `Assignment` |
+| `homework.ts` / `homework-{loader,virtual-module}.ts` | `assignments.ts` / `assignments-{loader,virtual-module}.ts` |
+| `loadHomework` / `homeworkVirtualModule` | `loadAssignments` / `assignmentsVirtualModule` |
+
+**Generalized entry shape.** `{ id: Slug, title, kind: Slug,
+assignedDate: DateOrTbd, dueDate: DateOrTbd, problems?: ProblemGroup[] }`
+(schema at
+[`packages/core/src/schema/assignments.ts`](https://github.com/drannarosen/sophie/blob/main/packages/core/src/schema/assignments.ts)).
+Two substantive changes beyond the rename:
+
+- **`kind` is a free `Slug`** (consumer-owned vocabulary, humanized for
+  display: `growth-memo` → "Growth Memo"), **not** a closed platform
+  enum. Assignment kinds are course-owned (ASTR 596: growth-memo,
+  grade-memo; COMP 521: others) — a closed enum in `@sophie/core` would
+  force a platform PR per course-specific kind. The optional
+  consumer-declared label map + typo-protection cross-refine lives in
+  [ADR 0080 Amendment 3](./0080-course-spec-format-v0-1.md#amendment-3-optional-assignment-kinds-course-spec-field-2026-05-31).
+
+- **`problems` is now OPTIONAL, and the gated-solution reveal keys off
+  its PRESENCE — not on `kind`.** The resolver
+  ([`resolve-solution-reveal.ts`](https://github.com/drannarosen/sophie/blob/main/packages/astro/src/lib/resolve-solution-reveal.ts))
+  generalizes to a **one-line change**: it iterates `registry.assignments`
+  and filters `a.problems?.some((g) => g.unit === unit)` (optional-aware,
+  so it never touches a missing `problems` array). The resolver never
+  learns that project/lab/memo kinds exist — *generalization without
+  branching*.
+
+**The security invariant is unchanged.** Keying the reveal on data
+shape (does this assignment carry gradable problems whose solutions
+unlock?) rather than on a `kind` label means an assignment **without**
+`problems` (a project, a memo) **never gates** — it contributes no
+reveal date, so the chapter stays hidden (the fail-closed direction of
+decision 2). The gate is correct for *any* future kind that ships
+problems (a lab with a problem set gates identically) and inert for
+those that don't. The registry-level invariants are preserved
+(`assignedDate ≤ dueDate`, tbd-tolerant; each problem claimed by at
+most one assignment — now optional-aware over `a.problems ?? []`).
+
+**`virtual:sophie/assignments`** remains the `T | null` always-register
+virtual module of decision 1. Per **R12** it is consumed in two ways:
+the Solutions dispatcher
+([`solutions.astro`](https://github.com/drannarosen/sophie/blob/main/packages/astro/src/routes/solutions.astro))
+reads it null-safely through the resolver (no property access at the
+route boundary), and the course-landing dashboard passes it whole into
+the null-guarding `dueSoon` / `thisWeek` projections — a **documented
+null-safe exception** to R12's narrow-with-throw rule, not a regression
+(see the AGENTS.md R12 scope clarification). The "predicted third
+nullable module" framing of decision 1 is realized by `ScheduleSchema`
+(ADR 0098), which ships in the same PR.
+
+**Consequences.**
+
+- Solutions gating survives the rename unchanged: the PR's
+  `gated-solutions-security.spec.ts` still proves a future-dated
+  chapter's `dist/` contains zero solution text.
+- A project / memo / non-problem assignment can now live in the
+  registry and surface in Due-Soon / This-Week without ever gating a
+  solution — the generalization that unblocks the dashboard's calendar
+  seams.
+- `spec_version` / schema-id concerns do not apply: the assignments
+  registry is a standalone consumer artifact, not part of the course-
+  spec versioned surface.
+
 ## References
 
 - [ADR 0001 — Repo shape: standalone platform, separate consumer repos](./0001-platform-not-monorepo.md)
   — the auth-less SSG model that forces build-time gating.
 - [ADR 0003 — Zod as schema source of truth](./0003-zod-as-source-of-truth.md)
-  — the `HomeworkRegistrySchema` contract.
+  — the `AssignmentRegistrySchema` contract (renamed from
+  `HomeworkRegistrySchema` per Amendment 1).
 - [ADR 0073 — Unified assessment schema (formative-with-reveal v1)](./0073-unified-assessment-schema.md)
   — the `<Solution>` / `<NumericQuestion>` / `<Hint>` family the gate protects.
 - [ADR 0080 — Course-spec format](./0080-course-spec-format-v0-1.md)

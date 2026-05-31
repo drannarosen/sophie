@@ -1,0 +1,62 @@
+# Class calendar for examples/smoke — exercises ScheduleSchema (ADR 0098)
+# on a real build so CI guards the course-home week-ranges / "Now" marker /
+# This-Week card wiring end to end through @sophie/* (Task 11, W4).
+#
+# Dates are authored to BRACKET the build wall-clock at fixture-authoring
+# time (2026-05-31, a Sunday) so a build TODAY visibly populates the
+# date-relative seams — one-time local proof the populated path works:
+#
+#   term_start: 2026-05-18 (Monday) → Week 1 = May 18–24, Week 2 = May 25–31,
+#   Week 3 = Jun 1–7, Week 4 = Jun 8–14.
+#
+#   - foundations span = 2026-05-19 … 2026-06-02 → brackets 2026-05-31
+#     → row `isNow: true` ("Now" tag) + `Weeks 1–3`.
+#   - stars span = 2026-06-04 … 2026-06-09 (all future on the authoring
+#     date) → not now, not past → `Weeks 3–4`.
+#   - This-Week window [today, today+7] catches the Jun 2 + Jun 4 lectures
+#     (plus the Jun 5 homework dueDate pulled from assignments.sophie.yaml).
+#
+# `unit:` refs point at REAL smoke unit ids (see src/content/units/*.json):
+# foundations = spoiler-alerts / measuring-the-sky / misconception-fixture /
+# mobile-a11y-fixture; stars = spectra-and-composition / stellar-evolution.
+# The holiday + break entries carry NO unit (they are no-class days, not
+# lecture events) and exercise those two closed-enum kinds.
+#
+# NOTE (Task 11): no e2e asserts these date-relative populated states — they
+# would flip on a future CI date. The populated-state assertions live in the
+# date-injected unit tests (home-schedule-projections.test.ts). This fixture
+# is build-wiring proof + a one-time local visual check only.
+
+term_start: "2026-05-18"
+
+entries:
+  - date: "2026-05-19"
+    kind: lecture
+    title: "Course launch — Spoiler Alerts"
+    unit: spoiler-alerts
+  - date: "2026-05-21"
+    kind: activity
+    title: "Measuring the sky — in-class worksheet"
+    unit: measuring-the-sky
+  - date: "2026-05-26"
+    kind: lecture
+    title: "Misconceptions and interventions"
+    unit: misconception-fixture
+  - date: "2026-05-28"
+    kind: holiday
+    title: "No class — campus holiday"
+  - date: "2026-06-02"
+    kind: lecture
+    title: "Mobile a11y fixture walkthrough"
+    unit: mobile-a11y-fixture
+  - date: "2026-06-04"
+    kind: lecture
+    title: "Spectra & composition"
+    unit: spectra-and-composition
+  - date: "2026-06-09"
+    kind: exam
+    title: "Midterm — stellar evolution"
+    unit: stellar-evolution
+  - date: "2026-06-15"
+    kind: break
+    title: "Reading break begins"

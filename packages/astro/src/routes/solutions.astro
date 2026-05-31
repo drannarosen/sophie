@@ -2,8 +2,8 @@
 import { makeStaticComponents } from "@sophie/astro";
 import { setSophieBaseUrl } from "@sophie/core/runtime";
 import { getCollection, render } from "astro:content";
+import { assignments } from "virtual:sophie/assignments";
 import { figures } from "virtual:sophie/figures";
-import { homework } from "virtual:sophie/homework";
 import ChapterLayout from "../components/ChapterLayout.astro";
 import FigureImage from "../components/FigureImage.astro";
 import SolutionsPlaceholder from "../components/SolutionsPlaceholder.astro";
@@ -23,13 +23,14 @@ export async function getStaticPaths() {
   // they never ride the course-wide render/index sweep into Library + search),
   // gating each behind its resolved reveal date. `new Date()` is read HERE
   // and ONLY here — the single wall-clock read — then injected into the pure
-  // `buildSolutionPaths` helper so the gate logic stays testable. `homework`
-  // (virtual:sophie/homework, T | null) is passed straight through; the
-  // helper null-guards it internally, so no R12 narrowing throw is needed in
-  // this route (no direct property access on `homework` here).
+  // `buildSolutionPaths` helper so the gate logic stays testable.
+  // `assignments` (virtual:sophie/assignments, T | null) is passed straight
+  // through; the helper null-guards it internally, so no R12 narrowing throw
+  // is needed in this route (no direct property access on `assignments`
+  // here).
   const solutions = await getCollection("solutions");
   const units = await getCollection("units");
-  return buildSolutionPaths(solutions, units, homework, new Date());
+  return buildSolutionPaths(solutions, units, assignments, new Date());
 }
 
 const props = Astro.props;

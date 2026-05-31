@@ -464,6 +464,70 @@ describe("CourseSpecSchema v0.2 — chrome clusters", () => {
   });
 });
 
+// ───────────────────────────────────────────────────────────────────
+// assignment_kinds — optional consumer-declared vocabulary (ADR 0080
+// Amendment 3). slug → label map. @sophie/core validates SHAPE ONLY; the
+// cross-file membership check (rejecting undeclared kinds against the
+// assignments registry) lives in the integration, not here.
+// ───────────────────────────────────────────────────────────────────
+
+describe("CourseSpecSchema — assignment_kinds (ADR 0080 Am3)", () => {
+  it("accepts a valid slug→label map and round-trips it", () => {
+    const data = valid();
+    const extended = {
+      ...data,
+      assignment_kinds: {
+        homework: "Homework",
+        project: "Project",
+        "growth-memo": "Growth Memo",
+      },
+    };
+    const parsed = CourseSpecSchema.parse(extended);
+    expect(parsed.assignment_kinds).toEqual({
+      homework: "Homework",
+      project: "Project",
+      "growth-memo": "Growth Memo",
+    });
+  });
+
+  it("parses when assignment_kinds is absent (optional)", () => {
+    const data = valid();
+    const { assignment_kinds: _omit, ...rest } = data;
+    const parsed = CourseSpecSchema.parse(rest);
+    expect(parsed.assignment_kinds).toBeUndefined();
+  });
+
+  it("rejects a non-slug key (e.g. 'Home Work') at the assignment_kinds path", () => {
+    const result = CourseSpecSchema.safeParse({
+      ...valid(),
+      assignment_kinds: { "Home Work": "Homework" },
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      // Pin the failure to the Slug key validator (not `.strict()`'s
+      // unknown-key rejection), so the test goes RED if the field is removed.
+      expect(result.error.issues[0]?.path).toEqual([
+        "assignment_kinds",
+        "Home Work",
+      ]);
+    }
+  });
+
+  it("rejects an empty-string value (NonEmptyString) at the assignment_kinds path", () => {
+    const result = CourseSpecSchema.safeParse({
+      ...valid(),
+      assignment_kinds: { homework: "" },
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0]?.path).toEqual([
+        "assignment_kinds",
+        "homework",
+      ]);
+    }
+  });
+});
+
 describe("CourseSpecSchema v0.2 — grading invariants", () => {
   it("rejects objectives[*].assessed_by entries that don't reference declared grading.categories (I3 cross-refine)", () => {
     const data = valid();

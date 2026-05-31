@@ -1,4 +1,4 @@
-import type { HomeworkRegistry } from "@sophie/core/schema";
+import type { AssignmentRegistry } from "@sophie/core/schema";
 import {
   isChapterRevealed,
   resolveRevealDate,
@@ -70,7 +70,7 @@ const ISO_DATE_LENGTH = 10; // "YYYY-MM-DD"
 export function buildSolutionPaths<A extends SolutionArtifactLike>(
   solutions: ReadonlyArray<A>,
   units: ReadonlyArray<SolutionUnitLike>,
-  registry: HomeworkRegistry | null,
+  registry: AssignmentRegistry | null,
   now: Date
 ): SolutionPathEntry<A>[] {
   const unitsById = new Map(units.map((u) => [u.data.id, u]));

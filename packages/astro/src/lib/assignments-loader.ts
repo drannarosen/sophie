@@ -1,21 +1,21 @@
 import fs from "node:fs";
 import path from "node:path";
 import {
-  type HomeworkRegistry,
-  HomeworkRegistrySchema,
+  type AssignmentRegistry,
+  AssignmentRegistrySchema,
 } from "@sophie/core/schema";
 import { parse as parseYaml } from "yaml";
 
 /**
- * Load + validate `<consumerRoot>/homework.sophie.yaml` at config-setup
+ * Load + validate `<consumerRoot>/assignments.sophie.yaml` at config-setup
  * time. Two-state return:
  *
  * - **null** when the file is absent. Means the consumer hasn't
- *   authored a homework registry yet — `defineSophieIntegration`
- *   registers the `virtual:sophie/homework` plugin with a `null`
+ *   authored an assignments registry yet — `defineSophieIntegration`
+ *   registers the `virtual:sophie/assignments` plugin with a `null`
  *   payload (always-register pattern, ADR 0096) and the solutions
  *   reveal gate stays fail-closed for every chapter.
- * - **HomeworkRegistry** when the file exists + is schema-valid.
+ * - **AssignmentRegistry** when the file exists + is schema-valid.
  *
  * Throws (no third return state) when the file exists but is
  * malformed YAML or schema-invalid. Those are **author errors that
@@ -28,8 +28,10 @@ import { parse as parseYaml } from "yaml";
  * package is already a @sophie/astro dep for the figures + course-spec
  * loaders).
  */
-export function loadHomework(consumerRoot: string): HomeworkRegistry | null {
-  const registryPath = path.join(consumerRoot, "homework.sophie.yaml");
+export function loadAssignments(
+  consumerRoot: string
+): AssignmentRegistry | null {
+  const registryPath = path.join(consumerRoot, "assignments.sophie.yaml");
   if (!fs.existsSync(registryPath)) return null;
 
   const source = fs.readFileSync(registryPath, "utf8");
@@ -39,13 +41,13 @@ export function loadHomework(consumerRoot: string): HomeworkRegistry | null {
     raw = parseYaml(source);
   } catch (err) {
     throw new Error(
-      `[sophie] homework.sophie.yaml at ${registryPath} is not valid YAML: ${
+      `[sophie] assignments.sophie.yaml at ${registryPath} is not valid YAML: ${
         err instanceof Error ? err.message : String(err)
       }`
     );
   }
 
-  const result = HomeworkRegistrySchema.safeParse(raw);
+  const result = AssignmentRegistrySchema.safeParse(raw);
   if (!result.success) {
     // Format Zod issues as `path: message` lines so the author can
     // see exactly which fields failed validation.
@@ -56,7 +58,7 @@ export function loadHomework(consumerRoot: string): HomeworkRegistry | null {
       )
       .join("\n");
     throw new Error(
-      `[sophie] homework.sophie.yaml at ${registryPath} is schema-invalid:\n${issues}`
+      `[sophie] assignments.sophie.yaml at ${registryPath} is schema-invalid:\n${issues}`
     );
   }
   return result.data;

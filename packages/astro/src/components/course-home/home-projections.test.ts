@@ -5,11 +5,11 @@ import {
   courseCounts,
   howBand,
   howFlow,
-  infoPageLabel,
   lectureCountForSection,
   moduleRows,
   navGroups,
   quickLinks,
+  titleCaseSlug,
   toolkitPillarBody,
   trackNote,
   whyBand,
@@ -128,10 +128,11 @@ describe("assembleEyebrow", () => {
   });
 });
 
-describe("infoPageLabel", () => {
+describe("titleCaseSlug", () => {
   test("title-cases a kebab slug", () => {
-    expect(infoPageLabel("office-hours")).toBe("Office Hours");
-    expect(infoPageLabel("syllabus")).toBe("Syllabus");
+    expect(titleCaseSlug("office-hours")).toBe("Office Hours");
+    expect(titleCaseSlug("syllabus")).toBe("Syllabus");
+    expect(titleCaseSlug("growth-memo")).toBe("Growth Memo");
   });
 });
 

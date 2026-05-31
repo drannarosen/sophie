@@ -24,6 +24,11 @@ export {
   AssessmentTypeSchema,
 } from "./assessment.js";
 export {
+  type Assignment,
+  type AssignmentRegistry,
+  AssignmentRegistrySchema,
+} from "./assignments.js";
+export {
   type AuditFinding,
   AuditFindingSchema,
   type AuditSeverity,
@@ -139,11 +144,6 @@ export {
   FSRSTargetTypeSchema,
 } from "./fsrs-record.js";
 export {
-  type Homework,
-  type HomeworkRegistry,
-  HomeworkRegistrySchema,
-} from "./homework.js";
-export {
   type InterventionDepth,
   InterventionDepthSchema,
   type InterventionEntry,
@@ -243,6 +243,12 @@ export {
   RubricScaleLevelSchema,
   RubricSchema,
 } from "./rubric.js";
+export {
+  type Schedule,
+  type ScheduleEntry,
+  ScheduleKind,
+  ScheduleSchema,
+} from "./schedule.js";
 export type { EntityType } from "./search-facet.js";
 export {
   type Section,

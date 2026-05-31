@@ -2,8 +2,9 @@
 import { ProseWithToc, SimpleList } from "@sophie/components";
 import { setSophieBaseUrl } from "@sophie/core/runtime";
 import { getCollection } from "astro:content";
+import { assignments } from "virtual:sophie/assignments";
 import { courseSpec } from "virtual:sophie/course-spec";
-import { homework } from "virtual:sophie/homework";
+import { schedule } from "virtual:sophie/schedule";
 import CourseHomeShell from "../components/course-home/CourseHomeShell.astro";
 import {
   dueSoon,
@@ -13,6 +14,10 @@ import {
   howBand,
   whyBand,
 } from "../components/course-home/home-projections";
+import {
+  scheduleRows,
+  thisWeek,
+} from "../components/course-home/home-schedule-projections";
 import InfoPageShell from "../components/InfoPageShell.astro";
 
 // Feed the consumer's Vite-replaced base to the externalized-in-Node
@@ -72,19 +77,30 @@ const isDashboard =
 const sections = (await getCollection("sections")).map((s) => s.data);
 const units = (await getCollection("units")).map((u) => u.data);
 
-// ── Dashboard projections (ADR 0097 #2/#3/#7) ──────────────────────
-// Single build wall-clock read for the calendar-aware Due-Soon card.
+// ── Dashboard projections (ADR 0097 #2/#3/#7; ADR 0098) ────────────
+// Single build wall-clock read for the calendar-aware Due-Soon card +
+// the schedule-derived week-ranges / "Now" marker / This-Week card.
 // Build-time-only `new Date()` (no workflow script; mirrors
 // solutions.astro's one wall-clock read) → injected into the pure
-// `dueSoon` projection so the date logic stays testable.
+// `dueSoon` / `scheduleRows` / `thisWeek` projections so the date logic
+// stays testable.
 //
-// `homework` (virtual:sophie/homework, HomeworkRegistry | null) is
-// OPTIONAL — NOT R12-narrowed: the Due-Soon card degrades to nothing
-// when null (ADR 0097 #7). `dueSoon` null-guards it internally, and no
-// direct property access happens here, so no narrowing throw is needed
-// (R12 scopes to course-spec, which IS narrowed above).
+// `assignments` (virtual:sophie/assignments, AssignmentRegistry | null) and
+// `schedule` (virtual:sophie/schedule, Schedule | null) are OPTIONAL —
+// NOT R12-narrowed: the Due-Soon / week-range / This-Week surfaces degrade
+// to nothing when null (ADR 0097 #7). Each projection null-guards its
+// argument internally, and no direct property access happens here, so no
+// narrowing throw is needed (R12 scopes to course-spec, which IS narrowed
+// above; `assignments` + `schedule` are documented exceptions — the
+// homework precedent for null-safe optional projections, ADR 0096).
 const now = new Date();
-const dueSoonItems = isDashboard ? dueSoon(homework, now) : [];
+const dueSoonItems = isDashboard
+  ? dueSoon(assignments, now, undefined, courseSpec.assignment_kinds ?? {})
+  : [];
+const scheduleRowData = isDashboard
+  ? scheduleRows(schedule, sections, units, now)
+  : [];
+const thisWeekItems = isDashboard ? thisWeek(schedule, assignments, now) : [];
 const startReadingLink = isDashboard ? startReading(units) : undefined;
 const why = isDashboard
   ? whyBand(courseSpec.identity.description, courseSpec.pedagogy.named_tools)
@@ -128,6 +144,8 @@ const tagline =
       why={why}
       how={how}
       dueSoon={dueSoonItems}
+      scheduleRows={scheduleRowData}
+      thisWeek={thisWeekItems}
       startReading={startReadingLink}
     />
   ) : (
