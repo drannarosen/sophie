@@ -25,7 +25,7 @@ validation:
     - kind: test
       ref: packages/astro/src/components/course-home/home-schedule-projections.test.ts
       date: "2026-05-31"
-      notes: "Pure projection tests (injected `now`/`termStart`): `weekOf` Monday-alignment; `scheduleRows` week-range + isNow/isPast derivation, `term_start: 'tbd'` omits week fields, fail-closed unresolvable-unit drop; `thisWeek` rolling-7-day window pulling assignment dueDates by date, date-sorted, null-schedule → []. 18 cases."
+      notes: "Pure projection tests (injected `now`/`termStart`): `weekOf` Monday-alignment; `scheduleRows` week-range + isNow/isPast derivation, `term_start: 'tbd'` omits week fields, fail-closed unresolvable-unit drop; `thisWeek` rolling-7-day window pulling assignment dueDates by date, date-sorted, null-schedule → []. 16 cases."
     - kind: test
       ref: packages/astro/src/lib/schedule-loader.test.ts
       date: "2026-05-31"
