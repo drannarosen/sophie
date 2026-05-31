@@ -71,6 +71,30 @@ describe("checkFormative — AS-2 (no Solution, WARN)", () => {
     checkFormative(indexWith([entry({ hasSolution: true })]), sink);
     expect(sink.warnings.filter((f) => f.code === "AS-2")).toHaveLength(0);
   });
+
+  // ADR 0096 — a practice-tab problem intentionally carries no <Solution>;
+  // its worked solution lives in the unit's gated `solutions.mdx`. When the
+  // audit is told (existence-only) that the unit HAS a gated solution, AS-2
+  // must stay silent — the reveal feedback exists, just date-gated.
+  it("stays silent when the unit has a gated solution", () => {
+    const sink = emptySink();
+    checkFormative(
+      indexWith([entry({ unit: "u", hasSolution: false })]),
+      sink,
+      new Set(["u"])
+    );
+    expect(sink.warnings.filter((f) => f.code === "AS-2")).toHaveLength(0);
+  });
+
+  it("still fires when the unit is NOT in the gated-solutions set", () => {
+    const sink = emptySink();
+    checkFormative(
+      indexWith([entry({ unit: "u", hasSolution: false })]),
+      sink,
+      new Set(["other-unit"])
+    );
+    expect(sink.warnings.filter((f) => f.code === "AS-2")).toHaveLength(1);
+  });
 });
 
 describe("checkFormative — AS-3 (fill-blank zero blanks, WARN)", () => {

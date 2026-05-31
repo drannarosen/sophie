@@ -11,6 +11,7 @@ import { courseSpecVirtualModule } from "./lib/course-spec-virtual-module.ts";
 import { figuresVirtualModule } from "./lib/figures-virtual-module.ts";
 import { loadHomework } from "./lib/homework-loader.ts";
 import { homeworkVirtualModule } from "./lib/homework-virtual-module.ts";
+import { loadUnitIdsWithGatedSolutions } from "./lib/load-gated-solution-units.ts";
 import { enrichEquationsWithSpeech } from "./lib/math-render/enrich-equations-speech.ts";
 import { mdxAuthorTrapsVitePlugin } from "./lib/mdx-plugins/mdx-author-traps.ts";
 import { skillReviewResolverVitePlugin } from "./lib/mdx-plugins/skill-review-resolver-vite.ts";
@@ -367,11 +368,19 @@ export function defineSophieIntegration(
           .filter((u) => u.status === "draft")
           .map((u) => u.id);
         const { registry: notationRegistry } = loadConsumerRegistry(repoRoot);
+        // ADR 0096 — existence-only set of unit ids whose worked solution
+        // is gated (lives in `solutions.mdx`, not inline). Derived from
+        // filenames only (never the solution body) so AS-2 stops warning on
+        // practice-tab problems whose answer is gated by design. `repoRoot`
+        // (= consumer app cwd) is the same base the V5 evidence resolver uses.
+        const unitIdsWithGatedSolutions =
+          loadUnitIdsWithGatedSolutions(repoRoot);
         const auditReport = runPedagogyAudit(index, {
           draftUnitIds,
           repoRoot,
           notationRegistry,
           mathSpeechCoverage: getMathSpeechCoverage(),
+          unitIdsWithGatedSolutions,
         });
         await writePedagogyAuditJson(distPath, auditReport);
         logger.info(formatAuditReport(auditReport));

@@ -68,6 +68,16 @@ export interface AuditExtras {
    * per-render TextbookLayout dev audit + most invariant unit tests).
    */
   mathSpeechCoverage?: MathSpeechCoverage;
+  /**
+   * Unit ids that own a gated `solutions.mdx` (ADR 0096). Existence-only
+   * signal — derived from solution *filenames*, never their bodies — used
+   * by `checkFormative` to suppress AS-2 on practice-tab problems whose
+   * worked solution is intentionally gated rather than inline. Threaded
+   * from the `astro:build:done` hook, which enumerates
+   * `src/content/sections/**​/solutions.mdx` on disk. Absent/empty => no
+   * suppression (every answerless formative still warns).
+   */
+  unitIdsWithGatedSolutions?: ReadonlySet<string>;
 }
 
 /**
