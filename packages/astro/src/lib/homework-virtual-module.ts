@@ -1,5 +1,5 @@
 import type { HomeworkRegistry } from "@sophie/core/schema";
-import type { VitePluginLike } from "./vite-plugin-like.ts";
+import type { VitePluginLike } from "./vite-plugin-like";
 
 /**
  * Vite plugin that exposes the consumer's `homework.sophie.yaml`
