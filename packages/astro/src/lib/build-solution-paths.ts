@@ -5,12 +5,18 @@ import {
 } from "./resolve-solution-reveal.ts";
 
 /**
- * Minimal structural shape of an Astro `CollectionEntry<"artifacts">`
+ * Minimal structural shape of an Astro `CollectionEntry<"solutions">`
  * sufficient for the Solutions gate. Decoupled from `astro:content` so this
  * module stays importable in tests + non-Astro contexts (mirrors
  * `ArtifactCollectionEntryLike` in artifacts-from-collection.ts). The route
  * passes the real `CollectionEntry`, which structurally satisfies this and
  * flows through unchanged into `props.artifact` for `render()`.
+ *
+ * **SECURITY (ADR 0096 / C1):** solutions live in their OWN content collection
+ * (`getCollection("solutions")`), EXCLUDED from the course-wide `artifacts`
+ * sweep that renders/indexes into Library + Pagefind search. The separate
+ * collection makes the index/search side-channel leak impossible by
+ * construction — `getCollection("artifacts")` can never see a solution.
  */
 export interface SolutionArtifactLike {
   id: string;
@@ -49,10 +55,12 @@ const ISO_DATE_LENGTH = 10; // "YYYY-MM-DD"
 
 /**
  * Build the `getStaticPaths` entries for `/units/[unit]/solutions`, gating
- * each unit's solutions artifact behind its resolved reveal date (ADR 0096).
+ * each unit's solutions entry behind its resolved reveal date (ADR 0096).
  *
- * For every solutions artifact (`<sec>/units/<unit>/solutions`) whose unit
- * exists and is not a draft:
+ * The input is the dedicated `solutions` content collection
+ * (`getCollection("solutions")`) — every entry is a `<sec>/units/<unit>/
+ * solutions` artifact, so no `endsWith("/solutions")` filter is needed.
+ * For each whose unit exists and is not a draft:
  * - revealed → the entry carries the artifact (route renders it);
  * - gated → the entry omits the artifact (route renders the placeholder).
  *
@@ -60,7 +68,7 @@ const ISO_DATE_LENGTH = 10; // "YYYY-MM-DD"
  * fully testable; the route is the single site that reads `new Date()`.
  */
 export function buildSolutionPaths<A extends SolutionArtifactLike>(
-  artifacts: ReadonlyArray<A>,
+  solutions: ReadonlyArray<A>,
   units: ReadonlyArray<SolutionUnitLike>,
   registry: HomeworkRegistry | null,
   now: Date
@@ -68,8 +76,7 @@ export function buildSolutionPaths<A extends SolutionArtifactLike>(
   const unitsById = new Map(units.map((u) => [u.data.id, u]));
 
   const entries: SolutionPathEntry<A>[] = [];
-  for (const artifact of artifacts) {
-    if (!artifact.id.endsWith("/solutions")) continue;
+  for (const artifact of solutions) {
     // Path-derived unit id is path-position-2 (<sec>/units/<unit>/solutions).
     const unitId = artifact.id.split("/")[2] ?? "";
     const unit = unitsById.get(unitId);

@@ -8,8 +8,10 @@ import {
 
 // Structural fixtures — decoupled from astro:content so this stays testable
 // without the Astro runtime (mirrors artifacts-from-collection.test.ts).
+// Inputs model entries from the dedicated `solutions` collection
+// (ADR 0096 / C1), whose ids are `<sec>/units/<unit>/solutions`.
 
-const artifact = (id: string): SolutionArtifactLike => ({
+const solution = (id: string): SolutionArtifactLike => ({
   id,
   data: { id, title: `Solutions for ${id}` },
 });
@@ -37,7 +39,7 @@ const at = (d: string) => new Date(d);
 
 describe("buildSolutionPaths", () => {
   it("revealed unit: entry CARRIES the artifact + revealed:true", () => {
-    const a = artifact("sec/units/u1/solutions");
+    const a = solution("sec/units/u1/solutions");
     const paths = buildSolutionPaths(
       [a],
       [unit("u1")],
@@ -52,7 +54,7 @@ describe("buildSolutionPaths", () => {
   });
 
   it("gated unit: entry has NO artifact (security property) + revealed:false", () => {
-    const a = artifact("sec/units/u1/solutions");
+    const a = solution("sec/units/u1/solutions");
     const paths = buildSolutionPaths(
       [a],
       [unit("u1")],
@@ -68,7 +70,7 @@ describe("buildSolutionPaths", () => {
 
   it("excludes draft units entirely (no path emitted)", () => {
     const paths = buildSolutionPaths(
-      [artifact("sec/units/u1/solutions")],
+      [solution("sec/units/u1/solutions")],
       [unit("u1", { status: "draft" })],
       reg("u1", "2020-01-01"),
       at("2030-01-01")
@@ -77,7 +79,7 @@ describe("buildSolutionPaths", () => {
   });
 
   it("empty-string solutionsRevealDate (falsy) derives from registry — stays fail-closed", () => {
-    const a = artifact("sec/units/u1/solutions");
+    const a = solution("sec/units/u1/solutions");
     const paths = buildSolutionPaths(
       [a],
       [unit("u1", { solutionsRevealDate: "" })],
@@ -91,7 +93,7 @@ describe("buildSolutionPaths", () => {
 
   it("empty-string override + no registry → hidden (fail-closed, null date)", () => {
     const paths = buildSolutionPaths(
-      [artifact("sec/units/u1/solutions")],
+      [solution("sec/units/u1/solutions")],
       [unit("u1", { solutionsRevealDate: "" })],
       null,
       at("2030-01-01")
@@ -102,7 +104,7 @@ describe("buildSolutionPaths", () => {
   });
 
   it("explicit override wins over derived registry date", () => {
-    const a = artifact("sec/units/u1/solutions");
+    const a = solution("sec/units/u1/solutions");
     const paths = buildSolutionPaths(
       [a],
       [unit("u1", { solutionsRevealDate: "2027-01-15" })],
@@ -114,19 +116,25 @@ describe("buildSolutionPaths", () => {
     expect(paths[0]?.props.resolvedDate).toBe("2027-01-15");
   });
 
-  it("skips artifacts that are not /solutions", () => {
+  it("processes every entry from the dedicated solutions collection (no suffix filter)", () => {
+    // SECURITY (ADR 0096 / C1): solutions ride their OWN collection, so the
+    // helper no longer filters by `/solutions` suffix — the glob already
+    // guarantees every entry is a solution. Path-position-2 derives the unit.
+    const a = solution("sec/units/u1/solutions");
     const paths = buildSolutionPaths(
-      [artifact("sec/units/u1/practice")],
+      [a],
       [unit("u1")],
-      reg("u1", "2020-01-01"),
-      at("2030-01-01")
+      reg("u1", "2027-02-20"),
+      at("2027-02-20")
     );
-    expect(paths).toHaveLength(0);
+    expect(paths).toHaveLength(1);
+    expect(paths[0]?.params).toEqual({ unit: "u1" });
+    expect(paths[0]?.props.artifact).toBe(a);
   });
 
-  it("skips a solutions artifact whose unit is absent from the units collection", () => {
+  it("skips a solutions entry whose unit is absent from the units collection", () => {
     const paths = buildSolutionPaths(
-      [artifact("sec/units/ghost/solutions")],
+      [solution("sec/units/ghost/solutions")],
       [unit("u1")],
       reg("ghost", "2020-01-01"),
       at("2030-01-01")

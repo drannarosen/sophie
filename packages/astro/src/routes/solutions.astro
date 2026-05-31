@@ -18,16 +18,18 @@ setSophieBaseUrl(import.meta.env.BASE_URL);
 const components = { ...makeStaticComponents({ figures }), Figure: FigureImage };
 
 export async function getStaticPaths() {
-  // ADR 0096 — gated Solutions route. Routes every `*/solutions` artifact,
+  // ADR 0096 — gated Solutions route. Reads the DEDICATED `solutions`
+  // collection (SECURITY / C1: solutions are excluded from `artifacts`, so
+  // they never ride the course-wide render/index sweep into Library + search),
   // gating each behind its resolved reveal date. `new Date()` is read HERE
   // and ONLY here — the single wall-clock read — then injected into the pure
   // `buildSolutionPaths` helper so the gate logic stays testable. `homework`
   // (virtual:sophie/homework, T | null) is passed straight through; the
   // helper null-guards it internally, so no R12 narrowing throw is needed in
   // this route (no direct property access on `homework` here).
-  const artifacts = await getCollection("artifacts");
+  const solutions = await getCollection("solutions");
   const units = await getCollection("units");
-  return buildSolutionPaths(artifacts, units, homework, new Date());
+  return buildSolutionPaths(solutions, units, homework, new Date());
 }
 
 const props = Astro.props;
