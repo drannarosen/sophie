@@ -2,7 +2,7 @@ import fs, { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
-import { loadHomework } from "./homework-loader.js";
+import { loadHomework } from "./homework-loader.ts";
 
 /**
  * Minimal valid homework registry YAML for tests. A single homework with
@@ -50,11 +50,11 @@ describe("loadHomework", () => {
   });
 
   test("throws curated error on malformed YAML", () => {
-    fs.writeFileSync(
-      path.join(root, "homework.sophie.yaml"),
-      "homework:\n  - this is not\n    a valid registry"
-    );
-    expect(() => loadHomework(root)).toThrow();
+    // Unterminated flow sequence — genuinely unparseable YAML, so this
+    // exercises the parseYaml() catch branch (distinct from the
+    // schema-invalid path covered by the tests below).
+    fs.writeFileSync(path.join(root, "homework.sophie.yaml"), "homework: [");
+    expect(() => loadHomework(root)).toThrow(/homework\.sophie\.yaml/i);
   });
 
   test("throws schema-invalid error when a problem is claimed by two homeworks", () => {
