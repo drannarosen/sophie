@@ -403,6 +403,26 @@ describe("CourseSpecSchema v0.2 — chrome clusters", () => {
     expect(() => CourseSpecSchema.parse(extended)).not.toThrow();
   });
 
+  it("accepts landing.layout: 'dashboard' (canonical course-home layout per ADR 0097)", () => {
+    const data = valid();
+    const extended = {
+      ...data,
+      landing: { layout: "dashboard" },
+    };
+    const parsed = CourseSpecSchema.parse(extended);
+    expect(parsed.landing?.layout).toBe("dashboard");
+  });
+
+  it("still accepts landing.layout: 'hero-with-modules' (documented alias of 'dashboard' per ADR 0097)", () => {
+    const data = valid();
+    const extended = {
+      ...data,
+      landing: { layout: "hero-with-modules" },
+    };
+    const parsed = CourseSpecSchema.parse(extended);
+    expect(parsed.landing?.layout).toBe("hero-with-modules");
+  });
+
   it("defaults landing.layout to 'simple-list' when layout is omitted", () => {
     const data = valid();
     const extended = { ...data, landing: {} };
