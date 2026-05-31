@@ -34,7 +34,7 @@
 import {
   type BackgroundDescriptor,
   resolveHomeBackground,
-} from "./themes.ts";
+} from "./themes";
 
 interface Props {
   /** Theme id; absent/unknown → the default (`starfield`). */
@@ -55,7 +55,7 @@ const descriptor: BackgroundDescriptor = resolveHomeBackground(theme);
 }
 
 <script>
-  import { initStarfield } from "./starfield-engine.ts";
+  import { initStarfield } from "./starfield-engine";
 
   const canvas = document.getElementById(
     "starfield"

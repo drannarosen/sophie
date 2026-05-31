@@ -3,6 +3,7 @@ import { SectionLanding } from "@sophie/components";
 import { setSophieBaseUrl } from "@sophie/core/runtime";
 import { getCollection } from "astro:content";
 import { courseSpec } from "virtual:sophie/course-spec";
+import HomeBackground from "../components/backgrounds/HomeBackground.astro";
 import InfoPageShell from "../components/InfoPageShell.astro";
 
 // Feed the consumer's Vite-replaced base to the externalized-in-Node
@@ -48,7 +49,15 @@ if (!courseSpec) {
 const { section, units } = Astro.props;
 ---
 
+{/*
+  Section landings share the course home's Deep Field background (ADR
+  0097 #5 scope = home + section landings only; reading/practice/
+  solutions routes do NOT get it). <HomeBackground>'s layers are
+  `position: fixed` (z-index −2/−3 + a no-JS `.sky` fallback), so it
+  sits beneath the <SectionLanding> content with no layout change.
+*/}
 <InfoPageShell title={`${section.title} — ${courseSpec.identity.title}`}>
+  <HomeBackground />
   <SectionLanding
     client:load
     spec={courseSpec}
