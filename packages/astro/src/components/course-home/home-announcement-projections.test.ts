@@ -190,4 +190,35 @@ describe("activeAnnouncements", () => {
       "old",
     ]);
   });
+
+  test("3+ same-severity entries sort newest-first across both compare directions", () => {
+    // Three entries force the comparator to fire on both DESC arms (the
+    // `< → 1` tie-break arm is unreachable with a 2-element array). Locks the
+    // ordering against an arm-swap refactor.
+    const reg = registry(
+      announcement({
+        id: "mid",
+        title: "Mid",
+        severity: "notice",
+        publish_date: "2026-06-05",
+      }),
+      announcement({
+        id: "new",
+        title: "New",
+        severity: "notice",
+        publish_date: "2026-06-10",
+      }),
+      announcement({
+        id: "old",
+        title: "Old",
+        severity: "notice",
+        publish_date: "2026-06-01",
+      })
+    );
+    expect(activeAnnouncements(reg, NOW).map((a) => a.id)).toEqual([
+      "new",
+      "mid",
+      "old",
+    ]);
+  });
 });
