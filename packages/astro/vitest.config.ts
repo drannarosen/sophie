@@ -106,6 +106,14 @@ const config: ViteUserConfigWithTest = {
         "src/integration.ts",
         "src/mdx-config.ts",
         "src/client/**",
+        // Browser-only canvas/rAF renderer (ADR 0097): `initStarfield`
+        // reads canvas 2D context, requestAnimationFrame, matchMedia, and
+        // visibilitychange — none available under jsdom/node. Exercised at
+        // the smoke e2e level (Task 7), same category as `src/client/**`.
+        // Its PURE distribution core (`generateStars` + the tables) is
+        // unit-tested in `starfield-engine.test.ts` regardless of this
+        // coverage exclusion; only the untestable render loop is excluded.
+        "src/components/backgrounds/starfield-engine.ts",
         // Test-only Astro project fixture.
         "test-fixtures/**",
       ],
