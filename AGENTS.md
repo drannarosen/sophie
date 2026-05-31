@@ -432,7 +432,7 @@ to every PR, every design decision, every refactor.
       via the resolver in `solutions.astro`. No direct property access
       at any route boundary.
     - `virtual:sophie/schedule` (`Schedule | null`, ADR 0098 —
-      **now SHIPPED**, the realized third `T | null` always-register
+      **now realized in code**, the realized third `T | null` always-register
       module the prior "deferred ScheduleSchema" framing predicted) —
       **null-safe EXCEPTION, no throw**: passed whole into the
       null-guarding `scheduleRows` / `thisWeek` projections in

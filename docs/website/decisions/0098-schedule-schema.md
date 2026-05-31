@@ -41,8 +41,9 @@ validation:
     events while the assignments registry stays the single home for
     deadlines (the schedule pulls them by date, never duplicates them).
     `virtual:sophie/schedule` is the realized **third** `T | null`
-    always-register virtual module (figures, course-spec, assignments
-    preceded it). It is a documentary CHROME projection (ADR 0058) —
+    always-register virtual module (course-spec first, assignments
+    second; figures predates them in the always-register lineage but is
+    non-nullable). It is a documentary CHROME projection (ADR 0058) —
     it never enters the pedagogy-index / Library, so R11/R13 (which
     scope to `@sophie/components`) need no allowlist entries. astr201
     adoption (authoring `schedule.sophie.yaml`, flipping
@@ -136,8 +137,9 @@ module factory
 ([`schedule-virtual-module.ts`](https://github.com/drannarosen/sophie/blob/main/packages/astro/src/lib/schedule-virtual-module.ts))
 registers the module unconditionally, exporting the literal `null` when
 absent so importers never fail to resolve. This is the **realized
-third instance** of the `T | null` always-register pattern (figures
-was first, course-spec second, assignments alongside) — the slot ADR
+third instance** of the `T | null` always-register pattern (course-spec
+was first, assignments second; figures predates them in the
+always-register lineage but is non-nullable) — the slot ADR
 0096 and ADR 0080 Amendment 2 both predicted, and the **R12 family**.
 
 **Null-safe route exception (R12 nuance).** The dashboard dispatcher

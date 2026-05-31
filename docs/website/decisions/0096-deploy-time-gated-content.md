@@ -308,7 +308,8 @@ nullable module" framing of decision 1 is realized by `ScheduleSchema`
 - [ADR 0001 — Repo shape: standalone platform, separate consumer repos](./0001-platform-not-monorepo.md)
   — the auth-less SSG model that forces build-time gating.
 - [ADR 0003 — Zod as schema source of truth](./0003-zod-as-source-of-truth.md)
-  — the `HomeworkRegistrySchema` contract.
+  — the `AssignmentRegistrySchema` contract (renamed from
+  `HomeworkRegistrySchema` per Amendment 1).
 - [ADR 0073 — Unified assessment schema (formative-with-reveal v1)](./0073-unified-assessment-schema.md)
   — the `<Solution>` / `<NumericQuestion>` / `<Hint>` family the gate protects.
 - [ADR 0080 — Course-spec format](./0080-course-spec-format-v0-1.md)
