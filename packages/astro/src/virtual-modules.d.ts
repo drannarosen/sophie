@@ -92,3 +92,16 @@ declare module "virtual:sophie/assignments" {
    */
   export const assignments: AssignmentRegistry | null;
 }
+
+declare module "virtual:sophie/schedule" {
+  import type { Schedule } from "@sophie/core/schema";
+
+  /**
+   * Consumer's parsed `schedule.sophie.yaml`. Populated by
+   * `defineSophieIntegration` via `scheduleVirtualModule()`. Always
+   * registered — `null` when the consumer hasn't authored a calendar
+   * yet (the course-home week-ranges / "Now" marker / This-Week card
+   * stay fail-closed). ScheduleSchema design (ADR 0098).
+   */
+  export const schedule: Schedule | null;
+}
