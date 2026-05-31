@@ -28,7 +28,14 @@ export function isChapterRevealed(
   return now.getTime() >= resolved.getTime();
 }
 
-function resolveRevealDate(
+/**
+ * Resolve a chapter's reveal date without deciding visibility. Returns the
+ * concrete `Date` the solutions become visible, or `null` when no concrete
+ * date applies (`"tbd"`, absent override + no homework, etc.). Exported so
+ * the Solutions route can surface the date to `<SolutionsPlaceholder>` while
+ * `isChapterRevealed` makes the gate decision off the same resolution.
+ */
+export function resolveRevealDate(
   unit: string,
   explicit: string | null | undefined,
   registry: HomeworkRegistry | null

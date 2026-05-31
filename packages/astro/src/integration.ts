@@ -239,6 +239,17 @@ export function defineSophieIntegration(
           entrypoint: "@sophie/astro/routes/practice.astro",
         });
 
+        // ADR 0096 — gated Solutions route. Mirrors practice, but
+        // `getStaticPaths` gates each `*/solutions` artifact behind its
+        // resolved reveal date (fail-closed): a withheld chapter's props
+        // carry no artifact, so its solution text never compiles into
+        // dist/. The reveal date derives from virtual:sophie/homework +
+        // the optional per-unit `solutionsRevealDate` override.
+        injectRoute({
+          pattern: "/units/[unit]/solutions",
+          entrypoint: "@sophie/astro/routes/solutions.astro",
+        });
+
         // ADR 0082 § A2.6 — warn when a consumer ships a file at the
         // same route pattern as the injected route. Per Astro #3809,
         // file-based routes win over injected routes silently; surfacing

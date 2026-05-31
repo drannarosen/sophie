@@ -1,4 +1,8 @@
-export type UnitViewKind = "reading" | "slides" | "practice";
+// `solutions` (ADR 0096) is a valid view kind so ChapterLayout/UnitViewLinkBar
+// accept it, but it is deliberately ABSENT from `getAvailableUnitViews`' order
+// below: the gated Solutions route renders the view, while the nav tab that
+// surfaces it is wired in Task 7. Until then no Solutions tab appears.
+export type UnitViewKind = "reading" | "slides" | "practice" | "solutions";
 
 /**
  * Minimal structural shape of an Astro `CollectionEntry<"artifacts">`

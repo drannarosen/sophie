@@ -1,0 +1,29 @@
+---
+// Gated-solutions placeholder (ADR 0096). Shown when a chapter's solutions
+// have not yet been revealed; the gated solution artifact is NOT rendered
+// (it is absent from the route's props by construction — the build-time
+// security property). Task 7 polishes the copy + adds axe coverage; this is
+// the minimal labelled-region shell.
+//
+// R10 — this sits inside ChapterLayout's <main>, so it is a labelled
+// <section aria-labelledby> (NOT <main>/<article>/bare <div>).
+
+interface Props {
+  /** Resolved reveal date (`YYYY-MM-DD`) or null when no date is scheduled. */
+  date: string | null;
+}
+
+const { date } = Astro.props;
+const headingId = "sophie-solutions-placeholder-heading";
+---
+
+<section aria-labelledby={headingId} class="sophie-solutions-placeholder">
+  <h2 id={headingId}>Solutions not yet available</h2>
+  <p>
+    {
+      date
+        ? `Solutions become available after ${date}.`
+        : "Solutions are not yet scheduled."
+    }
+  </p>
+</section>

@@ -109,4 +109,37 @@ describe("UnitSchema", () => {
     });
     expect(parsed.description).toBe("One-paragraph Unit summary.");
   });
+
+  it("accepts a zero-padded ISO solutionsRevealDate (ADR 0096)", () => {
+    const parsed = UnitSchema.parse({
+      ...minimalLecture,
+      solutionsRevealDate: "2027-02-20",
+    });
+    expect(parsed.solutionsRevealDate).toBe("2027-02-20");
+  });
+
+  it("accepts solutionsRevealDate: tbd (ADR 0096)", () => {
+    const parsed = UnitSchema.parse({
+      ...minimalLecture,
+      solutionsRevealDate: "tbd",
+    });
+    expect(parsed.solutionsRevealDate).toBe("tbd");
+  });
+
+  it("treats solutionsRevealDate as omittable (optional)", () => {
+    const parsed = UnitSchema.parse(minimalLecture);
+    expect(parsed.solutionsRevealDate).toBeUndefined();
+  });
+
+  it.each([
+    "0",
+    "2027",
+    "garbage",
+    "2027-2-20",
+    "2027/02/20",
+  ])("rejects malformed solutionsRevealDate %j — schema is the real guard, not the permissive resolver (ADR 0096)", (bad) => {
+    expect(() =>
+      UnitSchema.parse({ ...minimalLecture, solutionsRevealDate: bad })
+    ).toThrow();
+  });
 });

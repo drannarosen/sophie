@@ -1,13 +1,11 @@
 import { z } from "zod";
-import { NonEmptyString, Slug } from "./primitives.js";
+import { DateOrTbd, NonEmptyString, Slug } from "./primitives.js";
 
 // Per-term homework registry: source of truth for assignedDate / dueDate /
 // cross-chapter problem membership (ADR 0096). Framework-pure — this schema
 // enforces shape + intra-registry invariants only. "Unit exists on disk" and
 // "id exists in that unit's practice file" cross-refines run in the loader
 // (no filesystem access here, ADR 0001).
-
-const DateOrTbd = z.union([z.iso.date(), z.literal("tbd")]);
 
 const ProblemGroupSchema = z
   .object({ unit: Slug, ids: z.array(NonEmptyString).min(1) })
