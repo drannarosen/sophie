@@ -1,0 +1,47 @@
+import type { HomeworkRegistry } from "@sophie/core/schema";
+
+/**
+ * Resolve a chapter's solution reveal date, then decide visibility.
+ *
+ * **Fail-closed by construction** (ADR 0096): any non-concrete, absent, or
+ * future date → hidden. A mistake here leaks homework answers early, so the
+ * default for every ambiguous branch is "hidden".
+ *
+ * `explicit` is the per-chapter `solutionsRevealDate` override:
+ * - `"tbd"` → hidden (instructor hasn't set a date yet).
+ * - a date string → use it verbatim.
+ * - `null` / `undefined` → derive from the homework registry: the latest
+ *   concrete `dueDate` among homeworks whose `problems[].unit` includes
+ *   `unit` (ignoring `"tbd"` dueDates). No concrete date → hidden.
+ *
+ * `now` is INJECTED (the build wall-clock), never read inside the resolver,
+ * so this function stays pure and fully testable.
+ */
+export function isChapterRevealed(
+  unit: string,
+  explicit: string | null | undefined,
+  registry: HomeworkRegistry | null,
+  now: Date
+): boolean {
+  const resolved = resolveRevealDate(unit, explicit, registry);
+  if (resolved === null) return false; // fail-closed
+  return now.getTime() >= resolved.getTime();
+}
+
+function resolveRevealDate(
+  unit: string,
+  explicit: string | null | undefined,
+  registry: HomeworkRegistry | null
+): Date | null {
+  if (explicit === "tbd") return null;
+  if (explicit) return new Date(explicit);
+  if (!registry) return null;
+  const due = registry.homework
+    .filter((hw) => hw.problems.some((g) => g.unit === unit))
+    .map((hw) => hw.dueDate)
+    .filter((d): d is string => d !== "tbd");
+  if (due.length === 0) return null; // no concrete date → hidden
+  // ISO `YYYY-MM-DD` strings sort lexicographically == chronologically, so the
+  // string max is the latest date without any timezone-dependent Date parsing.
+  return new Date(due.reduce((a, b) => (a > b ? a : b)));
+}
