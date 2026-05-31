@@ -115,7 +115,21 @@ reveal*. They share dates by default but are independently editable.
    as an injected parameter, so it is pure and exhaustively testable;
    the route is the single place wall-clock is read.
 
-4. **Consumer-side rebuild cadence.** A daily GitHub Actions
+4. **Separate `solutions` content collection (index/search side-channel
+   defense).** Solutions live in a dedicated `solutions` content
+   collection, kept out of the course-wide `artifacts` collection via a
+   `!**/solutions.mdx` glob negation in the `artifacts` source pattern.
+   Because no course-wide artifact sweep — Library rollups, the Pagefind
+   search index, the pedagogy-index harvest — ever reads
+   `getCollection("solutions")`, none of them can see a solution body,
+   gated *or* revealed. This is **defense-in-depth** alongside the
+   route-level gate (point 3): the route gate withholds the *page*; the
+   separate collection withholds the *index/search side-channels* that
+   would otherwise leak a withheld answer through a search hit or a
+   Library rollup. This emerged as the **C1** hardening and is the
+   primary index/search side-channel defense.
+
+5. **Consumer-side rebuild cadence.** A daily GitHub Actions
    `schedule:` cron rebuild flips chapters on as their reveal dates
    pass; the existing manual `workflow_dispatch` is the backup. No
    reveal date passes silently — the gate re-evaluates every build.
@@ -145,6 +159,13 @@ reveal*. They share dates by default but are independently editable.
   after due dates; the same `revealed(chapter)` result gates both the
   Solutions route and practice-tab auto-check reveal; the registry
   becomes the single editable surface for per-term assignment changes.
+- **Index/search side-channel closed by construction.** The dedicated
+  `solutions` collection (excluded from `artifacts` via the
+  `!**/solutions.mdx` negation) means Library rollups, Pagefind, and the
+  pedagogy-index harvest never enumerate a solution body — so a withheld
+  answer cannot leak through a search hit or a Library rollup even if the
+  route gate were bypassed. Defense-in-depth: the route-level gate gates
+  the page, the separate collection gates the index/search.
 - **Operational cost.** Real protection requires (a) a **private source
   repo** (so withheld content does not leak from source — confirmed:
   `astrobytes-edu/astr201` is private) and (b) a **rebuild cadence**

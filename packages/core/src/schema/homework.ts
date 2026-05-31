@@ -3,9 +3,14 @@ import { DateOrTbd, NonEmptyString, Slug } from "./primitives.js";
 
 // Per-term homework registry: source of truth for assignedDate / dueDate /
 // cross-chapter problem membership (ADR 0096). Framework-pure — this schema
-// enforces shape + intra-registry invariants only. "Unit exists on disk" and
-// "id exists in that unit's practice file" cross-refines run in the loader
-// (no filesystem access here, ADR 0001).
+// enforces shape + intra-registry invariants only. The reference-integrity
+// cross-refines (every `unit` resolves to a real unit; every `id` exists in
+// that unit's practice set) are NOT enforced here or in the loader (which does
+// YAML-parse + schema validation only). They require the content collections,
+// available at `astro:config:setup` — not in `@sophie/core`, which is
+// framework-pure (ADR 0001) — so they are deferred to the consumer-integration
+// phase. Until then an unresolvable `unit`/`id` fails closed: no reveal date
+// resolves, so the affected chapter's solutions stay hidden (the safe direction).
 
 const ProblemGroupSchema = z
   .object({ unit: Slug, ids: z.array(NonEmptyString).min(1) })
