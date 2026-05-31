@@ -251,6 +251,7 @@ project:
         - file: decisions/0093-build-time-html-trust-primitive.md
         - file: decisions/0094-build-time-figure-optimization.md
         - file: decisions/0095-global-css-delivery-shared-document-head.md
+        - file: decisions/0096-deploy-time-gated-content.md
     - title: Pilots
       children:
         - file: pilots/_template.md

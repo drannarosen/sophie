@@ -1737,3 +1737,26 @@ html {
   outline: var(--sophie-focus-width) solid var(--sophie-focus-color);
   outline-offset: 2px;
 }
+
+/* Gated-solutions placeholder — shown on the /solutions route before a
+   chapter's resolved reveal date (ADR 0096). Borrows the calm card shape
+   of the reading-end CTA so the locked state reads as deliberate chrome,
+   not an error. */
+.sophie-solutions-placeholder {
+  margin-block-start: var(--sophie-space-6);
+  padding: var(--sophie-space-5);
+  border: 1px solid var(--sophie-border-subtle);
+  border-radius: var(--sophie-radius-lg);
+  background: var(--sophie-surface-1);
+}
+.sophie-solutions-placeholder__heading {
+  margin-block: 0 var(--sophie-space-2);
+  font-family: var(--sophie-font-sans);
+  font-size: var(--sophie-text-lg);
+  font-weight: var(--sophie-weight-semibold);
+  color: var(--sophie-text);
+}
+.sophie-solutions-placeholder__body {
+  margin-block: 0;
+  color: var(--sophie-text-muted);
+}

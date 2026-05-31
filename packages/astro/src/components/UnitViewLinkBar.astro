@@ -14,15 +14,18 @@ const labelMap: Record<UnitViewKind, string> = {
   reading: "Reading",
   slides: "Slides",
   practice: "Practice",
+  solutions: "Solutions",
 };
 
-// Order locked: reading → slides → practice (read → see → do). The
-// helper already returns the views in this order, but re-filtering
-// here guards against callers that pass an unordered set.
+// Order locked: reading → slides → practice → solutions (read → see →
+// do → check; solutions per ADR 0096). The helper already returns the
+// views in this order, but re-filtering here guards against callers that
+// pass an unordered set.
 const orderedViews: ReadonlyArray<UnitViewKind> = [
   "reading",
   "slides",
   "practice",
+  "solutions",
 ];
 const tabs = orderedViews.filter((v) => availableViews.includes(v));
 ---

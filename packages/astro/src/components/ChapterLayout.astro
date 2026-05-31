@@ -103,11 +103,23 @@ const artifacts = await getCollection("artifacts");
 const draftUnitIds = new Set(
   units.filter((u) => u.status === "draft").map((u) => u.id),
 );
+// ADR 0096 — the Solutions tab appears IFF a `solutions` collection entry
+// exists for the unit, regardless of reveal state (the route gates the
+// CONTENT, not the tab). Solutions live in their OWN collection (excluded
+// from `artifacts` for the build-time security property), so the
+// existence check reads `getCollection("solutions")` separately. Only the
+// path-derived unit id is read here — never the solution body — so this
+// existence probe cannot leak gated text. Solutions ids are path-derived
+// `<sec>/units/<unit>/solutions` (ADR 0067), so the unit id is position-2.
+const unitIdsWithSolutions = new Set(
+  (await getCollection("solutions")).map((s) => s.id.split("/")[2] ?? ""),
+);
 const unitIdForViews = currentChapterSlug ?? "";
 const availableViews = getAvailableUnitViews({
   unit: unitIdForViews,
   artifacts,
   draftUnitIds,
+  unitIdsWithSolutions,
 });
 // Pagination sort needs `status` to filter drafts; the helper drops
 // that field for nav-purity. Derive a paginable list with the same

@@ -48,15 +48,41 @@ const units = defineCollection({
 // at consumer time in @sophie/astro's TextbookLayout (Task 13). The
 // per-entry result is shaped into ArtifactEntry before pushing into the
 // pedagogy index via indexAccumulator.setArtifacts.
+// SECURITY (ADR 0096 / C1): the `solutions.mdx` files are EXCLUDED from the
+// `artifacts` glob via the `!**/solutions.mdx` negation. The course-wide
+// `artifacts` sweep in @sophie/astro's TextbookLayout render()s + indexes every
+// artifact into the Library + Pagefind search index that reaches `dist/`. A
+// gated solution riding that glob would leak its withheld text through search
+// even though the `/solutions` route itself is correctly date-gated. Putting
+// solutions in their OWN collection (below) makes the leak impossible by
+// construction: `getCollection("artifacts")` can never see a solution.
+const solutionsSchema = z
+  .object({
+    id: NonEmptyString,
+    title: NonEmptyString,
+    references: ArtifactReferencesSchema.optional().default({}),
+  })
+  .loose();
+
 const artifacts = defineCollection({
-  loader: glob({ pattern: "**/*.mdx", base: "./src/content/sections" }),
-  schema: z
-    .object({
-      id: NonEmptyString,
-      title: NonEmptyString,
-      references: ArtifactReferencesSchema.optional().default({}),
-    })
-    .loose(),
+  loader: glob({
+    pattern: ["**/*.mdx", "!**/solutions.mdx"],
+    base: "./src/content/sections",
+  }),
+  schema: solutionsSchema,
+});
+
+// SECURITY (ADR 0096 / C1): solutions are a SEPARATE collection so they NEVER
+// ride the course-wide `artifacts` sweep. Only the date-gated `/solutions`
+// route (which calls `getCollection("solutions")` and withholds the artifact
+// before its reveal date) ever reaches these entries. Same schema as
+// `artifacts` so `render()` + frontmatter validation behave identically.
+const solutions = defineCollection({
+  loader: glob({
+    pattern: "**/solutions.mdx",
+    base: "./src/content/sections",
+  }),
+  schema: solutionsSchema,
 });
 
 // ADR 0060 registry ecosystem: per-equation MDX files at
@@ -81,4 +107,11 @@ const topics = defineCollection({
   schema: TopicEntrySchema,
 });
 
-export const collections = { sections, units, artifacts, equations, topics };
+export const collections = {
+  sections,
+  units,
+  artifacts,
+  solutions,
+  equations,
+  topics,
+};

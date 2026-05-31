@@ -139,6 +139,11 @@ export {
   FSRSTargetTypeSchema,
 } from "./fsrs-record.js";
 export {
+  type Homework,
+  type HomeworkRegistry,
+  HomeworkRegistrySchema,
+} from "./homework.js";
+export {
   type InterventionDepth,
   InterventionDepthSchema,
   type InterventionEntry,

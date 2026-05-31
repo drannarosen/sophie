@@ -1,0 +1,42 @@
+---
+id: "measuring-the-sky"
+title: "Solutions — Measuring the Sky"
+chapter: 1
+order: 1
+lang: "en"
+description: "Smoke security fixture (ADR 0096): a GATED solutions artifact (future solutionsRevealDate). Its unique sentinel must be ABSENT from the entire dist/ tree — HTML, Pagefind index, and pedagogy-index JSON — because the route is gated AND solutions never ride the artifacts sweep."
+tags: ["foundations", "solutions", "security-fixture"]
+---
+
+# Worked solutions
+
+The unique sentinel string below — `GATEDSOLUTIONSENTINELXKCD9Z` — is the
+build-time security probe (ADR 0096). This chapter is GATED (a future
+`solutionsRevealDate`), so the `/solutions` route renders the placeholder
+and never `render()`s this artifact. The sentinel must therefore be absent
+from every file under `dist/`.
+
+<PracticeProblem course="smoke" unit="measuring-the-sky" id="gated-probe">
+  <PracticeProblem.Prompt>
+    A sentinel probe for the gated-solutions security gate.
+  </PracticeProblem.Prompt>
+
+  <Solution>
+    GATEDSOLUTIONSENTINELXKCD9Z — this worked answer must never reach dist/.
+  </Solution>
+</PracticeProblem>
+
+The sentinel also rides a <GlossaryTerm name="parallax">glossary term
+GATEDSOLUTIONSENTINELXKCD9Z</GlossaryTerm> and a misconception aside, to
+prove the pedagogy-index / Library / search side-channel cannot leak it
+either.
+
+<Aside
+  kind="misconception"
+  name="gated-solution-sentinel"
+  short="GATEDSOLUTIONSENTINELXKCD9Z must not appear in any index."
+>
+  GATEDSOLUTIONSENTINELXKCD9Z — if this string surfaces in the
+  pedagogy-index JSON, the Pagefind index, or a Library rollup, the
+  separate-collection exclusion (C1) has regressed.
+</Aside>

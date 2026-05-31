@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { AuditOverrideSchema } from "./audit-override.ts";
 import { ChapterFraming, ChapterStatus } from "./chapter.js";
-import { NonEmptyString, Slug } from "./primitives.js";
+import { DateOrTbd, NonEmptyString, Slug } from "./primitives.js";
 
 /**
  * `UnitTypeSchema` — the discriminator for a `Unit`'s pedagogical kind
@@ -50,6 +50,14 @@ export type UnitType = z.infer<typeof UnitTypeSchema>;
  *
  * `description` (W2/D2) — optional one-paragraph Unit summary;
  * surfaces in `<ChapterRef>` hover-preview and Unit roll-up cards.
+ *
+ * `solutionsRevealDate` (ADR 0096) — optional per-Unit override for the
+ * build-time gated-solutions reveal date. A zero-padded ISO date or the
+ * literal `"tbd"` (shared `DateOrTbd` union with the homework registry).
+ * When absent, the reveal date derives from the homework registry; when
+ * `"tbd"`, solutions stay hidden (fail-closed). This schema — not the
+ * permissive `new Date()` in the resolver — is the real guard against
+ * malformed dates reaching the gate.
  */
 export const UnitSchema = z.object({
   id: Slug,
@@ -62,6 +70,7 @@ export const UnitSchema = z.object({
   status: ChapterStatus,
   framing: ChapterFraming.optional(),
   description: z.string().optional(),
+  solutionsRevealDate: DateOrTbd.optional(),
   /**
    * Per-Unit audit-invariant exceptions per ADR 0053. PRA-1 (W4b)
    * is the first invariant to honor these. Each override declares

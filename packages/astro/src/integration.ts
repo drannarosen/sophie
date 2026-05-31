@@ -9,6 +9,8 @@ import type { AstroIntegration } from "astro";
 import { loadCourseSpec } from "./lib/course-spec-loader.ts";
 import { courseSpecVirtualModule } from "./lib/course-spec-virtual-module.ts";
 import { figuresVirtualModule } from "./lib/figures-virtual-module.ts";
+import { loadHomework } from "./lib/homework-loader.ts";
+import { homeworkVirtualModule } from "./lib/homework-virtual-module.ts";
 import { enrichEquationsWithSpeech } from "./lib/math-render/enrich-equations-speech.ts";
 import { mdxAuthorTrapsVitePlugin } from "./lib/mdx-plugins/mdx-author-traps.ts";
 import { skillReviewResolverVitePlugin } from "./lib/mdx-plugins/skill-review-resolver-vite.ts";
@@ -121,6 +123,10 @@ export function defineSophieIntegration(
         const consumerRoot = fileURLToPath(config.root);
         const courseSpec = loadCourseSpec(consumerRoot);
 
+        // ADR 0096 — consumer's parsed homework.sophie.yaml (or null
+        // when absent). Drives the fail-closed Solutions reveal gate.
+        const homework = loadHomework(consumerRoot);
+
         // ADR 0094 — discover figure masters under <root>/src/figures so
         // the figures virtual module can emit generated astro:assets
         // imports (convention: src/figures/<name>.<ext>). Captured once
@@ -174,6 +180,14 @@ export function defineSophieIntegration(
               // TextbookLayout + chrome components handle null
               // explicitly).
               courseSpecVirtualModule(courseSpec) as never,
+              // ADR 0096 — consumer's parsed homework.sophie.yaml
+              // exposed as `virtual:sophie/homework` for the Solutions
+              // reveal gate. Always registered so
+              // `import { homework } from "virtual:sophie/homework"`
+              // resolves at build time even when the consumer has no
+              // registry yet (the export is `null` in that case; the
+              // reveal gate stays fail-closed for every chapter).
+              homeworkVirtualModule(homework) as never,
               // Pre-parse author-trap lint (issues #190, #193) — scans
               // raw `.mdx` text for multi-line inline `$...$` and raw
               // `<` before a non-letter, and throws curated errors with
@@ -223,6 +237,17 @@ export function defineSophieIntegration(
         injectRoute({
           pattern: "/units/[unit]/practice",
           entrypoint: "@sophie/astro/routes/practice.astro",
+        });
+
+        // ADR 0096 — gated Solutions route. Mirrors practice, but
+        // `getStaticPaths` gates each `*/solutions` artifact behind its
+        // resolved reveal date (fail-closed): a withheld chapter's props
+        // carry no artifact, so its solution text never compiles into
+        // dist/. The reveal date derives from virtual:sophie/homework +
+        // the optional per-unit `solutionsRevealDate` override.
+        injectRoute({
+          pattern: "/units/[unit]/solutions",
+          entrypoint: "@sophie/astro/routes/solutions.astro",
         });
 
         // ADR 0082 § A2.6 — warn when a consumer ships a file at the

@@ -1,0 +1,64 @@
+---
+import { makeStaticComponents } from "@sophie/astro";
+import { setSophieBaseUrl } from "@sophie/core/runtime";
+import { getCollection, render } from "astro:content";
+import { figures } from "virtual:sophie/figures";
+import { homework } from "virtual:sophie/homework";
+import ChapterLayout from "../components/ChapterLayout.astro";
+import FigureImage from "../components/FigureImage.astro";
+import SolutionsPlaceholder from "../components/SolutionsPlaceholder.astro";
+import { buildSolutionPaths } from "../lib/build-solution-paths";
+
+// Feed the consumer's Vite-replaced base to the externalized-in-Node
+// SSR/prerender dist of @sophie/* (mirrors practice.astro). ADR 0092.
+setSophieBaseUrl(import.meta.env.BASE_URL);
+
+// Module-level singleton (mirrors practice.astro) — built once, not
+// per-render. ADR 0094 overrides the React <Figure> with <FigureImage>.
+const components = { ...makeStaticComponents({ figures }), Figure: FigureImage };
+
+export async function getStaticPaths() {
+  // ADR 0096 — gated Solutions route. Reads the DEDICATED `solutions`
+  // collection (SECURITY / C1: solutions are excluded from `artifacts`, so
+  // they never ride the course-wide render/index sweep into Library + search),
+  // gating each behind its resolved reveal date. `new Date()` is read HERE
+  // and ONLY here — the single wall-clock read — then injected into the pure
+  // `buildSolutionPaths` helper so the gate logic stays testable. `homework`
+  // (virtual:sophie/homework, T | null) is passed straight through; the
+  // helper null-guards it internally, so no R12 narrowing throw is needed in
+  // this route (no direct property access on `homework` here).
+  const solutions = await getCollection("solutions");
+  const units = await getCollection("units");
+  return buildSolutionPaths(solutions, units, homework, new Date());
+}
+
+const props = Astro.props;
+const { unit } = Astro.params;
+
+// SECURITY (ADR 0096): only the revealed branch destructures + renders the
+// artifact. Gated props carry no artifact, so `render()` is never reached
+// for a withheld chapter and its solution text never compiles into dist/.
+const rendered = props.revealed ? await render(props.artifact) : null;
+const Content = rendered?.Content;
+---
+
+{
+  props.revealed && Content && rendered ? (
+    <ChapterLayout
+      frontmatter={props.artifact.data}
+      currentChapterSlug={props.artifact.data.id}
+      headings={rendered.headings}
+      viewKind="solutions"
+    >
+      <Content components={components} />
+    </ChapterLayout>
+  ) : (
+    <ChapterLayout
+      frontmatter={{ id: unit ?? "", title: "Solutions" }}
+      currentChapterSlug={unit}
+      viewKind="solutions"
+    >
+      <SolutionsPlaceholder date={props.resolvedDate} />
+    </ChapterLayout>
+  )
+}

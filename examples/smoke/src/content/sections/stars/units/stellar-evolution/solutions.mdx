@@ -1,0 +1,46 @@
+---
+id: "stellar-evolution"
+title: "Solutions — Stellar Evolution"
+chapter: 1
+order: 1
+lang: "en"
+description: "Smoke security fixture (ADR 0096): a REVEALED solutions artifact (past solutionsRevealDate). Its unique sentinel IS present in its own /units/stellar-evolution/solutions/index.html (the route renders it), but — by the separate-collection design — is still ABSENT from the Pagefind index, pedagogy-index JSON, and Library rollups."
+tags: ["stars", "solutions", "security-fixture"]
+---
+
+# Worked solutions
+
+The unique sentinel string below — `REVEALEDSOLUTIONSENTINELQJ7P2M` — is the
+build-time security probe (ADR 0096). This chapter is REVEALED (a past
+`solutionsRevealDate`), so the `/solutions` route `render()`s this artifact
+and the sentinel IS present on that one page. By the separate-collection
+design, it must still be absent from the Pagefind index, the pedagogy-index
+JSON, and every Library rollup — solutions never ride the artifacts sweep,
+even when revealed.
+
+<PracticeProblem course="smoke" unit="stellar-evolution" id="revealed-probe">
+  <PracticeProblem.Prompt>
+    A sentinel probe for the revealed-solutions security gate.
+  </PracticeProblem.Prompt>
+
+  <Solution>
+    REVEALEDSOLUTIONSENTINELQJ7P2M — this worked answer is shown on the
+    solutions route but must not be indexed.
+  </Solution>
+</PracticeProblem>
+
+The sentinel also rides a <GlossaryTerm name="luminosity">glossary term
+REVEALEDSOLUTIONSENTINELQJ7P2M</GlossaryTerm> and a misconception aside, to
+prove the pedagogy-index / Library / search side-channel stays closed even
+for a revealed solution.
+
+<Aside
+  kind="misconception"
+  name="revealed-solution-sentinel"
+  short="REVEALEDSOLUTIONSENTINELQJ7P2M is on the route but not in any index."
+>
+  REVEALEDSOLUTIONSENTINELQJ7P2M — if this string surfaces in the
+  pedagogy-index JSON, the Pagefind index, or a Library rollup, the
+  separate-collection exclusion (C1) has regressed even though the route
+  itself renders correctly.
+</Aside>
