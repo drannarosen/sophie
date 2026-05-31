@@ -149,6 +149,58 @@ describe("ModuleList — axe", () => {
     expect(html).toContain("Foundations");
     expect(await axe(document.body)).toHaveNoViolations();
   });
+
+  test("absent scheduleRows → lecture-count-only render, no week label / Now tag / row state, axe-clean", async () => {
+    const html = await renderAstroToBody(ModuleList, {
+      props: { sections: SECTIONS, units: UNITS },
+      wrap: (inner) => `<main>${inner}</main>`,
+    });
+    // Graceful degradation (ADR 0097 #7): today's behavior is unchanged.
+    expect(html).toMatch(/1\s+lecture/);
+    expect(html).not.toContain("sophie-home-mod__now");
+    expect(html).not.toContain("sophie-home-mod__weeks");
+    expect(html).not.toContain("is-now");
+    expect(html).not.toContain("is-past");
+    expect(await axe(document.body)).toHaveNoViolations();
+  });
+
+  test("with scheduleRows → week range + Now tag + is-now/is-past row state, axe-clean", async () => {
+    const html = await renderAstroToBody(ModuleList, {
+      props: {
+        sections: SECTIONS,
+        units: UNITS,
+        scheduleRows: [
+          {
+            slug: "foundations",
+            weekStart: 1,
+            weekEnd: 3,
+            isNow: true,
+            isPast: false,
+          },
+          {
+            slug: "hr-diagram",
+            weekStart: 4,
+            weekEnd: 4,
+            isNow: false,
+            isPast: true,
+          },
+        ],
+      },
+      wrap: (inner) => `<main>${inner}</main>`,
+    });
+    // Multi-week section → "Weeks N–M" (en-dash U+2013); single-week → "Week N".
+    expect(html).toContain("Weeks 1–3");
+    expect(html).toContain("Week 4");
+    // "Now" tag is text (not color-only) for screen readers.
+    expect(html).toContain("sophie-home-mod__now");
+    expect(html).toContain("Now");
+    // Row state classes drive the dim/highlight styling.
+    expect(html).toContain("is-now");
+    expect(html).toContain("is-past");
+    // Lecture count still present alongside the schedule status.
+    expect(html).toMatch(/1\s+lecture/);
+    expect(await axe(document.body)).toHaveNoViolations();
+  });
 });
 
 describe("HomeQuickLinks — axe", () => {
