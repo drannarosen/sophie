@@ -17,9 +17,11 @@ import {
   renderAstroToBody,
   setupAxeDom,
 } from "../../test-utils/container-axe.ts";
+import AnnouncementBanner from "./AnnouncementBanner.astro";
 import CourseHero from "./CourseHero.astro";
 import HomeQuickLinks from "./HomeQuickLinks.astro";
 import HowBand from "./HowBand.astro";
+import type { ActiveAnnouncement } from "./home-announcement-projections.ts";
 import { howBand, whyBand } from "./home-projections.ts";
 import ModuleList from "./ModuleList.astro";
 import OrientationCards from "./OrientationCards.astro";
@@ -239,6 +241,80 @@ describe("ModuleList — axe", () => {
     expect(html).toContain("is-past");
     // Lecture count still present alongside the schedule status.
     expect(html).toMatch(/1\s+lecture/);
+    expect(await axe(document.body)).toHaveNoViolations();
+  });
+});
+
+// Three active announcements covering all severities, sorted as the
+// projection emits them (urgent → notice → info); the urgent one carries a
+// `body` + an author-provided `href`. Mirrors the `ActiveAnnouncement` shape
+// the dispatcher feeds the banner (ADR 0099).
+const ANNOUNCEMENTS: ActiveAnnouncement[] = [
+  {
+    id: "exam-moved",
+    title: "Midterm moved to Friday",
+    body: "Room TBA — check email for the final assignment.",
+    severity: "urgent",
+    href: "https://example.edu/astr201/midterm",
+  },
+  {
+    id: "office-hours",
+    title: "Extra office hours this week",
+    severity: "notice",
+  },
+  {
+    id: "reading-posted",
+    title: "Week 6 reading is posted",
+    severity: "info",
+  },
+];
+
+describe("AnnouncementBanner — axe + empty-state", () => {
+  test("active: all three severities render the severity WORD + titles + body + href, named region, axe-clean", async () => {
+    const html = await renderAstroToBody(AnnouncementBanner, {
+      props: { announcements: ANNOUNCEMENTS },
+      wrap: (inner) => `<main>${inner}</main>`,
+    });
+    // Titles render (always present).
+    for (const a of ANNOUNCEMENTS) {
+      expect(html).toContain(a.title);
+    }
+    // Severity is a TEXT label (WCAG 1.4.1), never color-only: the
+    // capitalized word carries the meaning.
+    expect(html).toContain("Urgent");
+    expect(html).toContain("Notice");
+    expect(html).toContain("Info");
+    // Optional body renders only for the item that has one.
+    expect(html).toContain("Room TBA — check email for the final assignment.");
+    // Optional href renders as a link, raw (author-provided URL — see banner).
+    expect(html).toContain('href="https://example.edu/astr201/midterm"');
+    // The region is named for screen readers (aria-labelledby → hidden h2).
+    expect(html).toContain(
+      'aria-labelledby="sophie-home-announcements-heading"'
+    );
+    expect(html).toContain('id="sophie-home-announcements-heading"');
+    expect(html).toContain("Course announcements");
+    expect(await axe(document.body)).toHaveNoViolations();
+  });
+
+  test("empty: no announcements → renders nothing (no labelled region), axe-clean", async () => {
+    const html = await renderAstroToBody(AnnouncementBanner, {
+      props: { announcements: [] },
+      wrap: (inner) => `<main>${inner}</main>`,
+    });
+    // Render-nothing: no banner section, no accessible-name heading.
+    expect(html).not.toContain("sophie-home-announce");
+    expect(html).not.toContain("sophie-home-announcements-heading");
+    expect(html).not.toContain("Course announcements");
+    expect(await axe(document.body)).toHaveNoViolations();
+  });
+
+  test("omitted prop → renders nothing, axe-clean", async () => {
+    const html = await renderAstroToBody(AnnouncementBanner, {
+      props: {},
+      wrap: (inner) => `<main>${inner}</main>`,
+    });
+    expect(html).not.toContain("sophie-home-announce");
     expect(await axe(document.body)).toHaveNoViolations();
   });
 });
