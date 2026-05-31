@@ -172,7 +172,7 @@ The 11 below are the routine-reasoning subset; full catalog
 | Pedagogy-index pattern           | 0038 | Pedagogy index serialized from MDX AST; consumed by audit, diff, AI authoring                                             |
 | **Epistemic Component Contract** | 0058 | **Eight-role taxonomy** (optional, additive); amends 0003/0004/0044/0046; underwrites Reasoning-OS thesis                  |
 | **AI-optimized codebase design** | 0061 | **AI is primary author of platform code, not just content**: 6 rules (focused files, Write-over-Edit, LOC budget 300/500/800, filename routing, atomic docs, tests split with source); amends 0023/0030. **Validated at scale by the 8-file course-spec v0.2-shape split in PR #199** (sibling files 20–91 LOC each; main schema 371→404 LOC within budget). |
-| **Course-spec format** | 0080 | **v0.1 + Amendment 1 (discovery reshape to ADR 0067)** + **Amendment 2 (PR #199, 2026-05-26)**: clean-break removal of `assessment.grade_weights` → required top-level `grading.categories` (sum to 1.0); 7 new optional clusters (objectives, prereqs, office_hours, contact, accessibility, info_pages, landing); strict-union `info_pages.compose:`; reserved-slug refine; `landing.layout: "custom"` enum; 3 cross-refines; projection-pattern + chrome-vs-pedagogy boundary operationalized. `spec_version` stays at `"0.1"` (pre-launch zero-consumer state). |
+| **Course-spec format** | 0080 | **v0.1 + Amendment 1 (discovery reshape to ADR 0067)** + **Amendment 2 (PR #199, 2026-05-26)**: clean-break removal of `assessment.grade_weights` → required top-level `grading.categories` (sum to 1.0); 7 new optional clusters (objectives, prereqs, office_hours, contact, accessibility, info_pages, landing); strict-union `info_pages.compose:`; reserved-slug refine; `landing.layout: "custom"` enum; 3 cross-refines; projection-pattern + chrome-vs-pedagogy boundary operationalized. **+ Amendment 3 (2026-05-31)**: optional `assignment_kinds: {slug: label}` field — present → custom labels + integration cross-refine rejecting undeclared kinds; absent → free slugs with humanized fallback (pairs with ADR 0096 Am1's free-slug assignment `kind`). `@sophie/core` validates shape only; the cross-file membership check is the integration's. `spec_version` stays at `"0.1"` (pre-launch zero-consumer state). |
 | **Chapter migration playbook**   | 0064 | Six locked rules + seven-step protocol; fixed-template pilot report under `docs/website/pilots/`; halt on missing-component gaps (no inline workarounds); next pilot must differ in structural density |
 | **Unified assessment schema (v1 = formative-with-reveal)** | 0073 | **Amendment 1 (2026-05-27)**: formative-with-reveal v1 — six MDX components (`<MCQ>` / `<MultiSelect>` / `<FillBlank>` / `<NumericQuestion>` / `<QuickCheck>` / `<PracticeProblem>`) + two reveals (`<Solution>` / `<Hint>`) + practice route + AS-1..5 audit; grading + BKT + Rubric + `<Assignment>` deferred to v2 per the locked broader ADR. PRs 3–9 of the [formative-assessment plan](docs/plans/2026-05-27-formative-assessment-implementation.md) cite this amendment as the design source. |
 
@@ -416,16 +416,42 @@ to every PR, every design decision, every refactor.
     than as a confusing nullish-property crash deep in composition.
 
     **Scope clarification.** R12 applies *only* to nullable
-    virtual-module exports. Currently nullable:
-    `virtual:sophie/course-spec` (`CourseSpec | null`) and
-    `virtual:sophie/homework` (`HomeworkRegistry | null`, ADR 0096).
-    Non-nullable
-    (R12 does not apply): `virtual:sophie/figures` (always an object,
-    possibly empty); `virtual:sophie/pedagogy-index`. Check shapes
-    at [`packages/astro/src/virtual-modules.d.ts`](packages/astro/src/virtual-modules.d.ts).
-    The deferred ScheduleSchema virtual module is the predicted
-    third instance with a `T | null` shape per the always-register
-    pattern memorialized in
+    virtual-module exports, and within that, the **narrow-with-throw**
+    requirement applies only where a dispatcher does **direct property
+    access** on the export. Currently nullable (three `T | null`
+    always-register modules):
+
+    - `virtual:sophie/course-spec` (`CourseSpec | null`) —
+      **narrowed WITH `throw`** at the dispatchers
+      (`course-landing.astro`, `section-landing.astro`,
+      `info-page.astro`), which read `courseSpec.<field>` directly.
+    - `virtual:sophie/assignments` (`AssignmentRegistry | null`, ADR
+      0096 — **renamed from `homework` / `HomeworkRegistry`** per
+      Amendment 1) — **null-safe EXCEPTION, no throw**: passed whole
+      into the null-guarding `dueSoon` / `thisWeek` projections + read
+      via the resolver in `solutions.astro`. No direct property access
+      at any route boundary.
+    - `virtual:sophie/schedule` (`Schedule | null`, ADR 0098 —
+      **now SHIPPED**, the realized third `T | null` always-register
+      module the prior "deferred ScheduleSchema" framing predicted) —
+      **null-safe EXCEPTION, no throw**: passed whole into the
+      null-guarding `scheduleRows` / `thisWeek` projections in
+      `course-landing.astro`.
+
+    The two null-safe exceptions are **documented in the route**
+    (`course-landing.astro`'s projection comment) — they are the
+    homework-precedent pattern for optional projections, not a
+    regression. Because they are never narrowed-with-throw, they are
+    **NOT** added to the throw grep-gate below; the gate stays
+    course-spec-specific.
+
+    Non-nullable (R12 does not apply): `virtual:sophie/figures`
+    (always an object, possibly empty); `virtual:sophie/pedagogy-index`.
+    Check shapes at
+    [`packages/astro/src/virtual-modules.d.ts`](packages/astro/src/virtual-modules.d.ts).
+    The next predicted `T | null` instance is
+    `virtual:sophie/announcements` (ADR 0099, PR 3) per the
+    always-register pattern memorialized in
     `feedback_always_register_virtual_module.md`.
 
     **Primary enforcement: TS type-checker.** Astro check + `pnpm

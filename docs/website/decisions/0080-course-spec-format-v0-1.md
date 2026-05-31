@@ -9,7 +9,7 @@ tags:
 status: shipped
 validation:
   status: validated
-  last_validated_date: "2026-05-26"
+  last_validated_date: "2026-05-31"
   evidence:
     - kind: test
       ref: packages/core/src/schema/course-spec.test.ts
@@ -47,6 +47,14 @@ validation:
       ref: packages/astro/src/components/SyllabusPage.astro
       date: "2026-05-26"
       notes: "Amendment 2 — H7 = Option B projection pattern: 5 .astro layout orchestrators (Syllabus/Schedule/Instructor/Policies/Accommodations) + 6 React sub-components (ObjectivesSection/GradingTable/OfficeHoursTable/ContactCard/AccessibilitySection/PrereqsList) shipped. SchedulePage placeholder per H6 (iCal + schedule.yaml deferred to follow-up sprint). 5 MDX-authorable chrome components (Due/Points/Reading/OfficeHours/Week) at @sophie/components/chrome/ ship the useCourseSpec() hook via SSR-setter + script-tag store pattern."
+    - kind: test
+      ref: packages/core/src/schema/course-spec.test.ts
+      date: "2026-05-31"
+      notes: "Amendment 3 — optional `assignment_kinds: record(Slug, NonEmptyString)` field tests: a valid slug→label map parses; an absent map parses; a map with a non-slug key (`Home Work`) rejected; an empty-string label rejected. @sophie/core validates shape only — the cross-file membership check (every Assignment.kind is a declared key) is the integration's job."
+    - kind: test
+      ref: packages/astro/src/lib/assert-assignment-kinds.test.ts
+      date: "2026-05-31"
+      notes: "Amendment 3 — `assertAssignmentKindsDeclared(assignments, declared)` cross-refine helper (framework-pure, unit-tested without the integration harness): an undeclared kind throws naming the offending kind + assignment id; an all-declared registry passes; an absent map (undefined) is a no-op; a null registry is a no-op. Mirrors ADR 0096's deferred unit/id cross-refine machinery. Wired into `astro:config:setup` (integration.ts)."
 ---
 
 # ADR 0080: Course Spec format v0.1
@@ -563,6 +571,69 @@ fragmenting across two course-spec ADRs.
   [`reference/course-info-schema.md`](../reference/course-info-schema.md)
   covering the v0.2-shape clusters, prose-fragment authoring
   conventions, and the chrome-vs-pedagogy component-set split.
+
+### Amendment 3 — optional `assignment_kinds` course-spec field (2026-05-31)
+
+**Trigger.** The assignments registry generalization
+([ADR 0096 Amendment 1](./0096-deploy-time-gated-content.md#amendment-1-homework-registry-assignments-registry-generalization-2026-05-31))
+made `Assignment.kind` a **free, consumer-owned `Slug`** (no closed
+platform enum). Free slugs need (a) a way to supply human-readable
+display labels and (b) typo protection — `kind: "projetc"` should fail
+the build, not silently render a humanized "Projetc" badge.
+Authoritative companions:
+[design doc § ②](../../plans/2026-05-31-schedule-announcements-design.md),
+[implementation plan Tasks 3 + 7](../../plans/2026-05-31-schedule-announcements-implementation.md).
+
+**Field.** A new **optional** top-level field:
+
+```ts
+// Optional consumer-declared assignment-kind vocabulary (slug → label).
+assignment_kinds: z.record(Slug, NonEmptyString).optional(),
+```
+
+- **Absent** → kinds are free slugs with a humanized-label fallback
+  (`growth-memo` → "Growth Memo"); zero-config, no membership check.
+- **Present** → supplies custom display labels (e.g.
+  `{ "growth-memo": "Growth Memo (P/F)" }`) **and** opts the course into
+  an integration-level cross-refine that **rejects undeclared `kind`
+  values** at build (typo protection + AI-authoring legibility per
+  [ADR 0030](./0030-audience-and-ai-author-model.md)).
+
+Convention, not constraint. The choice to declare is the consumer's.
+
+**`@sophie/core` validates shape only (ADR 0001 framework-purity).**
+The schema enforces that `assignment_kinds` is a `record(Slug,
+NonEmptyString)`; it cannot perform the **cross-FILE** membership check
+(`every Assignment.kind ∈ keys(assignment_kinds)`) because that needs
+both `course.sophie.yaml` and `assignments.sophie.yaml`, which are only
+co-visible at `astro:config:setup`. The membership check is therefore a
+small pure helper
+[`assertAssignmentKindsDeclared(assignments, declared)`](https://github.com/drannarosen/sophie/blob/main/packages/astro/src/lib/assert-assignment-kinds.ts)
+in `@sophie/astro`, unit-testable without the integration harness and
+called from `astro:config:setup`. It throws a curated config-setup
+error naming every offending `kind` + its assignment id (collected, not
+first-only). This mirrors ADR 0096's already-deferred `unit`/`id`
+cross-refine — **same machinery, not a new concept**.
+
+**Why `spec_version` stays at `"0.1"`.** Same rationale as Amendments 1
+and 2: `feedback_no_backcompat_prelaunch` (zero production students; the
+single consumer course is migrated in-place). `assignment_kinds` is an
+**additive optional** field — no clean break, so it doesn't even reach
+Amendment 2's cross-shape-break threshold. The `spec_version` /
+schema-id literals are untouched.
+
+**Consequences.**
+
+- ASTR 201 can declare `assignment_kinds` in `course.sophie.yaml` to get
+  custom badge labels + build-time typo protection on its registry; the
+  canonical fixture
+  [`course-spec-astr-201.yaml`](https://github.com/drannarosen/sophie/blob/main/packages/core/src/schema/__fixtures__/course-spec-astr-201.yaml)
+  carries a small block.
+- The Due-Soon card surfaces `kindLabel` = the declared label when
+  present, else `humanizeSlug(kind)` — so a course gets readable badges
+  with or without the map.
+- A course that omits the map keeps zero-config free slugs; declaring it
+  is a one-way opt-in to stricter authoring.
 
 ## References
 
