@@ -1,0 +1,9 @@
+term_start: "2027-01-19"
+entries:
+  - date: "2027-01-20"
+    kind: lecture
+    title: "Lecture 1 — Ages and Lifetimes"
+    unit: lecture-01-ages-lifetimes
+  - date: "2027-02-20"
+    kind: due
+    title: "Homework 3 due (not a schedule kind)"

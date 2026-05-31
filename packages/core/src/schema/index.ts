@@ -243,6 +243,12 @@ export {
   RubricScaleLevelSchema,
   RubricSchema,
 } from "./rubric.js";
+export {
+  type Schedule,
+  type ScheduleEntry,
+  ScheduleKind,
+  ScheduleSchema,
+} from "./schedule.js";
 export type { EntityType } from "./search-facet.js";
 export {
   type Section,
