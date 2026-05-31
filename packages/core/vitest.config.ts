@@ -24,9 +24,9 @@ export default defineConfig({
       // `vitest run --coverage` in CI's unit job exits non-zero below floor.
       thresholds: {
         statements: 96,
-        branches: 91,
-        functions: 91,
-        lines: 96,
+        branches: 93,
+        functions: 92,
+        lines: 97,
       },
     },
   },

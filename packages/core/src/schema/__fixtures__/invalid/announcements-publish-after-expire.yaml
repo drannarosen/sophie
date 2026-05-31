@@ -1,0 +1,6 @@
+announcements:
+  - id: inverted-window
+    title: "Announcement whose expire_date precedes its publish_date"
+    severity: notice
+    publish_date: "2026-04-10"
+    expire_date: "2026-04-01"

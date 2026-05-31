@@ -1,0 +1,17 @@
+announcements:
+  - id: welcome
+    title: "Welcome to ASTR 201"
+    severity: info
+    publish_date: "2026-01-20"
+  - id: office-hours-moved
+    title: "Office hours moved to Thursday this week"
+    body: "Wednesday office hours shift to Thursday 2–4pm in PS-140 this week only."
+    severity: notice
+    publish_date: "2026-02-03"
+    expire_date: "2026-02-10"
+    href: "https://example.edu/astr201/calendar"
+  - id: midterm-rescheduled
+    title: "Midterm rescheduled — read carefully"
+    severity: urgent
+    publish_date: "2026-03-01"
+    expire_date: "2026-03-15"
