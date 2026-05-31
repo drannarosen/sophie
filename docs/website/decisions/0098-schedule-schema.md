@@ -109,6 +109,15 @@ be scheduled yet, and `tbd` simply omits the week-number labels
 downstream (the date-derived "Now"/past state still works). Strict-by-
 default mirrors ADR 0080 §5.
 
+**Supersedes `schedule_ref`.** ADR 0080's v0.2 placeholder field
+`schedule_ref: string` (an opaque path to a future `schedule.yaml`, H6)
+is **removed** by this ADR. The schedule loads from the fixed
+`schedule.sophie.yaml` filename convention — mirroring
+`assignments.sophie.yaml` and `course.sophie.yaml` — not from a
+course-spec pointer. One less indirection, and the convention (not a
+spec field) is the contract, consistent with every other consumer
+registry.
+
 ### 2. `kind` is a CLOSED enum (unlike assignment kinds)
 
 `kind ∈ lecture | activity | exam | holiday | break`. This is a

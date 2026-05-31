@@ -351,8 +351,6 @@ export const CourseSpecSchema = z
     office_hours: z.array(OfficeHourSchema).optional(),
     contact: ContactSchema.optional(),
     accessibility: AccessibilitySchema.optional(),
-    /** Opaque path to schedule.yaml; loader/iCal ship in follow-up sprint per H6. */
-    schedule_ref: z.string().optional(),
     info_pages: InfoPagesSchema.optional(),
     landing: LandingSchema.optional(),
     // Optional consumer-declared assignment-kind vocabulary (ADR 0080 Am3):
