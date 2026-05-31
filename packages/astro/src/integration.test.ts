@@ -74,17 +74,29 @@ interface InjectedRoute {
   entrypoint: string;
 }
 
+interface NamedPlugin {
+  name?: string;
+}
+
 function runSetupHook(consumerRoot: string): {
   injected: InjectedRoute[];
   warnCalls: string[];
+  vitePluginNames: string[];
 } {
   const injected: InjectedRoute[] = [];
   const warnCalls: string[] = [];
+  const vitePluginNames: string[] = [];
 
   const injectRoute = vi.fn((args: InjectedRoute) => {
     injected.push({ pattern: args.pattern, entrypoint: args.entrypoint });
   });
-  const updateConfig = vi.fn();
+  // Capture the vite plugins the integration registers via updateConfig so
+  // tests can assert the virtual modules (e.g. `sophie:schedule`) are wired.
+  const updateConfig = vi.fn((cfg: { vite?: { plugins?: NamedPlugin[] } }) => {
+    for (const plugin of cfg.vite?.plugins ?? []) {
+      if (plugin?.name) vitePluginNames.push(plugin.name);
+    }
+  });
   const logger = {
     warn: vi.fn((msg: string) => warnCalls.push(msg)),
     info: vi.fn(),
@@ -105,7 +117,7 @@ function runSetupHook(consumerRoot: string): {
     logger,
   });
 
-  return { injected, warnCalls };
+  return { injected, warnCalls, vitePluginNames };
 }
 
 describe("defineSophieIntegration — route injection (course-info projection)", () => {
@@ -191,5 +203,88 @@ describe("defineSophieIntegration — route injection (course-info projection)",
     expect(warnCalls.some((w) => /index\.astro|shadow|landing/i.test(w))).toBe(
       true
     );
+  });
+});
+
+describe("defineSophieIntegration — virtual-module wiring", () => {
+  let consumerRoot: string;
+
+  beforeEach(() => {
+    consumerRoot = mkdtempSync(path.join(tmpdir(), "sophie-integration-"));
+    fs.mkdirSync(path.join(consumerRoot, "src", "content"), {
+      recursive: true,
+    });
+  });
+
+  afterEach(() => {
+    rmSync(consumerRoot, { recursive: true, force: true });
+  });
+
+  test("registers the schedule virtual module (ADR 0098, always-register)", () => {
+    const { vitePluginNames } = runSetupHook(consumerRoot);
+    expect(vitePluginNames).toContain("sophie:schedule");
+  });
+
+  test("registers the assignments + course-spec + schedule virtual modules together", () => {
+    const { vitePluginNames } = runSetupHook(consumerRoot);
+    // The three nullable always-register virtual modules (R12 family) plus
+    // the figures module are wired even with no consumer data present.
+    expect(vitePluginNames).toContain("sophie:assignments");
+    expect(vitePluginNames).toContain("sophie:course-spec");
+    expect(vitePluginNames).toContain("sophie:schedule");
+  });
+});
+
+describe("defineSophieIntegration — assignment_kinds cross-refine (ADR 0080 Am3)", () => {
+  let consumerRoot: string;
+
+  beforeEach(() => {
+    consumerRoot = mkdtempSync(path.join(tmpdir(), "sophie-integration-"));
+    fs.mkdirSync(path.join(consumerRoot, "src", "content"), {
+      recursive: true,
+    });
+  });
+
+  afterEach(() => {
+    rmSync(consumerRoot, { recursive: true, force: true });
+  });
+
+  const SPEC_WITH_KINDS = `${MINIMAL_VALID_SPEC}
+assignment_kinds:
+  homework: Homework
+`;
+
+  test("throws naming the undeclared kind when assignments use a kind missing from assignment_kinds", () => {
+    fs.writeFileSync(
+      path.join(consumerRoot, "course.sophie.yaml"),
+      SPEC_WITH_KINDS
+    );
+    fs.writeFileSync(
+      path.join(consumerRoot, "assignments.sophie.yaml"),
+      "assignments:\n" +
+        "  - id: memo1\n" +
+        "    title: Growth Memo\n" +
+        "    kind: growth-memo\n" +
+        "    assignedDate: tbd\n" +
+        "    dueDate: tbd\n"
+    );
+    expect(() => runSetupHook(consumerRoot)).toThrow(/growth-memo/);
+  });
+
+  test("passes when every assignment kind is declared", () => {
+    fs.writeFileSync(
+      path.join(consumerRoot, "course.sophie.yaml"),
+      SPEC_WITH_KINDS
+    );
+    fs.writeFileSync(
+      path.join(consumerRoot, "assignments.sophie.yaml"),
+      "assignments:\n" +
+        "  - id: hw1\n" +
+        "    title: Problem Set 1\n" +
+        "    kind: homework\n" +
+        "    assignedDate: tbd\n" +
+        "    dueDate: tbd\n"
+    );
+    expect(() => runSetupHook(consumerRoot)).not.toThrow();
   });
 });

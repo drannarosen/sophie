@@ -6,6 +6,7 @@ import react from "@astrojs/react";
 import type { FigureRegistryEntry } from "@sophie/core/schema";
 import { isFigureFile } from "@sophie/core/schema";
 import type { AstroIntegration } from "astro";
+import { assertAssignmentKindsDeclared } from "./lib/assert-assignment-kinds.ts";
 import { loadAssignments } from "./lib/assignments-loader.ts";
 import { assignmentsVirtualModule } from "./lib/assignments-virtual-module.ts";
 import { loadCourseSpec } from "./lib/course-spec-loader.ts";
@@ -27,6 +28,8 @@ import { getMathSpeechCoverage } from "./lib/pedagogy-audit/math-speech-coverage
 import { runPedagogyAudit } from "./lib/pedagogy-audit/runner.ts";
 import { indexAccumulator } from "./lib/pedagogy-index/accumulator.ts";
 import { pedagogyIndexVirtualModule } from "./lib/pedagogy-index-virtual-module.ts";
+import { loadSchedule } from "./lib/schedule-loader.ts";
+import { scheduleVirtualModule } from "./lib/schedule-virtual-module.ts";
 import { extractContractValidations } from "./lib/validation/extractor.ts";
 import { sophieMdxOptions } from "./mdx-config.ts";
 
@@ -129,6 +132,22 @@ export function defineSophieIntegration(
         // fail-closed Solutions reveal gate.
         const assignments = loadAssignments(consumerRoot);
 
+        // ADR 0098 — consumer's parsed schedule.sophie.yaml (or null when
+        // absent). Drives the fail-closed course-home week-ranges / "Now"
+        // marker / This-Week card.
+        const schedule = loadSchedule(consumerRoot);
+
+        // ADR 0080 Amendment 3 — reject assignment kinds not declared in the
+        // course-spec `assignment_kinds` map. Lives HERE (not @sophie/core)
+        // because the cross-file membership check needs both course.sophie.yaml
+        // and assignments.sophie.yaml, visible only at config-setup; the core
+        // schema stays framework-pure (ADR 0001) and validates the map's shape
+        // only. No-op when the map is absent or the registry is null.
+        assertAssignmentKindsDeclared(
+          assignments,
+          courseSpec?.assignment_kinds
+        );
+
         // ADR 0094 — discover figure masters under <root>/src/figures so
         // the figures virtual module can emit generated astro:assets
         // imports (convention: src/figures/<name>.<ext>). Captured once
@@ -191,6 +210,18 @@ export function defineSophieIntegration(
               // registry yet (the export is `null` in that case; the
               // reveal gate stays fail-closed for every chapter).
               assignmentsVirtualModule(assignments) as never,
+              // ADR 0098 — consumer's parsed schedule.sophie.yaml exposed
+              // as `virtual:sophie/schedule` for the course-home dashboard
+              // (week-ranges, "Now" marker, This-Week card). Always
+              // registered so
+              // `import { schedule } from "virtual:sophie/schedule"`
+              // resolves at build time even when the consumer has no
+              // calendar yet (the export is `null` in that case; the
+              // dashboard seams stay fail-closed). This is the realized
+              // **third** `T | null` always-register instance the R12-family
+              // pattern note predicted (figures + course-spec + assignments
+              // preceded it).
+              scheduleVirtualModule(schedule) as never,
               // Pre-parse author-trap lint (issues #190, #193) — scans
               // raw `.mdx` text for multi-line inline `$...$` and raw
               // `<` before a non-letter, and throws curated errors with
