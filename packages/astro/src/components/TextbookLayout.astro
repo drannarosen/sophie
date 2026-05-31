@@ -25,6 +25,7 @@ import {
   runAuditOncePerProcess,
 } from "../lib/audit-cache";
 import { enrichEquationsWithSpeech } from "../lib/math-render/enrich-equations-speech";
+import { loadUnitIdsWithGatedSolutions } from "../lib/load-gated-solution-units";
 import { loadConsumerRegistry } from "../lib/notation-registry-loader";
 import { indexAccumulator } from "../lib/pedagogy-index/accumulator";
 import { serializePedagogyForHydration } from "../lib/serialize-pedagogy-hydration";
@@ -202,9 +203,17 @@ if (import.meta.env.DEV) {
   // free when <ChapterMultiReps> already loaded it during MDX render.
   // `{ registry: null }` when the consumer hasn't opted in (NR/MR skip).
   const { registry: notationRegistry } = loadConsumerRegistry(repoRoot);
+  // ADR 0096 — existence-only set of unit ids whose worked solution is
+  // gated (lives in `solutions.mdx`, not inline), so AS-2 stops warning on
+  // practice-tab problems whose answer is gated by design. Derived from
+  // filenames only (never the solution body); `repoRoot` is the consumer-app
+  // cwd, the same base the build hook passes. Included in `extras` BEFORE the
+  // runAuditOncePerProcess call so it's present on the first (and, in dev,
+  // every) run — keeps dev and `astro:build:done` audit behavior identical.
+  const unitIdsWithGatedSolutions = loadUnitIdsWithGatedSolutions(repoRoot);
   const auditReport = runAuditOncePerProcess(
     indexAccumulator.asPedagogyIndex(),
-    { draftUnitIds, repoRoot, notationRegistry },
+    { draftUnitIds, repoRoot, notationRegistry, unitIdsWithGatedSolutions },
     import.meta.env.PROD
   );
   if (auditReport !== null) {

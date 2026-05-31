@@ -51,7 +51,7 @@ documents all of them below). Still to land: `<QuickCheck>` and
 | `<FillBlank>` | Text-fill with inline slots | AS-3 WARN: ≥1 `<FillBlank.Slot>` |
 | `<NumericQuestion>` | Numeric answer + tolerance + unit | AS-4 ERROR: exactly one `<NumericQuestion.Answer>` |
 | `<QuickCheck>` | Free-response, solution-only | (no specific invariant; AS-2 WARN if no `<Solution>`) |
-| `<PracticeProblem>` | Bare practice shell (context owner for `<Solution>`/`<Hint>` when no MCQ/etc. wraps) | (no specific invariant; AS-2 WARN if no `<Solution>`) |
+| `<PracticeProblem>` | Bare practice shell (context owner for `<Solution>`/`<Hint>` when no MCQ/etc. wraps) | (no specific invariant; AS-2 WARN if no `<Solution>` **and** the unit has no gated `solutions.mdx` per ADR 0096) |
 
 All six accept `<Solution>` (full reveal) and `<Hint number={N}>`
 (progressive reveal) as children — these are the shared reveal
@@ -383,7 +383,9 @@ the on-ramp.
   storybook fixtures (renders the reveal without
   `parentId`-namespaced persistence) but a chapter-author bug
   every time — the AS-2 audit invariant flags formative items
-  without a solution; the reverse — a solution without a
+  without a solution (except when the unit's worked solution is
+  intentionally gated in a separate `solutions.mdx`, per ADR 0096 —
+  AS-2 stays silent there); the reverse — a solution without a
   formative item — has no audit signal yet (PR 11 lint job is
   expected to add one).
 - **Duplicate choice/slot slugs.** Two `<MCQ.Choice>` /

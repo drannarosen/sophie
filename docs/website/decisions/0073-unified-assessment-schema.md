@@ -454,7 +454,7 @@ per ADR 0038's audit pattern:
 | ID | Severity | Trigger | Author resolution |
 |---|---|---|---|
 | **AS-1** | ERROR | `<MCQ>` does not have exactly one `<MCQ.Choice correct>` | Mark exactly one choice with `correct` |
-| **AS-2** | WARN | A formative item (any of the six) has no `<Solution>` child | Add a `<Solution>` — authored-but-answerless items are the silently-missing-Aside class for the formative family |
+| **AS-2** | WARN | A formative item (any of the six) has no `<Solution>` child **and** its unit has no gated `solutions.mdx` (ADR 0096) | Add a `<Solution>` — authored-but-answerless items are the silently-missing-Aside class for the formative family. Suppressed when the worked solution is intentionally gated (lives in the unit's `solutions.mdx`, not inline). |
 | **AS-3** | WARN | `<FillBlank>` has zero `<FillBlank.Slot>` children | Add at least one `<FillBlank.Slot>` |
 | **AS-4** | ERROR | `<NumericQuestion>` does not have exactly one `<NumericQuestion.Answer>` child | Provide exactly one answer child with `value` + `tolerance` |
 | **AS-5** | ERROR | `<MultiSelect>` has zero choices marked `correct` | Mark at least one `<MultiSelect.Choice correct>` |
@@ -464,7 +464,21 @@ contract; WARN-severity invariants surface in the audit report and
 in CI logs but do not halt. AS-2's WARN posture is deliberate: a
 formative item without a solution is a likely authoring gap but a
 legitimate intermediate state during drafting; the audit notifies
-rather than blocks.
+rather than blocks. AS-2 is also **gated-solution-aware** (ADR
+0096): a practice-tab `<PracticeProblem>` intentionally carries no
+inline `<Solution>` because its worked solution lives in the unit's
+separate, date-gated `solutions.mdx`. The audit receives an
+**existence-only** signal (the set of unit ids that own a
+`solutions.mdx`, derived from filenames alone — never the solution
+body, preserving the gate's security property) and suppresses AS-2
+for any formative whose unit is in that set. Suppression is
+deliberately **per-unit, not per-problem**: one `solutions.mdx`
+silences AS-2 for *every* answerless formative in that unit
+(including, e.g., a reading-tab `<QuickCheck>` that genuinely
+should carry an inline `<Solution>`) — per-problem precision would
+require reading the solution body to learn which problems it
+covers, which the existence-only security constraint forbids, so
+the unit granularity is the correct ceiling.
 
 #### 6. Practice route
 

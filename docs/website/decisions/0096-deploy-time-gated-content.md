@@ -172,6 +172,14 @@ reveal*. They share dates by default but are independently editable.
   (the cron) so a passed reveal date actually publishes. A skipped
   rebuild means a chapter stays hidden past its date — fail-closed, the
   safe direction.
+- **AS-2 suppression is per-unit, not per-problem.** The existence-only
+  signal that makes the formative AS-2 audit gated-solution-aware (ADR
+  0073) is the *set of unit ids* owning a `solutions.mdx`, so one gated
+  solution silences AS-2 for *every* answerless formative in that unit
+  (including a reading-tab `<QuickCheck>` that genuinely should carry an
+  inline `<Solution>`) — a deliberate tradeoff, since per-problem
+  precision would require reading the solution body the security
+  constraint here forbids; unit granularity is the correct ceiling.
 - **Future date source.** `ScheduleSchema` (future, deferred per the
   implementation plan's out-of-scope list) becomes the date source,
   superseding hand-entered registry dates; the registry is shaped to

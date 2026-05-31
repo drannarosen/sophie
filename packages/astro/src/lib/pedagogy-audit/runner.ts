@@ -133,8 +133,10 @@ export function runPedagogyAudit(
   // ADR 0073 Amendment 1 — AS-2 (no Solution WARN) + AS-3 (fill-blank
   // zero-blank WARN). AS-1 / AS-4 / AS-5 ERRORs are pushed by the
   // formative extractor at extract-time and surface via
-  // `passthroughExtractorFindings` above.
-  checkFormative(index, sink);
+  // `passthroughExtractorFindings` above. AS-2 is suppressed for units
+  // whose worked solution is gated (ADR 0096) — the existence-only set is
+  // threaded via extras (filenames only, never solution bodies).
+  checkFormative(index, sink, extras.unitIdsWithGatedSolutions ?? new Set());
 
   // Wedge B1 retrieval-family invariants (PRA-1 prereq activation,
   // RET-1 retrieval coverage, SR-1 SpacedReview ref validity).
