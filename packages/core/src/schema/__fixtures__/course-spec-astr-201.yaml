@@ -368,6 +368,14 @@ landing:
   hero:
     tagline: "A quantitative introduction to astrophysics — extracting physical insight from limited observations."
 
+# Optional consumer-declared assignment-kind vocabulary (ADR 0080 Am3):
+# slug → display label. Present → custom labels + the integration rejects
+# any assignments-registry `kind` not declared here (typo protection).
+assignment_kinds:
+  homework: "Homework"
+  project: "Project"
+  growth-memo: "Growth Memo"
+
 discovery:
   sections: "src/content/sections/*.json"
   units: "src/content/units/**/*.json"

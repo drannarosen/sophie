@@ -464,6 +464,58 @@ describe("CourseSpecSchema v0.2 — chrome clusters", () => {
   });
 });
 
+// ───────────────────────────────────────────────────────────────────
+// assignment_kinds — optional consumer-declared vocabulary (ADR 0080
+// Amendment 3). slug → label map. @sophie/core validates SHAPE ONLY; the
+// cross-file membership check (rejecting undeclared kinds against the
+// assignments registry) lives in the integration, not here.
+// ───────────────────────────────────────────────────────────────────
+
+describe("CourseSpecSchema — assignment_kinds (ADR 0080 Am3)", () => {
+  it("accepts a valid slug→label map and round-trips it", () => {
+    const data = valid();
+    const extended = {
+      ...data,
+      assignment_kinds: {
+        homework: "Homework",
+        project: "Project",
+        "growth-memo": "Growth Memo",
+      },
+    };
+    const parsed = CourseSpecSchema.parse(extended);
+    expect(parsed.assignment_kinds).toEqual({
+      homework: "Homework",
+      project: "Project",
+      "growth-memo": "Growth Memo",
+    });
+  });
+
+  it("parses when assignment_kinds is absent (optional)", () => {
+    const data = valid();
+    const { assignment_kinds: _omit, ...rest } = data;
+    const parsed = CourseSpecSchema.parse(rest);
+    expect(parsed.assignment_kinds).toBeUndefined();
+  });
+
+  it("rejects a non-slug key (e.g. 'Home Work')", () => {
+    const data = valid();
+    const broken = {
+      ...data,
+      assignment_kinds: { "Home Work": "Homework" },
+    };
+    expect(() => CourseSpecSchema.parse(broken)).toThrow();
+  });
+
+  it("rejects an empty-string value (NonEmptyString)", () => {
+    const data = valid();
+    const broken = {
+      ...data,
+      assignment_kinds: { homework: "" },
+    };
+    expect(() => CourseSpecSchema.parse(broken)).toThrow();
+  });
+});
+
 describe("CourseSpecSchema v0.2 — grading invariants", () => {
   it("rejects objectives[*].assessed_by entries that don't reference declared grading.categories (I3 cross-refine)", () => {
     const data = valid();

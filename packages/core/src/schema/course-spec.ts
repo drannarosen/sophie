@@ -355,6 +355,12 @@ export const CourseSpecSchema = z
     schedule_ref: z.string().optional(),
     info_pages: InfoPagesSchema.optional(),
     landing: LandingSchema.optional(),
+    // Optional consumer-declared assignment-kind vocabulary (ADR 0080 Am3):
+    // slug → label. Present → custom labels + integration rejects undeclared
+    // kinds (Task 7); absent → free slugs with humanized fallback. @sophie/core
+    // validates shape only; the cross-file membership check lives in the
+    // integration (both files visible there).
+    assignment_kinds: z.record(Slug, NonEmptyString).optional(),
   })
   .strict()
   // Cross-refine: every assessment.category_refs entry must reference a
