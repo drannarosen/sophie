@@ -183,17 +183,20 @@ const { moduleCount, lectureCount } = courseCounts(sections, units);
   /* ── Scoped Deep Field palette (ADR 0097 #4; NOT global tokens) ─────
      A dark-first designed surface. Promotion to theme tokens is a future
      palette/multi-theme ADR. AA-clean on the near-black ground:
-     ink ~16:1, ink-soft ~10:1, ink-muted ~5.1:1. */
+     ink ~16:1, ink-soft ~11:1, ink-muted ~6.6:1. (Contrast pass
+     2026-05-31: ink-muted + glass lifted a notch so the descriptive-band
+     labels, How-flow captions, and glass card/step surfaces read more
+     present on the masked-dark working area — deeper polish deferred.) */
   .sophie-home {
     --sophie-home-ground: #060611;
     --sophie-home-ink: #f3f4fb;
-    --sophie-home-ink-soft: #cdd0e3;
-    --sophie-home-ink-muted: #9498b6;
+    --sophie-home-ink-soft: #d6d9ea;
+    --sophie-home-ink-muted: #a9adc8;
     --sophie-home-teal: #4fd6c4;
     --sophie-home-violet: #a08bff;
     --sophie-home-rose: #ff8aa6;
-    --sophie-home-glass: rgba(255, 255, 255, 0.045);
-    --sophie-home-glass-brd: rgba(160, 170, 230, 0.18);
+    --sophie-home-glass: rgba(255, 255, 255, 0.06);
+    --sophie-home-glass-brd: rgba(170, 180, 235, 0.22);
     --sophie-home-glass-brd-lit: rgba(120, 225, 210, 0.45);
     --sophie-home-radius: 16px;
     --sophie-home-maxw: 1080px;
