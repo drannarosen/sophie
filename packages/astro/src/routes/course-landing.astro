@@ -1,12 +1,18 @@
 ---
-import {
-  HeroWithModules,
-  ProseWithToc,
-  SimpleList,
-} from "@sophie/components";
+import { ProseWithToc, SimpleList } from "@sophie/components";
 import { setSophieBaseUrl } from "@sophie/core/runtime";
 import { getCollection } from "astro:content";
 import { courseSpec } from "virtual:sophie/course-spec";
+import { homework } from "virtual:sophie/homework";
+import CourseHomeShell from "../components/course-home/CourseHomeShell.astro";
+import {
+  dueSoon,
+  startReading,
+} from "../components/course-home/home-card-projections";
+import {
+  howBand,
+  whyBand,
+} from "../components/course-home/home-projections";
 import InfoPageShell from "../components/InfoPageShell.astro";
 
 // Feed the consumer's Vite-replaced base to the externalized-in-Node
@@ -18,14 +24,20 @@ setSophieBaseUrl(import.meta.env.BASE_URL);
  * Course landing dispatcher. Pattern: `/`. Injected by
  * defineSophieIntegration when course.sophie.yaml is present.
  *
- * Reads `landing.layout` from the spec to pick one of the three
- * built-in layouts (`simple-list`, `hero-with-modules`,
- * `prose-with-toc`). When `"custom"` is declared, the consumer must
- * shadow this route with their own `src/pages/index.astro` (per
- * H2/B4 — schema is the declarative locus; the override path was
- * future-proofed in landing-schema). v0.2 ships SimpleList as the
- * real implementation; the other two delegate to it pending follow-up
- * sprints.
+ * Reads `landing.layout` from the spec to pick a built-in layout:
+ * `"dashboard"` (and its `"hero-with-modules"` alias, ADR 0097 #1) →
+ * the <CourseHomeShell> Deep Field dashboard; `"simple-list"` /
+ * `"prose-with-toc"` → the lighter @sophie/components layouts. When
+ * `"custom"` is declared, the consumer must shadow this route with
+ * their own `src/pages/index.astro` (per H2/B4 — schema is the
+ * declarative locus; the override path was future-proofed in
+ * landing-schema).
+ *
+ * SHELL OWNERSHIP (ADR 0097 #2): <CourseHomeShell> renders the WHOLE
+ * document (`<html>/<head>` via shared <SophieHead> + <HomeBackground>
+ * + <body>), so the dashboard branch is NOT wrapped in <InfoPageShell>;
+ * the simple-list / prose-with-toc layouts render only a `<main>` and
+ * still mount inside <InfoPageShell> for the document chrome.
  */
 // Defensive null guard — runtime-unreachable today because the
 // integration only injects `/` when courseSpec is non-null, but
@@ -46,14 +58,45 @@ const layoutKey = courseSpec.landing?.layout ?? "simple-list";
 if (layoutKey === "custom") {
   throw new Error(
     "[sophie] landing.layout: 'custom' requires a consumer-shadow at src/pages/index.astro. " +
-      "Either author the override file or change landing.layout to one of: simple-list, hero-with-modules, prose-with-toc."
+      "Either author the override file or change landing.layout to one of: dashboard, hero-with-modules, simple-list, prose-with-toc."
   );
 }
+
+// `dashboard` is canonical; `hero-with-modules` is its documented alias
+// (ADR 0097 #1). Both resolve to <CourseHomeShell>.
+const isDashboard =
+  layoutKey === "dashboard" || layoutKey === "hero-with-modules";
 
 // Sections + units shape the unit-list rendering; the layout filters
 // (draft units) + sorts (by `order`) internally.
 const sections = (await getCollection("sections")).map((s) => s.data);
 const units = (await getCollection("units")).map((u) => u.data);
+
+// ── Dashboard projections (ADR 0097 #2/#3/#7) ──────────────────────
+// Single build wall-clock read for the calendar-aware Due-Soon card.
+// Build-time-only `new Date()` (no workflow script; mirrors
+// solutions.astro's one wall-clock read) → injected into the pure
+// `dueSoon` projection so the date logic stays testable.
+//
+// `homework` (virtual:sophie/homework, HomeworkRegistry | null) is
+// OPTIONAL — NOT R12-narrowed: the Due-Soon card degrades to nothing
+// when null (ADR 0097 #7). `dueSoon` null-guards it internally, and no
+// direct property access happens here, so no narrowing throw is needed
+// (R12 scopes to course-spec, which IS narrowed above).
+const now = new Date();
+const dueSoonItems = isDashboard ? dueSoon(homework, now) : [];
+const startReadingLink = isDashboard ? startReading(units) : undefined;
+const why = isDashboard
+  ? whyBand(courseSpec.identity.description, courseSpec.pedagogy.named_tools)
+  : undefined;
+const how = isDashboard
+  ? howBand(
+      courseSpec.pedagogy.required_moves,
+      courseSpec.pedagogy.multi_track_readings
+    )
+  : undefined;
+const tagline =
+  courseSpec.landing?.hero?.tagline ?? courseSpec.identity.subtitle;
 ---
 
 {/*
@@ -70,17 +113,34 @@ const units = (await getCollection("units")).map((u) => u.data);
   ("No matching import has been found for `Layout`"), so each layout
   is rendered by an explicit conditional instead.
 */}
-<InfoPageShell
-  title={`${courseSpec.identity.code} — ${courseSpec.identity.title}`}
-  description={courseSpec.identity.description}
->
-  {layoutKey === "simple-list" && (
-    <SimpleList spec={courseSpec} sections={sections} units={units} />
-  )}
-  {layoutKey === "hero-with-modules" && (
-    <HeroWithModules spec={courseSpec} sections={sections} units={units} />
-  )}
-  {layoutKey === "prose-with-toc" && (
-    <ProseWithToc spec={courseSpec} sections={sections} units={units} />
-  )}
-</InfoPageShell>
+{
+  isDashboard ? (
+    <CourseHomeShell
+      code={courseSpec.identity.code}
+      title={courseSpec.identity.title}
+      tagline={tagline}
+      instructor={courseSpec.identity.instructor}
+      institution={courseSpec.identity.institution}
+      term={courseSpec.identity.term}
+      sections={sections}
+      units={units}
+      infoPages={courseSpec.info_pages}
+      why={why}
+      how={how}
+      dueSoon={dueSoonItems}
+      startReading={startReadingLink}
+    />
+  ) : (
+    <InfoPageShell
+      title={`${courseSpec.identity.code} — ${courseSpec.identity.title}`}
+      description={courseSpec.identity.description}
+    >
+      {layoutKey === "simple-list" && (
+        <SimpleList spec={courseSpec} sections={sections} units={units} />
+      )}
+      {layoutKey === "prose-with-toc" && (
+        <ProseWithToc spec={courseSpec} sections={sections} units={units} />
+      )}
+    </InfoPageShell>
+  )
+}

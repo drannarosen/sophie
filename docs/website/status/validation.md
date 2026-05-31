@@ -24,22 +24,22 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 | Status | Count |
 |---|---|
 | Validated | 40 |
-| In progress | 22 |
+| In progress | 23 |
 | Unvalidated | 62 |
 | Re-validation needed | 0 |
 | Missing block | 1 |
-| Total | 125 |
+| Total | 126 |
 
 ## Lifecycle summary
 
 | Lifecycle | Count |
 |---|---|
 | Shipped | 74 |
-| Accepted design | 41 |
+| Accepted design | 42 |
 | Mixed | 1 |
 | Future package split | 9 |
 | No status | 0 |
-| Total | 125 |
+| Total | 126 |
 
 ## Evidence kinds
 
@@ -47,7 +47,7 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 |---|---|
 | test | 131 |
 | chapter | 9 |
-| review | 34 |
+| review | 36 |
 | deployment | 85 |
 | audit | 9 |
 | manual | 40 |
@@ -157,6 +157,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0094-build-time-figure-optimization.md](/build-time-figure-optimization/) | _missing_ | accepted design | — | — | no validation block |
 | [docs/website/decisions/0095-global-css-delivery-shared-document-head.md](/global-css-delivery-shared-document-head/) | validated | shipped | 2026-05-30 | deployment, test |  |
 | [docs/website/decisions/0096-deploy-time-gated-content.md](/deploy-time-gated-content/) | in progress | accepted design | 2026-05-30 | review | Approved design, not yet shipped. Real protection depends on a private source repo (`astrobytes-edu/astr201`) plus a daily rebuild cadence; the gate is build-time exclusion from `dist/`, not a runtime check (Sophie has no server — ADR 0001). The security-acceptance test in PR 2 (grep `dist/` for a sentinel) is the proof obligation that flips `validation.status` to `validated`. Amends astr201 decision 0001 §4 + §6 (lecture solutions fold into readings; homework/exam solutions deferred as an assessment concern): solutions are now migrated, gated.  |
+| [docs/website/decisions/0097-course-home-dashboard.md](/course-home-dashboard/) | in progress | accepted design | 2026-05-31 | review | Approved design, not yet shipped. The dashboard is the realized form of the course-spec `hero-with-modules` landing layout (astr201's spec anticipates the auto-upgrade); `dashboard` is its canonical name, `hero-with-modules` a documented alias. Cards needing schedule (ADR 0098) / announcements (ADR 0099) degrade to render-nothing until those land. Extends ADR 0080 (course-spec landing) and composes with ADR 0005 (theming); the home-background theme registry is the seam a future palette/multi-theme ADR extends.  |
 
 ### Reference docs
 

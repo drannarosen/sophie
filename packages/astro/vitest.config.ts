@@ -106,6 +106,14 @@ const config: ViteUserConfigWithTest = {
         "src/integration.ts",
         "src/mdx-config.ts",
         "src/client/**",
+        // Browser-only canvas/rAF renderer (ADR 0097): `initStarfield`
+        // reads canvas 2D context, requestAnimationFrame, matchMedia, and
+        // visibilitychange — none available under jsdom/node. Exercised at
+        // the smoke e2e level (Task 7), same category as `src/client/**`.
+        // Its PURE distribution core (`generateStars` + the tables) is
+        // unit-tested in `starfield-engine.test.ts` regardless of this
+        // coverage exclusion; only the untestable render loop is excluded.
+        "src/components/backgrounds/starfield-engine.ts",
         // Test-only Astro project fixture.
         "test-fixtures/**",
       ],
@@ -115,10 +123,10 @@ const config: ViteUserConfigWithTest = {
       // Bump UPWARD as coverage rises, never down. Self-enforcing — the
       // `vitest run --coverage` in CI's unit job exits non-zero below floor.
       thresholds: {
-        statements: 89,
-        branches: 79,
-        functions: 92,
-        lines: 91,
+        statements: 90,
+        branches: 80,
+        functions: 94,
+        lines: 92,
       },
     },
   },

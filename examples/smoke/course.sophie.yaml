@@ -1,0 +1,104 @@
+# Course Spec for examples/smoke — exercises the course-home dashboard.
+#
+# Minimal-but-valid v0.2 shape whose job here is to make the in-repo
+# (live-dist) smoke consumer inject + build the `/` course-landing
+# dispatcher with `landing.layout: "dashboard"` → <CourseHomeShell>
+# (ADR 0097, Task 7). Field shapes mirror the canonical fixture
+# (packages/core/.../course-spec-astr-201.yaml) and the packed-smoke
+# guard spec; `info_pages` is intentionally omitted (no prose fixtures
+# in smoke) so only the home + section landings are exercised.
+
+identity:
+  id: smoke
+  title: Sophie Smoke Course
+  code: SMOKE 100
+  term: Spring 2026
+  institution: Sophie Platform
+  instructor: Test Harness
+  voice: anna-rosen
+  voice_register: sophomore-quantitative
+  subtitle: Vertical-slice smoke consumer for the course-home dashboard.
+  description: >
+    A synthetic course spec that drives the in-repo smoke consumer's
+    course-home dashboard so the Deep Field landing builds end to end
+    through every @sophie/* package.
+
+audience:
+  level: undergraduate-sophomore
+  majors_minors: [test-major]
+  enrollment_motivation: Synthetic smoke consumer.
+  prerequisites:
+    courses: []
+    assumed_skills: []
+    scaffolded_skills: []
+  affective_profile: Not applicable — synthetic fixture.
+
+pedagogy:
+  pattern: observable_model_inference
+  required_moves:
+    observable: What we measure.
+    model: What we believe.
+    inference: What we can claim.
+    assumption-audit: Where it breaks.
+  named_tools:
+    - id: dimensional-analysis
+      tagline: A smoke detector for physics.
+    - id: ratio-method
+      tagline: Escape giant numbers.
+  multi_track_readings:
+    enabled: true
+    tracks:
+      - id: core
+        label: Track A
+        target_time: 20-min
+      - id: deep
+        label: Track B
+        target_time: 30-min
+        deeper: true
+  callouts: []
+
+terminal_goals:
+  - id: TG1
+    tag: build-dashboard
+    statement: >
+      Exercise the course-home dashboard end to end in the in-repo
+      smoke consumer so CI guards the landing render path.
+    contributing_modules: [foundations]
+
+principles: []
+
+assessment:
+  philosophy: Synthetic fixture; no real assessment surface.
+  category_refs: [homework]
+
+grading:
+  categories:
+    - id: homework
+      name: Homework
+      weight: 1.0
+  letter_scale:
+    - { grade: "A", min: 90 }
+    - { grade: "B", min: 80 }
+    - { grade: "C", min: 70 }
+    - { grade: "D", min: 60 }
+    - { grade: "F", min: 0 }
+
+quality_bars:
+  required: []
+  recommended: []
+
+landing:
+  layout: dashboard
+  hero:
+    tagline: Extract physical insight from limited observations.
+
+discovery:
+  sections: "src/content/sections/*.json"
+  units: "src/content/units/**/*.json"
+  artifacts: "src/content/sections/**/*.mdx"
+  registries:
+    equations: "src/content/equations/**/*.mdx"
+    figures: "src/content/figures.ts"
+
+spec_version: "0.1"
+schema: "@sophie/schemas/course-spec@0.1"

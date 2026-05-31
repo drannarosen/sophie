@@ -15,7 +15,8 @@
       "!_archive",
       "!**/coverage",
       "!**/.turbo",
-      "!**/node_modules"
+      "!**/node_modules",
+      "!docs/reviews/assets"
     ]
   },
   "formatter": {

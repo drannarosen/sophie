@@ -1,0 +1,108 @@
+---
+/**
+ * <HomeBackground theme?="..." /> — the pluggable course-home background
+ * slot (ADR 0097 #4/#5). Chrome (role-less by ADR 0058).
+ *
+ * Resolves a theme id → background descriptor via `resolveHomeBackground`
+ * (the single swap point) and renders it. The only theme today is the
+ * vendored `starfield`, which renders THREE layers, back to front:
+ *
+ *   1. `.sky` — a pure-CSS nebula-mesh ground. This is the **no-JS
+ *      fallback**: it is present and painted with zero script execution,
+ *      so the home is never a black void.
+ *   2. a decorative photometric `canvas#starfield`, drawn by
+ *      `initStarfield` from a bundled script element. A vertical
+ *      hero-falloff `mask-image` keeps the field full-strength through the
+ *      hero and eases it over the working area so cards/text below stay
+ *      legible. `aria-hidden` because it is decorative.
+ *   3. (caller owns content + grain, above this background.)
+ *
+ * Scope (per ADR 0097 #5) is the CALLER's concern: mount this on the
+ * course home + section landings only, never reading/practice. This
+ * component just renders the background it is given.
+ *
+ * Script shape: a BUNDLED script element (NOT `is:inline`) — Astro
+ * processes it, so it can `import` the engine module. `initStarfield`
+ * itself reads `prefers-reduced-motion` (→ one static frame, no loop) and
+ * pauses on a hidden tab; the no-JS fallback is the `.sky` layer above.
+ *
+ * (This docblock deliberately avoids the literal script open/close tags:
+ * the tsup entry-discovery walk regex-scans `.astro` script bodies, and a
+ * stray tag pair in prose would corrupt its chunking. See
+ * `build/discover-astro-entries.ts`.)
+ */
+import {
+  type BackgroundDescriptor,
+  resolveHomeBackground,
+} from "./themes";
+
+interface Props {
+  /** Theme id; absent/unknown → the default (`starfield`). */
+  theme?: string;
+}
+
+const { theme } = Astro.props;
+const descriptor: BackgroundDescriptor = resolveHomeBackground(theme);
+---
+
+{
+  descriptor.kind === "starfield" && (
+    <>
+      <div class='sophie-home-bg__sky' aria-hidden='true' />
+      <canvas id='starfield' class='sophie-home-bg__canvas' aria-hidden='true' />
+    </>
+  )
+}
+
+<script>
+  import { initStarfield } from "./starfield-engine";
+
+  const canvas = document.getElementById(
+    "starfield"
+  ) as HTMLCanvasElement | null;
+  if (canvas) initStarfield(canvas);
+</script>
+
+<style>
+  /* `.sky` is the no-JS fallback: a pure-CSS layered nebula mesh that
+     renders without any script. Bluer + deeper than the #0a0a0a token —
+     the Deep Field "deep sky" ground (ADR 0097). */
+  .sophie-home-bg__sky {
+    position: fixed;
+    inset: 0;
+    z-index: -3;
+    pointer-events: none;
+    background:
+      radial-gradient(60% 50% at 18% 8%, rgba(160, 139, 255, 0.2), transparent 60%),
+      radial-gradient(55% 45% at 88% 14%, rgba(79, 214, 196, 0.16), transparent 62%),
+      radial-gradient(70% 60% at 50% 110%, rgba(124, 80, 160, 0.16), transparent 60%),
+      linear-gradient(180deg, #060611, #0a0a1c 70%, #060611);
+  }
+
+  /* The photometric canvas, masked so it is full-strength through the
+     hero and eases to ~45% over the working area below (ambient-plus
+     vertical falloff). Transparent over `.sky`. Decorative → aria-hidden. */
+  .sophie-home-bg__canvas {
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    width: 100%;
+    height: 100%;
+    display: block;
+    pointer-events: none;
+    -webkit-mask-image: linear-gradient(
+      180deg,
+      #000 0%,
+      #000 34%,
+      rgba(0, 0, 0, 0.5) 72%,
+      rgba(0, 0, 0, 0.42) 100%
+    );
+    mask-image: linear-gradient(
+      180deg,
+      #000 0%,
+      #000 34%,
+      rgba(0, 0, 0, 0.5) 72%,
+      rgba(0, 0, 0, 0.42) 100%
+    );
+  }
+</style>

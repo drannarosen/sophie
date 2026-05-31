@@ -149,6 +149,18 @@ const CHROME: ReadonlyArray<readonly [string, string]> = [
     "instructor contact card (name/email/response window); course-info chrome",
   ],
   [
+    "CourseHero",
+    "course-home masthead (eyebrow/title/tagline/meta); course-info chrome (lives in @sophie/astro, outside this gate's scope — documentary)",
+  ],
+  [
+    "CourseHomeShell",
+    "course-home dashboard page shell (ADR 0097); assembles hero/cards/modules/footer over HomeBackground; page chrome (lives in @sophie/astro, outside this gate's scope — documentary)",
+  ],
+  [
+    "CourseMenu",
+    "course-home global dropdown nav (grouped all-pages menu; ADR 0097 #6); navigation chrome (lives in @sophie/astro, outside this gate's scope — documentary)",
+  ],
+  [
     "CourseLanding",
     "course landing layout (hero-with-modules / simple-list); page chrome",
   ],
@@ -187,8 +199,20 @@ const CHROME: ReadonlyArray<readonly [string, string]> = [
     "pure SSR layout container (CSS Grid 1–4 cols); strict chrome per its header",
   ],
   [
+    "HomeBackground",
+    "pluggable course-home background slot (ADR 0097); decorative atmosphere, role-less chrome (lives in @sophie/astro, outside this gate's scope — documentary)",
+  ],
+  [
+    "HomeQuickLinks",
+    "course-home footer quick-links projected from info_pages (ADR 0097); navigation chrome (lives in @sophie/astro, outside this gate's scope — documentary)",
+  ],
+  [
     "Hint",
     "formative reveal: disclosure container; the role lives on the wrapped reasoning, not the reveal (domain pass 2026-05-29)",
+  ],
+  [
+    "HowBand",
+    'course-home "How each lecture works" band; chrome PROJECTION of pedagogy.required_moves + multi_track_readings (ADR 0097 #3), not a pedagogy primitive (lives in @sophie/astro, outside this gate\'s scope — documentary)',
   ],
   [
     "InteractiveCheckbox",
@@ -205,6 +229,10 @@ const CHROME: ReadonlyArray<readonly [string, string]> = [
   [
     "MCQ",
     "formative family: assessment is a teaching move (ADR 0041), not a role; the role lives on the wrapped question content (domain pass 2026-05-29)",
+  ],
+  [
+    "ModuleList",
+    "course-home module roll-up (named-region list of sections; ADR 0097); navigation chrome (lives in @sophie/astro, outside this gate's scope — documentary)",
   ],
   [
     "MultiRep",
@@ -226,6 +254,10 @@ const CHROME: ReadonlyArray<readonly [string, string]> = [
   [
     "OfficeHoursChrome",
     "inline office-hours surface from spec.office_hours; course-management chrome",
+  ],
+  [
+    "OrientationCards",
+    "course-home three-card orientation row (This Week/Due Soon/Start Reading; ADR 0097); named-region chrome (lives in @sophie/astro, outside this gate's scope — documentary)",
   ],
   [
     "OfficeHoursTable",
@@ -293,6 +325,10 @@ const CHROME: ReadonlyArray<readonly [string, string]> = [
     "queued spaced-review surface from the practice queue; retrieval-practice chrome",
   ],
   [
+    "Starfield",
+    "vendored photometric Canvas 2D starfield engine for HomeBackground (ADR 0097); decorative atmosphere, role-less chrome (the @sophie/astro engine module, outside this gate's scope — documentary)",
+  ],
+  [
     "Tabs",
     "ARIA-tabs disclosure container (static markup + controller island); chrome",
   ],
@@ -304,6 +340,10 @@ const CHROME: ReadonlyArray<readonly [string, string]> = [
   [
     "Week",
     "inline week-of-term label; chrome (header: no epistemic role declared)",
+  ],
+  [
+    "WhyBand",
+    'course-home "Why this course is different" band; chrome PROJECTION of identity.description + named_tools (ADR 0097 #3) with two fixed editorial pillars, not a pedagogy primitive (lives in @sophie/astro, outside this gate\'s scope — documentary)',
   ],
 ];
 

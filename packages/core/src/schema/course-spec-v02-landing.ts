@@ -11,6 +11,12 @@ import { NonEmptyString } from "./primitives.js";
  * override: with `"custom"` declared, the override path is explicit;
  * without it, the schema enum picks one of the three built-ins. One
  * declarative locus of truth, not two.
+ *
+ * `"dashboard"` is the canonical name for the course-home dashboard
+ * (ADR 0097); `"hero-with-modules"` is a documented alias that resolves
+ * to the same layout downstream (honors astr201's spec comment that
+ * `hero-with-modules` auto-upgrades with no spec change). New courses
+ * should use `"dashboard"`.
  */
 const HeroSchema = z
   .object({
@@ -30,7 +36,13 @@ const HeroSchema = z
 export const LandingSchema = z
   .object({
     layout: z
-      .enum(["hero-with-modules", "simple-list", "prose-with-toc", "custom"])
+      .enum([
+        "dashboard",
+        "hero-with-modules",
+        "simple-list",
+        "prose-with-toc",
+        "custom",
+      ])
       .default("simple-list"),
     hero: HeroSchema.optional(),
     show_announcements: z.boolean().optional(),

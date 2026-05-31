@@ -1,0 +1,102 @@
+---
+/**
+ * <CourseHero /> — the course-home masthead (ADR 0097 #2). Eyebrow
+ * (instructor · institution · term, instructor first), Fraunces display
+ * title, tagline, and a meta line (code · N modules · M lectures).
+ *
+ * Chrome (role-less, ADR 0058): a course-info projection, not pedagogy.
+ * All type comes from the local `@sophie/theme` font vars — Fraunces via
+ * `--sophie-font-serif`, the mono eyebrow/meta via `--sophie-font-mono`.
+ */
+import { assembleEyebrow } from "./home-projections";
+
+interface Props {
+  instructor: string;
+  institution: string;
+  term: string;
+  /** Display title; rendered in Fraunces. */
+  title: string;
+  /** One-line course tagline. */
+  tagline: string;
+  /** Course code, e.g. "ASTR 201". */
+  code: string;
+  moduleCount: number;
+  lectureCount: number;
+}
+
+const { instructor, institution, term, title, tagline, code, moduleCount, lectureCount } =
+  Astro.props;
+
+const eyebrow = assembleEyebrow(instructor, institution, term);
+---
+
+<header class='sophie-home-hero'>
+  <p class='sophie-home-hero__eyebrow'>{eyebrow}</p>
+  <h1 class='sophie-home-hero__title'>{title}</h1>
+  <div class='sophie-home-hero__rule' aria-hidden='true'></div>
+  <p class='sophie-home-hero__tagline'>{tagline}</p>
+  <p class='sophie-home-hero__meta'>
+    <span>{code}</span>
+    <span class='sophie-home-hero__dot' aria-hidden='true'></span>
+    <span>{moduleCount} modules · {lectureCount} lectures</span>
+  </p>
+</header>
+
+<style>
+  .sophie-home-hero {
+    padding: clamp(3rem, 9vw, 6.5rem) 0 clamp(2rem, 5vw, 3.5rem);
+  }
+  .sophie-home-hero__eyebrow {
+    font-family: var(--sophie-font-mono);
+    font-size: 0.74rem;
+    letter-spacing: 0.34em;
+    text-transform: uppercase;
+    color: var(--sophie-home-teal);
+    margin: 0 0 1.1rem;
+  }
+  .sophie-home-hero__title {
+    font-family: var(--sophie-font-serif);
+    font-optical-sizing: auto;
+    font-weight: 500;
+    font-size: clamp(3rem, 9vw, 6.2rem);
+    line-height: 0.98;
+    letter-spacing: -0.02em;
+    margin: 0;
+    color: var(--sophie-home-ink);
+    background: linear-gradient(176deg, #ffffff 30%, #cfe9ff 70%, #9fe4d8);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 60px rgba(150, 200, 255, 0.18);
+  }
+  .sophie-home-hero__rule {
+    margin-top: 2rem;
+    height: 1px;
+    width: min(420px, 70%);
+    background: linear-gradient(90deg, var(--sophie-home-teal), transparent);
+    box-shadow: 0 0 12px rgba(79, 214, 196, 0.4);
+  }
+  .sophie-home-hero__tagline {
+    margin: 1.6rem 0 0;
+    max-width: 56ch;
+    color: var(--sophie-home-ink-soft);
+    font-size: 1.05rem;
+  }
+  .sophie-home-hero__meta {
+    margin: 1.5rem 0 0;
+    font-family: var(--sophie-font-mono);
+    font-size: 0.86rem;
+    letter-spacing: 0.04em;
+    color: var(--sophie-home-ink-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    flex-wrap: wrap;
+  }
+  .sophie-home-hero__dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--sophie-home-ink-muted);
+  }
+</style>
