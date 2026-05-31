@@ -3,11 +3,18 @@ import { describe, expect, test } from "vitest";
 import {
   assembleEyebrow,
   courseCounts,
+  howBand,
+  howFlow,
   infoPageLabel,
   lectureCountForSection,
   moduleRows,
   navGroups,
   quickLinks,
+  toolkitPillarBody,
+  trackNote,
+  whyBand,
+  whyLead,
+  whyPillars,
 } from "./home-projections.ts";
 
 /** A `module`-variant section fixture. */
@@ -245,5 +252,198 @@ describe("navGroups", () => {
       "math-physics-review",
       "practice-problems",
     ]);
+  });
+});
+
+// ─── Descriptive-band projections (ADR 0097 #3) ─────────────────────
+
+/** The real astr201 named_tools shape (id + tagline). */
+const ASTR201_TOOLS = [
+  { id: "dimensional-analysis", tagline: "The smoke detector for physics." },
+  { id: "ratio-method", tagline: "Escape the paralysis of giant numbers." },
+  {
+    id: "order-of-magnitude-estimation",
+    tagline: "One sig fig keeps you grounded.",
+  },
+  {
+    id: "unit-conversions",
+    tagline: "Move between SI and CGS without panicking.",
+  },
+];
+
+/** The real astr201 required_moves shape (key → description). */
+const ASTR201_MOVES = {
+  observable: "What we measure (parallax angle, color, line spectrum)",
+  model: "What we believe (geometric, atomic, gravitational)",
+  inference: "What we can claim (distance, T, M, composition, L)",
+  "assumption-audit": "What we leaned on; where it breaks",
+};
+
+const ASTR201_TRACKS = {
+  enabled: true,
+  tracks: [
+    { id: "core", label: "Track A", target_time: "20-min" },
+    { id: "enrichment", label: "Track B", target_time: "30-min", deeper: true },
+  ],
+};
+
+describe("whyLead", () => {
+  test("projects the first sentence of identity.description", () => {
+    expect(
+      whyLead(
+        "This is not a tour of the cosmos. ASTR 201 teaches you to think like an astronomer."
+      )
+    ).toBe("This is not a tour of the cosmos.");
+  });
+
+  test("collapses whitespace from a folded YAML scalar", () => {
+    expect(whyLead("Wonder-first\n  → physics-second. The rest.")).toBe(
+      "Wonder-first → physics-second."
+    );
+  });
+
+  test("returns the whole string when there is no sentence terminator", () => {
+    expect(whyLead("A single clause with no period")).toBe(
+      "A single clause with no period"
+    );
+  });
+
+  test("absent / blank description → undefined (graceful omission)", () => {
+    expect(whyLead(undefined)).toBeUndefined();
+    expect(whyLead("   ")).toBeUndefined();
+  });
+});
+
+describe("toolkitPillarBody", () => {
+  test("projects the named_tools ids into a humanized Oxford-comma list", () => {
+    expect(toolkitPillarBody(ASTR201_TOOLS)).toBe(
+      "Dimensional analysis, ratio method, order of magnitude estimation, and unit conversions — reasoning skills that outlast any single equation."
+    );
+  });
+
+  test("absent / empty named_tools → undefined (pillar omitted upstream)", () => {
+    expect(toolkitPillarBody(undefined)).toBeUndefined();
+    expect(toolkitPillarBody([])).toBeUndefined();
+  });
+});
+
+describe("whyPillars", () => {
+  test("full spec → three pillars in prototype order (observe · toolkit · models)", () => {
+    const pillars = whyPillars(ASTR201_TOOLS);
+    expect(pillars.map((p) => p.key)).toEqual([
+      "observation",
+      "toolkit",
+      "models",
+    ]);
+    // The toolkit pillar's body is the PROJECTED tools list.
+    expect(pillars[1]?.body).toContain("Dimensional analysis");
+  });
+
+  test("absent named_tools → toolkit pillar dropped, fixed pillars remain", () => {
+    const pillars = whyPillars(undefined);
+    expect(pillars.map((p) => p.key)).toEqual(["observation", "models"]);
+    // No empty shell: every surviving pillar carries a body.
+    expect(pillars.every((p) => p.body.length > 0)).toBe(true);
+  });
+});
+
+describe("whyBand", () => {
+  test("full spec → projected lead + three pillars", () => {
+    const band = whyBand(
+      "ASTR 201 teaches you to think like an astronomer. More text.",
+      ASTR201_TOOLS
+    );
+    expect(band.lead).toBe("ASTR 201 teaches you to think like an astronomer.");
+    expect(band.pillars).toHaveLength(3);
+  });
+
+  test("absent description + tools → no lead, two fixed pillars (no crash)", () => {
+    const band = whyBand(undefined, undefined);
+    expect(band.lead).toBeUndefined();
+    expect(band.pillars).toHaveLength(2);
+  });
+});
+
+describe("howFlow", () => {
+  test("projects required_moves keys+values verbatim, in insertion order", () => {
+    const flow = howFlow(ASTR201_MOVES);
+    expect(flow).toEqual([
+      {
+        key: "observable",
+        label: "Observable",
+        caption: "What we measure (parallax angle, color, line spectrum)",
+      },
+      {
+        key: "model",
+        label: "Model",
+        caption: "What we believe (geometric, atomic, gravitational)",
+      },
+      {
+        key: "inference",
+        label: "Inference",
+        caption: "What we can claim (distance, T, M, composition, L)",
+      },
+      {
+        key: "assumption-audit",
+        label: "Assumption audit",
+        caption: "What we leaned on; where it breaks",
+      },
+    ]);
+  });
+
+  test("uses the REAL move labels, not hardcoded OMI (distinct fixture)", () => {
+    const flow = howFlow({
+      "gather-data": "collect the photons",
+      "fit-curve": "regress the model",
+    });
+    expect(flow.map((s) => s.label)).toEqual(["Gather data", "Fit curve"]);
+    expect(flow.map((s) => s.caption)).toEqual([
+      "collect the photons",
+      "regress the model",
+    ]);
+  });
+
+  test("absent / empty required_moves → [] (band omitted, graceful)", () => {
+    expect(howFlow(undefined)).toEqual([]);
+    expect(howFlow({})).toEqual([]);
+  });
+});
+
+describe("trackNote", () => {
+  test("projects enabled multi_track_readings labels + target times", () => {
+    expect(trackNote(ASTR201_TRACKS)).toEqual({
+      tracks: [
+        { label: "Track A", time: "20-min" },
+        { label: "Track B", time: "30-min" },
+      ],
+    });
+  });
+
+  test("degrades on every absence path → undefined", () => {
+    expect(trackNote(undefined)).toBeUndefined();
+    expect(
+      trackNote({ enabled: false, tracks: ASTR201_TRACKS.tracks })
+    ).toBeUndefined();
+    expect(trackNote({ enabled: true, tracks: [] })).toBeUndefined();
+  });
+});
+
+describe("howBand", () => {
+  test("full spec → flow + track note", () => {
+    const band = howBand(ASTR201_MOVES, ASTR201_TRACKS);
+    expect(band.flow).toHaveLength(4);
+    expect(band.note?.tracks).toHaveLength(2);
+  });
+
+  test("absent required_moves → empty flow (band degrades to nothing)", () => {
+    const band = howBand(undefined, undefined);
+    expect(band.flow).toEqual([]);
+    expect(band.note).toBeUndefined();
+  });
+
+  test("moves present but tracks absent → flow without note", () => {
+    const band = howBand(ASTR201_MOVES, undefined);
+    expect(band.flow).toHaveLength(4);
+    expect(band.note).toBeUndefined();
   });
 });

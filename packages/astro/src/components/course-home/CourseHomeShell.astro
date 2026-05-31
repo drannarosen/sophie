@@ -39,10 +39,16 @@ import HomeBackground from "../backgrounds/HomeBackground.astro";
 import CourseHero from "./CourseHero.astro";
 import CourseMenu from "./CourseMenu.astro";
 import HomeQuickLinks from "./HomeQuickLinks.astro";
+import HowBand from "./HowBand.astro";
 import ModuleList from "./ModuleList.astro";
 import OrientationCards from "./OrientationCards.astro";
 import SophieHead from "../SophieHead.astro";
-import { courseCounts } from "./home-projections.ts";
+import WhyBand from "./WhyBand.astro";
+import {
+  courseCounts,
+  type HowBandData,
+  type WhyBandData,
+} from "./home-projections.ts";
 import type { SectionEntry, UnitEntry } from "@sophie/core/schema";
 
 interface Props {
@@ -59,6 +65,18 @@ interface Props {
   units: ReadonlyArray<UnitEntry>;
   /** The course-spec `info_pages` record (slug → declaration), if any. */
   infoPages?: Readonly<Record<string, unknown>>;
+  /**
+   * "Why this course is different" band data, projected from the spec's
+   * `identity` + `pedagogy` clusters (`whyBand()`). Always present in the
+   * dashboard path; the band carries ≥2 fixed pillars (ADR 0097 #3).
+   */
+  why?: WhyBandData;
+  /**
+   * "How each lecture works" band data, projected from `pedagogy`
+   * (`howBand()`). Omitted when `flow` is empty (absent `required_moves`),
+   * so the band degrades to nothing (ADR 0097 #3/#7).
+   */
+  how?: HowBandData;
   /** Home-background theme id; absent → default (`starfield`). */
   theme?: string;
 }
@@ -73,6 +91,8 @@ const {
   sections,
   units,
   infoPages,
+  why,
+  how,
   theme,
 } = Astro.props;
 
@@ -116,13 +136,21 @@ const { moduleCount, lectureCount } = courseCounts(sections, units);
 
           <OrientationCards />
 
-          {/* Task 5: "Why this course is different" projection band. */}
-          <slot name='why-band' />
+          {/* "Why this course is different" projection band (ADR 0097 #3).
+              Default slot content; consumers may override the slot. */}
+          <slot name='why-band'>
+            {why && <WhyBand lead={why.lead} pillars={why.pillars} />}
+          </slot>
 
           <ModuleList sections={sections} units={units} />
 
-          {/* Task 5: "How each lecture works" projection band. */}
-          <slot name='how-band' />
+          {/* "How each lecture works" projection band (ADR 0097 #3).
+              Omitted when `flow` is empty (degrades to nothing, #7). */}
+          <slot name='how-band'>
+            {how && how.flow.length > 0 && (
+              <HowBand flow={how.flow} note={how.note} />
+            )}
+          </slot>
         </main>
 
         <HomeQuickLinks infoPages={infoPages} />

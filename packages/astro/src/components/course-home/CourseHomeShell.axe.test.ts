@@ -28,6 +28,7 @@ import { JSDOM } from "jsdom";
 import { describe, expect, test } from "vitest";
 import { setupAxeDom } from "../../test-utils/container-axe.ts";
 import CourseHomeShell from "./CourseHomeShell.astro";
+import { howBand, whyBand } from "./home-projections.ts";
 
 const { axe, toHaveNoViolations } = setupAxeDom();
 expect.extend(toHaveNoViolations as never);
@@ -84,6 +85,28 @@ const PROPS = {
     "office-hours": {},
     instructor: {},
   },
+  why: whyBand(
+    "ASTR 201 teaches you to think like an astronomer. Wonder-first.",
+    [
+      { id: "dimensional-analysis", tagline: "Smoke detector for physics." },
+      { id: "ratio-method", tagline: "Escape giant numbers." },
+    ]
+  ),
+  how: howBand(
+    {
+      observable: "What we measure",
+      model: "What we believe",
+      inference: "What we can claim",
+      "assumption-audit": "Where it breaks",
+    },
+    {
+      enabled: true,
+      tracks: [
+        { id: "core", label: "Track A", target_time: "20-min" },
+        { id: "deep", label: "Track B", target_time: "30-min", deeper: true },
+      ],
+    }
+  ),
 };
 
 /** Render the full-document shell to a string via the Container API. */
@@ -169,6 +192,25 @@ describe("CourseHomeShell — axe-core a11y + landmark structure", () => {
     const html = await renderShell();
     expect(html).toContain("sophie-home-bg__sky");
     expect(html).toContain('id="starfield"');
+  });
+
+  test("descriptive bands render into their slots (projected data)", async () => {
+    const html = await renderShell();
+    // Why band: projected lead + projected toolkit pillar.
+    expect(html).toContain("Why this course is different");
+    expect(html).toContain("think like an astronomer");
+    expect(html).toContain("Dimensional analysis");
+    // How band: real required_moves labels + the track note.
+    expect(html).toContain("How each lecture works");
+    expect(html).toContain("Assumption audit");
+    expect(html).toContain("Track A");
+  });
+
+  test("absent how-band data → How band omitted (graceful degradation)", async () => {
+    const html = await renderShell({ ...PROPS, how: undefined });
+    expect(html).not.toContain("How each lecture works");
+    // The Why band (always-present pillars) still renders.
+    expect(html).toContain("Why this course is different");
   });
 
   test("absent info_pages → no crash, no quick-links", async () => {

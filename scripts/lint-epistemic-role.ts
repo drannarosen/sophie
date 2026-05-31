@@ -211,6 +211,10 @@ const CHROME: ReadonlyArray<readonly [string, string]> = [
     "formative reveal: disclosure container; the role lives on the wrapped reasoning, not the reveal (domain pass 2026-05-29)",
   ],
   [
+    "HowBand",
+    'course-home "How each lecture works" band; chrome PROJECTION of pedagogy.required_moves + multi_track_readings (ADR 0097 #3), not a pedagogy primitive (lives in @sophie/astro, outside this gate\'s scope — documentary)',
+  ],
+  [
     "InteractiveCheckbox",
     "persistence-bearing checkbox primitive; chrome control",
   ],
@@ -336,6 +340,10 @@ const CHROME: ReadonlyArray<readonly [string, string]> = [
   [
     "Week",
     "inline week-of-term label; chrome (header: no epistemic role declared)",
+  ],
+  [
+    "WhyBand",
+    'course-home "Why this course is different" band; chrome PROJECTION of identity.description + named_tools (ADR 0097 #3) with two fixed editorial pillars, not a pedagogy primitive (lives in @sophie/astro, outside this gate\'s scope — documentary)',
   ],
 ];
 
