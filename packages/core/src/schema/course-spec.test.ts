@@ -497,22 +497,34 @@ describe("CourseSpecSchema — assignment_kinds (ADR 0080 Am3)", () => {
     expect(parsed.assignment_kinds).toBeUndefined();
   });
 
-  it("rejects a non-slug key (e.g. 'Home Work')", () => {
-    const data = valid();
-    const broken = {
-      ...data,
+  it("rejects a non-slug key (e.g. 'Home Work') at the assignment_kinds path", () => {
+    const result = CourseSpecSchema.safeParse({
+      ...valid(),
       assignment_kinds: { "Home Work": "Homework" },
-    };
-    expect(() => CourseSpecSchema.parse(broken)).toThrow();
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      // Pin the failure to the Slug key validator (not `.strict()`'s
+      // unknown-key rejection), so the test goes RED if the field is removed.
+      expect(result.error.issues[0]?.path).toEqual([
+        "assignment_kinds",
+        "Home Work",
+      ]);
+    }
   });
 
-  it("rejects an empty-string value (NonEmptyString)", () => {
-    const data = valid();
-    const broken = {
-      ...data,
+  it("rejects an empty-string value (NonEmptyString) at the assignment_kinds path", () => {
+    const result = CourseSpecSchema.safeParse({
+      ...valid(),
       assignment_kinds: { homework: "" },
-    };
-    expect(() => CourseSpecSchema.parse(broken)).toThrow();
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0]?.path).toEqual([
+        "assignment_kinds",
+        "homework",
+      ]);
+    }
   });
 });
 
