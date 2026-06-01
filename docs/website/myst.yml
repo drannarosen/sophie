@@ -254,6 +254,7 @@ project:
         - file: decisions/0096-deploy-time-gated-content.md
         - file: decisions/0097-course-home-dashboard.md
         - file: decisions/0098-schedule-schema.md
+        - file: decisions/0099-announcements.md
     - title: Pilots
       children:
         - file: pilots/_template.md

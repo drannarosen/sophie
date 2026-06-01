@@ -1,0 +1,67 @@
+# Announcements registry for examples/smoke — exercises AnnouncementSchema
+# (ADR 0099) on a real build so CI guards the course-home announcement
+# banner's build-time publish/expire gate end to end through @sophie/*
+# (PR 3 Task 6, W4).
+#
+# The banner gates on the build WALL-CLOCK: an announcement renders only
+# when `publish_date <= today <= (expire_date ?? +infinity)` (the pure
+# `activeAnnouncements` projection, fail-closed). Dates here are authored
+# to BRACKET the build wall-clock at fixture-authoring time (2026-05-31,
+# a Sunday) so a build TODAY visibly populates the banner with the THREE
+# active notices and DROPS the two gated ones — one-time local proof the
+# gate works on a real build.
+#
+#   ACTIVE (publish window contains today = 2026-05-31):
+#     - drop-deadline   urgent  published 2026-05-27, never expires
+#                       (carries body + href → exercises both optional
+#                        fields + the "Details →" link + RAW author href)
+#     - office-hours    notice  published 2026-05-29, expires 2026-06-07
+#                       (a week out → still inside the window today)
+#     - welcome         info    published 2026-05-31 (TODAY; publish_date
+#                       <= today is inclusive → active)
+#
+#   GATED (dropped by the projection — MUST be ABSENT from built HTML):
+#     - future-survey   info    published 2026-12-01 (future-dated → not
+#                       yet published → dropped, proves the UPPER bound)
+#     - past-syllabus   notice  published 2026-05-10, expired 2026-05-20
+#                       (already expired → dropped, proves the LOWER bound)
+#
+# Severity spread (urgent/notice/info) exercises the full scoped
+# `--sophie-home-*` palette + the capitalized severity TEXT signal
+# ("Urgent"/"Notice"/"Info", WCAG 1.4.1 — never color-only).
+#
+# NOTE (W1): the active vs gated split is date-relative and would flip on
+# a future CI date, so no e2e asserts these populated states — they are a
+# build-wiring proof + a one-time local check only. The date-injected
+# populated-state assertions live in the unit tests
+# (home-announcement-projections.test.ts).
+
+announcements:
+  - id: drop-deadline
+    title: "Add/drop deadline is Friday"
+    body: >
+      The last day to drop without a W on your transcript is this Friday.
+      Check the registrar's calendar before the window closes.
+    severity: urgent
+    publish_date: "2026-05-27"
+    href: "https://example.edu/registrar/calendar"
+  - id: office-hours
+    title: "Office hours moved to Thursday this week"
+    body: "Tuesday office hours are cancelled; come Thursday 2–4pm instead."
+    severity: notice
+    publish_date: "2026-05-29"
+    expire_date: "2026-06-07"
+  - id: welcome
+    title: "Welcome to the course"
+    severity: info
+    publish_date: "2026-05-31"
+  - id: future-survey
+    title: "End-of-term survey opens December"
+    body: "The course-evaluation survey will open near the end of the term."
+    severity: info
+    publish_date: "2026-12-01"
+  - id: past-syllabus
+    title: "Syllabus review session (now passed)"
+    severity: notice
+    publish_date: "2026-05-10"
+    expire_date: "2026-05-20"

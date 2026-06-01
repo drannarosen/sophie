@@ -1,4 +1,10 @@
 export {
+  type Announcement,
+  type AnnouncementRegistry,
+  AnnouncementRegistrySchema,
+  AnnouncementSeverity,
+} from "./announcements.js";
+export {
   type Artifact,
   type ArtifactReferences,
   ArtifactReferencesSchema,

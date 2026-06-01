@@ -44,6 +44,7 @@
  * `home-schedule-projections` value import + the impure virtual-module read.
  */
 import HomeBackground from "../backgrounds/HomeBackground.astro";
+import AnnouncementBanner from "./AnnouncementBanner.astro";
 import CourseHero from "./CourseHero.astro";
 import CourseMenu from "./CourseMenu.astro";
 import HomeQuickLinks from "./HomeQuickLinks.astro";
@@ -70,6 +71,11 @@ import type {
   ScheduleRow,
   ThisWeekItem,
 } from "./home-schedule-projections";
+// TYPE-ONLY (same rationale as the schedule projections above): the
+// dispatcher (course-landing.astro) owns the single value import of
+// `home-announcement-projections` + the impure virtual-module read; the
+// shell only threads the projected shape down to <AnnouncementBanner>.
+import type { ActiveAnnouncement } from "./home-announcement-projections";
 import type { SectionEntry, UnitEntry } from "@sophie/core/schema";
 
 interface Props {
@@ -106,6 +112,15 @@ interface Props {
    */
   dueSoon?: ReadonlyArray<DueSoonItem>;
   /**
+   * Active announcement banners, projected from the announcements registry
+   * (ADR 0099, `activeAnnouncements()`). Mounted at the top of `<main>` via
+   * <AnnouncementBanner>; empty → the banner renders nothing (graceful
+   * degradation, #7). The dispatcher reads `virtual:sophie/announcements`
+   * (null-safe, no R12 throw), applies the `landing.show_announcements`
+   * toggle, and injects the build wall-clock into the projection.
+   */
+  announcements?: ReadonlyArray<ActiveAnnouncement>;
+  /**
    * Per-section calendar status (week-ranges + Now/past flags), projected
    * from the schedule (ADR 0098, `scheduleRows()`). Threaded to
    * <ModuleList>; absent / empty → the module rows render their
@@ -140,6 +155,7 @@ const {
   why,
   how,
   dueSoon,
+  announcements = [],
   scheduleRows = [],
   thisWeek = [],
   startReading,
@@ -173,6 +189,8 @@ const { moduleCount, lectureCount } = courseCounts(sections, units);
         </header>
 
         <main class='sophie-home__main'>
+          <AnnouncementBanner announcements={announcements} />
+
           <CourseHero
             instructor={instructor}
             institution={institution}

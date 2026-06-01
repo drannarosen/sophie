@@ -105,3 +105,16 @@ declare module "virtual:sophie/schedule" {
    */
   export const schedule: Schedule | null;
 }
+
+declare module "virtual:sophie/announcements" {
+  import type { AnnouncementRegistry } from "@sophie/core/schema";
+
+  /**
+   * Consumer's parsed `announcements.sophie.yaml`. Populated by
+   * `defineSophieIntegration` via `announcementsVirtualModule()`. Always
+   * registered — `null` when the consumer hasn't authored any banner
+   * notices yet (the course-home announcement banner stays fail-closed).
+   * AnnouncementRegistrySchema design (ADR 0099).
+   */
+  export const announcements: AnnouncementRegistry | null;
+}

@@ -97,6 +97,11 @@ quality_bars:
 
 landing:
   layout: dashboard
+  # Opt in to the course-home announcement banner (ADR 0099). The route
+  # passes `[]` without this flag, so the banner renders only when this is
+  # true AND announcements.sophie.yaml has currently-active notices. Drives
+  # the real-build banner-render proof (PR 3 Task 6, W4).
+  show_announcements: true
   hero:
     tagline: Extract physical insight from limited observations.
 

@@ -515,7 +515,18 @@ shape; tasks:
    at the top of `<main>` in `CourseHomeShell.astro`, gated by
    `landing.show_announcements && active.length > 0`; null-safe route read.
 6. **Smoke fixture** `examples/smoke/announcements.sophie.yaml` + real-build verify.
-7. **ADR 0099** + `myst.yml` + `validation.md` regen + confirm AGENTS.md R12 lists
+7. **Mobile "Now"-pill reachability fix** (folded-in follow-up from PR 2's final
+   review M3) — `ModuleList.astro` `<style>`. Today the `@media (max-width: 820px)`
+   block hides the whole `.sophie-home-mod__right` cell, so on mobile the current
+   section is signalled by the `is-now` teal rail **alone** (color-only — defeats the
+   "Now" pill's "TEXT label, never color-only" design intent and is a WCAG 1.4.1
+   gap). Fix: keep the third grid column + restore `.sophie-home-mod__now` on mobile;
+   leave `.sophie-home-mod__weeks` + `.sophie-home-mod__count` hidden (their current
+   mobile behavior — net change is the pill returns, nothing is removed). CSS-only, no
+   logic/prop change. Verify: the existing `home-pieces.axe.test.ts` stays green; the
+   real smoke build shows the "Now" pill at a <820px viewport.
+8. **ADR 0099** + `myst.yml` + `validation.md` regen + confirm AGENTS.md R12 lists
    `announcements`. MyST `grep -c "⚠"` = 0.
 
-Finish → PR (ADR 0099) → auto-merge after review (confirm with Anna).
+Finish → PR (ADR 0099 + the M3 mobile fix) → auto-merge after review (confirm with
+Anna).
