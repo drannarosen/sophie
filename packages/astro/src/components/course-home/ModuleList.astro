@@ -233,9 +233,16 @@ const headingId = "sophie-home-modules-heading";
   }
   @media (max-width: 820px) {
     .sophie-home-mod {
-      grid-template-columns: 2.4rem 1fr;
+      grid-template-columns: 2.4rem 1fr auto;
     }
-    .sophie-home-mod__right {
+    /* On mobile keep only the live-row "Now" pill — the sole non-color signal
+       of the current section (WCAG 1.4.1; the `is-now` teal rail is color
+       alone). Drop the secondary week-range + lecture count to save horizontal
+       space; they were already hidden here, so the net change is the pill
+       returns — nothing else moves. The `auto` column collapses to 0 on rows
+       with no pill, so non-"now" rows look unchanged. */
+    .sophie-home-mod__weeks,
+    .sophie-home-mod__count {
       display: none;
     }
     .sophie-home-modules__orbit {
