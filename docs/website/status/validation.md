@@ -24,31 +24,31 @@ on every build; suppressed when `SOPHIE_DOCS_INCLUDE_VALIDATION=0`.
 | Status | Count |
 |---|---|
 | Validated | 40 |
-| In progress | 24 |
+| In progress | 25 |
 | Unvalidated | 62 |
 | Re-validation needed | 0 |
 | Missing block | 1 |
-| Total | 127 |
+| Total | 128 |
 
 ## Lifecycle summary
 
 | Lifecycle | Count |
 |---|---|
 | Shipped | 74 |
-| Accepted design | 43 |
+| Accepted design | 44 |
 | Mixed | 1 |
 | Future package split | 9 |
 | No status | 0 |
-| Total | 127 |
+| Total | 128 |
 
 ## Evidence kinds
 
 | Kind | Count |
 |---|---|
-| test | 136 |
+| test | 140 |
 | chapter | 9 |
-| review | 40 |
-| deployment | 86 |
+| review | 42 |
+| deployment | 87 |
 | audit | 9 |
 | manual | 40 |
 
@@ -159,6 +159,7 @@ _No extractor findings (V0 + V8) surfaced during this build._
 | [docs/website/decisions/0096-deploy-time-gated-content.md](/deploy-time-gated-content/) | in progress | accepted design | 2026-05-31 | review | Approved design, not yet shipped. Real protection depends on a private source repo (`astrobytes-edu/astr201`) plus a daily rebuild cadence; the gate is build-time exclusion from `dist/`, not a runtime check (Sophie has no server — ADR 0001). The security-acceptance test in PR 2 (grep `dist/` for a sentinel) is the proof obligation that flips `validation.status` to `validated`. Amends astr201 decision 0001 §4 + §6 (lecture solutions fold into readings; homework/exam solutions deferred as an assessment concern): solutions are now migrated, gated.  |
 | [docs/website/decisions/0097-course-home-dashboard.md](/course-home-dashboard/) | in progress | accepted design | 2026-05-31 | review | Approved design, not yet shipped. The dashboard is the realized form of the course-spec `hero-with-modules` landing layout (astr201's spec anticipates the auto-upgrade); `dashboard` is its canonical name, `hero-with-modules` a documented alias. Cards needing schedule (ADR 0098) / announcements (ADR 0099) degrade to render-nothing until those land. Extends ADR 0080 (course-spec landing) and composes with ADR 0005 (theming); the home-background theme registry is the seam a future palette/multi-theme ADR extends.  |
 | [docs/website/decisions/0098-schedule-schema.md](/schedule-schema/) | in progress | accepted design | 2026-05-31 | deployment, review, test | Approved design, not yet shipped to a consumer. ScheduleSchema is the deferred date source ADR 0096 + ADR 0080 Amendment 2 both predicted: it supersedes hand-entered registry dates for class events while the assignments registry stays the single home for deadlines (the schedule pulls them by date, never duplicates them). `virtual:sophie/schedule` is the realized **third** `T \| null` always-register virtual module (course-spec first, assignments second; figures predates them in the always-register lineage but is non-nullable). It is a documentary CHROME projection (ADR 0058) — it never enters the pedagogy-index / Library, so R11/R13 (which scope to `@sophie/components`) need no allowlist entries. astr201 adoption (authoring `schedule.sophie.yaml`, flipping `landing.layout` to `dashboard`) is deferred to after the PR merges.  |
+| [docs/website/decisions/0099-announcements.md](/announcements/) | in progress | accepted design | 2026-05-31 | deployment, review, test | Approved design, not yet shipped to a consumer. ADR 0099 fills the last of ADR 0097's three fail-closed dashboard seams — the announcement banner ADR 0097 decision 7 left open (the two calendar seams were filled by ADR 0098). `virtual:sophie/announcements` is the realized **fourth** `T \| null` always-register virtual module (course-spec first, assignments second, schedule third; figures predates them in the always-register lineage but is non-nullable). It is a documentary CHROME projection (ADR 0058) — it never enters the pedagogy-index / Library, so R11/R13 (which scope to `@sophie/components`) need no allowlist entries; R14 (no raw `dangerouslySetInnerHTML`) applies and is honored (plain-text interpolation, no HTML injection). astr201 adoption (authoring `announcements.sophie.yaml`, flipping `landing.show_announcements` on) is deferred to after the PR merges.  |
 
 ### Reference docs
 

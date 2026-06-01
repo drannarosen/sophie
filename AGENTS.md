@@ -418,7 +418,7 @@ to every PR, every design decision, every refactor.
     **Scope clarification.** R12 applies *only* to nullable
     virtual-module exports, and within that, the **narrow-with-throw**
     requirement applies only where a dispatcher does **direct property
-    access** on the export. Currently nullable (three `T | null`
+    access** on the export. Currently nullable (four `T | null`
     always-register modules):
 
     - `virtual:sophie/course-spec` (`CourseSpec | null`) —
@@ -437,8 +437,15 @@ to every PR, every design decision, every refactor.
       **null-safe EXCEPTION, no throw**: passed whole into the
       null-guarding `scheduleRows` / `thisWeek` projections in
       `course-landing.astro`.
+    - `virtual:sophie/announcements` (`AnnouncementRegistry | null`, ADR
+      0099 — **now realized in code**, the realized fourth `T | null`
+      always-register module the prior R12 prose predicted) —
+      **null-safe EXCEPTION, no throw**: passed whole into the
+      null-guarding `activeAnnouncements` projection in
+      `course-landing.astro`. No direct property access at any route
+      boundary.
 
-    The two null-safe exceptions are **documented in the route**
+    The three null-safe exceptions are **documented in the route**
     (`course-landing.astro`'s projection comment) — they are the
     homework-precedent pattern for optional projections, not a
     regression. Because they are never narrowed-with-throw, they are
@@ -449,10 +456,12 @@ to every PR, every design decision, every refactor.
     (always an object, possibly empty); `virtual:sophie/pedagogy-index`.
     Check shapes at
     [`packages/astro/src/virtual-modules.d.ts`](packages/astro/src/virtual-modules.d.ts).
-    The next predicted `T | null` instance is
-    `virtual:sophie/announcements` (ADR 0099, PR 3) per the
-    always-register pattern memorialized in
-    `feedback_always_register_virtual_module.md`.
+    Announcements completed the predicted quartet (course-spec,
+    assignments, schedule, announcements); there is no next-predicted
+    `T | null` module on the board. Any future nullable virtual module
+    follows the same always-register pattern memorialized in
+    `feedback_always_register_virtual_module.md` — register it
+    unconditionally, default-null when absent, and add a bullet here.
 
     **Primary enforcement: TS type-checker.** Astro check + `pnpm
     typecheck` already catch unguarded property access on a
