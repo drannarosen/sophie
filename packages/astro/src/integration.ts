@@ -6,6 +6,8 @@ import react from "@astrojs/react";
 import type { FigureRegistryEntry } from "@sophie/core/schema";
 import { isFigureFile } from "@sophie/core/schema";
 import type { AstroIntegration } from "astro";
+import { loadAnnouncements } from "./lib/announcements-loader.ts";
+import { announcementsVirtualModule } from "./lib/announcements-virtual-module.ts";
 import { assertAssignmentKindsDeclared } from "./lib/assert-assignment-kinds.ts";
 import { loadAssignments } from "./lib/assignments-loader.ts";
 import { assignmentsVirtualModule } from "./lib/assignments-virtual-module.ts";
@@ -137,6 +139,11 @@ export function defineSophieIntegration(
         // marker / This-Week card.
         const schedule = loadSchedule(consumerRoot);
 
+        // ADR 0099 — consumer's parsed announcements.sophie.yaml (or null
+        // when absent). Drives the fail-closed course-home announcement
+        // banner, gated by `landing.show_announcements`.
+        const announcements = loadAnnouncements(consumerRoot);
+
         // ADR 0080 Amendment 3 — reject assignment kinds not declared in the
         // course-spec `assignment_kinds` map. Lives HERE (not @sophie/core)
         // because the cross-file membership check needs both course.sophie.yaml
@@ -222,6 +229,16 @@ export function defineSophieIntegration(
               // pattern note predicted (figures + course-spec + assignments
               // preceded it).
               scheduleVirtualModule(schedule) as never,
+              // ADR 0099 — consumer's parsed announcements.sophie.yaml
+              // exposed as `virtual:sophie/announcements` for the course-home
+              // announcement banner. Always registered so
+              // `import { announcements } from "virtual:sophie/announcements"`
+              // resolves at build time even when the consumer has no banner
+              // notices yet (the export is `null` in that case; the banner
+              // stays fail-closed). The realized **fourth** `T | null`
+              // always-register instance (figures + course-spec + assignments
+              // + schedule preceded it).
+              announcementsVirtualModule(announcements) as never,
               // Pre-parse author-trap lint (issues #190, #193) — scans
               // raw `.mdx` text for multi-line inline `$...$` and raw
               // `<` before a non-letter, and throws curated errors with

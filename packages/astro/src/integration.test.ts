@@ -225,13 +225,19 @@ describe("defineSophieIntegration — virtual-module wiring", () => {
     expect(vitePluginNames).toContain("sophie:schedule");
   });
 
-  test("registers the assignments + course-spec + schedule virtual modules together", () => {
+  test("registers the announcements virtual module (ADR 0099, always-register)", () => {
     const { vitePluginNames } = runSetupHook(consumerRoot);
-    // The three nullable always-register virtual modules (R12 family) plus
+    expect(vitePluginNames).toContain("sophie:announcements");
+  });
+
+  test("registers the assignments + course-spec + schedule + announcements virtual modules together", () => {
+    const { vitePluginNames } = runSetupHook(consumerRoot);
+    // The four nullable always-register virtual modules (R12 family) plus
     // the figures module are wired even with no consumer data present.
     expect(vitePluginNames).toContain("sophie:assignments");
     expect(vitePluginNames).toContain("sophie:course-spec");
     expect(vitePluginNames).toContain("sophie:schedule");
+    expect(vitePluginNames).toContain("sophie:announcements");
   });
 });
 

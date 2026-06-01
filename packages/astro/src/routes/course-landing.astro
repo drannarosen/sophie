@@ -2,10 +2,12 @@
 import { ProseWithToc, SimpleList } from "@sophie/components";
 import { setSophieBaseUrl } from "@sophie/core/runtime";
 import { getCollection } from "astro:content";
+import { announcements } from "virtual:sophie/announcements";
 import { assignments } from "virtual:sophie/assignments";
 import { courseSpec } from "virtual:sophie/course-spec";
 import { schedule } from "virtual:sophie/schedule";
 import CourseHomeShell from "../components/course-home/CourseHomeShell.astro";
+import { activeAnnouncements } from "../components/course-home/home-announcement-projections";
 import {
   dueSoon,
   startReading,
@@ -85,14 +87,16 @@ const units = (await getCollection("units")).map((u) => u.data);
 // `dueSoon` / `scheduleRows` / `thisWeek` projections so the date logic
 // stays testable.
 //
-// `assignments` (virtual:sophie/assignments, AssignmentRegistry | null) and
-// `schedule` (virtual:sophie/schedule, Schedule | null) are OPTIONAL —
-// NOT R12-narrowed: the Due-Soon / week-range / This-Week surfaces degrade
-// to nothing when null (ADR 0097 #7). Each projection null-guards its
+// `assignments` (virtual:sophie/assignments, AssignmentRegistry | null),
+// `schedule` (virtual:sophie/schedule, Schedule | null), and `announcements`
+// (virtual:sophie/announcements, AnnouncementRegistry | null) are OPTIONAL —
+// NOT R12-narrowed: the Due-Soon / week-range / This-Week / banner surfaces
+// degrade to nothing when null (ADR 0097 #7). Each projection null-guards its
 // argument internally, and no direct property access happens here, so no
 // narrowing throw is needed (R12 scopes to course-spec, which IS narrowed
-// above; `assignments` + `schedule` are documented exceptions — the
-// homework precedent for null-safe optional projections, ADR 0096).
+// above; `assignments` + `schedule` + `announcements` are documented
+// exceptions — the homework precedent for null-safe optional projections,
+// ADR 0096).
 const now = new Date();
 const dueSoonItems = isDashboard
   ? dueSoon(assignments, now, undefined, courseSpec.assignment_kinds ?? {})
@@ -101,6 +105,12 @@ const scheduleRowData = isDashboard
   ? scheduleRows(schedule, sections, units, now)
   : [];
 const thisWeekItems = isDashboard ? thisWeek(schedule, assignments, now) : [];
+// ADR 0099: opt-in banner — show only when the consumer enables it AND
+// there are live announcements. activeAnnouncements null-guards a null registry.
+const announcementItems =
+  isDashboard && courseSpec.landing?.show_announcements
+    ? activeAnnouncements(announcements, now)
+    : [];
 const startReadingLink = isDashboard ? startReading(units) : undefined;
 const why = isDashboard
   ? whyBand(courseSpec.identity.description, courseSpec.pedagogy.named_tools)
@@ -144,6 +154,7 @@ const tagline =
       why={why}
       how={how}
       dueSoon={dueSoonItems}
+      announcements={announcementItems}
       scheduleRows={scheduleRowData}
       thisWeek={thisWeekItems}
       startReading={startReadingLink}
